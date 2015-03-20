@@ -30,6 +30,9 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'json_field',
+    'blackbird_engine',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -56,14 +59,7 @@ USE_L10N = True
 
 USE_TZ = True
 
-AUTH_USER_MODEL = 'api.User'
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static/'),)
-
-MEDIA_ROOT = 'media/'
-
-MEDIA_URL = '/api/v0/media/'
