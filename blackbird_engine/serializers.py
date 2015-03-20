@@ -19,5 +19,5 @@ class EngineModelSerializer(serializers.HyperlinkedModelSerializer):
     tags = JSONSerializerField()
 
     class Meta:
-        model = models.EngineModel
+        model = models.BlackbirdModel
         fields = ('id', 'summary', 'business_name', 'code', 'tags')
