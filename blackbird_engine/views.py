@@ -4,8 +4,8 @@ from . import models
 from . import serializers
 
 
-class EngineModelView(mixins.ListModelMixin, mixins.RetrieveModelMixin,
-                      mixins.CreateModelMixin,  # temporary
+class BusinessView(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
+                   mixins.ListModelMixin,  # temporary
                       viewsets.GenericViewSet):
-    serializer_class = serializers.EngineModelSerializer
-    queryset = models.BlackbirdModel.objects.all()  # not used, overridden by get_queryset
+    serializer_class = serializers.BusinessSerializer
+    queryset = models.Business.objects.all()  # not used, overridden by get_queryset

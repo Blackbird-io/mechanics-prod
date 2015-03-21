@@ -13,11 +13,18 @@ class JSONSerializerField(serializers.Field):
         return value
 
 
-# TODO make e_model available somehow
-class EngineModelSerializer(serializers.HyperlinkedModelSerializer):
-    summary = JSONSerializerField()
-    tags = JSONSerializerField()
+class BusinessSerializer(serializers.HyperlinkedModelSerializer):
+    summary = JSONSerializerField(read_only=True)
+    tags = JSONSerializerField(read_only=True)
+    transcript = JSONSerializerField(read_only=True)
 
     class Meta:
-        model = models.BlackbirdModel
-        fields = ('id', 'summary', 'business_name', 'code', 'tags')
+        model = models.Business
+
+
+# TODO make e_model available somehow for admin
+
+
+class QuestionSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        models = models.Business

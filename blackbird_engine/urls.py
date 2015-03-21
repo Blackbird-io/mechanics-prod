@@ -3,10 +3,10 @@ from rest_framework import routers
 
 
 def get_v0_patterns():
-    from .views import EngineModelView
+    from .views import BusinessView
 
     router = routers.DefaultRouter()
-    router.register(r'engine-model', EngineModelView)
+    router.register(r'engine-model', BusinessView)
 
     return patterns('',
                     url(r'', include(router.urls)),

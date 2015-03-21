@@ -7,25 +7,31 @@ def timestamp(**kwargs):
 
 
 class Business(models.Model):
-    summary = json_field.JSONField(null=True)
-    business_name = models.CharField(max_length=256, blank=True)
-    tags = json_field.JSONField(null=True)
-    created = timestamp()
+    # id field is used to call into engine
+    created_timestamp = timestamp()
+    # generated upon interview completion
+    summary = json_field.JSONField(null=True, editable=False)
+    business_name = models.CharField(max_length=256, blank=True, editable=False)
+    tags = json_field.JSONField(null=True, editable=False)
+    transcript = json_field.JSONField(null=True, editable=False, )
 
 
 class BlackbirdModel(models.Model):
+    created_timestamp = timestamp()
     # business_id passed into engine will be str(business.id)
     business = models.ForeignKey(Business, related_name="blackbird_models")
     data = json_field.JSONField()
-    created = timestamp()
 
 
 class Question(models.Model):
-    business = models.ForeignKey(Business, related_name="questions")
-    sequence_num = models.PositiveSmallIntegerField()
-    data = json_field.JSONField()  # will be populated with answers
-    created = timestamp()
-    # do we need an "answered" field?
+    created_timestamp = timestamp()
+    business = models.ForeignKey(Business, related_name="questions", editable=False)
+    # the model that generated this question
+    blackbird_model = models.ForeignKey(BlackbirdModel, related_name="questions", editable=False)
+    sequence_num = models.PositiveSmallIntegerField(editable=False)
+    #question information.  will also contain response data once answered
+    data = json_field.JSONField(editable=False)
 
     class Meta:
         unique_together = ('business', 'sequence_num')
+        ordering = ('business', 'sequence_num')
