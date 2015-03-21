@@ -13,7 +13,7 @@ class Business(models.Model):
     summary = json_field.JSONField(null=True, editable=False)
     business_name = models.CharField(max_length=256, blank=True, editable=False)
     tags = json_field.JSONField(null=True, editable=False)
-    transcript = json_field.JSONField(null=True, editable=False, )
+    transcript = json_field.JSONField(null=True, editable=False)
 
 
 class BlackbirdModel(models.Model):
@@ -21,6 +21,10 @@ class BlackbirdModel(models.Model):
     # business_id passed into engine will be str(business.id)
     business = models.ForeignKey(Business, related_name="blackbird_models")
     data = json_field.JSONField()
+
+    class Meta:
+        index_together = ('business', 'created_timestamp')
+        ordering = ('-business', '-created_timestamp')
 
 
 class Question(models.Model):
@@ -30,7 +34,8 @@ class Question(models.Model):
     blackbird_model = models.ForeignKey(BlackbirdModel, related_name="questions", editable=False)
     sequence_num = models.PositiveSmallIntegerField(editable=False)
     #question information.  will also contain response data once answered
-    data = json_field.JSONField(editable=False)
+    data = json_field.JSONField()
+    answered = models.BooleanField(default=False, editable=False)
 
     class Meta:
         unique_together = ('business', 'sequence_num')

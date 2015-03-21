@@ -1,15 +1,18 @@
 from django.conf.urls import url, include, patterns
-from rest_framework import routers
+from rest_framework_nested import routers
 
 
 def get_v0_patterns():
-    from .views import BusinessView
+    from .views import BusinessView, QuestionView
 
-    router = routers.DefaultRouter()
-    router.register(r'engine-model', BusinessView)
+    router = routers.SimpleRouter()
+    router.register(r'business', BusinessView)
+    question_router = routers.NestedSimpleRouter(router, r'business', lookup='business')
+    question_router.register(r'question', QuestionView)
 
     return patterns('',
                     url(r'', include(router.urls)),
+                    url(r'', include(question_router.urls)),
                     )
 
 
