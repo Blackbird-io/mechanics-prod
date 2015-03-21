@@ -10,21 +10,54 @@ class Business(models.Model):
     # id field is used to call into engine
     created_timestamp = timestamp()
     # generated upon interview completion
-    summary = json_field.JSONField(null=True, editable=False)
-    business_name = models.CharField(max_length=256, blank=True, editable=False)
-    tags = json_field.JSONField(null=True, editable=False)
-    transcript = json_field.JSONField(null=True, editable=False)
+
+    @property
+    def current_model(self):
+        if not hasattr(self, '_current_model'):
+            try:
+                self._current_model = BlackbirdModel.objects.filter(business=self, complete=True)[0]
+            except IndexError:
+                self._current_model = BlackbirdModel()
+        return self._current_model
+
+    @property
+    def industry(self):
+        return self.current_model.industry
+
+    @property
+    def summary(self):
+        return self.current_model.industry
+
+    @property
+    def business_name(self):
+        return self.current_model.business_name
+
+    @property
+    def tags(self):
+        return self.current_model.tags
+
+    @property
+    def transcript(self):
+        return [question.data for question in self.questions.all() if question.transcribe]
 
 
 class BlackbirdModel(models.Model):
     created_timestamp = timestamp()
-    # business_id passed into engine will be str(business.id)
     business = models.ForeignKey(Business, related_name="blackbird_models")
-    data = json_field.JSONField()
+    user_context = json_field.JSONField(default=dict)
+    complete = models.BooleanField(default=False)
+
+    industry = models.CharField(max_length=256, blank=True, editable=False)
+    summary = json_field.JSONField(null=True, editable=False)
+    business_name = models.CharField(max_length=256, blank=True, editable=False)
+    tags = json_field.JSONField(null=True, editable=False)
+
+    e_model = json_field.JSONField()
+    # only use complete models to derive business info
 
     class Meta:
-        index_together = ('business', 'created_timestamp')
-        ordering = ('-business', '-created_timestamp')
+        index_together = ('business', 'complete', 'created_timestamp')
+        ordering = ('-business', '-complete', '-created_timestamp')
 
 
 class Question(models.Model):
@@ -33,10 +66,11 @@ class Question(models.Model):
     # the model that generated this question
     blackbird_model = models.ForeignKey(BlackbirdModel, related_name="questions", editable=False)
     sequence_num = models.PositiveSmallIntegerField(editable=False)
-    #question information.  will also contain response data once answered
-    data = json_field.JSONField()
+    # question information.  will also contain response data once answered
+    detail = json_field.JSONField()
     answered = models.BooleanField(default=False, editable=False)
 
-    class Meta:
-        unique_together = ('business', 'sequence_num')
-        ordering = ('business', 'sequence_num')
+
+class Meta:
+    unique_together = ('business', 'sequence_num')
+    ordering = ('business', 'sequence_num')

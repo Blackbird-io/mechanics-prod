@@ -40,17 +40,26 @@ class BusinessSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = models.Business
+        fields = ('url', 'industry', 'summary', 'business_name', 'tags', 'transcript', 'questions')
+        readonly_fields = fields
 
 
 # TODO make e_model available somehow for admin
 
 
 class QuestionSerializer(serializers.HyperlinkedModelSerializer):
-    data = JSONSerializerField()
+    detail = JSONSerializerField()
     url = QuestionHyperlinkedIdentityField(view_name='question-detail')
     business = serializers.HyperlinkedRelatedField(required=False, read_only=True, view_name='business-detail')
     sequence_num = serializers.IntegerField(required=False, read_only=True)
 
+    def update(self, instance, validated_data):
+        # TODO pull only response out of validated data
+        validated_data['answered'] = True
+        return super(QuestionSerializer, self).update(instance, validated_data)
+
+
     class Meta:
         model = models.Question
-        fields = ('url', 'business', 'sequence_num', 'created_timestamp', 'data')
+        fields = ('url', 'business', 'sequence_num', 'created_timestamp', 'detail', 'answered')
+        readonly_fields = ('answered', )
