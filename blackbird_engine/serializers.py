@@ -36,16 +36,24 @@ class BusinessSerializer(serializers.HyperlinkedModelSerializer):
     summary = JSONSerializerField(read_only=True)
     tags = JSONSerializerField(read_only=True)
     transcript = JSONSerializerField(read_only=True)
-    questions = QuestionHyperlinkedRelatedField(read_only=True, many=True, view_name='question-detail')
 
     class Meta:
         model = models.Business
-        fields = ('url', 'industry', 'summary', 'business_name', 'tags', 'transcript', 'questions')
+        fields = ('url', 'industry', 'summary', 'business_name', 'tags', 'transcript')
         readonly_fields = fields
 
 
-# TODO make e_model available somehow for admin
+# TODO make e_model available to admin
+class InternalBlackbirdModelSerializer(serializers.ModelSerializer):
+    user_context = JSONSerializerField()
+    business_alias = serializers.CharField()
+    summary = JSONSerializerField()
+    tags = JSONSerializerField()
+    e_model = JSONSerializerField()
 
+    class Meta:
+        model = models.BlackbirdModel
+        fields = ('user_context', 'business_alias', 'industry', 'summary', 'business_name', 'tags', 'e_model')
 
 class QuestionSerializer(serializers.HyperlinkedModelSerializer):
     detail = JSONSerializerField()

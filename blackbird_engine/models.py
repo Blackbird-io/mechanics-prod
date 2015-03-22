@@ -45,15 +45,20 @@ class BlackbirdModel(models.Model):
     created_timestamp = timestamp()
     business = models.ForeignKey(Business, related_name="blackbird_models")
     user_context = json_field.JSONField(default=dict)
+
     complete = models.BooleanField(default=False)
 
-    industry = models.CharField(max_length=256, blank=True, editable=False)
-    summary = json_field.JSONField(null=True, editable=False)
-    business_name = models.CharField(max_length=256, blank=True, editable=False)
-    tags = json_field.JSONField(null=True, editable=False)
+    industry = models.CharField(max_length=256, blank=True)
+    summary = json_field.JSONField(null=True)
+    business_name = models.CharField(max_length=256, blank=True)
+    tags = json_field.JSONField(null=True)
 
     e_model = json_field.JSONField()
     # only use complete models to derive business info
+
+    @property
+    def business_alias(self):
+        return str(self.business_id)
 
     class Meta:
         index_together = ('business', 'complete', 'created_timestamp')

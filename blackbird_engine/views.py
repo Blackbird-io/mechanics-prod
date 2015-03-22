@@ -1,6 +1,4 @@
 from rest_framework import mixins, viewsets
-from rest_framework.decorators import detail_route
-
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -24,14 +22,20 @@ class QuestionView(mixins.RetrieveModelMixin,
     lookup_field = 'sequence_num'
     serializer_class = serializers.QuestionSerializer
 
-    @detail_route(methods=['post'])
-    def answer(self, request, *args, **kwargs):
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
         question = self.get_object()
-        serializer = serializers.QuestionSerializer(question, data=request.data)
+        serializer = self.get_serializer(question, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializers.QuestionSerializer(question.next_question).data,
+        self.perform_update(serializer)
+        # next_question field is available when a question is answered
+        next_question = question.next_question
+        if next_question:
+            #TODO maybe a redirect?
+            return Response(self.get_serializer(next_question).data,
                         status=status.HTTP_201_CREATED)
+        else:
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
     def get_queryset(self):
