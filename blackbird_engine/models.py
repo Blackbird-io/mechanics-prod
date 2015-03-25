@@ -38,7 +38,7 @@ class Business(models.Model):
 
     @property
     def transcript(self):
-        return [question.data for question in self.questions.all() if question.transcribe]
+        return self.questions.filter(transcribe=True)
 
 
 class BlackbirdModel(models.Model):
@@ -68,14 +68,35 @@ class BlackbirdModel(models.Model):
 class Question(models.Model):
     created_timestamp = timestamp()
     business = models.ForeignKey(Business, related_name="questions", editable=False)
-    # the model that generated this question
-    blackbird_model = models.ForeignKey(BlackbirdModel, related_name="questions", editable=False)
     sequence_num = models.PositiveSmallIntegerField(editable=False)
-    # question information.  will also contain response data once answered
-    detail = json_field.JSONField()
-    answered = models.BooleanField(default=False, editable=False)
+
+    # the model that generated this question
+    blackbird_model = models.OneToOneField(BlackbirdModel, related_name="question", editable=False)
+
+    # used by engine
+    e_question = json_field.JSONField(null=True)
+    question_id = models.CharField(max_length=64, blank=True)
+    topic_name = models.CharField(max_length=64, blank=True)
+
+    # question information.
+    progress = models.FloatField(default=0.0)  #TODO validate [0.0, 1.0] range?
+    short = models.CharField(max_length=64, blank=True)
+    prompt = models.TextField(blank=True)
+    comment = models.TextField(blank=True)
+    array_caption = models.TextField(blank=True)
+    input_array = json_field.JSONField()
+    input_type = models.CharField(max_length=64, default='text')  #TODO choices?
+    input_sub_type = models.CharField(max_length=64, null=True)  #TODO choices?
+    user_can_add = models.BooleanField(default=False)
+
+    #for building business transcript
+    transcribe = models.BooleanField(default=False)
+
+    #response data
+    response_array = json_field.JSONField(null=True)
 
 
 class Meta:
     unique_together = ('business', 'sequence_num')
     ordering = ('business', 'sequence_num')
+    index_together = ('business', 'transcribe', 'sequence_num')

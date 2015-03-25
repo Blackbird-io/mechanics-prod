@@ -35,7 +35,7 @@ class QuestionHyperlinkedIdentityField(serializers.HyperlinkedIdentityField, Que
 class BusinessSerializer(serializers.HyperlinkedModelSerializer):
     summary = JSONSerializerField(read_only=True)
     tags = JSONSerializerField(read_only=True)
-    transcript = JSONSerializerField(read_only=True)
+    transcript = QuestionSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Business
@@ -58,16 +58,22 @@ class InternalBlackbirdModelSerializer(serializers.ModelSerializer):
 class QuestionSerializer(serializers.HyperlinkedModelSerializer):
     detail = JSONSerializerField()
     url = QuestionHyperlinkedIdentityField(view_name='question-detail')
+
+    # required=False necessary because of unique_together
     business = serializers.HyperlinkedRelatedField(required=False, read_only=True, view_name='business-detail')
     sequence_num = serializers.IntegerField(required=False, read_only=True)
 
+    input_array = JSONSerializerField(read_only=True)
+    response_array = JSONSerializerField()
+
     def update(self, instance, validated_data):
-        # TODO pull only response out of validated data
-        validated_data['answered'] = True
         return super(QuestionSerializer, self).update(instance, validated_data)
 
 
     class Meta:
         model = models.Question
-        fields = ('url', 'business', 'sequence_num', 'created_timestamp', 'detail', 'answered')
-        readonly_fields = ('answered', )
+        readonly_fields = ('url', 'created_timestamp', 'business', 'sequence_num',
+                           'topic_name', 'progress', 'short', 'prompt', 'comment',
+                           'array_caption', 'input_array', 'input_type', 'input_sub_type',
+                           'user_can_add')
+        fields = readonly_fields + ('response_array', )

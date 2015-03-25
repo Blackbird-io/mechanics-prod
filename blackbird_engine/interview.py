@@ -16,7 +16,7 @@ def _send_engine_msg(bb_model, question=None, response=None):
         model_dict['industry'] = 'Agriculture'
         model_dict['summary'] = {'is': 'awesome'}
         model_dict['business_name'] = 'Bob\'s Bakery'
-        model_dict['tags'] = ['business', 'bad', 'delicious', 'wow']
+        model_dict['tags'] = ['business', 'good', 'delicious', 'wow']
     question_dict = None if end else dict(question_id=new_question_id, prompt='Question ' + str(new_question_id))
     engine_end = END_SENTINEL if end else None
 
@@ -47,7 +47,8 @@ def _save_question_dict(business, answered_question, model, end, question_dict):
     question = None if end else models.Question.objects.create(business=business,
                                                                blackbird_model=model,
                                                                sequence_num=sequence_num,
-                                                               detail=question_dict)
+                                                               **{k: v for (k, v) in question_dict.items() if v !=
+                                                                  None})
     return question
 
 
