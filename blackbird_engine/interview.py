@@ -11,7 +11,7 @@ def _send_engine_msg(bb_model, question=None, response=None):
     # mocking each model
     try:
         question_num = bb_model['e_model']['question_num'] + 1
-    except KeyError:
+    except (KeyError, TypeError):
         question_num = 0
     end = question_num >= 5
     model_dict = dict(bb_model, e_model=dict(question_num=question_num))
@@ -19,7 +19,7 @@ def _send_engine_msg(bb_model, question=None, response=None):
         model_dict['industry'] = 'Agriculture'
         model_dict['summary'] = {'is': 'awesome'}
         model_dict['business_name'] = 'Bob\'s Bakery'
-        model_dict['tags'] = ['business', 'good', 'delicious', 'wow']
+        model_dict['tags'] = ['business', 'best', 'delicious', 'wow']
     question_dict = None if end else dict(question_id=str(question_num), prompt='Question ' + str(question_num))
     engine_end = END_SENTINEL if end else None
 

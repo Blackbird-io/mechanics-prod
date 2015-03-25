@@ -48,9 +48,9 @@ class BlackbirdModel(models.Model):
 
     complete = models.BooleanField(default=False)
 
-    industry = models.CharField(max_length=256, blank=True)
+    industry = models.CharField(max_length=256, null=True)
     summary = json_field.JSONField(null=True)
-    business_name = models.CharField(max_length=256, blank=True)
+    business_name = models.CharField(max_length=256, null=True)
     tags = json_field.JSONField(null=True)
 
     e_model = json_field.JSONField()
@@ -67,24 +67,24 @@ class BlackbirdModel(models.Model):
 
 class Question(models.Model):
     created_timestamp = timestamp()
-    business = models.ForeignKey(Business, related_name="questions", editable=False)
-    sequence_num = models.PositiveSmallIntegerField(editable=False)
+    business = models.ForeignKey(Business, related_name="questions")
+    sequence_num = models.PositiveSmallIntegerField()
 
     # the model that generated this question
-    blackbird_model = models.OneToOneField(BlackbirdModel, related_name="question", editable=False)
+    blackbird_model = models.OneToOneField(BlackbirdModel, related_name="question")
 
     # used by engine
     e_question = json_field.JSONField(null=True)
-    question_id = models.CharField(max_length=64, blank=True)
-    topic_name = models.CharField(max_length=64, blank=True)
+    question_id = models.CharField(max_length=64, null=True)
+    topic_name = models.CharField(max_length=64, null=True)
 
     # question information.
     progress = models.FloatField(default=0.0)  #TODO validate [0.0, 1.0] range?
-    short = models.CharField(max_length=64, blank=True)
-    prompt = models.TextField(blank=True)
-    comment = models.TextField(blank=True)
-    array_caption = models.TextField(blank=True)
-    input_array = json_field.JSONField()
+    short = models.CharField(max_length=64, null=True)
+    prompt = models.TextField(null=True)
+    comment = models.TextField(null=True)
+    array_caption = models.TextField(null=True)
+    input_array = json_field.JSONField(default=list)
     input_type = models.CharField(max_length=64, default='text')  #TODO choices?
     input_sub_type = models.CharField(max_length=64, null=True)  #TODO choices?
     user_can_add = models.BooleanField(default=False)
