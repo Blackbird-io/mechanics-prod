@@ -32,31 +32,7 @@ class QuestionHyperlinkedIdentityField(serializers.HyperlinkedIdentityField, Que
         return self.get_question_url(*args, **kwargs)
 
 
-class BusinessSerializer(serializers.HyperlinkedModelSerializer):
-    summary = JSONSerializerField(read_only=True)
-    tags = JSONSerializerField(read_only=True)
-    transcript = QuestionSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = models.Business
-        fields = ('url', 'industry', 'summary', 'business_name', 'tags', 'transcript')
-        readonly_fields = fields
-
-
-# TODO make e_model available to admin
-class InternalBlackbirdModelSerializer(serializers.ModelSerializer):
-    user_context = JSONSerializerField()
-    business_alias = serializers.CharField()
-    summary = JSONSerializerField()
-    tags = JSONSerializerField()
-    e_model = JSONSerializerField()
-
-    class Meta:
-        model = models.BlackbirdModel
-        fields = ('user_context', 'business_alias', 'industry', 'summary', 'business_name', 'tags', 'e_model')
-
 class QuestionSerializer(serializers.HyperlinkedModelSerializer):
-    detail = JSONSerializerField()
     url = QuestionHyperlinkedIdentityField(view_name='question-detail')
 
     # required=False necessary because of unique_together
@@ -72,8 +48,46 @@ class QuestionSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = models.Question
-        readonly_fields = ('url', 'created_timestamp', 'business', 'sequence_num',
-                           'topic_name', 'progress', 'short', 'prompt', 'comment',
-                           'array_caption', 'input_array', 'input_type', 'input_sub_type',
-                           'user_can_add')
-        fields = readonly_fields + ('response_array', )
+        fields = ('url', 'created_timestamp', 'business', 'sequence_num',
+                  'topic_name', 'progress', 'short', 'prompt', 'comment',
+                  'array_caption', 'input_array', 'input_type', 'input_sub_type',
+                  'user_can_add', 'response_array', )
+        read_only_fields = ('url', 'created_timestamp', 'business', 'sequence_num',
+                            'topic_name', 'progress', 'short', 'prompt', 'comment',
+                            'array_caption', 'input_array', 'input_type', 'input_sub_type',
+                            'user_can_add')
+
+
+class BusinessSerializer(serializers.HyperlinkedModelSerializer):
+    summary = JSONSerializerField(read_only=True)
+    tags = JSONSerializerField(read_only=True)
+    transcript = QuestionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = models.Business
+        fields = ('url', 'industry', 'summary', 'business_name', 'tags', 'transcript')
+        read_only_fields = fields
+
+
+# TODO make e_model available to admin
+class InternalBlackbirdModelSerializer(serializers.ModelSerializer):
+    user_context = JSONSerializerField()
+    business_alias = serializers.CharField(read_only=True)
+    summary = JSONSerializerField(required=False)
+    tags = JSONSerializerField(required=False)
+    e_model = JSONSerializerField()
+
+    class Meta:
+        model = models.BlackbirdModel
+        fields = ('user_context', 'business_alias', 'industry', 'summary',
+                  'business_name', 'tags', 'e_model')
+
+
+class InternalQuestionSerializer(serializers.ModelSerializer):
+    e_question = JSONSerializerField()
+    input_array = JSONSerializerField()
+    class Meta:
+        model = models.Question
+        fields = ('e_question', 'question_id', 'topic_name', 'progress', 'short',
+                  'prompt', 'comment', 'array_caption', 'input_array',
+                  'input_type', 'input_sub_type', 'user_can_add', 'transcribe')
