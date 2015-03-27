@@ -17,7 +17,7 @@ def get_v0_patterns():
 
 
 urlpatterns = patterns('',
-                       url(r'v0/', include(get_v0_patterns())),
+                       url(r'api/v0/', include(get_v0_patterns())),
                        )
 '''
 Endpoints:
