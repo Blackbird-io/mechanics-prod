@@ -44,17 +44,20 @@ class Business(models.Model):
 class BlackbirdModel(models.Model):
     created_timestamp = timestamp()
     business = models.ForeignKey(Business, related_name="blackbird_models")
-    user_context = json_field.JSONField(default=dict)
-
+    # only use complete models to derive business info
     complete = models.BooleanField(default=False)
 
+    # passed to engine
+    user_context = json_field.JSONField(default=dict)
+
+    #set by engine, visible to Business
     industry = models.CharField(max_length=256, null=True)
     summary = json_field.JSONField(null=True)
     business_name = models.CharField(max_length=256, null=True)
     tags = json_field.JSONField(null=True)
 
+    #set by engine, hidden from Business
     e_model = json_field.JSONField()
-    # only use complete models to derive business info
 
     @property
     def business_alias(self):
@@ -78,7 +81,7 @@ class Question(models.Model):
     question_id = models.CharField(max_length=64, null=True)
     topic_name = models.CharField(max_length=64, null=True)
 
-    # question information.
+    # question information, passed to portal
     progress = models.FloatField(default=0.0)  #TODO validate [0.0, 1.0] range?
     short = models.CharField(max_length=64, null=True)
     prompt = models.TextField(null=True)
@@ -92,7 +95,7 @@ class Question(models.Model):
     #for building business transcript
     transcribe = models.BooleanField(default=False)
 
-    #response data
+    #response data, passed to portal
     response_array = json_field.JSONField(null=True)
 
 
