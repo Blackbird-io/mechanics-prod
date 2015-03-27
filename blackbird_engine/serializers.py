@@ -33,10 +33,10 @@ class QuestionHyperlinkedIdentityField(serializers.HyperlinkedIdentityField, Que
 
 
 class QuestionSerializer(serializers.HyperlinkedModelSerializer):
-    url = QuestionHyperlinkedIdentityField(view_name='question-detail')
+    # url = QuestionHyperlinkedIdentityField(view_name='question-detail')
 
     # required=False necessary because of unique_together
-    business = serializers.HyperlinkedRelatedField(required=False, read_only=True, view_name='business-detail')
+    # business = serializers.HyperlinkedRelatedField(required=False, read_only=True, view_name='business-detail')
     sequence_num = serializers.IntegerField(required=False, read_only=True)
 
     input_array = JSONSerializerField(read_only=True)
@@ -48,14 +48,11 @@ class QuestionSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = models.Question
-        fields = ('url', 'created_timestamp', 'business', 'sequence_num',
-                  'topic_name', 'progress', 'short', 'prompt', 'comment',
-                  'array_caption', 'input_array', 'input_type', 'input_sub_type',
-                  'user_can_add', 'response_array', )
-        read_only_fields = ('url', 'created_timestamp', 'business', 'sequence_num',
+        read_only_fields = ('created_timestamp', 'sequence_num',
                             'topic_name', 'progress', 'short', 'prompt', 'comment',
                             'array_caption', 'input_array', 'input_type', 'input_sub_type',
                             'user_can_add')
+        fields = read_only_fields + ('response_array', )
 
 
 class BusinessSerializer(serializers.HyperlinkedModelSerializer):
@@ -66,7 +63,7 @@ class BusinessSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = models.Business
-        fields = ('url', 'industry', 'summary', 'business_name', 'tags', 'transcript', 'questions')
+        fields = ('id', 'url', 'industry', 'summary', 'business_name', 'tags', 'transcript', 'questions')
         read_only_fields = fields
 
 
