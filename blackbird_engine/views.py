@@ -1,5 +1,6 @@
 from rest_framework import mixins, viewsets
 from rest_framework import status
+from rest_framework.decorators import detail_route
 from rest_framework.response import Response
 
 from . import models
@@ -36,6 +37,10 @@ class QuestionView(mixins.RetrieveModelMixin,
                         status=status.HTTP_201_CREATED)
         else:
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @detail_route(methods=['post'])
+    def response(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
 
 
     def get_queryset(self):
