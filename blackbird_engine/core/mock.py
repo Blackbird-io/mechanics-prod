@@ -34,8 +34,14 @@ class EngineModel:
     def __init__(self, portal_model):
         self._m = dict(portal_model)
 
+    @staticmethod
+    def _base_e_model():
+        return dict(q_idx=0)
+
     def _get_e_model(self):
-        return self._m.setdefault('e_model', dict(q_idx=0))
+        if not self._m['e_model']:
+            self._m['e_model'] = dict(q_idx=0)
+        return self._m['e_model']
 
     def complete(self):
         self._finalize()
@@ -49,7 +55,10 @@ class EngineModel:
 
     def get_next_question(self):
         idx = self._q_idx
-        return _mock_questions[idx] if idx else None
+        try:
+            return _mock_questions[idx]
+        except IndexError:
+            return None
 
     @property
     def portal_model(self):
@@ -60,7 +69,7 @@ class EngineModel:
         return self._get_e_model()['q_idx']
 
     @_q_idx.setter
-    def _set_q_idx(self, q_idx):
+    def _q_idx(self, q_idx):
         self._get_e_model()['q_idx'] = q_idx
 
     def _increment_q_idx(self):
@@ -69,10 +78,8 @@ class EngineModel:
             self._finalize()
 
     def _finalize(self):
-        self._q_idx = None
-
         self._m.setdefault('industry', 'Unknown')
-        self._m.setdefault('summary', {'is': 'awesome'})
+        self._m.setdefault('summary', {'is': 'awesome', 'has': 10000000, 'needs': 20000000})
         self._m.setdefault('business_name', 'Unknown')
         self._m.setdefault('tags', ['incomplete-interview'])
 
@@ -83,15 +90,20 @@ class Message:
         self._m = EngineModel(self._msg['M'])
 
     @property
+    def portal_msg(self):
+        self._msg['M'] = self._m.portal_model
+        return self._msg
+
+    @property
     def m(self):
         return self._m
 
     @property
     def q(self):
-        return self._msg['M']
+        return self._msg['Q']
 
     @q.setter
-    def set_q(self, q):
+    def q(self, q):
         self._msg['Q'] = q
 
     @property
@@ -99,13 +111,8 @@ class Message:
         return self._msg['R']
 
     @r.setter
-    def set_r(self, r):
+    def r(self, r):
         self._msg['R'] = r
-
-    @property
-    def portal_msg(self):
-        self._msg['M'] = self._m.portal_model
-        return self._msg
 
 
 class MockEngine:
