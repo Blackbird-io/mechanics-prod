@@ -29,18 +29,87 @@ _mock_questions = [
 
 EndInterview = 'END_interview'
 
+# simplistic model for a linear interview
+class _EngineModel:
+    def __init__(self, portal_model):
+        self._m = dict(portal_model)
+
+    def _get_e_model(self):
+        if 'e_model' not in self._m:
+            self._m['e_model'] = dict(q_idx=0)
+        return self._m['e_model']
+
+    def mark_complete(self):
+        self._q_idx = None
+
+    def update(self, response):
+        # TODO change properties
+        self._increment_q_idx()
+
+    @property
+    def portal_model(self):
+        return self._m
+
+    @property
+    def _q_idx(self):
+        return self._get_e_model()['q_idx']
+
+    @_q_idx.setter
+    def _set_q_idx(self, q_idx):
+        self._get_e_model()['q_idx'] = q_idx
+
+    def _increment_q_idx(self):
+        new_idx = self._q_idx + 1
+        if new_idx < len(_mock_questions):
+            self._q_idx = new_idx
+        else:
+            self._q_idx = None
+
+    def get_next_question(self):
+        idx = self._q_idx
+        return _mock_questions[idx] if idx else None
+
+    @property
+    def industry(self):
+        return self._m['industry']
+
+    @industry.setter
+    def set_industry(self, industry):
+        self._m['industry'] = industry
+
+    @property
+    def summary(self):
+        return self._m['summary']
+
+    @industry.setter
+    def set_summary(self, summary):
+        self._m['summary'] = summary
+
+    @property
+    def business_name(self):
+        return self._m['business_name']
+
+    @industry.setter
+    def set_business_name(self, business_name):
+        self._m['business_name'] = business_name
+
+    @property
+    def tags(self):
+        return self._m['tags']
+
+    @industry.setter
+    def set_tags(self, tags):
+        self._m['tags'] = tags
+
 
 class _Message:
     def __init__(self, portal_msg):
         self._msg = portal_msg
+        self._m = _EngineModel(self._msg['M'])
 
     @property
     def m(self):
-        return self._msg['M']
-
-    @m.setter
-    def set_m(self, m):
-        self._msg['M'] = m
+        return self._m
 
     @property
     def q(self):
@@ -60,22 +129,9 @@ class _Message:
 
     @property
     def portal_msg(self):
+        self._msg['M'] = self._m.portal_model
         return self._msg
 
-
-class _EngineModel:
-    def __init__(self, portal_model):
-        self._m = portal_model
-
-    def _get_e_model(self):
-        if 'e_model' not in self._m:
-            self._m['e_model'] = dict()
-        return self._m['e_model']
-
-    @property
-    def q_idx(self):
-        # TODO
-        pass
 
 class Engine:
     def process_interview(self, portal_msg):
@@ -108,8 +164,7 @@ class Engine:
 
     def _get_next_question(self, msg):
         m = msg.m
-        q_idx =
-        q = _mock_questions[m['e_model']['q_idx']]
+        return _mock_questions[m.q_idx] if m.q_idx else None
 
 
     def get_forecast(self, portal_model, fixed, ask):
