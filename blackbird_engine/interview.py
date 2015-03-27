@@ -1,37 +1,19 @@
 from . import models
 from . import serializers
-
-# TODO move this to engine api
-END_SENTINEL = 'END'
+from .core.engine import EndInterview, Engine
 
 
 def _send_engine_msg(bb_model, question=None, response=None):
-    # TODO send data
-
-    # mocking each model
-    try:
-        question_num = bb_model['e_model']['question_num'] + 1
-    except (KeyError, TypeError):
-        question_num = 0
-    end = question_num >= 5
-    model_dict = dict(bb_model, e_model=dict(question_num=question_num))
-    if end:
-        model_dict['industry'] = 'Agriculture'
-        model_dict['summary'] = {'is': 'awesome'}
-        model_dict['business_name'] = 'Bob\'s Bakery'
-        model_dict['tags'] = ['business', 'best', 'delicious', 'wow']
-    question_dict = None if end else dict(question_id=str(question_num), prompt='Question ' + str(question_num))
-    engine_end = END_SENTINEL if end else None
-
-    return model_dict, question_dict, engine_end
+    msg = Engine().process_interview(dict(M=bb_model, Q=question, R=response))
+    return msg['M'], msg['Q'], msg['R']
 
 
-def _strip_nones(dict):
-    return {k: v for k, v in dict.items() if v is not None}
+def _strip_nones(d):
+    return {k: v for k, v in d.items() if v is not None}
 
 
 def _get_response_dict(question, end=False):
-    return END_SENTINEL if end else question.response_array
+    return EndInterview if end else question.response_array
 
 
 def _get_bb_model_dict(bb_model):
@@ -79,7 +61,7 @@ def _engine_update(business, answered_question=None, end=False):
         engine_msg = _send_engine_msg(prev_bb_model_dict)
     model_dict, question_dict, engine_end = engine_msg
     assert model_dict and (question_dict or engine_end), 'Message from Engine is valid'
-    end = engine_end == END_SENTINEL
+    end = engine_end == EndInterview
     model = _save_bb_model_dict(business, model_dict, end)
     question = _save_question_dict(business, answered_question, model, end, question_dict)
     return question
