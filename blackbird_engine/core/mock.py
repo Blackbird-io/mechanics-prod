@@ -3,7 +3,7 @@ EndInterview = 'END_interview'
 _mock_questions = [
     dict(
         e_question=dict(),
-        question_id='ABCDE',
+        question_id='business_name',
         topic_name='Mock',
 
         progress=0.0,
@@ -35,16 +35,21 @@ class EngineModel:
         self._m = dict(portal_model)
 
     def _get_e_model(self):
-        if 'e_model' not in self._m:
-            self._m['e_model'] = dict(q_idx=0)
-        return self._m['e_model']
+        return self._m.setdefault('e_model', dict(q_idx=0))
 
-    def mark_complete(self):
-        self._q_idx = None
+    def complete(self):
+        self._finalize()
 
-    def update(self, response):
-        # TODO change properties
+    def update(self, question, response):
+        if question['question_id'] == 'business_name':
+            self._m['business_name'] = response[0]['response']
+        elif question['question_id'] == 'industry':
+            self._m['industry'] = response[0]['response']
         self._increment_q_idx()
+
+    def get_next_question(self):
+        idx = self._q_idx
+        return _mock_questions[idx] if idx else None
 
     @property
     def portal_model(self):
@@ -59,47 +64,17 @@ class EngineModel:
         self._get_e_model()['q_idx'] = q_idx
 
     def _increment_q_idx(self):
-        new_idx = self._q_idx + 1
-        if new_idx < len(_mock_questions):
-            self._q_idx = new_idx
-        else:
-            self._q_idx = None
+        self._q_idx += 1
+        if self._q_idx >= len(_mock_questions):
+            self._finalize()
 
-    def get_next_question(self):
-        idx = self._q_idx
-        return _mock_questions[idx] if idx else None
+    def _finalize(self):
+        self._q_idx = None
 
-    @property
-    def industry(self):
-        return self._m['industry']
-
-    @industry.setter
-    def set_industry(self, industry):
-        self._m['industry'] = industry
-
-    @property
-    def summary(self):
-        return self._m['summary']
-
-    @industry.setter
-    def set_summary(self, summary):
-        self._m['summary'] = summary
-
-    @property
-    def business_name(self):
-        return self._m['business_name']
-
-    @industry.setter
-    def set_business_name(self, business_name):
-        self._m['business_name'] = business_name
-
-    @property
-    def tags(self):
-        return self._m['tags']
-
-    @industry.setter
-    def set_tags(self, tags):
-        self._m['tags'] = tags
+        self._m.setdefault('industry', 'Unknown')
+        self._m.setdefault('summary', {'is': 'awesome'})
+        self._m.setdefault('business_name', 'Unknown')
+        self._m.setdefault('tags', ['incomplete-interview'])
 
 
 class Message:
@@ -136,34 +111,24 @@ class Message:
 class MockEngine:
     def process_interview(self, portal_msg):
         msg = Message(portal_msg)
-
         if msg.q:
-            assert 'e_model' in msg.m, 'Model properly configured'
-            msg.m = self._handle_response(msg)
-        else:
-            # creates model
-            msg.m = self._init_interview(msg)
-        msg.q = self._get_next_question(msg)
+            self._handle_response(msg.m, msg.q, msg.r)
+        msg.q = self._get_next_question(msg.m)
         msg.r = None if msg.q else EndInterview
         return msg.portal_msg
 
-    def _handle_response(self, msg):
-        if msg.r == EndInterview:
-            msg.q = None
+    @staticmethod
+    def _handle_response(m, q, r):
+        if r == EndInterview:
+            # complete model
+            m.mark_complete()
         else:
             # updates model based on question/response
-            msg.m = self._update_model(msg)
-        # TODO
-        return msg.m
-        pass
+            m.update(q, r)
 
-    def _init_interview(self, msg):
-        m = dict(msg.m)
-        m['e_model'] = dict(q_idx=0)
-        return m
-
-    def _get_next_question(self, msg):
-        return msg.m.get_next_question()
+    @staticmethod
+    def _get_next_question(m):
+        return m.get_next_question()
 
 
     def get_forecast(self, portal_model, fixed, ask):
@@ -173,21 +138,3 @@ class MockEngine:
     def get_landscape_summary(self, portal_model):
         # TODO
         pass
-
-
-    '''
-
-    try:
-        question_num = bb_model['e_model']['question_num'] + 1
-    except (KeyError, TypeError):
-        question_num = 0
-    end = question_num >= 5
-    model_dict = dict(bb_model, e_model=dict(question_num=question_num))
-    if end:
-        model_dict['industry'] = 'Agriculture'
-        model_dict['summary'] = {'is': 'awesome'}
-        model_dict['business_name'] = 'Bob\'s Bakery'
-        model_dict['tags'] = ['business', 'best', 'delicious', 'wow']
-    question_dict = None if end else dict(question_id=str(question_num), prompt='Question ' + str(question_num))
-    engine_end = END_SENTINEL if end else None
-    '''
