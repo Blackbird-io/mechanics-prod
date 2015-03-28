@@ -26,7 +26,7 @@ class Business(models.Model):
 
     @property
     def summary(self):
-        return self.current_model.industry
+        return self.current_model.summary
 
     @property
     def business_name(self):

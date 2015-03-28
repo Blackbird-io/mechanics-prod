@@ -78,10 +78,13 @@ class EngineModel:
             self._finalize()
 
     def _finalize(self):
-        self._m.setdefault('industry', 'Unknown')
-        self._m.setdefault('summary', {'is': 'awesome', 'has': 10000000, 'needs': 20000000})
-        self._m.setdefault('business_name', 'Unknown')
-        self._m.setdefault('tags', ['incomplete-interview'])
+        defaults = {
+            'industry': 'Unknown',
+            'summary': {'is': 'awesome', 'has': 10000000, 'needs': 20000000},
+            'business_name': 'Unknown',
+            'tags': ['incomplete-interview']
+        }
+        self._m.update({k: v for k, v in defaults.items() if not self._m[k]})
 
 
 class Message:
