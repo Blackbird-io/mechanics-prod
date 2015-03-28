@@ -59,7 +59,7 @@ class BusinessSerializer(serializers.HyperlinkedModelSerializer):
     summary = JSONSerializerField(read_only=True)
     tags = JSONSerializerField(read_only=True)
     transcript = QuestionSerializer(many=True, read_only=True)
-    questions = QuestionHyperlinkedRelatedField(many=True, read_only=True, view_name='question-detail')
+    questions = QuestionSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Business
