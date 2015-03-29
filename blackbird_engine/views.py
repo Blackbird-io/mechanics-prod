@@ -5,6 +5,7 @@ from rest_framework.response import Response
 
 from . import models
 from . import serializers
+from . import interview
 
 
 class BusinessView(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
@@ -13,6 +14,16 @@ class BusinessView(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
                    viewsets.GenericViewSet):
     serializer_class = serializers.BusinessSerializer
     queryset = models.Business.objects.all()
+
+    @detail_route(methods=['post'])
+    def landscape_summary(self, request, *args, **kwargs):
+        business = self.get_object()
+        return Response(interview.get_landscape_summary(business), status=status.HTTP_201_CREATED)
+
+    @detail_route(methods=['post'])
+    def forecast(self, request, *args, **kwargs):
+        business = self.get_object()
+        return Response(interview.get_forecast(business, **request.data), status=status.HTTP_201_CREATED)
 
 
 class QuestionView(mixins.RetrieveModelMixin,
@@ -32,9 +43,9 @@ class QuestionView(mixins.RetrieveModelMixin,
         # next_question field is available when a question is answered
         next_question = question.next_question
         if next_question:
-            #TODO maybe a redirect?
+            # TODO maybe a redirect?
             return Response(self.get_serializer(next_question).data,
-                        status=status.HTTP_201_CREATED)
+                            status=status.HTTP_201_CREATED)
         else:
             return Response(status=status.HTTP_204_NO_CONTENT)
 

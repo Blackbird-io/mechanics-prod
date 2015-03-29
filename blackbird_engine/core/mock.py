@@ -1,3 +1,6 @@
+import decimal
+import random
+
 EndInterview = 'END_interview'
 
 _mock_questions = [
@@ -28,6 +31,56 @@ _mock_questions = [
         transcribe=False
     )
 ]
+
+
+def random_currency():
+    num = random.randrange(1000000, 100000000, 1000000)
+    return decimal.Decimal('{:d}.00'.format(num))
+
+
+def random_percent():
+    num = random.randrange(0, 1000000)
+    return decimal.Decimal('0.{:06d}'.format(num))
+
+
+def random_years():
+    return random.uniform(1.0, 3.0)
+
+
+def random_structure():
+    return random.randrange(0, 10)
+
+
+def get_landscape_summary():
+    return dict(
+        # borrower = borrower, #this line isn't necessary?
+        size_lo=random_currency(),
+        size_hi=random_currency(),
+        price_lo=random_percent(),
+        price_hi=random_percent(),
+    )
+
+
+def _get_random_credit_scenario(price=None, size=None):
+    return dict(
+        size=size if size else random_currency(),
+        price=price if price else random_percent(),
+        term=random_years(),
+        value=random_percent(),
+        structure=random_structure()
+    )
+
+
+def _get_forecast(price=None, size=None):
+    assert price or size
+    return dict(
+        price=price,
+        size=size,
+        bad=_get_random_credit_scenario(price=price, size=size),
+        mid=_get_random_credit_scenario(price=price, size=size),
+        good=_get_random_credit_scenario(price=price, size=size),
+    )
+
 
 # simplistic model for a linear interview
 class EngineModel:
@@ -82,7 +135,7 @@ class EngineModel:
             'industry': 'Unknown',
             'summary': {'is': 'awesome', 'has': 10000000, 'needs': 20000000},
             'business_name': 'Unknown',
-            'tags': ['incomplete-interview']
+            'tags': ['incomplete-interview'],
         }
         self._m.update({k: v for k, v in defaults.items() if not self._m[k]})
 
@@ -142,9 +195,10 @@ class MockEngine:
 
 
     def get_forecast(self, portal_model, fixed, ask):
-        # TODO
-        pass
+        portal_model['summary']['has'] += 1
+        return portal_model, fixed, ask, _get_forecast(price=ask if fixed == 'price' else None,
+                                                       size=ask if fixed == 'size' else None)
 
     def get_landscape_summary(self, portal_model):
-        # TODO
-        pass
+        portal_model['summary']['needs'] += 1
+        return portal_model, get_landscape_summary()

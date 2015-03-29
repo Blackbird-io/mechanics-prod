@@ -1,3 +1,5 @@
+from django.http import Http404
+
 from . import models
 from . import serializers
 from .core.engine import EndInterview, Engine
@@ -73,3 +75,24 @@ def get_next_question(business, prev_question=None):
 
 def stop_interview(business, prev_question=None):
     return _engine_update(business, prev_question, end=True)
+
+
+def get_landscape_summary(business):
+    if not business.current_model.complete:
+        raise Http404()
+    prev_bb_model_dict = _get_bb_model_dict(business.current_model)
+    model_dict, landscape_summary = Engine().get_landscape_summary(prev_bb_model_dict)
+    _save_bb_model_dict(business, model_dict, end=True)
+    return landscape_summary
+
+
+def get_forecast(business, price=None, size=None):
+    if not business.current_model.complete:
+        raise Http404()
+    prev_bb_model_dict = _get_bb_model_dict(business.current_model)
+    fixed = 'price' if price else 'size'
+    ask = price if price else size
+    model_dict, fixed_out, ask_out, forecast = Engine().get_forecast(prev_bb_model_dict, fixed, ask)
+    _save_bb_model_dict(business, model_dict, end=True)
+    return forecast
+
