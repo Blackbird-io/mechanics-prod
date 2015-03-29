@@ -56,8 +56,9 @@ class QuestionView(mixins.RetrieveModelMixin,
     @detail_route(methods=['post'])
     def stop(self, request, *args, **kwargs):
         question = self.get_object()
+        question.response_array = None
+        question.save()
         interview.stop_interview(question.business, cur_question=question)
-        self.get_queryset().filter(sequence_num__gt=question.sequence_num).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def perform_destroy(self, instance):
