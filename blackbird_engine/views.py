@@ -29,6 +29,7 @@ class BusinessView(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
 class QuestionView(mixins.RetrieveModelMixin,
                    mixins.ListModelMixin,
                    mixins.UpdateModelMixin,
+                   mixins.DestroyModelMixin,
                    viewsets.GenericViewSet):
     queryset = models.Question.objects.all()
     lookup_field = 'sequence_num'
@@ -43,7 +44,6 @@ class QuestionView(mixins.RetrieveModelMixin,
         # next_question field is available when a question is answered
         next_question = question.next_question
         if next_question:
-            # TODO maybe a redirect?
             return Response(self.get_serializer(next_question).data,
                             status=status.HTTP_201_CREATED)
         else:
@@ -53,6 +53,17 @@ class QuestionView(mixins.RetrieveModelMixin,
     def response(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs)
 
+    @detail_route(methods=['post'])
+    def stop(self, request, *args, **kwargs):
+        question = self.get_object()
+        interview.stop_interview(question.business, cur_question=question)
+        self.get_queryset().filter(sequence_num__gt=question.sequence_num).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        self.get_queryset().filter(sequence_num__gte=instance.sequence_num).delete()
+        if instance.sequence_num == 0:
+            interview.get_next_question(instance.business)
 
     def get_queryset(self):
         return super(QuestionView, self).get_queryset().filter(business=self.kwargs['business_pk'])

@@ -29,7 +29,33 @@ _mock_questions = [
         input_sub_type=None,
         # user_can_add=False, #TODO where will this live?
         transcribe=False
-    )
+    ),
+    dict(
+        e_question=dict(),
+        question_id='business_name_2',
+        topic_name='Mock',
+
+        progress=0.0,
+        short='Second Name',
+        prompt='Let\'s get Introduced',
+        comment=None,
+        array_caption='What is the name of your second business?',
+        input_array=[
+            dict(
+                input_type='text',
+                input_sub_type=None,
+                main_caption=None,
+                response=None,  # TODO should this be here?
+                shadow='2nd Business Name',
+                size=None,
+                show_if=None
+            )
+        ],
+        input_type='text',
+        input_sub_type=None,
+        # user_can_add=False, #TODO where will this live?
+        transcribe=False
+    ),
 ]
 
 
@@ -98,6 +124,7 @@ class EngineModel:
 
     def complete(self):
         self._finalize()
+        self._q_idx = len(_mock_questions)
 
     def update(self, question, response):
         if question['question_id'] == 'business_name':
@@ -184,7 +211,7 @@ class MockEngine:
     def _handle_response(m, q, r):
         if r == EndInterview:
             # complete model
-            m.mark_complete()
+            m.complete()
         else:
             # updates model based on question/response
             m.update(q, r)

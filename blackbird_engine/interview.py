@@ -44,44 +44,44 @@ def _save_question_dict(business, answered_question, model, end, question_dict):
                                               **_strip_nones(question_dict))
 
 
-def _get_model(business, prev_question=None):
-    if prev_question:
-        return prev_question.blackbird_model
+def _get_model(business, question=None):
+    if question:
+        return question.blackbird_model
     else:
         # don't create the dummy model in db
         return models.BlackbirdModel(business=business)
 
 
-def _engine_update(business, answered_question=None, end=False):
-    prev_bb_model = _get_model(business, answered_question)
-    prev_bb_model_dict = _get_bb_model_dict(prev_bb_model)
-    if answered_question:
-        answered_question_dict = _get_question_dict(answered_question)
-        response_dict = _get_response_dict(answered_question, end)
-        engine_msg = _send_engine_msg(prev_bb_model_dict, answered_question_dict, response_dict)
+def _engine_update(business, cur_question=None, end=False):
+    cur_bb_model = _get_model(business, cur_question)
+    cur_bb_model_dict = _get_bb_model_dict(cur_bb_model)
+    if cur_question:
+        answered_question_dict = _get_question_dict(cur_question)
+        response_dict = _get_response_dict(cur_question, end)
+        engine_msg = _send_engine_msg(cur_bb_model_dict, answered_question_dict, response_dict)
     else:
-        engine_msg = _send_engine_msg(prev_bb_model_dict)
+        engine_msg = _send_engine_msg(cur_bb_model_dict)
     model_dict, question_dict, engine_end = engine_msg
     assert model_dict and (question_dict or engine_end), 'Message from Engine is valid'
     end = engine_end == EndInterview
     model = _save_bb_model_dict(business, model_dict, end)
-    question = _save_question_dict(business, answered_question, model, end, question_dict)
+    question = _save_question_dict(business, cur_question, model, end, question_dict)
     return question
 
 
-def get_next_question(business, prev_question=None):
-    return _engine_update(business, prev_question)
+def get_next_question(business, cur_question=None):
+    return _engine_update(business, cur_question)
 
 
-def stop_interview(business, prev_question=None):
-    return _engine_update(business, prev_question, end=True)
+def stop_interview(business, cur_question):
+    return _engine_update(business, cur_question, end=True)
 
 
 def get_landscape_summary(business):
     if not business.current_model.complete:
         raise Http404()
-    prev_bb_model_dict = _get_bb_model_dict(business.current_model)
-    model_dict, landscape_summary = Engine().get_landscape_summary(prev_bb_model_dict)
+    cur_bb_model_dict = _get_bb_model_dict(business.current_model)
+    model_dict, landscape_summary = Engine().get_landscape_summary(cur_bb_model_dict)
     _save_bb_model_dict(business, model_dict, end=True)
     return landscape_summary
 
@@ -89,10 +89,10 @@ def get_landscape_summary(business):
 def get_forecast(business, price=None, size=None):
     if not business.current_model.complete:
         raise Http404()
-    prev_bb_model_dict = _get_bb_model_dict(business.current_model)
+    cur_bb_model_dict = _get_bb_model_dict(business.current_model)
     fixed = 'price' if price else 'size'
     ask = price if price else size
-    model_dict, fixed_out, ask_out, forecast = Engine().get_forecast(prev_bb_model_dict, fixed, ask)
+    model_dict, fixed_out, ask_out, forecast = Engine().get_forecast(cur_bb_model_dict, fixed, ask)
     _save_bb_model_dict(business, model_dict, end=True)
     return forecast
 

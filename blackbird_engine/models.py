@@ -50,13 +50,13 @@ class BlackbirdModel(models.Model):
     # passed to engine
     user_context = json_field.JSONField(default=dict)
 
-    #set by engine, visible to Business
+    # set by engine, visible to Business
     industry = models.CharField(max_length=256, null=True)
     summary = json_field.JSONField(null=True)
     business_name = models.CharField(max_length=256, null=True)
     tags = json_field.JSONField(null=True)
 
-    #set by engine, hidden from Business
+    # set by engine, hidden from Business
     e_model = json_field.JSONField()
 
     @property
@@ -82,24 +82,23 @@ class Question(models.Model):
     topic_name = models.CharField(max_length=64, null=True)
 
     # question information, passed to portal
-    progress = models.FloatField(default=0.0)  #TODO validate [0.0, 1.0] range?
+    progress = models.FloatField(default=0.0)  # TODO validate [0.0, 1.0] range?
     short = models.CharField(max_length=64, null=True)
     prompt = models.TextField(null=True)
     comment = models.TextField(null=True)
     array_caption = models.TextField(null=True)
     input_array = json_field.JSONField(default=list)
-    input_type = models.CharField(max_length=64, default='text')  #TODO choices?
-    input_sub_type = models.CharField(max_length=64, null=True)  #TODO choices?
+    input_type = models.CharField(max_length=64, default='text')  # TODO choices?
+    input_sub_type = models.CharField(max_length=64, null=True)  # TODO choices?
     user_can_add = models.BooleanField(default=False)
 
-    #for building business transcript
+    # for building business transcript
     transcribe = models.BooleanField(default=False)
 
-    #response data, passed to portal
+    # response data, passed to portal
     response_array = json_field.JSONField(null=True)
 
-
-class Meta:
-    unique_together = ('business', 'sequence_num')
-    ordering = ('business', 'sequence_num')
-    index_together = ('business', 'transcribe', 'sequence_num')
+    class Meta:
+        unique_together = ('business', 'sequence_num')
+        ordering = ('business', 'sequence_num')
+        index_together = ('business', 'transcribe', 'sequence_num')
