@@ -69,12 +69,14 @@ class BlackbirdModel(models.Model):
 
 
 class QuestionManager(models.Manager):
-    def create_next(self, prev_question=None, end=False, **kwargs):
+    def create_next(self, prev_question=None, end=False, stop=True, **kwargs):
         if prev_question:
             kwargs['business'] = prev_question.business
             kwargs['sequence_num'] = prev_question.sequence_num + 1
         if end:
             kwargs['input_type'] = 'end'
+            if stop:
+                kwargs['input_sub_type'] = 'stop'
         return self.create(**kwargs)
 
 class Question(models.Model):

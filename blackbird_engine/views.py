@@ -43,19 +43,17 @@ class QuestionView(mixins.RetrieveModelMixin,
         self.perform_update(serializer)
         # next_question field is available when a question is answered
         next_question = question.next_question
-        if next_question:
-            return Response(self.get_serializer(next_question).data,
-                            status=status.HTTP_201_CREATED)
-        else:
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(self.get_serializer(next_question).data,
+                        status=status.HTTP_201_CREATED)
 
     @detail_route(methods=['post'])
     def stop(self, request, *args, **kwargs):
         question = self.get_object()
         question.response_array = None
         question.save()
-        interview.stop_interview(question.business, cur_question=question)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        next_question = interview.stop_interview(question.business, cur_question=question)
+        return Response(self.get_serializer(next_question).data,
+                        status=status.HTTP_201_CREATED)
 
     def perform_destroy(self, instance):
         self.get_queryset().filter(sequence_num__gte=instance.sequence_num).delete()

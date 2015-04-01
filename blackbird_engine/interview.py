@@ -32,8 +32,8 @@ def _get_question_dict(question):
     return serializers.InternalQuestionSerializer(question).data
 
 
-def _save_question_dict(business, answered_question, model, end, question_dict):
-    return models.Question.objects.create_next(answered_question, end, business=business, blackbird_model=model,
+def _save_question_dict(business, answered_question, model, end, stop, question_dict):
+    return models.Question.objects.create_next(answered_question, end, stop, business=business, blackbird_model=model,
                                                **_strip_nones(question_dict))
 
 
@@ -45,12 +45,12 @@ def _get_model(business, question=None):
         return models.BlackbirdModel(business=business)
 
 
-def _engine_update(business, cur_question=None, end=False):
+def _engine_update(business, cur_question=None, stop=False):
     cur_bb_model = _get_model(business, cur_question)
     cur_bb_model_dict = _get_bb_model_dict(cur_bb_model)
     if cur_question:
         answered_question_dict = _get_question_dict(cur_question)
-        response_dict = _get_response_dict(cur_question, end)
+        response_dict = _get_response_dict(cur_question, stop)
         engine_msg = _send_engine_msg(cur_bb_model_dict, answered_question_dict, response_dict)
     else:
         engine_msg = _send_engine_msg(cur_bb_model_dict)
@@ -58,7 +58,7 @@ def _engine_update(business, cur_question=None, end=False):
     assert model_dict and (question_dict or engine_end), 'Message from Engine is valid'
     end = engine_end == EndInterview
     model = _save_bb_model_dict(business, model_dict, end)
-    question = _save_question_dict(business, cur_question, model, end, question_dict or dict())
+    question = _save_question_dict(business, cur_question, model, end, stop, question_dict or dict())
     return question
 
 
@@ -67,7 +67,7 @@ def get_next_question(business, cur_question=None):
 
 
 def stop_interview(business, cur_question):
-    return _engine_update(business, cur_question, end=True)
+    return _engine_update(business, cur_question, stop=True)
 
 
 def get_landscape_summary(business):

@@ -50,9 +50,6 @@ class QuestionSerializer(serializers.HyperlinkedModelSerializer):
             raise serializers.ValidationError('cannot answer end question')
         return data
 
-    def to_representation(self, instance):
-        return None if instance.input_type == 'end' else super(QuestionSerializer, self).to_representation(instance)
-
     class Meta:
         model = models.Question
         read_only_fields = ('created_timestamp', 'sequence_num',
