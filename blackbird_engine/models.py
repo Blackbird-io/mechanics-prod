@@ -68,10 +68,19 @@ class BlackbirdModel(models.Model):
         ordering = ('-business', '-complete', '-created_timestamp')
 
 
+class QuestionManager(models.Manager):
+    def create_next(self, prev_question=None, end=False, **kwargs):
+        if prev_question:
+            kwargs['business'] = prev_question.business
+            kwargs['sequence_num'] = prev_question.sequence_num + 1
+        if end:
+            kwargs['input_type'] = 'end'
+        return self.create(**kwargs)
+
 class Question(models.Model):
     created_timestamp = timestamp()
     business = models.ForeignKey(Business, related_name="questions")
-    sequence_num = models.PositiveSmallIntegerField()
+    sequence_num = models.PositiveSmallIntegerField(default=0)
 
     # the model that generated this question
     blackbird_model = models.OneToOneField(BlackbirdModel, related_name="question")
@@ -97,6 +106,8 @@ class Question(models.Model):
 
     # response data, passed to portal
     response_array = json_field.JSONField(null=True)
+
+    objects = QuestionManager()
 
     class Meta:
         unique_together = ('business', 'sequence_num')

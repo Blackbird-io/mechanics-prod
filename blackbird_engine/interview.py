@@ -33,15 +33,8 @@ def _get_question_dict(question):
 
 
 def _save_question_dict(business, answered_question, model, end, question_dict):
-    if end:
-        return None
-    else:
-        # TODO move to Question manager?
-        sequence_num = answered_question.sequence_num + 1 if answered_question else 0
-        return models.Question.objects.create(business=business,
-                                              blackbird_model=model,
-                                              sequence_num=sequence_num,
-                                              **_strip_nones(question_dict))
+    return models.Question.objects.create_next(answered_question, end, business=business, blackbird_model=model,
+                                               **_strip_nones(question_dict))
 
 
 def _get_model(business, question=None):
@@ -65,7 +58,7 @@ def _engine_update(business, cur_question=None, end=False):
     assert model_dict and (question_dict or engine_end), 'Message from Engine is valid'
     end = engine_end == EndInterview
     model = _save_bb_model_dict(business, model_dict, end)
-    question = _save_question_dict(business, cur_question, model, end, question_dict)
+    question = _save_question_dict(business, cur_question, model, end, question_dict or dict())
     return question
 
 

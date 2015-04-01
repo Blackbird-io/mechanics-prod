@@ -45,6 +45,13 @@ class QuestionSerializer(serializers.HyperlinkedModelSerializer):
     def update(self, instance, validated_data):
         return super(QuestionSerializer, self).update(instance, validated_data)
 
+    def validate(self, data):
+        if data['response_array'] and self.instance.input_type == 'end':
+            raise serializers.ValidationError('cannot answer end question')
+        return data
+
+    def to_representation(self, instance):
+        return None if instance.input_type == 'end' else super(QuestionSerializer, self).to_representation(instance)
 
     class Meta:
         model = models.Question
@@ -83,6 +90,7 @@ class InternalBlackbirdModelSerializer(serializers.ModelSerializer):
 class InternalQuestionSerializer(serializers.ModelSerializer):
     e_question = JSONSerializerField()
     input_array = JSONSerializerField()
+
     class Meta:
         model = models.Question
         fields = ('e_question', 'question_id', 'topic_name', 'progress', 'short',
