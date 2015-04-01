@@ -15,5 +15,5 @@ def register():
     def question(sender, instance, created, **kwargs):
         sender.objects.filter(business=instance.business,
                               sequence_num__gt=instance.sequence_num).delete()
-        if instance.response_array:
+        if instance.response_array is not None:
             instance.next_question = interview.get_next_question(instance.business, instance)

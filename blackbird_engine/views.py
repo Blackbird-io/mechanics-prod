@@ -50,10 +50,6 @@ class QuestionView(mixins.RetrieveModelMixin,
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     @detail_route(methods=['post'])
-    def response(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
-
-    @detail_route(methods=['post'])
     def stop(self, request, *args, **kwargs):
         question = self.get_object()
         question.response_array = None
