@@ -54,8 +54,7 @@ class QuestionSerializer(serializers.HyperlinkedModelSerializer):
         model = models.Question
         read_only_fields = ('created_timestamp', 'sequence_num',
                             'topic_name', 'progress', 'short', 'prompt', 'comment',
-                            'array_caption', 'input_array', 'input_type', 'input_sub_type',
-                            'user_can_add')
+                            'array_caption', 'input_array', 'input_type', 'input_sub_type')
         fields = read_only_fields + ('response_array', )
 
 
@@ -92,4 +91,4 @@ class InternalQuestionSerializer(serializers.ModelSerializer):
         model = models.Question
         fields = ('e_question', 'question_id', 'topic_name', 'progress', 'short',
                   'prompt', 'comment', 'array_caption', 'input_array',
-                  'input_type', 'input_sub_type', 'user_can_add', 'transcribe')
+                  'input_type', 'input_sub_type', 'transcribe')

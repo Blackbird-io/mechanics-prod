@@ -101,7 +101,6 @@ class Question(models.Model):
     input_array = json_field.JSONField(default=list)
     input_type = models.CharField(max_length=64, default='text')  # TODO choices?
     input_sub_type = models.CharField(max_length=64, null=True)  # TODO choices?
-    user_can_add = models.BooleanField(default=False)
 
     # for building business transcript
     transcribe = models.BooleanField(default=False)

@@ -19,15 +19,14 @@ _mock_questions = [
                 input_type='text',
                 input_sub_type=None,
                 main_caption=None,
-                response=None,  # TODO should this be here?
                 shadow='Business Name',
                 size=None,
-                show_if=None
+                show_if=None,
+                user_can_add=False
             )
         ],
         input_type='text',
         input_sub_type=None,
-        # user_can_add=False, #TODO where will this live?
         transcribe=False
     ),
     dict(
@@ -39,21 +38,20 @@ _mock_questions = [
         short='Second Name',
         prompt='Let\'s get Introduced',
         comment=None,
-        array_caption='What is the name of your second business?',
+        array_caption='What are some other names for your business?',
         input_array=[
             dict(
                 input_type='text',
                 input_sub_type=None,
                 main_caption=None,
-                response=None,  # TODO should this be here?
                 shadow='2nd Business Name',
                 size=None,
-                show_if=None
+                show_if=None,
+                user_can_add=True
             )
         ],
         input_type='text',
         input_sub_type=None,
-        # user_can_add=False, #TODO where will this live?
         transcribe=False
     ),
 ]
@@ -128,9 +126,9 @@ class EngineModel:
 
     def update(self, question, response):
         if question['question_id'] == 'business_name':
-            self._m['business_name'] = response[0]['response']
+            self._m['business_name'] = response[0]['response'][0]
         elif question['question_id'] == 'industry':
-            self._m['industry'] = response[0]['response']
+            self._m['industry'] = response[0]['response'][0]
         self._increment_q_idx()
 
     def get_next_question(self):
