@@ -1,3 +1,4 @@
+from django.http import Http404
 from rest_framework import mixins, viewsets
 from rest_framework import status
 from rest_framework.decorators import detail_route
@@ -61,5 +62,8 @@ class QuestionView(mixins.RetrieveModelMixin,
             interview.get_next_question(instance.business)
 
     def get_queryset(self):
+        # first check that business exists
+        if not models.Business.objects.filter(id=self.kwargs['business_pk']).exists():
+            raise Http404()
         return super(QuestionView, self).get_queryset().filter(business=self.kwargs['business_pk'])
 
