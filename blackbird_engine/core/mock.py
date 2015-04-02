@@ -9,7 +9,7 @@ _mock_questions = [
         question_id='business_name',
         topic_name='Mock',
 
-        progress=0.0,
+        progress=0.1,
         short='Name',
         prompt='Let\'s get Introduced',
         comment='Names are a great way to get acquainted. You know ours, now tell us yours.',
@@ -31,10 +31,68 @@ _mock_questions = [
     ),
     dict(
         e_question=dict(),
+        question_id='check_some_stuff',
+        topic_name='Mock',
+
+        progress=0.2,
+        short='Check',
+        prompt='Are these true?',
+        array_caption='Check all that apply:',
+        input_array=[
+            dict(
+                input_type='bool',
+                line_value='Green',
+                main_caption='Your favorite color',
+            ),
+            dict(
+                input_type='bool',
+                main_caption='You like to sing.',
+            ),
+            dict(
+                input_type='bool',
+                main_caption='The earth is round.',
+            )
+        ],
+        input_type='bool',
+        transcribe=True
+    ),
+    dict(
+        e_question=dict(),
+        question_id='would_you_rather',
+        topic_name='Mock',
+
+        progress=0.3,
+        short='Check',
+        prompt='Would you rather',
+        array_caption='Which do you prefer:',
+        input_array=[
+            dict(
+                input_type='binary',
+                toggle_caption_true='Hot',
+                toggle_caption_false='Cold',
+                main_caption='Porridge',
+            ),
+            dict(
+                input_type='binary',
+                toggle_caption_true='Sun',
+                toggle_caption_false='Rain',
+                main_caption='Weather',
+            ),
+            dict(
+                input_type='binary',
+                toggle_caption_true='Star Trek',
+                toggle_caption_false='Star Wars',
+            ),
+        ],
+        input_type='binary',
+        transcribe=True
+    ),
+    dict(
+        e_question=dict(),
         question_id='business_name_2',
         topic_name='Mock',
 
-        progress=0.0,
+        progress=0.9,
         short='Second Name',
         prompt='Let\'s get Introduced',
         comment=None,

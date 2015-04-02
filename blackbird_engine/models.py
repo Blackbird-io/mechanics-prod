@@ -75,6 +75,7 @@ class QuestionManager(models.Manager):
             kwargs['sequence_num'] = prev_question.sequence_num + 1
         if end:
             kwargs['input_type'] = 'end'
+            kwargs['progress'] = 1.0
             if stop:
                 kwargs['input_sub_type'] = 'stop'
         return self.create(**kwargs)
