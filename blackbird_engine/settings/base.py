@@ -74,20 +74,20 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             # 'filename': '/path/to/django/debug.log',
         },
-        'file': {
+        'query_file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': 'debug.log',
+            'filename': 'queries.log',
         }
     },
     'loggers': {
         'django.request': {
-            'handlers': ['stdout', 'file'],
+            'handlers': ['stdout'],
             'level': 'DEBUG',
             'propagate': True,
         },
-        'django': {
-            'handlers': ['file'],
+        'django.db': {
+            'handlers': ['query_file'],
             'level': 'DEBUG',
             'propagate': True,
         },
