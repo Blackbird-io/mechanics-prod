@@ -31,10 +31,91 @@ _mock_questions = [
     ),
     dict(
         e_question=dict(),
-        question_id='check_some_stuff',
+        question_id='some_email',
+        topic_name='Mock',
+
+        progress=0.15,
+        short='Email',
+        prompt='How can we reach you?',
+        array_caption='What is your business email?',
+        input_array=[
+            dict(
+                input_type='text',
+                input_sub_type='email',
+                shadow='youremail@example.com',
+            )
+        ],
+        input_type='text',
+        input_sub_type='email',
+    ),
+    dict(
+        e_question=dict(),
+        question_id='ice_cream',
         topic_name='Mock',
 
         progress=0.2,
+        short='Ice Cream',
+        prompt='Your Favorite Flavor',
+        comment='Which flavors of ice cream do you like?',
+        input_array=[
+            dict(
+                input_type='choice',
+                main_caption='Pick your favorite:',
+                shadow='Ice Cream Flavor',
+                entries=['Chocolate', 'Vanilla', 'Mint', 'Rocky Road'],
+                allow_other=True,
+                multi=True
+            )
+        ],
+        input_type='choice',
+        transcribe=True
+    ),
+    dict(
+        e_question=dict(),
+        question_id='industry',
+        topic_name='Mock',
+
+        progress=0.3,
+        short='Industry',
+        prompt='What industry are you in?',
+        comment='Which flavors of ice cream do you like?',
+        input_array=[
+            dict(
+                input_type='choice',
+                main_caption='Your industry',
+                shadow='Choose Industry',
+                entries=['Agriculture', 'Financial Services', 'Healthcare', 'Retail', 'Technology', 'Water Polo'],
+                allow_other=True,
+                multi=False
+            )
+        ],
+        input_type='choice',
+        transcribe=True
+    ),
+    dict(
+        e_question=dict(),
+        question_id='store',
+        topic_name='Mock',
+
+        progress=0.3,
+        short='Store Maturity',
+        prompt='How long does it take for each store to reach maturity?',
+        input_array=[
+            dict(
+                input_type='choice',
+                main_caption='Time for stores to reach maturity',
+                entries=['0-6 mos', '7-12 mos', '12-18 mos', '18-24 mos', '24+ mos'],
+            )
+        ],
+        input_type='choice',
+        transcribe=True
+    ),
+    dict(
+        e_question=dict(),
+        question_id='check_some_stuff',
+        topic_name='Mock',
+
+        progress=0.4,
         short='Check',
         prompt='Are these true?',
         array_caption='Check all that apply:',
@@ -61,8 +142,8 @@ _mock_questions = [
         question_id='would_you_rather',
         topic_name='Mock',
 
-        progress=0.3,
-        short='Check',
+        progress=0.5,
+        short='Preferences',
         prompt='Would you rather',
         array_caption='Which do you prefer:',
         input_array=[
@@ -89,10 +170,194 @@ _mock_questions = [
     ),
     dict(
         e_question=dict(),
+        question_id='numbers',
+        topic_name='Mock',
+
+        progress=0.55,
+        short='Numbers',
+        prompt='Some numerical questions',
+        array_caption='Various numbers',
+        input_array=[
+            dict(
+                input_type='number',
+                r_min=5000,
+                r_max=10000,
+                main_caption='Some numbers',
+                user_can_add=True
+            ),
+            dict(
+                input_type='number',
+                input_sub_type='currency',
+                r_min=5000,
+                r_max=10000,
+                main_caption='Currency',
+            ),
+            dict(
+                input_type='number',
+                input_sub_type='days',
+                r_min=0,
+                r_max=100,
+                main_caption='Days',
+            ),
+            dict(
+                input_type='number',
+                input_sub_type='weeks',
+                r_min=0,
+                r_max=100,
+                main_caption='Weeks',
+            ),
+            dict(
+                input_type='number',
+                input_sub_type='months',
+                r_min=0,
+                r_max=100,
+                main_caption='Months',
+            ),
+            dict(
+                input_type='number',
+                input_sub_type='years',
+                r_min=0,
+                r_max=100,
+                main_caption='Years',
+            ),
+        ],
+        input_type='number',
+        transcribe=True
+    ),
+    dict(
+        e_question=dict(),
+        question_id='number_range',
+        topic_name='Mock',
+
+        progress=0.6,
+        short='Salaries',
+        prompt='Your employees\' salaries',
+        comment='Give an idea of how much your employees are paid.',
+        input_array=[
+            dict(
+                input_type='number-range',
+                input_sub_type='currency',
+                main_caption='Salary Range',
+                shadow='Lowest Salary',
+                shadow_2='Highest Salary'
+            )
+        ],
+        input_type='number-range',
+        transcribe=False
+    ),
+    dict(
+        e_question=dict(),
+        question_id='dates',
+        topic_name='Mock',
+
+        progress=0.65,
+        short='Important Dates',
+        prompt='Provide some important dates',
+        input_array=[
+            dict(
+                input_type='date',
+                r_min='2014-01-01',
+                r_max='2014-12-31',
+                main_caption='A date in 2014',
+                shadow='YYYY-MM-DD'
+            ),
+            dict(
+                input_type='date',
+                r_min='2015-01-01',
+                r_max='2015-01-31',
+                main_caption='Some dates in January 2015',
+                shadow='YYYY-MM-DD',
+                user_can_add=True
+            ),
+            dict(
+                input_type='date',
+                main_caption='Any dates',
+                shadow='YYYY-MM-DD',
+                user_can_add=True
+            ),
+        ],
+        input_type='date',
+        transcribe=True
+    ),
+    dict(
+        e_question=dict(),
+        question_id='date_range',
+        topic_name='Mock',
+
+        progress=0.7,
+        short='Vacation',
+        prompt='When did you go on vacation last year?',
+        input_array=[
+            dict(
+                input_type='date-range',
+                r_min='2014-01-01',
+                r_max='2014-12-31',
+                main_caption='Vacation date range',
+                shadow='Vacation Start',
+                shadow_2='Vacation End',
+                user_can_add=True
+            ),
+        ],
+        input_type='date-range',
+        transcribe=True
+    ),
+    dict(
+        e_question=dict(),
+        question_id='times',
+        topic_name='Mock',
+
+        progress=0.75,
+        short='Times of the day',
+        prompt='What is you schedule like?',
+        input_array=[
+            dict(
+                input_type='time',
+                r_min='00:00:00',
+                r_max='18:00:00',
+                main_caption='When do you wake up?',
+                shadow='HH:MM:SS'
+            ),
+            dict(
+                input_type='time',
+                main_caption='What times do you eat?',
+                shadow='HH:MM:SS',
+                user_can_add=True
+            ),
+            dict(
+                input_type='time',
+                r_min='12:00:00',
+                r_max='23:59:59',
+                main_caption='What time do you go to sleep?',
+                shadow='HH:MM:SS',
+            ),
+        ],
+        input_type='time',
+        transcribe=False
+    ),
+    dict(
+        e_question=dict(),
+        question_id='time_range',
+        topic_name='Mock',
+        progress=0.8,
+        short='Work hours',
+        prompt='When do you work?',
+        input_array=[
+            dict(
+                input_type='time-range',
+                shadow='Begin',
+                shadow_2='End',
+                user_can_add=True
+            ),
+        ],
+        input_type='time-range',
+        transcribe=True
+    ),
+    dict(
+        e_question=dict(),
         question_id='business_name_2',
         topic_name='Mock',
 
-        progress=0.9,
+        progress=0.85,
         short='Second Name',
         prompt='Let\'s get Introduced',
         comment=None,
@@ -106,6 +371,26 @@ _mock_questions = [
                 size=None,
                 show_if=None,
                 user_can_add=True
+            )
+        ],
+        input_type='text',
+        input_sub_type=None,
+        transcribe=False
+    ),
+    dict(
+        e_question=dict(),
+        question_id='life_story',
+        topic_name='Mock',
+
+        progress=0.9,
+        short='Life Story',
+        prompt='Tell us your life story',
+        comment='Take your time',
+        input_array=[
+            dict(
+                input_type='text',
+                shadow='Begin here',
+                size='long',
             )
         ],
         input_type='text',
