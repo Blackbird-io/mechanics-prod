@@ -194,6 +194,13 @@ _mock_questions = [
             ),
             dict(
                 input_type='number',
+                input_sub_type='percent',
+                r_min=0,
+                r_max=1,
+                main_caption='Percent',
+            ),
+            dict(
+                input_type='number',
                 input_sub_type='days',
                 r_min=0,
                 r_max=100,
@@ -391,6 +398,11 @@ _mock_questions = [
                 input_type='text',
                 shadow='Begin here',
                 size='long',
+                show_if=dict(
+                    input_type='binary',
+                    main_caption='Would you like to share yours?',
+                ),
+                user_can_add=True
             )
         ],
         input_type='text',
