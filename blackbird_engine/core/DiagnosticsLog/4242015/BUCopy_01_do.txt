@@ -1,0 +1,55 @@
+current build: c:\blackbird\engine\wip 
+
+running BUCopy_01.do()
+
+
+Running Copy_01
+
+Task loads a simple standard model and makes a class-specific copy of the top
+business unit in the Model's current period.
+
+Grader checks that the copy compares equal to the original, is deep in the right
+places (points towards independent components, drivers, etcetera), and shallow
+in others (points towards the same Model and the same period).
+
+{'T13.01': {}}
+Tests\Basic\BUCopy_01\source_model.pkl
+<_io.BufferedReader name='Tests\\Basic\\BUCopy_01\\source_model.pkl'>
+starting model: 
+ <DataStructures.Modelling.Model.Model object at 0x000000000390C4E0>
+s_topBU.fillOut() 
+
+top business uint: 
+ <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000039F8F60>
+T13.01: make a class-specific copy of topBU. enforce rules.
+c1 = s_topBU.copy(enforce_rules = True)
+
+
+make a second copy of topBU, set its period to None, copy it again.
+
+c2 = s_topBU.copy(enforce_rules = True)
+c2.period = None
+cc3 = c2.copy()
+
+Successfully loaded model and copied its top business unit.
+BUCopy_01 generated the following output: 
+	{'T13.01': {'cc3': <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000041C94A8>, 'topBU': <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000039F8F60>, 'c1': <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003DBDEF0>, 'c2': <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000041A1278>}}
+start time:  1429885573.933864
+end time:    1429885574.949641
+run time:    1.0157768726348877
+****************************************
+
+RESULT:
+	testName:       BUCopy_01 
+
+	output:         ... (truncated) 
+
+	errors:         [] 
+
+	completed:      True 
+
+	passed:         False 
+
+	rubric:         None 
+
+
