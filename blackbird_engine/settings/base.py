@@ -49,11 +49,12 @@ USE_TZ = True
 ##################################################################
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, '../static/')
+
 
 ##################################################################
 # Environment specific:
 # Database settings (https://docs.djangoproject.com/en/1.7/ref/settings/#databases)
-# Static file root settings
 #   Debug settings
 #   Email settings
 #   Logging settings

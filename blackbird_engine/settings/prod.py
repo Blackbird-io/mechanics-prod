@@ -22,10 +22,6 @@ DATABASES = {
 }
 
 ##################################################################
-# Static file root settings
-STATIC_ROOT = os.path.join(BASE_DIR, '../static/')
-
-##################################################################
 # Logging settings
 LOGGING_ROOT = '/var/log/django'
 LOGGING = {
