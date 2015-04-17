@@ -17,9 +17,12 @@ ALLOWED_HOSTS = hosts.split(sep=',') if hosts else []
 ##################################################################
 # Application definition
 INSTALLED_APPS = (
+    'django.contrib.admin',
+    'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.staticfiles',
+    'django.contrib.messages',
     'rest_framework',
     'json_field',
     'blackbird_engine',
@@ -28,6 +31,9 @@ INSTALLED_APPS = (
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
 )
 
 ##################################################################

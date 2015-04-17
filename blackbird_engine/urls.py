@@ -1,5 +1,6 @@
 from django.conf.urls import url, include, patterns
 from rest_framework_nested import routers
+from django.contrib import admin
 
 
 def get_v0_patterns():
@@ -17,6 +18,7 @@ def get_v0_patterns():
 
 
 urlpatterns = patterns('',
+                       url(r'^admin/', include(admin.site.urls)),
                        url(r'api/v0/', include(get_v0_patterns())),
                        )
 '''
