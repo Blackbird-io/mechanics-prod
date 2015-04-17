@@ -38,7 +38,10 @@ class Business(models.Model):
 
     @property
     def transcript(self):
-        return self.questions.filter(transcribe=True)
+        return self.questions.filter(transcribe=True, valid=True)
+
+    def __str__(self):
+        return '{:d} - {}'.format(self.id, self.business_name)
 
 
 class BlackbirdModel(models.Model):
@@ -59,10 +62,6 @@ class BlackbirdModel(models.Model):
     # set by engine, hidden from Business
     e_model = json_field.JSONField()
 
-    @property
-    def business_alias(self):
-        return str(self.business_id)
-
     class Meta:
         index_together = ('business', 'complete', 'created_timestamp')
         ordering = ('-business', '-complete', '-created_timestamp')
@@ -80,10 +79,13 @@ class QuestionManager(models.Manager):
                 kwargs['input_sub_type'] = 'stop'
         return self.create(**kwargs)
 
+
 class Question(models.Model):
     created_timestamp = timestamp()
     business = models.ForeignKey(Business, related_name="questions")
     sequence_num = models.PositiveSmallIntegerField(default=0)
+    # if a question is deleted, it instead becomes invalid to preserve history
+    valid = models.BooleanField(default=True)
 
     # the model that generated this question
     blackbird_model = models.OneToOneField(BlackbirdModel, related_name="question")
@@ -94,14 +96,14 @@ class Question(models.Model):
     topic_name = models.CharField(max_length=64, null=True)
 
     # question information, passed to portal
-    progress = models.FloatField(default=0.0)  # TODO validate [0.0, 1.0] range?
+    progress = models.FloatField(default=0.0)
     short = models.CharField(max_length=64, null=True)
     prompt = models.TextField(null=True)
     comment = models.TextField(null=True)
     array_caption = models.TextField(null=True)
     input_array = json_field.JSONField(default=list)
-    input_type = models.CharField(max_length=64, default='text')  # TODO choices?
-    input_sub_type = models.CharField(max_length=64, null=True)  # TODO choices?
+    input_type = models.CharField(max_length=64, default='text')
+    input_sub_type = models.CharField(max_length=64, null=True)
 
     # for building business transcript
     transcribe = models.BooleanField(default=False)
@@ -112,6 +114,6 @@ class Question(models.Model):
     objects = QuestionManager()
 
     class Meta:
-        unique_together = ('business', 'sequence_num')
-        ordering = ('business', 'sequence_num')
-        index_together = ('business', 'transcribe', 'sequence_num')
+        unique_together = ('business', 'valid', 'sequence_num')
+        ordering = ('business', 'valid', 'sequence_num')
+        index_together = ('business', 'valid', 'transcribe', 'sequence_num')

@@ -69,17 +69,16 @@ class BusinessSerializer(serializers.HyperlinkedModelSerializer):
         read_only_fields = fields
 
 
-# TODO make e_model available to admin
 class InternalBlackbirdModelSerializer(serializers.ModelSerializer):
     user_context = JSONSerializerField()
-    business_alias = serializers.CharField(read_only=True)
+    business_id = serializers.CharField(read_only=True)
     summary = JSONSerializerField(required=False)
     tags = JSONSerializerField(required=False)
     e_model = JSONSerializerField()
 
     class Meta:
         model = models.BlackbirdModel
-        fields = ('user_context', 'business_alias', 'industry', 'summary',
+        fields = ('user_context', 'business_id', 'industry', 'summary',
                   'business_name', 'tags', 'e_model')
 
 

@@ -14,6 +14,6 @@ def register():
     @receiver(post_save, sender=models.Question, weak=False, dispatch_uid='question')
     def question(sender, instance, created, **kwargs):
         sender.objects.filter(business=instance.business,
-                              sequence_num__gt=instance.sequence_num).delete()
+                              sequence_num__gt=instance.sequence_num).update(valid=False)
         if instance.response_array is not None:
             instance.next_question = interview.get_next_question(instance.business, instance)

@@ -10,8 +10,6 @@ from . import interview
 
 
 class BusinessView(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
-                   mixins.ListModelMixin,  # temporary
-                   mixins.DestroyModelMixin,  # temporary
                    viewsets.GenericViewSet):
     serializer_class = serializers.BusinessSerializer
     queryset = models.Business.objects.all()
@@ -32,7 +30,7 @@ class QuestionView(mixins.RetrieveModelMixin,
                    mixins.UpdateModelMixin,
                    mixins.DestroyModelMixin,
                    viewsets.GenericViewSet):
-    queryset = models.Question.objects.all()
+    queryset = models.Question.objects.filter(valid=True)
     lookup_field = 'sequence_num'
     serializer_class = serializers.QuestionSerializer
 
@@ -57,7 +55,7 @@ class QuestionView(mixins.RetrieveModelMixin,
                         status=status.HTTP_201_CREATED)
 
     def perform_destroy(self, instance):
-        self.get_queryset().filter(sequence_num__gte=instance.sequence_num).delete()
+        self.get_queryset().filter(sequence_num__gte=instance.sequence_num).update(valid=False)
         if instance.sequence_num == 0:
             interview.get_next_question(instance.business)
 
