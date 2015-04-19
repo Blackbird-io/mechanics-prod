@@ -1,0 +1,862 @@
+running Financials_01.check() on result...
+load standard object
+	standard object loaded
+first, check whether build completed do() without generating an exception.
+that is, check whether output is a descendant of the Exception class.
+build completed test.do() successfully.
+compare output to standard.
+T1.01: check basic bookmark properties
+comparing bookmarks to standard
+output bookmark: 
+     |bb|classics........................................................None    
+standard bookmark: 
+     |bb|classics........................................................None    
+output bookmark: 
+     |bb|myths...........................................................None    
+standard bookmark: 
+     |bb|myths...........................................................None    
+output bookmark: 
+     |bb|poetry..........................................................None    
+standard bookmark: 
+     |bb|poetry..........................................................None    
+Task 1.01 (Bookmarks) confirmed
+T1.01 finished. 
+
+
+T1.02: check that build produces equal default fin objects
+fin1 and fin2 should be identical within output
+o_fin1: 
+ 
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+
+o_fin2: 
+ 
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+
+fin1 == fin2 
+ True
+T1.02 finished. 
+
+
+T1.03: check default settings for topLevelNames
+check default top level names
+o_fin1.topLevelNames: 
+ [None, 'financials', 'financials', 'Financials']
+s_fin1.topLevelNames: 
+ [None, 'financials', 'financials', 'Financials']
+tLN should match for all output fins (all default)
+tLN for o_fin1 should match s_fin1
+o_fin1.topLevelNames == s_fin1.topLevelNames:
+ True
+T1.03 finished. 
+
+
+T1.04: check hierarchy maps and groups for simple fins
+calling .buildHierarchyMap for o_fin1
+o_fin1.hierarchyMap: 
+ [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+calling .buildHierarchyMap for s_fin1
+s_fin1.hierarchyMap: 
+ [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+compare o_fin1.hMap to standard
+o_fin1.hierarchyMap == s_fin1.hierarchyMap True
+compare o_fin1.hGroups to standard
+(groups generated automatically when building hMap
+o_fin1.hierarchyGroups == s_fin1.hierarchyGroups True
+T1.04 finished. 
+
+
+T1.05: check hierarchy maps and groups for complex fins
+(i.e., fins w multiple levels of hierarchy
+calling .buildHierarchyMap for o_fin3
+o_fin3.hierarchyMap: 
+ [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+calling .buildHierarchyMap for s_fin3
+s_fin3.hierarchyMap: 
+ [0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 2, 2, 2, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+compare hMap for ofin3 and standard
+o_fin3.hierarchyMap == s_fin3.hierarchyMap True
+compare o_fin3.hGroups to standard
+(groups generated automatically when building hMap
+o_fin3.hierarchyGroups == s_fin3.hierarchyGroups True
+T1.05 finished. 
+
+
+T1.06: check hierarchy maps and groups for fins w misfits
+``sharks`` is a lineitem that looks like a misfit in normal fins
+sharks: 
+     sharks!!............................................................None    
+sharks.partOf: 
+ Navy Seals
+``sharks`` should be in both o_fin4 and s_fin4
+check that ``sharks`` is present in both
+``sharks in o_fin4:  True
+``sharks in s_fin4:  True
+build & comparee hierarchy groups for o_fin4 and s_fin4
+o_hg4 == s_hg4:  True
+second item in .buildHierarchyMaps() should be list of misfits
+o_hg4[1] == [sharks]:  True
+check that hierarchy maps match for output and standard
+o_fin4.hierarchyMap: 
+ [0, 0, 0, 0, 0, 1, 1, 0, 0, 'MISFIT', 1, 2, 2, 2, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+s_fin4.hierarchyMap: 
+ [0, 0, 0, 0, 0, 1, 1, 0, 0, 'Outlier', 1, 2, 2, 2, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+o_fin4.hierarchyMap == s_fin4.hierarchyMap:  False
+get index of misfit label for each hmap
+misfit label in o_fin4, s_fin4 at index: 9,9
+o_mloc == s_mloc:  True
+append ``Navy Seals`` to o_fin4.topLevelNames
+this should resolve misfit status for ``shark``
+o_sharks.partOf: 
+ Navy Seals
+o_fin4.topLevelNames: 
+ [None, 'financials', 'financials', 'Financials', 'Navy Seals']
+o_fin4.hierarchyMap: 
+ [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 2, 2, 2, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+misfitLabel not in o_fin4.hierarchyMap:  True
+remove ``Navy Seals`` from tLN; check that misfit status reverts
+o_sharks.partOf: 
+ Navy Seals
+o_fin4.topLevelNames: 
+ [None, 'financials', 'financials', 'Financials']
+o_fin4.hierarchyMap: 
+ [0, 0, 0, 0, 0, 1, 1, 0, 0, 'MISFIT', 1, 2, 2, 2, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+misfitLabel back in o_fin4.hierarchyMap:  False
+change misfit label and make sure string in hmap changes too
+o_fin4.hierarchyMap: 
+ [0, 0, 0, 0, 0, 1, 1, 0, 0, 'Outlier', 1, 2, 2, 2, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+misfit label toggles:  True
+T1.06 finished. 
+
+
+T1.08: confirm manage_summaries() inserts correct lineitems
+o_fin5.autoSummarize:  False
+s_fin5_1.autoSummarize:  False
+starting fin print matches standard
+run manage_summaries() on o_fin5, check if it matches s_fin5_2
+o_fin5_str2 == str(s_fin5_2):  True
+T1.08 finished. 
+
+
+T1.09: confirm replica insertion and incrementation
+check if replicas inserted correctly on first pass over complex fins
+o_fin6_str == str(s_fin6_2):  True
+check that the replicas pulled down values from the reference top
+increment every top item in o_fin6 by a preset value; check that
+ddr pulls it down
+run o_fin6.manageDropDownReplicas()
+compare post-increment view to standard
+
+o_fin6: 
+ 
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue:  
+    Unspecified revenue.................................................131.00  
+    men's................................................................35.00  
+    women's..............................................................42.00  
+  total revenue...........................................................None  
+  cogs...................................................................50.00  
+  opex:  
+    Unspecified opex.....................................................52.00  
+    employee expense:  
+      Unspecified employee expense.......................................12.00  
+      compensation........................................................6.00  
+      benefits............................................................1.00  
+      payroll taxes.......................................................2.00  
+    total employee expense................................................None  
+    rent.................................................................11.00  
+  total opex..............................................................None  
+  sg&a:  
+    Unspecified sg&a.....................................................13.00  
+    kml insurance.........................................................5.00  
+  total sg&a..............................................................None  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+
+
+s_fin6_3: 
+ 
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue:  
+    Unspecified revenue..................................................31.00  
+    men's................................................................35.00  
+    women's..............................................................42.00  
+  cogs...................................................................50.00  
+  opex:  
+    Unspecified opex.....................................................20.00  
+    employee expense:  
+      Unspecified employee expense........................................9.00  
+      compensation.......................................................32.00  
+      benefits............................................................1.00  
+      payroll taxes.......................................................3.00  
+    rent.................................................................11.00  
+  sg&a:  
+    Unspecified sg&a.....................................................10.00  
+    kml insurance.........................................................5.00  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................3.00  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+
+o_fin6str == str(s_fin6_3):  False
+T1.09 finished. 
+
+
+T1.10: check that summaries increment correctly
+starting point for output and standard financials
+o_fin7_1: 
+ 
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue...............................................................100.00  
+    men's................................................................35.00  
+    women's..............................................................42.00  
+  cogs...................................................................50.00  
+  opex...................................................................20.00  
+    employee expense......................................................9.00  
+      compensation........................................................6.00  
+      benefits............................................................1.00  
+      payroll taxes.......................................................2.00  
+    rent.................................................................11.00  
+  sg&a...................................................................10.00  
+    kml insurance.........................................................5.00  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+
+s_fin7_2: 
+ 
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue:  
+    Unspecified revenue.................................................100.00  
+    men's................................................................35.00  
+    women's.............................................................270.00  
+  total revenue...........................................................None  
+  cogs...................................................................50.00  
+  opex:  
+    Unspecified opex.....................................................20.00  
+    employee expense:  
+      Unspecified employee expense........................................9.00  
+      compensation.......................................................39.00  
+      benefits............................................................1.00  
+      payroll taxes......................................................31.00  
+    total employee expense................................................None  
+    rent.................................................................11.00  
+  total opex.............................................................15.00  
+  sg&a:  
+    Unspecified sg&a.....................................................10.00  
+    kml insurance.........................................................5.00  
+  total sg&a..............................................................None  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+
+check starting point equality
+str(o_fin7_1) == str(s_fin7_1):  True
+manage summaries, manage ddr, update summaries
+compare stage 2
+o_fin7_2: 
+ 
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue:  
+    Unspecified revenue.................................................100.00  
+    men's................................................................35.00  
+    women's.............................................................270.00  
+  total revenue...........................................................None  
+  cogs...................................................................50.00  
+  opex:  
+    Unspecified opex.....................................................20.00  
+    employee expense:  
+      Unspecified employee expense........................................9.00  
+      compensation.......................................................39.00  
+      benefits............................................................1.00  
+      payroll taxes......................................................31.00  
+    total employee expense................................................None  
+    rent.................................................................11.00  
+  total opex.............................................................15.00  
+  sg&a:  
+    Unspecified sg&a.....................................................10.00  
+    kml insurance.........................................................5.00  
+  total sg&a..............................................................None  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+
+s_fin7_2: 
+ 
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue:  
+    Unspecified revenue.................................................100.00  
+    men's................................................................35.00  
+    women's.............................................................270.00  
+  total revenue...........................................................None  
+  cogs...................................................................50.00  
+  opex:  
+    Unspecified opex.....................................................20.00  
+    employee expense:  
+      Unspecified employee expense........................................9.00  
+      compensation.......................................................39.00  
+      benefits............................................................1.00  
+      payroll taxes......................................................31.00  
+    total employee expense................................................None  
+    rent.................................................................11.00  
+  total opex.............................................................15.00  
+  sg&a:  
+    Unspecified sg&a.....................................................10.00  
+    kml insurance.........................................................5.00  
+  total sg&a..............................................................None  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+
+str(o_fin7_2) == str(s_fin7_2):  True
+take output, add lineitems from premade list
+repeat manage summaries, manage ddr, update summaries
+compare to standard
+o_fin7_3: 
+ 
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue:  
+    Unspecified revenue.................................................100.00  
+    men's................................................................35.00  
+    women's.............................................................270.00  
+  total revenue.........................................................405.00  
+  cogs...................................................................50.00  
+  opex:  
+    Unspecified opex.....................................................20.00  
+    employee expense:  
+      Unspecified employee expense........................................9.00  
+      compensation.......................................................39.00  
+      benefits............................................................1.00  
+      payroll taxes......................................................31.00  
+    total employee expense...............................................80.00  
+    rent.................................................................11.00  
+  total opex............................................................111.00  
+  sg&a:  
+    Unspecified sg&a.....................................................10.00  
+    kml insurance.........................................................5.00  
+    r&d...................................................................7.30  
+    it....................................................................1.80  
+    marketing.............................................................7.70  
+  total sg&a.............................................................31.80  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+
+s_fin7_3: 
+ 
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue:  
+    Unspecified revenue.................................................100.00  
+    men's................................................................35.00  
+    women's.............................................................270.00  
+  total revenue.........................................................405.00  
+  cogs...................................................................50.00  
+  opex:  
+    Unspecified opex.....................................................20.00  
+    employee expense:  
+      Unspecified employee expense........................................9.00  
+      compensation.......................................................39.00  
+      benefits............................................................1.00  
+      payroll taxes......................................................31.00  
+    total employee expense...............................................80.00  
+    rent.................................................................11.00  
+  total opex............................................................111.00  
+  sg&a:  
+    Unspecified sg&a.....................................................10.00  
+    kml insurance.........................................................5.00  
+    r&d...................................................................7.30  
+    it....................................................................1.80  
+    marketing.............................................................7.70  
+  total sg&a.............................................................31.80  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+
+str(o_fin7_3) == str(s_fin7_3):  True
+T1.10 finished. 
+
+
+T1.11: check summarize() functionality
+compare output and standard starting points
+o_fin8: 
+ 
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue...............................................................100.00  
+    men's................................................................35.00  
+    women's..............................................................42.00  
+  cogs...................................................................50.00  
+    storage...............................................................9.20  
+    freight out...........................................................4.15  
+    freight in............................................................3.50  
+  opex...................................................................20.00  
+    employee expense......................................................9.00  
+      compensation........................................................6.00  
+      benefits............................................................1.00  
+      payroll taxes.......................................................2.00  
+    rent.................................................................11.00  
+  sg&a...................................................................10.00  
+    r&d...................................................................7.30  
+    it....................................................................1.80  
+    marketing.............................................................7.70  
+    kml insurance.........................................................5.00  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+
+s_fin8_1: 
+ 
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue...............................................................100.00  
+    men's................................................................35.00  
+    women's..............................................................42.00  
+  cogs...................................................................50.00  
+    storage...............................................................9.20  
+    freight out...........................................................4.15  
+    freight in............................................................3.50  
+  opex...................................................................20.00  
+    employee expense......................................................9.00  
+      compensation........................................................6.00  
+      benefits............................................................1.00  
+      payroll taxes.......................................................2.00  
+    rent.................................................................11.00  
+  sg&a...................................................................10.00  
+    r&d...................................................................7.30  
+    it....................................................................1.80  
+    marketing.............................................................7.70  
+    kml insurance.........................................................5.00  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+
+str(o_fin8) == str(s_fin8_1):  True
+o_fin8.summarize()
+o_fin8: 
+ 
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue:  
+    Unspecified revenue.................................................100.00  
+    men's................................................................35.00  
+    women's..............................................................42.00  
+  cogs:  
+    Unspecified cogs.....................................................50.00  
+    storage...............................................................9.20  
+    freight out...........................................................4.15  
+    freight in............................................................3.50  
+  opex:  
+    Unspecified opex.....................................................20.00  
+    employee expense:  
+      Unspecified employee expense........................................9.00  
+      compensation........................................................6.00  
+      benefits............................................................1.00  
+      payroll taxes.......................................................2.00  
+    rent.................................................................11.00  
+    total employee expense...............................................18.00  
+  sg&a:  
+    Unspecified sg&a.....................................................10.00  
+    r&d...................................................................7.30  
+    it....................................................................1.80  
+    marketing.............................................................7.70  
+    kml insurance.........................................................5.00  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+  total revenue.........................................................177.00  
+  total cogs.............................................................66.85  
+  total opex.............................................................49.00  
+  total sg&a.............................................................31.80  
+
+s_fin8_2: 
+ 
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue:  
+    Unspecified revenue.................................................100.00  
+    men's................................................................35.00  
+    women's..............................................................42.00  
+  cogs:  
+    Unspecified cogs.....................................................50.00  
+    storage...............................................................9.20  
+    freight out...........................................................4.15  
+    freight in............................................................3.50  
+  opex:  
+    Unspecified opex.....................................................20.00  
+    employee expense:  
+      Unspecified employee expense........................................9.00  
+      compensation........................................................6.00  
+      benefits............................................................1.00  
+      payroll taxes.......................................................2.00  
+    rent.................................................................11.00  
+    total employee expense...............................................18.00  
+  sg&a:  
+    Unspecified sg&a.....................................................10.00  
+    r&d...................................................................7.30  
+    it....................................................................1.80  
+    marketing.............................................................7.70  
+    kml insurance.........................................................5.00  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+  total revenue.........................................................177.00  
+  total cogs.............................................................66.85  
+  total opex.............................................................49.00  
+  total sg&a.............................................................31.80  
+
+str(o_fin8) == str(s_fin8_2):  True
+run manage_summaries, manage ddr, update summaries on fin8a
+result should be same as summarize()
+o_fin8a == o_fin8:  False
+T1.11 finished. 
+
+
+T1.12: check managed lineitem detection and clearing
+compare output and standard starting points
+o_fin9: 
+ 
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue:  
+    Unspecified revenue.................................................100.00  
+    men's................................................................35.00  
+    women's..............................................................42.00  
+  cogs:  
+    Unspecified cogs.....................................................50.00  
+    storage...............................................................9.20  
+    freight out...........................................................4.15  
+    freight in............................................................3.50  
+  opex:  
+    Unspecified opex.....................................................20.00  
+    employee expense:  
+      Unspecified employee expense........................................9.00  
+      compensation........................................................6.00  
+      benefits............................................................1.00  
+      payroll taxes.......................................................2.00  
+    rent.................................................................11.00  
+    total employee expense...............................................18.00  
+  sg&a:  
+    Unspecified sg&a.....................................................10.00  
+    r&d...................................................................7.30  
+    it....................................................................1.80  
+    marketing.............................................................7.70  
+    kml insurance.........................................................5.00  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+  total revenue.........................................................177.00  
+  total cogs.............................................................66.85  
+  total opex.............................................................49.00  
+  total sg&a.............................................................31.80  
+
+s_fin9_1: 
+ 
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue:  
+    Unspecified revenue.................................................100.00  
+    men's................................................................35.00  
+    women's..............................................................42.00  
+  cogs:  
+    Unspecified cogs.....................................................50.00  
+    storage...............................................................9.20  
+    freight out...........................................................4.15  
+    freight in............................................................3.50  
+  opex:  
+    Unspecified opex.....................................................20.00  
+    employee expense:  
+      Unspecified employee expense........................................9.00  
+      compensation........................................................6.00  
+      benefits............................................................1.00  
+      payroll taxes.......................................................2.00  
+    rent.................................................................11.00  
+    total employee expense...............................................18.00  
+  sg&a:  
+    Unspecified sg&a.....................................................10.00  
+    r&d...................................................................7.30  
+    it....................................................................1.80  
+    marketing.............................................................7.70  
+    kml insurance.........................................................5.00  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+  total revenue.........................................................177.00  
+  total cogs.............................................................66.85  
+  total opex.............................................................49.00  
+  total sg&a.............................................................31.80  
+
+str(o_fin9) == str(s_fin9_1):  True
+o_fin9.eraseManagedLineItems()
+compare output and standard ending points
+str(o_fin9) == str(s_fin9_2):  True
+T1.12 finished. 
+
+
+T1.13: check full reset mechanism
+compare output and standard starting points
+o_fin10: 
+ 
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue:  
+    Unspecified revenue.................................................100.00  
+    men's................................................................35.00  
+    women's..............................................................42.00  
+  cogs:  
+    Unspecified cogs.....................................................50.00  
+    storage...............................................................9.20  
+    freight out...........................................................4.15  
+    freight in............................................................3.50  
+  opex:  
+    Unspecified opex.....................................................20.00  
+    employee expense:  
+      Unspecified employee expense........................................9.00  
+      compensation........................................................6.00  
+      benefits............................................................1.00  
+      payroll taxes.......................................................2.00  
+    rent.................................................................11.00  
+    total employee expense...............................................18.00  
+  sg&a:  
+    Unspecified sg&a.....................................................10.00  
+    r&d...................................................................7.30  
+    it....................................................................1.80  
+    marketing.............................................................7.70  
+    kml insurance.........................................................5.00  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+  total revenue.........................................................177.00  
+  total cogs.............................................................66.85  
+  total opex.............................................................49.00  
+  total sg&a.............................................................31.80  
+
+s_fin10_1: 
+ 
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue:  
+    Unspecified revenue.................................................100.00  
+    men's................................................................35.00  
+    women's..............................................................42.00  
+  cogs:  
+    Unspecified cogs.....................................................50.00  
+    storage...............................................................9.20  
+    freight out...........................................................4.15  
+    freight in............................................................3.50  
+  opex:  
+    Unspecified opex.....................................................20.00  
+    employee expense:  
+      Unspecified employee expense........................................9.00  
+      compensation........................................................6.00  
+      benefits............................................................1.00  
+      payroll taxes.......................................................2.00  
+    rent.................................................................11.00  
+    total employee expense...............................................18.00  
+  sg&a:  
+    Unspecified sg&a.....................................................10.00  
+    r&d...................................................................7.30  
+    it....................................................................1.80  
+    marketing.............................................................7.70  
+    kml insurance.........................................................5.00  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+  total revenue.........................................................177.00  
+  total cogs.............................................................66.85  
+  total opex.............................................................49.00  
+  total sg&a.............................................................31.80  
+
+str(o_fin10) == str(s_fin10_1):  True
+o_fin10.eraseManagedLineItems()
+compare output and standard ending points
+str(o_fin10) == str(s_fin10_2):  True
+T1.13 finished. 
+
+
+RUBRIC:
+
+T1.01.01: bookmarks are equal ............................... True
+T1.01.02: bookmarks match names ............................. True
+T1.01.03: bookmarks match tags .............................. True
+T1.01: confirmed ............................................ True
+T1.02.01: bare fins equal ................................... True
+T1.03.01: identical default tLN in output ................... True
+T1.03.02: standard default tLN .............................. True
+T1.03: confirmed ............................................ True
+T1.04.01: simple fin hMap matches standard .................. True
+T1.04.02: simple fin hGroups match standard ................. True
+T1.04: confirmed ............................................ True
+T1.05.01: complex fin hMap matches standard ................. True
+T1.05.02: complex fin hGroups match standard ................ True
+T1.05: confirmed ............................................ True
+T1.06.01: misfit included ................................... True
+T1.06.02: misfit standard ................................... True
+T1.06.03: h groups match .................................... True
+T1.06.04: misfit group matches .............................. True
+T1.06.05: h maps match ...................................... False
+T1.06.07: misfit index matches .............................. True
+T1.06.08: tLN adjustment works .............................. True
+T1.06.09: tLN reversion works ............................... False
+T1.06.10: misfit label toggles .............................. True
+T1.06: confirmed ............................................ False
+T1.08.01: complex fin views match ........................... True
+T1.08.02: summaries views match ............................. True
+T1.08: confirmed ............................................ True
+T1.09.01: replicas inserted correctly ....................... True
+T1.09.02: ddr pulls down starting value ..................... True
+T1.09.03: ddr pulls down incremental value .................. False
+T1.09: confirmed ............................................ False
+T1.10.01: starting points match ............................. True
+T1.10.02: first pass summaries match ........................ True
+T1.10.03: increment summaries ............................... True
+T1.10: confirmed ............................................ True
+T1.11.01: starting points match ............................. True
+T1.11.02: summarize views match ............................. True
+T1.11.03: step equivalence to summarize ..................... False
+T1.11: confirmed ............................................ False
+T1.12.01: starting points match ............................. True
+T1.12.02: cleared views match ............................... True
+T1.12: confirmed ............................................ True
+T1.13.01: starting points match ............................. True
+T1.13.02: reset views match ................................. True
+T1.13: confirmed ............................................ True
+********************************************************************************
+********************************************************************************
+T1.06: confirmed   False
+Financials_01 passed:  False
+********************************************************************************
+********************************************************************************
+Grader level: 
+Passed:  False
+Financials_01 result: False 
+
+start time:  1429388011.864237
+end time:    1429388012.598638
+run time:    0.7344009876251221
+****************************************
+PASSED:  False
+****************************************
