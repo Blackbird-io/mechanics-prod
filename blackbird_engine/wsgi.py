@@ -9,7 +9,8 @@ https://docs.djangoproject.com/en/1.7/howto/deployment/wsgi/
 
 import os
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "blackbird_engine.settings.dev")
+os.environ.setdefault("TIER", "dev")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "blackbird_engine.settings." + os.environ["TIER"])
 
 from django.core.wsgi import get_wsgi_application
 
