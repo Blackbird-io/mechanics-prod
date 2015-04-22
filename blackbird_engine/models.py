@@ -114,6 +114,5 @@ class Question(models.Model):
     objects = QuestionManager()
 
     class Meta:
-        unique_together = ('business', 'valid', 'sequence_num')
         ordering = ('business', 'valid', 'sequence_num')
         index_together = ('business', 'valid', 'transcribe', 'sequence_num')
