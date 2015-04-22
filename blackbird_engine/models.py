@@ -51,7 +51,7 @@ class BlackbirdModel(models.Model):
     complete = models.BooleanField(default=False)
 
     # passed to engine
-    user_context = json_field.JSONField(default=dict)
+    user_context = json_field.JSONField(default=dict, blank=True)
 
     # set by engine, visible to Business
     industry = models.CharField(max_length=256, null=True)
