@@ -14,8 +14,25 @@ def _strip_nones(d):
     return {k: v for k, v in d.items() if v is not None}
 
 
+def try_float(s):
+    try:
+        return float(s)
+    except ValueError:
+        return s
+
+
+def _prep_response(response_array):
+    for d in response_array:
+        if d['input_type'] == 'bool':
+            d['response'] = [(True if e else False) for e in d['response']]
+        elif d['input_type'] == 'number':
+            d['response'] = [try_float(e) for e in d['response']]
+        elif d['input_type'] == 'number-range':
+            d['response'] = [[try_float(e2) for e2 in e] for e in d['response']]
+    return response_array
+
 def _get_response_dict(question, end=False):
-    return EndInterview if end else question.response_array
+    return EndInterview if end else _prep_response(question.response_array)
 
 
 def _get_bb_model_dict(bb_model):
