@@ -182,6 +182,7 @@ _mock_questions = [
                 input_type='number',
                 r_min=5000,
                 r_max=10000,
+                r_steps=1000,
                 main_caption='Some numbers',
                 user_can_add=True
             ),
@@ -246,7 +247,8 @@ _mock_questions = [
                 input_sub_type='currency',
                 main_caption='Salary Range',
                 shadow='Lowest Salary',
-                shadow_2='Highest Salary'
+                shadow_2='Highest Salary',
+                r_steps=1000
             )
         ],
         input_type='number-range',
