@@ -1,3 +1,5 @@
+import os
+
 from django.db import models
 import json_field
 
@@ -44,6 +46,9 @@ class Business(models.Model):
         return '{:d} - {}'.format(self.id, self.business_name)
 
 
+def model_filename(model, filename):
+    return os.path.join(str(model.pk), filename)
+
 class BlackbirdModel(models.Model):
     created_timestamp = timestamp()
     business = models.ForeignKey(Business, related_name="blackbird_models")
@@ -60,7 +65,17 @@ class BlackbirdModel(models.Model):
     tags = json_field.JSONField(null=True)
 
     # set by engine, hidden from Business
-    e_model = json_field.JSONField()
+    e_model = models.FileField(upload_to=model_filename, null=True)
+
+    def save(self, *args, **kwargs):
+        if self.pk is None:
+            e_model_file = self.e_model
+            self.e_model = None
+            super(BlackbirdModel, self).save(*args, **kwargs)
+            self.e_model = e_model_file
+            kwargs['force_insert'] = False
+            kwargs['force_update'] = True
+        super(BlackbirdModel, self).save(*args, **kwargs)
 
     class Meta:
         index_together = ('business', 'complete', 'created_timestamp')

@@ -25,6 +25,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'rest_framework',
     'json_field',
+    'dbfiles',
     'blackbird_engine',
 )
 
@@ -35,6 +36,11 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
 )
+
+##################################################################
+# Uploaded files
+MEDIA_URL = '/api/v0/media/'
+DEFAULT_FILE_STORAGE = 'dbfiles.storage.DatabaseStorage'
 
 ##################################################################
 # Url & wsgi configuration
