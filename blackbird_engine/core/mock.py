@@ -466,7 +466,7 @@ def _get_forecast(price=None, size=None):
 # simplistic model for a linear interview
 class EngineModel:
     def __init__(self, portal_model):
-        self._m = dict(portal_model)
+        self._m = dict(portal_model) if portal_model else dict()
 
     @staticmethod
     def _base_e_model():

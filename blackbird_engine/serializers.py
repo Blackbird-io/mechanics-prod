@@ -1,4 +1,6 @@
 from rest_framework import serializers
+import dill
+from django.core.files.base import ContentFile
 
 from . import models
 
@@ -11,6 +13,17 @@ class JSONSerializerField(serializers.Field):
 
     def to_representation(self, value):
         return value
+
+
+class PickleField(serializers.Field):
+    """ Serializer for JSONField -- required to make field writable"""
+
+    def to_representation(self, value):
+        return dill.load(value) if value else None
+
+    # turns into model object
+    def to_internal_value(self, data):
+        return ContentFile(dill.dumps(data), name='model.pickle')
 
 
 class QuestionUrlMixin():
@@ -74,7 +87,7 @@ class InternalBlackbirdModelSerializer(serializers.ModelSerializer):
     business_id = serializers.CharField(read_only=True)
     summary = JSONSerializerField(required=False)
     tags = JSONSerializerField(required=False)
-    e_model = JSONSerializerField()
+    e_model = PickleField()
 
     class Meta:
         model = models.BlackbirdModel
