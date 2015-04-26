@@ -1,0 +1,40 @@
+current build: c:\blackbird\engine\wip 
+
+running LifeCycle_01.do()
+Test.do encountered an exception: 
+No module named 'LTDEX_0_ObjectLibraries'
+running traceback funcitons
+traceback.print_exc(file=sys.stdout)
+Traceback (most recent call last):
+  File ".\Tests\Basic\LifeCycle_01\__init__.py", line 82, in do
+    from . import Task
+  File ".\Tests\Basic\LifeCycle_01\Task.py", line 18, in <module>
+    from LTDEX_0_ObjectLibraries import ModelComponents as MC
+ImportError: No module named 'LTDEX_0_ObjectLibraries'
+traceback.print_stack(file=sys.stdout)
+  File "<stdin>", line 1, in <module>
+  File ".\Tester.py", line 219, in runTest_do
+    result = test.do(retainState)
+  File ".\Tests\Basic\LifeCycle_01\__init__.py", line 97, in do
+    traceback.print_stack(file=sys.stdout)
+LifeCycle_01 generated the following output: 
+	No module named 'LTDEX_0_ObjectLibraries'
+start time:  1429388157.508298
+end time:    1429388157.508298
+run time:    0.0
+****************************************
+
+RESULT:
+	testName:       LifeCycle_01 
+
+	output:         None 
+
+	errors:         ... (truncated) 
+
+	completed:      False 
+
+	passed:         False 
+
+	rubric:         None 
+
+

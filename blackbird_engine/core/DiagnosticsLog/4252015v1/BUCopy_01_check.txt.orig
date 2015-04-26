@@ -1,0 +1,190 @@
+running BUCopy_01.check() on result...
+load standard object
+	standard object loaded
+first, check whether build completed do() without generating an exception.
+that is, check whether output is a descendant of the Exception class.
+build completed test.do() successfully.
+compare output to standard.
+
+
+    o = result["output"]
+    o_topBU = o["T13.01"]["topBU"]
+    c1 = o["T13.01"]["c1"]
+    c2 = o["T13.01"]["c2"]
+    cc3 = o["T13.01"]["cc3"]
+
+
+    T13.01: o_topBU vs c1
+    ------------------------------------------------------------------------
+
+    This function checks that the original and copy objects maintain
+    the correct relationship.
+
+    Specifically, the function checks that:
+      1. equality is True for the original and copy as a whole.
+      2. original and copy ``components`` point to distinct sets
+         of objects (identity is False for each pair of matching-
+         bbid business units).
+      3. original and copy ``drivers`` point to distinct sets of
+         objects in their .dr_directory.
+      4. original and copy ``financials`` point to lists of
+         distinct objects (matching-index lineitems must have
+         identity False).
+      5. original and copy ``period`` points to the same object.
+
+    Function returns False if the arguments fail any part above, and
+    True otherwise.
+
+    Objects (like Business Units) that define a class-specific 
+    equality method usually require equality among key attributes.
+    For Business Units, that means that Part 1 of this function's
+    already requires that each matching component, driver, and line
+    compare equal.
+
+
+    **original object**: 
+    <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000002C445C0>
+    (o_topBU)
+
+    **copy object**:     
+    <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000002EBB630>
+    (c1)
+
+    Part 1: Check for equality between original and copy.
+
+    orig_bu == copy_bu: True
+
+
+
+    Part 2: Check that components are distinct.
+
+    Iterate through each of the bbids in the original's
+    components. For each bbid, pull the component from the
+    original and from the copy. If identity is true for the two
+    components, break loop and fail part. Otherwise, continue.
+
+    If each component is distinct, the args pass Part 2.
+
+         All component business units are distinct.
+
+
+
+
+    Part 3: Check that drivers are distinct.
+
+    Iterate through each of the bbids in the original's
+    drivers.dr_directory.keys(). For each bbid, pull the driver
+    from the original and copy. If the two drivers share identity,
+    break loop and fail part. Otherwise, continue.
+
+    If each driver is distinct, the args pass Part 3.
+
+         All drivers are distinct.
+
+
+
+
+    Part 4: Check that each line in financials is distinct.
+
+    Iterate through a zip of original and copy financials. Check
+    for identity in each pair. Pairs already must have equality
+    per Part 1.
+
+         All lines are distinct.
+
+
+
+
+    Part 5: Check that copy period is original period.
+
+    orig_bu.period is copy_bu.period: True
+
+
+
+    Test completed.
+    ------------------------------------------------------------------------
+    ------------------------------------------------------------------------
+
+    T13.01 finished. 
+
+
+    T13.02: c2 vs cc3 (copy of a copy, periods blank).
+    ------------------------------------------------------------------------
+
+    **original object**: 
+    <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x000000000341EAC8>
+    (c2, period blank)
+
+    **copy object**:     
+    <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000037BBBE0>
+    (cc3, period blank)
+
+    Part 1: Check for equality between original and copy.
+
+    orig_bu == copy_bu: True
+
+
+
+    Part 2: Check that components are distinct.
+
+         All component business units are distinct.
+
+
+
+
+    Part 3: Check that drivers are distinct.
+
+         All drivers are distinct.
+
+
+
+
+    Part 4: Check that each line in financials is distinct.
+
+         All lines are distinct.
+
+
+
+
+    Part 5: Check that copy period is original period.
+
+    orig_bu.period is copy_bu.period: True
+
+
+
+    Test completed.
+    ------------------------------------------------------------------------
+    ------------------------------------------------------------------------
+
+    T13.02 finished. 
+
+
+RUBRIC:
+
+T13.01.01: original equals copy ............................. True
+T13.01.02: components are distinct. ......................... True
+T13.01.03: drivers are distinct. ............................ True
+T13.01.04: financials are distinct. ......................... True
+T13.01.05: period identity .................................. True
+T13.01: confirmed ........................................... True
+T13.02.01: original equals copy ............................. True
+T13.02.02: components are distinct. ......................... True
+T13.02.03: drivers are distinct. ............................ True
+T13.02.04: financials are distinct. ......................... True
+T13.02.05: period identity .................................. True
+T13.02: confirmed ........................................... True
+********************************************************************************
+********************************************************************************
+BUCopy_01 passed:  True
+********************************************************************************
+********************************************************************************
+Grader level: 
+Passed:  True
+BUCopy_01 result: True 
+
+start time:  1429976675.706984
+end time:    1429976675.753853
+run time:    0.04686903953552246
+****************************************
+PASSED:  True
+****************************************
