@@ -1,14 +1,20 @@
-from .mock import MockEngine
+from . import BBGlobalVariables as Globals
+from . import Shell as Engine
 
-EndInterview = 'END_interview'
+EndInterview = Globals.END_INTERVIEW
 
 
-class Engine(MockEngine):
-    def process_interview(self, portal_msg):
-        return super(Engine, self).process_interview(portal_msg)
-
-    def get_forecast(self, portal_model, fixed, ask):
-        return super(Engine, self).get_forecast(portal_model, fixed, ask)
-
-    def get_landscape_summary(self, portal_model):
-        return super(Engine, self).get_landscape_summary(portal_model)
+##from .mock import MockEngine
+##
+##EndInterview = 'END_interview'
+##
+##
+##class Engine(MockEngine):
+##    def process_interview(self, portal_msg):
+##        return super(Engine, self).process_interview(portal_msg)
+##
+##    def get_forecast(self, portal_model, fixed, ask):
+##        return super(Engine, self).get_forecast(portal_model, fixed, ask)
+##
+##    def get_landscape_summary(self, portal_model):
+##        return super(Engine, self).get_landscape_summary(portal_model)
