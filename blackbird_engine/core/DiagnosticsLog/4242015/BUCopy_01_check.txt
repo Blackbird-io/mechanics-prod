@@ -1,0 +1,1030 @@
+running BUCopy_01.check() on result...
+load standard object
+	standard object loaded
+first, check whether build completed do() without generating an exception.
+that is, check whether output is a descendant of the Exception class.
+build completed test.do() successfully.
+compare output to standard.
+
+
+    o = result["output"]
+    o_topBU = o["T13.01"]["topBU"]
+    c1 = o["T13.01"]["c1"]
+    c2 = o["T13.01"]["c2"]
+    cc3 = o["T13.01"]["cc3"]
+
+
+    T13.01: o_topBU vs c1
+    ------------------------------------------------------------------------
+
+    This function checks that the original and copy objects maintain
+    the correct relationship.
+
+    Specifically, the function checks that:
+      1. equality is True for the original and copy as a whole.
+      2. original and copy ``components`` point to distinct sets
+         of objects (identity is False for each pair of matching-
+         bbid business units).
+      3. original and copy ``drivers`` point to distinct sets of
+         objects in their .dr_directory.
+      4. original and copy ``financials`` point to lists of
+         distinct objects (matching-index lineitems must have
+         identity False).
+      5. original and copy ``period`` points to the same object.
+
+    Function returns False if the arguments fail any part above, and
+    True otherwise.
+
+    Objects (like Business Units) that define a class-specific 
+    equality method usually require equality among key attributes.
+    For Business Units, that means that Part 1 of this function's
+    already requires that each matching component, driver, and line
+    compare equal.
+
+
+    **original object**: 
+    <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000039F8F60>
+    (o_topBU)
+
+    **copy object**:     
+    <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003DBDEF0>
+    (c1)
+
+    Part 1: Check for equality between original and copy.
+
+    orig_bu == copy_bu: False
+        ----------------------------------------------------------------
+        Begin tracing equality evaluation...
+          object:     <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000039F8F60>
+          comparator: <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003DBDEF0>
+
+
+        skipNames: 
+        ('allTags', 'filled', 'guide', 'id', 'parentObject', 'partOf', '__')
+
+        attrsToReview: 
+          __class__
+          __delattr__
+          __dict__
+          __dir__
+          __doc__
+          __eq__
+          __format__
+          __ge__
+          __getattribute__
+          __gt__
+          __hash__
+          __init__
+          __le__
+          __lt__
+          __module__
+          __ne__
+          __new__
+          __reduce__
+          __reduce_ex__
+          __repr__
+          __setattr__
+          __sizeof__
+          __slotnames__
+          __str__
+          __subclasshook__
+          __weakref__
+          _inheritedTags
+          _optionalTags
+          addComponent
+          addDriver
+          allTags
+          analytics
+          autoRegister
+          checkOrdinary
+          checkTouch
+          clear
+          clearInheritedTags
+          components
+          connected
+          consolidate
+          consolidate_unit
+          copy
+          copyTagsTo
+          copyTagsTo_rules_off
+          copyTagsTo_rules_on
+          derive
+          disconnect
+          drivers
+          dyn_AllTManager
+          dyn_OptTManager
+          dyn_SpecTManager
+          ex_to_default
+          ex_to_special
+          extrapolate_to
+          fillOut
+          filled
+          financials
+          fitToPeriod
+          guide
+          hands_off
+          header
+          id
+          ignoreSystem
+          inheritTags
+          inheritTagsFrom
+          irrelevantAttributes
+          keyAttributes
+          lifeCycle
+          name
+          optionalTags
+          parentObject
+          partOf
+          period
+          reg_req
+          reg_req_off
+          reg_req_on
+          registerTag
+          requiredTags
+          resetFinancials
+          setAnalytics
+          setComponents
+          setDefaultFinancials
+          setDrivers
+          setFinancials
+          setHandsOff
+          setName
+          setPartOf
+          setSpecialTags
+          setTagManager
+          sig_consolidate
+          skipPrefixes
+          spacer_opt
+          spacer_req
+          spec_tags
+          tag
+          tagManager
+          tagSources
+          templateFinancials
+          unTag
+          updateDirectory
+          verifyID
+
+            checking attr: ``__class__``
+            attribute in skipNames, continue
+
+            checking attr: ``__delattr__``
+            attribute in skipNames, continue
+
+            checking attr: ``__dict__``
+            attribute in skipNames, continue
+
+            checking attr: ``__dir__``
+            attribute in skipNames, continue
+
+            checking attr: ``__doc__``
+            attribute in skipNames, continue
+
+            checking attr: ``__eq__``
+            attribute in skipNames, continue
+
+            checking attr: ``__format__``
+            attribute in skipNames, continue
+
+            checking attr: ``__ge__``
+            attribute in skipNames, continue
+
+            checking attr: ``__getattribute__``
+            attribute in skipNames, continue
+
+            checking attr: ``__gt__``
+            attribute in skipNames, continue
+
+            checking attr: ``__hash__``
+            attribute in skipNames, continue
+
+            checking attr: ``__init__``
+            attribute in skipNames, continue
+
+            checking attr: ``__le__``
+            attribute in skipNames, continue
+
+            checking attr: ``__lt__``
+            attribute in skipNames, continue
+
+            checking attr: ``__module__``
+            attribute in skipNames, continue
+
+            checking attr: ``__ne__``
+            attribute in skipNames, continue
+
+            checking attr: ``__new__``
+            attribute in skipNames, continue
+
+            checking attr: ``__reduce__``
+            attribute in skipNames, continue
+
+            checking attr: ``__reduce_ex__``
+            attribute in skipNames, continue
+
+            checking attr: ``__repr__``
+            attribute in skipNames, continue
+
+            checking attr: ``__setattr__``
+            attribute in skipNames, continue
+
+            checking attr: ``__sizeof__``
+            attribute in skipNames, continue
+
+            checking attr: ``__slotnames__``
+            attribute in skipNames, continue
+
+            checking attr: ``__str__``
+            attribute in skipNames, continue
+
+            checking attr: ``__subclasshook__``
+            attribute in skipNames, continue
+
+            checking attr: ``__weakref__``
+            attribute in skipNames, continue
+
+            checking attr: ``_inheritedTags``
+              standard value: []
+              comp value:     []
+            Exception on .__eq__(trace=True) call:
+              wrapper __eq__ doesn't take keyword arguments
+            Running plain vanilla ``==`` call...
+              standardValue == compValue: True
+            continue
+
+            checking attr: ``_optionalTags``
+              standard value: ['small number of units']
+              comp value:     ['small number of units']
+            Exception on .__eq__(trace=True) call:
+              wrapper __eq__ doesn't take keyword arguments
+            Running plain vanilla ``==`` call...
+              standardValue == compValue: True
+            continue
+
+            checking attr: ``addComponent``
+              standard value: <bound method BusinessUnit.addComponent of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000039F8F60>>
+              ``addComponent`` is a routine (according to inspect).
+            continue
+
+            checking attr: ``addDriver``
+              standard value: <bound method BusinessUnit.addDriver of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000039F8F60>>
+              ``addDriver`` is a routine (according to inspect).
+            continue
+
+            checking attr: ``allTags``
+            attribute in skipNames, continue
+
+            checking attr: ``analytics``
+              standard value:     analytics...........................................................None    
+              comp value:         analytics...........................................................None    
+            Exception on .__eq__(trace=True) call:
+              __eq__() got an unexpected keyword argument 'trace'
+            Running plain vanilla ``==`` call...
+              standardValue == compValue: True
+            continue
+
+            checking attr: ``autoRegister``
+              standard value: True
+              comp value:     True
+            Exception on .__eq__(trace=True) call:
+              wrapper __eq__ doesn't take keyword arguments
+            Running plain vanilla ``==`` call...
+              standardValue == compValue: True
+            continue
+
+            checking attr: ``checkOrdinary``
+              standard value: <bound method BusinessUnit.checkOrdinary of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000039F8F60>>
+              ``checkOrdinary`` is a routine (according to inspect).
+            continue
+
+            checking attr: ``checkTouch``
+              standard value: <bound method BusinessUnit.checkTouch of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000039F8F60>>
+              ``checkTouch`` is a routine (according to inspect).
+            continue
+
+            checking attr: ``clear``
+              standard value: <bound method BusinessUnit.clear of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000039F8F60>>
+              ``clear`` is a routine (according to inspect).
+            continue
+
+            checking attr: ``clearInheritedTags``
+              standard value: <bound method BusinessUnit.clearInheritedTags of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000039F8F60>>
+              ``clearInheritedTags`` is a routine (according to inspect).
+            continue
+
+            checking attr: ``components``
+              standard value: {UUID('2e31ab6c-98c0-3123-a96e-451885eed439'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003648C88>, UUID('735c7c3d-0116-3e8a-b02c-aa3945939dc1'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000037F87B8>, UUID('e2dda022-4d23-3a95-96ec-ebed941bcd21'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000037916A0>, UUID('85a9348e-4566-318a-a8d0-1795dec05e8b'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x000000000378F588>, UUID('3d20d6f2-0ef2-349c-91ee-14483d30f0e6'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000036A0470>, UUID('7395ee23-5f15-3a05-afc5-17d8e7773200'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000039E9358>, UUID('ac65b96b-1e9b-3092-ae3a-06c7a4051f77'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000039EF240>, UUID('185497b2-ab75-3f5a-b328-0b1db221a021'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>, UUID('d9b496d7-ad69-34b2-a1c3-57b95c3efae2'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003E45FD0>, UUID('3df236d7-6e74-3a97-bad9-25f1ba1c31a0'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003E64EB8>}
+              comp value:     {UUID('2e31ab6c-98c0-3123-a96e-451885eed439'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000040766D8>, UUID('735c7c3d-0116-3e8a-b02c-aa3945939dc1'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003E8BCC0>, UUID('e2dda022-4d23-3a95-96ec-ebed941bcd21'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x000000000412ABA8>, UUID('85a9348e-4566-318a-a8d0-1795dec05e8b'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000040727B8>, UUID('3d20d6f2-0ef2-349c-91ee-14483d30f0e6'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x000000000407F390>, UUID('7395ee23-5f15-3a05-afc5-17d8e7773200'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003EA5978>, UUID('ac65b96b-1e9b-3092-ae3a-06c7a4051f77'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003E85240>, UUID('185497b2-ab75-3f5a-b328-0b1db221a021'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x000000000406BBA8>, UUID('3df236d7-6e74-3a97-bad9-25f1ba1c31a0'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003E82048>, UUID('d9b496d7-ad69-34b2-a1c3-57b95c3efae2'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000004111EF0>}
+            --------------------------------------------------------
+            Begin tracing equality evaluation...
+              object:     {UUID('2e31ab6c-98c0-3123-a96e-451885eed439'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003648C88>, UUID('735c7c3d-0116-3e8a-b02c-aa3945939dc1'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000037F87B8>, UUID('e2dda022-4d23-3a95-96ec-ebed941bcd21'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000037916A0>, UUID('85a9348e-4566-318a-a8d0-1795dec05e8b'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x000000000378F588>, UUID('3d20d6f2-0ef2-349c-91ee-14483d30f0e6'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000036A0470>, UUID('7395ee23-5f15-3a05-afc5-17d8e7773200'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000039E9358>, UUID('ac65b96b-1e9b-3092-ae3a-06c7a4051f77'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000039EF240>, UUID('185497b2-ab75-3f5a-b328-0b1db221a021'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>, UUID('d9b496d7-ad69-34b2-a1c3-57b95c3efae2'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003E45FD0>, UUID('3df236d7-6e74-3a97-bad9-25f1ba1c31a0'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003E64EB8>}
+              comparator: {UUID('2e31ab6c-98c0-3123-a96e-451885eed439'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000040766D8>, UUID('735c7c3d-0116-3e8a-b02c-aa3945939dc1'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003E8BCC0>, UUID('e2dda022-4d23-3a95-96ec-ebed941bcd21'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x000000000412ABA8>, UUID('85a9348e-4566-318a-a8d0-1795dec05e8b'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000040727B8>, UUID('3d20d6f2-0ef2-349c-91ee-14483d30f0e6'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x000000000407F390>, UUID('7395ee23-5f15-3a05-afc5-17d8e7773200'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003EA5978>, UUID('ac65b96b-1e9b-3092-ae3a-06c7a4051f77'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003E85240>, UUID('185497b2-ab75-3f5a-b328-0b1db221a021'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x000000000406BBA8>, UUID('3df236d7-6e74-3a97-bad9-25f1ba1c31a0'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003E82048>, UUID('d9b496d7-ad69-34b2-a1c3-57b95c3efae2'): <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000004111EF0>}
+
+
+            skipNames: 
+            ('__',)
+
+            attrsToReview: 
+
+            attribute comparison completed.
+            result: True
+
+            dict.__eq__(self,comparator) == False
+            Run dict introspection logic.
+
+            instance and comparator have identical keys. step through each value and compare.
+
+                key 185497b2-ab75-3f5a-b328-0b1db221a021:
+                  orig_val: <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>
+                  comp_val: <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x000000000406BBA8>
+
+                ------------------------------------------------
+                Begin tracing equality evaluation...
+                  object:     <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>
+                  comparator: <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x000000000406BBA8>
+
+
+                skipNames: 
+                ('allTags', 'filled', 'guide', 'id', 'parentObject', 'partOf', '__')
+
+                attrsToReview: 
+                  __class__
+                  __delattr__
+                  __dict__
+                  __dir__
+                  __doc__
+                  __eq__
+                  __format__
+                  __ge__
+                  __getattribute__
+                  __gt__
+                  __hash__
+                  __init__
+                  __le__
+                  __lt__
+                  __module__
+                  __ne__
+                  __new__
+                  __reduce__
+                  __reduce_ex__
+                  __repr__
+                  __setattr__
+                  __sizeof__
+                  __slotnames__
+                  __str__
+                  __subclasshook__
+                  __weakref__
+                  _inheritedTags
+                  _optionalTags
+                  addComponent
+                  addDriver
+                  allTags
+                  analytics
+                  autoRegister
+                  checkOrdinary
+                  checkTouch
+                  clear
+                  clearInheritedTags
+                  components
+                  connected
+                  consolidate
+                  consolidate_unit
+                  copy
+                  copyTagsTo
+                  copyTagsTo_rules_off
+                  copyTagsTo_rules_on
+                  derive
+                  disconnect
+                  drivers
+                  dyn_AllTManager
+                  dyn_OptTManager
+                  dyn_SpecTManager
+                  ex_to_default
+                  ex_to_special
+                  extrapolate_to
+                  fillOut
+                  filled
+                  financials
+                  fitToPeriod
+                  guide
+                  hands_off
+                  header
+                  id
+                  ignoreSystem
+                  inheritTags
+                  inheritTagsFrom
+                  irrelevantAttributes
+                  keyAttributes
+                  lifeCycle
+                  name
+                  optionalTags
+                  parentObject
+                  partOf
+                  period
+                  reg_req
+                  reg_req_off
+                  reg_req_on
+                  registerTag
+                  requiredTags
+                  resetFinancials
+                  setAnalytics
+                  setComponents
+                  setDefaultFinancials
+                  setDrivers
+                  setFinancials
+                  setHandsOff
+                  setName
+                  setPartOf
+                  setSpecialTags
+                  setTagManager
+                  sig_consolidate
+                  skipPrefixes
+                  spacer_opt
+                  spacer_req
+                  spec_tags
+                  tag
+                  tagManager
+                  tagSources
+                  templateFinancials
+                  unTag
+                  updateDirectory
+                  verifyID
+
+                    checking attr: ``__class__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__delattr__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__dict__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__dir__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__doc__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__eq__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__format__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__ge__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__getattribute__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__gt__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__hash__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__init__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__le__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__lt__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__module__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__ne__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__new__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__reduce__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__reduce_ex__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__repr__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__setattr__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__sizeof__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__slotnames__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__str__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__subclasshook__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``__weakref__``
+                    attribute in skipNames, continue
+
+                    checking attr: ``_inheritedTags``
+                      standard value: []
+                      comp value:     []
+                    Exception on .__eq__(trace=True) call:
+                      wrapper __eq__ doesn't take keyword arguments
+                    Running plain vanilla ``==`` call...
+                      standardValue == compValue: True
+                    continue
+
+                    checking attr: ``_optionalTags``
+                      standard value: ['long adolescence', 'rapid decline', 'unusual lifecycle']
+                      comp value:     ['long adolescence', 'rapid decline', 'unusual lifecycle']
+                    Exception on .__eq__(trace=True) call:
+                      wrapper __eq__ doesn't take keyword arguments
+                    Running plain vanilla ``==`` call...
+                      standardValue == compValue: True
+                    continue
+
+                    checking attr: ``addComponent``
+                      standard value: <bound method BusinessUnit.addComponent of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>>
+                      ``addComponent`` is a routine (according to inspect).
+                    continue
+
+                    checking attr: ``addDriver``
+                      standard value: <bound method BusinessUnit.addDriver of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>>
+                      ``addDriver`` is a routine (according to inspect).
+                    continue
+
+                    checking attr: ``allTags``
+                    attribute in skipNames, continue
+
+                    checking attr: ``analytics``
+                      standard value: None
+                      comp value:     None
+                    Exception on .__eq__(trace=True) call:
+                      wrapper __eq__ doesn't take keyword arguments
+                    Running plain vanilla ``==`` call...
+                      standardValue == compValue: True
+                    continue
+
+                    checking attr: ``autoRegister``
+                      standard value: True
+                      comp value:     True
+                    Exception on .__eq__(trace=True) call:
+                      wrapper __eq__ doesn't take keyword arguments
+                    Running plain vanilla ``==`` call...
+                      standardValue == compValue: True
+                    continue
+
+                    checking attr: ``checkOrdinary``
+                      standard value: <bound method BusinessUnit.checkOrdinary of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>>
+                      ``checkOrdinary`` is a routine (according to inspect).
+                    continue
+
+                    checking attr: ``checkTouch``
+                      standard value: <bound method BusinessUnit.checkTouch of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>>
+                      ``checkTouch`` is a routine (according to inspect).
+                    continue
+
+                    checking attr: ``clear``
+                      standard value: <bound method BusinessUnit.clear of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>>
+                      ``clear`` is a routine (according to inspect).
+                    continue
+
+                    checking attr: ``clearInheritedTags``
+                      standard value: <bound method BusinessUnit.clearInheritedTags of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>>
+                      ``clearInheritedTags`` is a routine (according to inspect).
+                    continue
+
+                    checking attr: ``components``
+                      standard value: {}
+                      comp value:     {}
+                    ----------------------------------------
+                    Begin tracing equality evaluation...
+                      object:     {}
+                      comparator: {}
+
+
+                    skipNames: 
+                    ('__',)
+
+                    attrsToReview: 
+
+                    attribute comparison completed.
+                    result: True
+
+                      standardValue == compValue: True
+                    (using .__eq__(trace=True))
+                    continue
+
+                    checking attr: ``connected``
+                      standard value: True
+                      comp value:     True
+                    Exception on .__eq__(trace=True) call:
+                      wrapper __eq__ doesn't take keyword arguments
+                    Running plain vanilla ``==`` call...
+                      standardValue == compValue: True
+                    continue
+
+                    checking attr: ``consolidate``
+                      standard value: <bound method BusinessUnit.consolidate of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>>
+                      ``consolidate`` is a routine (according to inspect).
+                    continue
+
+                    checking attr: ``consolidate_unit``
+                      standard value: <bound method BusinessUnit.consolidate_unit of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>>
+                      ``consolidate_unit`` is a routine (according to inspect).
+                    continue
+
+                    checking attr: ``copy``
+                      standard value: <bound method BusinessUnit.copy of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>>
+                      ``copy`` is a routine (according to inspect).
+                    continue
+
+                    checking attr: ``copyTagsTo``
+                      standard value: <bound method BusinessUnit.copyTagsTo of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>>
+                      ``copyTagsTo`` is a routine (according to inspect).
+                    continue
+
+                    checking attr: ``copyTagsTo_rules_off``
+                      standard value: <bound method BusinessUnit.copyTagsTo_rules_off of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>>
+                      ``copyTagsTo_rules_off`` is a routine (according to inspect).
+                    continue
+
+                    checking attr: ``copyTagsTo_rules_on``
+                      standard value: <bound method BusinessUnit.copyTagsTo_rules_on of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>>
+                      ``copyTagsTo_rules_on`` is a routine (according to inspect).
+                    continue
+
+                    checking attr: ``derive``
+                      standard value: <bound method BusinessUnit.derive of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>>
+                      ``derive`` is a routine (according to inspect).
+                    continue
+
+                    checking attr: ``disconnect``
+                      standard value: <bound method type.disconnect of <class 'DataStructures.Modelling.BusinessUnit.BusinessUnit'>>
+                      ``disconnect`` is a routine (according to inspect).
+                    continue
+
+                    checking attr: ``drivers``
+                      standard value: {'revenue': {UUID('f52e66d0-43ff-39e4-9cda-81c45fbb0381')}, 'Security': {UUID('b476fa5c-1df5-30cf-a544-d9d0c8231b4d')}, 'utilities': {UUID('e133ad17-e720-3b0d-aeec-6cdb4176e9ad')}, 'rent': {UUID('60c934c6-e1d1-3a00-8d68-4299aee5cef0')}, 'ebitda': {UUID('a09efc58-7e34-31e8-8d2c-aecaf79b36f5')}, 'Employee Expense': {UUID('51bdade4-4c62-34ff-bb96-018f19b118cb')}, 'cogs': {UUID('470bfabb-fef3-38da-b84e-ff8cd153a25d')}, 'Cost': {UUID('470bfabb-fef3-38da-b84e-ff8cd153a25d')}, 'security': {UUID('b476fa5c-1df5-30cf-a544-d9d0c8231b4d')}, 'EBITDA': {UUID('a09efc58-7e34-31e8-8d2c-aecaf79b36f5')}, 'Utilities': {UUID('e133ad17-e720-3b0d-aeec-6cdb4176e9ad')}, 'COGS': {UUID('470bfabb-fef3-38da-b84e-ff8cd153a25d')}, 'it': {UUID('8e565f35-4285-33c2-b875-d20028d6744c')}, 'cost': {UUID('470bfabb-fef3-38da-b84e-ff8cd153a25d')}, None: set(), 'Rent': {UUID('60c934c6-e1d1-3a00-8d68-4299aee5cef0')}, 'employee expense': {UUID('51bdade4-4c62-34ff-bb96-018f19b118cb')}, 'IT': {UUID('8e565f35-4285-33c2-b875-d20028d6744c')}}
+                      comp value:     {'revenue': {UUID('f52e66d0-43ff-39e4-9cda-81c45fbb0381')}, 'Security': {UUID('b476fa5c-1df5-30cf-a544-d9d0c8231b4d')}, 'utilities': {UUID('e133ad17-e720-3b0d-aeec-6cdb4176e9ad')}, 'COGS': {UUID('470bfabb-fef3-38da-b84e-ff8cd153a25d')}, 'EBITDA': {UUID('a09efc58-7e34-31e8-8d2c-aecaf79b36f5')}, 'Rent': {UUID('60c934c6-e1d1-3a00-8d68-4299aee5cef0')}, 'employee expense': {UUID('51bdade4-4c62-34ff-bb96-018f19b118cb')}, 'cost': {UUID('470bfabb-fef3-38da-b84e-ff8cd153a25d')}, 'security': {UUID('b476fa5c-1df5-30cf-a544-d9d0c8231b4d')}, 'ebitda': {UUID('a09efc58-7e34-31e8-8d2c-aecaf79b36f5')}, 'Utilities': {UUID('e133ad17-e720-3b0d-aeec-6cdb4176e9ad')}, 'cogs': {UUID('470bfabb-fef3-38da-b84e-ff8cd153a25d')}, 'it': {UUID('8e565f35-4285-33c2-b875-d20028d6744c')}, 'Cost': {UUID('470bfabb-fef3-38da-b84e-ff8cd153a25d')}, None: set(), 'rent': {UUID('60c934c6-e1d1-3a00-8d68-4299aee5cef0')}, 'Employee Expense': {UUID('51bdade4-4c62-34ff-bb96-018f19b118cb')}, 'IT': {UUID('8e565f35-4285-33c2-b875-d20028d6744c')}}
+                    ----------------------------------------
+                    Begin tracing equality evaluation...
+                      object:     {'revenue': {UUID('f52e66d0-43ff-39e4-9cda-81c45fbb0381')}, 'Security': {UUID('b476fa5c-1df5-30cf-a544-d9d0c8231b4d')}, 'utilities': {UUID('e133ad17-e720-3b0d-aeec-6cdb4176e9ad')}, 'rent': {UUID('60c934c6-e1d1-3a00-8d68-4299aee5cef0')}, 'ebitda': {UUID('a09efc58-7e34-31e8-8d2c-aecaf79b36f5')}, 'Employee Expense': {UUID('51bdade4-4c62-34ff-bb96-018f19b118cb')}, 'cogs': {UUID('470bfabb-fef3-38da-b84e-ff8cd153a25d')}, 'Cost': {UUID('470bfabb-fef3-38da-b84e-ff8cd153a25d')}, 'security': {UUID('b476fa5c-1df5-30cf-a544-d9d0c8231b4d')}, 'EBITDA': {UUID('a09efc58-7e34-31e8-8d2c-aecaf79b36f5')}, 'Utilities': {UUID('e133ad17-e720-3b0d-aeec-6cdb4176e9ad')}, 'COGS': {UUID('470bfabb-fef3-38da-b84e-ff8cd153a25d')}, 'it': {UUID('8e565f35-4285-33c2-b875-d20028d6744c')}, 'cost': {UUID('470bfabb-fef3-38da-b84e-ff8cd153a25d')}, None: set(), 'Rent': {UUID('60c934c6-e1d1-3a00-8d68-4299aee5cef0')}, 'employee expense': {UUID('51bdade4-4c62-34ff-bb96-018f19b118cb')}, 'IT': {UUID('8e565f35-4285-33c2-b875-d20028d6744c')}}
+                      comparator: {'revenue': {UUID('f52e66d0-43ff-39e4-9cda-81c45fbb0381')}, 'Security': {UUID('b476fa5c-1df5-30cf-a544-d9d0c8231b4d')}, 'utilities': {UUID('e133ad17-e720-3b0d-aeec-6cdb4176e9ad')}, 'COGS': {UUID('470bfabb-fef3-38da-b84e-ff8cd153a25d')}, 'EBITDA': {UUID('a09efc58-7e34-31e8-8d2c-aecaf79b36f5')}, 'Rent': {UUID('60c934c6-e1d1-3a00-8d68-4299aee5cef0')}, 'employee expense': {UUID('51bdade4-4c62-34ff-bb96-018f19b118cb')}, 'cost': {UUID('470bfabb-fef3-38da-b84e-ff8cd153a25d')}, 'security': {UUID('b476fa5c-1df5-30cf-a544-d9d0c8231b4d')}, 'ebitda': {UUID('a09efc58-7e34-31e8-8d2c-aecaf79b36f5')}, 'Utilities': {UUID('e133ad17-e720-3b0d-aeec-6cdb4176e9ad')}, 'cogs': {UUID('470bfabb-fef3-38da-b84e-ff8cd153a25d')}, 'it': {UUID('8e565f35-4285-33c2-b875-d20028d6744c')}, 'Cost': {UUID('470bfabb-fef3-38da-b84e-ff8cd153a25d')}, None: set(), 'rent': {UUID('60c934c6-e1d1-3a00-8d68-4299aee5cef0')}, 'Employee Expense': {UUID('51bdade4-4c62-34ff-bb96-018f19b118cb')}, 'IT': {UUID('8e565f35-4285-33c2-b875-d20028d6744c')}}
+
+
+                    skipNames: 
+                    ('__',)
+
+                    attrsToReview: 
+
+                    attribute comparison completed.
+                    result: True
+
+                      standardValue == compValue: True
+                    (using .__eq__(trace=True))
+                    continue
+
+                    checking attr: ``dyn_AllTManager``
+                      standard value: <class 'DataStructures.Platform.Tags.Tags.dyn_AllTManager'>
+                      comp value:     <class 'DataStructures.Platform.Tags.Tags.dyn_AllTManager'>
+                    Exception on .__eq__(trace=True) call:
+                      wrapper __eq__ doesn't take keyword arguments
+                    Running plain vanilla ``==`` call...
+                      standardValue == compValue: True
+                    continue
+
+                    checking attr: ``dyn_OptTManager``
+                      standard value: <class 'DataStructures.Platform.Tags.Tags.dyn_OptTManager'>
+                      comp value:     <class 'DataStructures.Platform.Tags.Tags.dyn_OptTManager'>
+                    Exception on .__eq__(trace=True) call:
+                      wrapper __eq__ doesn't take keyword arguments
+                    Running plain vanilla ``==`` call...
+                      standardValue == compValue: True
+                    continue
+
+                    checking attr: ``dyn_SpecTManager``
+                      standard value: <class 'DataStructures.Platform.Tags.Tags.dyn_SpecTManager'>
+                      comp value:     <class 'DataStructures.Platform.Tags.Tags.dyn_SpecTManager'>
+                    Exception on .__eq__(trace=True) call:
+                      wrapper __eq__ doesn't take keyword arguments
+                    Running plain vanilla ``==`` call...
+                      standardValue == compValue: True
+                    continue
+
+                    checking attr: ``ex_to_default``
+                      standard value: <bound method BusinessUnit.ex_to_default of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>>
+                      ``ex_to_default`` is a routine (according to inspect).
+                    continue
+
+                    checking attr: ``ex_to_special``
+                      standard value: <bound method BusinessUnit.ex_to_special of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>>
+                      ``ex_to_special`` is a routine (according to inspect).
+                    continue
+
+                    checking attr: ``extrapolate_to``
+                      standard value: <bound method BusinessUnit.extrapolate_to of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>>
+                      ``extrapolate_to`` is a routine (according to inspect).
+                    continue
+
+                    checking attr: ``fillOut``
+                      standard value: <bound method BusinessUnit.fillOut of <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x0000000003902128>>
+                      ``fillOut`` is a routine (according to inspect).
+                    continue
+
+                    checking attr: ``filled``
+                    attribute in skipNames, continue
+
+                    checking attr: ``financials``
+                      standard value: 
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  structure...............................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue.............................................................83333.33  
+  cost................................................................29166.67  
+  operating expense.......................................................None  
+    employee expense..................................................25000.00  
+    rent...............................................................2000.00  
+    utilities...........................................................100.00  
+    miscellanious.........................................................None  
+      security..........................................................100.00  
+      it................................................................500.00  
+    total miscellanious.................................................600.00  
+  total operating expense.............................................27700.00  
+  sg&a....................................................................None  
+  ebitda..............................................................26466.67  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+
+                      comp value:     
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  structure...............................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue.................................................................None  
+  cost....................................................................None  
+  operating expense.......................................................None  
+    employee expense......................................................None  
+    rent..................................................................None  
+    utilities.............................................................None  
+    miscellanious.........................................................None  
+      security............................................................None  
+      it..................................................................None  
+    total miscellanious...................................................None  
+  total operating expense.................................................None  
+  sg&a....................................................................None  
+    marketing.............................................................None  
+    g&a...................................................................None  
+  total sg&a..............................................................None  
+  ebitda..................................................................None  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+
+                    ----------------------------------------
+                    Begin tracing equality evaluation...
+                      object:     
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  structure...............................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue.............................................................83333.33  
+  cost................................................................29166.67  
+  operating expense.......................................................None  
+    employee expense..................................................25000.00  
+    rent...............................................................2000.00  
+    utilities...........................................................100.00  
+    miscellanious.........................................................None  
+      security..........................................................100.00  
+      it................................................................500.00  
+    total miscellanious.................................................600.00  
+  total operating expense.............................................27700.00  
+  sg&a....................................................................None  
+  ebitda..............................................................26466.67  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+
+                      comparator: 
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  structure...............................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue.................................................................None  
+  cost....................................................................None  
+  operating expense.......................................................None  
+    employee expense......................................................None  
+    rent..................................................................None  
+    utilities.............................................................None  
+    miscellanious.........................................................None  
+      security............................................................None  
+      it..................................................................None  
+    total miscellanious...................................................0.00  
+  total operating expense.................................................0.00  
+  sg&a....................................................................None  
+    marketing.............................................................None  
+    g&a...................................................................None  
+  total sg&a..............................................................0.00  
+  ebitda..................................................................None  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+
+
+
+                    skipNames: 
+                    ('__',)
+
+                    attrsToReview: 
+
+                    attribute comparison completed.
+                    result: True
+
+                    list.__eq__(self,comparator) == False
+                    Run list introspection logic.
+
+                    object length: 25
+                    comparator length: 28
+
+                    orig_len == comp_len: False
+No further analysis necessary.
+                      standardValue == compValue: False
+                    (using .__eq__(trace=True))
+                      result = False
+                    break
+
+                attribute comparison completed.
+                result: False
+
+                orig_val == comp_val: False
+                (using .__eq__(trace=True))
+                break
+              standardValue == compValue: False
+            (using .__eq__(trace=True))
+              result = False
+            break
+
+        attribute comparison completed.
+        result: False
+
+
+
+
+    Part 2: Check that components are distinct.
+
+    Iterate through each of the bbids in the original's
+    components. For each bbid, pull the component from the
+    original and from the copy. If identity is true for the two
+    components, break loop and fail part. Otherwise, continue.
+
+    If each component is distinct, the args pass Part 2.
+
+         All component business units are distinct.
+
+
+
+
+    Part 3: Check that drivers are distinct.
+
+    Iterate through each of the bbids in the original's
+    drivers.dr_directory.keys(). For each bbid, pull the driver
+    from the original and copy. If the two drivers share identity,
+    break loop and fail part. Otherwise, continue.
+
+    If each driver is distinct, the args pass Part 3.
+
+         All drivers are distinct.
+
+
+
+
+    Part 4: Check that each line in financials is distinct.
+
+    Iterate through a zip of original and copy financials. Check
+    for identity in each pair. Pairs already must have equality
+    per Part 1.
+
+         All lines are distinct.
+
+
+
+
+    Part 5: Check that copy period is original period.
+
+    orig_bu.period is copy_bu.period: True
+
+
+
+    Test completed.
+    ------------------------------------------------------------------------
+    ------------------------------------------------------------------------
+
+    T13.01 finished. 
+
+
+    T13.02: c2 vs cc3 (copy of a copy, periods blank).
+    ------------------------------------------------------------------------
+
+    **original object**: 
+    <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000041A1278>
+    (c2, period blank)
+
+    **copy object**:     
+    <DataStructures.Modelling.BusinessUnit.BusinessUnit object at 0x00000000041C94A8>
+    (cc3, period blank)
+
+    Part 1: Check for equality between original and copy.
+
+    orig_bu == copy_bu: True
+
+
+
+    Part 2: Check that components are distinct.
+
+         All component business units are distinct.
+
+
+
+
+    Part 3: Check that drivers are distinct.
+
+         All drivers are distinct.
+
+
+
+
+    Part 4: Check that each line in financials is distinct.
+
+         All lines are distinct.
+
+
+
+
+    Part 5: Check that copy period is original period.
+
+    orig_bu.period is copy_bu.period: True
+
+
+
+    Test completed.
+    ------------------------------------------------------------------------
+    ------------------------------------------------------------------------
+
+    T13.02 finished. 
+
+
+RUBRIC:
+
+T13.01.01: original equals copy ............................. False
+T13.01.02: components are distinct. ......................... True
+T13.01.03: drivers are distinct. ............................ True
+T13.01.04: financials are distinct. ......................... True
+T13.01.05: period identity .................................. True
+T13.01: confirmed ........................................... False
+T13.02.01: original equals copy ............................. True
+T13.02.02: components are distinct. ......................... True
+T13.02.03: drivers are distinct. ............................ True
+T13.02.04: financials are distinct. ......................... True
+T13.02.05: period identity .................................. True
+T13.02: confirmed ........................................... True
+********************************************************************************
+********************************************************************************
+T13.01: confirmed   False
+BUCopy_01 passed:  False
+********************************************************************************
+********************************************************************************
+Grader level: 
+Passed:  False
+BUCopy_01 result: False 
+
+start time:  1429885574.949641
+end time:    1429885575.027772
+run time:    0.07813096046447754
+****************************************
+PASSED:  False
+****************************************
