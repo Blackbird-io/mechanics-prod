@@ -790,7 +790,11 @@ class Tags:
             self.partOf = None
         self.parentObject = parentObject        
 
-    def tag(self,*newTags, field = "opt", mode = "at"):
+    def tag(self,
+            *newTags,
+            field = "opt",
+            mode = "at",
+            permit_duplicates = True):
         """
 
 
@@ -850,6 +854,12 @@ class Tags:
             #NOTE: automatically decase tags!
             tag = deCase(tag)
             #
+            #filter out duplicates if necessary
+            if permit_duplicates:
+                pass
+            else:
+                if tag in self.allTags:
+                    continue               
             #
             registered = False
             if self.tagManager:
