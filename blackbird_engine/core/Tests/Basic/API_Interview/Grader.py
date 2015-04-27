@@ -1,16 +1,44 @@
 #PROPRIETARY AND CONFIDENTIAL
 #Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2014
+#Copyright Blackbird Logical Applications, LLC 2015
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Diagnostics
-#Module: Tests\\Basic\\Summarization.Grader
+#Module: Tests\Basic\API_Interview\Task
+"""
+Grader for API_Interview
 
-import copy
-import dill
+Check whether concluding message includes all of the expected data. 
+
+====================  ==========================================================
+Object                Description
+====================  ==========================================================
+
+DATA:
+n/a
+
+FUNCTIONS:
+check()               compare Task output to standard
+printRubric()         pretty print for performance results
+
+CLASSES:
+n/a
+====================  ==========================================================
+"""
+
+
+
+#imports
 import sys
 import traceback
 
+
+
+
+#globals
+#n/a
+
+#functions
 def printRubric(r, width = 60):
     print("RUBRIC:\n")
     ks = list(rubric.keys())
@@ -27,27 +55,6 @@ def printRubric(r, width = 60):
         print(k,dots,rubric[k])
     return (stepks,confks)
 
-def lineByLine(A,B):
-    n = 0
-    for aL,bL in zip(A,B):
-        print(n)
-        n = n + 1
-        print("Line A: \n",aL)
-        print("Line B: \n",bL)
-        print(aL == bL)
-        if aL == bL:
-            continue
-        else:
-            for attr in aL.keyAttributes:
-                print(attr)
-                print("print(getattr(aL,attr))")
-                print(getattr(aL,attr))
-                print("print(getattr(bL,attr))")
-                print(getattr(bL,attr))
-                print("print(getattr(aL,attr) == getattr(bL,attr))")
-                print(getattr(aL,attr) == getattr(bL,attr))
-                print("\n")
-            print("\n\n")
 
 def check(result,standard):
     #standard is a stored version of the ``perfect`` output, w symmetrical
@@ -57,46 +64,57 @@ def check(result,standard):
     global passed
     passed = True
     try:
-        c = ""
         c = """
 
-        This test checks whether the summary of a model built from known inputs
-        in the current build matches the summary of the known (intended) output
-        of that model in a verified build.
+        This Grader checks whether the contents of the message that the Engine
+        returns at the conclusion of a simple scripted interview include all
+        of the required data from a standard end-of-interview message.
 
-        Grader will award an affirmative score ("pass") for all new summaries
-        that include the entirety of information from known summaries.
+        This Grader uses a standard message with a **deleted** e_model to
+        remain neutral towards model structure. 
         
+        Grader will award an affirmative score ("pass") for all new messages
+        that include the entirety of information from known summaries.
         """
         print(c)
         o = result["output"]
-        #16.01:
-        print("T16.01: compare model summaries")
-        rubric["T16.01: confirmed"] = True
-        new_summary = o["T16.01"]["summary"]
-        known_summary = standard["T16.01"]["summary"]
-        print("""
-        new_summary = o["T16.01"]["summary"]
-        known_summary = standard["T16.01"]["summary"]
-        """)
-        print("new_summary: \n%s\n" % new_summary)
-        print("known_summary: \n%s\n" % known_summary)
+        #17.01:
+        print("T17.01: compare concluding messages.")
+        rubric["T17.01: confirmed"] = True
+        new_msg = o["T17.01"]["final message"]
         #
-        known_keys = sorted(known_summary.keys())
+        #strip out e_model, which should be a massive string
+        c = "Strip out e_model from new message."
+        print(c) 
+        new_msg["M"].pop("e_model")
+        c = """new_msg["M"].pop("e_model")"""
+        print(c)
+        #
+        std_msg = standard["T17.01"]["final message"]
+        print("""
+        new_msg = o["T17.01"]["final message"]
+        std_msg = standard["T17.01"]["final message"]
+        """)
+        print("new_msg: \n%s\n" % new_msg)
+        print("std_msg: \n%s\n" % std_msg)
+        #
+        known_keys = sorted(std_msg.keys())
         #maintain fixed order of keys
         print("""
-        known_keys = sorted(known_summary.keys())
+        known_keys = sorted(std_msg.keys())
         """)
         print("Known keys: \n", known_keys)
-        c = """Iterate through known_keys, check that values in new summary
-        match those in known summary. New summary may include additional
-        data and still pass the test."""
+        c = """
+        Iterate through known_keys, check that values in new message
+        match those in known message. New summary may include additional
+        data and still pass the test.
+        """
         print(c)
         #
         outcome = True
         for (i,k) in enumerate(known_keys):
-            known_value = known_summary[k]
-            new_value = new_summary[k]
+            known_value = std_msg[k]
+            new_value = new_msg[k]
             c = ""
             c += "%s. Key: %s\n" % (i,k)
             c += "\tKnown value: %s\n" % known_value
@@ -110,14 +128,14 @@ def check(result,standard):
         else:
             print("\n")
         if not outcome:
-            print("new_summary is a superset of known_summary: ", False)
-            rubric["T16.01.01: summaries match"]=False
-            rubric["T16.01: confirmed"] = False
+            print("New message includes all expected data: ", False)
+            rubric["T17.01.01: summaries match"]=False
+            rubric["T17.01: confirmed"] = False
         else:
-            print("new_summary is a superset of known_summary: ", True)
-            rubric["T16.01.01: summaries match"]=True
+            print("New message includes all expected data: ", True)
+            rubric["T17.01.01: summaries match"]=True
         #
-        print("T16.01 finished. \n\n")
+        print("T17.01 finished. \n\n")
         #
         #
         #check rubric, figure out result
@@ -129,7 +147,7 @@ def check(result,standard):
                 print("*"*80)
                 print("*"*80)
                 print(k, " ", rubric[k])
-                print("Model_01_Retail passed: ", False)
+                print("API_Interview passed: ", False)
                 print("*"*80)
                 print("*"*80)
                 break
@@ -138,7 +156,7 @@ def check(result,standard):
         else:
             print("*"*80)
             print("*"*80)
-            print("Model_01_Retail passed: ", True)
+            print("API_Interview passed: ", True)
             print("*"*80)
             print("*"*80)
     except Exception as X:
