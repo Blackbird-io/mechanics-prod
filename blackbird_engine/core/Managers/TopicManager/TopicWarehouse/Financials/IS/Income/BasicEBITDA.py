@@ -105,12 +105,12 @@ def scenario_1(topic):
     driver_ebitda.setFormula(ebitda_formula)
     #
     #insert driver into model
-    #drivers go into bottom units only
-    topBU = M.currentPeriod.content
-    bottomBUs = M.currentPeriod.selectBottomUnits()
-    for bu in bottomBUs:
-        clean_driver = driver_ebitda.copy()
-        bu.addDriver(clean_driver,"EBITDA","ebitda")
+    #to make sure ebitda picks up any line items at the top level, insert
+    #into top unit only; otherwise ground-level calculations will block top
+    #from deriving it with its own line items taken into account
+    #
+    top_bu = M.currentPeriod.content
+    top_bu.addDriver(driver_ebitda, "EBITDA", "ebitda")
     #
     #don't clear Model.interview cache (protocol, etc) because didnt add any
     #lineitems
