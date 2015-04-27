@@ -182,7 +182,10 @@ def get_forecast(portal_model, fixed, ask):
     """
     
 
-    get_forecast(portal_model, fixed, ask) -> [CreditReference, PortalModel]
+    get_forecast(portal_model, fixed, ask) -> [PortalModel,
+                                               fixed,
+                                               ask,
+                                               CreditReference]
 
 
     **API SPEC**
@@ -197,14 +200,16 @@ def get_forecast(portal_model, fixed, ask):
     result = None
     M = EngineModel.from_portal(portal_model)
     uM = SessionController.process_analytics(M)
-    result = uM.analytics.cc.landscape.forecast(ask = ask, field = fixed)
+    ref = uM.analytics.cc.landscape.forecast(ask = ask, field = fixed)
+    new_model = pm_converter.to_portal(uM)
+    result = [new_model, fixed, ask, ref]
     return result  
     
 def get_landscape_summary(portal_model):
     """
 
 
-    get_landscape_summary(portal_model) -> [LandscapeSummary, PortalModel]
+    get_landscape_summary(portal_model) -> [PortalModel, LandscapeSummary]
 
 
     **API SPEC**
@@ -221,18 +226,18 @@ def get_landscape_summary(portal_model):
     M = EngineModel.from_portal(portal_model)
     if low_error:
         try:
-            M = SessionController.process_analytics(M)
+            uM = SessionController.process_analytics(M)
             new_summary = uM.analytics.cc.landscape.getSummary()
             result.update(new_summary)
         except Exception:
             pass
     else:
         #no exception handler
-        M = SessionController.process_analytics(M)
+        uM = SessionController.process_analytics(M)
         new_summary = uM.analytics.cc.landscape.getSummary()
         result.update(new_summary)
     new_model = pm_converter.to_portal(M)
-    return (result, new_model)
+    return [new_model, result]
 
 def next_question():
     """
@@ -314,11 +319,17 @@ def to_portal(engine_msg):
     M = engine_msg[0]
     Q = engine_msg[1]
     R = engine_msg[2]
-    portal_message = dict()
-    portal_message["M"] = pm_converter.to_portal(M)
     #
     global web_mode
-    portal_message["Q"] = QuestionManager.make_portal(Q, web = web_mode)
+    portal_q = None
+    if Q:
+        portal_q = QuestionManager.make_portal(Q, web = web_mode)
+    else:
+        portal_q = Q
+    #
+    portal_message = dict()
+    portal_message["M"] = pm_converter.to_portal(M)
+    portal_message["Q"] = portal_q
     portal_message["R"] = R
     return portal_message
 
