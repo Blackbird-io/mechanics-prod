@@ -1,6 +1,17 @@
+
+
+
+
+
+#imports
 from . import BBGlobalVariables as Globals
 from . import Shell as Engine
 
+
+
+
+#globals
+Engine.low_error  = True
 EndInterview = Globals.END_INTERVIEW
 
 

@@ -794,7 +794,7 @@ class Tags:
             *newTags,
             field = "opt",
             mode = "at",
-            permit_duplicates = True):
+            permit_duplicates = False):
         """
 
 
