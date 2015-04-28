@@ -91,6 +91,7 @@ def do(retainState = False):
     print("running %s.do()" % testName)
     output = None
     try:
+        print(os.getcwd())
         from . import Task
         output = Task.do()
         result["output"] = output

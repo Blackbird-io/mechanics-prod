@@ -82,7 +82,7 @@ def run_test_do(bLocation,
     #changing working directory so testing files can locate and store inputs
     #relative to the testing modules' location within root dir
     starting_wd = os.getcwd()
-    os.chdir(bLocation)
+    ##    os.chdir(bLocation)
     #
     if log:
         dFolderName = r"DiagnosticsLog"
@@ -170,7 +170,7 @@ def run_test_check(bLocation,
     #change working directory so testing files can locate and store inputs
     #relative to the testing modules' location within root dir
     starting_wd = os.getcwd()
-    os.chdir(bLocation)
+##    os.chdir(bLocation)
     #
     if log:
         dFolderName = r"DiagnosticsLog"

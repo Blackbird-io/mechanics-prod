@@ -21,6 +21,7 @@ output the final model
 
 #imports
 import dill
+import os
 import Shell
 
 
