@@ -4,11 +4,11 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Diagnostics
-#Module: Tests\Basic\API_Interview\Task
+#Module: Tests\Basic\API_Forecast\Grader
 """
-Grader for API_Interview
+Grader for API_Forecast
 
-Check whether concluding message includes all of the expected data. 
+Check whether new references match standards for the same price/size point. 
 
 ====================  ==========================================================
 Object                Description
@@ -66,55 +66,43 @@ def check(result,standard):
     try:
         c = """
 
-        This Grader checks whether the contents of the message that the Engine
-        returns at the conclusion of a simple scripted interview include all
-        of the required data from a standard end-of-interview message.
-
-        This Grader uses a standard message with a **deleted** e_model to
-        remain neutral towards model structure. 
+        This Grader checks whether the Engine delivered a set of credit
+        references that matches expectations for a known model.
         
-        Grader will award an affirmative score ("pass") for all new messages
-        that include the entirety of information from known summaries.
         """
         print(c)
         o = result["output"]
-        #17.01:
-        print("T17.01: compare concluding messages.")
-        rubric["T17.01: confirmed"] = True
-        new_msg = o["T17.01"]["final message"]
+        #19.01:
+        print("T19.01: compare credit references.")
+        rubric["T19.01: confirmed"] = True
         #
-        #strip out e_model, which should be a massive string
-        c = "Strip out e_model from new message."
-        print(c) 
-        new_msg["M"].pop("e_model")
-        c = """new_msg["M"].pop("e_model")"""
-        print(c)
+        new_references = o["T19.01"]["references"]
+        std_references = standard["T19.01"]["references"]
         #
-        std_msg = standard["T17.01"]["final message"]
         print("""
-        new_msg = o["T17.01"]["final message"]
-        std_msg = standard["T17.01"]["final message"]
+        new_references = o["T19.01"]["references"]
+        std_references = standard["T19.01"]["references"]
         """)
-        print("new_msg: \n%s\n" % new_msg)
-        print("std_msg: \n%s\n" % std_msg)
         #
-        known_keys = sorted(std_msg.keys())
+        known_keys = sorted(std_references.keys())
         #maintain fixed order of keys
         print("""
-        known_keys = sorted(std_msg.keys())
+        known_keys = sorted(std_references.keys())
         """)
         print("Known keys: \n", known_keys)
         c = """
-        Iterate through known_keys, check that values in new message
-        match those in known message. New summary may include additional
-        data and still pass the test.
+
+        Iterate through known_keys, check that references for each request
+        match expected data. 
+
+        Test requires 100% match for each known credit reference to pass. 
         """
         print(c)
         #
         outcome = True
         for (i,k) in enumerate(known_keys):
-            known_value = std_msg[k]
-            new_value = new_msg[k]
+            known_value = std_references[k]
+            new_value = new_references[k]
             c = ""
             c += "%s. Key: %s\n" % (i,k)
             c += "\tKnown value: %s\n" % known_value
@@ -128,14 +116,14 @@ def check(result,standard):
         else:
             print("\n")
         if not outcome:
-            print("New message includes all expected data: ", False)
-            rubric["T17.01.01: summaries match"]=False
-            rubric["T17.01: confirmed"] = False
+            print("New references equal expected outcome: ", False)
+            rubric["T19.01.01: credit references equal"]=False
+            rubric["T19.01: confirmed"] = False
         else:
-            print("New message includes all expected data: ", True)
-            rubric["T17.01.01: summaries match"]=True
+            print("New references equal expected outcome: ", True)
+            rubric["T19.01.01: credit references equal"]=True
         #
-        print("T17.01 finished. \n\n")
+        print("T19.01 finished. \n\n")
         #
         #
         #check rubric, figure out result
@@ -147,7 +135,7 @@ def check(result,standard):
                 print("*"*80)
                 print("*"*80)
                 print(k, " ", rubric[k])
-                print("API_Interview passed: ", False)
+                print("API_Forecast passed: ", False)
                 print("*"*80)
                 print("*"*80)
                 break
@@ -156,7 +144,7 @@ def check(result,standard):
         else:
             print("*"*80)
             print("*"*80)
-            print("API_Interview passed: ", True)
+            print("API_Forecast passed: ", True)
             print("*"*80)
             print("*"*80)
     except Exception as X:
