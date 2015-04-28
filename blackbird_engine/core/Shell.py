@@ -90,7 +90,10 @@ def continuous(first_message = None, cycles = 200, portal_format = False):
     the API spec for PortalMessage. Otherwise, function returns an MQR message.
     """
     last_message = None
-    #clear MR
+    #
+    MR.clearMessageIn()
+    MR.clearMessageOut()
+    MR.clearMQR()
     #
     if not first_message:
         #launch the Portal and get the first message from the Engine before
@@ -112,7 +115,7 @@ def continuous(first_message = None, cycles = 200, portal_format = False):
         mock_engine_msg = (M,Q,R)
         #skip expensive formal unpack for now
         status = Globals.checkMessageStatus(mock_engine_msg)
-        if status = Globals.status_pendingQuestion:
+        if status == Globals.status_pendingQuestion:
             MR.messageIn = to_engine(first_message)
             #convert message so it tracks standard SessionController output;
             #that way, can use loop to keep track of cycles without running

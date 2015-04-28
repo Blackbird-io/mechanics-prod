@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Diagnostics
-#Module: Tests\Basic\API_Interview\Grader
+#Module: Tests\Basic\API_Interview\Task
 """
 Grader for API_Interview
 

@@ -4,11 +4,11 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Diagnostics
-#Module: Tests\Basic\API_Interview\Grader
+#Module: Tests\Basic\API_Landscape\Grader
 """
-Grader for API_Interview
+Grader for API_Landscape
 
-Check whether concluding message includes all of the expected data. 
+Check whether the landscape that Tester delivered includes all required data. 
 
 ====================  ==========================================================
 Object                Description
@@ -66,55 +66,49 @@ def check(result,standard):
     try:
         c = """
 
-        This Grader checks whether the contents of the message that the Engine
-        returns at the conclusion of a simple scripted interview include all
-        of the required data from a standard end-of-interview message.
+        This Grader checks whether the summary of the credit landscape that
+        Tester (and Engine) delivered for the known model includes all expected
+        data.
 
-        This Grader uses a standard message with a **deleted** e_model to
-        remain neutral towards model structure. 
-        
-        Grader will award an affirmative score ("pass") for all new messages
-        that include the entirety of information from known summaries.
+        Grader will award an affirmative score ("pass") when new landscape
+        summary includes all of the information from the standard summary.
         """
         print(c)
         o = result["output"]
-        #17.01:
-        print("T17.01: compare concluding messages.")
-        rubric["T17.01: confirmed"] = True
-        new_msg = o["T17.01"]["final message"]
-        #
-        #strip out e_model, which should be a massive string
-        c = "Strip out e_model from new message."
-        print(c) 
-        new_msg["M"].pop("e_model")
-        c = """new_msg["M"].pop("e_model")"""
-        print(c)
-        #
-        std_msg = standard["T17.01"]["final message"]
+        #18.01:
+        print("T18.01: compare landscape summaries.")
+        rubric["T18.01: confirmed"] = True
+        new_land = o["T18.01"]["new land"]
+        std_land = standard["T18.01"]["new land"]
         print("""
-        new_msg = o["T17.01"]["final message"]
-        std_msg = standard["T17.01"]["final message"]
+        new_land = o["T18.01"]["new land"]
+        std_land = standard["T18.01"]["new land"]
         """)
-        print("new_msg: \n%s\n" % new_msg)
-        print("std_msg: \n%s\n" % std_msg)
+        print("new_land: \n%s\n" % new_land)
+        print("std_land: \n%s\n" % std_land)
         #
-        known_keys = sorted(std_msg.keys())
+        known_keys = sorted(std_land.keys())
         #maintain fixed order of keys
         print("""
-        known_keys = sorted(std_msg.keys())
+        known_keys = sorted(std_land.keys())
         """)
         print("Known keys: \n", known_keys)
         c = """
-        Iterate through known_keys, check that values in new message
+
+        Iterate through known_keys, check that values in new summary
         match those in known message. New summary may include additional
-        data and still pass the test.
+        (key, value) pairs and still pass the test.
+
+        Test still requires that each attribute in the landscape summary
+        conform to the API spec and include **only** the ``hi`` and ``lo``
+        keys.
         """
         print(c)
         #
         outcome = True
         for (i,k) in enumerate(known_keys):
-            known_value = std_msg[k]
-            new_value = new_msg[k]
+            known_value = std_land[k]
+            new_value = new_land[k]
             c = ""
             c += "%s. Key: %s\n" % (i,k)
             c += "\tKnown value: %s\n" % known_value
@@ -128,14 +122,14 @@ def check(result,standard):
         else:
             print("\n")
         if not outcome:
-            print("New message includes all expected data: ", False)
-            rubric["T17.01.01: summaries match"]=False
-            rubric["T17.01: confirmed"] = False
+            print("New landscape summary includes all expected data: ", False)
+            rubric["T18.01.01: landscape summaries match"]=False
+            rubric["T18.01: confirmed"] = False
         else:
-            print("New message includes all expected data: ", True)
-            rubric["T17.01.01: summaries match"]=True
+            print("New landscape summary includes all expected data: ", True)
+            rubric["T18.01.01: landscape summaries match"]=True
         #
-        print("T17.01 finished. \n\n")
+        print("T18.01 finished. \n\n")
         #
         #
         #check rubric, figure out result
@@ -147,7 +141,7 @@ def check(result,standard):
                 print("*"*80)
                 print("*"*80)
                 print(k, " ", rubric[k])
-                print("API_Interview passed: ", False)
+                print("API_Landscape passed: ", False)
                 print("*"*80)
                 print("*"*80)
                 break
@@ -156,7 +150,7 @@ def check(result,standard):
         else:
             print("*"*80)
             print("*"*80)
-            print("API_Interview passed: ", True)
+            print("API_Landscape passed: ", True)
             print("*"*80)
             print("*"*80)
     except Exception as X:
