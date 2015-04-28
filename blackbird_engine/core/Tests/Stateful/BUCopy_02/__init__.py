@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Diagnostics
-#Module: (Basic) BUCopy_02.__init__
+#Module: Tests\Stateful\BUCopy_02.__init__
 
 #Module follows standard Test interface.
 #Module requires that package contain a standard.pkl file.

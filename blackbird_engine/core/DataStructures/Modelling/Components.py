@@ -58,6 +58,7 @@ class Components(dict, Tags, Equalities):
     ====================  ======================================================
 
     DATA:
+    by_name               dict; keys are unit names, values are unit bbids
     keyAttributes         list; CLASS; keep empty to follow standard dict logic
 
     FUNCTIONS:
@@ -69,6 +70,7 @@ class Components(dict, Tags, Equalities):
     ex_to_special()       makes a shell, fills with items from seed & target
     getOrdered()          returns a list of values, ordered by key
     inheritTags()         runs default routine, then inherits from all comps
+    refresh_names()       clear and rebuild name-to-bbid dictionary
     ====================  ======================================================
     """
     #
@@ -87,6 +89,7 @@ class Components(dict, Tags, Equalities):
         dict.__init__(self)
         Tags.__init__(self, name)
         Equalities.__init__(self)
+        self.by_name = dict()
 
     def __eq__(self, comparator, trace = False, tab_width = 4):
         """
@@ -103,7 +106,7 @@ class Components(dict, Tags, Equalities):
         """
         return Equalities.__ne__(self, comparator, trace, tab_width)
 
-    def addItem(self,bu):
+    def addItem(self, bu):
         """
 
 
@@ -111,13 +114,18 @@ class Components(dict, Tags, Equalities):
 
 
         Method adds bu to the instance, keyed as bu.id.bbid. If bu does not
-        specify a bbid, method raises IDError. 
+        specify a bbid, method raises IDError.
+
+        Method also registers each unit's id under the unit's name in
+        instance.by_name. 
         """
         if not bu.id.bbid:
             c = "Cannot add a component that does not have a valid bbid."
             raise BBExceptions.IDError(c)
         bu.setPartOf(self)
         self[bu.id.bbid] = bu
+        if bu.name:
+            self.by_name[bu.name] = bu.id.bbid
 
     def clearInheritedTags(self,recur = False):
         """
@@ -142,11 +150,16 @@ class Components(dict, Tags, Equalities):
 
 
         Method returns a deep copy of components. Uses Tags.copy() to create a
-        shell and then fills it with a copy of each item in the instance by
-        calling item.copy().
+        shell. Method then sets result.by_name to a blank dictionary and adds a
+        copy of each unit in the instance to the result. 
         """
         result = Tags.copy(self, enforce_rules = True)
+        #
+        #customize container
         result.clear()
+        result.by_name = dict()
+        #
+        #fill container (automatically add names)
         for C in self.getOrdered():
             rC = C.copy(enforce_rules)
             result.addItem(rC)
@@ -287,4 +300,22 @@ class Components(dict, Tags, Equalities):
                 if recur:
                     bu.inheritTags()
                 self.inheritTagsFrom(bu)
+
+    def refresh_names(self):
+        """
+
+
+        Components.refresh_names() -> None
+
+
+        Method clears and rebuilds the instance by_name dictionary for all units
+        in instance. 
+        """   
+        self.by_name.clear()
+        for bu in self.values:
+            if bu.name:
+                self.by_name[bu.name] = bu.id.bbid
+            else:
+                continue
+        #
                 

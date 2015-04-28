@@ -26,7 +26,6 @@ def do():
 #T11.01
 output["T11.01"] = {}
 print(output)
-##full_p = r"c:\blackbird\engine\diagnostics\scripts\retail2.pkl"
 ##use relative paths to maintain portability
 p = r"scripts\retail2.pkl"
 print(p)
@@ -43,9 +42,8 @@ topBU = M.currentPeriod.content
 topBU.fillOut()
 output["T11.01"]["M"] = M
 print(output)
-##full_p_s = r"c:\blackbird\engine\diagnostics\tests\basic\Model_01_Retail\new_model.pkl"
 ##use relative paths to maintain portability
-p_s = r"tests\basic\Model_01_Retail\new_model.pkl"
+p_s = r"tests\stateful\Model_01_Retail\new_model.pkl"
 f = open(p_s,"wb")
 dill.dump(M,f)
 f.close()

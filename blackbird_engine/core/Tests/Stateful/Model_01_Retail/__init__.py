@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Diagnostics
-#Module: (Basic) Model_01_Retail.__init__
+#Module: Tests\Stateful\Model_01_Retail.__init__
 
 #Module follows standard Test interface.
 #Module requires that package contain a standard.pkl file.
@@ -45,7 +45,7 @@ import traceback
 
 #globals
 testName = "Model_01_Retail"
-testPath = "Tests" + "\\" + "Basic" + "\\" + testName
+testPath = "Tests" + "\\" + "Stateful" + "\\" + testName
 
 def do(retainState = False):
     """
