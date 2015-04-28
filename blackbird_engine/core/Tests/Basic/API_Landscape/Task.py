@@ -17,7 +17,7 @@ Object                Description
 
 DATA:
 output                dict; populated on do()
-retail_script         dict; from Retail2_Raw.answers
+path                  str; location of known model relative to root Engine dir
 
 FUNCTIONS:
 do()                  runs through interview, populates output
@@ -40,7 +40,7 @@ import Shell as Engine
 
 #globals
 output = {}
-path = r"Tests\Basic\API_Landscape\starting_model.pkl"
+path = r"Tests\Basic\portal_model_retail_2.pkl"
 
 #functions
 def do():

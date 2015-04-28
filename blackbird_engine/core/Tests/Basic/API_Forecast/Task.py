@@ -4,11 +4,12 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Diagnostics
-#Module: Tests.Basic.API_Interview.Task
+#Module: Tests.Basic.API_Forecast.Task
 """
-Task for API_Interview
+Task for API_Forecast
 
-Run through scripted interview using only API interface, return last message. 
+Load a pickled PortalModel, call Engine.get_landscape_summary(), pick out the
+landscape summary, store summary in output for Grader review. 
 
 ====================  ==========================================================
 Object                Description
@@ -16,7 +17,7 @@ Object                Description
 
 DATA:
 output                dict; populated on do()
-retail_script         dict; from Retail2_Raw.answers
+path                  str; location of known model relative to root Engine dir
 
 FUNCTIONS:
 do()                  runs through interview, populates output
@@ -30,18 +31,16 @@ n/a
 
 
 #imports
-import BBGlobalVariables as Globals
-import Shell as Engine
-import SimplePortal as Portal
+import dill
 
-from Scripts import Retail2_Raw
+import Shell as Engine
 
 
 
 
 #globals
 output = {}
-retail_script = Retail2_Raw.answers
+path = r"Tests\Basic\portal_model_retail_2.pkl"
 
 #functions
 def do():
@@ -56,84 +55,107 @@ def do():
     Output is usually a dictionary of data. Output can be any object that the
     Grader for this Test understands
 
-    Function runs through an interview script until Engine declares completion. 
+    Function gets 4 price and 4 size forecasts from Engine for a known model. 
     """
     #
-    #T17.01
+    #T19.01
     #
-    c = ""
-    c+= "Use script: \n%s\n" % retail_script
+    c = """
+    Start with a completed PortalModel stored in a file. The PortalModel
+    includes all API-spec attributes and an e_model string.
+    """
     print(c)
     #
-    Portal.set_script(retail_script)
-    c = """Portal.set_script(retail_script)"""
+    print("Load PortalModel from file.")
+    c = "path: %s\n" % path
     print(c)
     #
-    msg_0 = Portal.starting_message
-    c = ""
-    c+= "msg_0 = Portal.starting_message"
-    c+= "\nStarting message: \n%s\n" % msg_0
+    file = open(path, "rb")
+    starting_model = dill.load(file)
+    file.close()
+    #
+    c = """
+    file = open(path, "rb")
+    starting_model = dill.load(file)
+    file.close()
+    """
     print(c)
     #
-    final_message = None
-    c = "final_message = None"
+
+    c = """
+    Get four size forecasts and four price forecasts. In each of the two
+    categories, two forecasts (the maximum and the minimum) lie outside the
+    bounds of the expected credit landscape facing the model. The remaining
+    two forecasts lie within the landscape.
+    """
+    print(c)
+    #
+    
+    sizes = [("$1mm", 1000000),
+                 ("$5mm", 5000000),
+                 ("$10mm", 10000000),
+                 ("$20mm", 20000000)]
+    
+    prices = [("2pct", 0.02),
+                  ("5pct", 0.05),
+                  ("10pct", 0.10),
+                  ("20pct", 0.25)]
+
+    references = dict()
+    
+    #
+    c = """
+    sizes = [("$1mm", 1000000),
+                 ("$5mm", 5000000),
+                 ("$10mm", 10000000),
+                 ("$20mm", 20000000)]
+    
+    prices = [("2pct", 0.02),
+                  ("5pct", 0.05),
+                  ("10pct", 0.10),
+                  ("20pct", 0.25)]
+
+    references = dict()
+    """
+    print(c)
+    #
+    
+    for (label, dollars) in sizes:
+        ref = Engine.get_forecast(starting_model, "size", dollars)[3]
+        #get_forecast() returns len-4 list [model, fixed, ask, ref]
+        references[label] = ref
+
+    for (label, percent) in prices:
+        ref = Engine.get_forecast(starting_model, "price", percent)[3]
+        #get_forecast() returns len-4 list [model, fixed, ask, ref]
+        references[label] = ref
+
+    #
+    c = """
+    for (label, dollars) in sizes:
+        ref = Engine.get_forecast(starting_model, "size", dollars)[3]
+        #get_forecast() returns len-4 list [model, fixed, ask, ref]
+        references[label] = ref
+
+    for (label, percent) in prices:
+        ref = Engine.get_forecast(starting_model, "price", percent)[3]
+        #get_forecast() returns len-4 list [model, fixed, ask, ref]
+        references[label] = ref
+    """
+    print(c)
+    #
+    
+    output["T19.01"] = dict()
+    output["T19.01"]["references"] = references
+    #
+    c = """
+    output["T19.01"] = dict()
+    output["T19.01"]["references"] = references
+    """
     print(c)
     #
     c = """
-    Start with a blank portal message. Call Engine through the API interface for
-    the next message. Use the Simple Portal to process the engine output. Repeat
-    until Engine returns an end-interview message.
-    
-    For any message, Portal will collect the user response (here, from the
-    script), package the response into an API-spec PortalResponse object, and
-    return a new, conforming message.
-
-    Use the Engine's checkMessageStatus function to figure out when to stop.
-    """
-    print(c)
-    #
-    loop = True
-    while loop:
-        msg_1 = Engine.process_interview(msg_0)
-        msg_mqr = Engine.to_engine(msg_1)
-        #
-        status = Globals.checkMessageStatus(msg_mqr)
-        if status == Globals.status_endSession:
-            final_message = msg_1
-            break
-        else:
-            msg_2 = Portal.process(msg_1)
-            msg_0 = msg_2
-            continue
-    
-    c+= """
-    loop = True
-    while loop:
-        msg_1 = Engine.process_interview(msg_0)
-        msg_mqr = Engine.to_engine(msg_1)
-        #
-        status = Globals.checkMessageStatus(msg_mqr)
-        if status == Globals.status_endSession:
-            final_message = msg_1
-            break
-        else:
-            msg_2 = Portal.process(msg_1)
-            msg_0 = msg_2
-            continue
-    """
-    print(c)
-    output["T17.01"] = {}
-    output["T17.01"]["final message"] = final_message
-    #
-    c = """
-    Engine successfully concluded the interview and stored the final message
-    for grading. 
-
-    Test does not print final_message because it contains a long string for the
-    serialized e_model.
-
-    Grader will individually evaluate whether the final message satisfies the
-    standard. 
+    Engine successfully delivered all requested credit references. 
     """
     print(c)
     #

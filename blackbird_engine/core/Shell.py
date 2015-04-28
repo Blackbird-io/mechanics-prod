@@ -246,6 +246,9 @@ def get_forecast(portal_model, fixed, ask):
     M = EngineModel.from_portal(portal_model)
     uM = SessionController.process_analytics(M)
     ref = uM.analytics.cc.landscape.forecast(ask = ask, field = fixed)
+    #ref comes back as a CR Reference object, with custom prints. Flatten to
+    #primitive. 
+    ref = dict.copy(ref)
     new_model = pm_converter.to_portal(uM)
     result = [new_model, fixed, ask, ref]
     return result  

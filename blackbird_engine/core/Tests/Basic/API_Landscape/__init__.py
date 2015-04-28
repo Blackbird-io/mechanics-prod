@@ -10,7 +10,7 @@
 #Module requires that package contain a standard.pkl file.
 
 """
-API_Forecast
+API_Landscape
 
 Task calls Shell.get_landscape_summary() for an externally-provided PortalModel
 that grew out of the retail-2 script. Grader checks that the summary includes

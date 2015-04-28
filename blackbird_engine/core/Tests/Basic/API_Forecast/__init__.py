@@ -4,19 +4,16 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Diagnostics
-#Module: Tests.Basic.API_Interview.__init__
+#Module: Tests.Basic.API_Forecast.__init__
 
 #Module follows standard Test interface.
 #Module requires that package contain a standard.pkl file.
 
 """
-API_Interview
+API_Forecast
 
-Task starts with a blank portal message and runs through the retail_2 interview
-script using only the API interface. Grader checks that output includes the
-expected primitive info.
-
-Grader does **not** check that e_model matches any particular state. 
+Task uses Shell to forecast 8 data points for a known PortalModel. Grader
+compares the new forecasts to standard. 
 
 Reporting structure: 
 
@@ -48,7 +45,7 @@ import sys
 import traceback
 
 #globals
-testName = "API_Interview"
+testName = "API_Forecast"
 testPath = "Tests" + "\\" + "Basic" + "\\" + testName
 
 def do(retainState = False):
