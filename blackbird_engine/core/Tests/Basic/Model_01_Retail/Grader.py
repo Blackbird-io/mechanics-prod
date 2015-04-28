@@ -6,10 +6,23 @@
 #Blackbird Diagnostics
 #Module: Tests\\Basic\\Model_01_Retail.Grader
 
+
+
+
+#imports
 import copy
 import dill
+import os
 import sys
 import traceback
+
+
+
+
+#globals
+#n/a
+
+#functions
 
 def printRubric(r, width = 60):
     print("RUBRIC:\n")
@@ -106,9 +119,13 @@ def check(result,standard):
         """
         print(c)
         p_store = r"tests\basic\model_01_retail\new_model.pkl"
+        p_store = os.path.normpath(p_store)
+        #make path portable
+        #
         f = open(p_store,"rb")
         hardOM = dill.load(f)
         f.close()
+        #
         print(r"""
         p_store = r"tests\basic\model_01_retail\new_model.pkl"
         f = open(p_store,"rb")

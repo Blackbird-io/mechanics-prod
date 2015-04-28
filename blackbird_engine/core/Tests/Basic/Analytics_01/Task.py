@@ -20,11 +20,23 @@ save all to output
 
 Grader compares result
 """
+
+
+
+
+#imports
 import dill
+import os
+
 import Shell
 
+
+
+
+#globals
 output = {}
 
+#functions
 def do():
     return output
 #
@@ -45,11 +57,16 @@ output["T12.02"] = {}
 output["T12.03"] = {}
 print(output)
 p = r"Tests\Basic\Analytics_01\source_model.pkl"
+p = os.path.normpath(p)
+#make path portable
+#
 print(p)
 f = open(p,"rb")
 print(f)
 sM = dill.load(f)
 f.close()
+del p
+#
 print("starting model: \n",sM)
 uM = Shell.SessionController.process_analytics(sM)
 print ("uM = Shell.SessionController.process_analytics(sM)")
@@ -71,7 +88,11 @@ output["T12.03"]["ref10mm"] = ref10mm
 output["T12.03"]["ref5pct"] = ref5pct
 output["T12.03"]["ref10pct"] = ref10pct
 print(output["T12.03"].keys())
+#
 p_u = r"tests\basic\Analytics_01\updated_model.pkl"
+p_u = os.path.normpath(p_u)
+#make path portable
+#
 f = open(p_u,"wb")
 dill.dump(uM,f)
 f.close()

@@ -129,7 +129,7 @@ def check(result,standard):
                 print("*"*80)
                 print("*"*80)
                 print(k, " ", rubric[k])
-                print("Model_01_Retail passed: ", False)
+                print("Summarization passed: ", False)
                 print("*"*80)
                 print("*"*80)
                 break
@@ -138,7 +138,7 @@ def check(result,standard):
         else:
             print("*"*80)
             print("*"*80)
-            print("Model_01_Retail passed: ", True)
+            print("Summarization passed: ", True)
             print("*"*80)
             print("*"*80)
     except Exception as X:

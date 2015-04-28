@@ -7,212 +7,104 @@
 #Module: Tester
 
 """
-This module provides diagnostic tools Blackbird Environment builds.
 
+Module provides tools for running individual tests. 
 ====================  ==========================================================
 Object                Description
 ====================  ==========================================================
 
-Functions:
+DATA:
+n/a
 
-validateBuild()       checks if build completes and passes each test in a battery
-printSummary()        prints completed, passed status for each test in summary
-
+FUNCTIONS:
+run_test_do()         returns dict, use build to perform one test's task
+run_test_check()      returns True if build output passes test, else False
+====================  ==========================================================
 """
+
+
+
+
 #imports:
 import os
 import sys
 import dill as pickle
 import time
 import copy
-import Tests
 
-def runBattery(bLocation,battery=None,trace=False,forceFinish = False,
-                  cleanUpDir = True):
+
+
+
+#functions
+def run_test_do(bLocation,
+                test,
+                retainState = False,
+                log = False,
+                timer = False):
     """
 
-    runBattery(bLocation,battery=None,trace=False,forceFinish=False,
-                  cleanUpDir=True) -> bool
 
-    ``bool`` is True if the build in bLocation is valid; bool is False otherwise.
+    run_test_do(bLocation, test [,retainState = False
+                                [, log = False
+                                [, timer = False]]]) -> dict
 
-    .runBuild() locates build, appends it to sys.path, then runs each test in
-    ``battery``, collects the output (which presumably relies on the build) and
-    stores a pickled version of that output in the bLocation\\DiagnosticLog
-    directory.
 
-    The function then compares each test's output to its standard.
+    Function runs the task portion of the specified test module for the build in
+    bLocation.
+  
+    Function returns a dictionary in the standard test reporting format. See
+    test module doc string for details on the response contents.
     
-    .validateBuild() returns False if any test generates an exception or output
-    that doesn't match up against the standard.
+    -- ``bLocation`` must be an existing directory. 
 
-    Function records substantive testing operations on a log file that it places
-    in the bLocation directory by redirecting sys.stdout. Function restores
-    stdout to built-in default (sys.__stdout__) when it's done. 
+    -- ``retainState``: if True, test attempts to preserve state on exceptions.
+    -- ``log``: if True, function prints a report to the build's DiagnosticsLog
+       folder; otherwise, function prints report to stdout
+    -- ``timer``: if True, function times how long the test's task takes.
+
+    NOTE: Function switches CWD to bLocation for the duration of the test
     
-    Arguments:
-        ``bLocation``      a string of the top-level directory for a given
-                           build, with respect to root (c:\).
-        ``battery``        list of Test modules
-        ``trace``          if True, function returns a tuple of (bool,summary);
-                           otherwise, function returns only the bool status
-        ``forceFinish``    if True, function runs through every test in battery
-                           even after build fails one
-        ``cleanUpDir``     delete any objects generated during testing that were
-                           not found in dir() at time of call. 
+    Function returns to the original working directory after the test completes
+    operation. 
     """
+    #
+    bLocation = os.path.normpath(bLocation)
+    #make bLocation system-neutral
+    #
     if not os.path.exists(bLocation):
         status = "build location does not exist"
         return status
-    if not battery: 
-        battery = Tests.trial
-    summary = {}
-    cleanDir = dir()
-    build_Valid = True
-    if type(bLocation) != type(''):
-        raise Exception
+    #
+    #append bLocation to PYTHON_PATH so build modules can run imports as they
+    #expect
     sys.path.append(bLocation)
-    dFolderName = r"DiagnosticsLog"
-    dFolderPath = bLocation+"\\"+dFolderName
-    #place a diagnostic log folder in the build directory
-    if not os.path.exists(dFolderPath):
-        os.makedirs(dFolderPath)
-    dFilePath = dFolderPath + "\\" + "log.txt"
-    logFile = open(dFilePath,"w")
-    sys.stdout = logFile
-    #now printing to logFile
-    hLine1 = "=" * 80
-    hLine2 = hLine1
-    hLine3 = "Blackbird Diagnostics: TESTER"
-    hLine3 = hLine3.center(80)
-    hLine4 = hLine1
-    hLine5 = hLine1
-    hLine6 = "specified build: \n\t%s\n" % bLocation
-    hLine7 = "running Tester.runBattery()"
-    hLine8 = hLine1
-    header = [hLine1,hLine2,hLine3,hLine4,
-              hLine5,hLine6,hLine7,hLine8]
-    for line in header:
-        print(line)
-    print("begining %s test battery ... " % battery["name"])
-    startTime = time.time()
-    oFolderName = "o_%s" % battery["name"]
-    oFolderPath = dFolderPath + "\\" + oFolderName
-    if not os.path.exists(oFolderPath):
-        os.makedirs(oFolderPath)
-    #NOTE: can have different batteries specified somewhere in Tests or
-    #even in Validation.__init__
-    oFilePattern = "out_%s"
-    oFileExt = ".pkl"
-    for test in battery["tests"]:
-        subheader = str(test.testName)
-        subheader = subheader.center(80,"*")
-        print(subheader)
-        oFileName = oFilePattern % test.testName
-        oFileName = oFileName+oFileExt
-        oFilePath = oFolderPath + "\\" + oFileName
-        oFile = open(oFilePath,"wb")
-        bPreResult = test.do()
-        bResult = test.check(bPreResult)
-        pickle.dump(bResult,oFile)
-        oFile.close()
-        summary[test.testName] = bResult
-        if bResult["completed"] == False or bResult["passed"] == False:
-            build_Valid = False
-        if build_Valid == False and forceFinish == False:
-            print("\nbuild failed %s. validation concluded.\n" % test.testName)
-            break
-        else:
-            continue
-    print("*"*80)
-    print("*"*80)
-    print("%s test battery concluded." % battery["name"])
-    print("\n")
-    printSummary(summary)
-    if build_Valid:
-        print("RESULT: Valid")
-    else:
-        print("RESULT: Not Valid")
-    endTime = time.time()
-    duration = endTime - startTime
-    print("Start Time: %s" % startTime)
-    print("End Time: %s" % endTime)
-    print("Duration: %s" % duration)
-    fLine1 = "THE END"
-    fLine1 = fLine1.center(80,"=")
-    fLine2 = hLine1
-    footer = fLine1+"\n"+fLine2+"\n"
-    print(footer)
-    #clean up stdout, sys.path, dir
-    sys.stdout = sys.__stdout__
-    logFile.close()
-    sys.path.remove(bLocation)
-    usedDir = dir()
-    if cleanUpDir:
-        newAttrs = set(usedDir).difference(set(cleanDir))
-        instruction = "del %s"
-        for attr in newAttrs:
-            announce = "deleting %s"
-            #print(announce % attr)
-            #should be an eval(del attr) here
-    if trace:
-        return (build_Valid,summary)
-    else:
-        return build_Valid
-
-def printSummary(summary):
-    """
-    printSummary(summary) -> str
-
-    For every test in summary, prints whether build (i) completed and (ii)
-    passed the test. A build may not complete a test if Test.do() returns an
-    exception.    
-    """
-    tests = list(summary.keys())
-    tests.sort()
-    h1 = "SUMMARY"
-    h1 = h1.center(20)
-    print(h1)
-    for test in tests:
-        c = "not completed"
-        if summary[test]["completed"]:
-            c = "completed"
-        p = "failed"
-        if summary[test]["passed"]:
-            p = "passed"
-        l1 = "%s: %s, %s" % (test,c,p)
-        print(l1)
-    print("\n")
-
-def runTest_do(bLocation,test,retainState = False, log = False, timer = False):
-    """
-
-    runTestDo(bLocation,test[,retainState = False, log = False]) -> result
-
-    ``result`` is a dictionary in the standard test reporting format.
-
-    Function runs the task portion of a specified test module.
-
-    ``bLocation`` must be an existing directory. 
-    If ``retainState`` is True, test attempts to preserve state on exceptions.
-    If ``log`` is True, function prints a report to the build's DiagnosticsLog
-    """
-    if not os.path.exists(bLocation):
-        status = "build location does not exist"
-        return status
-    sys.path.append(bLocation)
+    #
+    #changing working directory so testing files can locate and store inputs
+    #relative to the testing modules' location within root dir
+    starting_wd = os.getcwd()
+    os.chdir(bLocation)
+    #
     if log:
         dFolderName = r"DiagnosticsLog"
         dFolderPath = bLocation+"\\"+dFolderName
+        dFolderPath = os.path.normpath(dFolderPath)
+        #create a system-neutral path
+        #
         #place a diagnostic log folder in the build directory
         if not os.path.exists(dFolderPath):
             os.makedirs(dFolderPath)
         ft = time.localtime()
         sFolderName = str(ft.tm_mon)+str(ft.tm_mday)+str(ft.tm_year)
         sFolderPath = dFolderPath + "\\" + sFolderName
+        sFolderPath = os.path.normpath(sFolderPath)
+        #create a system-neutral path
+        #
         if not os.path.exists(sFolderPath):
             os.makedirs(sFolderPath)
         logFilePath = sFolderPath + "\\" + test.testName + "_do"+".txt"
+        logFilePath = os.path.normpath(logFilePath)
+        #create a system-neutral path
+        #
         logFile = open(logFilePath,"w")
         sys.stdout = logFile
     tStart = time.time()
@@ -227,27 +119,80 @@ def runTest_do(bLocation,test,retainState = False, log = False, timer = False):
         h1 = "\nRESULT:"
         print("*"*40)
         print(h1)
-        print_Result(result)
+        print_result(result)
         logFile.close()
+    #
+    #revert back to original stdout and working dir
+    os.chdir(starting_wd)
     sys.stdout = sys.__stdout__
+    #
     return result
 
-def runTest_check(bLocation,test,result,log = False, timer = False):
+def run_test_check(bLocation,
+                   test,
+                   result,
+                   log = False,
+                   timer = False):
     """
-    bLocation required for storage path    
+
+
+    run_test_check(bLocation, test, result
+                                [, log = False
+                                [, timer = False]]) -> bool
+
+
+    Function returns True if the test's Grader module finds result satisfactory,
+    and False otherwise.
+
+    E.g.:
+
+    >>> import Tests
+    >>> import Tester
+    >>> p = r"c:\blackbird\blackbird_engine\core"
+    >>> t = Tests.Basic.Model_01_Retail
+    >>> r = Tester.runTest_do(p, t)
+    >>> s = Tester.runTest_check(p, t, r)
+
+    If ``s`` is True, build passes test ``t``. 
+  
+    Function returns a dictionary in the standard test reporting format. See
+    test module doc string for details on the response contents.
+    
+    -- ``bLocation`` must be an existing directory. 
+    -- ``log``: if True, function prints a report to the build's DiagnosticsLog
+       folder; otherwise, function prints report to stdout
+    -- ``timer``: if True, function times how long the test's task takes. 
     """
+    #
+    bLocation = os.path.normpath(bLocation)
+    #make bLocation system-neutral
+    #
+    #change working directory so testing files can locate and store inputs
+    #relative to the testing modules' location within root dir
+    starting_wd = os.getcwd()
+    os.chdir(bLocation)
+    #
     if log:
         dFolderName = r"DiagnosticsLog"
         dFolderPath = bLocation+"\\"+dFolderName
+        dFolderPath = os.path.normpath(dFolderPath)
+        #create a system-neutral path
+        #
         #place a diagnostic log folder in the build directory
         if not os.path.exists(dFolderPath):
             os.makedirs(dFolderPath)
         ft = time.localtime()
         sFolderName = str(ft.tm_mon)+str(ft.tm_mday)+str(ft.tm_year)
         sFolderPath = dFolderPath + "\\" + sFolderName
+        sFolderPath = os.path.normpath(sFolderPath)
+        #create a system-neutral path
+        #
         if not os.path.exists(sFolderPath):
             os.makedirs(sFolderPath)
         logFilePath = sFolderPath + "\\" + test.testName + "_check"+".txt"
+        logFilePath = os.path.normpath(logFilePath)
+        #create a system-neutral path
+        #
         logFile = open(logFilePath,"w")
         sys.stdout = logFile
     tStart = time.time()
@@ -263,12 +208,19 @@ def runTest_check(bLocation,test,result,log = False, timer = False):
     print("*"*40)
     if log:
         logFile.close()
+    #
+    #revert back to original stdout and working dir
+    os.chdir(starting_wd)
     sys.stdout = sys.__stdout__
+    #
     return passed
 
-def print_Result(result,truncate = True):
+def print_result(result,truncate = True):
     """
-    printResult(result) -> str
+
+
+    print_result(result) -> str
+
     
     Pretty print function for standard ``result`` dictionary.
     """
@@ -282,27 +234,7 @@ def print_Result(result,truncate = True):
         if truncate and valLength > truncLength:
             val = "... (truncated)"
         print(line % (key,val))
-    print("")
-
-def logger(filePath,task,task_pargs,task_kargs,timer = True):
-    """
-    task_pargs must be a list
-    task_kargs must be a dictionary
-    """
-    pass    
-
-def timer(task,*pargs,**kargs):
-    tStart = time.time()
-    task(*pargs,**kargs)
-    tEnd = time.time()
-    return (tStart,tEnd)
-    
-def runTest():
-    #do both
-    #
-    pass
-
-
+    print("")  
 
 
 
