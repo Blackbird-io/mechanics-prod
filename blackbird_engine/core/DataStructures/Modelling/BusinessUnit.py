@@ -130,7 +130,7 @@ class BusinessUnit(Tags,Equalities):
     def __hash__(self):
         return self.id.__hash__()
 
-    def addComponent(self,bu,updateID = True):
+    def addComponent(self, bu, updateID = True):
         """
 
 
