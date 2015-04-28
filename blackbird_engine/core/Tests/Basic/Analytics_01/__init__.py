@@ -47,6 +47,8 @@ import traceback
 #globals
 testName = "Analytics_01"
 testPath = "Tests" + "\\" + "Basic" + "\\" + testName
+testPath = os.path.normpath(testPath)
+#make testPath system-compatible
 
 def do(retainState = False):
     """
@@ -105,7 +107,7 @@ def do(retainState = False):
     print("%s generated the following output: \n\t%s" % (testName,output))
     return result
     
-def check(result,useRefPath = False,refPath=None):
+def check(result, useRefPath = False, refPath=None):
     """
     check(result[,useRefPath=False[,refPath=None]]) -> dict
 
@@ -142,6 +144,9 @@ def check(result,useRefPath = False,refPath=None):
         sys.path.insert(1,refPath)
     print("load standard object")
     standardPath = testPath + "\\" + "standard.pkl"
+    standardPath = os.path.normpath(standardPath)
+    #make path portable
+    #
     standardFile = open(standardPath,"rb")
     standardObj = pickle.load(standardFile)
     print("\tstandard object loaded")

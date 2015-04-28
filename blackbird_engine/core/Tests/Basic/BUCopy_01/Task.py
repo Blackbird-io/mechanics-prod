@@ -18,10 +18,21 @@ save all to output.
 Grader compares the original and the copy
 
 """
-import dill
 
+
+
+
+#imports
+import dill
+import os
+
+
+
+
+#globals
 output = {}
 
+#functions
 def do():
     return output
 #
@@ -43,11 +54,17 @@ print(c)
 output["T13.01"] = {}
 print(output)
 p = r"Tests\Basic\BUCopy_01\source_model.pkl"
+p = os.path.normpath(p)
+#make path portable
+#
 print(p)
+#
 f = open(p,"rb")
 print(f)
 sM = dill.load(f)
 f.close()
+del f, p
+#
 print("starting model: \n",sM)
 s_topBU = sM.currentPeriod.content
 s_topBU.fillOut()

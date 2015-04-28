@@ -38,15 +38,27 @@ do()                  imports Task script, returns result, including output from
 check()               checks result from do() against a standard
 ====================  ==========================================================
 """
+
+
+
+
 #imports
 import dill as pickle
+import os
 import sys
 import traceback
+
+
+
 
 #globals
 testName = "Model_01_Retail"
 testPath = "Tests" + "\\" + "Basic" + "\\" + testName
+testPath = os.path.normpath(testPath)
+#make path portable
+#
 
+#functions
 def do(retainState = False):
     """
 
@@ -141,6 +153,9 @@ def check(result,useRefPath = False,refPath=None):
         sys.path.insert(1,refPath)
     print("load standard object")
     standardPath = testPath + "\\" + "standard.pkl"
+    standardPath = os.path.normpath(standardPath)
+    #make path portable
+    #
     standardFile = open(standardPath,"rb")
     standardObj = pickle.load(standardFile)
     print("\tstandard object loaded")
