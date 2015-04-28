@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Diagnostics
-#Module: Tests.Basic.__init__
+#Module: Tests.Legacy.__init__
 
 """
 The Tests package contains both individual tests and pre-made batteries of those
@@ -33,9 +33,7 @@ check()               takes output as an argument, checks it against a
 
 
 #imports
-from . import Model_01_Retail
-from . import Analytics_01
-from . import BUCopy_01
-from . import BUCopy_02
-from . import Ex_01
-from . import Summarization
+from . import Financials_01
+from . import LifeCycle_01
+from . import Queue_01
+from . import BusinessUnit_03
