@@ -247,7 +247,13 @@ def get_forecast(portal_model, fixed, ask):
     uM = SessionController.process_analytics(M)
     ref = uM.analytics.cc.landscape.forecast(ask = ask, field = fixed)
     #ref comes back as a CR Reference object, with custom prints. Flatten to
-    #primitive. 
+    #primitive.
+    #
+    #check if ref is filled out; if not, resubmit for min or max?
+    #if not ref:
+        #alt_ask = None
+        #land = uM.atx.getSummary()
+        #if ask > land[field][
     ref = dict.copy(ref)
     new_model = pm_converter.to_portal(uM)
     result = [new_model, fixed, ask, ref]
