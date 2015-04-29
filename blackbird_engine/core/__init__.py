@@ -18,6 +18,7 @@ full_path = os.path.abspath(sub_dir)
 #
 #adding docker-specific path
 dock_path = r"opt/apps/django/blackbird_engine/core"
+dock_path = os.path.normpath(dock_path)
 #
 sys.path.append(sub_dir)
 sys.path.append(dock_path)
