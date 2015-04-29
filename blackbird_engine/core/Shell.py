@@ -42,6 +42,18 @@ n/a
 
 
 #imports
+import sys
+import os
+
+c = "CWD: \n%s\n" % os.getcwd()
+print(c)
+c = "Python Path (via sys): \n%s\n" % sys.path
+print(c)
+sub_folder = r"blackbird_engine/core"
+sub_folder = os.path.normpath(sub_folder)
+if sub_folder not in sys.path:
+    sys.path.append(sub_folder)
+
 import SimplePortal as Portal
 import BBGlobalVariables as Globals
 
