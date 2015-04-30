@@ -243,21 +243,3 @@ class PortalModel(ReadyForPortal):
                 
                         #now.extrapolate_to(next)
                     
-            
-                #get past
-                
-                    #
-
-            #timeLine.get_ordered()
-            #timeLine.get_past()
-            #timeLine.get_future():
-            #   #
-            #
-            #
-            #
-            #
-            #
-            #
-            #
-    
-    

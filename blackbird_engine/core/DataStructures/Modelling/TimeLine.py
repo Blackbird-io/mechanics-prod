@@ -197,8 +197,11 @@ class TimeLine(dict):
         """
         if not seed:
             seed = self.current_period
-        seed_date = seed.ends
-        segments = M.get_date_segments(seed_date)
+        seed_date = datetime.date.fromtimestamp(seed.end)
+        #seed.end is a float representing a POSIX timestamp since Epoch. For
+        #downstream use, convert the timestamp into a calendar date 
+        #
+        segments = self.get_date_segments(seed_date)
         past = segments[0]
         future = segments[-1]
         #
@@ -238,12 +241,32 @@ class TimeLine(dict):
             dates = dates[::-1]
             #reverse order, so go from newest to oldest
         #
-        for date in dates:
+        for i in range(len(dates)):
+            date = dates[i]                
             #with default arguments, start work at the period immediately
             #prior to the current period
             target_period = self[date]
-            seed.extrapolate_to(target_period)
-            seed = target_period
+            updated_period = seed.extrapolate_to(target_period)
+            #
+            #extrapolate_to() always does work on an external object and leaves
+            #the target untouched. Manually swap the old period for the new
+            #period.
+            #
+            if i == 0:
+                updated_period = self.configurePeriod(updated_period)
+                #on i == 0, extrapolating from the original seed. seed can be
+                #external (come from a different model), in which case it would
+                #use a different model namespace id for unit tracking.
+                #
+                #accordingly, when extrapolating from the may-be-external seed,
+                #use configurePeriod() to conform output to current model.
+                #
+                #subsequent iterations of the loop will start w periods that are
+                #already in the model, so method can leave their namespace id
+                #configuration as is.
+                #
+            self[date] = updated_period
+            seed = updated_period
         #
 
     def findPeriod(self,query):
@@ -285,10 +308,10 @@ class TimeLine(dict):
         output[2] = list of keys for periods after ref_date
         """
         result = None
-        if not ref_date:
-            ref_date = self.ref_date
-        #
-        ref_end = self.get_ref_end_date(ref_date)
+        if ref_date:
+            ref_end = self.get_ref_end_date(ref_date)    
+        else:
+            ref_end = self.current_period.end        
         #
         dates = sorted(self.keys())
         ref_spot = dates.index(ref_end)
