@@ -6,7 +6,7 @@ EndInterview = 'END_interview'
 _mock_questions = [
     dict(
         e_question=dict(),
-        question_id='business_name',
+        bbid='business_name',
         topic_name='Mock',
 
         progress=0.1,
@@ -31,7 +31,7 @@ _mock_questions = [
     ),
     dict(
         e_question=dict(),
-        question_id='some_email',
+        bbid='some_email',
         topic_name='Mock',
 
         progress=0.15,
@@ -50,7 +50,7 @@ _mock_questions = [
     ),
     dict(
         e_question=dict(),
-        question_id='ice_cream',
+        bbid='ice_cream',
         topic_name='Mock',
 
         progress=0.2,
@@ -72,7 +72,7 @@ _mock_questions = [
     ),
     dict(
         e_question=dict(),
-        question_id='industry',
+        bbid='industry',
         topic_name='Mock',
 
         progress=0.3,
@@ -94,7 +94,7 @@ _mock_questions = [
     ),
     dict(
         e_question=dict(),
-        question_id='store',
+        bbid='store',
         topic_name='Mock',
 
         progress=0.3,
@@ -112,7 +112,7 @@ _mock_questions = [
     ),
     dict(
         e_question=dict(),
-        question_id='check_some_stuff',
+        bbid='check_some_stuff',
         topic_name='Mock',
 
         progress=0.4,
@@ -139,7 +139,7 @@ _mock_questions = [
     ),
     dict(
         e_question=dict(),
-        question_id='would_you_rather',
+        bbid='would_you_rather',
         topic_name='Mock',
 
         progress=0.5,
@@ -170,7 +170,7 @@ _mock_questions = [
     ),
     dict(
         e_question=dict(),
-        question_id='numbers',
+        bbid='numbers',
         topic_name='Mock',
 
         progress=0.55,
@@ -234,7 +234,7 @@ _mock_questions = [
     ),
     dict(
         e_question=dict(),
-        question_id='number_range',
+        bbid='number_range',
         topic_name='Mock',
 
         progress=0.6,
@@ -256,7 +256,7 @@ _mock_questions = [
     ),
     dict(
         e_question=dict(),
-        question_id='dates',
+        bbid='dates',
         topic_name='Mock',
 
         progress=0.65,
@@ -290,7 +290,7 @@ _mock_questions = [
     ),
     dict(
         e_question=dict(),
-        question_id='date_range',
+        bbid='date_range',
         topic_name='Mock',
 
         progress=0.7,
@@ -312,7 +312,7 @@ _mock_questions = [
     ),
     dict(
         e_question=dict(),
-        question_id='times',
+        bbid='times',
         topic_name='Mock',
 
         progress=0.75,
@@ -345,7 +345,7 @@ _mock_questions = [
     ),
     dict(
         e_question=dict(),
-        question_id='time_range',
+        bbid='time_range',
         topic_name='Mock',
         progress=0.8,
         short='Work hours',
@@ -363,7 +363,7 @@ _mock_questions = [
     ),
     dict(
         e_question=dict(),
-        question_id='business_name_2',
+        bbid='business_name_2',
         topic_name='Mock',
 
         progress=0.85,
@@ -388,7 +388,7 @@ _mock_questions = [
     ),
     dict(
         e_question=dict(),
-        question_id='life_story',
+        bbid='life_story',
         topic_name='Mock',
 
         progress=0.9,
@@ -482,9 +482,9 @@ class EngineModel:
         self._q_idx = len(_mock_questions)
 
     def update(self, question, response):
-        if question['question_id'] == 'business_name':
+        if question['bbid'] == 'business_name':
             self._m['business_name'] = response[0]['response'][0]
-        elif question['question_id'] == 'industry':
+        elif question['bbid'] == 'industry':
             self._m['industry'] = response[0]['response'][0]
         self._increment_q_idx()
 
