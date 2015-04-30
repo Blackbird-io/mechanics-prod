@@ -141,7 +141,7 @@ class PortalQuestion(ReadyForPortal):
                     #dictionary and call it a day
                 #
                 result["input_array"].append(clean_element)
-        result["progress"] = int(prelim["progress"])/100
+        result["progress"] = int(prelim["progress"])
         #
         #manually supplement 
         result["name"] = copy.copy(seed.tags.name)
