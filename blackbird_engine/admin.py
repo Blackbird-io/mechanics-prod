@@ -9,8 +9,8 @@ class BlackbirdModelAdmin(admin.ModelAdmin):
 
 
 class QuestionAdmin(admin.ModelAdmin):
-    list_filter = ('business', 'question_id', 'valid')
-    list_display = ('short', 'business', 'valid', 'sequence_num', 'created_timestamp', 'question_id')
+    list_filter = ('business', 'bbid', 'valid')
+    list_display = ('short', 'business', 'valid', 'sequence_num', 'created_timestamp', 'bbid')
 
 
 admin.site.register(BlackbirdModel, BlackbirdModelAdmin)

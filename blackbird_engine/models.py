@@ -106,12 +106,11 @@ class Question(models.Model):
     blackbird_model = models.OneToOneField(BlackbirdModel, related_name="question")
 
     # used by engine
-    e_question = json_field.JSONField(null=True)
-    question_id = models.CharField(max_length=64, null=True)
+    bbid = models.CharField(max_length=64, null=True)
     topic_name = models.CharField(max_length=64, null=True)
 
     # question information, passed to portal
-    progress = models.FloatField(default=0.0)
+    progress = models.IntegerField(default=0)
     short = models.CharField(max_length=64, null=True)
     prompt = models.TextField(null=True)
     comment = models.TextField(null=True)

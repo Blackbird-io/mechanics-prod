@@ -101,6 +101,6 @@ class InternalQuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Question
-        fields = ('e_question', 'question_id', 'topic_name', 'progress', 'short',
+        fields = ('e_question', 'bbid', 'topic_name', 'progress', 'short',
                   'prompt', 'comment', 'array_caption', 'input_array',
                   'input_type', 'input_sub_type', 'transcribe')
