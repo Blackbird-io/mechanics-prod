@@ -145,7 +145,7 @@ class PortalQuestion(ReadyForPortal):
         #
         #manually supplement 
         result["name"] = copy.copy(seed.tags.name)
-        result["bbid"] = str(seed.id.bbid)
+        result["question_id"] = str(seed.id.bbid)
         #
         del result["_var_attrs"]
         #
