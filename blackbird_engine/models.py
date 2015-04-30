@@ -106,7 +106,7 @@ class Question(models.Model):
     blackbird_model = models.OneToOneField(BlackbirdModel, related_name="question")
 
     # used by engine
-    bbid = models.CharField(max_length=64, null=True)
+    question_id = models.CharField(max_length=64, null=True)
     topic_name = models.CharField(max_length=64, null=True)
 
     # question information, passed to portal
