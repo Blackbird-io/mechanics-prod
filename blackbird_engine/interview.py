@@ -50,8 +50,11 @@ def _get_question_dict(question):
 
 
 def _save_question_dict(business, answered_question, model, end, stop, question_dict):
+    s = serializers.InternalQuestionSerializer(data=_strip_nones(question_dict))
+    assert s.is_valid(), 'Question from Engine is valid'
+    question_dict = s.validated_data
     return models.Question.objects.create_next(answered_question, end, stop, business=business, blackbird_model=model,
-                                               **_strip_nones(question_dict))
+                                               **question_dict)
 
 
 def _get_model(business, question=None):

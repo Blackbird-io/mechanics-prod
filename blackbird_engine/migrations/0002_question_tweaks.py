@@ -10,11 +10,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RenameField(
-            model_name='question',
-            old_name='question_id',
-            new_name='bbid',
-        ),
         migrations.RemoveField(
             model_name='question',
             name='e_question',
@@ -22,6 +17,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='question',
             name='progress',
-            field=models.IntegerField(default=1),
+            field=models.IntegerField(default=0),
         ),
     ]
