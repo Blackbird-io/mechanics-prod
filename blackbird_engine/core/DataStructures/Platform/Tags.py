@@ -790,11 +790,18 @@ class Tags:
             self.partOf = None
         self.parentObject = parentObject        
 
-    def tag(self,*newTags, field = "opt", mode = "at"):
+    def tag(self,
+            *newTags,
+            field = "opt",
+            mode = "at",
+            permit_duplicates = False):
         """
 
 
-        Tags.tag(*newTags[,field = "opt"[, mode = "at"]]) -> None
+        Tags.tag( *newTags[,
+                  field = "opt"[,
+                  mode = "at"[,
+                  permit_duplicates = False]]]) -> None
 
 
         Method appends tags to an instance.
@@ -808,6 +815,9 @@ class Tags:
         
         Tags should generally be optional. When in doubt, add more tags.
 
+        If ``permit_duplicates`` is False, method will skip (no-op) tags
+        that already appear in the specified field on the on the instance. 
+
         NOTE2: An instance's ``name`` and ``partOf`` are set directly via a
         descriptor. These tags always skip catalog registration.
         
@@ -816,7 +826,7 @@ class Tags:
         -- "at" [ default ] means tagging is taking place within the same object
         -- "up" means tagging is taking place during inheritance
         -- "out" means tagging is taking place during copying.
-
+        
         NOTE3: Use of detag() rules is highly discouraged.
 
         For best results, create independent functions that explicitly define
@@ -832,7 +842,8 @@ class Tags:
         inheritance could thus differ from the order on the seed object.
         Application of a detag rule to a pure deepcopy of the seed object could
         then yield a different outcome than its application during normal
-        tagging.        
+        tagging.
+
         """
         attrs = {}
         attrs["r"]=attrs["req"]=attrs["required"]="requiredTags"
@@ -842,7 +853,7 @@ class Tags:
         attrs[1] = attrs["_optionalTags"] = attrs["o"]
         attrs[2] = attrs["_inheritedTags"] = attrs["i"]
         #
-        real_thing = getattr(self,attrs[field])
+        real_thing = getattr(self, attrs[field])
         #
         for tag in newTags:
             #
@@ -850,6 +861,12 @@ class Tags:
             #NOTE: automatically decase tags!
             tag = deCase(tag)
             #
+            #filter out duplicates if necessary
+            if permit_duplicates:
+                pass
+            else:
+                if tag in real_thing:
+                    continue               
             #
             registered = False
             if self.tagManager:

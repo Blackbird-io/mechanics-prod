@@ -29,6 +29,7 @@ Model                 structured snapshots of a company across time periods
 
 #imports
 import copy
+import dill
 import time
 import BBExceptions
 import BBGlobalVariables as Globals
@@ -154,12 +155,19 @@ class Model(Tags):
 
         Method extracts a Model from portal_model.
 
+        Method expects ``portal_model`` to be a string serialized by dill (or
+        pickle).
+
         If portal_model does not specify a Model object, method creates a new
         instance. Method stores all portal data other than the Model in the
         output's .portal_data dictionary.         
         """
-        M = portal_model["e_model"]
-        if not M:
+        M = None
+        flat_model = portal_model["e_model"]
+        #
+        if flat_model:
+            M = dill.loads(flat_model)
+        else:
             business_name = portal_model["business_name"]
             if not business_name:
                 business_name = Globals.default_model_name

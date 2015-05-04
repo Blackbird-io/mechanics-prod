@@ -82,34 +82,76 @@ QuestionManager.populate()
 #sub modules beat Shell to the punch
 
 #functions
-def continuous(max_tries = 200):
+def continuous(first_message = None, cycles = 200, portal_format = False):
     """
 
 
     Shell.continuous([max_tries = 200]) -> msg
 
-    
-    Function launches Portal and runs a continuous processing loop until Engine
-    completes the Model or the number of iterations exceeds the ``max_tries``
-    circuit-breaker. Function then returns the last message, always in MQR
-    format.
+
+    Function runs a continuous processing loop until Engine completes the
+    interview or the number of iterations exceeds the ``cycles``
+    circuit-breaker, whichever is earlier. Function then returns the last
+    message.
+
+    Function will start work from the first_message, if one is specified. The
+    first message **must** be in PortalMessage format. Without a first message,
+    function will start with the launch message from Simple Portal. 
+
+    If ``portal_format`` is True, function returns a message that complies with
+    the API spec for PortalMessage. Otherwise, function returns an MQR message.
     """
+    last_message = None
     #
-    #run launch routine and first process outside loop
-    MR.messageOut = Portal.launch("iop start")
-    message_for_engine = to_engine(MR.messageOut)
-    MR.messageIn = SessionController.process(message_for_engine)
-    last_message = MR.messageIn
-    MR.messageOut = None
+    MR.clearMessageIn()
+    MR.clearMessageOut()
+    MR.clearMQR()
+    #
+    if not first_message:
+        #launch the Portal and get the first message from the Engine before
+        #moving to loop
+        MR.messageOut = Portal.launch("iop start")
+        message_for_engine = to_engine(MR.messageOut)
+        MR.messageIn = SessionController.process(message_for_engine)
+        MR.messageOut = None
+        #
+        last_message = MR.messageIn
+        if portal_format:
+            last_message = to_portal(last_message)
+        #
+    else:
+        #caller specified a starting message
+        M = first_message["M"]
+        Q = first_message["Q"]
+        R = first_message["R"]
+        mock_engine_msg = (M,Q,R)
+        #skip expensive formal unpack for now
+        status = Globals.checkMessageStatus(mock_engine_msg)
+        if status == Globals.status_pendingQuestion:
+            MR.messageIn = to_engine(first_message)
+            #convert message so it tracks standard SessionController output;
+            #that way, can use loop to keep track of cycles without running
+            #``shadow`` processing beforehand
+            #
+        else:
+            MR.messageOut = first_message
+        #
+        if portal_format:
+            last_message = first_message
+        else:
+            last_message = to_engine(first_message)
+        #
     #
     #now start looping
     n = 0
-    while n < max_tries:
+    while n < cycles:
         if MR.messageOut:
             message_for_engine = to_engine(MR.messageOut)
             status = Globals.checkMessageStatus(message_for_engine)
             if status == Globals.status_endSession:
                 last_message = message_for_engine
+                if portal_format:
+                    last_message = MR.messageOut
                 break
             else:
                 MR.messageIn = SessionController.process(message_for_engine)
@@ -118,6 +160,8 @@ def continuous(max_tries = 200):
             status = Globals.checkMessageStatus(MR.messageIn)
             if status == Globals.status_endSession:
                 last_message = MR.messageIn
+                if portal_format:
+                    last_message = to_portal(last_message)
                 break
             else:
                 message_for_portal = to_portal(MR.messageIn)
@@ -125,6 +169,7 @@ def continuous(max_tries = 200):
                                                  display = show_responses)
                 MR.messageIn = None
         n = n + 1
+    #
     return last_message
 
 def disable_script():
@@ -213,6 +258,15 @@ def get_forecast(portal_model, fixed, ask):
     M = EngineModel.from_portal(portal_model)
     uM = SessionController.process_analytics(M)
     ref = uM.analytics.cc.landscape.forecast(ask = ask, field = fixed)
+    #ref comes back as a CR Reference object, with custom prints. Flatten to
+    #primitive.
+    #
+    #check if ref is filled out; if not, resubmit for min or max?
+    #if not ref:
+        #alt_ask = None
+        #land = uM.atx.getSummary()
+        #if ask > land[field][
+    ref = dict.copy(ref)
     new_model = pm_converter.to_portal(uM)
     result = [new_model, fixed, ask, ref]
     return result  

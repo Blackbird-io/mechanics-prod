@@ -1,5 +1,18 @@
+
+
+
+
+
+#imports
 from . import BBGlobalVariables as Globals
 from . import Shell as Engine
+
+
+
+
+#globals
+Engine.low_error  = True
+Engine.enable_web_mode()
 
 EndInterview = Globals.END_INTERVIEW
 
