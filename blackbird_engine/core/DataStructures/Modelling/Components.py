@@ -175,13 +175,16 @@ class Components(dict, Tags, Equalities):
                 if i == 0:
                     box_width = len(boxes[0][0])
                     #set box width once, to the first line of the first unit
+                    #
                 filled_bunch_hdr = None
                 filled_unit_hdrs = []
                 for k in range(j, (j + bunch_size)):
                     hdr = unit_header % k
                     hdr = hdr.center(box_width)
                     filled_unit_hdrs.append(hdr)
+                #
                 filled_bunch_hdr = unit_spacer.join(filled_unit_hdrs)
+                filled_bunch_hdr = "\t" + filled_bunch_hdr
                 bunch_lines.append(filled_bunch_hdr)                
                 #
                 #boxes now contains 3 lists of strings. the lists are all the
@@ -189,10 +192,11 @@ class Components(dict, Tags, Equalities):
                 #all those lists together into tuples of (line1a, line1b,
                 #line1c), (line2a, line2b, line2c), etc.
                 #
-                zipped_boxes = zip(boxes)
+                zipped_boxes = zip(*boxes)
                 #
                 for triplet in zipped_boxes:
                     line = unit_spacer.join(triplet)
+                    line = "\t" + line
                     bunch_lines.append(line)
                 #
                 bunch_lines.append(bunch_footer)
@@ -208,6 +212,9 @@ class Components(dict, Tags, Equalities):
         #
         #finished all the groups; now go through the tail
         #HAVE TO MANUALLY ADD A TAIL HEADER
+        filled_tail_hdr = group_header % ((unit_count - tail_count),
+                                          (unit_count - 1))
+        main_lines.append(filled_tail_hdr)
         if tail_count != 0:
             #
             tail_lines = []
@@ -236,6 +243,7 @@ class Components(dict, Tags, Equalities):
                     hdr = hdr.center(box_width)
                     filled_unit_hdrs.append(hdr)
                 filled_bunch_hdr = unit_spacer.join(filled_unit_hdrs)
+                filled_bunch_hdr = "\t" + filled_bunch_hdr
                 bunch_lines.append(filled_bunch_hdr)                
                 #
                 #boxes now contains 3 lists of strings. the lists are all the
@@ -243,10 +251,11 @@ class Components(dict, Tags, Equalities):
                 #all those lists together into tuples of (line1a, line1b,
                 #line1c), (line2a, line2b, line2c), etc.
                 #
-                zipped_boxes = zip(boxes)
+                zipped_boxes = zip(*boxes)
                 #
                 for triplet in zipped_boxes:
                     line = unit_spacer.join(triplet)
+                    line = "\t" + line
                     bunch_lines.append(line)
                 #
                 bunch_lines.append(bunch_footer)
@@ -271,17 +280,22 @@ class Components(dict, Tags, Equalities):
                 hdr = hdr.center(box_width)
                 filled_unit_hdrs.append(hdr)
             filled_bunch_hdr = unit_spacer.join(filled_unit_hdrs)
+            filled_bunch_hdr = "\t" + filled_bunch_hdr
             stub_lines.append(filled_bunch_hdr)
             #
-            zipped_boxes = zip(boxes)
+            zipped_boxes = zip(*boxes)
             #
             for triplet in zipped_boxes:
                 line = unit_spacer.join(triplet)
+                line = "\t" + line
                 stub_lines.append(line)
             #
             stub_lines.append(bunch_footer)
             main_lines.extend(stub_lines)
             #
+        main_lines.append(group_footer)
+        main_lines.append(group_footer)
+        #
         return main_lines            
         
     def addItem(self, bu):
