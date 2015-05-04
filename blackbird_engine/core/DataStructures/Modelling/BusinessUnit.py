@@ -131,12 +131,17 @@ class BusinessUnit(Tags,Equalities):
     def __hash__(self):
         return self.id.__hash__()
 
-    def __str__(self):
+    def __str__(self, lines = None):
         #
         #get string list from pretty_print, slap a new-line at the end of every
         #line and return a string with all the lines joined together.
         #
-        lines = self.pretty_print()
+        if not lines:
+            lines = self.pretty_print()
+        #add empty strings for header and footer padding
+        lines.insert(0, "")
+        lines.append("")
+        #
         box = "\n".join(lines)
         return box
 
@@ -166,6 +171,7 @@ class BusinessUnit(Tags,Equalities):
         | LIFE  :         43% |
         | STAGE :      MATURE |   
         | TYPE  :         OPS |
+        | FILL  :        True |
         | COMPS :          45 |
         +=====================+
         """
@@ -186,22 +192,28 @@ class BusinessUnit(Tags,Equalities):
                   "LIFE",
                   "STAGE",
                   "TYPE",
+                  "FILL",
                   "COMPS"]
         ##data
         data = {}
         data["NAME"] = str(self.name)[:data_width]
         #
-        id_length = len(str(self.id))
         id_dots = "..."
-        id_width = data_width - len(id_dots)
-        id_tail  = str(self.id)[(id_length - id_width):]
+        tail_width = data_width - len(id_dots)
+        id_tail  = str(self.id.bbid)[(tail_width * -1):]
         data["ID"] = id_dots + id_tail
         #
-        dob = datetime.date.fromtimestamp(self.lifeCycle.dateBorn)
-        dob = dob.isoformat()
-        data["DOB"] = dob.isoformat()
+        if self.lifeCycle.dateBorn:
+            dob = datetime.date.fromtimestamp(self.lifeCycle.dateBorn)
+            dob = dob.isoformat()
+        else:
+            dob = "n/a"
+        data["DOB"] = dob
         #
-        life = int(self.lifeCycle.percentDone)
+        if self.lifeCycle.percentDone:
+            life = int(self.lifeCycle.percentDone)
+        else:
+            life = "n/a"
         data["LIFE"] = str(life)
         #
         stage = str(self.lifeCycle.currentLifeStageName)[:data_width]
@@ -209,6 +221,8 @@ class BusinessUnit(Tags,Equalities):
         #
         unit_type = str(None)
         data["TYPE"] = unit_type.upper()
+        #
+        data["FILL"] = str(self.filled)
         #
         data["COMPS"] = str(len(self.components))
         #
@@ -227,6 +241,9 @@ class BusinessUnit(Tags,Equalities):
                                    data[field].rjust(data_width),
                                    side_element)
             lines.append(new_line)
+        #
+        #add a bottom border symmetrical to the top
+        lines.append(top_border)
         #
         return lines    
 
