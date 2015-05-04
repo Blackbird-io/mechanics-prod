@@ -91,6 +91,7 @@ class BusinessUnit(Tags,Equalities):
     derive()              uses drivers to determine values for financials
     fillOut()             integrates consolidate() and derive()
     fitToPeriod()         set refDate for bu and all components to period.end
+    pretty_print()        show graphical summary of instance
     resetFinancials()     resets instance and (optionally) component financials
     setAnalytics()        attaches an object to instance.analytics
     setComponents()       attaches a Components object, sets partOf
@@ -132,6 +133,16 @@ class BusinessUnit(Tags,Equalities):
         return self.id.__hash__()
 
     def __str__(self, lines = None):
+        """
+
+
+        BusinessUnit.__str__(lines = None) -> str
+
+
+        Method concatenates each line in ``lines``, adds a new-line character at
+        the end, and returns a string ready for printing. If ``lines`` is None,
+        method calls pretty_print() on instance. 
+        """
         #
         #get string list from pretty_print, slap a new-line at the end of every
         #line and return a string with all the lines joined together.
@@ -144,108 +155,6 @@ class BusinessUnit(Tags,Equalities):
         #
         box = "\n".join(lines)
         return box
-
-    def pretty_print(self,
-                     top_element = "=",
-                     side_element = "|",
-                     box_width = 23,
-                     field_width = 5,
-                     corner_pluses = True):
-
-        """
-
-
-        BusinessUnit.pretty_print() -> list
-
-
-        Method returns a list of strings that displays a box if printed in
-        order. Line ends are naked (i.e, lines do **not** terminate in a
-        new-line character.
-
-        Box format:
-      
-        +=====================+
-        | NAME  : Baltimore-4 |
-        | ID    : ...x65-0b78 |
-        | DOB   :  2015-04-01 |
-        | LIFE  :         43% |
-        | STAGE :      MATURE |   
-        | TYPE  :         OPS |
-        | FILL  :        True |
-        | COMPS :          45 |
-        +=====================+
-        """
-        #
-        ##formatting rules
-        template = "%s %s : %s %s"
-        empty_line = template % (side_element,
-                                     ("x" * field_width),
-                                     "",
-                                     side_element)
-        #empty_line should equal " | xxxxxxxx :  |"
-        data_width = box_width - len(empty_line)
-        #
-        ##fields:
-        fields = ["NAME",
-                  "ID",
-                  "DOB",
-                  "LIFE",
-                  "STAGE",
-                  "TYPE",
-                  "FILL",
-                  "COMPS"]
-        ##data
-        data = {}
-        data["NAME"] = str(self.name)[:data_width]
-        #
-        id_dots = "..."
-        tail_width = data_width - len(id_dots)
-        id_tail  = str(self.id.bbid)[(tail_width * -1):]
-        data["ID"] = id_dots + id_tail
-        #
-        if self.lifeCycle.dateBorn:
-            dob = datetime.date.fromtimestamp(self.lifeCycle.dateBorn)
-            dob = dob.isoformat()
-        else:
-            dob = "n/a"
-        data["DOB"] = dob
-        #
-        if self.lifeCycle.percentDone:
-            life = int(self.lifeCycle.percentDone)
-        else:
-            life = "n/a"
-        data["LIFE"] = str(life)
-        #
-        stage = str(self.lifeCycle.currentLifeStageName)[:data_width]
-        data["STAGE"] = stage.upper()
-        #
-        unit_type = str(None)
-        data["TYPE"] = unit_type.upper()
-        #
-        data["FILL"] = str(self.filled)
-        #
-        data["COMPS"] = str(len(self.components))
-        #
-        ##assemble the real thing
-        ##DONT FORGET TO rjust(data_width)
-        #
-        lines = []
-        top_border = top_element * box_width
-        if corner_pluses:
-            top_border = "+" + top_element * (box_width - 2) + "+"
-        lines.append(top_border)
-        #
-        for field in fields:
-            new_line = template % (side_element,
-                                   field.ljust(field_width),
-                                   data[field].rjust(data_width),
-                                   side_element)
-            lines.append(new_line)
-        #
-        #add a bottom border symmetrical to the top
-        lines.append(top_border)
-        #
-        return lines    
 
     def addComponent(self, bu, updateID = True):
         """
@@ -810,6 +719,186 @@ class BusinessUnit(Tags,Equalities):
             #repeat all the way down to the ground floor
             for sub in self.components.getOrdered():
                 sub.fitToPeriod(timePeriod, recur)
+
+    def pretty_print(self,
+                     top_element = "=",
+                     side_element = "|",
+                     box_width = 23,
+                     field_width = 5):
+
+        """
+
+
+        BusinessUnit.pretty_print([top_element = "=" [,
+                                  side_element = "|" [,
+                                  box_width = 23 [,
+                                  field_width = 5]]]]) -> list
+
+
+        Method returns a list of strings that displays a box if printed in
+        order. Line ends are naked (i.e, lines do **not** terminate in a
+        new-line character).
+
+        Box format (live units):
+      
+        +=====================+
+        | NAME  : Baltimore-4 |
+        | ID    : ...x65-0b78 |
+        | DOB   :  2015-04-01 |
+        | LIFE  :         43% |
+        | STAGE :      MATURE |   
+        | TYPE  :         OPS |
+        | FILL  :        True |
+        | COMPS :          45 |
+        +=====================+
+
+        Box format (dead units):
+
+        +=====\========/======+
+        | name \: Balt/more-4 |
+        | id    \ .../65-0b78 |
+        | dob   :\ 2/15-04-01 |
+        | life  : \/      43% |
+        | stage : /\   MATURE |   
+        | type  :/  \     OPS |
+        | fill  /    \   True |
+        | comps/:     \    45 |
+        +=====/========\======+
+
+        Box format (unborn units):
+      
+        ?  = = = = = = = = =  ?
+        | NAME  : Baltimore-4 |
+          ID    : ...x65-0b78  
+        | DOB   :  2015-04-01 |
+          LIFE  :         43%  
+        | STAGE :      MATURE |   
+          TYPE  :         OPS  
+        | FILL  :        True |
+          COMPS :          45 
+        ?  = = = = = = = = =  ?
+        
+        """
+        reg_corner = "+"
+        alt_corner = "?"
+        alt_element = " "
+        #
+        ##formatting rules
+        template = "%s %s : %s %s"
+        empty_line = template % (side_element,
+                                     ("x" * field_width),
+                                     "",
+                                     side_element)
+        #empty_line should equal " | xxxxxxxx :  |"
+        data_width = box_width - len(empty_line)
+        #
+        ##fields:
+        fields = ["NAME",
+                  "ID",
+                  "DOB",
+                  "LIFE",
+                  "STAGE",
+                  "TYPE",
+                  "FILL",
+                  "COMPS"]
+        ##data
+        data = {}
+        data["NAME"] = str(self.name)[:data_width]
+        #
+        id_dots = "..."
+        tail_width = data_width - len(id_dots)
+        id_tail  = str(self.id.bbid)[(tail_width * -1):]
+        data["ID"] = id_dots + id_tail
+        #
+        if self.lifeCycle.dateBorn:
+            dob = datetime.date.fromtimestamp(self.lifeCycle.dateBorn)
+            dob = dob.isoformat()
+        else:
+            dob = "n/a"
+        data["DOB"] = dob
+        #
+        if self.lifeCycle.percentDone:
+            life = int(self.lifeCycle.percentDone)
+            life = str(life) + r"%"
+        else:
+            life = "n/a"
+        data["LIFE"] = life
+        #
+        stage = str(self.lifeCycle.currentLifeStageName)[:data_width]
+        data["STAGE"] = stage.upper()
+        #
+        unit_type = str(None)
+        data["TYPE"] = unit_type.upper()
+        #
+        data["FILL"] = str(self.filled)
+        #
+        data["COMPS"] = str(len(self.components))
+        #
+        ##assemble the real thing
+        ##DONT FORGET TO rjust(data_width)
+        #
+        lines = []
+        top_border = reg_corner + top_element * (box_width - 2) + reg_corner
+        lines.append(top_border)
+        #
+        for field in fields:
+            new_line = template % (side_element,
+                                   field.ljust(field_width),
+                                   data[field].rjust(data_width),
+                                   side_element)
+            lines.append(new_line)
+        #
+        #add a bottom border symmetrical to the top
+        lines.append(top_border)
+        #
+        #post-processing (dashed lines for units that have not yet opened,
+        #x's for units that have already closed)
+        #
+        if (not self.lifeCycle.born) and self.lifeCycle.dateBorn:
+            #
+            alt_width = int(box_width / 2) + 1
+            alt_border = (top_element + alt_element) * alt_width
+            alt_border = alt_border[:(box_width - 2)]
+            alt_border = alt_corner + alt_border + alt_corner
+            #
+            core_lines = lines[1:-1]
+            for i in range(0, len(core_lines), 2):
+                line = core_lines[i]
+                core_symbols = line[1:-1]
+                line = alt_element + core_symbols + alt_element
+                core_lines[i] = line
+            #
+            lines = [alt_border] + core_lines + [alt_border]
+        #
+        if self.lifeCycle.dead:
+            #
+            alt_lines = []
+            line_count = len(lines)
+            down_start = int((box_width - line_count)/2)
+            #X is line_count lines wide
+            up_start = down_start + line_count
+            #
+            for i in range(line_count):
+                #
+                #replace the character at (down_start + i) with "\"
+                #replace the character at (up_start - i) with "/"
+                #
+                line = lines[i]
+                #
+                down_pos = (down_start + i)
+                seg_a = line[: (down_pos)]
+                seg_b = line[(down_pos + 1):]
+                line = seg_a + "\\" + seg_b
+                #
+                up_pos = (up_start - i)
+                seg_a = line[:(up_pos)]
+                seg_b = line[(up_pos + 1):]
+                line = seg_a + "/" + seg_b
+                #
+                alt_lines.append(line)
+            lines = alt_lines
+        #
+        return lines    
 
     def resetFinancials(self,recur = True):
         """
