@@ -106,6 +106,184 @@ class Components(dict, Tags, Equalities):
         """
         return Equalities.__ne__(self, comparator, trace, tab_width)
 
+
+    def __str__(self):
+        #
+        lines = self.pretty_print()
+        line_end = "\n"
+        result = line_end.join(lines)
+        return result        
+
+    def pretty_print(self):
+        #
+        #get string list from pretty_print, slap a new-line at the end of every
+        #line and return a string with all the lines joined together.
+        #
+        main_lines = []
+        #
+        units = self.getOrdered()
+        unit_count = len(units)
+        #
+        group_size = 9
+        group_count = unit_count // group_size
+        #there are exactly 9 units in each group
+        tail_count = unit_count % group_size
+        group_header = "\nComponents %s through %s...\n"
+        group_footer = "--"
+        #
+        bunch_footer = ""
+        bunch_size = 3
+        #
+        box_width = None
+        unit_spacer = " " * 3
+        unit_header = r"#%s"       
+        #
+        #build out lines one group at a time. go through units in a group
+        #in bunches of 3. each bunch of units makes up a row. there are
+        #3 bunches in group.
+        #
+        #get the pretty print lines for each unit a bunch. zip the lines
+        #together (line 1a with line 1b, etc.), separated by spacers. that
+        #produces the row. then add headers on top of each unit. the row
+        #is complete.
+        #
+        #group print is 3 rows (one for each bunch), plus the group header.
+        #
+        for i in range(group_count):
+            #
+            group_lines = []
+            #
+            group_start = i * group_size
+            group_end = (i + 1) * group_size - 1
+            #
+            filled_group_hdr = group_header % (group_start, group_end)
+            group_lines.append(filled_group_hdr)
+            #
+            #process the bunches; j is the index in the ordered list of units
+            #
+            j = group_start
+            while j < group_end:
+                #
+                bunch = units[ j : (j + bunch_size) ]
+                #
+                bunch_lines = []
+                #
+                boxes = []
+                for unit in bunch:
+                    unit_box = unit.pretty_print()
+                    boxes.append(unit_box)
+                if i == 0:
+                    box_width = len(boxes[0][0])
+                    #set box width once, to the first line of the first unit
+                filled_bunch_hdr = None
+                filled_unit_hdrs = []
+                for k in range(j, (j + bunch_size)):
+                    hdr = unit_header % k
+                    hdr = hdr.center(box_width)
+                    filled_unit_hdrs.append(hdr)
+                filled_bunch_hdr = unit_spacer.join(filled_unit_hdrs)
+                bunch_lines.append(filled_bunch_hdr)                
+                #
+                #boxes now contains 3 lists of strings. the lists are all the
+                #same length because each unit prints in the same format. zip
+                #all those lists together into tuples of (line1a, line1b,
+                #line1c), (line2a, line2b, line2c), etc.
+                #
+                zipped_boxes = zip(boxes)
+                #
+                for triplet in zipped_boxes:
+                    line = unit_spacer.join(triplet)
+                    bunch_lines.append(line)
+                #
+                bunch_lines.append(bunch_footer)
+                #add a footer string after each bunch; footer can be empty
+                #
+                group_lines.extend(bunch_lines)
+                #row is over, move to the next 3 units. unit index goes up by 3.
+                j = j + bunch_size
+            #
+            #loop is over, add the group lines and a group footer to main lines.
+            main_lines.extend(group_lines)
+            main_lines.append(group_footer)
+        #
+        #finished all the groups; now go through the tail
+        #HAVE TO MANUALLY ADD A TAIL HEADER
+        if tail_count != 0:
+            #
+            tail_lines = []
+            #
+            bunch_count = tail_count // bunch_size
+            tail_start = unit_count - tail_count
+            stub_count = tail_count % bunch_size
+            #
+            j = tail_start
+            for i in range(bunch_count):
+                #build each bunch-row, extend tail_lines; then add the final
+                #stub row
+                bunch = units[j : (j + bunch_size)]
+                #
+                bunch_lines = []
+                #
+                boxes = []
+                for unit in bunch:
+                    unit_box = unit.pretty_print()
+                    boxes.append(unit_box)
+                #
+                filled_bunch_hdr = None
+                filled_unit_hdrs = []
+                for k in range(j, (j + bunch_size)):
+                    hdr = unit_header % k
+                    hdr = hdr.center(box_width)
+                    filled_unit_hdrs.append(hdr)
+                filled_bunch_hdr = unit_spacer.join(filled_unit_hdrs)
+                bunch_lines.append(filled_bunch_hdr)                
+                #
+                #boxes now contains 3 lists of strings. the lists are all the
+                #same length because each unit prints in the same format. zip
+                #all those lists together into tuples of (line1a, line1b,
+                #line1c), (line2a, line2b, line2c), etc.
+                #
+                zipped_boxes = zip(boxes)
+                #
+                for triplet in zipped_boxes:
+                    line = unit_spacer.join(triplet)
+                    bunch_lines.append(line)
+                #
+                bunch_lines.append(bunch_footer)
+                #add a footer string after each bunch; footer can be empty
+                #
+                main_lines.extend(bunch_lines)
+                #row is over, move to the next 3 units. unit index goes up by 3.
+                j = j + bunch_size
+            #
+            #finally, manually append the tail_stub row
+            stub_lines = []
+            bunch = units[(stub_count * -1):]
+            boxes = []
+            for unit in bunch:
+                unit_box = unit.pretty_print()
+                boxes.append(unit_box)
+            #
+            filled_bunch_hdr = None
+            filled_unit_hdrs = []
+            for k in range(j, (j + stub_count)):
+                hdr = unit_header % k
+                hdr = hdr.center(box_width)
+                filled_unit_hdrs.append(hdr)
+            filled_bunch_hdr = unit_spacer.join(filled_unit_hdrs)
+            stub_lines.append(filled_bunch_hdr)
+            #
+            zipped_boxes = zip(boxes)
+            #
+            for triplet in zipped_boxes:
+                line = unit_spacer.join(triplet)
+                stub_lines.append(line)
+            #
+            stub_lines.append(bunch_footer)
+            main_lines.extend(stub_lines)
+            #
+        return main_lines            
+        
     def addItem(self, bu):
         """
 

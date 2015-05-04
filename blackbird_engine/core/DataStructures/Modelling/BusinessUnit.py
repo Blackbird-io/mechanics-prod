@@ -30,6 +30,7 @@ BusinessUnit          structured snapshot of a business at a given point in time
 
 #imports
 import copy
+import datetime
 import time
 import BBExceptions
 import BBGlobalVariables as Globals
@@ -129,6 +130,105 @@ class BusinessUnit(Tags,Equalities):
         
     def __hash__(self):
         return self.id.__hash__()
+
+    def __str__(self):
+        #
+        #get string list from pretty_print, slap a new-line at the end of every
+        #line and return a string with all the lines joined together.
+        #
+        lines = self.pretty_print()
+        box = "\n".join(lines)
+        return box
+
+    def pretty_print(self,
+                     top_element = "=",
+                     side_element = "|",
+                     box_width = 23,
+                     field_width = 5,
+                     corner_pluses = True):
+
+        """
+
+
+        BusinessUnit.pretty_print() -> list
+
+
+        Method returns a list of strings that displays a box if printed in
+        order. Line ends are naked (i.e, lines do **not** terminate in a
+        new-line character.
+
+        Box format:
+      
+        +=====================+
+        | NAME  : Baltimore-4 |
+        | ID    : ...x65-0b78 |
+        | DOB   :  2015-04-01 |
+        | LIFE  :         43% |
+        | STAGE :      MATURE |   
+        | TYPE  :         OPS |
+        | COMPS :          45 |
+        +=====================+
+        """
+        #
+        ##formatting rules
+        template = "%s %s : %s %s"
+        empty_line = template % (side_element,
+                                     ("x" * field_width),
+                                     "",
+                                     side_element)
+        #empty_line should equal " | xxxxxxxx :  |"
+        data_width = box_width - len(empty_line)
+        #
+        ##fields:
+        fields = ["NAME",
+                  "ID",
+                  "DOB",
+                  "LIFE",
+                  "STAGE",
+                  "TYPE",
+                  "COMPS"]
+        ##data
+        data = {}
+        data["NAME"] = str(self.name)[:data_width]
+        #
+        id_length = len(str(self.id))
+        id_dots = "..."
+        id_width = data_width - len(id_dots)
+        id_tail  = str(self.id)[(id_length - id_width):]
+        data["ID"] = id_dots + id_tail
+        #
+        dob = datetime.date.fromtimestamp(self.lifeCycle.dateBorn)
+        dob = dob.isoformat()
+        data["DOB"] = dob.isoformat()
+        #
+        life = int(self.lifeCycle.percentDone)
+        data["LIFE"] = str(life)
+        #
+        stage = str(self.lifeCycle.currentLifeStageName)[:data_width]
+        data["STAGE"] = stage.upper()
+        #
+        unit_type = str(None)
+        data["TYPE"] = unit_type.upper()
+        #
+        data["COMPS"] = str(len(self.components))
+        #
+        ##assemble the real thing
+        ##DONT FORGET TO rjust(data_width)
+        #
+        lines = []
+        top_border = top_element * box_width
+        if corner_pluses:
+            top_border = "+" + top_element * (box_width - 2) + "+"
+        lines.append(top_border)
+        #
+        for field in fields:
+            new_line = template % (side_element,
+                                   field.ljust(field_width),
+                                   data[field].rjust(data_width),
+                                   side_element)
+            lines.append(new_line)
+        #
+        return lines    
 
     def addComponent(self, bu, updateID = True):
         """
