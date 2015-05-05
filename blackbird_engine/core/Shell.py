@@ -264,15 +264,15 @@ def get_forecast(portal_model, fixed, ask):
     #ref comes back as a CR Reference object, with custom prints. Flatten to
     #primitive.
     #
-    #check if ref is filled out; if not, resubmit for min or max?
+    #can resubmit at min or max landscape for refs that come in blank? 
     #if not ref:
         #alt_ask = None
         #land = uM.atx.getSummary()
         #if ask > land[field][
     if ref:
-        ref = dict.copy(ref)
+        ref = ref.to_portal()
     else:
-        ref = dict.copy(blank_credit_reference)
+        ref = blank_credit_reference.to_portal()
     new_model = pm_converter.to_portal(uM)
     result = [new_model, fixed, ask, ref]
     return result
