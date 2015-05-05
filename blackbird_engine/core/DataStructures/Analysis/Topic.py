@@ -34,10 +34,10 @@ import uuid
 
 import BBExceptions
 import BBGlobalVariables as Globals
-
 from DataStructures.Platform.ID import ID
 from DataStructures.Platform.Messenger import Messenger
 from DataStructures.Platform.Tags import Tags
+
 
 
 

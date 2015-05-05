@@ -24,21 +24,32 @@ LOGGING_ROOT = '/var/log/django'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
     'handlers': {
         'error_file': {
             'level': 'WARN',
             'class': 'logging.FileHandler',
             'filename': os.path.join(LOGGING_ROOT, 'error.log'),
+            'formatter': 'verbose'
         },
         'debug_file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': os.path.join(LOGGING_ROOT, 'debug.log'),
+            'formatter': 'verbose'
         },
         'app_file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': os.path.join(LOGGING_ROOT, 'app.log'),
+            'formatter': 'verbose'
         }
     },
     'loggers': {
@@ -47,7 +58,7 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
-        '': {
+        'blackbird_engine': {
             'handlers': ['app_file'],
             'level': 'DEBUG',
         }
@@ -56,5 +67,8 @@ LOGGING = {
 
 ##################################################################
 # Email settings
-EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-EMAIL_FILE_PATH = os.path.join(LOGGING_ROOT, 'email.log')
+EMAIL_BACKEND = 'django_ses_backend.SESBackend'
+AWS_SES_RETURN_PATH = ADMINS[0][1]
+AWS_SES_AUTO_THROTTLE = float(os.environ.setdefault("SES_THROTTLE", '0.5'))
+AWS_SES_ACCESS_KEY_ID = AWS_ACCESS_KEY_ID
+AWS_SES_SECRET_ACCESS_KEY = AWS_SECRET_ACCESS_KEY
