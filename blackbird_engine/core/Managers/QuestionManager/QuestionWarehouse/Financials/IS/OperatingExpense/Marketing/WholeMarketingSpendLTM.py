@@ -52,7 +52,7 @@ input_type = "number"
 input_sub_type = "currency"
 basic_prompt = "In the last 12 months, how much did you spend on marketing?"
 custom_prompt = None
-short = "Marketing Spend"
+short = "LTM Marketing"
 transcribe = True
 active_elements = 1
 

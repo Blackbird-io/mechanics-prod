@@ -16,6 +16,9 @@ Engine.enable_web_mode()
 
 EndInterview = Globals.END_INTERVIEW
 
+get_forecast = Engine.get_forecast
+get_landscape_summary = Engine.get_landscape_summary
+process_interview = Engine.process_interview
 
 ##from .mock import MockEngine
 ##
