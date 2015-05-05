@@ -1,7 +1,24 @@
-from .Shell import *
+
+
+
+
+
+#imports
+from . import BBGlobalVariables as Globals
+from . import Shell as Engine
+
+
+
+
+#globals
+Engine.low_error  = True
+Engine.enable_web_mode()
 
 EndInterview = Globals.END_INTERVIEW
 
+get_forecast = Engine.get_forecast
+get_landscape_summary = Engine.get_landscape_summary
+process_interview = Engine.process_interview
 
 ##from .mock import MockEngine
 ##
