@@ -1,5 +1,4 @@
-from . import BBGlobalVariables as Globals
-from . import Shell as Engine
+from .Shell import *
 
 EndInterview = Globals.END_INTERVIEW
 
