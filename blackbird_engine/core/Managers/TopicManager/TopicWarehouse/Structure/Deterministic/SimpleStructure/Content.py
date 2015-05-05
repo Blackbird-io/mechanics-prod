@@ -252,7 +252,6 @@ def scenario_4(topic):
     component_batch = []
     for n in range(number_of_units):
         clone = bu_0.copy(enforce_rules = False)
-        #clone was originally a deepcopy; can try reverting if doesnt work
         c_name = "Cloned Unit %s" % n
         clone.setName(c_name)
         clone.id.assignBBID(clone.name)

@@ -64,6 +64,8 @@ class TimeLine(dict):
     build()               populates instance with adjacent time periods
     configurePeriod()     connects period to instance namespace id     
     findPeriod()          returns period that contains queried time point
+    extrapolate_all()     use seed to fill out all periods in instance
+    extrapolate_dates()   use seed to fill out a range of dates
     get_fwd_start_date()  returns first date of next month
     get_red_end_date()    returns last date of current month
     getOrdered()          returns list of periods ordered by end point
@@ -180,6 +182,93 @@ class TimeLine(dict):
         #their bbids.
         return period
         
+    def extrapolate_all(self, seed = None):
+        """
+
+
+        TimeLine.extrapolate_all(seed = None) -> None
+
+
+        Method extrapolates all periods in instance sequentially from seed. If
+        seed not specified, method uses instance.current_period.
+
+        Method expects ``seed`` to be a TimePeriod instance. Method will not
+        change seed during operation. 
+        """
+        if not seed:
+            seed = self.current_period
+        seed_date = datetime.date.fromtimestamp(seed.end)
+        #seed.end is a float representing a POSIX timestamp since Epoch. For
+        #downstream use, convert the timestamp into a calendar date 
+        #
+        segments = self.get_date_segments(seed_date)
+        past = segments[0]
+        future = segments[-1]
+        #
+        self.extrapolate_dates(seed, past, work_backward = True)
+        self.extrapolate_dates(seed, future)
+        #
+
+    def extrapolate_dates(self, seed, dates, work_backward = False):
+        """
+
+
+        TimeLine.extrapolate_dates(seed, dates, [work_backward = False]) -> None
+
+
+        Method extrapolates seed to the first date in dates, then sequentially
+        extrapolates remaining dates from each other.
+        
+        Method expects ``seed`` to be an instance of TimePeriod. Seed can be
+        external to the caller TimeLine.
+
+        Method expects ``dates`` to be a series of endpoints for the periods in
+        instance the caller is targeting. In other words, instance must contain
+        a period corresponding to each date in ``dates``.
+
+        Dates can contain gaps. Method will always extrapolate from one date to
+        its neighbor. Extrapolation works by requesting that each object in a
+        content structure extrapolate itself and any of its subordinates.
+        For time-sensitive objects like BusinessUnits, that process should
+        automatically adjust to the target date regardless of how far away that
+        date is from the instance's reference date.
+
+        If ``work_backward`` is True, method will go through dates
+        last-one-first.
+        """
+        #
+        if work_backward:
+            dates = dates[::-1]
+            #reverse order, so go from newest to oldest
+        #
+        for i in range(len(dates)):
+            date = dates[i]                
+            #with default arguments, start work at the period immediately
+            #prior to the current period
+            target_period = self[date]
+            updated_period = seed.extrapolate_to(target_period)
+            #
+            #extrapolate_to() always does work on an external object and leaves
+            #the target untouched. Manually swap the old period for the new
+            #period.
+            #
+            if i == 0:
+                updated_period = self.configurePeriod(updated_period)
+                #on i == 0, extrapolating from the original seed. seed can be
+                #external (come from a different model), in which case it would
+                #use a different model namespace id for unit tracking.
+                #
+                #accordingly, when extrapolating from the may-be-external seed,
+                #use configurePeriod() to conform output to current model.
+                #
+                #subsequent iterations of the loop will start w periods that are
+                #already in the model, so method can leave their namespace id
+                #configuration as is.
+                #
+            self[date] = updated_period
+            seed = updated_period
+        #
+
     def findPeriod(self,query):
         """
 
@@ -207,6 +296,30 @@ class TimeLine(dict):
         result = self[end_date]
         return result
 
+    def get_date_segments(self, ref_date = None):
+        """
+
+
+        TimeLine.get_date_segments(self, ref_date = None) -> list
+
+
+        output[0] = list of keys for periods before ref_date
+        output[1] = list of ref period (len output[1] == 1)
+        output[2] = list of keys for periods after ref_date
+        """
+        result = None
+        if ref_date:
+            ref_end = self.get_ref_end_date(ref_date)    
+        else:
+            ref_end = self.current_period.end        
+        #
+        dates = sorted(self.keys())
+        ref_spot = dates.index(ref_end)
+        future_dates = dates[(ref_spot + 1 ): ]
+        past_dates = dates[:ref_spot]
+        result = [past_dates, [ref_end], future_dates]
+        return result
+    
     def get_fwd_start_date(self,ref_date):
         """
 
@@ -241,30 +354,7 @@ class TimeLine(dict):
         ref_end_time = fwd_start_time - 1
         ref_end_date = datetime.date.fromtimestamp(ref_end_time)
         result = ref_end_date
-        return result       
-
-    def get_date_segments(self, ref_date = None):
-        """
-
-        TimeLine.get_date_segments(self, ref_date = None) -> list
-
-        output[0] = list of keys for periods before ref_date
-        output[1] = list of ref period (len output[1] == 1)
-        output[2] = list of keys for periods after ref_date
-
-        """
-        result = None
-        if not ref_date:
-            ref_date = self.ref_date
-        #
-        ref_end = self.get_ref_end_date(ref_date)
-        #
-        dates = sorted(self.keys())
-        ref_spot = dates.index(ref_end)
-        future_dates = dates[(ref_spot + 1 ): ]
-        past_dates = dates[:ref_spot]
-        result = [past_dates, [ref_end], future_dates]
-        return result 
+        return result        
     
     def getOrdered(self):
         """

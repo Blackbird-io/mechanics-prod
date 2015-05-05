@@ -49,9 +49,9 @@ array_caption = None
 comment = "including maintenance and any common area or similar charges."
 input_type = "number"
 input_sub_type = "currency"
-basic_prompt = "How much is rent for your average unit?"
-custom_prompt = "How much is rent for your average {unit_label_singular}?"
-short = "Rent"
+basic_prompt = "How much is monthly rent for your average unit?"
+custom_prompt = "How much is monthly rent for your average {unit_label_singular}?"
+short = "Monthly Rent"
 transcribe = True
 active_elements = 1
 
