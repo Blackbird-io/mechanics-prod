@@ -71,6 +71,7 @@ from Managers import QuestionManager
 MR = Messenger()
 
 blank_credit_reference = CR_Reference()
+blank_portal_question = 
 launched = False
 low_error = False
 script = None
@@ -393,11 +394,9 @@ def to_portal(engine_msg):
     R = engine_msg[2]
     #
     global web_mode
-    portal_q = None
-    if Q:
-        portal_q = QuestionManager.make_portal(Q, web = web_mode)
-    else:
-        portal_q = Q
+    #
+    portal_q = QuestionManager.make_portal(Q, web = web_mode)
+    #QM will return a blank PortalQuestion if Q == None
     #
     portal_message = dict()
     portal_message["M"] = pm_converter.to_portal(M)
