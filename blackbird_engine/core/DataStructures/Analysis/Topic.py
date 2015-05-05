@@ -34,10 +34,10 @@ import uuid
 
 import BBExceptions
 import BBGlobalVariables as Globals
-
 from DataStructures.Platform.ID import ID
 from DataStructures.Platform.Messenger import Messenger
 from DataStructures.Platform.Tags import Tags
+
 
 
 
@@ -171,7 +171,7 @@ class Topic:
         scenario_key = None
         active_scenario = None
         if self.MR.activeQuestion:
-            q_bbid_string = self.MR.activeQuestion["bbid"]
+            q_bbid_string = self.MR.activeQuestion["question_id"]
             q_bbid = uuid.UUID(q_bbid_string)
             scenario_key = q_bbid
         else:

@@ -46,7 +46,7 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
-        '': {
+        'blackbird_engine': {
             'handlers': ['stdout'],
             'level': 'DEBUG',
         }
