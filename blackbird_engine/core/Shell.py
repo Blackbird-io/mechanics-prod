@@ -58,9 +58,10 @@ import SimplePortal as Portal
 import BBGlobalVariables as Globals
 
 from Controllers import SessionController
-from DataStructures.Platform.Messenger import Messenger
 from DataStructures.Analysis.PortalModel import PortalModel
 from DataStructures.Modelling.Model import Model as EngineModel
+from DataStructures.Platform.Messenger import Messenger
+from DataStructures.Valuation.CR_Reference import CR_Reference
 from Managers import QuestionManager
 
 
@@ -69,6 +70,7 @@ from Managers import QuestionManager
 #globals
 MR = Messenger()
 
+blank_credit_reference = CR_Reference()
 launched = False
 low_error = False
 script = None
@@ -76,6 +78,7 @@ show_responses = False
 trace = False
 web_mode = True
 pm_converter = PortalModel()
+
 
 QuestionManager.populate()
 #QM.populate() should run a no-op here because SessionController or other
@@ -266,10 +269,13 @@ def get_forecast(portal_model, fixed, ask):
         #alt_ask = None
         #land = uM.atx.getSummary()
         #if ask > land[field][
-    ref = dict.copy(ref)
+    if ref:
+        ref = dict.copy(ref)
+    else:
+        ref = dict.copy(blank_credit_reference)
     new_model = pm_converter.to_portal(uM)
     result = [new_model, fixed, ask, ref]
-    return result  
+    return result
     
 def get_landscape_summary(portal_model):
     """

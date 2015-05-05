@@ -20,6 +20,7 @@ n/a
 FUNCTIONS:
 check()               compare Task output to standard
 printRubric()         pretty print for performance results
+walk_dict()           convenience function for recursive dict comparisons
 
 CLASSES:
 n/a
@@ -40,8 +41,16 @@ import traceback
 
 #functions
 def printRubric(r, width = 60):
+    """
+
+
+    printRubric(r[, width = 60]) -> tuple
+
+
+    Function prints the Grader rubric nicely and returns a tuple of results.
+    """
     print("RUBRIC:\n")
-    ks = list(rubric.keys())
+    ks = list(r.keys())
     ks.sort()
     stepks = []
     confks = []
@@ -52,11 +61,127 @@ def printRubric(r, width = 60):
             stepks.append(k)
     for k in ks:
         dots = "."*(width-len(k))
-        print(k,dots,rubric[k])
-    return (stepks,confks)
+        print(k, dots, r[k])
+    return (stepks, confks)
 
+def walk_dict(std, new, tab = 4):
+    """
+
+
+    walk_dict(std, new[, tab = 4]) -> bool
+
+
+    Function returns True if for each k in ``std``, std[k] == new[k], or, if
+    std[k] is a dictionary instance, that the function returns True when
+    comparing the values.
+
+    Function returns false otherwise.
+    """
+    c = """
+    \tRunning walk_dict() for the following:
+    
+    \tstd = %s
+    \tnew = %s
+    \ttab = %s
+    
+    """
+    c = c % (std, new, tab)
+    print(c.expandtabs(tab))
+    #
+    outcome = True
+    c = "\toutcome = True"
+    print(c.expandtabs(tab))
+    #
+    known_keys = std.keys()
+    c = "\tknown_keys = std.keys()\n"
+    print(c.expandtabs(tab))
+    #
+    c = """
+    \tStep through the keys in ``std``. If value is a dictionary, call the
+    \tfunction recursively for std[k] and new[k]. Otherwise, tcheck that value
+    \tequals new value.
+
+    Return True if all the values match, False otherwise.
+
+    \tfor (i,k) in enumerate(known_keys):    
+        \tknown_value = std[k]
+        \tnew_value = new[k]
+        \t...
+
+    \tNow running loop:
+    """
+    for (i,k) in enumerate(known_keys):
+        known_value = std[k]
+        new_value = new[k]
+        #
+        c = ""
+        c += "\t%s. Key: ``%s``\n\n" % (i,k)
+        c += "\t    Known value: \n    \t%s\n\n" % known_value
+        c += "\t    New value:   \n    \t%s\n\n" % new_value
+        c = c.expandtabs(tab)
+        print(c)
+        #
+        if isinstance(known_value, dict):
+            try:
+                sub_tab = tab + 4
+                sub_outcome = walk_dict(known_value, new_value, tab = sub_tab)
+                if not sub_outcome:
+                    outcome = False
+                    #
+                    c = "\tSetting outcome to False due negative sub outcome:\n\n"
+                    c += "\tsub_outcome = %s\n" % sub_outcome
+                    c += "\toutcome = %s\n" % outcome
+                    c = c.expandtabs(tab)
+                    print(c)
+                    #
+            except Exception as X:
+                #
+                c = "\tEncountered exception: \n\t%s\n" % X
+                c = c.expandtabs(tab)
+                print(c)
+                #
+                c = "\tSetting outcome to False"
+                c= c.expandtabs(tab)
+                print(c)
+                #
+                outcome = False
+                c = "\toutcome = %s" % outcome
+                c= c.expandtabs(tab)
+                print(c)
+                #
+                continue
+        else:
+            if known_value != new_value:
+                c = "\tknown value != new value"
+                c = c.expandtabs(tab)
+                print(c)
+                outcome = False
+            else:
+                continue
+    else:
+        print("\n")
+    #
+    c = "\toutcome = %s\n" % outcome
+    c = c.expandtabs(tab)
+    print(c)
+    #
+    c = "\treturn outcome\n\n\t--\n\n\n"
+    c = c.expandtabs(tab)
+    print(c)
+    #
+    return outcome
 
 def check(result,standard):
+    """
+
+
+    check(result, standard) -> tuple
+
+
+    Function checks whether result satisfies standard. Returns bool result
+    and scoring rubric. 
+    """
+    #
     #standard is a stored version of the ``perfect`` output, w symmetrical
     #keys
     global rubric
@@ -84,37 +209,23 @@ def check(result,standard):
         std_references = standard["T19.01"]["references"]
         """)
         #
-        known_keys = sorted(std_references.keys())
-        #maintain fixed order of keys
-        print("""
-        known_keys = sorted(std_references.keys())
-        """)
-        print("Known keys: \n", known_keys)
         c = """
 
-        Iterate through known_keys, check that references for each request
-        match expected data. 
-
-        Test requires 100% match for each known credit reference to pass. 
+        Check that new credit references contain all of the standard data. New
+        references can pass even when they contain additional data (that does
+        not exist in old references).
+        
         """
         print(c)
         #
-        outcome = True
-        for (i,k) in enumerate(known_keys):
-            known_value = std_references[k]
-            new_value = new_references[k]
-            c = ""
-            c += "%s. Key: %s\n" % (i,k)
-            c += "\tKnown value: %s\n" % known_value
-            c += "\tNew value:   %s\n" % new_value
-            print(c)
-            if known_value != new_value:
-                print("known value != new value")
-                outcome = False
-            else:
-                continue
-        else:
-            print("\n")
+        c = """
+
+        outcome = walk_dict(std_references, new_references)
+        
+        """
+        print(c)
+        outcome = walk_dict(std_references, new_references)
+        #
         if not outcome:
             print("New references equal expected outcome: ", False)
             rubric["T19.01.01: credit references equal"]=False
