@@ -33,9 +33,8 @@ check()               takes output as an argument, checks it against a
 
 
 #imports
-from . import Model_01_Retail
-from . import Analytics_01
-from . import BUCopy_01
-from . import BUCopy_02
 from . import Ex_01
 from . import Summarization
+from . import API_Forecast
+from . import API_Interview
+from . import API_Landscape

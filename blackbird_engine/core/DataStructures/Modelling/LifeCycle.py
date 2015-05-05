@@ -484,8 +484,6 @@ class LifeCycle(Equalities):
         def __set__(self,instance,value):
             comment = "managed attribute, write prohibited."
             raise BBExceptions.ManagedAttributeError(comment)
-
-        #def __del__: exception cause tries to delete a permanent attribute
         
     #create class-level attributes to be managed by the dynLifeManager
     #descriptor; construct each instance of the descriptor to return the right
