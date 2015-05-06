@@ -175,6 +175,9 @@ class LifeCycle(Equalities):
 
     refDate = dynRefDateManager()
 
+    def set_dob(self, dob):
+        self._dateBorn = dob
+        
     def setRefDate(self,refDate):
         """
 
