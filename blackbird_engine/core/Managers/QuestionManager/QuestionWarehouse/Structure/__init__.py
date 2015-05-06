@@ -36,7 +36,7 @@ n/a
 #catalog
 #
 from . import FirstStoreOpen
-from . import LastStoreOpen
+from . import LatestStoreOpen
 from . import MonthsToUnitMaturity
 from . import NumberOfUnits
 from . import UnitLifeSpan
