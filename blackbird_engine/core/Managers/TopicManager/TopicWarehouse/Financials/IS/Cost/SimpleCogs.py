@@ -1,4 +1,4 @@
-#PROPRIETARY AND CONFIDENTIAL
+c#PROPRIETARY AND CONFIDENTIAL
 #Property of Blackbird Logical Applications, LLC
 #Copyright Blackbird Logical Applications, LLC 2015
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
@@ -220,7 +220,7 @@ def scenario_2(topic):
     R = topic.get_first_answer()
     adjR = R/100
     #use percent
-    top_bu = M.currentPeriod.conten5t
+    top_bu = M.currentPeriod.content
     D1 = topic.applied_drivers["D1"]
     cost_formula = topic.formulas["compute cost from known gross margin."]
     data = {}
