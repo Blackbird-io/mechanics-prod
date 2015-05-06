@@ -29,7 +29,7 @@ unit_life_spans["default"] = 5
 unit_labels = dict()
 unit_labels["retail"] = {"singular": "store", "plural" : "stores"}
 
-unit_number_limit = 1000
+unit_number_limit = 500
 #max number of units in a model
 
 unit_months_to_mature = dict()
