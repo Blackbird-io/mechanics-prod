@@ -36,7 +36,7 @@ n/a
 ====================  ==========================================================
 """
 question_content = True
-name = "last store open date?"
+name = "latest store open date?"
 question_author = "Ilya Podolyako"
 
 #Engine parameters

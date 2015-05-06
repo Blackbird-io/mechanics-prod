@@ -39,6 +39,9 @@ n/a
 
 
 #imports
+import datetime
+import time
+
 import BBGlobalVariables as Globals
 import Tools
 
@@ -75,7 +78,7 @@ question_names = ["number of business units?",
                   "unit lifespan in years?",
                   "months to unit maturity?",
                   "first store open date?",
-                  "last store open date?"]
+                  "latest store open date?"]
 
 work_plan["structure"] = 2
 
@@ -92,7 +95,9 @@ SK = SubjectKnowledge
 def scenario_1(topic):
     """
 
+
     scenario_1(topic) -> None
+
 
     **opening**
 
@@ -120,7 +125,9 @@ def scenario_1(topic):
 def scenario_2(topic):
     """
 
+
     scenario_2(topic) -> None
+
 
     Scenario concludes with wrap_scenario(Q).
 
@@ -133,7 +140,7 @@ def scenario_2(topic):
     Q = topic.MR.activeQuestion
     R = topic.MR.activeResponse
     number_of_units = int(topic.get_first_answer())
-    M.interview.work_space["number of units"] = number_of_units
+    M.interview.work_space["unit_count"] = number_of_units
     #save answer for later processing
     #
     #prep follow up question
@@ -158,7 +165,9 @@ def scenario_2(topic):
 def scenario_3(topic):
     """
 
+
     scenario_3(topic) -> None
+
 
     Scenario concludes with wrap_scenario(Q).
 
@@ -170,7 +179,7 @@ def scenario_3(topic):
     Q = topic.MR.activeQuestion
     R = topic.MR.activeResponse
     life_in_years = float(topic.get_first_answer())
-    M.interview.work_space["unit lifespan in years"] = life_in_years
+    M.interview.work_space["unit_life_years"] = life_in_years
     #save answer for later processing
     #
     #select question
@@ -198,21 +207,91 @@ def scenario_3(topic):
     topic.wrap_scenario(new_Q)
 
 def scenario_4(topic):
-    #ask about first store
-    #use the date as a floor
-    blah()
+    """
 
-def scenario_5(topic):
+
+    scenario_4(topic) -> None
+
+    
+    Scenario concludes with wrap_scenario(Q).
+
+    Scenario receives a message with a response about months to mature and
+    retrieves the answer.
+
+    Scenario then asks when the user opened their first store. Scenario sets
+    anchor to standard industry period after company founding. 
+    """
+    M = topic.MR.activeModel
+    #
+    months_to_mature = float(topic.get_first_answer())
+    M.interview.work_space["months_to_mature"] = months_to_mature
+    #
+    top_bu = M.currentPeriod.content
+    dob_company_seconds = top_bu.lifeCycle.dateBorn
+    dob_company_date = datetime.date.fromtimestamp(dob_company_seconds)
+    dob_company_string = dob_company_date.isoformat()
+    #put in work_space to save work in later scenarios
+    M.interview.work_space["earliest_store_open"] = dob_company_string
+    #
+    industry_standard = SK.months_to_first_unit["retail"]
+    shift = Tools.Parsing.monthsToSeconds(industry_standard)
+    anchor_seconds = int(dob_company_standards + shift)
+    anchor_string = datetime.date.fromtimestamp(anchor_seconds).isoformat()
+    #
+    new_Q = topic.questions["first store open date?"]
+    #set bounds for the input element
+    new_Q.input_array[0].r_min = dob_company_string
+    new_Q.input_array[0].r_max = datetime.date.today().isoformat()
+    new_Q.input_array[0].shadow = anchor_string
+    #
+    topic.wrap_scenario(new_Q)
+
+def scenario_5
+    """
+
+
+    scenario_5(topic) -> None
+
+
+    Scenario concludes with wrap_scenario(Q).
+
+    
+    Scenario receives a message with a response about the first store opening
+    date. Scenario retrieves the message and formats the answer into seconds.
+
+    Scenario then asks user about their most recent store opening.     
+    """
+    M = topic.MR.activeModel
+    R = topic.get_first_answer()
+    #R is a YYYY-MM-DD string
+    adj_r = Tools.Parsing.seconds_from_iso(R)
+    M.interview.work_space["earliest_store_open"] = R
+    M.interview.work_space["first_dob_seconds"] = adj_r
+    #
+    industry_standard = SK.months_to_first_unit["retail"]
+    shift = Tools.Parsing.monthsToSeconds(industry_standard)
+    anchor_seconds = int(time.time() - shift)
+    anchor_string = datetime.date.fromtimestamp(anchor_seconds).isoformat()
+    #
+    new_Q = topic.questions["latest store open date?"]
+    #set bounds for the input element
+    new_Q.input_array[0].r_min = R
+    new_Q.input_array[0].r_max = datetime.date.today().isoformat()
+    new_Q.input_array[0].shadow = anchor_string
+    #
+    topic.wrap_scenario(new_Q)
+
     #ask about last store
     #use date as ceiling on dob
     #also compute time to open store =  (first_dob - last_dob)/no_of_stores
     #embed that period as gestation
-    blah()
     
-def scenario_x4(topic):
+def scenario_6(topic):
     """
 
-    scenario_4(topic) -> None
+
+    scenario_6(topic) -> None
+
 
     **closing**
     
@@ -224,29 +303,58 @@ def scenario_x4(topic):
     creates class-specific copies of the standard unit and adds them to Model's
     current period top-level. 
     """
+    
     M = topic.MR.activeModel
-    Q = topic.MR.activeQuestion
-    R = topic.MR.activeResponse
+    top_bu = M.currentPeriod.content
     #
-    months_to_mature = float(topic.get_first_answer())
-    M.interview.work_space["months to mature"] = months_to_mature
+    R = topic.get_first_answer()
+    adj_R = Tools.Parsing.seconds_from_iso(R)
     #
-    number_of_units = M.interview.work_space["number of units"]
-    life_in_years = M.interview.work_space["unit lifespan in years"]
-    ref_date = None
+    unit_count = M.interview.work_space["unit_count"]
     #
+    first_dob_seconds = M.interview.work_space["first_dob_seconds"]
+    latest_dob_seconds = adj_R
+    #
+    months_to_mature = M.interview.work_space["months_to_mature"]
+    gestation_seconds = ((latest_dob_seconds - first_dob_seconds)/
+                              (unit_count - 1))
+    #unit gestation should show approximately how long it takes to take
+    #a new unit from idea to open doors
+    #
+    #adjust gestation to max of average time to open a store and time to open
+    #first store. average time can be skewed materially if company prepared
+    #stores in batches (eg, 5 openings at a time).
+    first_unit_runway = first_dob_seconds - top_bu.lifeCycle.dateBorn
+    gestation_seconds = max(gestation_seconds,
+                            (first_unit_runway * (1-0.20)))
+    #assume company gets 20% faster at opening units; more advanced topics
+    #ask questions first.
+    #                       
+    M.interview.work_space["unit_gestation_seconds"] = gestation_seconds
+    #
+    life_in_years = M.interview.work_space["unit_life_years"]
     life_in_seconds = Tools.Parsing.monthsToSeconds((life_in_years * 12))
+    life_in_seconds = life_in_seconds + gestation_seconds
+    #
+    #for purposes of Blackbird, life begins at conception
+    #
     mature_in_seconds = Tools.Parsing.monthsToSeconds(months_to_mature)
-    youth_ends_percent = int(mature_in_seconds/life_in_seconds * 100)
+    mature_in_seconds = mature_in_seconds + gestation_seconds
     #
-    stnd_fins  = M.defaultFinancials.copy()
+    #configure unit lifecycle
+    gestation_ends_pct = int(gestation_seconds/life_in_seconds * 100)
+    youth_ends_pct = int(mature_in_seconds/life_in_seconds * 100)
     #
-    bu_0 = BusinessUnit("BU0: Template", stnd_fins)
-    bu_0.lifeCycle.setLifeSpan(life_in_seconds)
+    ref_date = None
     if Globals.fix_ref_date:
         ref_date = Globals.t0
     else:
         ref_date = time.time()
+    #
+    standard_fins  = M.defaultFinancials.copy()
+    #
+    bu_0 = BusinessUnit("Unit Template", standard_fins)
+    bu_0.lifeCycle.setLifeSpan(life_in_seconds)
     bu_0.lifeCycle.setRefDate(ref_date)
     #
     if youth_ends_percent < 50:
@@ -269,7 +377,7 @@ def scenario_x4(topic):
     #
     #clone bU0 x #of units
     component_batch = []
-    for n in range(number_of_units):
+    for n in range(unit_count):
         clone = bu_0.copy(enforce_rules = False)
         c_name = "Existing %s" % n
         clone.setName(c_name)
@@ -286,18 +394,25 @@ def scenario_x4(topic):
     med_num = 50
     tag9 = "large number of units"
     parent_bu = M.currentPeriod.content
-    if number_of_units <= small_num:
+    if unit_count <= small_num:
         parent_bu.tag(tag7)
-    elif number_of_units <= med_num:
+    elif unit_count <= med_num:
         parent_bu.tag(tag8)
     else:
         parent_bu.tag(tag9)
     #
+    ####### <- tag with Ready_For_Growth_Analysis or smtg, which Growth requires as a reqd tag---------
+                            
     topic.wrap_topic()
+    
         
 def end_scenario(topic):
-    #user pressed stop interview in middle of question
-    #if know number of units, good to go off GeneralKnowledge; otherwise, dont bother
+    #user pressed stop interview
+    #if know number of units, can do a fair amount of work based on SubjectKnowledge
+    #here, would mean a topic structure that delegates scenario work to specialized functions
+    #then, can use end_scenario to delegate to those same functions in order, albeit with
+    #assumptions instead of actual user responses.
+    #
     pass
 
 scenarios[None] = scenario_1

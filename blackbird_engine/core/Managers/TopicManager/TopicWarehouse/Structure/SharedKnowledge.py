@@ -35,3 +35,6 @@ unit_number_limit = 500
 unit_months_to_mature = dict()
 unit_months_to_mature["default"] = unit_months_to_mature[None] = 12
 unit_months_to_mature["retail"] = 30
+
+months_to_first_unit["default"] = 14
+months_to_first_unit["retail"] = 10
