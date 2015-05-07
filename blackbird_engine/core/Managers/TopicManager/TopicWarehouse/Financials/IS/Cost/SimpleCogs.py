@@ -1,4 +1,4 @@
-c#PROPRIETARY AND CONFIDENTIAL
+# PROPRIETARY AND CONFIDENTIAL
 #Property of Blackbird Logical Applications, LLC
 #Copyright Blackbird Logical Applications, LLC 2015
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
@@ -42,9 +42,7 @@ n/a
 import copy
 
 import BBGlobalVariables as Globals
-
 from DataStructures.Modelling.Driver import Driver
-
 from . import SharedKnowledge as SubjectKnowledge
 
 
