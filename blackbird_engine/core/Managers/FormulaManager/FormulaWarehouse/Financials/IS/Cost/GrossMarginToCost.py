@@ -68,7 +68,7 @@ def func(line, business_unit, data, driver_signature):
     -- "active_gross_margin"
     
     """
-    gross_margin = data["active_gross_margin"]
+    gross_margin = float(data["active_gross_margin"])
     fins = business_unit.financials
     i_rev = None
     try:
