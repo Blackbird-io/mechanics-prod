@@ -68,18 +68,15 @@ from Managers import QuestionManager
 
 
 #globals
-MR = Messenger()
-
 blank_credit_reference = CR_Reference()
-blank_portal_question = 
 launched = False
 low_error = False
+MR = Messenger()
+pm_converter = PortalModel()
 script = None
 show_responses = False
 trace = False
 web_mode = True
-pm_converter = PortalModel()
-
 
 QuestionManager.populate()
 #QM.populate() should run a no-op here because SessionController or other
@@ -395,8 +392,10 @@ def to_portal(engine_msg):
     #
     global web_mode
     #
-    portal_q = QuestionManager.make_portal(Q, web = web_mode)
-    #QM will return a blank PortalQuestion if Q == None
+    if Q:
+        portal_q = QuestionManager.make_portal(Q, web = web_mode)
+    else:
+        portal_q = Q
     #
     portal_message = dict()
     portal_message["M"] = pm_converter.to_portal(M)

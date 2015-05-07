@@ -45,7 +45,9 @@ import time
 import BBGlobalVariables as Globals
 import Tools
 
+from DataStructures.Modelling import CommonLifeStages
 from DataStructures.Modelling.BusinessUnit import BusinessUnit
+from DataStructures.Modelling.LifeStage import LifeStage
 
 from .. import SharedKnowledge as SubjectKnowledge
 
@@ -338,71 +340,98 @@ def scenario_6(topic):
     #
     #for purposes of Blackbird, life begins at conception
     #
-    mature_in_seconds = Tools.Parsing.monthsToSeconds(months_to_mature)
-    mature_in_seconds = mature_in_seconds + gestation_seconds
-    #
-    #configure unit lifecycle
-    gestation_ends_pct = int(gestation_seconds/life_in_seconds * 100)
-    youth_ends_pct = int(mature_in_seconds/life_in_seconds * 100)
-    #
+    mature_in_seconds = Tools.Parsing.monthsToSeconds(months_to_mature)    
+    youth_ends_percent = int(mature_in_seconds/life_in_seconds * 100)
     ref_date = None
     if Globals.fix_ref_date:
         ref_date = Globals.t0
     else:
         ref_date = time.time()
     #
-    standard_fins  = M.defaultFinancials.copy()
-    #
-    bu_0 = BusinessUnit("Unit Template", standard_fins)
-    bu_0.lifeCycle.setLifeSpan(life_in_seconds)
-    bu_0.lifeCycle.setRefDate(ref_date)
+    standard_fins = M.defaultFinancials.copy()
+    bu_template = BusinessUnit("Unit Template", standard_fins)
+    bu_template.life.set_gestation(gestation_seconds)
+    bu_template.life.set_duration(life_in_seconds)
+    bu_template.life.set_ref_date(ref_date)
     #
     if youth_ends_percent < 50:
         #maturation less than 50% of lifespan
-        bu_0.lifeCycle.allLifeStages[0].ends = youth_ends_percent
-        bu_0.lifeCycle.allLifeStages[1].starts = youth_ends_percent + 1
-        bu_0.lifeCycle.allLifeStages[1].ends = youth_ends_percent + 30
-        bu_0.lifeCycle.allLifeStages[2].starts = youth_ends_percent + 30 + 1
+        #
+        bu_template.life.stages["all"]["maturity"].starts = youth_ends_percent
+        bu_template.life.stages["all"]["decline"].starts = (youth_ends_percent + 30)
+        bu_template.life.organize_stages()
+        #
+        ##by default, include youth, maturity, and decline in all. organize()
+        #should ignore stages with None as start. only start should be required
+        #end should be optional. default pattern is youth.start = 0,
+        #maturity.start  = 30, decline.start = 70. always end at 100. organize
+        #should weed out anything below start. if end specified on a period that
+        #makes it in, organize() also weeds out any candidates that start below
+        #the mandated end. the three default stages dont have ends. 
+        #
         tag1 = "long adolescence"
         tag2 = "rapid decline"
         tag3 = "unusual LifeCycle"
-        bu_0.tag(tag1, tag2, tag3)
+        bu_template.tag(tag1, tag2, tag3)
     else:
         #maturation too long, assume lifespan too short, set to 3x maturity
-        bu_0.lifeCycle.setLifeSpan(mature_in_seconds * 3)
+        bu_template.life.set_duration(mature_in_seconds * 3)
         tag4 = "standard LifeCycle"
         tag5 = "pro forma lifeSpan"
         tag6 = "response difficulty"
-        bu_0.tag(tag4, tag5, tag6)
+        bu_template.tag(tag4, tag5, tag6)
     #
+    batch = {}
     #clone bU0 x #of units
-    component_batch = []
     for n in range(unit_count):
-        clone = bu_0.copy(enforce_rules = False)
+        clone = bu_template.copy(enforce_rules = False)
         c_name = "Existing %s" % n
         clone.setName(c_name)
         clone.id.assignBBID(clone.name)
-        fixed_age = 0.40 * life_in_seconds
-        #assume a particular age, uniform across units
-        clone.lifeCycle.setInitialAge(fixed_age, ref_date)
-        component_batch.append(clone)
-        M.currentPeriod.content.addComponent(clone)
+        batch[clone.id.bbid] = clone
+    #
+    ordered_batch = []
+    for bbid in sorted(batch.keys()):
+        unit = batch[bbid]
+        ordered_batch.append[unit]
+    #
+    first_bu = ordered_batch.pop(0)
+    first_bu.life.set_dob(first_dob_seconds)
+    last_bu = ordered_batch.pop()
+    last_bu.life.set_dob(last_dob_seconds)
+    #ordered_batch now 2 units shorter than unit_count. apply distribution to
+    #all remaining units.
+    #
+    #assume that company is creating units at a uniform rate over time. can
+    #eventually modify this to look like a curve that's fast early and slow
+    #later (log curve).
+    #
+    conception_date = first_bu.life.date_of_birth
+    for bu in ordered_batch:
+        bu.life.set_conception(conception_date)
+        conception_date = conception_date + gestation_seconds
+    #
+    #make sure have same number of units in batch as unit_count. also make
+    #sure that all units are alive as of ref_date. if not all alive, logic is
+    #wrong, because they all must exist right now, per user's instructions. <----------------------------!!!
+    #
+    #when all is checked out, add the components to top_bu
+    top_bu.addComponent(clone)
     #
     tag7 = "small number of units"
     small_num = 10
     tag8 = "medium number of units"
     med_num = 50
     tag9 = "large number of units"
-    parent_bu = M.currentPeriod.content
     if unit_count <= small_num:
-        parent_bu.tag(tag7)
+        top_bu.tag(tag7)
     elif unit_count <= med_num:
-        parent_bu.tag(tag8)
+        top_bu.tag(tag8)
     else:
-        parent_bu.tag(tag9)
+        top_bu.tag(tag9)
     #
     ####### <- tag with Ready_For_Growth_Analysis or smtg, which Growth requires as a reqd tag---------
-                            
+    #                 
     topic.wrap_topic()
     
         

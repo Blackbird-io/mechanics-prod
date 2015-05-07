@@ -95,7 +95,6 @@ class LifeCycle:
         #should automatically set date of conception
         #then go from there
         
-
     def set_gestation(self, length_in_seconds):
         pass
 
@@ -106,6 +105,8 @@ class LifeCycle:
         self.duration = length_in_seconds
 
     def add_stage(self, stage):
+        #check that stage has start, end, and name
+        #
         #should be able to take objects and dictionaries as stage
         #stage should be a dictionary w known keys
         #stage_starts = int(stage["starts"])

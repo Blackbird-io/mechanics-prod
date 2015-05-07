@@ -184,6 +184,7 @@ def make_portal(mini_q, language = "English", web = False):
         full_q = PortalQuestion()
     #
     result = blank_pq.to_portal(full_q, web)
+    #
     return result
     #keeps PortalQuestion independent of QuestionManager
     #keeps FullQuestion independent of QuestionManager

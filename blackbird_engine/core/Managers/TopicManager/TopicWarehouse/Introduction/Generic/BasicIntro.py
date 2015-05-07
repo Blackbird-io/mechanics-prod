@@ -161,7 +161,9 @@ def scenario_5(topic):
         line_overview.tag("author role: big")
     #
     new_question = topic.questions["company start date?"]
-    today_date_string = datetime.date.today.isoformat()
+    if M.name:
+        new_question.context["company_name"] = str(M.name)
+    today_date_string = datetime.date.today().isoformat()
     new_question.input_array[0].r_max = today_date_string
     topic.wrap_scenario(new_question)
 
@@ -193,7 +195,7 @@ scenarios["company name?"] = scenario_2
 scenarios["company industry?"] = scenario_3
 scenarios["user name?"] = scenario_4
 scenarios["user position?"] = scenario_5
-secnarios["company start date?"] = scenario_6
+scenarios["company start date?"] = scenario_6
 #
 scenarios[Globals.user_stop] = end_scenario
 
