@@ -41,7 +41,7 @@ def _get_bb_model_dict(bb_model):
 
 def _save_bb_model_dict(business, model_dict, end=False):
     s = serializers.InternalBlackbirdModelSerializer(data=_strip_nones(model_dict))
-    assert s.is_valid(), 'BlackbirdModel from Engine is valid'
+    s.is_valid(raise_exception=True)
     return s.save(business=business, complete=end)
 
 
@@ -51,7 +51,7 @@ def _get_question_dict(question):
 
 def _save_question_dict(business, answered_question, model, end, stop, question_dict):
     s = serializers.InternalQuestionSerializer(data=_strip_nones(question_dict))
-    assert s.is_valid(), 'Question from Engine is valid'
+    s.is_valid(raise_exception=True)
     question_dict = s.validated_data
     return models.Question.objects.create_next(answered_question, end, stop, business=business, blackbird_model=model,
                                                **question_dict)
