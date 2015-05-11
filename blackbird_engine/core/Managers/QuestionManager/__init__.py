@@ -175,10 +175,16 @@ def make_portal(mini_q, language = "English", web = False):
     the Engine-Wrapper API. Dictionary contains only built-in types and is
     compatible with the json module.
     """
-    full_q = make_full(mini_q, language)
-    full_q.set_prompt()
     blank_pq = PortalQuestion()
+    #
+    if mini_q:
+        full_q = make_full(mini_q, language)
+        full_q.set_prompt()
+    else:
+        full_q = PortalQuestion()
+    #
     result = blank_pq.to_portal(full_q, web)
+    #
     return result
     #keeps PortalQuestion independent of QuestionManager
     #keeps FullQuestion independent of QuestionManager

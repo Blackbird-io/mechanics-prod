@@ -35,6 +35,8 @@ n/a
 #must import any modules contained here at init for manager to see and add to
 #catalog
 #
+from . import FirstStoreOpen
+from . import LatestStoreOpen
 from . import MonthsToUnitMaturity
 from . import NumberOfUnits
 from . import UnitLifeSpan

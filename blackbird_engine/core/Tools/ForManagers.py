@@ -4,10 +4,11 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Engine
-#Module: DataStructures.ManagerTools
+#Module: DataStructures.Tools.ForManagers
 """
 
-Module [ ] .
+Module provides convenience functions for common content management tasks
+handled by xManager modules (e.g., TopicManager, QuestionManager, etc.). 
 
 ====================  ==========================================================
 Attribute             Description
@@ -17,7 +18,7 @@ DATA:
 n/a
 
 FUNCTIONS:
-walk_package
+walk_package()        walk dir tree and apply action to modules that pass check
 
 CLASSES:
 n/a
@@ -39,6 +40,7 @@ def walk_package(top, check, action, counter = 0):
 
 
     walk_package(top, check, action[, counter = 0]) -> int
+
 
     Function expects:
     ``top`` is a package module

@@ -4,9 +4,10 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: QuestionWarehouse.Overview.UserPosition
+#Module: QW.Structure.FirstStore
 """
-"What is your position in the company?"
+
+A question specifically about stores.
 
 ====================  ==========================================================
 Attribute             Description
@@ -26,7 +27,6 @@ question_content
 requiredTags
 short
 transcribe
-user_can_add
 
 FUNCTIONS:
 n/a
@@ -35,23 +35,26 @@ CLASSES:
 n/a
 ====================  ==========================================================
 """
-
-name = "user position?"
 question_content = True
+name = "first store open date?"
+question_author = "Ilya Podolyako"
+
+#Engine parameters
 #
-#Engine
 requiredTags = []
 optionalTags = []
+
+#Portal parameters
 #
-#Portal
 array_caption = None
-comment = None
-input_type = "text"
+c = "You can approximate the date if you'd like. We are trying to understand"
+c += "how your company has grown over time, so the month and year matter most."
+comment = c
+input_type = "date"
 input_sub_type = None
-basic_prompt = "What is your position in the company?"
-custom_prompt = "What is your role at {company_name}?"
-short = "role"
+basic_prompt = "When did you open your first store?"
+custom_prompt = None
+short = "First Store"
 transcribe = True
-user_can_add = False
 active_elements = 1
 
