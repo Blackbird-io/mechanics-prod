@@ -201,7 +201,7 @@ class TimeLine(dict):
         #seed.end is a float representing a POSIX timestamp since Epoch. For
         #downstream use, convert the timestamp into a calendar date 
         #
-        segments = self.get_date_segments(seed_date)
+        segments = self.get_segments(seed_date)
         past = segments[0]
         future = segments[-1]
         #
@@ -296,11 +296,11 @@ class TimeLine(dict):
         result = self[end_date]
         return result
 
-    def get_date_segments(self, ref_date = None):
+    def get_segments(self, ref_date = None):
         """
 
 
-        TimeLine.get_date_segments(self, ref_date = None) -> list
+        TimeLine.get_segments(self, ref_date = None) -> list
 
 
         output[0] = list of keys for periods before ref_date
@@ -311,7 +311,7 @@ class TimeLine(dict):
         if ref_date:
             ref_end = self.get_ref_end_date(ref_date)    
         else:
-            ref_end = self.current_period.end        
+            ref_end = datetime.date.fromtimestamp(self.current_period.end)        
         #
         dates = sorted(self.keys())
         ref_spot = dates.index(ref_end)
