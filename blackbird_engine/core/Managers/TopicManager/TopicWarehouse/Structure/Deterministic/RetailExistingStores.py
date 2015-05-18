@@ -361,7 +361,7 @@ def scenario_6(topic):
         bu_template.life.stages["all"]["decline"].starts = (youth_ends_percent + 30)
         bu_template.life.organize_stages()
         #
-        ##by default, include youth, maturity, and decline in all. organize()
+        #by default, include youth, maturity, and decline in all. organize()
         #should ignore stages with None as start. only start should be required
         #end should be optional. default pattern is youth.start = 0,
         #maturity.start  = 30, decline.start = 70. always end at 100. organize
@@ -399,6 +399,7 @@ def scenario_6(topic):
     first_bu.life.set_dob(first_dob_seconds)
     last_bu = ordered_batch.pop()
     last_bu.life.set_dob(last_dob_seconds)
+    #
     #ordered_batch now 2 units shorter than unit_count. apply distribution to
     #all remaining units.
     #
@@ -407,16 +408,25 @@ def scenario_6(topic):
     #later (log curve).
     #
     conception_date = first_bu.life.date_of_birth
+    #
     for bu in ordered_batch:
         bu.life.set_conception(conception_date)
         conception_date = conception_date + gestation_seconds
+        #
+        #the batch represents all units that the user said **exist** as of
+        #"now" (the ref_date). in Blackbird, that means all units must be
+        #alive as of the ref date. the analysis also puts a ceiling on
+        #the date on which a user could have conceived a unit. 
+        #
+        conception_date = min(conception_date,
+                              (ref_date - gestation_seconds))
+        #
+        if bu.life.alive:
+            top_bu.addComponent(bu)
+        else:
+            raise BBAnalyticalError
+            #something wrong
     #
-    #make sure have same number of units in batch as unit_count. also make
-    #sure that all units are alive as of ref_date. if not all alive, logic is
-    #wrong, because they all must exist right now, per user's instructions. <----------------------------!!!
-    #
-    #when all is checked out, add the components to top_bu
-    top_bu.addComponent(clone)
     #
     tag7 = "small number of units"
     small_num = 10
@@ -429,8 +439,119 @@ def scenario_6(topic):
         top_bu.tag(tag8)
     else:
         top_bu.tag(tag9)
+    ##
+    ##can refactor this into:
+        #topic that configures a template unit ["TypicalStore"]
+            #probably better this way, because can have several different kinds of stores
+            #small, medium, and large, for example
+            #topics can vary:
+                #simple:
+                    #ask about single type
+                #more involved:
+                    #ask about each type
+            #
+            #each company will have its own set of types (tiers, etc)
+            #each company will have some built-in types
+            #can have a look up table, by type
+            #type can be a special type of tag? a list of tags? tags that
+            #dont get inherited up? "type :: " tags? 
+            #
+            #challenge is that once you introduce multi-typing, you then
+            #have to ask about each type, unless you have a theory on where
+            #they are the same and where they are different
+            #
+            #also, kind of reinventing the wheel w respect to classes
+            #may be should create custom classes and put them into model
+            #
+            #will definitely break pickling; but kind of nice cause then can configure
+            #the classes and inherit stuff and what-not
+            #
+            #so each model will have its own set of BU subclasses...
+            #or, alternatively, a set of instructions on how to subclass BU...
+            #
+            #since a bunch of attributes and objects determine the "nature" of
+            #a business unit though, templates have to define each of those
+            #so the answer is to create template business units. usually store
+            #them at the top-level of a model. or at the bu-level.
+            #e.g., components.templates. can then pull out the template, adjust
+            #a couple of things, and plug in to actual bu.
+            #
+            # components.templates should be a dictionary. with a couple keys.
+            #"standard" always. each key should point to a dictionary. each
+            #dictionary should include a "default" object and then optionally
+            #one or more subtypes.
+            #
+            #so always:
+            #templates = dict()
+            #len(templates.keys()) >= 1
+            #templates["standard"] = dict()
+            #templates["standard"]["default"] = BU
+            #
+            #or may be templates["default"] = BU
+            #templates[x] = template_store
+            #
+            #this thing will probably get chunky, so should probably have one
+            #per model.
+            #
+            #M.timeLine.taxonomy
+            #BU.components.local_taxonomy
+            #would also like to be able to rapidly look up units by taxonomy
+            #so could look up operating and non-operating; all small or large
+            #
+            #each Components container should have a taxonomy_directory
+            #should be flat? so all types at same level
+            #look into chained dictionary for this.
+            #
+            #should add taxonomy to Tags. should have taxonomy tags.
+            #goals:
+                #allow rapid look up of business unit at any level by type
+                #know what type a given business unit is
+                #have template business units that can be configured once and then
+                #   inserted many times
+                #minimize space
+                #maximize access speed
+                #taxonomy system should integrate w tags; in some ways, tags provide
+                #a taxonomy. and in some ways, taxonomy is a look up table of tags
+                #   distinction is that each unit in the top-level taxonomy is a template,
+                #   a platonic ideal of sorts.
+                #keep model backwards and forwards compatible
+                #keep model serializable w standard pickle and dill modules
+                #
+                #may be this is two different types of things:
+                #   -- taxonomy: belongs to a timeline, consists of only prototypes
+                #   -- look_up: a look up table that splits all components and subcomponents
+                #   into their respective taxonomic categories
+                #
+                #can also show the taxonomy in component print-out: first line is the most
+                #senior group, then more and more narrow as it goes. "ops","small", etc.
+                #size row to max number of lines, or 5. show after box.
+                #
+                #this is reinventing the class wheel.
+                #
+                #except that kind of annoying to configure classes at runtime.
+                #would want to subclass BU.
+                #
+                #and still have to store these somewhere on model, cause that's
+                #where we retain state.
+                #
+                #and want to know all instances of the class at a given level
+                #
+                #
+                #
+                #
+                #
+            #
+            #
+            #think through while in israel. 
+            #
+            #
+        #topic that configures 
     #
     ####### <- tag with Ready_For_Growth_Analysis or smtg, which Growth requires as a reqd tag---------
+    ##growth: expected vs forecasted
+    ##[expected means already in the works]
+    ##[forecasted means plans]
+    #
     #                 
     topic.wrap_topic()
     

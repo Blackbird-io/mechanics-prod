@@ -181,7 +181,10 @@ def scenario_6(topic):
     top_bu = M.currentPeriod.content
     top_bu.lifeCycle.set_dob(dob_in_seconds)
     #
+    i_overview = top_bu.financials.indexByName("Overview")
+    line_overview = top_bu.financials[i_overview]
     line_overview.guide.quality.increment(1)
+    #
     topic.wrap_topic()
 
 def end_scenario(topic):
