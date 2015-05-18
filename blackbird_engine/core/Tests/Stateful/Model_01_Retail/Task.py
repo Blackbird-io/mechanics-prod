@@ -18,6 +18,8 @@ output the final model
 import dill
 import Shell
 
+from Scripts import Retail2_Raw
+
 output = {}
 
 def do():
@@ -27,12 +29,18 @@ def do():
 output["T11.01"] = {}
 print(output)
 ##use relative paths to maintain portability
-p = r"scripts\retail2.pkl"
-print(p)
-f = open(p,"rb")
-print(f)
-script_retail = dill.load(f)
-f.close()
+c = """
+Already imported Retail2_Raw module from scripts:
+
+Module: %s\n
+"""
+c = c % Retail2_Raw
+print(c)
+#
+script_retail = Retail2_Raw.answers
+c = """script_retail = Retail2_Raw.answers"""
+print(c)
+#
 print("interview script: \n",script_retail)
 Shell.use_script(script_retail)
 msg = Shell.continuous()

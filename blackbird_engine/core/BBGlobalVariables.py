@@ -131,3 +131,14 @@ default_unit_name = "Blank Unit"
 default_periods_back = 36
 default_periods_fwd = 36
 cc_haircut = 0.20
+
+#Object Life Cycle
+conception_date_min = "1850-01-01"
+conception_date_max = "2100-01-01"
+gestation_years_max = 15
+gestation_years_def = 1
+life_span_years_max = 300
+life_span_years_def = 10
+ref_date_min = "1900-01-01"
+ref_date_max = "2100-01-01"
+
