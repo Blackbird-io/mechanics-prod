@@ -23,13 +23,16 @@ class ManagedAttributeError(BlackbirdError): pass
 
 class AbstractMethodError(BlackbirdError): pass
 
-class LifeCycleError(BlackbirdError): pass
-    #specific to lifecycle-based dynamics
-
 class BBAnalyticalError(BlackbirdError):
     """
     Parent class of custom exceptions raised during Blackbird analytical
     operations. I.e., topic selection, topic processing, topic definition
+    """
+    pass
+
+class LifeCycleError(BBAnalyticalError):
+    """
+    Blackbird life cycle model cannot fit data.
     """
     pass
 
