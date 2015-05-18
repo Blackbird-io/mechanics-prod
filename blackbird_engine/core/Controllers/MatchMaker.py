@@ -93,12 +93,14 @@ class Yenta():
     =================  ==============================================
     DATA:
     allScores          dict of TDEX: (cScore,pScore,trump)
+    honor_trump
 
-    FUNCTION: 
-    simpleSelect()     returns an instance of the best-matched topic
+    FUNCTION:
     findEligible()     returns a list of any eligible topic objects
     pickBest()         returns a list of best-scoring topic objects
-    tieBreaker()       returns the winner of tie-breaking routine
+    reset()
+    simple_select()     returns an instance of the best-matched topic
+    tieBreaker()       returns the winner of tie-breaking routine    
     =================  ==============================================
     """
     TM = None
@@ -108,19 +110,25 @@ class Yenta():
         cls.TM = None
         
     @classmethod
-    def setTopicManager(cls,new_TM):
+    def set_topic_manager(cls,new_TM):
         cls.TM = new_TM
         
     def __init__(self):
-        self.honorTrumpTags = True
-        self.guide = BBGlobalVariables.ACTIVETag
+        self.honor_trump = True
     
-    def enableTrumpTags(self):
-        self.honorTrumpTags = True
+    def reset(self):
+        """
 
-    def disableTrump(self):
-        self.honorTrumpTags = False
 
+        Yenta.reset() -> None
+
+
+        Method sets ``percentScores`` and ``allScores`` on instance to blank
+        dictionaries. 
+        """
+        self.percentScores = {}
+        self.allScores = {}
+        
     def selectTopic(self,Model):
         """
 
@@ -131,14 +139,14 @@ class Yenta():
         
         """
         self.reset()
-        newTopic = self.simpleSelect(Model)
+        newTopic = self.simple_select(Model)
         return newTopic
 
-    def simpleSelect(self,Model):
+    def simple_select(self, Model):
         """
 
 
-        Yenta.simpleSelect(Model) -> Topic
+        Yenta.simple_select(Model) -> Topic
 
         
         Method finds and returns the best topic in the active catalog for
@@ -376,19 +384,7 @@ class Yenta():
         #``recursive``; duplicative review should be in this module
         #
     
-    def reset(self):
-        """
-
-
-        Yenta.reset() -> None
-
-
-        Method sets ``percentScores`` and ``allScores`` on instance to blank
-        dictionaries. 
-        """
-        self.percentScores = {}
-        self.allScores = {}
 
 #Connect Yenta class to TopicManager so Yenta can access catalog
 TopicManager.populate()
-Yenta.setTopicManager(TopicManager)
+Yenta.set_topic_manager(TopicManager)

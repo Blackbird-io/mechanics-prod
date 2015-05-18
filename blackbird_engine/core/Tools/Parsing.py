@@ -351,7 +351,8 @@ def seconds_from_iso(string):
 
 
     Function takes a string in "YYYY-MM-DD" format and returns a POSIX timestamp
-    representing seconds since Epoch.
+    representing seconds since Epoch. Function ignores any whitespace around the
+    POSIX data. 
     """
     calendar = date_from_iso(string)
     to_time = calendar.timetuple()
@@ -367,11 +368,23 @@ def date_from_iso(string):
 
 
     Function takes a string in "YYYY-MM-DD" format and returns an instance of
-    datetime.date
+    datetime.date. Function ignores any whitespace around the POSIX data. 
     """
     elements = [int(x) for x in string.split("-")]
     result = datetime.date(*elements)
     #
     return result
-                
+
+def seconds_from_years(yrs):
+    """
+
+
+    seconds_from_years(yrs) -> int or float
+
+
+    Function returns value corresponding to the number of seconds in ``yrs``,
+    assuming a 365-day year.
+    """
+    result = yrs * 365 * 24 * 60 * 60
+    return result
     

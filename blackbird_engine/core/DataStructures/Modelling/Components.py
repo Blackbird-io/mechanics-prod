@@ -68,6 +68,7 @@ class Components(dict, Tags, Equalities):
     extrapolate_to()      delegates Tags.extrapolate_to()
     ex_to_default()       delegates to Tags.ex_to_default, which runs on copy()
     ex_to_special()       makes a shell, fills with items from seed & target
+    find_bbid()           return bbid that contains a known string
     getOrdered()          returns a list of values, ordered by key
     inheritTags()         runs default routine, then inherits from all comps
     pretty_print()        returns a list of strings showing units one by one
@@ -276,6 +277,28 @@ class Components(dict, Tags, Equalities):
             result.addItem(c_new)
         #
         #return result
+        return result
+        
+
+    def find_bbid(self, snippet):
+        """
+
+
+        Components.find_bbid(snippet) -> uuid
+
+
+        Method returns first bbid in instance keys that contains the snippet.
+        Snippet should be a string. Method returns None if no id in instance
+        contains snippet. 
+        """
+        result = None
+        for bbid in self:
+            if snippet in str(bbid):
+                result = bbid
+                break
+            else:
+                continue
+        #
         return result
         
     def getOrdered(self):
