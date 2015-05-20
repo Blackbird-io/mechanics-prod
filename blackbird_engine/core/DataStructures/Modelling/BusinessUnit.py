@@ -21,7 +21,6 @@ setDefaultFinancials() tracks ModelComponents interface.
 
 CLASSES:
 BusinessUnit          structured snapshot of a business at a given point in time
-
 ====================  ==========================================================
 """
 
