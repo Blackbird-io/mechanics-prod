@@ -77,7 +77,7 @@ def func(line, business_unit, data, driver_signature):
         pass
     if i_rev:
         rev = fins[i_rev].value
-    if business_unit.lifeCycle.alive and rev:
+    if business_unit.life.alive and rev:
         COGS = rev * (1 - gross_margin)
         line.setValue(COGS, driver_signature)
     #

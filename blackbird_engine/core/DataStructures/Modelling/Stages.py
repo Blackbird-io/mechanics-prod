@@ -48,18 +48,22 @@ class Stages:
     Attribute             Description
     ====================  ======================================================
     DATA:
+    by_name               dict; all stage objects, keyed by name, SSOT
+    by_start              dict; all stage objected, by start, from by_name data
     end_points            list; ordered start and end points. stage spans [s,e)
-    options               dict; all stage objects, keyed by start point
+    
 
     FUNCTIONS:
-    add_stage()           adds stage to options, runs organize() on instance
+    add_stage()           adds stage to by_name, runs organize() on instance
+    copy()                return new instance with shallow copies of attrs
     find_stage()          finds a stage that covers specified percent
-    organize()            builds end_points from stages in options
+    organize()            builds end_points from stages in by_name
     ====================  ======================================================
     """
     def __init__(self):
+        self.by_name = dict()
+        self.by_start = dict()
         self.end_points = []
-        self.options = dict()
         
     def add_stage(self, stage):
         """
@@ -68,16 +72,27 @@ class Stages:
         Stages.add_stage(stage) -> None
 
 
-        Method records a **shallow copy** of stage in instance.options under the
-        stage's ``starts`` value. Method then organizes the instance. 
+        Method records a **shallow copy** of stage in instance.by_name under the
+        stage's ``name`` value and in by_start under the stage's start value.
+        Method then organizes the instance. 
 
         Method expects a dict-type object for ``stage``. Method rasies error
-        if start value is outside [0,100).
+        if stage start value is outside [0,100). To maintain deterministic
+        outcomes on find_stage(), method also raises error if instance already
+        contains a stage that starts at the same percent as the argument. 
         """
         stage_start = stage["start"]
+        stage_name = stage["name"]
         #
         if 0 <= stage_start < 100:
-            self.options[stage_start] = stage.copy()
+            if stage_start not in self.by_start:
+                clean_stage = stage.copy()
+                self.by_name[stage_name] = clean_stage
+                self.by_start[stage_start] = clean_stage
+            else:
+                c = "Instance already contains stage that starts at %s percent."
+                c = c % stage_start
+                raise BBExceptions.LifeCycleError(c)
         else:
             c = "Starting point must fall in [0,100)."
             raise BBExceptions.LifeCycleError(c)
@@ -85,6 +100,25 @@ class Stages:
         self.organize()
         #
 
+
+    def copy(self):
+        """
+
+
+        Stages.copy() -> Stages
+
+
+        Method returns a new instance of Stages. Result attributes are shallow
+        copies of seed attributes. 
+        """
+        result = Stages()
+        result.by_name = self.by_name.copy()
+        result.by_start = self.by_start.copy()
+        result.end_points = self.end_points[:]
+        #
+        return result
+        
+        
     def find_stage(self, percent):
         """
 
@@ -108,7 +142,7 @@ class Stages:
                 stage_ends = self.end_points[i]
                 #
                 if stage_starts <= percent < stage_ends:
-                    result = self.options[stage_starts]
+                    result = self.by_start[stage_starts]
                     break
                 else:
                     continue
@@ -124,13 +158,18 @@ class Stages:
 
         Method generates a new instance.end_points list from sorted stage start
         points.
+
+        On every call, method clears and then rebuilds instance.by_start from
+        data in instance.by_name.
         """
+        self.by_start.clear()
         self.end_points.clear()
         #
-        ordered_ends = sorted(self.options.keys())
+        for stage in self.by_name.values():
+            stage_start = stage["start"]
+            self.by_start[stage_start] = stage
+        #
+        ordered_ends = sorted(self.by_start.keys())
         self.end_points.extend(ordered_ends)
         #
-        self.end_points.append(100)
-        
-        
-        
+        self.end_points.append(100)        

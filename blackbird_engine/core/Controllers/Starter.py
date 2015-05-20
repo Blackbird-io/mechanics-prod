@@ -79,7 +79,7 @@ def process(msg):
                      Globals.default_periods_fwd,
                      Globals.default_periods_back)
     topBU = BusinessUnit(Globals.default_unit_name)
-    topBU.lifeCycle.setRefDate(refDate)
+    topBU.life.set_ref_date(refDate)
     atx = Analytics()
     topBU.setAnalytics(atx)
     M.currentPeriod.setContent(topBU)
