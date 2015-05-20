@@ -64,20 +64,19 @@ def func(line, business_unit, data, driver_signature):
     "annual_rev_per_mature_unit" 
     
     """
-    stage_number = business_unit.lifeCycle.currentLifeStageNumber
-    stage = business_unit.lifeCycle.allLifeStages[stage_number]
+    stage_name = business_unit.life.stage
     annual_revenue = data["annual_rev_per_mature_unit"]
     monthly_revenue = annual_revenue/12
-    if stage.name == "maturity":
+    if stage_name == "maturity":
         line.setValue(monthly_revenue, driver_signature)
         #
-    elif stage.name == "growth":
+    elif stage_name == "youth":
         growth_adjustment = (business_unit.lifeCycle.percentDone / 
                              (stage.ends - stage.starts))
         adj_growth_revenue = growth_adjustment * monthly_revenue
         line.setValue(adj_growth_revenue, driver_signature)
         #
-    elif stage.name == "decline":
+    elif stage_name == "decline":
         decline_adjustment = ((100 - business_unit.lifeCycle.percentDone) / 
                               (stage.ends - stage.starts))
         adj_decline_revenue = decline_adjustment * monthly_revenue
