@@ -28,6 +28,8 @@ LifeCycle             object that tracks how attributes evolve over time
 
 
 #imports
+import copy
+
 import BBExceptions
 import BBGlobalVariables as Globals
 
@@ -50,8 +52,8 @@ conc_posix_min = seconds_from_iso(Globals.conception_date_min)
 gest_secs_def = seconds_from_years(Globals.gestation_years_def)
 gest_secs_max = seconds_from_years(Globals.gestation_years_max)
 #
-ref_posix_max = seconds_from_iso(Globals.ref_date_min)
-ref_posix_min = seconds_from_iso(Globals.ref_date_max)
+ref_posix_max = seconds_from_iso(Globals.ref_date_max)
+ref_posix_min = seconds_from_iso(Globals.ref_date_min)
 #
 span_secs_def = seconds_from_years(Globals.life_span_years_def)
 span_secs_max = seconds_from_years(Globals.life_span_years_max)
@@ -121,6 +123,7 @@ class LifeCycle(Equalities):
     FUNCTIONS:
     copy()                returns a new instance with a dict-copy of _stages
     kill()                set date of death to argument or ref_date
+    set_age()             set conception date from age and ref
     set_ref_date()        set ref_date to timestamp argument
     ====================  ======================================================
 
@@ -156,11 +159,14 @@ class LifeCycle(Equalities):
 
 
         Property returns the difference between ref_date and date_of_birth for
-        instance. Only objects with a ref_date greater than date_of_conception
-        have a valid age.
+        instance.
+
+        Only objects with a ref_date greater than date_of_conception and less
+        than date_of_death have a valid age. In other words, objects only have
+        an age between conception and death. 
         """
         result = None
-        if self.date_of_conception <= self.ref_date:
+        if self.date_of_conception <= self.ref_date < self.date_of_death:
             result = self.ref_date - self.date_of_birth
         return result
 
@@ -230,12 +236,21 @@ class LifeCycle(Equalities):
         
     @property
     def date_of_death(self):
+        """
+
+
+        **read-only property**
+
+
+        Property returns pre-existing _date_of_death, or, if none exists,
+        computes the expected date of death (sum of dob and span), sets
+        _date_of_death to the expected value, and then returns the same.
+        """
         if not self._date_of_death:
             #instance.kill() can force a value for _dod
-            if all(self.ref_date, self.date_of_birth, self.span):
+            if all([self.ref_date, self.date_of_birth, self.span]):
                 expected_dod = self.date_of_birth + self.span
-                if self.ref_date > expected_dod:
-                    self._date_of_death = expected_dod
+                self._date_of_death = expected_dod
         #
         return self._date_of_death
     
@@ -331,12 +346,25 @@ class LifeCycle(Equalities):
         """
         result = None
         #
-        if all(self.age, self.span):
+        if all([self.age, self.span]):
             result = (self.age / self.span) * 100
             result = int(result)
         #
         return result
     
+
+    @property
+    def ref_date(self):
+        """
+
+
+        **read-only property**
+
+
+        Property returns _ref_date.
+        """
+        return self._ref_date
+
     @property
     def span(self):
         """
@@ -421,6 +449,20 @@ class LifeCycle(Equalities):
         self._date_of_death = new_dod
         #
 
+    def set_age(self, fixed_age, ref_date):
+        """
+
+
+        LifeCycle.set_age(fixed_age, ref_date) -> None
+
+
+        Method computes a date of conception that generates the desired age
+        at ref_date and sets instance properties accordingly. 
+        """
+        self._ref_date = ref_date
+        estimated_conception = ref_date - fixed_age - self.gestation
+        self.date_of_conception = estimated_conception
+        
     def set_ref_date(self, new_ref):
         """
 

@@ -77,7 +77,7 @@ class BusinessUnit(Tags,Equalities):
     guide                 instance of Guide object
     header                instance of Header object
     id                    instance of ID object
-    lifeCycle             instance of LifeCycle object
+    life                  instance of LifeCycle object
     sig_consolidate       global signature updated for unit name
     tagSources            list; CLASS attribute, sources for tag inheritance
     
@@ -123,7 +123,7 @@ class BusinessUnit(Tags,Equalities):
         self.header = Header()
         self.id = ID()
         #get the id functionality but do NOT assign a bbid yet
-        self.lifeCycle = LifeCycle()
+        self.life = LifeCycle()
         self.period = None
         gl_sig_con = Globals.signatures["BusinessUnit.consolidate"]
         self.sig_consolidate =  gl_sig_con % self.name
@@ -411,7 +411,7 @@ class BusinessUnit(Tags,Equalities):
         if refresh_dictionaries:
             parent.financials.buildDictionaries()
         #stage 1: check that sub is alive
-        if not sub.lifeCycle.alive:
+        if not sub.life.alive:
             pass
         else:
             sub.fillOut()
@@ -510,8 +510,7 @@ class BusinessUnit(Tags,Equalities):
         - financials
         - header.profile
         - id (vanilla shallow copy)
-        - lifeCycle (vanilla shallow copy)
-        - lifeCycle.allLifeStages
+        - life
 
         The class-specific copy methods for components, drivers, and financials
         all return deep copies of the object and its contents. See their
@@ -537,11 +536,8 @@ class BusinessUnit(Tags,Equalities):
         result.header.profile = copy.deepcopy(self.header.profile)
         result.id = copy.copy(self.id)
         #header.profile should be the only object pointing to others on header
-        result.lifeCycle = copy.copy(self.lifeCycle)
-        seed_lifeStages = self.lifeCycle.allLifeStages
-        result.lifeCycle.allLifeStages = copy.deepcopy(seed_lifeStages)
-        #lifeStages should be only deep attribute on lifeCycle; keep others
-        #as shallow copies
+        result.life = self.life.copy()
+        #
         return result
 
     def derive(self, *tagsToOmit):
@@ -701,7 +697,7 @@ class BusinessUnit(Tags,Equalities):
         
         Method syncs instance.header.startDate and endDate with time period.
         Method then sets the namespace id for the instance to that of the period
-        and the lifeCycle.refDate to the period endpoint. 
+        and the life.ref_date to the period endpoint. 
 
         If ``recur`` == True, repeats for each component.
         If ``updateID`` == True, method updates the instance id for the new
@@ -713,7 +709,7 @@ class BusinessUnit(Tags,Equalities):
         self.id.setNID(timePeriod.id.namespace_id)
         if updateID:
             self.id.assignBBID(self.name)
-        self.lifeCycle.setRefDate(timePeriod.end)
+        self.life.set_ref_date(timePeriod.end)
         if recur:
             #repeat all the way down to the ground floor
             for sub in self.components.getOrdered():
@@ -809,21 +805,21 @@ class BusinessUnit(Tags,Equalities):
         id_tail  = str(self.id.bbid)[(tail_width * -1):]
         data["ID"] = id_dots + id_tail
         #
-        if self.lifeCycle.dateBorn:
-            dob = datetime.date.fromtimestamp(self.lifeCycle.dateBorn)
+        if self.life.date_of_birth:
+            dob = datetime.date.fromtimestamp(self.life.date_of_birth)
             dob = dob.isoformat()
         else:
             dob = "n/a"
         data["DOB"] = dob
         #
-        if self.lifeCycle.percentDone:
-            life = int(self.lifeCycle.percentDone)
+        if self.life.percent:
+            life = int(self.life.percent)
             life = str(life) + r"%"
         else:
             life = "n/a"
         data["LIFE"] = life
         #
-        stage = str(self.lifeCycle.currentLifeStageName)[:data_width]
+        stage = str(self.life.stage)[:data_width]
         data["STAGE"] = stage.upper()
         #
         unit_type = str(None)
@@ -850,10 +846,10 @@ class BusinessUnit(Tags,Equalities):
         #add a bottom border symmetrical to the top
         lines.append(top_border)
         #
-        #post-processing (dashed lines for units that have not yet opened,
-        #x's for units that have already closed)
+        #post-processing (dashed lines for units scheduled to be conceived in
+        #the future, x's for units that have already closed)
         #
-        if (not self.lifeCycle.born) and self.lifeCycle.dateBorn:
+        if self.life.ref_date < self.life.date_of_conception:
             #
             alt_width = int(box_width / 2) + 1
             alt_border = (top_element + alt_element) * alt_width
@@ -869,7 +865,7 @@ class BusinessUnit(Tags,Equalities):
             #
             lines = [alt_border] + core_lines + [alt_border]
         #
-        if self.lifeCycle.dead:
+        if self.life.dead:
             #
             alt_lines = []
             line_count = len(lines)

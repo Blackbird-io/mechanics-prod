@@ -179,7 +179,8 @@ def scenario_6(topic):
     dob_in_seconds = time.mktime(date_of_birth.timetuple())
     #
     top_bu = M.currentPeriod.content
-    top_bu.lifeCycle.set_dob(dob_in_seconds)
+    estimated_conception = dob_in_seconds - top_bu.life.gestation
+    top_bu.life.date_of_conception = estimated_conception
     #
     i_overview = top_bu.financials.indexByName("Overview")
     line_overview = top_bu.financials[i_overview]
