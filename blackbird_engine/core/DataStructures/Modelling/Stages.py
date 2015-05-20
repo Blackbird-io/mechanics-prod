@@ -68,7 +68,7 @@ class Stages:
         Stages.add_stage(stage) -> None
 
 
-        Method records shallow copy of stage in instance.options under the
+        Method records a **shallow copy** of stage in instance.options under the
         stage's ``starts`` value. Method then organizes the instance. 
 
         Method expects a dict-type object for ``stage``. Method rasies error

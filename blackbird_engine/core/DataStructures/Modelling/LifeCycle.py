@@ -4,10 +4,10 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: LifeCycle
+#Module: DataStructures.Modelling.LifeCycle.
 """
 
-Module defines LifeCycle class. 
+Module defines LifeCycle class.
 
 ====================  ==========================================================
 Attribute             Description
@@ -20,8 +20,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-LifeCycle             objects that track evolution over time
-
+LifeCycle             object that tracks how attributes evolve over time
 ====================  ==========================================================
 """
 
@@ -29,474 +28,424 @@ LifeCycle             objects that track evolution over time
 
 
 #imports
-import copy
-import time
 import BBExceptions
+import BBGlobalVariables as Globals
 
-from BBGlobalVariables import *
+import Tools.Parsing
 
 from .Equalities import Equalities
+from .Stages import Stages
 from .LifeStage import LifeStage
 
 
 
 
 #globals
-#n/a
+seconds_from_iso = Tools.Parsing.seconds_from_iso
+seconds_from_years = Tools.Parsing.seconds_from_years
+#
+conc_posix_max = seconds_from_iso(Globals.conception_date_max)
+conc_posix_min = seconds_from_iso(Globals.conception_date_min)
+#
+gest_secs_def = seconds_from_years(Globals.gestation_years_def)
+gest_secs_max = seconds_from_years(Globals.gestation_years_max)
+#
+ref_posix_max = seconds_from_iso(Globals.ref_date_min)
+ref_posix_min = seconds_from_iso(Globals.ref_date_max)
+#
+span_secs_def = seconds_from_years(Globals.life_span_years_def)
+span_secs_max = seconds_from_years(Globals.life_span_years_max)
 
 #classes
 class LifeCycle(Equalities):
     """
 
-    This class contains attributes that describe the lifecycle of the real-world
-    referent for certain objects (e.g., BusinessUnits).
+    The LifeCycle class represents how an object develops over time.
 
-    1) ALL TIME VALUES ARE STORED AS SECONDS.
-    Periods are stored as floating point numbers of seconds. Ages or time
-    periods are stored as seconds since the Epoch. All arguments passed to
-    methods should be in seconds.
+    Blackbird shows ``age`` with respect to an instance's date_of_birth,
+    regardless of whether the ref_date is before or after the date of birth
+    (i.e., whether the date of birth is projected or actual).
     
-    Age may exceed time since the beginning of the Epoch (44 years), in which
-    case dateBorn will be a negative floating point number. In such an event,
-    the standard Python time module will be unable to convert it back to a
-    local time.
+    Blackbird does not differentiate between ``projected`` and ``actual`` dates:
+    dates have the same validity whether they are larger or smaller than an
+    instance's ref_date. 
+
+    Blackbird uses the convention that life begins at birth. Accordingly,
+    instances of LifeCycle will only show non-None percent completion and life
+    stages after their date of birth. In Blackbird, an object is not alive
+    during gestation: ``gestating`` is a status distinct from ``alive``.
     
-    2) There are three default allLifeStages: growth (0-30), maturity (31-80),
-    and decline(81-100). Numbers in parentheses represent starting and ending
-    values for Lifecycle.percentDone associated with the lifestage. User may
-    pass in their own list of Lifestage objects.
-
-    NOTE: Drivers may rely on a known life stage set. 
-    ACCORDINGLY, CARE SHOULD BE TAKEN WHEN INTRODUCING NON-DEFAULT LIFESTAGES
-    TO AN OBJECT.
-
-    3) A number of attributes appear as class-level variables that are managed
-    by descriptors.
+    Blackbird uses the convention that an object can die any time after
+    conception. If a caller ``kills`` an instance during gestation, that
+    instance will become dead (instance.dead == True) without ever having been
+    alive.
     
-    The descriptors provide dynamically computed values that do no get stale and
-    should not be in logical conflict with each other. Writes to such managed
-    attributes are prohibited; methods should be used instead to ensure
-    coherency after the update.
+    LifeCycle object store all time values as an integer POSIX timestamp: number
+    of seconds since Jan. 1, 1970.  All LifeCycle periods include the lower bound
+    and exclude the upper bound.
 
-    Attributes that begin with a single underscore are instance-level state
-    storage for the managed class-level objects.
+    The LifeCycle class supports equivalence comparisons through the Equalities
+    mix-in class.
 
+    LifeCycle equivalence analysis runs across all properties and ignores
+    attributes beginning with "_" (see skipPrefixes). The comparison of two
+    LifeCycle objects will thus come out equal if they have identical state at
+    the current point in time (including life stage name), even if their state
+    will diverge at other points in time because they have different life stage
+    patterns. 
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
     DATA:
-    _age                  (instance-level state)
-    _alive                (instance-level state)
-    _born                 (instance-level state) 
-    _currentLifeStageName (instance-level state)
-    _currentLifeStageNumber  (instance-level state)
-    _dateBorn             (instance-level state)
-    _dateDied             (instance-level state)
-    _dateKilled           (instance-level state)
-    _dead                 (instance-level state)
-    _killed               (instance-level state)
-    _percentDone          (instance-level state)
-    _refDate              (instance-level state)
-    age                   difference btwn refDate and dateBorn
-    alive                 bool
-    allLifeStages         list of applicable lifeStage objects
-    born                  bool
-    currentLifeStageName  w/r/to allLifeStages
-    currentLifeStageNumber  w/r/to allLifeStages
-    dateBorn              in seconds, set as a function of age
-    dateDied              in seconds, if applicable
-    dateKilled            in seconds, if applicable
-    dead                  bool
-    killed                bool
-    lifeSpan              total length of life (in seconds)
-    percentDone           age / lifespan * 100
-    refDate               point in time that represents the present
+    _date_of_conception   int; local state, POSIX date when work on obj begins
+    _date_of_death        int; local state, min(date killed, dob + span)
+    _gestation            int; local state, seconds btwn conception and birth 
+    _ref_date             int; local state, obj shows status w/r/to this moment
+    _span                 int >= 0; local state, max obj life span in seconds
+    _stages               Stages instance; covers birth to death for max life
+    #
+    age                   float in [gestation * -1, span); P, get ref minus dob
+    alive                 bool; P, get True iff ref date in [birth, death)
+    gestating             bool; P, get True iff ref date in [conception, birth)
+    gestation             int; P, get _gestation, set for int [0, max)
+    date_of_birth         int; P, get doc + gestation
+    date_of_conception    int; P, get _doc, set for int [min, max)
+    date_of_death         int; P, get _dod
+    dead                  bool; P, True iff doc < dod < ref_date 
+    ref_date              int; P, get _ref_date
+    percent               int; P, int(age / life_span * 100)
+    skipPrefixes          list; CLASS attribute, configures equivalence checks
+    span                  int; P, get _span, set for int [0, max)
+    stage                 str; P, name of current stage    
 
     FUNCTIONS:
-    kill()                kill instance
-    makeOlder()           reduce dateBorn
-    makeYounger()         increase dateBorn
-    moveForwardInTime()   increase refDate
-    moveBackwardInTime()  reduce refDate
-    setInitialAge()       sets age and appropriate dateBorn for refDate
-    setLifeSpan()         sets lifeSpan for instance
-    setLifeStages()       sets lifestages for instance
-    setRefDate()          sets refDate for instance
-    showLifeStages()      returns pretty string of life stages
+    copy()                returns a new instance with a dict-copy of _stages
+    kill()                set date of death to argument or ref_date
+    set_ref_date()        set ref_date to timestamp argument
     ====================  ======================================================
-    
+
+    ``P`` indicates attributes decorated as properties. See attribute-level doc
+    string for more information.
     """
-    #class-level comparison rules:
-    skipPrefixes = ["_","dyn""allLifeStages"]
-    #skip instance-level state for dynamic attributes to improve accuracy (may
-    #not refresh on time) and speed. 
+
+    #Customize Equality comparison rules; compare properties only, skip instance
+    #state. Alternatively, can check only _attributes, excluding _stages, and
+    #``stage``. Equivalence for LifeCycle objects requires that the object's
+    #current state look identical, but permits differences at other points in
+    #time (ie, different pattern of life stages). 
+    skipPrefixes = ["_"]
+                            
+    def __init__(self):
+        self._date_of_conception = None
+        self._date_of_death = None
+        self._gestation = gest_secs_def
+        self._ref_date = None
+        self._span = span_secs_def
+        self._stages = Stages()
+        #
+        for (name, start) in Globals.default_life_stages:
+            new = LifeStage(name, start)
+            self._stages.add_stage(new)
+
+    @property
+    def age(self):
+        """
+
+
+        **read-only property**
+
+
+        Property returns the difference between ref_date and date_of_birth for
+        instance. Only objects with a ref_date greater than date_of_conception
+        have a valid age.
+        """
+        result = None
+        if self.date_of_conception <= self.ref_date:
+            result = self.ref_date - self.date_of_birth
+        return result
+
+    @property
+    def alive(self):
+        """
+
+
+        **read-only property**
+
+
+        Property returns True if ref_date is larger than date_of_birth for the
+        instance, and less than date_of_death (if one exists for the instance).
+
+        False otherwise. 
+        """
+        result = False
+        if self.ref_date > self.date_of_birth:
+            result = True
+        if self.date_of_death:
+            if self.date_of_death < self.ref_date:
+                result = False
+        #
+        return result
+
+    @property
+    def date_of_birth(self):
+        """
+
+
+        **read-only property**
+
+
+        Property returns date that is ahead of instance conception by the
+        instance gestation. 
+        """
+        result = self.date_of_conception + self.gestation
+        return result
     
-    def __init__(self,age = None, lifeSpan = None, allLifeStages = "default"):
-        self.lifeSpan = lifeSpan
-        if allLifeStages == "default":
-            stage1 = LifeStage(stageName="growth",
-                               stageStarts=0,stageEnds=30)
-            stage1.makeFirst()
-            stage2 = LifeStage(stageName = "maturity",
-                               stageStarts = 31, stageEnds = 80)
-            stage3 = LifeStage(stageName = "decline",
-                               stageStarts = 81, stageEnds = 100)
-            stage3.makeLast()
-            self.allLifeStages = [stage1, stage2, stage3]
+    @property
+    def date_of_conception(self):
+        """
+
+
+        **property**
+
+
+        Property returns instance _date_of_conception.
+
+        Property setter accepts values between Globals.conception_date_min and
+        Globals.conception_date_max, in seconds. Setter raises LifeCycleError
+        otherwise.
+
+        Setter sets date to nearest integer.
+        """
+        return self._date_of_conception
+
+    @date_of_conception.setter
+    def date_of_conception(self, value):
+        value = int(value)
+        if conc_posix_min <= value < conc_posix_max:
+            self._date_of_conception = value
         else:
-            self.allLifeStages = allLifeStages  
-        #instance state attributes for class-level dynamically managed
-        #attributes follow:
-        self._refDate = None
-        self._age = None
-        self._percentDone = None
-        self._born = False
-        self._alive = False     
-        self._killed = False
-        self._dead = False
-        self._dateBorn = None
-        self._dateKilled = None
-        self._dateDied = None
-        self._currentLifeStageName = None
-        self._currentLifeStageNumber = None
-        if age:
-            self.setInitialAge(age)
-        if lifeSpan:
-            self.setLifeSpan(lifeSpan)
-            self.percentDone
-
-    class dynRefDateManager():
-        def __get__(self,instance,owner):
-            return instance._refDate
-
-        def __set__(self,instance,value):
-            comment = "refDate is a managed attribute, write prohibited."
-            raise BBExceptions.ManagedAttributeError(comment)
-
-    refDate = dynRefDateManager()
-
-    def set_dob(self, dob):
-        self._dateBorn = dob
+            c = "Conception must occur in [%s, %s)."
+            c = c % (Globals.conception_date_min, Globals.conception_date_max)
+            raise BBExceptions.LifeCycleError(c)
         
-    def setRefDate(self,refDate):
-        """
-
-        LifeCycle.setRefDate(refDate) -> None
-
-        instance.refDate specifies the point in time that counts as the present.
-        date values greater than refDate are then the future; those less than
-        the refDate are the past. 
-
-        Method sets instance._refDate to refDate. refDate should be in seconds
-        since Epoch.
-        """
-        self._refDate = refDate
-
-    def setInitialAge(self, newAge = 0, refDate = None):
-        """
-
-        LifeCycle.setInitialAge([newAge=0,][refDate=None]) -> None
-
-        Method sets instance's newAge, refDate, and dateBorn to satisfy the
-        following (intuitive) condition:
-          dateBorn + age = refDate
-
-        All date inputs should be in seconds. 
-
-        If ``refDate`` is None, method will use the UMT value at time of call
-        (time.time()). As a result, every object will have a unique refDate
-        by default (unless the operation is faster than the system clock
-        resolution). 
-
-        When building out a population of peer objects, users should fix the
-        refDate externally and provide it as a constructor.
-        
-        This method should generally be used once per object, to commit it to
-        some timeline. Thereafter, the object can move along the timeline, which
-        would change .refDate The object's dateBorn would stay the same and age
-        would change accordingly. The object would then evolve as specified
-        elsewhere in its construction.
-        """
-        #Generally shouldn't feed in a negative number here
-        if not refDate:
-            refDate = time.time()
-        self.setRefDate(refDate)
-        self._dateBorn = self.refDate-newAge
-
-    class dynamicAgeManager():
-        """
-
-        Descriptor object that manages the .age class-level attribute.
-        The age of an object is the arithmetic difference between the object's
-        ``refDate`` and ``dateBorn``. On get calls, the descriptor updates the
-        instance's ._age attribute.
-        
-        Direct write is prohibited.        
-        """
-        def __get__(self,instance,owner):
-            #routes LifeCycle.age to instance._age
-            try:
-                updatedAge = instance.refDate - instance._dateBorn
-            except (TypeError,AttributeError):
-                updatedAge = None
-            instance._age = updatedAge
-            return instance._age
-
-        def __set__(self,instance,value):
-            raise BBExceptions.ManagedAttributeError("Use methods to adjust LifeCycle.age")
-
-    #age is a class-level attribute of LifeCycle objects that references an
-    #instance of the descriptor.
-    age = dynamicAgeManager()
-
-    def setLifeSpan(self, newLifeSpan = 0):
-        """
-
-        LifeCycle.setLifeSpan([newLifeSpan = 0]) -> None
-
-        Method sets an instance's lifespan to the specified value. Value must be
-        greater than zero and should be enumerated in seconds. 
-        """
-        self.lifeSpan = newLifeSpan
-
-    class dynamicPercentDone:
-        """
-
-        Descriptor that enables dynamic computation of an instance's completion
-        level for its lifespan, in percent (``percentDone``).
-
-        percentDone = int(age / lifeSpan * 100)
-
-        percentDone can be negative (pre-birth) or greater than 100 (after
-        death).
-        
-        Descriptor returns None on errors or if instance age or lifespan not
-        properly defined. 
-
-        Direct write to LifeCycle.percentDone prohibited and results in an error.
-        """
-        def __get__(self, instance, owner):
-            result = None
-            if instance.lifeSpan:                
-                try:
-                    result = int(instance.age/instance.lifeSpan*100)
-                    instance._percentDone = result       
-                except ValueError:
-                    #runs if there are any errors during the attempted computation
-                    #(e.g., because age or lifeSpan still have default None values)
-                    pass
-            return result
-                        
-        def __set__(self,instance,value):
-            comment = "LifeCycle.percentDone is a managed attribute."
-            raise BBExceptions.ManagedAttributeError(comment)
-
-    #class attribute, references an instance of the dynamicPercentDone descriptor
-    #above
-    percentDone = dynamicPercentDone()
-
-    def makeOlder(self, increment = 2592000):
-        """
-
-        LifeCycle.makeOlder([increment=2592000]) -> None
-        
-        Method decreases instance's ``dateBorn`` by the increment. Increment
-        should be specified in seconds. Default increment value is number of
-        seconds in 30 days. 
-
-        If increment is not positive, raises LifeCycleError.
-        """
-        if increment <= 0:
-            raise BBExceptions.LifeCycleError("Must specify a positive time increment.")
-        self._dateBorn = self.dateBorn - increment
-        #must set the underscore attribute, because non-underscore is
-        #managed and write-prohibited
-        
-    def makeYounger(self, increment = 2592000):
-        """
-
-        LifeCycle.makeOlder([increment=2592000]) -> None
-        
-        Method increases instance's ``dateBorn`` by the increment. Increment
-        should be specified in seconds. Default increment value is number of
-        seconds in 30 days. 
-
-        If increment is not positive, raises LifeCycleError.
-        """
-        if increment <= 0:
-            raise BBExceptions.LifeCycleError("Must specify a positive time increment.")
-        self._dateBorn = self.dateBorn + increment
-        #must set the underscore attribute, because non-underscore is
-        #managed and write-prohibited
-
-    def kill(self,date=None):
-        """
-
-        LifeCycle.kill([date=None]) -> None
-
-        Method that turns objects that are alive into objects that are dead. If
-        object is not alive, running the method will not change any of the
-        object's attributes.
-
-        If date not specified, method uses time at call. 
-        """
-        if self.alive:
-            #change instance-level attributes (underscore names). should only be
-            #changing non-underscore class values through methods
-            self._alive = False
-            self._killed = True
-            self._dead = True
-            if date:
-                self_dateKilled = date
-            else:
-                self._dateKilled = time.time()
-            self._dateDied = self._dateKilled
-
-    def moveForwardInTime(self, increment = 2592000):
-        """
-
-        LifeCycle.moveForwardInTime([increment=2592000]) -> None
-
-        Method increases the instance's refDate by the increment. Increment
-        should be specified in seconds. Default increment value is number of
-        seconds in 30 days.
-
-        Raises LifeCycleError if increment is not positive.
-        """
-        if increment <= 0:
-            raise BBExceptions.LifeCycleError("Must specify a positive time increment.")
-        hiRefDate = self.refDate + increment
-        self.setRefDate(hiRefDate)
-
-    def moveBackwardInTime(self, increment = 2592000):
-        """
-
-        LifeCycle.moveBackwardInTime([increment=2592000]) -> None
-
-        Method decreases the instance's refDate by the increment. Increment
-        should be specified in seconds. Default increment value is number of
-        seconds in 30 days.
-
-        Raises LifeCycleError if increment is not positive.
-        """
-        if increment <= 0:
-            raise BBExceptions.LifeCycleError("Must specify a positive time increment.")
-        lowRefDate = self.refDate - increment
-        self.setRefDate(lowRefDate)
-
-    def setLifeStages(self, stages): 
-        """
-
-        LifeCycle.setLifeStages(stages) -> None
-
-        ``stages`` should be a container of lifecycle objects. Method sets
-        instance.allLifeStages to a deep copy of stages (to prevent
-        forced cross-referencing).
-
-        If looking to force references to one set of mutable lifecycle objects
-        (i.e., to bind a population to a uniform lifecycle), modify
-        attribute directly. 
-        """
-        self.allLifeStages = copy.copy(stages)
-
-    def showLifeStages(self):
-        """
-
-        LifeCycle.showLifeStages() -> view
-
-        View is a string showing __str__ for each lifeStage
-        """
-        view = ""
-        for stage in self.allLifeStages:
-            view = view + str(stage)
-        return view
+    @property
+    def date_of_death(self):
+        if not self._date_of_death:
+            #instance.kill() can force a value for _dod
+            if all(self.ref_date, self.date_of_birth, self.span):
+                expected_dod = self.date_of_birth + self.span
+                if self.ref_date > expected_dod:
+                    self._date_of_death = expected_dod
+        #
+        return self._date_of_death
     
-    class dynLifeManager:
+    @property
+    def dead(self):
         """
 
-        Descriptor that maintains logical consistency across status attributes.
+
+        **read-only property**
+
+
+        Property returns True for instances where date of death is larger than
+        or equal to date of conception and the ref date is equal to or larger
+        than the date of death (conception <= death <= ref).
+
+        NOTE: If object is killed during gestation, it will be dead without
+        having ever been alive.
+        """
+        #
+        #can only be dead with a defined date_of_death
+        #
+        result = False
+        if self.date_of_conception and self.date_of_death:
+            if self.date_of_conception <= self.date_of_death:
+                if self.date_of_death <= self.ref_date:
+                    result = True
+                #
+            #
+        return result
+
+    @property
+    def gestating(self):
+        """
+
+
+        **read-only property**
+
+
+        Property returns True iff instance ref_date is between conception and
+        birth and instance has not yet died.        
+        """
+        result = False
+        if self.date_of_conception <= self.ref_date < self.date_of_birth:
+            result = True
+        if result:
+            if self.date_of_death <= self.ref_date:
+                result = False
+            #correct result if instance died before ref_date;
+        #
+        return result
+
+    @property
+    def gestation(self):
+        """
+
+
+        **property**
+
+
+        Property returns instance._gestation state. By default, instances have
+        a gestation period
+
+        Property setter accepts values between 0 and the seconds equivalent of
+        Globals.gestation_years_max. Setter raises LifeCycleError otherwise.
+
+        Setter always sets period to nearest integer. 
+        """
+        return self._gestation
+
+    @gestation.setter
+    def gestation(self, value):
+        value = int(value)
+        try:
+            if 0 <= value < gest_secs_max:
+                self._span = value
+            else:
+                c = "Gestation must be an integer in [0, %s)." % gest_secs_max
+                raise BBExceptions.LifeCycleError(c)
+        except TypeError:
+            c = "Gestation must be an integer in [0, %s)." % gest_secs_max
+            raise BBExceptions.LifeCycleError(c)
+
+    @property
+    def percent(self):
+        """
+
+
+        **read-only property**
+
+
+        Property returns age divided by span, multiplied by 100 and rounded to
+        the nearest integer. 
+        """
+        result = None
+        #
+        if all(self.age, self.span):
+            result = (self.age / self.span) * 100
+            result = int(result)
+        #
+        return result
+    
+    @property
+    def span(self):
+        """
+
+
+        **property**
+
+
+        Property returns instance life span in seconds. By default, instance
+        life span is set to a value that corresponds to
+        Globals.life_span_years_def.
+
+        Property setter accepts values between 0 and the seconds equivalent of
+        Globals.life_span_years_max. Setter raises LifeCycleError otherwise.
+
+        Setter always sets period to nearest integer. 
+        """
+        return self._span
+
+    @span.setter
+    def span(self, value):
+        value = int(value)
+        try:
+            if 0 <= value < span_secs_max:
+                self._span = value
+            else:
+                c = "Life span must be an integer in [0, %s)." % span_secs_max
+                raise BBExceptions.LifeCycleError(c)
+        except TypeError:
+            c = "Life span must be an integer in [0, %s)." % span_secs_max
+            raise BBExceptions.LifeCycleError(c)
         
-        NOTE: This descriptor NEVER sets "_born" or "_killed."
-        This descriptor also generally does not set timestamps, except when the
-        object dies a "natural death" (its age exceeds its lifeSpan).
+    @property
+    def stage(self):
+        """
 
-        Each instance of the descriptor requires the user to specify a target
-        attribute that the descriptor will manage. On __get__, descriptor will
-        return the instance level state of the underscore version of the target
-        attribute (instance._killed for targetAttribute = "killed").
 
-        The descriptor runs through conforming logic for all managed names on
-        every get call. 
+        **read-only property**
 
-        Direct writes to managed attributes are prohibited and return an error. 
-        """    
-        def __init__(self,targetAttribute):
-            self.targetAttribute = targetAttribute
-            self.references = {}
-            
-        def __get__(self,instance,owner):
-            #Alignment logic based on assumption that ._born, age, lifespan, and
-            #._killed are independently specified. 
-            if instance.age == None or instance.age < 0:
-                pass
-            else: 
-                instance._born = True
-                if instance.lifeSpan == None:
-                    if instance._killed != True:
-                        instance._alive = True
-                        instance._dead = False
-                        #age is at or above 0, and instance hasn't been killed
-                        #therefore, it must be alive and not dead,
-                        #because there is no natural end of life (lifespan
-                        #unspecified)
-                    else:
-                        pass
-                        #Lifestages don't exist because the instance is dead and
-                        #no lifespan anyways.
-                        #
-                        #Summary: without a specified lifespan, only way an
-                        #instance that's been born can die is through a kill()
-                else:
-                    #lifeSpan defined, age > 0, object born, need to check other
-                    #status: has it died (naturally or from killing) 
-                    if instance._killed:
-                        instance._currentLifeStageName = None
-                        instance._currentLifeStageNumber = None
-                        #someone ran kill() method, which aligns most status
-                        #attributes on its own
-                    else:
-                        if instance.percentDone <= 100:
-                            instance._alive = True
-                            instance._dead = False
-                            for stage in instance.allLifeStages:
-                                if stage.starts <= instance.percentDone <= stage.ends:
-                                    instance._currentLifeStageName = stage.name
-                                    instance._currentLifeStageNumber = instance.allLifeStages.index(stage)
-                                    break
-                        else:
-                            #instance exceeded 100% of lifespan
-                            instance._alive = False
-                            instance._dead = True
-                            instance._dateDied = instance._dateBorn + instance.lifeSpan
-                            instance._currentLifeStageName = None
-                            instance._currentLifeStageNumber = None
-            tAttr = "_" + self.targetAttribute
-            tStatus = getattr(instance,tAttr)
-            return tStatus
- 
-        def __set__(self,instance,value):
-            comment = "managed attribute, write prohibited."
-            raise BBExceptions.ManagedAttributeError(comment)
+
+        Property returns name of stage that covers current point in life,
+        measured by percent completion.        
+        """
+        result = None
+        current = self._stages.find_stage(self.percent)
+        result = current.get("name")
+        return result
+    
+    def copy(self):
+        """
+
+
+        LifeCycle.copy() -> LifeCycle
+
+
+        Method returns a new LifeCycle object. Result is a shallow copy of
+        instance with a dict-specific deep copy of ``_stages``.
+        """
+        result = copy.copy(self)
+        result._stages = self._stages.copy()
+        return result
+
+    def kill(self, new_dod = None):
+        """
+
+
+        LifeCycle.kill(new_dod) -> None
+
+
+        Method sets date of death for instance to argument. If ``new_dod``
+        is not True, method uses instance ref_date. Method raises error if
+        instance does not specify a True ref_date. 
+        """
+        if not new_dod:
+            if self.ref_date:
+                new_dod = self.ref_date
+            else:
+                c = "kill() requires valid POSIX date of death or instance"
+                c += " ref_date."
+                raise BBExceptions.LifeCycleError(c)
+        #
+        self._date_of_death = new_dod
+        #
+
+    def set_ref_date(self, new_ref):
+        """
+
+
+        LifeCycle.set_ref_date(new_ref) -> None
+
+
+        Method sets instance ref date to ``new_ref,`` rounded to the nearest
+        integer. Method expects new_ref to show date as seconds since Epoch.
+        Method accepts negative new_ref values for dates prior to the beginning
+        of the Epoch. 
         
-    #create class-level attributes to be managed by the dynLifeManager
-    #descriptor; construct each instance of the descriptor to return the right
-    #targetAttribute
-    born = dynLifeManager(targetAttribute = "born")
-    alive = dynLifeManager(targetAttribute = "alive")
-    killed = dynLifeManager(targetAttribute = "killed")
-    dead = dynLifeManager(targetAttribute = "dead")
-    dateBorn = dynLifeManager(targetAttribute = "dateBorn")
-    dateKilled = dynLifeManager(targetAttribute = "dateKilled")
-    dateDied = dynLifeManager(targetAttribute = "dateDied")
-    currentLifeStageName = dynLifeManager(targetAttribute = "currentLifeStageName")
-    currentLifeStageNumber = dynLifeManager(targetAttribute = "currentLifeStageNumber")
+        Method raises LifeCycleError if new_ref falls outside of [earliest,
+        latest) range specified in Globals.
+        """
+        new_ref = int(new_ref)
+        #
+        if ref_posix_min <= new_ref < ref_posix_max:
+            self._ref_date = new_ref
+        else:
+            c = "Object requires a POSIX ref date in [%s, %s)."
+            c = c % (Globals.ref_date_min, Globals.ref_date_max)
+            raise BBExceptions.LifeCycleError(c)
+    
+    
+
+    
+        
