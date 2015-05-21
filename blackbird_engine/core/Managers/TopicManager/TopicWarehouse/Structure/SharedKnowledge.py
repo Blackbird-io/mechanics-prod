@@ -39,3 +39,7 @@ unit_months_to_mature["retail"] = 30
 months_to_first_unit = dict()
 months_to_first_unit["default"] = 14
 months_to_first_unit["retail"] = 10
+
+gestation_rate_boost = 0.20
+#how much faster unit gestation gets from first unit to subsequent
+#units; one-time step up in rate. 

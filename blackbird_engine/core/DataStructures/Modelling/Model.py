@@ -42,6 +42,7 @@ from DataStructures.Platform.Tags import Tags
 from Tools import Parsing as ParsingTools
 
 from .Header import Header
+from .Taxonomy import Taxonomy
 from .TimeLine import TimeLine
 from .TimePeriod import TimePeriod
 
@@ -104,7 +105,8 @@ class Model(Tags):
                           Analyzer and MatchMaker modules
     started               bool; property, tracks whether engine has begun work
     portal_data           dict; stores data from Portal related to the instance
-    summary               dict or obj; instance of BusinessSummary 
+    summary               dict or obj; instance of BusinessSummary
+    taxonomy              Taxonomy; collection of prototypical business units
     timeLine              list of TimePeriod objects
 
     FUNCTIONS:
@@ -128,6 +130,7 @@ class Model(Tags):
         self.interview = InterviewTracker()
         self.portal_data = dict()
         self.summary = BusinessSummary()
+        self.taxonomy = Taxonomy()
         self.timeLine = TimeLine()
         self.timeLine.id.setNID(self.id.namespace_id)
 
