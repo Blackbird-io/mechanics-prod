@@ -45,11 +45,12 @@ import time
 import BBGlobalVariables as Globals
 import Tools
 
-from DataStructures.Modelling import CommonLifeStages
 from DataStructures.Modelling.BusinessUnit import BusinessUnit
 from DataStructures.Modelling.LifeStage import LifeStage
 
 from .. import SharedKnowledge as SubjectKnowledge
+
+
 
 
 #globals
@@ -113,7 +114,7 @@ def scenario_1(topic):
     unit_label = None
     if model_industry:
         model_industry = model_industry.casefold()
-        #only do transform is model_industry is a string, not a None
+        #only do transform if model_industry is a string, not a None
         unit_label = SubjectKnowledge.unit_labels.get(model_industry)
         M.interview.work_space["industry"] = model_industry
     if unit_label:
@@ -133,9 +134,9 @@ def scenario_2(topic):
 
     Scenario concludes with wrap_scenario(Q).
 
-    Scenario retrieves number of units in company, asks about unit lifespan.
-    Scenario uses max and expected (shadow) lifespan values from
-    Structure.SharedKnowledge. 
+    Scenario retrieves user response about number of units in the company and
+    then asks about unit lifespan. Scenario uses max and expected (shadow)
+    lifespan values from Structure.SharedKnowledge. 
     """
     #
     M = topic.MR.activeModel
@@ -229,7 +230,7 @@ def scenario_4(topic):
     M.interview.work_space["months_to_mature"] = months_to_mature
     #
     top_bu = M.currentPeriod.content
-    dob_company_seconds = top_bu.lifeCycle.dateBorn
+    dob_company_seconds = top_bu.life.date_of_birth
     dob_company_date = datetime.date.fromtimestamp(dob_company_seconds)
     dob_company_string = dob_company_date.isoformat()
     #put in work_space to save work in later scenarios
@@ -248,7 +249,7 @@ def scenario_4(topic):
     #
     topic.wrap_scenario(new_Q)
 
-def scenario_5
+def scenario_5(topic):
     """
 
 
@@ -286,7 +287,7 @@ def scenario_5
     #ask about last store
     #use date as ceiling on dob
     #also compute time to open store =  (first_dob - last_dob)/no_of_stores
-    #embed that period as gestation
+    #embed that period in the model as unit gestation
     
 def scenario_6(topic):
     """
@@ -309,78 +310,102 @@ def scenario_6(topic):
     M = topic.MR.activeModel
     top_bu = M.currentPeriod.content
     #
+    #
+    #Step 1:
+    #Retrieve and format user response
+    #
     R = topic.get_first_answer()
     adj_R = Tools.Parsing.seconds_from_iso(R)
     #
-    unit_count = M.interview.work_space["unit_count"]
     #
-    first_dob_seconds = M.interview.work_space["first_dob_seconds"]
-    latest_dob_seconds = adj_R
+    #Step 2:
+    #Now, make a business unit that represents the company's standard.
+    #Topic will create and insert actual working units into the model by
+    #copying and customizing this template.
     #
-    months_to_mature = M.interview.work_space["months_to_mature"]
-    gestation_seconds = ((latest_dob_seconds - first_dob_seconds)/
-                              (unit_count - 1))
-    #unit gestation should show approximately how long it takes to take
-    #a new unit from idea to open doors
+    standard_fins = M.defaultFinancials.copy()
+    bu_template = BusinessUnit("Unit Template", standard_fins)
     #
-    #adjust gestation to max of average time to open a store and time to open
-    #first store. average time can be skewed materially if company prepared
-    #stores in batches (eg, 5 openings at a time).
-    first_unit_runway = first_dob_seconds - top_bu.lifeCycle.dateBorn
-    gestation_seconds = max(gestation_seconds,
-                            (first_unit_runway * (1-0.20)))
-    #assume company gets 20% faster at opening units; more advanced topics
-    #ask questions first.
-    #                       
-    M.interview.work_space["unit_gestation_seconds"] = gestation_seconds
-    #
+    #figure out unit lifespan, set accordingly
     life_in_years = M.interview.work_space["unit_life_years"]
     life_in_seconds = Tools.Parsing.monthsToSeconds((life_in_years * 12))
-    life_in_seconds = life_in_seconds + gestation_seconds
+    bu_template.life.span = life_in_seconds
     #
-    #for purposes of Blackbird, life begins at conception
-    #
-    mature_in_seconds = Tools.Parsing.monthsToSeconds(months_to_mature)    
-    youth_ends_percent = int(mature_in_seconds/life_in_seconds * 100)
+    #figure out ref date for the current period
     ref_date = None
     if Globals.fix_ref_date:
         ref_date = Globals.t0
     else:
         ref_date = time.time()
+    bu_template.life.set_ref_date(ref_date) #-------------------------------------------------------------------------------------------------------this could be different than the top_bu!!! may want to copy ref_date directly from there. 
     #
-    standard_fins = M.defaultFinancials.copy()
-    bu_template = BusinessUnit("Unit Template", standard_fins)
-    bu_template.life.set_gestation(gestation_seconds)
-    bu_template.life.set_duration(life_in_seconds)
-    bu_template.life.set_ref_date(ref_date)
+    #figure out unit gestation
+    bu_template.life.gestation = avg_gestation
     #
+    first_dob_seconds = M.interview.work_space["first_dob_seconds"]
+    latest_dob_seconds = adj_R
+    unit_count = M.interview.work_space["unit_count"]
+    #
+    #to estimate unit gestation (time from moment of conception/decision to
+    #doors opening), calculate how much time per unit it took the company to
+    #open all existing units after the first one.
+    #
+    avg_gestation = ((latest_dob_seconds - first_dob_seconds)/
+                              (unit_count - 1))
+    #
+    #adjust gestation to max of average time to open a store and time to open
+    #first store. average time can be skewed materially if company prepared
+    #stores in batches (eg, 5 openings at a time).
+    #
+    first_gestation = first_dob_seconds - top_bu.life.date_of_birth
+    step_up = SK.gestation_rate_boost
+    avg_gestation = max(avg_gestation,
+                            (first_gestation * (1 - step_up)))
+    #assume company gets 20% faster at opening units; more advanced topics
+    #ask questions first.
+    M.interview.work_space["average_gestation_seconds"] = avg_gestation
+    #
+    #figure out life stage pattern
+    months_to_mature = M.interview.work_space["months_to_mature"]
+    mature_in_seconds = Tools.Parsing.monthsToSeconds(months_to_mature)
+    youth_ends_percent = int(mature_in_seconds/life_in_seconds * 100)
     if youth_ends_percent < 50:
-        #maturation less than 50% of lifespan
+        #maturation less than 50% of lifespan; create custom life stage pattern
+        maturity = bu_template.life._stages.by_name["maturity"]
+        decline = bu_template.life._stages.by_name["decline"]
         #
-        bu_template.life.stages["all"]["maturity"].starts = youth_ends_percent
-        bu_template.life.stages["all"]["decline"].starts = (youth_ends_percent + 30)
-        bu_template.life.organize_stages()
-        #
-        #by default, include youth, maturity, and decline in all. organize()
-        #should ignore stages with None as start. only start should be required
-        #end should be optional. default pattern is youth.start = 0,
-        #maturity.start  = 30, decline.start = 70. always end at 100. organize
-        #should weed out anything below start. if end specified on a period that
-        #makes it in, organize() also weeds out any candidates that start below
-        #the mandated end. the three default stages dont have ends. 
+        maturity["start"] = youth_ends_percent + 1
+        decline["start"] = youth_ends_percent + 30 + 1
+        #make sure stages reorganized data now that we've changed start points
+        bu_0.life._stages.organize()
         #
         tag1 = "long adolescence"
         tag2 = "rapid decline"
         tag3 = "unusual LifeCycle"
         bu_template.tag(tag1, tag2, tag3)
     else:
-        #maturation too long, assume lifespan too short, set to 3x maturity
-        bu_template.life.set_duration(mature_in_seconds * 3)
+        #compared to common sense expectations for how long a company will wait
+        #for a unit to mature, known maturation takes too long. scenario assumes
+        #the error occurs because the user underestimated the life span of their
+        #units. adjust the life span to 3x maturity.
+        bu_template.life.span = mature_in_seconds * 3
         tag4 = "standard LifeCycle"
         tag5 = "pro forma lifeSpan"
         tag6 = "response difficulty"
         bu_template.tag(tag4, tag5, tag6)
     #
+    #template configuation complete
+    #
+    #
+    #Step 3:
+    #Add template to model taxonomy
+    M.taxonomy["operating"] = bu_template
+    #later topics can sub-type "operating" into "small", "large", etc. 
+    #
+    #
+    #Step 4:
+    #Use the template operating unit to create a batch of clones. The clones
+    #will go in to the model as actual working components. 
     batch = {}
     #clone bU0 x #of units
     for n in range(unit_count):
@@ -395,38 +420,41 @@ def scenario_6(topic):
         unit = batch[bbid]
         ordered_batch.append[unit]
     #
-    first_bu = ordered_batch.pop(0)
-    first_bu.life.set_dob(first_dob_seconds)
-    last_bu = ordered_batch.pop()
-    last_bu.life.set_dob(last_dob_seconds)
     #
+    #Step 5:
+    #Customize the batch units and insert them into the top_unit. This scenario
+    #assumes that clones are identical except for their age.
+    first_bu = ordered_batch.pop(0)
+    first_bu.life.date_of_conception = first_dob_seconds - avg_gestation
+    #
+    last_bu = ordered_batch.pop()
+    last_bu.life.date_of_conception = last_dob_seconds - avg_gestation
     #ordered_batch now 2 units shorter than unit_count. apply distribution to
     #all remaining units.
-    #
+    next_conception_date = first_bu.life.date_of_birth
     #assume that company is creating units at a uniform rate over time. can
     #eventually modify this to look like a curve that's fast early and slow
     #later (log curve).
-    #
-    conception_date = first_bu.life.date_of_birth
-    #
     for bu in ordered_batch:
-        bu.life.set_conception(conception_date)
-        conception_date = conception_date + gestation_seconds
+        bu.life.date_of_conception = next_conception_date
+        next_conception_date = next_conception_date + avg_gestation
+        next_conception_date = min(next_conception_date,
+                                   (ref_date - avg_gestation))
         #
-        #the batch represents all units that the user said **exist** as of
-        #"now" (the ref_date). in Blackbird, that means all units must be
-        #alive as of the ref date. the analysis also puts a ceiling on
-        #the date on which a user could have conceived a unit. 
-        #
-        conception_date = min(conception_date,
-                              (ref_date - gestation_seconds))
+        #the user told blackbird how many units they have operating
+        #**right now**. blackbird translates right now into ref_date and the
+        #count into units that are alive as of the ref date. since units must
+        #have compelted gestation to count as alive, blackbird can also
+        #determine the latest possible date the user could have conceived a
+        #unit (based on blackbird's current assumptions about unit life cycle).
         #
         if bu.life.alive:
             top_bu.addComponent(bu)
         else:
-            raise BBAnalyticalError
-            #something wrong
-    #
+            c = "Topic detected non-living unit \n%s\n. Topic expected to"
+            c += " generate living units only."
+            c = c % bu
+            raise BBExceptions.BBAnalyticalError(c)
     #
     tag7 = "small number of units"
     small_num = 10
@@ -439,119 +467,18 @@ def scenario_6(topic):
         top_bu.tag(tag8)
     else:
         top_bu.tag(tag9)
-    ##
-    ##can refactor this into:
-        #topic that configures a template unit ["TypicalStore"]
-            #probably better this way, because can have several different kinds of stores
-            #small, medium, and large, for example
-            #topics can vary:
-                #simple:
-                    #ask about single type
-                #more involved:
-                    #ask about each type
-            #
-            #each company will have its own set of types (tiers, etc)
-            #each company will have some built-in types
-            #can have a look up table, by type
-            #type can be a special type of tag? a list of tags? tags that
-            #dont get inherited up? "type :: " tags? 
-            #
-            #challenge is that once you introduce multi-typing, you then
-            #have to ask about each type, unless you have a theory on where
-            #they are the same and where they are different
-            #
-            #also, kind of reinventing the wheel w respect to classes
-            #may be should create custom classes and put them into model
-            #
-            #will definitely break pickling; but kind of nice cause then can configure
-            #the classes and inherit stuff and what-not
-            #
-            #so each model will have its own set of BU subclasses...
-            #or, alternatively, a set of instructions on how to subclass BU...
-            #
-            #since a bunch of attributes and objects determine the "nature" of
-            #a business unit though, templates have to define each of those
-            #so the answer is to create template business units. usually store
-            #them at the top-level of a model. or at the bu-level.
-            #e.g., components.templates. can then pull out the template, adjust
-            #a couple of things, and plug in to actual bu.
-            #
-            # components.templates should be a dictionary. with a couple keys.
-            #"standard" always. each key should point to a dictionary. each
-            #dictionary should include a "default" object and then optionally
-            #one or more subtypes.
-            #
-            #so always:
-            #templates = dict()
-            #len(templates.keys()) >= 1
-            #templates["standard"] = dict()
-            #templates["standard"]["default"] = BU
-            #
-            #or may be templates["default"] = BU
-            #templates[x] = template_store
-            #
-            #this thing will probably get chunky, so should probably have one
-            #per model.
-            #
-            #M.timeLine.taxonomy
-            #BU.components.local_taxonomy
-            #would also like to be able to rapidly look up units by taxonomy
-            #so could look up operating and non-operating; all small or large
-            #
-            #each Components container should have a taxonomy_directory
-            #should be flat? so all types at same level
-            #look into chained dictionary for this.
-            #
-            #should add taxonomy to Tags. should have taxonomy tags.
-            #goals:
-                #allow rapid look up of business unit at any level by type
-                #know what type a given business unit is
-                #have template business units that can be configured once and then
-                #   inserted many times
-                #minimize space
-                #maximize access speed
-                #taxonomy system should integrate w tags; in some ways, tags provide
-                #a taxonomy. and in some ways, taxonomy is a look up table of tags
-                #   distinction is that each unit in the top-level taxonomy is a template,
-                #   a platonic ideal of sorts.
-                #keep model backwards and forwards compatible
-                #keep model serializable w standard pickle and dill modules
-                #
-                #may be this is two different types of things:
-                #   -- taxonomy: belongs to a timeline, consists of only prototypes
-                #   -- look_up: a look up table that splits all components and subcomponents
-                #   into their respective taxonomic categories
-                #
-                #can also show the taxonomy in component print-out: first line is the most
-                #senior group, then more and more narrow as it goes. "ops","small", etc.
-                #size row to max number of lines, or 5. show after box.
-                #
-                #this is reinventing the class wheel.
-                #
-                #except that kind of annoying to configure classes at runtime.
-                #would want to subclass BU.
-                #
-                #and still have to store these somewhere on model, cause that's
-                #where we retain state.
-                #
-                #and want to know all instances of the class at a given level
-                #
-                #
-                #
-                #
-                #
-            #
-            #
-            #think through while in israel. 
-            #
-            #
-        #topic that configures 
     #
-    ####### <- tag with Ready_For_Growth_Analysis or smtg, which Growth requires as a reqd tag---------
-    ##growth: expected vs forecasted
-    ##[expected means already in the works]
-    ##[forecasted means plans]
     #
+    #Step 6:
+    #prep top_bu for further processing.
+    i_structure = top_bu.financials.indexByName("structure")
+    line_structure = top_bu.financials[i_structure]
+    line_structure.tag("ready for expected growth analysis")
+    line_structure.guide.quality.setStandards(3, 5)
+    ##line will now need additional processing to look complete ot InterviewController;
+    ##Yenta should select a growth topic next, because the tag will act like a homing
+    ##beacon
+    #   
     #                 
     topic.wrap_topic()
     
@@ -570,6 +497,8 @@ scenarios[None] = scenario_1
 scenarios["number of business units?"] = scenario_2
 scenarios["unit lifespan in years?"] = scenario_3
 scenarios["months to unit maturity?"] = scenario_4
+scenarios["first store open date?"] = scenario_5
+scenarios["latest store open date?"] = scenario_6
 #
 scenarios[Globals.user_stop] = end_scenario
 
