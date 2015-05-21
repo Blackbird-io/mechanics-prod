@@ -163,7 +163,8 @@ class TimePeriod(Tags):
         if self.content:
             new_content = self.content.copy(enforce_rules)
             result.setContent(new_content, updateID = False)
-        #same id namesapce (old model)
+        #same id namespace (old model)
+        #
         return result
     
     def extrapolate_to(self,target):
