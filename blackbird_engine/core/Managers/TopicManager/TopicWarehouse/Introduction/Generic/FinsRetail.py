@@ -93,9 +93,10 @@ def scenario_1(topic):
     #
     structure = LineItem("Structure")
     structure.tag("Deterministic", field = "req")
+##    structure.tag("retail")
     structure.setPartOf(top_fins)
     structure.guide.priority.increment(3)
-    structure.guide.quality.setStandards(1,5)
+    structure.guide.quality.setStandards(2,5)
     #
     i_end_intro = top_fins.indexByName("|bb|end Introduction")
     top_fins.insert(i_end_intro,structure)
