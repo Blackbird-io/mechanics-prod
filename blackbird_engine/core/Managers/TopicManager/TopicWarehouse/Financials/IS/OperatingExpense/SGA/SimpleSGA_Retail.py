@@ -175,7 +175,7 @@ def scenario_3(topic):
     m_ref_date = M.currentPeriod.end
     if Globals.fix_ref_date:
         m_ref_date = Globals.t0
-    m_ref_year = datetime.date.fromtimestamp(m_ref_date).year
+    m_ref_year = m_ref_date.year
     #
     marketing_data["ref_year"] = m_ref_year
     #
