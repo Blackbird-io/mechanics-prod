@@ -33,6 +33,7 @@ import copy
 import BBExceptions
 import BBGlobalVariables as Globals
 
+import Tools.Parsing
 
 from .Equalities import Equalities
 from .Stages import Stages
@@ -42,7 +43,20 @@ from .LifeStage import LifeStage
 
 
 #globals
-#n/a
+seconds_from_iso = Tools.Parsing.seconds_from_iso
+seconds_from_years = Tools.Parsing.seconds_from_years
+#
+conc_posix_max = seconds_from_iso(Globals.conception_date_max)
+conc_posix_min = seconds_from_iso(Globals.conception_date_min)
+#
+gest_secs_def = seconds_from_years(Globals.gestation_years_def)
+gest_secs_max = seconds_from_years(Globals.gestation_years_max)
+#
+ref_posix_max = seconds_from_iso(Globals.ref_date_max)
+ref_posix_min = seconds_from_iso(Globals.ref_date_min)
+#
+span_secs_def = seconds_from_years(Globals.life_span_years_def)
+span_secs_max = seconds_from_years(Globals.life_span_years_max)
 
 #classes
 class LifeCycle(Equalities):
@@ -127,9 +141,9 @@ class LifeCycle(Equalities):
     def __init__(self):
         self._date_of_conception = None
         self._date_of_death = None
-        self._gestation = copy.copy(Globals.gestation_period_def)
+        self._gestation = gest_secs_def
         self._ref_date = None
-        self._span = copy.copy(Globals.life_span_def)
+        self._span = span_secs_def
         self._stages = Stages()
         #
         for (name, start) in Globals.default_life_stages:
@@ -144,10 +158,8 @@ class LifeCycle(Equalities):
         **read-only property**
 
 
-        datetime.timedelta object expressing instance age.
-
-        Property computes age as the difference between ref_date and
-        date_of_birth. 
+        Property returns the difference between ref_date and date_of_birth for
+        instance.
 
         Only objects with a ref_date greater than date_of_conception and less
         than date_of_death have a valid age. In other words, objects only have
@@ -214,7 +226,8 @@ class LifeCycle(Equalities):
 
     @date_of_conception.setter
     def date_of_conception(self, value):
-        if Globals.conception_date_min <= value < Globals.conception_date_max:
+        value = int(value)
+        if conc_posix_min <= value < conc_posix_max:
             self._date_of_conception = value
         else:
             c = "Conception must occur in [%s, %s)."
@@ -300,19 +313,24 @@ class LifeCycle(Equalities):
         Property returns instance._gestation state. By default, instances have
         a gestation period
 
-        Setter accepts datetime.timedelta values in (0, Globals.gestation_max).
-        Setter raises LifeCycleError otherwise.
+        Property setter accepts values between 0 and the seconds equivalent of
+        Globals.gestation_years_max. Setter raises LifeCycleError otherwise.
+
+        Setter always sets period to nearest integer. 
         """
         return self._gestation
 
     @gestation.setter
     def gestation(self, value):
-        if Globals.gestation_period_min <= value < Globals.gestation_period_max:
-            self._span = value
-        else:
-            c = "Gestation must be a timedelta object in [%s, %s)."
-            c = c % (Globals.gestation_period_min,
-                     Globals.gestation_period_max)
+        value = int(value)
+        try:
+            if 0 <= value < gest_secs_max:
+                self._span = value
+            else:
+                c = "Gestation must be an integer in [0, %s)." % gest_secs_max
+                raise BBExceptions.LifeCycleError(c)
+        except TypeError:
+            c = "Gestation must be an integer in [0, %s)." % gest_secs_max
             raise BBExceptions.LifeCycleError(c)
 
     @property
@@ -368,12 +386,15 @@ class LifeCycle(Equalities):
 
     @span.setter
     def span(self, value):
-        if Globals.life_span_min <= value < Globals.life_span_max:
-            self._span = value
-        else:
-            c = "Life span must be a timedelta object in [%s, %s)."
-            c  = c % (Globals.life_span_min.days,
-                      Globals.life_span_max.days)
+        value = int(value)
+        try:
+            if 0 <= value < span_secs_max:
+                self._span = value
+            else:
+                c = "Life span must be an integer in [0, %s)." % span_secs_max
+                raise BBExceptions.LifeCycleError(c)
+        except TypeError:
+            c = "Life span must be an integer in [0, %s)." % span_secs_max
             raise BBExceptions.LifeCycleError(c)
         
     @property
@@ -422,7 +443,8 @@ class LifeCycle(Equalities):
             if self.ref_date:
                 new_dod = self.ref_date
             else:
-                c = "kill() requires valid date of death or instance ref_date."
+                c = "kill() requires valid POSIX date of death or instance"
+                c += " ref_date."
                 raise BBExceptions.LifeCycleError(c)
         #
         self._date_of_death = new_dod
@@ -434,12 +456,9 @@ class LifeCycle(Equalities):
 
         LifeCycle.set_age(fixed_age, ref_date) -> None
 
-        Method expects:
-        -- ``fixed_age`` to be a timedelta object
-        -- ``ref_date`` to be a date object
 
         Method computes a date of conception that generates the desired age
-        at ref_date and sets instance properties accordingly.
+        at ref_date and sets instance properties accordingly. 
         """
         self._ref_date = ref_date
         estimated_conception = ref_date - fixed_age - self.gestation
@@ -452,19 +471,21 @@ class LifeCycle(Equalities):
         LifeCycle.set_ref_date(new_ref) -> None
 
 
-        Method sets instance ref date to ``new_ref``. Method expects
-        ``new_ref`` to be a datetime object.  
+        Method sets instance ref date to ``new_ref,`` rounded to the nearest
+        integer. Method expects new_ref to show date as seconds since Epoch.
+        Method accepts negative new_ref values for dates prior to the beginning
+        of the Epoch. 
         
         Method raises LifeCycleError if new_ref falls outside of [earliest,
         latest) range specified in Globals.
         """
+        new_ref = int(new_ref)
         #
-        if Globals.ref_date_min <= new_ref < Globals.ref_date_max:
+        if ref_posix_min <= new_ref < ref_posix_max:
             self._ref_date = new_ref
         else:
-            c = "Object requires a date in [%s, %s)."
-            c = c % (Globals.ref_date_min.isoformat(),
-                     Globals.ref_date_max.isoformat())
+            c = "Object requires a POSIX ref date in [%s, %s)."
+            c = c % (Globals.ref_date_min, Globals.ref_date_max)
             raise BBExceptions.LifeCycleError(c)
     
     

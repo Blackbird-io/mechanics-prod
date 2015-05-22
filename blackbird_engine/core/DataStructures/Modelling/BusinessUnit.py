@@ -806,8 +806,7 @@ class BusinessUnit(Tags,Equalities):
         data["ID"] = id_dots + id_tail
         #
         if self.life.date_of_birth:
-            dob = datetime.date.fromtimestamp(self.life.date_of_birth)
-            dob = dob.isoformat()
+            dob = self.life.date_of_birth.isoformat()
         else:
             dob = "n/a"
         data["DOB"] = dob
@@ -846,10 +845,10 @@ class BusinessUnit(Tags,Equalities):
         #add a bottom border symmetrical to the top
         lines.append(top_border)
         #
-        #post-processing (dashed lines for units scheduled to be conceived in
-        #the future, x's for units that have already closed)
+        #post-processing (dashed lines for units scheduled to open in the
+        #future, x's for units that have already closed)
         #
-        if self.life.ref_date < self.life.date_of_conception:
+        if self.life.ref_date < self.life.date_of_birth:
             #
             alt_width = int(box_width / 2) + 1
             alt_border = (top_element + alt_element) * alt_width

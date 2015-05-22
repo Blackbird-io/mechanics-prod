@@ -29,9 +29,8 @@ TimeLine              collection of TimePeriod objects indexed by end date
 
 
 #imports
-from datetime import date, timedelta
+import datetime
 import time
-
 import BBExceptions
 import BBGlobalVariables as Globals
 
@@ -50,10 +49,7 @@ class TimeLine(dict):
     """
 
     A TimeLine is a dictionary of TimePeriod objects keyed by ending date.
-    The TimeLine helps manage, configure, and search TimePeriods.
-
-    Unless otherwise specified, class expects all dates as datetime.date objects
-    and all periods as datetime.timedelta objects.
+    The TimeLine helps manage, configure, and search TimePeriods. 
 
     ====================  ======================================================
     Attribute             Description
@@ -97,7 +93,7 @@ class TimeLine(dict):
         period's end_date. 
         """
         period = self.configurePeriod(period)
-        self[period.end] = period
+        self[period.end_date] = period
 
     def build(self, ref_date = None, fwd = 36, back = 36):
         """
@@ -110,37 +106,45 @@ class TimeLine(dict):
         points. The chain is ``fwd`` periods long into the future and ``back``
         periods long into the past.
 
-        Method expects ``ref_date`` to be a datetime.date object. If ref_date
-        is left blank, method uses date.today() as the ref date. 
+        Method expects ``ref_in_seconds`` to be a POSIX timestamp (seconds since
+        Epoch) that represents the reference date. If ``ref_in_seconds`` is left
+        blank, method uses current system time (time.time()) as the ref date. 
 
         Method sets instance.current_period to the period covering the reference
         date.
+
+        Method relies on ``datetime`` and ``time`` modules to manage time and
+        date counts. 
         """
         #
         if not ref_date:
-            ref_date = date.today()
+            ref_date = datetime.date.today()
         ref_month = ref_date.month
         ref_year = ref_date.year
         #
-        current_start_date = date(ref_year, ref_month, 1)
+        curr_start_date = datetime.date(ref_year,ref_month,1)
         #
         #make reference period
         fwd_start_date = self.get_fwd_start_date(ref_date)
-        current_end_date = fwd_start_date - timedelta(1)
-        current_period = TimePeriod(current_start_date, current_end_date)
+        curr_start_sec = time.mktime(curr_start_date.timetuple())
+        fwd_start_sec = time.mktime(fwd_start_date.timetuple())
+        curr_end_sec = fwd_start_sec - 1       
+        current_period = TimePeriod(curr_start_sec, curr_end_sec)
         self.addPeriod(current_period)
         self.setCurrent(current_period)
         #
-        back_end_date = current_start_date - timedelta(1)        
+        back_end_sec = curr_start_sec - 1
         #save known starting point for back chain build before fwd changes it
         #
         #make fwd chain
         for i in range(fwd):
                 #pick up where ref period analysis leaves off
                 curr_start_date = fwd_start_date
+                curr_start_sec = fwd_start_sec
                 fwd_start_date = self.get_fwd_start_date(curr_start_date)
-                curr_end_date = fwd_start_date - timedelta(1)
-                fwd_period = TimePeriod(curr_start_date, curr_end_date)
+                fwd_start_sec = time.mktime(fwd_start_date.timetuple())
+                curr_end_sec = fwd_start_sec - 1
+                fwd_period = TimePeriod(curr_start_sec,curr_end_sec)
                 self.addPeriod(fwd_period)
                 #
                 #first line picks up last value in function scope, so loop
@@ -148,15 +152,17 @@ class TimeLine(dict):
         #
         #make back chain
         for i in range(back):
-                curr_end_date = back_end_date
-                curr_start_date = date(curr_end_date.year,
-                                       curr_end_date.month,
-                                       1)
-                back_period = TimePeriod(curr_start_date,curr_end_date)
+                curr_end_sec = back_end_sec
+                curr_end_date = datetime.date.fromtimestamp(curr_end_sec)
+                curr_start_date = datetime.date(curr_end_date.year,
+                                                curr_end_date.month,
+                                                1)
+                curr_start_sec = time.mktime(curr_start_date.timetuple())
+                back_period = TimePeriod(curr_start_sec,curr_end_sec)
                 self.addPeriod(back_period)
                 #
                 #close loop:
-                back_end_date = curr_start_date - timedelta(1)
+                back_end_sec = curr_start_sec - 1
         #
 
     def configurePeriod(self,period):
@@ -190,7 +196,9 @@ class TimeLine(dict):
         """
         if not seed:
             seed = self.current_period
-        seed_date = seed.end
+        seed_date = datetime.date.fromtimestamp(seed.end)
+        #seed.end is a float representing a POSIX timestamp since Epoch. For
+        #downstream use, convert the timestamp into a calendar date 
         #
         segments = self.get_segments(seed_date)
         past = segments[0]
@@ -274,15 +282,15 @@ class TimeLine(dict):
         result = None
         end_date = None
         q_date = None
-        if isinstance(query, date):
+        if isinstance(query,datetime.date):
             q_date = query
         else:            
             try:
-                q_date = date.fromtimestamp(query)
+                q_date = datetime.date.fromtimestamp(query)
             except TypeError:
                 num_query = [int(x) for x in query.split("-")]
                 #query is a string, split it
-                q_date = date(*num_query)
+                q_date = datetime.date(*num_query)
         end_date = self.get_ref_end_date(q_date)
         result = self[end_date]
         return result
@@ -299,10 +307,10 @@ class TimeLine(dict):
         output[2] = list of keys for periods after ref_date
         """
         result = None
-        #
-        if not ref_date:
-            ref_date = self.current_period.end
-        ref_end = self.get_ref_end_date(ref_date)    
+        if ref_date:
+            ref_end = self.get_ref_end_date(ref_date)    
+        else:
+            ref_end = datetime.date.fromtimestamp(self.current_period.end)        
         #
         dates = sorted(self.keys())
         ref_spot = dates.index(ref_end)
@@ -325,9 +333,9 @@ class TimeLine(dict):
         ref_month = ref_date.month
         ref_year = ref_date.year
         if ref_month == 12:
-            result = date(ref_year+1,1,1)
+            result = datetime.date(ref_year+1,1,1)
         else:
-            result = date(ref_year,ref_month+1,1)
+            result = datetime.date(ref_year,ref_month+1,1)
         return result   
 
     def get_ref_end_date(self,ref_date):
@@ -341,7 +349,9 @@ class TimeLine(dict):
         """
         result = None
         fwd_start_date = self.get_fwd_start_date(ref_date)
-        ref_end_date = fwd_start_date - timedelta(1)
+        fwd_start_time = time.mktime(fwd_start_date.timetuple())
+        ref_end_time = fwd_start_time - 1
+        ref_end_date = datetime.date.fromtimestamp(ref_end_time)
         result = ref_end_date
         return result        
     
@@ -383,7 +393,7 @@ class TimeLine(dict):
         ref_date. If ``ref_date`` == None, method uses current system time. 
         """
         if not ref_date:
-            ref_date = date.today()
+            ref_date = datetime.date.today()
         ref_period = self.findPeriod(ref_date)
         self.current_period = ref_period
     

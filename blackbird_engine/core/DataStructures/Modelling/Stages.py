@@ -133,6 +133,9 @@ class Stages:
         because percent is outside the [0,100) interval).
         """
         result = None
+        if not percent:
+            return result
+            #to avoid sorting errors when percent == None
         if not 0<= percent < 100:
             return result
         else:               

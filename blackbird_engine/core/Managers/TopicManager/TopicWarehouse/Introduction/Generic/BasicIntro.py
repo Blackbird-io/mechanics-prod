@@ -176,10 +176,9 @@ def scenario_6(topic):
     #
     adj_r = [int(x) for x in R.split("-")]
     date_of_birth = datetime.date(*adj_r)
-    dob_in_seconds = time.mktime(date_of_birth.timetuple())
     #
     top_bu = M.currentPeriod.content
-    estimated_conception = dob_in_seconds - top_bu.life.gestation
+    estimated_conception = date_of_birth - top_bu.life.gestation
     top_bu.life.date_of_conception = estimated_conception
     #
     i_overview = top_bu.financials.indexByName("Overview")
