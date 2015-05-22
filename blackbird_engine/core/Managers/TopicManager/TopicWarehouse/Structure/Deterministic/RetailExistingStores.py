@@ -42,6 +42,7 @@ n/a
 import datetime
 import time
 
+import BBExceptions
 import BBGlobalVariables as Globals
 import Tools
 
@@ -238,7 +239,7 @@ def scenario_4(topic):
     #
     industry_standard = SK.months_to_first_unit["retail"]
     shift = Tools.Parsing.monthsToSeconds(industry_standard)
-    anchor_seconds = int(dob_company_standards + shift)
+    anchor_seconds = int(dob_company_seconds + shift)
     anchor_string = datetime.date.fromtimestamp(anchor_seconds).isoformat()
     #
     new_Q = topic.questions["first store open date?"]
@@ -328,7 +329,8 @@ def scenario_6(topic):
     #
     #figure out unit lifespan, set accordingly
     life_in_years = M.interview.work_space["unit_life_years"]
-    life_in_seconds = Tools.Parsing.monthsToSeconds((life_in_years * 12))
+    life_in_months = life_in_years * 12
+    life_in_seconds = Tools.Parsing.monthsToSeconds(life_in_months)
     bu_template.life.span = life_in_seconds
     #
     #figure out ref date for the current period
@@ -340,8 +342,6 @@ def scenario_6(topic):
     bu_template.life.set_ref_date(ref_date) #-------------------------------------------------------------------------------------------------------this could be different than the top_bu!!! may want to copy ref_date directly from there. 
     #
     #figure out unit gestation
-    bu_template.life.gestation = avg_gestation
-    #
     first_dob_seconds = M.interview.work_space["first_dob_seconds"]
     latest_dob_seconds = adj_R
     unit_count = M.interview.work_space["unit_count"]
@@ -363,6 +363,7 @@ def scenario_6(topic):
                             (first_gestation * (1 - step_up)))
     #assume company gets 20% faster at opening units; more advanced topics
     #ask questions first.
+    bu_template.life.gestation = avg_gestation
     M.interview.work_space["average_gestation_seconds"] = avg_gestation
     #
     #figure out life stage pattern
@@ -377,7 +378,7 @@ def scenario_6(topic):
         maturity["start"] = youth_ends_percent + 1
         decline["start"] = youth_ends_percent + 30 + 1
         #make sure stages reorganized data now that we've changed start points
-        bu_0.life._stages.organize()
+        bu_template.life._stages.organize()
         #
         tag1 = "long adolescence"
         tag2 = "rapid decline"
@@ -418,7 +419,7 @@ def scenario_6(topic):
     ordered_batch = []
     for bbid in sorted(batch.keys()):
         unit = batch[bbid]
-        ordered_batch.append[unit]
+        ordered_batch.append(unit)
     #
     #
     #Step 5:
@@ -426,9 +427,11 @@ def scenario_6(topic):
     #assumes that clones are identical except for their age.
     first_bu = ordered_batch.pop(0)
     first_bu.life.date_of_conception = first_dob_seconds - avg_gestation
+    top_bu.addComponent(first_bu)
     #
     last_bu = ordered_batch.pop()
-    last_bu.life.date_of_conception = last_dob_seconds - avg_gestation
+    last_bu.life.date_of_conception = latest_dob_seconds - avg_gestation
+    top_bu.addComponent(last_bu)
     #ordered_batch now 2 units shorter than unit_count. apply distribution to
     #all remaining units.
     next_conception_date = first_bu.life.date_of_birth
@@ -437,9 +440,6 @@ def scenario_6(topic):
     #later (log curve).
     for bu in ordered_batch:
         bu.life.date_of_conception = next_conception_date
-        next_conception_date = next_conception_date + avg_gestation
-        next_conception_date = min(next_conception_date,
-                                   (ref_date - avg_gestation))
         #
         #the user told blackbird how many units they have operating
         #**right now**. blackbird translates right now into ref_date and the
@@ -448,13 +448,17 @@ def scenario_6(topic):
         #determine the latest possible date the user could have conceived a
         #unit (based on blackbird's current assumptions about unit life cycle).
         #
-        if bu.life.alive:
-            top_bu.addComponent(bu)
-        else:
-            c = "Topic detected non-living unit \n%s\n. Topic expected to"
-            c += " generate living units only."
-            c = c % bu
-            raise BBExceptions.BBAnalyticalError(c)
+        top_bu.addComponent(bu)
+        next_conception_date = next_conception_date + avg_gestation
+        next_conception_date = min(next_conception_date,
+                                   (ref_date - avg_gestation))
+##        if bu.life.alive:
+##            top_bu.addComponent(bu)
+##        else:
+##            c = "Topic detected non-living unit \n%s\n. Topic expected to"
+##            c += " generate living units only."
+##            c = c % bu
+##            raise BBExceptions.BBAnalyticalError(c) ------------------------------------ uncomment for deploy
     #
     tag7 = "small number of units"
     small_num = 10
@@ -471,10 +475,10 @@ def scenario_6(topic):
     #
     #Step 6:
     #prep top_bu for further processing.
-    i_structure = top_bu.financials.indexByName("structure")
-    line_structure = top_bu.financials[i_structure]
+    i_structure = M.interview.path.indexByName("structure")
+    line_structure = M.interview.path[i_structure]
     line_structure.tag("ready for expected growth analysis")
-    line_structure.guide.quality.setStandards(3, 5)
+##    line_structure.guide.quality.setStandards(3, 5)---------------------------------------------------un comment to turn on addtl analysis
     ##line will now need additional processing to look complete ot InterviewController;
     ##Yenta should select a growth topic next, because the tag will act like a homing
     ##beacon

@@ -67,9 +67,7 @@ def func(line, business_unit, data, driver_signature):
     -- "ref_year"    
     """
     #
-    calc_time_stamp = business_unit.life.ref_date
-    calc_date = datetime.date.fromtimestamp(calc_time_stamp)
-    calc_year = calc_date.year
+    calc_year = business_unit.life.ref_date.year
     years_from_base = calc_year - data["ref_year"]
     years_from_base = max(0, years_from_base)
     inflation_multiplier = (1 + data["annual_inflation"])** years_from_base

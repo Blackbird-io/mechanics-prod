@@ -39,6 +39,8 @@ n/a
 
 
 #imports
+import datetime
+
 import BBGlobalVariables as Globals
 import Tools
 
@@ -225,11 +227,11 @@ def scenario_4(topic):
     stnd_fins  = M.defaultFinancials.copy()
     #
     bu_0 = BusinessUnit("BU0: Template", stnd_fins)
-    bu_0.life.span = life_in_seconds
+    bu_0.life.span = datetime.timedelta(0, life_in_seconds)
     if Globals.fix_ref_date:
         ref_date = Globals.t0
     else:
-        ref_date = time.time()
+        ref_date = datetime.date.today()
     bu_0.life.set_ref_date(ref_date)
     #
     if youth_ends_percent < 50:
@@ -248,7 +250,7 @@ def scenario_4(topic):
         bu_0.tag(tag1, tag2, tag3)
     else:
         #maturation too long, assume lifespan too short, set to 3x maturity
-        bu_0.life.span = mature_in_seconds * 3
+        bu_0.life.span = datetime.date.timedelta(0, mature_in_seconds * 3)
         tag4 = "standard LifeCycle"
         tag5 = "pro forma lifeSpan"
         tag6 = "response difficulty"
@@ -261,8 +263,11 @@ def scenario_4(topic):
         c_name = "Cloned Unit %s" % n
         clone.setName(c_name)
         clone.id.assignBBID(clone.name)
-        fixed_age = 0.40 * life_in_seconds
-        #assume a particular age, uniform across units
+        #
+        fixed_age_seconds = 0.40 * life_in_seconds
+        fixed_age = datetime.timedelta(0, fixed_age_seconds)
+        #convert age into a timedelta obj, where main unit is days.
+        #
         clone.life.set_age(fixed_age, ref_date)
         component_batch.append(clone)
         M.currentPeriod.content.addComponent(clone)
