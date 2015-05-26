@@ -811,7 +811,7 @@ class BusinessUnit(Tags,Equalities):
             dob = "n/a"
         data["DOB"] = dob
         #
-        if self.life.percent:
+        if self.life.percent is not None:
             life = int(self.life.percent)
             life = str(life) + r"%"
         else:

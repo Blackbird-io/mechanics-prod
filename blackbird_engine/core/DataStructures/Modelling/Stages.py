@@ -133,9 +133,9 @@ class Stages:
         because percent is outside the [0,100) interval).
         """
         result = None
-        if not percent:
+        if percent is None:
             return result
-            #to avoid sorting errors when percent == None
+            #to avoid sorting errors
         if not 0<= percent < 100:
             return result
         else:               
@@ -145,7 +145,9 @@ class Stages:
                 stage_ends = self.end_points[i]
                 #
                 if stage_starts <= percent < stage_ends:
-                    result = self.by_start[stage_starts]
+                    result = self.by_start[stage_starts].copy()
+                    result["end"] = stage_ends
+                    #add some info to the stage before returning it
                     break
                 else:
                     continue

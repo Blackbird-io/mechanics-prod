@@ -39,8 +39,7 @@ n/a
 
 
 #imports
-import datetime
-import time
+from datetime import date, timedelta
 
 import BBExceptions
 import BBGlobalVariables as Globals
@@ -159,7 +158,7 @@ def scenario_2(topic):
     model_industry = M.interview.work_space.get("industry")
     if model_industry:
         model_industry = model_industry.casefold()
-        #only do transform is model_industry is a string, not a None
+        #only do transform if model_industry is a string, not a None
         new_Q.input_array[0].shadow = SK.unit_life_spans.get(model_industry)
         #shadow serves as anchor, should be approximate mean
     else:
@@ -206,7 +205,7 @@ def scenario_3(topic):
         #only do transform is model_industry is a string, not a None
         new_Q.input_array[0].shadow = SK.unit_months_to_mature.get(model_industry)
     else:
-        new_Q.input_array[0].shadow = (life_in_years * 12 ) * 0.40
+        new_Q.input_array[0].shadow = (life_in_years * 12) * 0.40
         #assume by default units mature 40% of the way through their life
     topic.wrap_scenario(new_Q)
 
@@ -231,22 +230,20 @@ def scenario_4(topic):
     M.interview.work_space["months_to_mature"] = months_to_mature
     #
     top_bu = M.currentPeriod.content
-    dob_company_seconds = top_bu.life.date_of_birth
-    dob_company_date = datetime.date.fromtimestamp(dob_company_seconds)
+    dob_company_date = top_bu.life.date_of_birth
     dob_company_string = dob_company_date.isoformat()
     #put in work_space to save work in later scenarios
     M.interview.work_space["earliest_store_open"] = dob_company_string
     #
     industry_standard = SK.months_to_first_unit["retail"]
-    shift = Tools.Parsing.monthsToSeconds(industry_standard)
-    anchor_seconds = int(dob_company_seconds + shift)
-    anchor_string = datetime.date.fromtimestamp(anchor_seconds).isoformat()
+    shift = timedelta(industry_standard * Globals.days_in_month)
+    anchor_date = dob_company_date + shift
     #
     new_Q = topic.questions["first store open date?"]
     #set bounds for the input element
     new_Q.input_array[0].r_min = dob_company_string
-    new_Q.input_array[0].r_max = datetime.date.today().isoformat()
-    new_Q.input_array[0].shadow = anchor_string
+    new_Q.input_array[0].r_max = date.today().isoformat()
+    new_Q.input_array[0].shadow = anchor_date.isoformat()
     #
     topic.wrap_scenario(new_Q)
 
@@ -268,19 +265,20 @@ def scenario_5(topic):
     M = topic.MR.activeModel
     R = topic.get_first_answer()
     #R is a YYYY-MM-DD string
-    adj_r = Tools.Parsing.seconds_from_iso(R)
+    adj_r = Tools.Parsing.date_from_iso(R)
     M.interview.work_space["earliest_store_open"] = R
-    M.interview.work_space["first_dob_seconds"] = adj_r
+    M.interview.work_space["first_dob_date"] = adj_r
     #
     industry_standard = SK.months_to_first_unit["retail"]
-    shift = Tools.Parsing.monthsToSeconds(industry_standard)
-    anchor_seconds = int(time.time() - shift)
-    anchor_string = datetime.date.fromtimestamp(anchor_seconds).isoformat()
+    shift = timedelta(industry_standard * 30)
+    #timedelta in days
+    anchor_date = date.today() - shift
+    anchor_string = anchor_date.isoformat()
     #
     new_Q = topic.questions["latest store open date?"]
     #set bounds for the input element
     new_Q.input_array[0].r_min = R
-    new_Q.input_array[0].r_max = datetime.date.today().isoformat()
+    new_Q.input_array[0].r_max = date.today().isoformat()
     new_Q.input_array[0].shadow = anchor_string
     #
     topic.wrap_scenario(new_Q)
@@ -316,7 +314,8 @@ def scenario_6(topic):
     #Retrieve and format user response
     #
     R = topic.get_first_answer()
-    adj_R = Tools.Parsing.seconds_from_iso(R)
+    adj_R = Tools.Parsing.date_from_iso(R)
+    M.interview.work_space["latest_store_open"] = R
     #
     #
     #Step 2:
@@ -329,47 +328,46 @@ def scenario_6(topic):
     #
     #figure out unit lifespan, set accordingly
     life_in_years = M.interview.work_space["unit_life_years"]
-    life_in_months = life_in_years * 12
-    life_in_seconds = Tools.Parsing.monthsToSeconds(life_in_months)
-    bu_template.life.span = life_in_seconds
+    life_in_days = life_in_years * Globals.days_in_year
+    bu_template.life.span = timedelta(life_in_days)
     #
     #figure out ref date for the current period
     ref_date = None
     if Globals.fix_ref_date:
         ref_date = Globals.t0
     else:
-        ref_date = time.time()
+        ref_date = date.today()
     bu_template.life.set_ref_date(ref_date) #-------------------------------------------------------------------------------------------------------this could be different than the top_bu!!! may want to copy ref_date directly from there. 
     #
     #figure out unit gestation
-    first_dob_seconds = M.interview.work_space["first_dob_seconds"]
-    latest_dob_seconds = adj_R
+    first_dob_date = M.interview.work_space["first_dob_date"]
+    latest_dob_date = adj_R
     unit_count = M.interview.work_space["unit_count"]
     #
     #to estimate unit gestation (time from moment of conception/decision to
     #doors opening), calculate how much time per unit it took the company to
     #open all existing units after the first one.
     #
-    avg_gestation = ((latest_dob_seconds - first_dob_seconds)/
+    avg_gestation = ((latest_dob_date - first_dob_date)/
                               (unit_count - 1))
     #
     #adjust gestation to max of average time to open a store and time to open
     #first store. average time can be skewed materially if company prepared
     #stores in batches (eg, 5 openings at a time).
     #
-    first_gestation = first_dob_seconds - top_bu.life.date_of_birth
+    first_gestation = first_dob_date - top_bu.life.date_of_birth
     step_up = SK.gestation_rate_boost
     avg_gestation = max(avg_gestation,
-                            (first_gestation * (1 - step_up)))
+                        (first_gestation * (1 - step_up)))
     #assume company gets 20% faster at opening units; more advanced topics
     #ask questions first.
     bu_template.life.gestation = avg_gestation
-    M.interview.work_space["average_gestation_seconds"] = avg_gestation
+    M.interview.work_space["average_gestation_days"] = avg_gestation
     #
     #figure out life stage pattern
     months_to_mature = M.interview.work_space["months_to_mature"]
-    mature_in_seconds = Tools.Parsing.monthsToSeconds(months_to_mature)
-    youth_ends_percent = int(mature_in_seconds/life_in_seconds * 100)
+    period_to_mature = timedelta(months_to_mature * Globals.days_in_month)
+    youth_ends_percent = int(period_to_mature/bu_template.life.span * 100)
     if youth_ends_percent < 50:
         #maturation less than 50% of lifespan; create custom life stage pattern
         maturity = bu_template.life._stages.by_name["maturity"]
@@ -389,7 +387,7 @@ def scenario_6(topic):
         #for a unit to mature, known maturation takes too long. scenario assumes
         #the error occurs because the user underestimated the life span of their
         #units. adjust the life span to 3x maturity.
-        bu_template.life.span = mature_in_seconds * 3
+        bu_template.life.span = period_to_mature * 3
         tag4 = "standard LifeCycle"
         tag5 = "pro forma lifeSpan"
         tag6 = "response difficulty"
@@ -400,7 +398,8 @@ def scenario_6(topic):
     #
     #Step 3:
     #Add template to model taxonomy
-    M.taxonomy["operating"] = bu_template
+    M.bu_template = bu_template
+##    M.taxonomy["operating"] = bu_template---------------------------------------------------------------------------
     #later topics can sub-type "operating" into "small", "large", etc. 
     #
     #
@@ -426,19 +425,25 @@ def scenario_6(topic):
     #Customize the batch units and insert them into the top_unit. This scenario
     #assumes that clones are identical except for their age.
     first_bu = ordered_batch.pop(0)
-    first_bu.life.date_of_conception = first_dob_seconds - avg_gestation
+    first_bu.life.date_of_conception = first_dob_date - avg_gestation
     top_bu.addComponent(first_bu)
     #
     last_bu = ordered_batch.pop()
-    last_bu.life.date_of_conception = latest_dob_seconds - avg_gestation
+    last_bu.life.date_of_conception = latest_dob_date - avg_gestation
     top_bu.addComponent(last_bu)
+    #
     #ordered_batch now 2 units shorter than unit_count. apply distribution to
     #all remaining units.
+    #
     next_conception_date = first_bu.life.date_of_birth
+    #
     #assume that company is creating units at a uniform rate over time. can
     #eventually modify this to look like a curve that's fast early and slow
     #later (log curve).
+    #
+    latest_conception_date = latest_dob_date - avg_gestation
     for bu in ordered_batch:
+        #
         bu.life.date_of_conception = next_conception_date
         #
         #the user told blackbird how many units they have operating
@@ -448,17 +453,16 @@ def scenario_6(topic):
         #determine the latest possible date the user could have conceived a
         #unit (based on blackbird's current assumptions about unit life cycle).
         #
-        top_bu.addComponent(bu)
         next_conception_date = next_conception_date + avg_gestation
         next_conception_date = min(next_conception_date,
-                                   (ref_date - avg_gestation))
-##        if bu.life.alive:
-##            top_bu.addComponent(bu)
-##        else:
-##            c = "Topic detected non-living unit \n%s\n. Topic expected to"
-##            c += " generate living units only."
-##            c = c % bu
-##            raise BBExceptions.BBAnalyticalError(c) ------------------------------------ uncomment for deploy
+                                   latest_conception_date)
+        if bu.life.alive:
+            top_bu.addComponent(bu)
+        else:
+            c = "Topic detected non-living unit: \n%s\nTopic expected to"
+            c += " generate living units only."
+            c = c % bu
+            raise BBExceptions.BBAnalyticalError(c)
     #
     tag7 = "small number of units"
     small_num = 10

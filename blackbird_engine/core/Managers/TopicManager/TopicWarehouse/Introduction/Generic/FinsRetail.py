@@ -93,7 +93,7 @@ def scenario_1(topic):
     #
     structure = LineItem("Structure")
     structure.tag("Deterministic", field = "req")
-##    structure.tag("retail")
+    structure.tag("Retail")
     structure.setPartOf(top_fins)
     structure.guide.priority.increment(3)
     structure.guide.quality.setStandards(2,5)
