@@ -29,6 +29,7 @@ LifeCycle             object that tracks how attributes evolve over time
 
 #imports
 import copy
+import time
 
 import BBExceptions
 import BBGlobalVariables as Globals
@@ -172,7 +173,7 @@ class LifeCycle(Equalities):
         False otherwise. 
         """
         result = False
-        if self.ref_date > self.date_of_birth:
+        if self.date_of_birth <= self.ref_date:
             result = True
         if self.date_of_death:
             if self.date_of_death < self.ref_date:
@@ -308,7 +309,7 @@ class LifeCycle(Equalities):
     @gestation.setter
     def gestation(self, value):
         if Globals.gestation_period_min <= value < Globals.gestation_period_max:
-            self._span = value
+            self._gestation = value
         else:
             c = "Gestation must be a timedelta object in [%s, %s)."
             c = c % (Globals.gestation_period_min,
@@ -330,7 +331,7 @@ class LifeCycle(Equalities):
         #
         if all([self.age, self.span]):
             result = (self.age / self.span) * 100
-            result = int(result)
+            result = round(result)
         #
         return result
     
@@ -356,13 +357,10 @@ class LifeCycle(Equalities):
 
 
         Property returns instance life span in seconds. By default, instance
-        life span is set to a value that corresponds to
-        Globals.life_span_years_def.
+        life span is set to Globals.life_span_years_def.
 
-        Property setter accepts values between 0 and the seconds equivalent of
-        Globals.life_span_years_max. Setter raises LifeCycleError otherwise.
-
-        Setter always sets period to nearest integer. 
+        Property setter accepts timedelta-type values between min and max
+        defined in Globals. Setter raises LifeCycleError otherwise.
         """
         return self._span
 

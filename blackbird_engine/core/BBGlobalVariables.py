@@ -143,6 +143,8 @@ cc_haircut = 0.20
 t0 = date(2015,3,30)
 fix_ref_date = True
 #whether models always start on the same date; keep True for testing
+days_in_month = 30
+days_in_year = 365
 
 #Object Life Cycle
 #all dates as datetime.date objects;
@@ -154,7 +156,8 @@ gestation_period_def = timedelta(365 * 1)
 gestation_period_max = timedelta(365 * 15)
 gestation_period_min = timedelta(0)
 #
-life_span_def = timedelta(365 * 10)
+life_span_def = timedelta(365 * 50)
+#50 years
 life_span_max = timedelta(365 * 300)
 life_span_min = timedelta(0)
 #
