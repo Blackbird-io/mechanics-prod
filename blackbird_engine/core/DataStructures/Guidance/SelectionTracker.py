@@ -60,12 +60,13 @@ class SelectionTracker(Counter):
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
-    finishedCatalog       bool, True if no eligible unused Topics in catalog
-    eligibleTopics        list of Topics previously determined to be eligible
-    usedTopics            list of Topics previously used on the object
-    allScores             dictionary of TDEX:(match-making scores) for eligibles
 
-    clearEligibleTopics() resets eligibleTopics to a blank list
+    DATA:
+    finishedCatalog       bool, True if no eligible unused Topics in catalog
+    eligible              list; bbid cache for topics that can run on obj
+    used                  list; bbids for topics that have already processed obj
+    
+    FUNCTIONS:
     recordDryRun()        toggles instance.finishedCatalog to True
     recordUsedTopic()     adds the topic's TDEX to self.usedTopics
     setEligibles          sets instance.eligibleTopics to passed list of TDEXes
@@ -73,34 +74,37 @@ class SelectionTracker(Counter):
     """
     def __init__(self):
         Counter.__init__(self)
-        self.finishedCatalog = False
-        self.eligibleTopics = []
-        self.usedTopics = []
-        self.allScores = None
+        self.finished_catalog = False
+        self.eligible = []
+        self.used = []
     
-    def recordDryRun(self):
+    def record_dry_run(self):
         """
 
-        SelectTr.recordDryRun() -> None
 
-        Sets instance.finishedCatalog to True
+        ST.record_dry_run() -> None
+
+
+        Sets instance.finished_catalog to True
         """
-        self.finishedCatalog = True
+        self.finished_catalog = True
 
-    def recordUsedTopic(self,T):
+    def record_used_topic(self,T):
         """
 
-        STr.recordUsedTopic(T) -> None
 
-        Records T.id.bbid in instance.usedTopics
+        ST.record_used_topic(T) -> None
+
+
+        Method appends topic bbid to instance.used list.
         """
-        self.usedTopics.append(T.id.bbid)
+        self.used.append(T.id.bbid)
             
-    def clearEligibleTopics(self):
-        """
-        STr.clearEligibleTopics() -> None
-        """
-        self.eligibleTopics = []
+##    def clear_eligible_topics(self):
+##        """
+##        STr.clearEligibleTopics() -> None
+##        """
+##        self.eligibleTopics = []
 
-    def setEligibles(self,knownEligibles):
-        self.eligibleTopics = knownEligibles
+    def set_eligible(self, known_eligibles):
+        self.eligible = known_eligibles
