@@ -35,25 +35,12 @@ yenta tries to tell the partner when to stop also
 simplify and add lightness
 
 
-Yenta class methods
--------------------
-
-=================  ==============================================
-Method             Description
-=================  ==============================================
-simpleSelect()     returns an instance of the best-matched topic
-findEligible()     returns a list of any eligible topic objects
-pickBest()         returns a list of best-scoring topic objects
-tieBreaker()       returns the winner of tie-breaking routine
-=================  ==============================================
 """
 
 
 
 
 #imports
-import random
-
 import BBGlobalVariables
 import DataStructures.Platform as Platform
 import Managers.TopicManager as TopicManager
@@ -62,20 +49,22 @@ import Tools.Parsing
 
 
 
+
 #globals
+#n/a
 #NOTE: class variables set at bottom of the module
 
 #classes
 #
 #UPGRADE-S: module currently uses a lot of dictionary[key] calls to retrieve
-#topic objects based on lists of tdexes passed from method to method. This is
-#done to ensure that if methods store state (ie a list of tdexes) on an object
-#somewhere in the ecosystem, that object can be deepcopied and pickled. Neither
-#of those ops work on objects that point to modules. Topics are modules.
+#topic objects based on lists of tdexes passed from method to method. Module
+#uses this approach to ensure that pickle and deepcopy remain compatible with
+#any selection state saved on the target object. Both deepcopy and pickle break
+#on objects that point to modules. Topics used to be modules. 
 #
-#However, speed improvements can be made by passing separate lists of tdexes for
-#state and topics for speed, as long as we don't ever store the latter on other
-#objects. 
+#Module can improve selection speed substantially by passing lists of actual
+#topic objects from one sub-routine to another. Module would still have to save
+#state via bbid only, since a topic can change tags between Matchmaker calls.
 #
 class Yenta():
     """
@@ -92,13 +81,14 @@ class Yenta():
     Attribute             Description
     =================  ==============================================
     DATA:
-    allScores          dict of TDEX: (cScore,pScore,trump)
-    honor_trump
+    scores          dict of TDEX: (cScore, pScore, trump)
 
     FUNCTION:
-    findEligible()     returns a list of any eligible topic objects
+    disconnect()
+    find_eligible()     returns a list of any eligible topic objects
     pickBest()         returns a list of best-scoring topic objects
     reset()
+    set_topic_manager() CLASS
     simple_select()     returns an instance of the best-matched topic
     tieBreaker()       returns the winner of tie-breaking routine    
     =================  ==============================================
@@ -114,7 +104,7 @@ class Yenta():
         cls.TM = new_TM
         
     def __init__(self):
-        self.honor_trump = True
+        self.scores = dict()
     
     def reset(self):
         """
@@ -123,101 +113,113 @@ class Yenta():
         Yenta.reset() -> None
 
 
-        Method sets ``percentScores`` and ``allScores`` on instance to blank
-        dictionaries. 
+        Method sets instance.scores to a blank dictionary. 
         """
-        self.percentScores = {}
-        self.allScores = {}
+        self.scores = {}
         
-    def selectTopic(self,Model):
+    def select_topic(self, model):
         """
 
-        Yenta.selectTopic(Model) -> Topic
 
-        Method returns the best topic for analyzing model in its current state.
-        Delegates all selection and introspection to other methods.
-        
+        Yenta.select_topic(model) -> Topic
+
+
+        Method returns the topic that best matches the model's focal point.
+
+        Method delegates selection logic to simple_select(). 
         """
         self.reset()
-        newTopic = self.simple_select(Model)
-        return newTopic
+        new_topic = self.simple_select(model)
+        return new_topic
 
-    def simple_select(self, Model):
+    def simple_select(self, model):
         """
 
 
-        Yenta.simple_select(Model) -> Topic
+        Yenta.simple_select(model) -> Topic or None
 
         
-        Method finds and returns the best topic in the active catalog for
-        analyzing the model. Actual object returned is a clean instance of the
-        topic.
+        Method returns a clean instance of a topic that fits the current
+        interview focal point better than any other candidates.
 
-        The focal point specified on model.interview acts as the key benchmark
-        for selection. If no topics apply to the focal point, method returns
-        None.
+        Method computes best fit against other candidates in a pool. If the
+        focal point carries a cache of known topic ids, method computes
+        rankings against that pool. Otherwise, or if no suitable topic exists
+        in the pool, method computes rankings for all topics in the catalog.
 
-        Method expects to find an informative ``guide`` attribute on the focal
-        point.
+        NOTE: The best candidate from an existing cache may be **worse** than
+        a candidate located elsewhere in the catalog.
+
+        Method returns None if no topics in catalog are eligible to work on the
+        model's focal point. 
+
+        Method uses local best fit to make selection run faster. To select the
+        best fit globally, clients can manually empty the cache on the focal
+        point. Alternatively, clients can maintain focus on a particular object
+        until Yenta records a dry run for that object. This second method is not
+        strictly equivalent to the first, however, since earlier (cached)
+        candidates could change the target at run-time in a way that alters
+        selection criteria (e.g., by adding tags).
         
         Selection algorithm:
 
-        (1) select topics eligible for processing focal point
-        (2) if more than one eligible topic exists, refine results by
-        running Yenta.pickBest()
-        (3) if pickBest() yields a tie, run Yenta.tieBreaker()
+        (1) select all topics that contain each of target's required tags
+        (2) rank the eligible topics by the total number of tags they match
+        (3) break ties by selecting the topic with the highest relative match
         
-        Method returns None if topicCatalog contains no eligible topics.
         """
-        topic = None
-        selection = None
-        readyToGo = None
-        fPt = Model.interview.focalPoint
-        fPt.guide.selection.increment(1)
-        knownEligibles = fPt.guide.selection.eligibleTopics
-        if knownEligibles != []:
-            eligibles = self.findEligible(fPt, knownEligibles)
+        chosen_bbid = None
+        chosen_topic = None
+        #
+        fp = Model.interview.focalPoint
+        fp.guide.selection.increment()
+        #
+        known_eligibles = fp.guide.selection.eligible
+        if known_eligibles != []:
+            eligibles = self.find_eligible(fp, known_eligibles)
             if eligibles == []:
-                eligibles = self.findEligible(fPt)
+                eligibles = self.find_eligible(fp)
+            #
             #to avoid duplicating work, first check if any topics that looked
             #eligible before continue to be eligible. if some do, pick from
-            #them. if none do, go through whole catalog again. 
+            #them. if none do, go through whole catalog again.
+            #
         else:
-            eligibles = self.findEligible(fPt)
-        #update records on focusLine
-        fPt.guide.selection.setEligibles(eligibles)
-        #eligibles is a list of bbids
+            eligibles = self.find_eligible(fp)
+        fp.guide.selection.set_eligible(eligibles)
         best = None
-        #pick the best candidates
+        #
         if len(eligibles) == 0:
             pass
+            #method will check for dry runs before concluding
         elif len(eligibles) == 1:
-            selection = eligibles[0]
+            chosen_bbid = eligibles[0]
         else:
-            best = self.pickBest(fPt,eligibles) #<---------------------------------------------------------------------------------make sure this is ok on bbids
+            best = self.pick_pest(fp, eligibles) 
             if len(best) == 1:
-                selection = best[0]
+                chosen_bbid = best[0]
             else:
-                selection = self.tieBreaker(fPt,best) #<---------------------------------------------------------------------------------make sure this is ok on bbids
-        #selection is a bbid, so need to retrieve actual topic from topic
-        #catalog 
-        if selection:
-            topic = self.TM.local_catalog.issue(selection)
-            fPt.guide.selection.recordUsedTopic(topic)
+                chosen_bbid = self.tie_breaker(best)
+        #
+        #check for dry runs and retrieve a copy of the topic w the chosen bbid
+        if chosen_bbid:
+            chosen_topic = self.TM.local_catalog.issue(chosen_bbid)
+            fp.guide.selection.record_used_topic(chosen_topic)
         else:
-            fPt.guide.selection.recordDryRun()
-        return topic
-    
-    def findEligible(self, L, pool = None, stripNone=True):
+            fp.guide.selection.record_dry_run()
+        #
+        return chosen_topic
+        
+    def find_eligible(self, target, pool = None):
         """
 
 
-        Yenta.findEligible(L[,pool=None[,stripNone=True]]) -> list
+        Yenta.find_eligible(target[, pool = None]) -> list
 
 
         Method returns a list of bbids for topics that are eligible for use on
-        the criterion object L. L must have an .allTags attribute and a
-        configured .guide object.
+        target. Method expects target to have an .allTags attribute and a
+        properly configured .guide object.
 
         The ``pool`` argument takes a list of bbids to review. If none is
         specified, method will use the keys in the active topic catalog (ie
@@ -225,166 +227,148 @@ class Yenta():
 
         To determine eligibility, method calls retrieves the topic corresponding
         to each bbid from the topic catalog. Method then checks whether the
-        topic's tags include all of the criterion's requiredTags (other than
-        partOf). The method skips topics that appear on L's guide.usedTopics
-        list.
+        topic's tags include all of the target's requiredTags (other than
+        partOf).
+
+        Method strips out None objects from target's eligibility criterion.
         
-        If ``stripNone`` is true (default), method strips out None objects from
-        the L's eligibility criterion.
+        NOTE: Method skips topics that appear in target's guide.usedTopics list.        
         """
         eligibles = []
-        criterion = set(L.requiredTags)-{L.partOf}
+        criterion = set(target.requiredTags) - {target.partOf}
+        criterion = criterion - {None}
+        #
         if not pool:
             pool = self.TM.local_catalog.by_id.keys()
-        if stripNone:
-            criterion = criterion - {None}
+        #
+        pool = set(pool) - set(target.guide.selection.used)
+        pool = sorted(pool)
+        #sort pool into list to maintain stable evaluation order and results
+        #
         for bbid in pool:
-            if bbid in L.guide.selection.usedTopics:
-                continue
-                #topic already used
-            T = self.TM.local_catalog.issue(bbid)
-            missedReqs = criterion - set(T.tags.allTags)
-            if missedReqs == set():
+            topic = self.TM.local_catalog.issue(bbid)
+            missed_reqs = criterion - set(topic.tags.allTags)
+            if missed_reqs == set():
                 #all requirements satisfied, topic eligible
                 eligibles.append(bbid)
             else:
                 continue
+        #
         return eligibles
 
-    def pickBest(self, L, candidates, stripNone=True):
+    def pick_best(self, target, model, candidates, combined = True):
         """
 
 
-        Yenta.pickBest(L, candidates[, stripNone]) -> list
+        Yenta.pick_best(target, model, candidates[, combined = True]) -> list
 
 
-        Method returns a list of bbids for the highest scoring topics
-        among the candidates.
+        Method returns a list of bbids for topics that scored highest against
+        target.
 
+        ``target`` must have an .allTags attribute.
         ``candidates`` must be a list of bbids.
 
-        ``L`` must be an object with an .allTags attribute.
+        For each bbid, method pulls the topic from the catalog and counts how
+        many target tags appear on the topic.
 
-        Method scores the topic corresponding to each candidate bbid based on
-        the number of tags the topic shares with L. Each shared tag is worth 1
-        point. The candidate(s) with the highest score are deemed the best.
+        Method ignores the disction between required and optional tags. Each
+        matching tag increases the topic's raw_score by 1 point.
 
-        Method counts matches to both optional and required tags to allow it to
-        score both pre-screened and raw candidate pools. In a pre-screened pool,
-        each of the eligible candidates carries all of L's requiredTags.
-        Accordingly, including requiredTag matches in each candidate's score
-        increases all such scores by the same number; rankings remain the same.
+        Method also computes relative scores for each topic and stores them in
+        **instance.scores**. Relative scores are the quotient of a topic's
+        raw score and the total number of tags on that topic. Relative scores
+        represent that quality of fit for a given topic, measured against
+        that topic's best possible outcome. Yenta's tie_breaker() routine
+        uses relative scores to select the best candidates when two or more
+        have the same raw score. 
 
-        If ``stripNone`` is True (default), method does not count matches
-        against None fields.
+        Method can score candidates in both pre-screened and raw pools. In a
+        pre-screened pool, each candidates carries all target requiredTags.
+        Target's required tags therefore increase each candidate's match score
+        by the same integer. Candidate rankings in an **all-eligible** pool
+        will therefore remain stable between counts that include required tags
+        and those that do not. 
 
-        Method ignores duplicate tags. All tags are matched casefolded.
-        """
-        self.allScores = {}
-        bestScore = 0
-        bestCandidates = []
-        criteria = Tools.Parsing.stripCase(L, attr="allTags")
-        #ignore duplicates
-        criteria = set(criteria)
-        if stripNone:
-            criteria = criteria - {None}
-        for bbid in candidates:
-            T = self.TM.local_catalog.issue(bbid)
-            cFeatures = Tools.Parsing.stripCase(T.tags,attr="allTags")
-            cMatch = set(cFeatures) & criteria
-            cScore = len(cMatch)
-            pScore = cScore/len(T.tags.allTags)
-            self.allScores[bbid] = [cScore, pScore, False]
-            if cScore >= bestScore:
-                bestCandidates.append(bbid)
-                bestScore = cScore
-        #save for later date
-        return bestCandidates
-
-    def tieBreaker(self,L,candidates,sripNone = True):
-        """
-
-
-        Yenta.tieBreaker(L, candidates[, stripNone = True]) -> bbid
-
-        Method returns the bbid of the most suitable topic. 
-
-        ``candidates`` must be a list of bbids.
-
-        ``L`` must be an object with an .allTags attribute.
-
-        Tests:
-        First, weed out any candidates that do not have a trump card.
-        Second, score by percentage of tags on Topic matched
+        If ``combined`` is True, method adds tags from target's senior objects
+        to the scoring criteria. Method uses the following senior objects:
         
-        ?Third, score by tags on Financials (ie not specific to L)
-        ?Fourth, score by tags on parentBU
-        ?Fifth, score by tags on model
+        -- the model
+        -- target.parent (usually a more general line item or an instance of
+           Financials)
+        -- target.parent.parent (usually a more general line item, an instance
+           of financials, or the business unit container for the target).
+
+        Method excludes None from target criteria.
+        """
+        self.scores = dict()
+        best_raw_score = 0
+        best_candidates = []
+        criteria = set(target.allTags)
+        #use sets to ignore duplicate tags
+        #
+        if combined:
+            #
+            #supplement target tags with tags that appear on more ``senior``
+            #objects in the model architecture.
+            #
+            parent = getattr(target.parentObject, None)
+            #target's parent will usually be a line or financials object
+            tags_up_one = getattr(parent.allTags, [])
+            grandpa = getattr(parent.parentObject, None)
+            #target's grandpa will usually be a line, fins object, or business
+            #unit
+            tags_up_two = getattr(grandpa.allTags, [])
+            #
+            criteria = criteria + set(tags_up_one) + set(tags_up_two)
+            criteria = criteria + set(model.allTags)
+            #
+            #could use isinstance() to always select fins and bu, but that's
+            #unpythonic. if that selection pattern turns out to be necessary,
+            #should rethink parentObject attributes generally.
+            #
+        #
+        criteria = criteria - {None}
+        for bbid in candidates:
+            topic = self.TM.local_catalog.issue(bbid)
+            match = set(topic.tags.allTags) & criteria
+            raw_score = len(match)
+            rel_score = raw_score/len(topic.tags.allTags)
+            #
+            self.scores[bbid] = [raw_score, rel_score]
+            #
+            #save state on Yenta instance so subsequent routines can access
+            #the information.
+            #
+            if raw_score >= best_raw_score:
+                best_candidates.append(bbid)
+                best_raw_score = raw_score
+        #
+        return best_candidates
+
+    def tie_breaker(self, candidates):
+        """
+
+
+        Yenta.tie_breaker(candidates) -> bbid
+
+
+        Method returns the bbid of the candidate with the highest relative
+        match score. Method uses Yenta.scores state to locate relative match
+        scores. 
         """
         winner = None
-        trump = Managers.tag_manager.loaded_tagManager.catalog["trump"]
-        tCandidates = []
-        self.percentScores = {}
-        bestPercent = 0
-        bestPercentCandidates = []
-        stillTied = []
-        for bbid in tCandidates:
-            T = self.TM.local_catalog.issue(bbid)
-            if trump in T.tags.allTags:
-                tCandidates.append(bbid)
-            cPercentScore = self.allScores[bbid][1]
-            #allScores items are [T,cScore,pScore,trump]
-            #method assumes that all candidates already have a valid entry in
-            #self.allScores because Y.tieBreaker() never builds a list of
-            #candidates from scratch
-            if cPercentScore > bestPercent:
-                bestPercent = cPercentScore
-                #if this score is the best to date (and there are no equals),
-                #then can overwrite existing bestPercentCandidates with a single
-                #item list
-                bestPercentCandidates = [bbid]
-            elif cPercentScore == bestPercent:
-                #if this score equals the previous high score, both topics
-                #should be in the bestPercentCandidates
-                bestPercentCandidates.append(bbid)
-        tStatus = len(tCandidates)
-        if tStatus == 1:
-            winner = tCandidates[0]
-        elif tStatus == 0:
-            #no candidates have trump status
-            #select one from general pool based on P Score
-            plainHighScore = 0
-            for bbid in candidates:
-                activePScore = self.allScores[bbid][1]
-                if activePScore > plainHighScore:
-                    winner = bbid
-                elif activePScore == plainHighScore:
-                    stillTied.append(bbid)
-                else:
-                    continue
-        else:
-            trumpHighScore = 0
-            #more than one candidate w trump status
-            #select the tCandidate w the highest pScore
-            for tdex in tCandidates:
-                activePScore = self.allScores[bbid][1]
-                if activePScore > trumpHighScore:
-                    winner = bbid
-                elif activePScore == trumpHighScore:
-                    stillTied.append(tdex)
-                else:
-                    continue
-        if stillTied != []:
-            #winner = random.choice(stillTied)
-            #no random selections
-            winner = stillTied[0]
+        top_rel_score = 0
+        for bbid in candidates:
+            rel_score = self.scores[bbid][1]
+            if rel_score >= top_rel_score:
+                winner = bbid
+                top_rel_score = rel_score
+            else:
+                continue
+        #
         return winner
-        #
-        #NOTE: need to make sure same topic doesnt go twice unless tagged
-        #``recursive``; duplicative review should be in this module
-        #
-    
-
+        
 #Connect Yenta class to TopicManager so Yenta can access catalog
 TopicManager.populate()
 Yenta.set_topic_manager(TopicManager)

@@ -139,12 +139,12 @@ class analyzerLM(Messenger):
                 message = T.process(message)
                 #
             elif self.upStatus == Globals.status_topicNeeded:
-                T = yenta.selectTopic(M)
+                T = yenta.select_topic(M)
                 if T:
                     message = T.process(message)
                 else:
                     pass
-                    #Yenta.selectTopic() returned None for Topic, which means
+                    #Yenta.select_topic() returned None for Topic, which means
                     #it couldn't find any matches in the Topic Catalog. In such
                     #an event, Yenta notes dry run on focal point and IC shifts
                     #to the next focal point
