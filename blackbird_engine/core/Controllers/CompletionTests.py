@@ -63,7 +63,7 @@ def test_MinComplete(item):
         result = False
     elif currentQ >= standard:
         result = True
-    if item.guide.selection.finishedCatalog:
+    if item.guide.selection.finished_catalog:
         result = True
     return result
 
