@@ -116,100 +116,7 @@ class Yenta():
         Method sets instance.scores to a blank dictionary. 
         """
         self.scores = {}
-        
-    def select_topic(self, model):
-        """
 
-
-        Yenta.select_topic(model) -> Topic
-
-
-        Method returns the topic that best matches the model's focal point.
-
-        Method delegates selection logic to simple_select(). 
-        """
-        self.reset()
-        new_topic = self.simple_select(model)
-        return new_topic
-
-    def simple_select(self, model):
-        """
-
-
-        Yenta.simple_select(model) -> Topic or None
-
-        
-        Method returns a clean instance of a topic that fits the current
-        interview focal point better than any other candidates.
-
-        Method computes best fit against other candidates in a pool. If the
-        focal point carries a cache of known topic ids, method computes
-        rankings against that pool. Otherwise, or if no suitable topic exists
-        in the pool, method computes rankings for all topics in the catalog.
-
-        NOTE: The best candidate from an existing cache may be **worse** than
-        a candidate located elsewhere in the catalog.
-
-        Method returns None if no topics in catalog are eligible to work on the
-        model's focal point. 
-
-        Method uses local best fit to make selection run faster. To select the
-        best fit globally, clients can manually empty the cache on the focal
-        point. Alternatively, clients can maintain focus on a particular object
-        until Yenta records a dry run for that object. This second method is not
-        strictly equivalent to the first, however, since earlier (cached)
-        candidates could change the target at run-time in a way that alters
-        selection criteria (e.g., by adding tags).
-        
-        Selection algorithm:
-
-        (1) select all topics that contain each of target's required tags
-        (2) rank the eligible topics by the total number of tags they match
-        (3) break ties by selecting the topic with the highest relative match
-        
-        """
-        chosen_bbid = None
-        chosen_topic = None
-        #
-        fp = Model.interview.focalPoint
-        fp.guide.selection.increment()
-        #
-        known_eligibles = fp.guide.selection.eligible
-        if known_eligibles != []:
-            eligibles = self.find_eligible(fp, known_eligibles)
-            if eligibles == []:
-                eligibles = self.find_eligible(fp)
-            #
-            #to avoid duplicating work, first check if any topics that looked
-            #eligible before continue to be eligible. if some do, pick from
-            #them. if none do, go through whole catalog again.
-            #
-        else:
-            eligibles = self.find_eligible(fp)
-        fp.guide.selection.set_eligible(eligibles)
-        best = None
-        #
-        if len(eligibles) == 0:
-            pass
-            #method will check for dry runs before concluding
-        elif len(eligibles) == 1:
-            chosen_bbid = eligibles[0]
-        else:
-            best = self.pick_pest(fp, eligibles) 
-            if len(best) == 1:
-                chosen_bbid = best[0]
-            else:
-                chosen_bbid = self.tie_breaker(best)
-        #
-        #check for dry runs and retrieve a copy of the topic w the chosen bbid
-        if chosen_bbid:
-            chosen_topic = self.TM.local_catalog.issue(chosen_bbid)
-            fp.guide.selection.record_used_topic(chosen_topic)
-        else:
-            fp.guide.selection.record_dry_run()
-        #
-        return chosen_topic
-        
     def find_eligible(self, target, pool = None):
         """
 
@@ -312,16 +219,16 @@ class Yenta():
             #supplement target tags with tags that appear on more ``senior``
             #objects in the model architecture.
             #
-            parent = getattr(target.parentObject, None)
+            parent = getattr(target, "parentObject", None)
             #target's parent will usually be a line or financials object
-            tags_up_one = getattr(parent.allTags, [])
-            grandpa = getattr(parent.parentObject, None)
+            tags_up_one = getattr(parent, "allTags", [])
+            grandpa = getattr(parent, "parentObject", None)
             #target's grandpa will usually be a line, fins object, or business
             #unit
-            tags_up_two = getattr(grandpa.allTags, [])
+            tags_up_two = getattr(grandpa, "allTags", [])
             #
-            criteria = criteria + set(tags_up_one) + set(tags_up_two)
-            criteria = criteria + set(model.allTags)
+            criteria = criteria | set(tags_up_one) | set(tags_up_two)
+            criteria = criteria | set(model.allTags)
             #
             #could use isinstance() to always select fins and bu, but that's
             #unpythonic. if that selection pattern turns out to be necessary,
@@ -346,6 +253,99 @@ class Yenta():
         #
         return best_candidates
 
+    def select_topic(self, model):
+        """
+
+
+        Yenta.select_topic(model) -> Topic
+
+
+        Method returns the topic that best matches the model's focal point.
+
+        Method delegates selection logic to simple_select(). 
+        """
+        self.reset()
+        new_topic = self.simple_select(model)
+        return new_topic
+
+    def simple_select(self, model):
+        """
+
+
+        Yenta.simple_select(model) -> Topic or None
+
+        
+        Method returns a clean instance of a topic that fits the current
+        interview focal point better than any other candidates.
+
+        Method computes best fit against other candidates in a pool. If the
+        focal point carries a cache of known topic ids, method computes
+        rankings against that pool. Otherwise, or if no suitable topic exists
+        in the pool, method computes rankings for all topics in the catalog.
+
+        NOTE: The best candidate from an existing cache may be **worse** than
+        a candidate located elsewhere in the catalog.
+
+        Method returns None if no topics in catalog are eligible to work on the
+        model's focal point. 
+
+        Method uses local best fit to make selection run faster. To select the
+        best fit globally, clients can manually empty the cache on the focal
+        point. Alternatively, clients can maintain focus on a particular object
+        until Yenta records a dry run for that object. This second method is not
+        strictly equivalent to the first, however, since earlier (cached)
+        candidates could change the target at run-time in a way that alters
+        selection criteria (e.g., by adding tags).
+        
+        Selection algorithm:
+
+        (1) select all topics that contain each of target's required tags
+        (2) rank the eligible topics by the total number of tags they match
+        (3) break ties by selecting the topic with the highest relative match
+        
+        """
+        chosen_bbid = None
+        chosen_topic = None
+        #
+        fp = model.interview.focalPoint
+        fp.guide.selection.increment(1)
+        #
+        known_eligibles = fp.guide.selection.eligible
+        if known_eligibles != []:
+            eligibles = self.find_eligible(fp, pool = known_eligibles)
+            if eligibles == []:
+                eligibles = self.find_eligible(fp)
+            #
+            #to avoid duplicating work, first check if any topics that looked
+            #eligible before continue to be eligible. if some do, pick from
+            #them. if none do, go through whole catalog again.
+            #
+        else:
+            eligibles = self.find_eligible(fp)
+        fp.guide.selection.set_eligible(eligibles)
+        best = None
+        #
+        if len(eligibles) == 0:
+            pass
+            #method will check for dry runs before concluding
+        elif len(eligibles) == 1:
+            chosen_bbid = eligibles[0]
+        else:
+            best = self.pick_best(fp, model, eligibles, combined = True) 
+            if len(best) == 1:
+                chosen_bbid = best[0]
+            else:
+                chosen_bbid = self.tie_breaker(best)
+        #
+        #check for dry runs and retrieve a copy of the topic w the chosen bbid
+        if chosen_bbid:
+            chosen_topic = self.TM.local_catalog.issue(chosen_bbid)
+            fp.guide.selection.record_used_topic(chosen_topic)
+        else:
+            fp.guide.selection.record_dry_run()
+        #
+        return chosen_topic
+        
     def tie_breaker(self, candidates):
         """
 
@@ -355,7 +355,8 @@ class Yenta():
 
         Method returns the bbid of the candidate with the highest relative
         match score. Method uses Yenta.scores state to locate relative match
-        scores. 
+        scores for each candidate. Method expects ``candidates`` to be an
+        iterable of bbids. 
         """
         winner = None
         top_rel_score = 0
