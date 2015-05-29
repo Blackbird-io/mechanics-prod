@@ -26,7 +26,7 @@ Taxonomy              organizes objects into standards and child sub-types
 
 
 #imports
-import collections
+#n/a
 
 
 
@@ -34,13 +34,13 @@ import collections
 #n/a
 
 #classes
-class Taxonomy(collections.defaultdict):
+class Taxonomy(dict):
     """
 
     The Taxonomy class uses a dictionary to organize objects into one standard
     type and zero or more child sub-types in the same form. 
 
-    Class provides a customized defaultdict that:
+    Class provides a customized dict that:
      -- contains a .standard attribute
      -- returns itself for missing keys
      -- records a new instance of the class for every defined key
@@ -75,32 +75,40 @@ class Taxonomy(collections.defaultdict):
     standard              obj; standard value for the node
     
     FUNCTIONS:
-    __missing__()         return instance (to allow safe .standard calls)
     __setitem__()         set self[k] to Taxonomy(v) via instance class    
-    
     ====================  ======================================================
     """
     def __init__(self, standard = None):
         self.standard = standard
-    
-    def __missing__(self, k):
+
+    def __getitem__(self, k):
         """
 
 
-        Taxonomy.__missing__(k) -> Taxonomy
+        Taxonomy.__getitem__(k) -> obj
 
 
-        Method returns instance. Guarantees a value on tx[k].standard calls. 
+        If ``k`` in instance.keys(), method returns value for k; otherwise,
+        method returns instance.
+
+        Method guarantees no KeyError on instance[k].standard calls. 
         """
-        return self
+        result = None
+        try:
+            result = dict.__getitem__(self, k)
+        except KeyError:
+            result = self
+        return result
 
     def __setitem__(self, k, v):
         """
 
+
         Taxonomy.__setitem__(k, v) -> None
+
 
         Method sets instance[k] to a child taxonomy with standard set to v. The
         child taxonomy is a new instance of the caller's .__class__. 
         """
-        child = self.__class__(v)
-        collections.defaultdict.__setitem__(self, k, child)
+        child = Taxonomy(v)
+        dict.__setitem__(self, k, child)

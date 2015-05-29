@@ -1,51 +1,35 @@
+#PROPRIETARY AND CONFIDENTIAL
+#Property of Blackbird Logical Applications, LLC
+#Copyright Blackbird Logical Applications, LLC 2014
+#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+
+#Blackbird Environment
+#Module: Controllers.Yenta
+
 """
-I run Yenta.selectTopic() on a model
 
-selectTopic should:
-    look inside currentPeriod.content (by default)
-    ?should control focus (auto,tight,broad)
-    step through the lineItems in financials
-    can tag "matched" for those it touched
-    can tag "active"
-    can tag "more?"
-    for each lineitem, go through topic catalog
-    #go through lineitems
-    #first lineitem you find that says "active", start search
-    search through topic catalog
-    return whatever you find first
+This module defines the Yenta class. Yenta objects select the best topic to
+analyze a given part of the model at a particular point in time. 
+====================  ==========================================================
+Object                Description
+====================  ==========================================================
 
-MM only gets called between topics
-Starter picks out first topic
+DATA:
+n/a
 
-should probably make select topic simple
-so it just selects topics, doesnt ask whether analysis is done
-and then completion controller can tag things "active" or "complete"
-completion controller would be part of interview controller
-can check re annoyance budget
+FUNCTIONS:
+n/a
 
-so this way yenta cycles on the same thing
-interrupt comes from:
-   completion controller
-   topics?
-yenta controlled purely w selecting the best partner at any given time
-
-alternative:
-yenta tries to tell the partner when to stop also
-
-simplify and add lightness
-
-
+CLASSES:
+Yenta                 selects best fitting topic to analyze an object
+====================  ==========================================================
 """
 
 
 
 
 #imports
-import BBGlobalVariables
-import DataStructures.Platform as Platform
 import Managers.TopicManager as TopicManager
-import Managers.tag_manager
-import Tools.Parsing
 
 
 
@@ -69,29 +53,32 @@ import Tools.Parsing
 class Yenta():
     """
 
-    Object that selects the best topic for a given focal point. Expects focal
-    point to have a guide attribute. Runs selection based on tags present on the
-    focal point.
+    The Yenta class selects the best topic to analyze an object. When deployed,
+    Yenta evaluates the focal point of the interview at a given point in time.
 
-    Most callers will interface with a Yenta object through the
-    selectTopic() method, which returns an instance of the most appropriate
-    topic.
+    Yenta evaluates fit based on target and candidate tags. See individual
+    methods for fit scoring algorithms.
+
+    Yenta sees only those topics found in its TopicManager's local_catalog.
     
-    =================  ==============================================
+    ====================  ======================================================
     Attribute             Description
-    =================  ==============================================
+    ====================  ======================================================
+
     DATA:
-    scores          dict of TDEX: (cScore, pScore, trump)
+    scores                dict; 
+    TM                    CLASS; pointer to TopicManager w populated catalog
 
     FUNCTION:
-    disconnect()
-    find_eligible()     returns a list of any eligible topic objects
-    pickBest()         returns a list of best-scoring topic objects
-    reset()
-    set_topic_manager() CLASS
-    simple_select()     returns an instance of the best-matched topic
-    tieBreaker()       returns the winner of tie-breaking routine    
-    =================  ==============================================
+    disconnect()          CLASS; set TM to None
+    find_eligible()       return a list of 0+ ids for topics w all required tags
+    pick_best()           return a list of 1+ ids for topics w most tags matched
+    reset()               set scores to blank dictionary
+    select_topic()        main interface, delegates all work
+    set_topic_manager()   CLASS; set TM to point to the TopicManager
+    simple_select()       returns topic that best matches focal point
+    tie_breaker()         returns id w highest relative match score
+    ====================  ======================================================
     """
     TM = None
     
@@ -105,19 +92,51 @@ class Yenta():
         
     def __init__(self):
         self.scores = dict()
+
+
+    def build_basic_profile(self, target):
+        """
+
+
+        Yenta.build_basic_profile(target) -> set()
+
+
+        Method returns set of all tags on target, with None stripped out. 
+        """
+        criteria = set(target.allTags)
+        criteria = criteria - {None}
+        #
+        return criteria
     
-    def reset(self):
+    def build_combo_profile(self, target, model):
         """
 
 
-        Yenta.reset() -> None
+        Yenta.build_combo_criteria(target, model) -> set()
 
 
-        Method sets instance.scores to a blank dictionary. 
+        Method returns the set of all tags found on target, target's parent,
+        target's grandparent, and the model.
+
+        When target is a LineItem, target's parent will usually be a line or a
+        Financials object and its grandparent will usually be a line, Financials
+        object, or a BusinessUnit. 
         """
-        self.scores = {}
-
-    def find_eligible(self, target, pool = None):
+        #
+        parent = getattr(target, "parentObject", None)
+        grandpa = getattr(parent, "parentObject", None)
+        #
+        tags_up_one = getattr(parent, "allTags", [])
+        tags_up_two = getattr(grandpa, "allTags", [])
+        #
+        criteria = set(target.allTags)
+        criteria = criteria | set(tags_up_one) | set(tags_up_two)
+        criteria = criteria | set(model.allTags)
+        criteria = criteria = {None}
+        #
+        return criteria    
+        
+    def find_eligible(self, target, model, pool = None, combined = False):
         """
 
 
@@ -142,8 +161,19 @@ class Yenta():
         NOTE: Method skips topics that appear in target's guide.usedTopics list.        
         """
         eligibles = []
-        criterion = set(target.requiredTags) - {target.partOf}
-        criterion = criterion - {None}
+        targ_criterion = set(target.requiredTags) - {target.partOf}
+        targ_criterion = criterion - {None}
+        #
+        #UPGRADE-F: Can make selection process more open-ended by also removing
+        #the target name from criterion. 
+        #
+        targ_profile_basic = self.build_basic_profile(target)
+        targ_profile_combo = self.build_combo_profile(target, model)
+        #
+        if combined:
+            targ_profile = targ_profile_combined
+        else:
+            targ_profile = targ_profile_basic
         #
         if not pool:
             pool = self.TM.local_catalog.by_id.keys()
@@ -154,12 +184,16 @@ class Yenta():
         #
         for bbid in pool:
             topic = self.TM.local_catalog.issue(bbid)
-            missed_reqs = criterion - set(topic.tags.allTags)
-            if missed_reqs == set():
+            topic_criterion = set(topic.requiredTags[2:]) - {None}
+            #
+            missed_target_reqs = (targ_criterion -
+                                  self.build_basic_profile(topic))
+            missed_topic_reqs = topic_criterion - targ_profile
+            if any([missed_target_reqs, missed_topic_reqs]):
+                continue
+            else:
                 #all requirements satisfied, topic eligible
                 eligibles.append(bbid)
-            else:
-                continue
         #
         return eligibles
 
@@ -252,6 +286,17 @@ class Yenta():
                 best_raw_score = raw_score
         #
         return best_candidates
+
+    def reset(self):
+        """
+
+
+        Yenta.reset() -> None
+
+
+        Method sets instance.scores to a blank dictionary. 
+        """
+        self.scores = {}
 
     def select_topic(self, model):
         """

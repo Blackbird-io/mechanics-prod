@@ -72,6 +72,7 @@ def process(msg):
     else:
         M = Model(Globals.default_model_name)
     M.start()
+    #
     #make sure to officially ``start`` the model so that it never comes
     #back here; otherwise, all data will be lost
     #
