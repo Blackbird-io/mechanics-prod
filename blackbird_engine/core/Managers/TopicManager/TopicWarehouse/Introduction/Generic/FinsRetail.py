@@ -49,19 +49,18 @@ from DataStructures.Modelling.LineItem import LineItem
 
 
 #globals
-name = "Introduction.Generic.FinsRetail"
+name = "financials configuration for retail models"
 author = "IOP"
 date = "03/26/2015"
 #
 topic_content = True
 extra_prep = False
 #
-requiredTags = []
-optionalTags = ["Retail",
-                "Default Financials",
+requiredTags = ["Retail",
+                "Overview"]
+optionalTags = ["Default Financials",
                 "Simple",
                 "Calibration",
-                "Overview",
                 "Start"]
 #
 applied_drivers = dict()
@@ -93,7 +92,6 @@ def scenario_1(topic):
     #
     structure = LineItem("Structure")
     structure.tag("Deterministic", field = "req")
-    structure.tag("Retail")
     structure.setPartOf(top_fins)
     structure.guide.priority.increment(3)
     structure.guide.quality.setStandards(2,5)

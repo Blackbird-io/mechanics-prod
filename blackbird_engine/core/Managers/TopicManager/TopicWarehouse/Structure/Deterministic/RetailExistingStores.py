@@ -64,7 +64,7 @@ extra_prep = False
 #standard prep
 #
 requiredTags = ["Retail"]
-optionalTags = ["Simple",
+optionalTags = ["Standard",
                 "Deterministic",
                 "Structure",
                 "Existing",
@@ -398,8 +398,8 @@ def scenario_6(topic):
     #
     #Step 3:
     #Add template to model taxonomy
-    M.bu_template = bu_template
-##    M.taxonomy["operating"] = bu_template---------------------------------------------------------------------------
+##    M.bu_template = bu_template
+    M.taxonomy["operating"] = bu_template
     #later topics can sub-type "operating" into "small", "large", etc. 
     #
     #

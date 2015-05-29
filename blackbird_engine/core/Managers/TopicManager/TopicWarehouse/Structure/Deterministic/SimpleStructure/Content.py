@@ -63,7 +63,10 @@ extra_prep = False
 #standard prep
 #
 requiredTags = []
-optionalTags = ["Simple","Deterministic","Structure","Generic"]
+optionalTags = ["Simple",
+                "Deterministic",
+                "Structure",
+                "Generic"]
 applied_drivers = dict()
 scenarios = dict()
     #ks are question names, None, or user_stop

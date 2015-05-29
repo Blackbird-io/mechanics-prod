@@ -52,7 +52,7 @@ import DataStructures.Platform as Platform
 
 from Managers import TopicManager
 
-from . import MatchMaker
+from .Yenta import Yenta
 
 from .AnalyticsController import AnalyticsController
 from .InterviewController import InterviewController
@@ -61,7 +61,7 @@ from .InterviewController import InterviewController
 
 
 #globals
-yenta = MatchMaker.Yenta()
+yenta = Yenta()
 interview_controller = InterviewController()
 Messenger = Platform.Messenger.Messenger
 

@@ -30,7 +30,7 @@ n/a
 
 #imports
 from . import SimpleStructure
-##from . import RetailExistingStores
+from . import RetailExistingStores
 
 
 
