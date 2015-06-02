@@ -66,7 +66,7 @@ class Yenta():
     ====================  ======================================================
 
     DATA:
-    scores                dict; 
+    scores                dict; topic id k, [raw_score, rel_score] value
     TM                    CLASS; pointer to TopicManager w populated catalog
 
     FUNCTION:
@@ -84,10 +84,30 @@ class Yenta():
     
     @classmethod
     def disconnect(cls):
+        """
+
+
+        Yenta.disconnect() -> None
+
+
+        **CLASS METHOD**
+
+        Method clears class TopicManager pointer (sets class.TM to None). 
+        """
         cls.TM = None
         
     @classmethod
     def set_topic_manager(cls,new_TM):
+        """
+
+
+        Yenta.set_topic_manager(new_TM) -> None
+
+
+        **CLASS METHOD**
+
+        Method sets class TopicManager pointer to new_TM.
+        """
         cls.TM = new_TM
         
     def __init__(self):
@@ -103,7 +123,10 @@ class Yenta():
 
         Method returns set of all tags on target, with None stripped out. 
         """
-        criteria = set(target.allTags)
+        try:
+            criteria = set(target.allTags)
+        except AttributeError:
+            criteria = set(target.tags.allTags)
         criteria = criteria - {None}
         #
         return criteria
@@ -129,51 +152,61 @@ class Yenta():
         tags_up_one = getattr(parent, "allTags", [])
         tags_up_two = getattr(grandpa, "allTags", [])
         #
-        criteria = set(target.allTags)
+        try:
+            criteria = set(target.allTags)
+        except AttributeError:
+            criteria = set(target.tags.allTags)
         criteria = criteria | set(tags_up_one) | set(tags_up_two)
         criteria = criteria | set(model.allTags)
-        criteria = criteria = {None}
+        criteria = criteria - {None}
         #
         return criteria    
         
-    def find_eligible(self, target, model, pool = None, combined = False):
+    def find_eligible(self, target, model, pool = None, combined = True):
         """
 
 
-        Yenta.find_eligible(target[, pool = None]) -> list
+        Yenta.find_eligible(target, model
+            [, pool = None[, combined = True]]) -> list
 
 
         Method returns a list of bbids for topics that are eligible for use on
         target. Method expects target to have an .allTags attribute and a
         properly configured .guide object.
 
-        The ``pool`` argument takes a list of bbids to review. If none is
-        specified, method will use the keys in the active topic catalog (ie
-        review the whole catalog).
+        The ``pool`` argument takes a list of bbids to review. If pool is None,
+        method will use a sorted set of keys to the active topic catalog
+        instead. That is, without a specific pool, method will review all topics
+        in catalog for eligibility. 
 
-        To determine eligibility, method calls retrieves the topic corresponding
-        to each bbid from the topic catalog. Method then checks whether the
-        topic's tags include all of the target's requiredTags (other than
-        partOf).
+        To determine eligibility, method retrieves the topic that corresponds to
+        to each bbid in pool from the topic catalog. Method then checks:
 
-        Method strips out None objects from target's eligibility criterion.
+        (1) whether the topic's tags include each of the tags required by target
+           (excluding target.partOf); and
+        (2) whether the **target's** tags include each of the tags required by
+            topic, if any.
+
+        Eligible topics are those that satisfy both conditions. If ``combined``
+        is True, method evaluates condition (2) with respect to target's
+        combined profile. In other words, if ``combined`` is True, method will
+        check whether a given topic fits the whole model.         
         
         NOTE: Method skips topics that appear in target's guide.usedTopics list.        
         """
         eligibles = []
         targ_criterion = set(target.requiredTags) - {target.partOf}
-        targ_criterion = criterion - {None}
+        targ_criterion = targ_criterion - {None}
         #
         #UPGRADE-F: Can make selection process more open-ended by also removing
-        #the target name from criterion. 
-        #
-        targ_profile_basic = self.build_basic_profile(target)
-        targ_profile_combo = self.build_combo_profile(target, model)
+        #the target name from criterion. As is, naming binding creates a sort of
+        #short cut for matches. Using only descriptive tags would shift
+        #selection to a more functional match.
         #
         if combined:
-            targ_profile = targ_profile_combined
+            targ_profile = self.build_combo_profile(target, model)
         else:
-            targ_profile = targ_profile_basic
+            targ_profile = self.build_basic_profile(target)
         #
         if not pool:
             pool = self.TM.local_catalog.by_id.keys()
@@ -184,7 +217,7 @@ class Yenta():
         #
         for bbid in pool:
             topic = self.TM.local_catalog.issue(bbid)
-            topic_criterion = set(topic.requiredTags[2:]) - {None}
+            topic_criterion = set(topic.tags.requiredTags[2:]) - {None}
             #
             missed_target_reqs = (targ_criterion -
                                   self.build_basic_profile(topic))
@@ -208,7 +241,7 @@ class Yenta():
         target.
 
         ``target`` must have an .allTags attribute.
-        ``candidates`` must be a list of bbids.
+        ``candidates`` must be an iterable container of bbids.
 
         For each bbid, method pulls the topic from the catalog and counts how
         many target tags appear on the topic.
@@ -221,15 +254,15 @@ class Yenta():
         raw score and the total number of tags on that topic. Relative scores
         represent that quality of fit for a given topic, measured against
         that topic's best possible outcome. Yenta's tie_breaker() routine
-        uses relative scores to select the best candidates when two or more
-        have the same raw score. 
+        uses relative scores to select the best candidates when two or more 
+        candidates have the same raw match score. 
 
         Method can score candidates in both pre-screened and raw pools. In a
         pre-screened pool, each candidates carries all target requiredTags.
         Target's required tags therefore increase each candidate's match score
-        by the same integer. Candidate rankings in an **all-eligible** pool
-        will therefore remain stable between counts that include required tags
-        and those that do not. 
+        by the same integer. As a result, candidate rankings in an
+        **all-eligible** pool will remain stable between counts that include
+        required tags and those that do not. 
 
         If ``combined`` is True, method adds tags from target's senior objects
         to the scoring criteria. Method uses the following senior objects:
@@ -245,34 +278,17 @@ class Yenta():
         self.scores = dict()
         best_raw_score = 0
         best_candidates = []
-        criteria = set(target.allTags)
-        #use sets to ignore duplicate tags
         #
         if combined:
-            #
-            #supplement target tags with tags that appear on more ``senior``
-            #objects in the model architecture.
-            #
-            parent = getattr(target, "parentObject", None)
-            #target's parent will usually be a line or financials object
-            tags_up_one = getattr(parent, "allTags", [])
-            grandpa = getattr(parent, "parentObject", None)
-            #target's grandpa will usually be a line, fins object, or business
-            #unit
-            tags_up_two = getattr(grandpa, "allTags", [])
-            #
-            criteria = criteria | set(tags_up_one) | set(tags_up_two)
-            criteria = criteria | set(model.allTags)
-            #
-            #could use isinstance() to always select fins and bu, but that's
-            #unpythonic. if that selection pattern turns out to be necessary,
-            #should rethink parentObject attributes generally.
-            #
+            criteria = self.build_combo_profile(target, model)
+        else:
+            criteria = self.build_basic_profile(target)
         #
-        criteria = criteria - {None}
         for bbid in candidates:
+            #
             topic = self.TM.local_catalog.issue(bbid)
-            match = set(topic.tags.allTags) & criteria
+            #
+            match = criteria & self.build_basic_profile(topic)
             raw_score = len(match)
             rel_score = raw_score/len(topic.tags.allTags)
             #
@@ -349,6 +365,7 @@ class Yenta():
         (3) break ties by selecting the topic with the highest relative match
         
         """
+        best = None
         chosen_bbid = None
         chosen_topic = None
         #
@@ -357,22 +374,20 @@ class Yenta():
         #
         known_eligibles = fp.guide.selection.eligible
         if known_eligibles != []:
-            eligibles = self.find_eligible(fp, pool = known_eligibles)
+            eligibles = self.find_eligible(fp, model, pool = known_eligibles)
             if eligibles == []:
-                eligibles = self.find_eligible(fp)
+                eligibles = self.find_eligible(fp, model)
             #
-            #to avoid duplicating work, first check if any topics that looked
-            #eligible before continue to be eligible. if some do, pick from
-            #them. if none do, go through whole catalog again.
+            #Method accepts the conclusion that no topics can work on target
+            #only after checking both the cache and the full catalog
             #
         else:
-            eligibles = self.find_eligible(fp)
+            eligibles = self.find_eligible(fp, model)
         fp.guide.selection.set_eligible(eligibles)
-        best = None
         #
         if len(eligibles) == 0:
             pass
-            #method will check for dry runs before concluding
+            #method will record dry run before concluding
         elif len(eligibles) == 1:
             chosen_bbid = eligibles[0]
         else:

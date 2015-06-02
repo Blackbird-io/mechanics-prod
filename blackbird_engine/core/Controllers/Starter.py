@@ -101,6 +101,7 @@ def process(msg):
     #run intro topic
     intro_topic_bbid = TopicManager.local_catalog.by_name[intro_topic_name]
     intro_topic = TopicManager.local_catalog.issue(intro_topic_bbid)
+    line_overview.guide.selection.record_used_topic(intro_topic)
     message = intro_topic.process(message)
     #
     return message
