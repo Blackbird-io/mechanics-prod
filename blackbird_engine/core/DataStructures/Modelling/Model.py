@@ -107,7 +107,7 @@ class Model(Tags):
     portal_data           dict; stores data from Portal related to the instance
     summary               dict or obj; instance of BusinessSummary
     taxonomy              Taxonomy; collection of prototypical business units
-    timeLine              list of TimePeriod objects
+    time_line              list of TimePeriod objects
 
     FUNCTIONS:
     from_portal()         class method, extracts model out of API-format
@@ -131,17 +131,17 @@ class Model(Tags):
         self.portal_data = dict()
         self.summary = BusinessSummary()
         self.taxonomy = Taxonomy()
-        self.timeLine = TimeLine()
-        self.timeLine.id.setNID(self.id.namespace_id)
+        self.time_line = TimeLine()
+        self.time_line.id.setNID(self.id.namespace_id)
 
     class dyn_current_manager:
         def __get__(self,instance,owner):
-            return instance.timeLine.current_period
+            return instance.time_line.current_period
 
         def __set__(self,instance,value):
             c = ""
             c += "Model.currentPeriod is a write-only attribute. Modifications"
-            c += "\nmust go through Model.timeLine"            
+            c += "\nmust go through Model.time_line"            
             raise BBExceptions.ManagedAttributeError(c)
 
     currentPeriod = dyn_current_manager()

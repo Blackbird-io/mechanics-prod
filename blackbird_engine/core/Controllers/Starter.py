@@ -76,7 +76,7 @@ def process(msg):
     #make sure to officially ``start`` the model so that it never comes
     #back here; otherwise, all data will be lost
     #
-    M.timeLine.build(refDate,
+    M.time_line.build(refDate,
                      Globals.default_periods_fwd,
                      Globals.default_periods_back)
     topBU = BusinessUnit(Globals.default_unit_name)

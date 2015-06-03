@@ -64,7 +64,7 @@ extra_prep = False
 #standard prep
 #
 requiredTags = ["Retail"]
-optionalTags = ["Standard",
+optionalTags = ["standard analysis depth",
                 "Deterministic",
                 "Structure",
                 "Existing",
@@ -309,28 +309,22 @@ def scenario_6(topic):
     M = topic.MR.activeModel
     top_bu = M.currentPeriod.content
     #
-    #
     #Step 1:
     #Retrieve and format user response
-    #
     R = topic.get_first_answer()
     adj_R = Tools.Parsing.date_from_iso(R)
     M.interview.work_space["latest_store_open"] = R
-    #
     #
     #Step 2:
     #Now, make a business unit that represents the company's standard.
     #Topic will create and insert actual working units into the model by
     #copying and customizing this template.
-    #
     standard_fins = M.defaultFinancials.copy()
     bu_template = BusinessUnit("Unit Template", standard_fins)
-    #
     #figure out unit lifespan, set accordingly
     life_in_years = M.interview.work_space["unit_life_years"]
     life_in_days = life_in_years * Globals.days_in_year
     bu_template.life.span = timedelta(life_in_days)
-    #
     #figure out ref date for the current period
     ref_date = None
     if Globals.fix_ref_date:
@@ -338,23 +332,18 @@ def scenario_6(topic):
     else:
         ref_date = date.today()
     bu_template.life.set_ref_date(ref_date) #-------------------------------------------------------------------------------------------------------this could be different than the top_bu!!! may want to copy ref_date directly from there. 
-    #
     #figure out unit gestation
     first_dob_date = M.interview.work_space["first_dob_date"]
     latest_dob_date = adj_R
     unit_count = M.interview.work_space["unit_count"]
-    #
     #to estimate unit gestation (time from moment of conception/decision to
     #doors opening), calculate how much time per unit it took the company to
     #open all existing units after the first one.
-    #
     avg_gestation = ((latest_dob_date - first_dob_date)/
                               (unit_count - 1))
-    #
     #adjust gestation to max of average time to open a store and time to open
     #first store. average time can be skewed materially if company prepared
     #stores in batches (eg, 5 openings at a time).
-    #
     first_gestation = first_dob_date - top_bu.life.date_of_birth
     step_up = SK.gestation_rate_boost
     avg_gestation = max(avg_gestation,
@@ -392,16 +381,12 @@ def scenario_6(topic):
         tag5 = "pro forma lifeSpan"
         tag6 = "response difficulty"
         bu_template.tag(tag4, tag5, tag6)
-    #
     #template configuation complete
-    #
     #
     #Step 3:
     #Add template to model taxonomy
-##    M.bu_template = bu_template
     M.taxonomy["operating"] = bu_template
     #later topics can sub-type "operating" into "small", "large", etc. 
-    #
     #
     #Step 4:
     #Use the template operating unit to create a batch of clones. The clones
@@ -414,12 +399,10 @@ def scenario_6(topic):
         clone.setName(c_name)
         clone.id.assignBBID(clone.name)
         batch[clone.id.bbid] = clone
-    #
     ordered_batch = []
     for bbid in sorted(batch.keys()):
         unit = batch[bbid]
         ordered_batch.append(unit)
-    #
     #
     #Step 5:
     #Customize the batch units and insert them into the top_unit. This scenario
@@ -431,19 +414,14 @@ def scenario_6(topic):
     last_bu = ordered_batch.pop()
     last_bu.life.date_of_conception = latest_dob_date - avg_gestation
     top_bu.addComponent(last_bu)
-    #
     #ordered_batch now 2 units shorter than unit_count. apply distribution to
     #all remaining units.
-    #
     next_conception_date = first_bu.life.date_of_birth
-    #
     #assume that company is creating units at a uniform rate over time. can
     #eventually modify this to look like a curve that's fast early and slow
     #later (log curve).
-    #
     latest_conception_date = latest_dob_date - avg_gestation
     for bu in ordered_batch:
-        #
         bu.life.date_of_conception = next_conception_date
         #
         #the user told blackbird how many units they have operating
@@ -475,7 +453,6 @@ def scenario_6(topic):
         top_bu.tag(tag8)
     else:
         top_bu.tag(tag9)
-    #
     #
     #Step 6:
     #prep top_bu for further processing.
