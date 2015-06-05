@@ -106,37 +106,6 @@ class TimePeriod(Tags):
         c = "\t content: \t%s\n" % self.content
         result = dots+"\n"+s+e+c+dots+"\n"
         return result 
-      
-##    class dyn_cal_manager:
-##        """
-##
-##        Descriptor for ``start_date``, ``end_date``, and ``length``. Length is
-##        always the difference between period.end and period.start. Descriptor
-##        uses datetime.date.fromtimestamp() to calculate fresh date values. 
-##        """
-##        def __init__(self, targetAttribute):
-##            self.target = targetAttribute
-##          
-##        def __get__(self,instance,owner):
-##            if self.target == "start_date":
-##                result = datetime.date.fromtimestamp(instance.start)
-##                return result
-##            elif self.target == "end_date":
-##                result = datetime.date.fromtimestamp(instance.end)
-##                return result
-##            elif self.target == "length":
-##                result = instance.end - instance.start
-##                return result
-##
-##        def __set__(self,instance,value):
-##            c = ""
-##            c += "``%s`` is a managed attribute. Direct writes prohibted."
-##            c = c % self.target
-##            raise BBExceptions.ManagedAttributeError(c)
-##
-##    end_date = dyn_cal_manager("end_date")
-##    start_date = dyn_cal_manager("start_date")
-##    length = dyn_cal_manager("length")
 
     def clear(self):
         """

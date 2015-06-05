@@ -261,7 +261,23 @@ def make_question(content_module, catalog = local_catalog):
         #input elements, so that Topic authors never have to add any manually.
         #The input elements are turned off (._active = False) by default. Logic
         #steps through the list and turns on the number specified by the content
-        #module. 
+        #module.
+    #
+    #advanced configuration: input element details
+    if content_module.element_details:
+        for i in range(content_module.active_elements):
+            element = new_question.input_array[i]
+            spec = content_module.element_details[i]
+            element.update(spec)
+    #
+    #advanced configuration: show_if rule
+    #[blank for now]
+    #if content_module.show_if:
+        #new_question.set_rule(content_module.show_if_spec)
+        ##show_if_spec is a dictionary w parameters for a binary input_element
+        ##FQ will try to configure and attach an element according to spec.
+        ##also need to change to_portal
+    #
     reverse_keys = [new_question.tags.name]
     catalog.register(new_question, *reverse_keys)
     #

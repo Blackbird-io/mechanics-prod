@@ -59,6 +59,7 @@ class Components(dict, Tags, Equalities):
 
     DATA:
     by_name               dict; keys are unit names, values are unit bbids
+    count                int; PROPERTY, counter for living units
     keyAttributes         list; CLASS; keep empty to follow standard dict logic
 
     FUNCTIONS:
@@ -86,7 +87,24 @@ class Components(dict, Tags, Equalities):
     keyAttributes = []
     #keyAttributes should remain an explicit empty list to maintain dictionary
     #comparison logic
-    
+
+    @property
+    def living(self):
+        """
+
+
+        **property**
+        
+        integer count of components with life.alive == True
+        """
+        counter = 0
+        for bu in self.values():
+            if bu.life.alive:
+                counter = counter + 1
+            else:
+                continue
+        return counter
+        
     def __init__(self,name = "Components"):
         dict.__init__(self)
         Tags.__init__(self, name)
@@ -96,13 +114,21 @@ class Components(dict, Tags, Equalities):
     def __eq__(self, comparator, trace = False, tab_width = 4):
         """
 
+
+        Components.__eq__(comparator[, trace = False[, tab_width = 4]]) -> bool
+
+        
         Call Equalities.__eq__ explicitly to bypass dict.__eq__ and support
-        tracing. 
+        tracing.    
         """
         return Equalities.__eq__(self,comparator, trace, tab_width)
 
     def __ne__(self, comparator, trace = False, tab_width = 4):
         """
+
+
+        Components.__ne__(comparator, [trace = False[, tab_width = 4]]) -> bool
+
 
         Explicit call to Equalities.__ne__ 
         """
