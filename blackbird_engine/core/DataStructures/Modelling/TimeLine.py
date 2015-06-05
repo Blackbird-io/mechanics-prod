@@ -64,17 +64,17 @@ class TimeLine(dict):
     id                    instance of PlatformComponents.ID class, for interface
     
     FUNCTIONS:
-    addPeriod()           configures and records period, keyed by end date
+    add_period()           configures and records period, keyed by end date
     build()               populates instance with adjacent time periods
-    configurePeriod()     connects period to instance namespace id     
-    findPeriod()          returns period that contains queried time point
+    configure_period()     connects period to instance namespace id     
+    find_period()          returns period that contains queried time point
     extrapolate_all()     use seed to fill out all periods in instance
     extrapolate_dates()   use seed to fill out a range of dates
     get_fwd_start_date()  returns first date of next month
     get_red_end_date()    returns last date of current month
     getOrdered()          returns list of periods ordered by end point
-    setCurrent()          sets instance.current_period to argument
-    updateCurrent()       updates current_period for reference or actual date
+    set_current()          sets instance.current_period to argument
+    update_current()       updates current_period for reference or actual date
     ====================  ======================================================
     """
     
@@ -86,17 +86,34 @@ class TimeLine(dict):
         #to time periods. the timeline instance itself does not get its own
         #bbid.
 
-    def addPeriod(self, period):
+    def __str__(self, lines = None):
         """
 
 
-        TimeLine.addPeriod(period) -> None
+        Components.__str__(lines = None) -> str
+
+
+        Method concatenates each line in ``lines``, adds a new-line character at
+        the end, and returns a string ready for printing. If ``lines`` is None,
+        method calls pretty_print() on instance. 
+        """
+        if not lines:
+            lines = self.pretty_print()
+        line_end = "\n"
+        result = line_end.join(lines)
+        return result
+
+    def add_period(self, period):
+        """
+
+
+        TimeLine.add_period(period) -> None
 
 
         Method configures period and records it in the instance under the
         period's end_date. 
         """
-        period = self.configurePeriod(period)
+        period = self.configure_period(period)
         self[period.end] = period
 
     def build(self, ref_date = None, fwd = 36, back = 36):
@@ -128,8 +145,8 @@ class TimeLine(dict):
         fwd_start_date = self.get_fwd_start_date(ref_date)
         current_end_date = fwd_start_date - timedelta(1)
         current_period = TimePeriod(current_start_date, current_end_date)
-        self.addPeriod(current_period)
-        self.setCurrent(current_period)
+        self.add_period(current_period)
+        self.set_current(current_period)
         #
         back_end_date = current_start_date - timedelta(1)        
         #save known starting point for back chain build before fwd changes it
@@ -141,7 +158,7 @@ class TimeLine(dict):
                 fwd_start_date = self.get_fwd_start_date(curr_start_date)
                 curr_end_date = fwd_start_date - timedelta(1)
                 fwd_period = TimePeriod(curr_start_date, curr_end_date)
-                self.addPeriod(fwd_period)
+                self.add_period(fwd_period)
                 #
                 #first line picks up last value in function scope, so loop
                 #should be closed. 
@@ -153,17 +170,17 @@ class TimeLine(dict):
                                        curr_end_date.month,
                                        1)
                 back_period = TimePeriod(curr_start_date,curr_end_date)
-                self.addPeriod(back_period)
+                self.add_period(back_period)
                 #
                 #close loop:
                 back_end_date = curr_start_date - timedelta(1)
         #
 
-    def configurePeriod(self,period):
+    def configure_period(self,period):
         """
 
 
-        TimeLine.configurePeriod(period) -> period
+        TimeLine.configure_period(period) -> period
 
 
         Method sets period's namespace id to that of the TimeLine, then returns
@@ -244,13 +261,13 @@ class TimeLine(dict):
             #period.
             #
             if i == 0:
-                updated_period = self.configurePeriod(updated_period)
+                updated_period = self.configure_period(updated_period)
                 #on i == 0, extrapolating from the original seed. seed can be
                 #external (come from a different model), in which case it would
                 #use a different model namespace id for unit tracking.
                 #
                 #accordingly, when extrapolating from the may-be-external seed,
-                #use configurePeriod() to conform output to current model.
+                #use configure_period() to conform output to current model.
                 #
                 #subsequent iterations of the loop will start w periods that are
                 #already in the model, so method can leave their namespace id
@@ -260,11 +277,11 @@ class TimeLine(dict):
             seed = updated_period
         #
 
-    def findPeriod(self,query):
+    def find_period(self,query):
         """
 
 
-        TimeLine.findPeriod(query) -> TimePeriod
+        TimeLine.find_period(query) -> TimePeriod
 
 
         Method returns a time period that includes query. ``query`` can be a
@@ -361,22 +378,153 @@ class TimeLine(dict):
             result.append(period)
         return result
 
-    def setCurrent(self,period):
+    def pretty_print(self,dates  = None, sep = "<<", border = "-", hook = True):
         """
 
 
-        TimeLine.setCurrent(period) -> None
+        TimeLine.pretty_print([dates = None[, sep = "<<"[, hook = True]]]) -> list
+
+
+                
+        """
+        clean_lines = []
+        #lines is the final, flat list of strings
+        #
+        if not dates:
+            dates = sorted(self.keys())
+        cushion = 1
+        hook_char = "}"
+        lead = "PERIOD:"
+        space = " "
+        #
+        underscore = "_"
+        bu_lines = self.current_period.content.pretty_print()
+        bu_width = len(bu_lines[0])
+        bu_height = len(bu_lines)
+        sep_width = len(sep)
+        column_width = bu_width + cushion * 2 + sep_width
+        column_count = Globals.screen_width // column_width
+##        column_count = 3
+        #
+        #the first column stays constant from row to row: it's just the lead,
+        #plus borders and white space. make all the strings once, then use them
+        #for each row. 
+        #
+        c0_width = len(lead) + cushion + sep_width
+        #
+        top_pad_c0 = space * c0_width
+        top_brdr_c0 = border * c0_width
+        calendar_c0 = lead + space * cushion + sep
+        bot_brdr_c0 = top_brdr_c0[:]
+        hanger_c0 = space * c0_width
+        bu_line_c0 = space * c0_width
+        bot_pad_c0 = top_pad_c0[:]
+        c0 = [top_pad_c0,
+              top_brdr_c0,
+              calendar_c0,
+              bot_brdr_c0,
+              hanger_c0]
+        c0.extend([bu_line_c0 for i in range(bu_height)])
+        c0.append(bot_pad_c0)
+        #
+        #now, build each row. to do so, walk dates in steps of column_count. for
+        #each date, build a column (list) of strings. if the column contains the
+        #current date, apply ``box`` post-processing to that column. store each
+        #column in the columns list for that row. then, when done with all the
+        #dates in the row, zip all of the columns together. the zipped object
+        #will contain tuples that represent each display line necessary to show
+        #that row: ([c0_line0], [c1_line0], ...).
+        #
+        #to make a flat string suitable for ``lines``, join all of the elements
+        #in a tuple, then append that line to lines. do so for all lines in the
+        #row (all tuples in the zipped object).
+        #
+        #finally, when all the hard work is done, add an empty string at the end
+        #of the row
+        #
+        for i in range(0, len(dates), column_count):
+            #
+            #build a row of c0 plus column_count date-specific columns
+            #
+            row = []
+            row.append(c0)
+            row_dates = dates[i : (i + column_count)]
+            #
+            for end_date in row_dates:
+                #
+                #build a column for each date
+                #
+                period = self[end_date]
+                post_processing = False
+                if end_date == self.current_period.end:
+                    post_processing = True
+                #                
+                top_pad = space * column_width
+                top_brdr = border * column_width
+                calendar = end_date.isoformat().center(column_width - sep_width)
+                calendar = calendar + sep
+                bot_brdr = top_brdr[:]
+                hanger = space * column_width
+                col_bu_lines = []
+                if period.content:
+                    bot_brdr = hook_char.center(column_width, border)
+                    hanger = "|".center(column_width)
+                    for line in period.content.pretty_print():
+                        adj_line = line.center(column_width)
+                        col_bu_lines.append(adj_line)
+                else:
+                    for k in range(bu_height):
+                        bu_line_blank = space * column_width
+                        col_bu_lines.append(bu_line_blank)
+                bot_pad = top_pad[:]
+                #
+                if post_processing:
+                    top_pad = space + underscore * (column_width - 2) + space
+                    bot_pad = underscore * column_width
+                #
+                column = [top_pad,
+                          top_brdr,
+                          calendar,
+                          bot_brdr,
+                          hanger]
+                column.extend(col_bu_lines)
+                column.append(bot_pad)
+                #
+                if post_processing:
+                    for j in range(1, len(column)):
+                        line = column[j]
+                        column[j] = "|" + line[1:-1] + "|"
+                #
+                row.append(column)
+            #
+            #now zip the columns together into clean lines
+            zipped_row = zip(*row)
+            #zipped_row should be a tuple w len == column_count + 1
+            for line_elements in zipped_row:
+                flat_line = "".join(line_elements)
+                clean_lines.append(flat_line)
+            else:
+                clean_lines.append("")
+                #add a blank line after every row               
+        #
+        return clean_lines
+        
+    def set_current(self,period):
+        """
+
+
+        TimeLine.set_current(period) -> None
 
 
         Method sets instance.current_period to argument.
         """
         self.current_period = period
         
-    def updateCurrent(self, ref_date = None):
+    def update_current(self, ref_date = None):
         """
 
 
-        TimeLine.updateCurrent([ref_date = None]) -> None
+        TimeLine.update_current([ref_date = None]) -> None
 
 
         Method sets instance.current_period to whichever period contains the
@@ -384,7 +532,7 @@ class TimeLine(dict):
         """
         if not ref_date:
             ref_date = date.today()
-        ref_period = self.findPeriod(ref_date)
+        ref_period = self.find_period(ref_date)
         self.current_period = ref_period
     
     

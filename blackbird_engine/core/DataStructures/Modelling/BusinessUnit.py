@@ -82,7 +82,8 @@ class BusinessUnit(Tags,Equalities):
     tagSources            list; CLASS attribute, sources for tag inheritance
     
     FUNCTIONS:
-    addComponent()        adds bus with verified ids to components
+    add_component()        adds bus with verified ids to components
+    addComponent()        legacy interface for add_component()
     addDriver()           registers a driver under every name that appears in
                           its workConditions["name"] (including None)
     consolidate()         consolidates financials from every component
@@ -155,7 +156,7 @@ class BusinessUnit(Tags,Equalities):
         box = "\n".join(lines)
         return box
 
-    def addComponent(self, bu, updateID = True):
+    def add_component(self, bu, updateID = True):
         """
 
 
@@ -185,7 +186,15 @@ class BusinessUnit(Tags,Equalities):
                 raise BBExceptions.IDNamespaceError
         #verifyID duplicative if method just reset all ids anyways
         bu.updateDirectory(recur = True, overwrite = False)
-        self.components.addItem(bu)            
+        self.components.addItem(bu)
+
+    def addComponent(self, *kargs, **pargs):
+        """
+
+        Legacy interface, delegates all work to add_component
+        
+        """
+        self.add_component(*kargs, **pargs)
 
     def addDriver(self,newDriver,*otherKeys):
         """
