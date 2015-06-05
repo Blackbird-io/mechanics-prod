@@ -66,7 +66,7 @@ scenarios = dict()
 work_plan = dict()
 
 formula_names = []
-question_names = ["time to sign new store lease?"]
+question_names = ["months to sign new store lease?"]
 work_plan["structure"] = 1
 work_plan["growth"] = 1
 

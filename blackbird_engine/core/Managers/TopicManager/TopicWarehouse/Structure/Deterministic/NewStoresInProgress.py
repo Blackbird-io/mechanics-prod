@@ -7,7 +7,8 @@
 #Module: TW.Structure.Deterministic.StoreLocationSearch
 """
 
-Topic asks user about time to find a new location for lease. 
+Topic asks about stores in progress and adds in gestating business units
+accordingly.
 
 ====================  ==========================================================
 Attribute             Description
@@ -55,14 +56,17 @@ extra_prep = False
 
 
 #standard prep
-requiredTags = ["Retail",
+requiredTags = ["retail",
                 "ready for growth analysis"
-                "medium depth of analysis"] #--------------------------------------------------------------
+                "medium analysis"] #--------------------------------------------------------------
+
 optionalTags = ["In-Progress",
+                "signed leases",
                 "Not Yet Built",
                 "LifeCycle",
                 "Structure",
                 "Growth"]
+
 applied_drivers = dict()
 scenarios = dict()
     #ks are question names, None, or user_stop
@@ -124,28 +128,60 @@ def scenario_2(topic):
 def apply_data(topic, datapoint):
     """
 
-    blah
+
+    apply_data(topic, datapoint) -> None
+    
+
+    ``datapoint`` : number of stores in progress
+    
+    Function creates and inserts datapoint-many new stores into top unit in
+    current period. Each new store is a copy of the standard operating template
+    in model taxonomy. Function distributes the stores uniformly throughout the
+    gestation period. 
     """
     model = topic.MR.activeModel
-    period = timedelta(datapoint * Globals.days_in_month)
-    model.taxonomy.standard.life.gestation = period
+    top_bu = model.current_period.content
+    bu_template = model.taxonomy["operating"].standard
+    age_increment = bu_template.life.gestation / datapoint
+    for i in range(datapoint):
+        new_store = bu_template.copy()
+        est_conception = Globals.ref_date - (age_increment * (i + 1))
+        new_store.life.date_of_conception = est_conception
+        new_store.tag("in-progress",
+                      "leased not opened")
+        label = "New Store (%s) #%s" % (new_store.life.date_of_birth.year, i)
+        new_store.set_name(label)
+        top_bu.add(new_store)
+    top_bu.life.brood = datapoint
     #
-    #apply descriptive tags
-    model.tag("known pre-opening period")
-    model.tag("known standard gestation")
+    #add to milestones? not specific enough for store-level verification. can
+    #add a milestone at final dob + 10% re new stores opened (or total store
+    #count).
     #
-    #apply tags that hook downstream topics
-    model.tag("ready for growth analysis")
+    model.tag("stores in progress")
         
 def end_scenario(topic):
-    assumed_months = SK.standard_preopen_length
-    apply_data(topic, assumed_months)
+    """
+
+
+    end_scenario(topic) -> None
+
+
+    **end scenario**
+
+    Scenario concludes with wrap_to_end()
+
+    On user interrupt, scenario assumes that 0 stores are in progress and runs
+    apply_data() accordingly. 
+    """
+    assumption = 0
+    apply_data(topic, assumption)
     topic.wrap_to_end()
 
 #
 scenarios[None] = scenario_1
 #
-scenarios["time to open leased store?"] = scenario_2
+scenarios["stores in progress?"] = scenario_2
 #
 scenarios[Globals.user_stop] = end_scenario
 

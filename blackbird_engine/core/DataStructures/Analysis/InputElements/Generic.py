@@ -90,6 +90,7 @@ class GenericInput(ReadyForPortal):
     copy()                returns a shallow copy, w deep copy of other_element
     format_response()     take string, return object formatted per type and API
     set_response()        take string, format, set as target response
+    update()              update instance attributes to spec values
     ====================  ======================================================
     """
     def __init__(self, var_attrs = None):
@@ -266,3 +267,20 @@ class GenericInput(ReadyForPortal):
         except Exception as E:
             c = "user response does not fit input element."
             raise BBExceptions.ResponseFormatError(c, E)
+
+    def update(self, spec):
+        """
+
+
+        GenericInput.update(spec) -> None
+
+
+        Method updates instance attributes to values in spec. Method expects
+        ``spec`` to be a dictionary with attribute name keys. 
+        """
+        for attr_name in spec:
+            spec_val = spec[attr_name]
+            setattr(self, attr_name, spec_val)
+            
+                
+            
