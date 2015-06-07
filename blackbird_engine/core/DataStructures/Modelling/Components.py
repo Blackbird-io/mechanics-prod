@@ -59,7 +59,6 @@ class Components(dict, Tags, Equalities):
 
     DATA:
     by_name               dict; keys are unit names, values are unit bbids
-    count                int; PROPERTY, counter for living units
     keyAttributes         list; CLASS; keep empty to follow standard dict logic
 
     FUNCTIONS:
@@ -70,7 +69,9 @@ class Components(dict, Tags, Equalities):
     ex_to_default()       delegates to Tags.ex_to_default, which runs on copy()
     ex_to_special()       makes a shell, fills with items from seed & target
     find_bbid()           return bbid that contains a known string
-    getOrdered()          returns a list of values, ordered by key
+    getOrdered()          legacy interface for get_ordered() 
+    get_ordered()         returns a list of values, ordered by key
+    get_living()          returns a bbid:bu dict of all bus that are alive
     inheritTags()         runs default routine, then inherits from all comps
     pretty_print()        returns a list of strings showing units one by one
     refresh_names()       clear and rebuild name-to-bbid dictionary
@@ -87,23 +88,6 @@ class Components(dict, Tags, Equalities):
     keyAttributes = []
     #keyAttributes should remain an explicit empty list to maintain dictionary
     #comparison logic
-
-    @property
-    def living(self):
-        """
-
-
-        **property**
-        
-        integer count of components with life.alive == True
-        """
-        counter = 0
-        for bu in self.values():
-            if bu.life.alive:
-                counter = counter + 1
-            else:
-                continue
-        return counter
         
     def __init__(self,name = "Components"):
         dict.__init__(self)
@@ -334,12 +318,41 @@ class Components(dict, Tags, Equalities):
         Components.getOrdered() -> list
 
 
+        Legacy interface for components.get_ordered()
+        """
+        return self.get_ordered()
+
+    def get_ordered(self):
+        """
+
+
+        Components.get_ordered() -> list
+
+
         Method returns a list of every value in the instance, ordered by key. 
         """
         result = []
         for k in sorted(self.keys()):
             bu = self[k]
             result.append(bu)
+        return result
+
+    def get_living(self):
+        """
+
+
+        Components.get_living() -> dict
+
+
+        Method returns a dictionary by bbid of every object in instance that
+        has life.alive == True.
+        """
+        result = dict()
+        for (bbid, bu) in self.items():
+            if bu.life.alive:
+                result[bbid] = bu
+            else:
+                continue
         return result
 
     def inheritTags(self, recur = True):
