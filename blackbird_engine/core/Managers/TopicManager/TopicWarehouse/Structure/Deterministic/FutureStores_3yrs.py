@@ -270,7 +270,10 @@ def apply_data(topic, datapoint, close_units = True):
                           "projections imply future unit closures")
                 
         #
-        #extrapolate forward again to apply changes to future.
+        #extrapolate forward again to apply changes to future, from this year
+        #on. so after working to insert the units necessary for 2018 (starting
+        #in nov 2017), ex periods from nov 2017 on.
+        #
         earliest_moment = earliest_changed_period.start
         relative_future = model.time_line.get_segments(ref_date = earliest_moment)[2]
         model.time_line.extrapolate_dates(earliest_changed_period, relative_future)        

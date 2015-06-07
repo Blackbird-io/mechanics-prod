@@ -82,7 +82,7 @@ class BusinessUnit(Tags,Equalities):
     tagSources            list; CLASS attribute, sources for tag inheritance
     
     FUNCTIONS:
-    add_component()        adds bus with verified ids to components
+    add_component()       adds bus with verified ids to components
     addComponent()        legacy interface for add_component()
     addDriver()           registers a driver under every name that appears in
                           its workConditions["name"] (including None)
@@ -835,7 +835,7 @@ class BusinessUnit(Tags,Equalities):
         #
         data["FILL"] = str(self.filled)
         #
-        data["COMPS"] = str(len(self.components))
+        data["COMPS"] = str(len(self.components.get_living()))
         #
         ##assemble the real thing
         ##DONT FORGET TO rjust(data_width)

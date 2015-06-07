@@ -382,10 +382,32 @@ class TimeLine(dict):
         """
 
 
-        TimeLine.pretty_print([dates = None[, sep = "<<"[, hook = True]]]) -> list
+        TimeLine.pretty_print([dates = None [, sep = "<<"
+            [, border = "-" [, hook = True]]]]) -> list
 
 
-                
+        Method returns a list of strings. Strings are raw: they do NOT end in
+        new-line characters.
+
+        When printed in order, the strings illustrate the instance contents for
+        each date in ``dates``. Illustration follows the form: 
+
+        
+        Row Label       Graphic
+        ------------------------------------------------------------------------
+        top_pad	        	  __________________
+        top_brdr  	---------|------------------|---------------------------
+        calendar	PERIOD: <|   2015-06-01    <|   2015-07-01  <<    . . . 
+        bot_brdr	---------|---------}--------|---------------------------
+        hanger		         |         |        | 
+        bu_line	        	 | +==============+ |
+        bu_line		         | |              | |
+        bu_line	        	 | |  BU CONTENT  | |
+        bu_line		         | |     . . .    | |
+        bu_line	        	 | |              | |   
+        bu_line		         | +==============+ |
+        bot_pad	        	 |__________________|        
+        \n
         """
         clean_lines = []
         #lines is the final, flat list of strings
