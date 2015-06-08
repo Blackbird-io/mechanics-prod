@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Engine
-#Module: TopicWarehouse.Introduction.__init__
+#Module: TW.Introduction.PathFinders.__init__
 """
 
 Contains specialized packages.
@@ -29,10 +29,8 @@ n/a
 
 
 #imports
-#relative package imports here
-from . import Generic
-from . import Retail
-from . import PathFinders
+from . import PF_Generic
+from . import SharedKnowledge
 #Warehouse packages have to import their contents. Catalog managers walk the
 #directory by looking at the top-level names of the package object. Without
 #imports through __init__, the walker function will not see any of the

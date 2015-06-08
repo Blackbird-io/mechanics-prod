@@ -63,6 +63,7 @@ extra_prep = False
 #
 requiredTags = []
 optionalTags = ["Overview",
+                "Introduction",
                 "Start",
                 "Automatic",
                 "Default"]
@@ -181,9 +182,12 @@ def scenario_6(topic):
     estimated_conception = date_of_birth - top_bu.life.gestation
     top_bu.life.date_of_conception = estimated_conception
     #
-    i_overview = top_bu.financials.indexByName("Overview")
-    line_overview = top_bu.financials[i_overview]
-    line_overview.guide.quality.increment(1)
+    fp = M.interview.focal_point
+    fp.guide.quality.increment(1)
+    M.tag("ready for path")
+##    i_overview = top_bu.financials.indexByName("Overview")
+##    line_overview = top_bu.financials[i_overview]
+##    line_overview.guide.quality.increment(1)
     #
     topic.wrap_topic()
 

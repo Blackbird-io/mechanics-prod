@@ -79,30 +79,45 @@ def process(msg):
     M.time_line.build(refDate,
                      Globals.default_periods_fwd,
                      Globals.default_periods_back)
+    #
+    #can also move the logic below into the intro topic, or further down the
+    #line (to structure, or whatever topic configures a standard business
+    #unit
+    #
     topBU = BusinessUnit(Globals.default_unit_name)
     topBU.life.set_ref_date(refDate)
     atx = Analytics()
     topBU.setAnalytics(atx)
-    M.currentPeriod.setContent(topBU)
-    i_overview = topBU.financials.indexByName("overview")
-    line_overview = topBU.financials[i_overview]
-    line_overview.tag("Start")
-    line_overview.tag("Configuration")
-    M.interview.setFocalPoint(line_overview)
-    def fFIXED(L):
-        result = False
-        if L.guide.quality.current >= L.guide.quality.minStandard:
-            result = True
-        return result
-    M.interview.setPointStandard(fFIXED)
+    M.currentPeriod.setContent(topBU) #------------------------------------------------move all this out into structure topic
+    
+    
+    
+    
+    #
+##    i_overview = topBU.financials.indexByName("overview")
+##    line_overview = topBU.financials[i_overview]
+##    line_overview.tag("Start")
+##    line_overview.tag("Configuration")
+##    M.interview.setFocalPoint(line_overview)
+##    def fFIXED(L):
+##        result = False
+##        if L.guide.quality.current >= L.guide.quality.minStandard:
+##            result = True
+##        return result
+##    M.interview.setPointStandard(fFIXED)
+
+    #model contains an intro focal point by default ----------------------------------
     #
     message = (M, None, None)
     #
-    #run intro topic
-    intro_topic_bbid = TopicManager.local_catalog.by_name[intro_topic_name]
-    intro_topic = TopicManager.local_catalog.issue(intro_topic_bbid)
-    line_overview.guide.selection.record_used_topic(intro_topic)
-    message = intro_topic.process(message)
+##    #run intro topic
+##    intro_topic_bbid = TopicManager.local_catalog.by_name[intro_topic_name]
+##    intro_topic = TopicManager.local_catalog.issue(intro_topic_bbid)
+##    line_overview.guide.selection.record_used_topic(intro_topic)
+##    message = intro_topic.process(message)
+    #
+    #can use Yenta like normal here to select the topic. if there is always one intro---------
+    #direct call can still be faster. 
     #
     return message
 
