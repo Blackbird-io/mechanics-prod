@@ -264,7 +264,7 @@ def make_question(content_module, catalog = local_catalog):
         #module.
     #
     #advanced configuration: input element details
-    if content_module.element_details:
+    if getattr(content_module, "element_details", False):
         for i in range(content_module.active_elements):
             element = new_question.input_array[i]
             spec = content_module.element_details[i]

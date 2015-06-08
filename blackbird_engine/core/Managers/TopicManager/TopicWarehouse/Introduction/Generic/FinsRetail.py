@@ -97,7 +97,7 @@ def scenario_1(topic):
     structure.guide.quality.setStandards(2,5)
     #
     i_end_intro = top_fins.indexByName("|bb|end Introduction")
-    top_fins.insert(i_end_intro,structure)
+    top_fins.insert(i_end_intro, structure)
     #
     revenue = LineItem("Revenue")
     revenue.tag("GAAP","Operations")
