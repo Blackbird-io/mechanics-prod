@@ -369,7 +369,7 @@ class Yenta():
         chosen_bbid = None
         chosen_topic = None
         #
-        fp = model.interview.focalPoint
+        fp = model.interview.focal_point
         fp.guide.selection.increment(1)
         #
         known_eligibles = fp.guide.selection.eligible

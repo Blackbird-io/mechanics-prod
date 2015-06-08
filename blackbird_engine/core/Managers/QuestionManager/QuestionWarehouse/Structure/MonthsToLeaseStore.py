@@ -48,7 +48,7 @@ optionalTags = []
 #Portal parameters
 #
 array_caption = None
-comment = "If tomorrow you decided to open a new store, you would need
+comment = "If tomorrow you decided to open a new store, you would need"
 comment += "this many months to find the right property and get all the "
 comment += "paperwork in order."
 input_type = "number"

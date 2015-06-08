@@ -71,7 +71,6 @@ def check_started(message):
     if M:
         if M.started:
             result = True
-    #
     return result
     
 def process(message_in):
