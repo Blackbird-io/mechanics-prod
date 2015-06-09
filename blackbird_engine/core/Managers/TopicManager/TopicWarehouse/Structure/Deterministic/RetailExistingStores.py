@@ -7,7 +7,7 @@
 #Module: TW.Structure.Deterministic.RetailExistingStores
 """
 
-Content module for a topic that builds out the businessf unit structure of a
+Content module for a topic that builds out the business unit structure of a
 retail business.
 ====================  ==========================================================
 Attribute             Description
@@ -47,6 +47,7 @@ import Tools
 
 from DataStructures.Modelling.BusinessUnit import BusinessUnit
 from DataStructures.Modelling.LifeStage import LifeStage
+from DataStructures.Valuation.Analytics import Analytics
 
 from .. import SharedKnowledge as SubjectKnowledge
 from .. import StandardFinancials
@@ -305,9 +306,8 @@ def scenario_6(topic):
     creates class-specific copies of the standard unit and adds them to Model's
     current period top-level. 
     """
-    
+    #
     M = topic.MR.activeModel
-    top_bu = M.currentPeriod.content
     #
     #Step 1:
     #Retrieve and format user response
@@ -319,23 +319,29 @@ def scenario_6(topic):
     #Now, make a business unit that represents the company's standard.
     #Topic will create and insert actual working units into the model by
     #copying and customizing this template.
+    #
+    #2.1 - configure model (logic used to be in starter)
+    if M.currentPeriod.content:
+        top_bu = M.currentPeriod.content
+    else:
+        top_name = (M.name or Globals.default_unit_name)
+        top_bu = BusinessUnit(top_name)
+        M.currentPeriod.setContent(top_bu)
+        
+    #
     standard_fins = StandardFinancials.standard_financials.copy()
     M.defaultFinancials = standard_fins.copy()
     top_bu.setFinancials(standard_fins.copy())
-    #assume top bu fins are empty for now; every object gets their own set of
-    #financials. 
+    atx = Analytics()
+    top_bu.setAnalytics(atx)
+    #
     bu_template = BusinessUnit("Unit Template", standard_fins)
     #figure out unit lifespan, set accordingly
     life_in_years = M.interview.work_space["unit_life_years"]
     life_in_days = life_in_years * Globals.days_in_year
     bu_template.life.span = timedelta(life_in_days)
-    #figure out ref date for the current period
-    ref_date = None
-    if Globals.fix_ref_date:
-        ref_date = Globals.t0
-    else:
-        ref_date = date.today()
-    bu_template.life.set_ref_date(ref_date) #-------------------------------------------------------------------------------------------------------this could be different than the top_bu!!! may want to copy ref_date directly from there. 
+    ref_date = M.currentPeriod.end
+    bu_template.life.set_ref_date(ref_date)
     #figure out unit gestation
     first_dob_date = M.interview.work_space["first_dob_date"]
     latest_dob_date = adj_R
