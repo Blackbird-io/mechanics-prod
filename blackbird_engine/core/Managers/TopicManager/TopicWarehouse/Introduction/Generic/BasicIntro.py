@@ -48,7 +48,7 @@ import time
 import BBGlobalVariables as Globals
 
 from DataStructures import Modelling
-
+from DataStructures.Modelling.BusinessUnit import BusinessUnit
 
 
 
@@ -99,17 +99,11 @@ def scenario_3(topic):
     R = topic.get_first_answer()
     #pull out substantive response
     M = topic.MR.activeModel
-    topBU = M.currentPeriod.content
-    i_overview = topBU.financials.indexByName("Overview")
-    line_overview = topBU.financials[i_overview]
     if R in known_industries:
         M.tag("known industry")
-        line_overview.tag("known industry")
     else:
         M.tag("unknown industry")
-        line_overview.tag("unknown industry")
     M.tag(R)
-    line_overview.tag(R)
     M.header.profile["industry"] = R
     #
     new_question = topic.questions["user name?"]
@@ -148,18 +142,12 @@ def scenario_5(topic):
     big_roles = set(decision_people + fin_people)
     R = R.casefold()
     M.header.profile["author role"] = R
-    topBU = M.currentPeriod.content
-    i_overview = topBU.financials.indexByName("Overview")
-    line_overview = topBU.financials[i_overview]
     if R in decision_people:
         M.tag("author role: decision")
-        line_overview.tag("author role: decision")
     if R in fin_people:
         M.tag("author role: finance")
-        line_overview.tag("author role: finance")
     if R in big_roles:
         M.tag("author role: big")
-        line_overview.tag("author role: big")
     #
     new_question = topic.questions["company start date?"]
     if M.name:
@@ -178,16 +166,14 @@ def scenario_6(topic):
     adj_r = [int(x) for x in R.split("-")]
     date_of_birth = datetime.date(*adj_r)
     #
-    top_bu = M.currentPeriod.content
+    top_bu = BusinessUnit(M.name)
     estimated_conception = date_of_birth - top_bu.life.gestation
     top_bu.life.date_of_conception = estimated_conception
+    M.currentPeriod.setContent(top_bu)
     #
     fp = M.interview.focal_point
     fp.guide.quality.increment(1)
     M.tag("ready for path")
-##    i_overview = top_bu.financials.indexByName("Overview")
-##    line_overview = top_bu.financials[i_overview]
-##    line_overview.guide.quality.increment(1)
     #
     topic.wrap_topic()
 

@@ -340,8 +340,6 @@ def scenario_3(topic):
             clean_dr = tDriver.copy()
             bu.addDriver(clean_dr,k)
     #
-    M.interview.clear_cache()
-    #
     topic.wrap_topic()
 
 def end_scenario(topic):
