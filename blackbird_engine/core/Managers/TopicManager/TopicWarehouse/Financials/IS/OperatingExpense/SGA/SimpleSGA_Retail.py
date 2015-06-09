@@ -242,12 +242,6 @@ def scenario_3(topic):
             clean_dr = tDriver.copy()
             bu.addDriver(clean_dr,k)
     #
-    #make sure to clear interview cache (protocol, focal point), etc., after
-    #inserting new line items so that interview controller can reprioritize
-    #the modified path.
-    #
-    M.interview.clear_cache()
-    #
     topic.wrap_topic()    
 
 def end_scenario(topic):
