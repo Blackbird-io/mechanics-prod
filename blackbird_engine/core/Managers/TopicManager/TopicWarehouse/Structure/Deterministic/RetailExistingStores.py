@@ -49,7 +49,7 @@ from DataStructures.Modelling.BusinessUnit import BusinessUnit
 from DataStructures.Modelling.LifeStage import LifeStage
 
 from .. import SharedKnowledge as SubjectKnowledge
-
+from .. import StandardFinancials
 
 
 
@@ -319,7 +319,11 @@ def scenario_6(topic):
     #Now, make a business unit that represents the company's standard.
     #Topic will create and insert actual working units into the model by
     #copying and customizing this template.
-    standard_fins = M.defaultFinancials.copy()
+    standard_fins = StandardFinancials.standard_financials.copy()
+    M.defaultFinancials = standard_fins.copy()
+    top_bu.setFinancials(standard_fins.copy())
+    #assume top bu fins are empty for now; every object gets their own set of
+    #financials. 
     bu_template = BusinessUnit("Unit Template", standard_fins)
     #figure out unit lifespan, set accordingly
     life_in_years = M.interview.work_space["unit_life_years"]

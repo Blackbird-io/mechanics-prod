@@ -246,7 +246,7 @@ def scenario_3(topic):
     #inserting new line items so that interview controller can reprioritize
     #the modified path.
     #
-    M.interview.clearCache()
+    M.interview.clear_cache()
     #
     topic.wrap_topic()    
 
