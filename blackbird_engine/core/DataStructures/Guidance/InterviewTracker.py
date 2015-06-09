@@ -85,13 +85,13 @@ class InterviewTracker:
     FUNCTIONS:
     transcribe()                add item to transcript
     set_attention_budget()      set attentionBudget to new value
-    setStructure()              set structure to new object
-    set_path()                   set path to a new object
-    setProgress()               set progress to higher of current or new,0<=p<=1
-    setProtocol()               attach a pointer to a new protocol object
-    setFocalPoint()             attach a pointer to the current focal point
-    set_point_standard()          attach a decision function for the focal point
-    clear_cache()                set protocol,structure, activeTest, and fPoint to
+    set_structure()             set structure to new object
+    set_path()                  set path to a new object
+    set_progress()              set progress to higher of current or new,0<=p<=1
+    set_protocol()              attach a pointer to a new protocol object
+    set_focal_point()           attach a pointer to the current focal point
+    set_point_standard()        attach a decision function for the focal point
+    clear_cache()               set protocol,structure, activeTest, and fPoint to
                                 None
     ==========================  ================================================
     """
@@ -156,7 +156,7 @@ class InterviewTracker:
         """
 
 
-        ITr.setPointStandard(standard) -> None
+        ITr.set_point_standard(standard) -> None
 
 
         ``standard`` should be a one-argument function that returns a bool
@@ -191,13 +191,21 @@ class InterviewTracker:
         """
 
 
-        ITr.setProtocol(aProl) -> None
+        ITr.set_protocol(aProl) -> None
 
         
         """
         self.protocol = aProl
     
     def set_structure(self, new_structure):
+        """
+
+
+        ITr.set_structure(new_structure) -> None
+
+
+        Method sets instance.structure to argument. 
+        """
         self.structure = new_structure
 
     def transcribe(self,msg):
