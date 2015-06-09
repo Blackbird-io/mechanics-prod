@@ -179,32 +179,32 @@ class Model(Tags):
         del M.portal_data["e_model"]
         return M
 
-    def recordTopic(self,T):
-        """
+##    def recordTopic(self,T):
+##        """
+##
+##
+##        M.recordTopic(T) -> None
+##
+##        
+##        Method records a topic's tdex in the instance's ``appliedTopics`` list.
+##        Allows other modules to ensure that the same topic doesn't run twice on
+##        a given model unless it's specifically tagged as recursive.
+##        """
+##        self.appliedTopics.append(T.TDEX)
 
-
-        M.recordTopic(T) -> None
-
-        
-        Method records a topic's tdex in the instance's ``appliedTopics`` list.
-        Allows other modules to ensure that the same topic doesn't run twice on
-        a given model unless it's specifically tagged as recursive.
-        """
-        self.appliedTopics.append(T.TDEX)
-
-    def setDefaultFinancials(self,fins):
-        """
-
-
-        M.setDefaultFinancials(fins) -> None
-
-
-        Method sets instance.defaultFinancials to the template object provided
-        as an argument. Analytical objects in the environment can then quickly
-        configure new business units with the correct template when adding them
-        to the model. 
-        """
-        self.defaultFinancials = fins
+##    def setDefaultFinancials(self,fins):
+##        """
+##
+##
+##        M.setDefaultFinancials(fins) -> None
+##
+##
+##        Method sets instance.defaultFinancials to the template object provided
+##        as an argument. Analytical objects in the environment can then quickly
+##        configure new business units with the correct template when adding them
+##        to the model. 
+##        """
+##        self.defaultFinancials = fins
 
     def start(self):
         """

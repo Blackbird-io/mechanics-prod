@@ -254,7 +254,7 @@ class InterviewController(Controller):
                 Model.interview.set_structure(newStructure)
                 pMaker = self.makerFunctions[protocolKey]
                 newProtocol = pMaker()
-                Model.interview.setProtocol(newProtocol)
+                Model.interview.set_protocol(newProtocol)
                 newFP = newProtocol.select(Model)
         if newFP == None:
             self.wrapInterview(Model)
@@ -288,7 +288,7 @@ class InterviewController(Controller):
                     new_progress = i/len(Model.interview.path)
                     new_progress = new_progress * 100
                     new_progress = int(new_progress)
-                    Model.interview.setProgress(new_progress)
+                    Model.interview.set_progress(new_progress)
                     #could wrap this whole thing in an exception handler
                     #
                 except ValueError:
