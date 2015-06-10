@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: QW.Structure.NewStoreLeasesNumber
+#Module: QW.Structure.CustomerLifeRange
 """
 
 A template for question content modules. Includes all parameters available for
@@ -38,7 +38,7 @@ n/a
 ====================  ==========================================================
 """
 question_content = True
-name = "number of signed new store leases?"
+name = "customer life range?"
 question_author = "Ilya Podolyako"
 
 #Engine parameters
@@ -49,29 +49,12 @@ optionalTags = []
 #Portal parameters
 #
 array_caption = None
-comment = None
-input_type = "Number"
-input_sub_type = None
-basic_prompt = "Do you have any leases signed for new stores?"
+comment = "Think of a range that would cover 95 out of 100 cases."
+input_type = "number-range"
+input_sub_type = "months"
+basic_prompt = "How long do most of your customer relationships last?"
 custom_prompt = None
-short = None
-transcribe = False
+short = "Customer Life Range"
+transcribe = True
 active_elements = 1
 
-#Advanced Configuration: show_if
-#See Blackbird Engine API for a description of show_if functionality. 
-#
-show_if_rule = {"toggle_caption_true" : "Yes",
-                "toggle_caption_false" : "No"}
-
-
-#Advanced Configuration: input element details.
-#See Blackbird Engine API for parameters available with each question type. 
-#
-element_0 = {"main_caption" : "Number of signed leases:",
-             "r_min" : 0,
-             "r_max" : 500,
-             "r_steps" : 500,
-             "shadow" : 2} 
-element_details = [element_0]
-        

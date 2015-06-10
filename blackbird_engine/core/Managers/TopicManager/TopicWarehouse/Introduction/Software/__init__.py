@@ -4,10 +4,10 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Engine
-#Module: Managers.QuestionManager.QuestionWarehouse.__init__
+#Module: TopicWarehouse.Introduction.Software.__init__
 """
 
-Package contains directories with content modules for user questions. 
+Contains topics related to the software industry.
 
 ====================  ==========================================================
 Attribute             Description
@@ -21,9 +21,6 @@ n/a
 
 CLASSES:
 n/a
-
-MODULES:
-n/a
 ====================  ==========================================================
 """
 
@@ -31,15 +28,10 @@ n/a
 
 
 #imports
-#[intentionally left blank]
-#
-#Do not import anything here to avoid creating any unnecessary dependencies
-#(e.g. A imports B imports C import A). Each subpackage handles its own imports
-#directly or through relative paths.
-#
-from . import Financials
-from . import Introduction
-from . import Structure
+#relative package imports
+from . import SoftwareFunctionality
 
+
+    
 
 
