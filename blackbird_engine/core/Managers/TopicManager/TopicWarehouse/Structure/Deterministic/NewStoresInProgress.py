@@ -44,11 +44,11 @@ from datetime import date, timedelta
 
 import BBGlobalVariables as Globals
 
-from .. import SharedKnowledge as SubjectKnowledge
+
 
 
 #globals
-name = "stores in progress"
+name = "new stores in progress (under lease)"
 topic_author = "IOP"
 date_created = "2015-06-02"
 topic_content = True
@@ -57,15 +57,21 @@ extra_prep = False
 
 #standard prep
 requiredTags = ["retail",
-                "ready for growth analysis"
-                "medium analysis"] #--------------------------------------------------------------
+                "defined standard operating unit",
+                "medium analysis depth permitted"]
 
-optionalTags = ["In-Progress",
+optionalTags = ["introduction",
+                "deterministic",
+                "in-progress",
                 "signed leases",
-                "Not Yet Built",
-                "LifeCycle",
-                "Structure",
-                "Growth"]
+                "check for stores in progress",
+                "not yet built",
+                "lifecycle",
+                "structure",
+                "growth",
+                "expected growth",
+                "knowable future",
+                "expected future"]
 
 applied_drivers = dict()
 scenarios = dict()
@@ -74,7 +80,7 @@ scenarios = dict()
 work_plan = dict()
 
 formula_names = []
-question_names = ["stores in progress?"]
+question_names = ["number of signed new store leases?"]
 work_plan["structure"] = 1
 work_plan["growth"] = 1
 
@@ -100,9 +106,9 @@ def scenario_1(topic):
     Ask user about time to open a newly leased store. 
     """
     M = topic.MR.activeModel
-    new_Q = topic.questions["stores in progress?"]
+    new_Q = topic.questions["number of signed new store leases?"]
     new_Q.input_array[0].r_max = 100
-    new_Q.input_array[0].r_step = 1
+##    new_Q.input_array[0].r_step = 1
     topic.wrap_scenario(new_Q)
 
 def scenario_2(topic):
@@ -120,9 +126,10 @@ def scenario_2(topic):
     record in work_space, pass data to apply_data() for substantive work.
     """
     #
+    model = topic.MR.activeModel
     spec_stores = round(topic.get_first_answer())
-    M.interview.work_space["stores_in_progress"] = spec_stores
-    apply_data(topic, spec_months)
+    model.interview.work_space["stores_in_progress"] = spec_stores
+    apply_data(topic, spec_stores)
     topic.wrap_topic()
 
 def apply_data(topic, datapoint):
@@ -140,7 +147,7 @@ def apply_data(topic, datapoint):
     gestation period. 
     """
     model = topic.MR.activeModel
-    top_bu = model.current_period.content
+    top_bu = model.currentPeriod.content
     bu_template = model.taxonomy["operating"].standard
     age_increment = bu_template.life.gestation / datapoint
     for i in range(datapoint):
@@ -172,7 +179,7 @@ def end_scenario(topic):
     Scenario concludes with wrap_to_end()
 
     On user interrupt, scenario assumes that 0 stores are in progress and runs
-    apply_data() accordingly. 
+    apply_data() accordingly.
     """
     assumption = 0
     apply_data(topic, assumption)
@@ -181,7 +188,7 @@ def end_scenario(topic):
 #
 scenarios[None] = scenario_1
 #
-scenarios["stores in progress?"] = scenario_2
+scenarios["number of signed new store leases?"] = scenario_2
 #
 scenarios[Globals.user_stop] = end_scenario
 

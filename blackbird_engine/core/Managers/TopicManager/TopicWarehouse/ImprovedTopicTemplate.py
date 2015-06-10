@@ -41,7 +41,6 @@ n/a
 
 #imports
 import BBGlobalVariables as Globals
-import Managers.TopicManager.TopicWarehouse
 
 ##from Managers.TopicManager import SharedKnowledge as GeneralKnowledge
 ##from TopicWarehouse.ParentDirectory import SharedKnowledge as SubjectKnowledge

@@ -79,26 +79,27 @@ class Taxonomy(dict):
     ====================  ======================================================
     """
     def __init__(self, standard = None):
+        dict.__init__(self)
         self.standard = standard
 
-    def __getitem__(self, k):
-        """
-
-
-        Taxonomy.__getitem__(k) -> obj
-
-
-        If ``k`` in instance.keys(), method returns value for k; otherwise,
-        method returns instance.
-
-        Method guarantees no KeyError on instance[k].standard calls. 
-        """
-        result = None
-        try:
-            result = dict.__getitem__(self, k)
-        except KeyError:
-            result = self
-        return result
+##    def __getitem__(self, k):
+##        """
+##
+##
+##        Taxonomy.__getitem__(k) -> obj
+##
+##
+##        If ``k`` in instance.keys(), method returns value for k; otherwise,
+##        method returns instance.
+##
+##        Method guarantees no KeyError on instance[k].standard calls. 
+##        """
+##        result = None
+##        try:
+##            result = dict.__getitem__(self, k)
+##        except KeyError:
+##            result = self
+##        return result
 
     def __setitem__(self, k, v):
         """

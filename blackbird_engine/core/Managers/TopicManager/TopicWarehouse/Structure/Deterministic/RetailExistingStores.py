@@ -326,8 +326,7 @@ def scenario_6(topic):
     else:
         top_name = (M.name or Globals.default_unit_name)
         top_bu = BusinessUnit(top_name)
-        M.currentPeriod.setContent(top_bu)
-        
+        M.currentPeriod.setContent(top_bu)  
     #
     standard_fins = StandardFinancials.standard_financials.copy()
     M.defaultFinancials = standard_fins.copy()
@@ -392,6 +391,7 @@ def scenario_6(topic):
         tag6 = "response difficulty"
         bu_template.tag(tag4, tag5, tag6)
     #template configuation complete
+    M.tag("defined standard operating unit")
     #
     #Step 3:
     #Add template to model taxonomy
@@ -452,28 +452,40 @@ def scenario_6(topic):
             c = c % bu
             raise BBExceptions.BBAnalyticalError(c)
     #
-    tag7 = "small number of units"
+    ##provide guidance for additional processing
     small_num = 10
-    tag8 = "medium number of units"
     med_num = 50
+    more_structure_processing = False
+    tag7 = "small number of units"
+    tag8 = "medium number of units"
     tag9 = "large number of units"
     if unit_count <= small_num:
         top_bu.tag(tag7)
+        M.tag(tag7)
     elif unit_count <= med_num:
         top_bu.tag(tag8)
+        M.tag(tag8)
+        M.tag("medium analysis depth permitted")
+        more_structure_processing = True
     else:
         top_bu.tag(tag9)
+        M.tag(tag9)
+        M.tag("medium analysis depth permitted")
+        M.tag("high analysis depth permitted")
+        more_structure_processing = True
     #
-    #Step 6:
-    #prep top_bu for further processing.
-    i_structure = M.interview.path.indexByName("structure")
-    line_structure = M.interview.path[i_structure]
-    line_structure.tag("ready for expected growth analysis")
-##    line_structure.guide.quality.setStandards(3, 5)---------------------------------------------------un comment to turn on addtl analysis
-    ##line will now need additional processing to look complete ot InterviewController;
-    ##Yenta should select a growth topic next, because the tag will act like a homing
-    ##beacon
-    #   
+    if more_structure_processing:
+        M.tag("check for stores in progress")
+        #this tag functions like a homing beacon.
+        i_structure = M.interview.path.indexByName("structure")
+        step_structure = M.interview.path[i_structure]
+        step_structure.guide.quality.setStandards(3, 5)
+        #
+        step_structure.guide.selection.eligible.clear()
+        #since we modified the criteria on the focal point, now have to clear
+        #the cache of eligible topics to force yenta to search through the full
+        #catalog. otherwise, yenta would only see the eligible topics from before
+        #the new tags. 
     #                 
     topic.wrap_topic()
     
