@@ -5,11 +5,10 @@ EndInterview = 'END_interview'
 
 _mock_questions = [
     dict(
-        e_question=dict(),
         question_id='business_name',
         topic_name='Mock',
 
-        progress=0.1,
+        progress=10,
         short='Name',
         prompt='Let\'s get Introduced',
         comment='Names are a great way to get acquainted. You know ours, now tell us yours.',
@@ -30,11 +29,10 @@ _mock_questions = [
         transcribe=False
     ),
     dict(
-        e_question=dict(),
         question_id='some_email',
         topic_name='Mock',
 
-        progress=0.15,
+        progress=15,
         short='Email',
         prompt='How can we reach you?',
         array_caption='What is your business email?',
@@ -49,11 +47,10 @@ _mock_questions = [
         input_sub_type='email',
     ),
     dict(
-        e_question=dict(),
         question_id='ice_cream',
         topic_name='Mock',
 
-        progress=0.2,
+        progress=20,
         short='Ice Cream',
         prompt='Your Favorite Flavor',
         comment='Which flavors of ice cream do you like?',
@@ -71,11 +68,10 @@ _mock_questions = [
         transcribe=True
     ),
     dict(
-        e_question=dict(),
         question_id='industry',
         topic_name='Mock',
 
-        progress=0.3,
+        progress=30,
         short='Industry',
         prompt='What industry are you in?',
         comment='Which flavors of ice cream do you like?',
@@ -93,11 +89,10 @@ _mock_questions = [
         transcribe=True
     ),
     dict(
-        e_question=dict(),
         question_id='store',
         topic_name='Mock',
 
-        progress=0.3,
+        progress=30,
         short='Store Maturity',
         prompt='How long does it take for each store to reach maturity?',
         input_array=[
@@ -111,11 +106,10 @@ _mock_questions = [
         transcribe=True
     ),
     dict(
-        e_question=dict(),
         question_id='check_some_stuff',
         topic_name='Mock',
 
-        progress=0.4,
+        progress=40,
         short='Check',
         prompt='Are these true?',
         array_caption='Check all that apply:',
@@ -138,11 +132,10 @@ _mock_questions = [
         transcribe=True
     ),
     dict(
-        e_question=dict(),
         question_id='would_you_rather',
         topic_name='Mock',
 
-        progress=0.5,
+        progress=50,
         short='Preferences',
         prompt='Would you rather',
         array_caption='Which do you prefer:',
@@ -169,11 +162,10 @@ _mock_questions = [
         transcribe=True
     ),
     dict(
-        e_question=dict(),
         question_id='numbers',
         topic_name='Mock',
 
-        progress=0.55,
+        progress=55,
         short='Numbers',
         prompt='Some numerical questions',
         array_caption='Various numbers',
@@ -233,11 +225,10 @@ _mock_questions = [
         transcribe=True
     ),
     dict(
-        e_question=dict(),
         question_id='number_range',
         topic_name='Mock',
 
-        progress=0.6,
+        progress=60,
         short='Salaries',
         prompt='Your employees\' salaries',
         comment='Give an idea of how much your employees are paid.',
@@ -255,11 +246,10 @@ _mock_questions = [
         transcribe=False
     ),
     dict(
-        e_question=dict(),
         question_id='dates',
         topic_name='Mock',
 
-        progress=0.65,
+        progress=65,
         short='Important Dates',
         prompt='Provide some important dates',
         input_array=[
@@ -289,11 +279,10 @@ _mock_questions = [
         transcribe=True
     ),
     dict(
-        e_question=dict(),
         question_id='date_range',
         topic_name='Mock',
 
-        progress=0.7,
+        progress=70,
         short='Vacation',
         prompt='When did you go on vacation last year?',
         input_array=[
@@ -311,11 +300,10 @@ _mock_questions = [
         transcribe=True
     ),
     dict(
-        e_question=dict(),
         question_id='times',
         topic_name='Mock',
 
-        progress=0.75,
+        progress=75,
         short='Times of the day',
         prompt='What is you schedule like?',
         input_array=[
@@ -344,10 +332,9 @@ _mock_questions = [
         transcribe=False
     ),
     dict(
-        e_question=dict(),
         question_id='time_range',
         topic_name='Mock',
-        progress=0.8,
+        progress=80,
         short='Work hours',
         prompt='When do you work?',
         input_array=[
@@ -362,11 +349,10 @@ _mock_questions = [
         transcribe=True
     ),
     dict(
-        e_question=dict(),
         question_id='business_name_2',
         topic_name='Mock',
 
-        progress=0.85,
+        progress=85,
         short='Second Name',
         prompt='Let\'s get Introduced',
         comment=None,
@@ -387,11 +373,10 @@ _mock_questions = [
         transcribe=False
     ),
     dict(
-        e_question=dict(),
         question_id='life_story',
         topic_name='Mock',
 
-        progress=0.9,
+        progress=90,
         short='Life Story',
         prompt='Tell us your life story',
         comment='Take your time',
