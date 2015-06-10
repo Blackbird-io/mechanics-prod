@@ -334,7 +334,7 @@ def scenario_6(topic):
     atx = Analytics()
     top_bu.setAnalytics(atx)
     #
-    bu_template = BusinessUnit("Unit Template", standard_fins)
+    bu_template = BusinessUnit("Standard Store Unit", standard_fins)
     #figure out unit lifespan, set accordingly
     life_in_years = M.interview.work_space["unit_life_years"]
     life_in_days = life_in_years * Globals.days_in_year
@@ -395,8 +395,15 @@ def scenario_6(topic):
     #
     #Step 3:
     #Add template to model taxonomy
-    M.taxonomy["operating"] = bu_template
-    #later topics can sub-type "operating" into "small", "large", etc. 
+    M.taxonomy["standard"] = bu_template
+    M.taxonomy["operating"] = dict()
+    M.taxonomy["operating"]["standard"] = bu_template
+    #
+    #later topics can sub-type "operating" into "small", "large", etc. since the
+    #custom Taxonomy class doesnt unpickle correctly, ``taxonomy`` is a simple
+    #dictionary where the "standard" key always points to a business unit object
+    #and all other keys point to other dictionaries with a similar
+    #configuration.
     #
     #Step 4:
     #Use the template operating unit to create a batch of clones. The clones

@@ -148,17 +148,18 @@ def apply_data(topic, datapoint):
     """
     model = topic.MR.activeModel
     top_bu = model.currentPeriod.content
-    bu_template = model.taxonomy["operating"].standard
+    bu_template = model.taxonomy["operating"]["standard"]
+    #use dict-style taxonomy interface. 
     age_increment = bu_template.life.gestation / datapoint
     for i in range(datapoint):
         new_store = bu_template.copy()
-        est_conception = Globals.ref_date - (age_increment * (i + 1))
+        est_conception = top_bu.life.ref_date - (age_increment * (i + 1))
         new_store.life.date_of_conception = est_conception
         new_store.tag("in-progress",
                       "leased not opened")
         label = "New Store (%s) #%s" % (new_store.life.date_of_birth.year, i)
-        new_store.set_name(label)
-        top_bu.add(new_store)
+        new_store.setName(label)
+        top_bu.addComponent(new_store)
     top_bu.life.brood = datapoint
     #
     #add to milestones? not specific enough for store-level verification. can
