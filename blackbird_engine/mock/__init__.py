@@ -1,7 +1,9 @@
 import decimal
 import random
 
-EndInterview = 'END_interview'
+from ..core import BBGlobalVariables as Globals
+
+EndInterview = Globals.END_INTERVIEW
 
 _mock_questions = [
     dict(
@@ -458,7 +460,7 @@ class EngineModel:
         return dict(q_idx=0)
 
     def _get_e_model(self):
-        if not self._m['e_model']:
+        if not (self._m['e_model'] and isinstance(self._m['e_model'], dict)):
             self._m['e_model'] = dict(q_idx=0)
         return self._m['e_model']
 
@@ -538,34 +540,34 @@ class Message:
         self._msg['R'] = r
 
 
-class MockEngine:
-    def process_interview(self, portal_msg):
-        msg = Message(portal_msg)
-        if msg.q:
-            self._handle_response(msg.m, msg.q, msg.r)
-        msg.q = self._get_next_question(msg.m)
-        msg.r = None if msg.q else EndInterview
-        return msg.portal_msg
-
-    @staticmethod
-    def _handle_response(m, q, r):
-        if r == EndInterview:
-            # complete model
-            m.complete()
-        else:
-            # updates model based on question/response
-            m.update(q, r)
-
-    @staticmethod
-    def _get_next_question(m):
-        return m.get_next_question()
+def process_interview(portal_msg):
+    msg = Message(portal_msg)
+    if msg.q:
+        _handle_response(msg.m, msg.q, msg.r)
+    msg.q = _get_next_question(msg.m)
+    msg.r = None if msg.q else EndInterview
+    return msg.portal_msg
 
 
-    def get_forecast(self, portal_model, fixed, ask):
-        portal_model['summary']['has'] += 1
-        return portal_model, fixed, ask, _get_forecast(price=ask if fixed == 'price' else None,
-                                                       size=ask if fixed == 'size' else None)
+def _handle_response(m, q, r):
+    if r == EndInterview:
+        # complete model
+        m.complete()
+    else:
+        # updates model based on question/response
+        m.update(q, r)
 
-    def get_landscape_summary(self, portal_model):
-        portal_model['summary']['needs'] += 1
-        return portal_model, get_landscape_summary()
+
+def _get_next_question(m):
+    return m.get_next_question()
+
+
+def get_forecast(portal_model, fixed, ask):
+    portal_model['summary']['has'] += 1
+    return portal_model, fixed, ask, _get_forecast(price=ask if fixed == 'price' else None,
+                                                   size=ask if fixed == 'size' else None)
+
+
+def get_landscape_summary(portal_model):
+    portal_model['summary']['needs'] += 1
+    return portal_model, get_landscape_summary()
