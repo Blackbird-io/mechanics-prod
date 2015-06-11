@@ -42,11 +42,7 @@ n/a
 #imports
 import BBGlobalVariables as Globals
 
-##from Managers.TopicManager import SharedKnowledge as GeneralKnowledge
 ##from TopicWarehouse.ParentDirectory import SharedKnowledge as SubjectKnowledge
-##from DataStructures.Modelling.Model import Model
-##from DataStructures.Modelling.BusinessUnit import BusinessUnit
-##from DataStructures.Modelling.Driver import Driver
 
 
 
@@ -62,12 +58,15 @@ extra_prep = False
 
 
 #standard topic prep
-user_outline_label = "Subscription Term"
+user_outline_label = "Contract Term"
 requiredTags = ["software",
                 "structure"]
 optionalTags = ["saas",
                 "lifecycle",
-                "contract term"]
+                "contract term",
+                "modifies path",
+                "basic",
+                "basic analysis depth"]
 #
 applied_drivers = dict()
 formula_names = []
@@ -154,27 +153,25 @@ def apply_data(topic, datapoint):
     apply_data(topic, datapoint) -> None
 
 
-    [describe substantive work that topic does to model based on data]
+    [describe substantive work that topic does to model based on data] -------------------------------------------
     """
-    #function performs substantive work on model in light of new data
+    model = topic.MR.activeModel
+    subscriber_unit_template = BusinessUnit()
+    #--------------------------------------------------------------------------------can add basic fins here?
+    model.taxonomy["subscriber"] = dict()
+    model.taxonomy["subscriber"]["standard"] = susbcriber_unit_template
+    #
     term_in_months = datapoint
     term_in_days = datapoint * Globals.days_in_month
-    model = topic.MR.activeModel
-    prod_unit = model.taxonomy["product"]["standard"]
-    prod_unit.life.segment = timedelta(term_in_days)
-    #TO DO-------------------------------------------------------------------------------------------
-        #create prod unit
-        #add customer life to path (min q  = 1)
-            #
+    subscriber_unit_template.life.segment = timedelta(term_in_days)
     #
+    subscriber_life = LineItem(name = "subscriber_life")
+    subscriber_life.guide.quality.setStandards(1,5)
+    model.path.add_to("structure", subscriber_life)
     #
-    #applies term as life.segment in timedelta
-    #can then count how many segments a particular unit has been through
-    #can assign expected termination dates? or can think in terms of half-life
-    #as in, how long does it take for half of the population to die? 
-    #going forward, when ref_date
-    
-    
+    model.tag("known subscription length")
+    model.tag("subscriber unit template: definition in progress")
+    model.tag("taxonomy content")    
 
 scenarios[None] = scenario_1
 scenarios["subscription term in months?"] = scenario_2
