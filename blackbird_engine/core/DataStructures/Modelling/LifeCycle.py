@@ -85,26 +85,34 @@ class LifeCycle(Equalities):
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
+    
+    ``TD`` means datetime.timedelta
+    
     DATA:
-    _date_of_conception   int; local state, POSIX date when work on obj begins
-    _date_of_death        int; local state, min(date killed, dob + span)
-    _gestation            int; local state, seconds btwn conception and birth 
-    _ref_date             int; local state, obj shows status w/r/to this moment
-    _span                 int >= 0; local state, max obj life span in seconds
+    _date_of_conception   date; local state, date when work on obj begins
+    _date_of_death        date; local state, min(date killed, dob + span)
+    _gestation            TD; local state, seconds btwn conception and birth 
+    _ref_date             date; local state, obj shows status w/r/to this moment
+    _span                 TD >= 0; local state, maximum obj life span
     _stages               Stages instance; covers birth to death for max life
     #
-    age                   float in [gestation * -1, span); P, get ref minus dob
+    age                   TD: in [gestation * -1, span); P, get ref minus dob
     alive                 bool; P, get True iff ref date in [birth, death)
+    churn                 num; rate of cancellations per segment
     gestating             bool; P, get True iff ref date in [conception, birth)
-    gestation             int; P, get _gestation, set for int [0, max)
-    date_of_birth         int; P, get doc + gestation
-    date_of_conception    int; P, get _doc, set for int [min, max)
-    date_of_death         int; P, get _dod
-    dead                  bool; P, True iff doc < dod < ref_date 
-    ref_date              int; P, get _ref_date
+    gestation             TD; P, get _gestation, set for int [0, max)
+    date_of_birth         date; P, get doc + gestation
+    date_of_conception    date; P, get _doc, set for int [min, max)
+    date_of_death         date; P, get _dod
+    dead                  bool; P, True iff doc < dod < ref_date
+    lead                  TD; period to locate or create unit
+    mean                  TD; average life span for population
+    ref_date              date; P, get _ref_date
     percent               int; P, int(age / life_span * 100)
+    segment               TD; contract or other term when status changes
     skipPrefixes          list; CLASS attribute, configures equivalence checks
-    span                  int; P, get _span, set for int [0, max)
+    sigma                 TD; standard deviation of sample from mean age
+    span                  TD; P, get _span, set for int [0, max)
     stage                 str; P, name of current stage    
 
     FUNCTIONS:
@@ -136,6 +144,12 @@ class LifeCycle(Equalities):
         for (name, start) in Globals.default_life_stages:
             new = LifeStage(name, start)
             self._stages.add_stage(new)
+        #
+        self.churn = None
+        self.lead = None
+        self.mean = None
+        self.sigma = None
+        self.segment = None
 
     @property
     def age(self):
