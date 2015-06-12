@@ -79,6 +79,7 @@ class BusinessUnit(Tags,Equalities):
     id                    instance of ID object
     life                  instance of LifeCycle object
     sig_consolidate       global signature updated for unit name
+    size                  int; number of real-life equivalents obj represents
     tagSources            list; CLASS attribute, sources for tag inheritance
     
     FUNCTIONS:
@@ -128,6 +129,7 @@ class BusinessUnit(Tags,Equalities):
         self.period = None
         gl_sig_con = Globals.signatures["BusinessUnit.consolidate"]
         self.sig_consolidate =  gl_sig_con % self.name
+        self.size = 1
         
     def __hash__(self):
         return self.id.__hash__()

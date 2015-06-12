@@ -36,6 +36,6 @@ n/a
 #catalog
 from . import UnitRevenue_Generic
 from . import UnitRevenue_Retail
-
+from . import SubscriptionPrice_Monthly
 
 

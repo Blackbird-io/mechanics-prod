@@ -31,21 +31,21 @@ n/a
 
 
 #imports
-import datetime
+#n/a
 
 
 
 
 #globals
 formula_content = True
-name = "set line to fixed monthly value."
+name = "fixed monthly value multiplied by unit size."
 
 #FORMULA NAMES SHOULD DESCRIBE THEIR ACTION IN SIMPLE LANGUAGE
 #simple names make it easier to reuse functions and avoid errors when creating
 #drivers
 
 formula_author = "Ilya Podolyako"
-date_created = "2015-04-10"
+date_created = "2015-06-12"
 required_data = ["fixed_monthly_value"]
 
 def func(line, business_unit, data, driver_signature):
@@ -65,9 +65,10 @@ def func(line, business_unit, data, driver_signature):
     -- "new_optional_tags"    |   list of tags to add to line after value
     """
     #
-    expense = data["fixed_monthly_value"]
-    line.setValue(expense, driver_signature)
+    value = data["fixed_monthly_value"] * business_unit.size
+    line.setValue(value, driver_signature)
     line.tag("fixed value")
+    line.tag("tracks size")
     new_optional_tags = data.get("new_optional_tags")
     if new_optional_tags:
         line.tag(*new_optional_tags, field = "opt")

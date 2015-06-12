@@ -67,22 +67,28 @@ tg_basic_depth = "basic analysis depth" #---------------------------------------
 tg_medium_depth = "medium analysis depth"
 tg_deep = "in-depth analysis"
 #
-tg_product = "describes resources associated with one product"
-tg_container = "may contain subscribers"
-tg_critical = "critical user input"
-tg_single_product = "single_product"
+tg_actual_name = "actual name"
 tg_assumed_age_dist = "assumes age distribution"
+tg_assumed_name = "assumed name"
 tg_assumed_norm_population = "assumes normal population"
-tg_populated = "populated with subscribers"
-tg_est_age = "estimated age"
 tg_batch = "batch unit"
+tg_critical = "critical user input"
+tg_est_age = "estimated age"
 tg_expands_taxonomy = "expands taxonomy"
-tg_multi_taxonomy = "taxonomy contains multiple types of units"
-tg_rump = "rump batch"
+tg_known_subscriber_pool = "known subscriber pool"
 tg_median_age = "assumes median age"
+tg_multi_taxonomy = "taxonomy contains multiple types of units"
+tg_populated = "known subscriber pool"
+tg_single_product = "describes resources associated with one product"
+tg_revenue_generating = "revenue generating"
+tg_rump = "rump batch"
+tg_subscriber_unit = "subscribers"
+
 
 sbr_tags = [tg_assumed_age_dist,
-            tg_est_age]
+            tg_est_age,
+            tg_subscriber_unit,
+            tg_revenue_generating]
 #
 #storing in tags in variables above is solely for the convenience of the author
 #
@@ -96,9 +102,9 @@ requiredTags = ["structure",
 optionalTags = ["customers",
                 "saas",
                 "software",
+                "product",
                 tg_critical,
                 tg_expands_taxonomy,
-                tg_product,
                 tg_single_product,
                 tg_assumed_age_distribution,
                 tg_assumed_norm_population]
@@ -217,15 +223,18 @@ def apply_data(topic, datapoint):
     product_unit = model.currentPeriod.content
     if not product_unit:
         product_template = BusinessUnit("Product Template", standard_financials.copy())
+        product_unit = product_template.copy()
+        #
         product_template.tag(tg_product)
-        product_template.tag(tg_container)
         #
         product_name = model.interview.work_space.get("product_name")
         #dont know if interview touched on product name
         #
-        if not product_name:
+        if product_name:
+            product_unit.tag(tg_actual_name)
+        else:
             product_name = "Product A"
-        product_unit = product_template.copy()
+            product_unit.tag(tg_assumed_name)
         product_unit.setName(product_name)
         #
         model.currentPeriod.setContent(product_unit)
@@ -302,7 +311,7 @@ def apply_data(topic, datapoint):
     for i in range(batch_count):
         label = sbr_label_template % i
         sbr = BusinessUnit(label, standard_financials.copy())
-        sbr.batch_size = batch_size
+        sbr.size = batch_size
         conception = conception + time_increment
         conception = max(conception, earliest_permitted_conception)
         conception = min(conception, latest_permitted_conception)
@@ -323,7 +332,7 @@ def apply_data(topic, datapoint):
     if rump_size:
         label = sbr_label_template % (batch_count + 1)
         rump_batch = BusinessUnit(name = label)
-        rump_batch.batch_size = rump_size
+        rump_batch.size = rump_size
         rump_batch.life.set_age(assumed_median_age, ref_date)
         #
         rump_batch.tag(tg_rump)
@@ -332,12 +341,13 @@ def apply_data(topic, datapoint):
         #
         product_unit.addComponent(rump_batch)
     #    
-    product_unit.tag("populated with subscribers")
+    product_unit.tag(tg_populated)
     #
     model.tag(tg_single_product)
     model.tag(tg_populated)
     model.tag(tg_assumed_age_dist)
     model.tag(tg_assumed_normal_dist)
+                                      
 
 scenarios[None] = scenario_1
 #
