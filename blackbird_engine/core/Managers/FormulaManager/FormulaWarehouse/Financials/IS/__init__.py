@@ -40,6 +40,8 @@ from . import Unusual
 
 #content modules:
 from . import FixedValue
+from . import FixedValue_BySize
 from . import SourceMultiplier
 from . import MonthlyExpense_FromAnnual
 from . import MonthlyExpense_FromAnnual_Inflation
+

@@ -47,5 +47,6 @@ from . import Number_SignedStoreLeases
 
 #
 from . import SubscriberLifeRange
+from . import SubscriberCount
 
 
