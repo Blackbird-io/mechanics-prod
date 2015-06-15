@@ -100,7 +100,7 @@ class Financials(list, Tags, Equalities):
     
 
     FUNCTIONS:
-    add_to()              add object as target detail
+    add_line_to()         add line as target detail
     buildDictionaries()   make name:{i} and partOf:{i} dicts for contents
     buildHierarchyGroups()
     buildHierarchyMap()
@@ -196,22 +196,39 @@ class Financials(list, Tags, Equalities):
         """
         return Equalities.__ne__(self,comparator,trace,tab_width)
 
-    def add_to(self, target_name, obj):
+    def add_line_to(self, line, parent, *ancestors):
         """
 
 
-        Financials.add_to(target_name, obj) -> None
+        Financials.add_line_to(line, target_name) -> None
 
 
         Method finds first target that matches target_name, sets the target as
-        obj's parentObject, and inserts the obj immediately prior to target's
+        line's parentObject, and inserts the line immediately prior to target's
         next peer. 
         """
         i_target = self.indexByName(target_name)
         target = self[i_target]
-        obj.setPartOf(target)
+        line.setPartOf(target)
         j_peer = self.find_peer_or_senior(i_target)
-        self.insert(obj, j_peer)
+        #j_bound = j_peer:
+            #would run this bounded by first ancestor
+            #if ancestors:
+                #j_bound:
+                    #on ancestor_0, know that you need to find i_anc_0 > i_parent; then j_anc_0 is the first
+                    #peer or senior to i_anc_0 that's left of j_parent (j_anc_0 < j_parent). and if there is
+                    #no such j_anc_0, return j_parent.
+                    #
+                    #make a locator function that does this. run it recursively. locator should expect built
+                    #dictionaries. 
+        self.insert(line, j_peer)
+        #
+        #<--------------------------------------------------------------should take star positional args for
+        #target: f(bonus_line, "g&a", "dev"). first locate g&a, then between g&a and its next peer locate "dev"
+        #
+        #<--------------------------------------------------------------should return KeyError(arg) if not foudn
+        #
+        #if not duplicate, should raise error if line already exists
 
     def buildDictionaries(self,*tagsToOmit):
         """
@@ -720,18 +737,22 @@ class Financials(list, Tags, Equalities):
             B = -1
         return B
 
-    def find_peer_or_senior(self, ref_index):
+    def find_peer_or_senior(self, ref_index, end_index = None):
         """
 
 
-        Financials.find_peer_or_senior(ref_index) -> int
+        Financials.find_peer_or_senior(ref_index[, end_index = None]) -> int
 
 
         Method locates the first peer or senior item to the right of ref_index
-        and returns that peer/senior item's index.
+        and left of end_index. Method returns the index of that peer/senior
+        relative to instance as a whole. 
 
-        If no peer or senior exists to the right of ref_index, method returns
-        index for insertion into last position (spot == len(instance)). 
+        If end_index == None, method uses instance length as the end index.
+        
+        If no peer or senior exists in instance[ref_index, end_index), method
+        returns end_index. When end_index is None, method returns instance
+        length, so callers can insert an object into last position.
 
         Items A and B are peers if A's hierarchy value equals that of B. A is
         senior to B if A's hierarchy value is **lower** than B. Method builds
@@ -741,7 +762,12 @@ class Financials(list, Tags, Equalities):
         spot = None
         peer_level = self.hierarchyMap[ref_index]
         start = ref_index + 1
-        end = len(self.hierarchyMap)
+        #
+        if end_index:
+            end = end_index
+        else:
+            end = len(self.hierarchyMap)
+        #
         for i in range(start, end):
             if self.hierarchyMap[i] <= peer_level:
                 #line in position is equal or greater in senior to ref

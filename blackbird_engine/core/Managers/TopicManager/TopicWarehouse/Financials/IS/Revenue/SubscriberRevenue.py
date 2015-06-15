@@ -199,7 +199,7 @@ def apply_data(topic, datapoint):
         own_d1 = D1.copy()
         own_line = subscriptions_line.copy()
         #
-        sbr_unit.financials.add_to("revenue", own_line)
+        sbr_unit.financials.add_line_to(own_line, "revenue")
         sbr_unit.addDriver(own_d1)
         #
         sbr_unit.tag(tg_constant_life_revenue)
