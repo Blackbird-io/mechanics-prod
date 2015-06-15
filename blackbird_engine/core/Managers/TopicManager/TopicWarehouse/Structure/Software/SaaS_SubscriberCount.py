@@ -241,6 +241,15 @@ def apply_data(topic, datapoint):
         model.taxonomy["product"]["standard"] = product_template
         model.tag(tg_multi_taxonomy)
     #
+    container_unit = model.taxonomy.get("container")
+    if not container_unit:    
+        container_unit = BusinessUnit("Container Template")
+        #tags:
+        container_unit.tag("container")
+        container_unit.tag("organizes similar units into bundles")
+        model.taxonomy["container"] = container_unit
+        #can put subscribers into a ``subscribers`` container; skip for now
+    #
     unit_count = datapoint
     batch_count = unit_count
     batch_size = 1

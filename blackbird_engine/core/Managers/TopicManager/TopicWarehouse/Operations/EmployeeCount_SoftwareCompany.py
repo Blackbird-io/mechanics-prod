@@ -4,11 +4,12 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: TW.Structure.Software.Saas_SubscriberCount
+#Module: TW.Structure.Software.EmployeeCount_SoftwareTeams
 """
 
-Topic asks about subscriber life distribution and uses that information to
-compute population life span and renewal statistics. 
+Topic asks about the number of employees across teams common to a software
+company's organization. Topic then populates the model with business units
+representative of those teams. 
 
 ====================  ==========================================================
 Attribute             Description
@@ -54,29 +55,30 @@ from ..StandardFinancials import standard_financials
 
 #globals
 topic_content = True
-name = "saas subscriber revenue"
+name = "employee head count for a software company"
 topic_author = "Ilya Podolyako"
 date_created = "2015-06-12"
 extra_prep = False
 
-
-###--------------------------------------------------------------------------have to finish tags here!!!!
 #store tags this topic uses multiple times in variables to avoid typos
-tg_constant_life_revenue = "constant revenue over lifecycle"
-tg_constant_price = "constant price over time"
 tg_critical = "critical user input"
-tg_no_inflation = "no inflation"
+tg_expands_taxonomy = "expands taxonomy"
 tg_single_product = "describes resources associated with one product"
-tg_sbx_revenue = "subscription-based revenue"
+tg_static_count = "head count stays constant over time"
+tg_size_significant = "size value is significant"
 
 #standard topic prep
-user_outline_label = "Subscription Pricing"
+user_outline_label = "Team composition"
 requiredTags = ["software",
-                "head count",
-                "personnel"]
+                "head count"]
 optionalTags = [tg_critical,
                 tg_single_product,
-                "full time employees"]
+                "full time employees",
+                "teams",
+                "personnel",
+                "staffing",
+                tg_static_count,
+                tg_expands_taxonomy]
 
 applied_drivers = dict()
 formula_names = []
@@ -84,12 +86,13 @@ question_names = []
 scenarios = dict()
 work_plan = dict()
 
-question_names = ["employee headcount across software company roles?"]
+question_names = ["employee head count across software company roles?"]
 
-work_plan["headcount"] = 2
+work_plan["head count"] = 2
 work_plan["employee expense"] = 1
 work_plan["expenses"] = 1
 work_plan["structure"] = 1
+work_plan["staffing"] = 1
 
 #custom prep
 def prepare(new_topic):
@@ -118,26 +121,12 @@ def scenario_1(topic):
 
     Scenario concludes with wrap_scenario(question).
 
-    Function asks user about employee headcount across categories.
+    Function asks user about employee head count across categories. The question
+    comes pre-baked with teams that typically make up the bulk of a software
+    organization's personnel. 
     """
-    new_question = topic.questions["employee cash salary across roles?"] 
-    model = topic.MR.activeModel
-    product_unit = model.time_line.current_period.content
-    personnel_container_bbid = product_unit.components.by_name["personnel"]
-    personnel_container = product_unit.components.by_id[personnel_container_bbid]
-    roles_by_count = sorted(personnel_container.values(), lambda headcount) #<----------------set up personnel containers
-    #
-    #configure question w existing roles:
-    input_array = new_question["input_array"]
-    for i in len(input_array):
-        element = input_array[i]
-        element["main_caption"] = roles_by_count[i].name
-        element[
-    #
-    #sort by headcount
-    #
-    #
-    #how many employees do you have in each of the following categories?
+    new_question = topic.questions["employee head count across software company roles?"]
+    #how many employees do you have in each of the following categories? ------------------------------------------------------------------------------
     topic.wrap_scenario(new_question)    
 
 def scenario_2(topic):
@@ -151,8 +140,8 @@ def scenario_2(topic):
 
     Scenario concludes with wrap_topic()
 
-    Function pulls out user response for monthly subscription price, records the
-    response in work_space, and then passes it on to apply_data() for
+    Function pulls out user response for head count across teams, records the
+    response in work_space, and then passes the data on to apply_data() for
     processing. 
     """
     model = topic.MR.activeModel
@@ -198,38 +187,52 @@ def apply_data(topic, datapoint):
 
     ``datapoint`` is monthly subscription cost in dollars. 
 
-    Function adds a ``subscriptions`` line to each subscriber unit in 
-    c
+    Function creates a unit for each role in datapoint and sets that unit's
+    size to the stipulated head count. Function then adds these team units to the
+    main product unit's ``personnel`` container.
+
+    Function defines a staff unit template that it then copies for each of the
+    team units. Function adds the staff template to the model taxonomy.
+
+    If the model taxonomy does not include a container template, function makes
+    one from scratch and adds it in. 
     """
-    #configure question:
-        #go through the personnel units
-        #add a line to each one called cash comp
-        #add a driver to each one that applies value times headcount
-            #to line called cash comp
-            #
-    #
-    
     model = topic.MR.activeModel
     prod_unit = model.time_line.current_period.content
-    staff_unit = BusinessUnit("Staff Unit Template")
+    #
+    container_unit = model.taxonomy.get("container")
+    if not container_unit:    
+        container_unit = BusinessUnit("Container Template")
+        #tags:
+        container_unit.tag("container")
+        container_unit.tag("organizes similar units into bundles")
+        model.taxonomy["container"] = container_unit 
+    #
+    staff_unit = BusinessUnit("Staff Template")
     #tags:
     staff_unit.tag("staff unit")
     staff_unit.tag("personnel")
+    staff_unit.tag("team)
     staff_unit.tag("cost center")
     staff_unit.tag("non-revenue generating")
+    staff_unit.tag("size is head count for a particular team")
+    model.taxonomy["personnel"] = staff_unit
     #
-    model.taxonomy["staff unit"] = staff_unit
+    teams = container_unit.copy()
+    teams.setName("personnel")
+    #teams unit contains personnel for the top product
+    prod_unit.addComponent(teams)
     #
     for (role, head_count) in datapoint.values():
-        new_personnel_unit = staff_unit.copy()
-        new_personnel_unit.setName(role)
-        new_personnel_unit.size = head_count
-        prod_unit.addComponent(new_personnel_unit)
+        team = staff_unit.copy()
+        team.setName(role)
+        team.size = head_count
+        teams.addComponent(new_personnel_unit)
     #    
     
 scenarios[None] = scenario_1
 #
-scenarios["employee headcount across software company roles?"] = scenario_2
+scenarios["employee head count across software company roles?"] = scenario_2
 #
 scenarios[Globals.user_stop] = end_scenario
 
