@@ -140,7 +140,7 @@ default_periods_fwd = 36
 cc_haircut = 0.20
 
 #Calendar
-t0 = date(2015,3,30)
+t0 = date(2015,6,16)
 fix_ref_date = True
 #whether models always start on the same date; keep True for testing
 days_in_month = 30
