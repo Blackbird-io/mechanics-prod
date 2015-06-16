@@ -4,12 +4,11 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: TW.Financials.IS.OpEx.Labor.commission_on_sbx
+#Module: TW.Financials.IS.OpEx.Labor.dev_spend_allocation
 """
 
-Topic asks about commissions that the company pays out from product subscriptions.
-Topic treats the commission as a ratable expense throughout the year (assumes
-that company moves cash into a reserve account as appropriate). 
+Topic asks about the percent of total development spend the company allocates
+to cost (versus R&D / SGA) for each product. 
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -53,27 +52,24 @@ from DataStructures.Modelling.LineItem import LineItem
 
 #globals
 topic_content = True
-name = "commission on product subscriptions"
+name = "development expense allocation"
 topic_author = "Ilya Podolyako"
-date_created = "2015-06-15"
+date_created = "2015-06-16"
 extra_prep = False
 
 #store tags this topic uses multiple times in variables to avoid typos
-tg_single_product = "describes resources associated with one product"
-tg_sales_team = "describes sales team"
-tg_f_sales = "function of product sales"
 tg_product_modification = "modifies product unit"
-tg_biz_dev = "business development"
 
 #standard topic prep
-user_outline_label = "Commission"
+user_outline_label = "Cost"
 requiredTags = ["employee expense",
                 "known team composition"]
 
 optionalTags = [tg_single_product,
                 "commission",
                 #
-                #software ------------------------------------------------------------------------------------
+                #software ------------------------------------------------------------------------------------update tags
+                "adjusts allocation of known value",
                 "all current",
                 "assumes simple comission structure",
                 "assumes current pay",
@@ -113,12 +109,12 @@ question_names = []
 scenarios = dict()
 work_plan = dict()
 
-formula_names = ["set line based on source value and multiplier."]
+formula_names = ["set line based on source value and multiplier."] #<--------------------------------------------------
 
-question_names = ["dev spend allocation?"]
+question_names = ["development allocation to product cost?"] #should only ask about a single product------------- tag accordingly
 #get value, add line to cost in product, add offsetting entry to sga or wherever. 
 
-work_plan["employee expense"] = 2
+work_plan["employee expense"] = 2 #<----------------------------------------------------- update
 work_plan["expenses"] = 1
 work_plan["operations"] = 1
 work_plan["bonuses"] = 1
@@ -165,67 +161,9 @@ def scenario_1(topic):
     If top product does not include any sales teams, function wraps topic. 
     """
     #
-    new_question = topic.questions["sales team commission?"]
-    #<------------------------------------------------------------ in percent of product revenue
-    #
-    model = topic.MR.activeModel
-    #
-    product_unit = model.time_line.current_period.content
-    personnel_bbid = product_unit.components.by_name["personnel"]
-    personnel_unit = product_unit.components[teams_bbid]
-    teams = personnel_unit.components.copy()
-    sales_team_names = {"sales",
-                        "bizdev",
-                        "business development",
-                        "development",
-                        "forward-deployed",
-                        "forward-deployed engineers",
-                        "inside sales",
-                        "outside sales",
-                        "inside",
-                        "outside",
-                        "sales and marketing",
-                        "sales & marketing",
-                        "marketing"}
-    sales_names_in_place = sales_team_names & set(teams.by_name.keys())
-    #
-    #in multiproduct version, run against bu_types keys.
-    #could potentially run review on team tags.
-    #
-    sales_teams_in_place = dict()
-    for sales_name in sales_names_in_place:
-        team_bbid = teams.by_name[sales_name]
-        team = teams[team_bbid]
-        #
-        team.tag(tg_biz_dev)
-        #tag the team for future reference
-        #
-        sales_teams_in_place[team_bbid] = team
-        
-    #
-    if not sales_teams_in_place:
-        model.tag("no sales teams")
-        #
-        topic.wrap_topic()
-    else:
-        sales_teams_ordered = sorted(sales_team_in_place.values(),
-                                     operator.attrgetter("size"),
-                                     reverse = True) 
-        input_array = new_question["input_array"]
-        ask_about = len(input_array)
-        ask_about = min(ask_about, len(sales_teams_ordered))
-        #if there are fewer teams than element slots, limit accordingly
-        for i in range(ask_about):
-            element = input_array[i]
-            element["_active"] = True
-            #when topic gets this question object, elements 2-5 will be
-            #inactive.
-            element["main_caption"] = sales_teams_ordered[i].name
-            element["r_min"] = 0
-            element["r_max"] = 100
-            element["shadow"] = 0
-        #
-        topic.wrap_scenario(new_question)
+    new_question = topic.questions["development allocation to product cost?"]
+    #always the same question; dont even both updating it for models
+    topic.wrap_scenario(new_question)
 
 def scenario_2(topic):
     """
@@ -244,18 +182,9 @@ def scenario_2(topic):
     """
     model = topic.MR.activeModel
     portal_question = topic.MR.activeQuestion
-    input_array = portal_question["input_array"]
-    portal_response = topic.MR.activeResponse
-    #
-    commission_by_role = dict()
-    #
-    for i in len(input_array):
-        role = input_array[i]["main_caption"]
-        commission = portal_response[i]["response"]
-        commission_by_role[role] = commission
-    #
-    model.interview.work_space["commission_by_team"] = commission_by_role
-    apply_data(topic, commission_by_role)
+    percent_to_cost = topic.get_first_response()
+    model.interview.work_space["dev_allocation_to_cost"] = percent_to_cost
+    apply_data(topic, percent_to_cost)
     topic.wrap_topic()
 
 def end_scenario(topic):
@@ -271,7 +200,7 @@ def end_scenario(topic):
     
     Function applies standard bonus data to model. 
     """
-    standard_data = SK.software.commissions
+    standard_data = SK.software.commissions #<-----------------------------------update
     #should pick out applicable data by industry and size
     #
     topic.apply_data(topic, standard_data)
@@ -298,6 +227,26 @@ def apply_data(topic, datapoint):
     #1.1. business units
     product_unit = model.time_line.current_period.content
     #
+    ##for the product unit:
+        #insert line "cost"
+            #insert line "development allocation"
+        #also insert a symmetric line into EE\Dev
+            #"allocation to cost"
+            #again, at the top level
+            #negative value.
+            #drivers are mirror images of each other
+            #but distinct objects. point to the same formula.
+        #EBITDA neutral
+        #
+        #insert 2 drivers that do the work
+        #driver: look at employment expense in the "dev" team:
+            #find the "dev" component
+            #find the "total employee expense" line
+            #apply the thing at the parent level
+            #must be a negative number
+        #requires new formula: multiply_component_line_value
+            #data: component_name, target_line, multiplier
+            
     personnel_bbid = product_unit.components.by_name["personnel"]
     personnel_unit = product_unit.components[teams_bbid]
     all_teams = personnel_unit.components

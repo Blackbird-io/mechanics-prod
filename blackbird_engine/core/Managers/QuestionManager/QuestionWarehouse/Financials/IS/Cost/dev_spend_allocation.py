@@ -46,11 +46,11 @@ optionalTags = []
 
 #Portal parameters
 #
-array_caption = "% allocated to cost"
+array_caption = None
 comment = "Feel free to estimate. We are looking to get a better sense of your accounting."
 input_type = "number"
 input_sub_type = "percent"
-bp = "What percentage of your total spending on development do you allocate to product cost?" 
+bp = "What percentage of your development spending do you allocate to product cost?" 
 basic_prompt = bp
 custom_prompt = None
 short = "Cost allocation"
@@ -65,4 +65,7 @@ active_elements = 1
 #Advanced Configuration: input element details.
 #See Blackbird Engine API for parameters available with each question type. 
 #
-#n/a
+element1 = dict()
+element1["r_min"] = 0
+element1["r_max"] = 100
+
