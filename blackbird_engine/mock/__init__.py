@@ -406,41 +406,42 @@ _mock_questions = [
 ]
 
 
-def random_currency():
+def _random_currency():
     num = random.randrange(1000000, 100000000, 1000000)
     return decimal.Decimal('{:d}.00'.format(num))
 
 
-def random_percent():
+def _random_percent():
     num = random.randrange(0, 1000000)
     return decimal.Decimal('0.{:06d}'.format(num))
 
 
-def random_years():
+def _random_years():
     return random.uniform(1.0, 3.0)
 
 
-def random_structure():
+def _random_structure():
     return random.randrange(0, 10)
 
 
-def get_landscape_summary():
+def _get_landscape_summary():
     return dict(
-        # borrower = borrower, #this line isn't necessary?
-        size_lo=random_currency(),
-        size_hi=random_currency(),
-        price_lo=random_percent(),
-        price_hi=random_percent(),
+        size=dict(
+            lo=_random_currency(),
+            hi=_random_currency()),
+        price=dict(
+            lo=_random_percent(),
+            hi=_random_percent()),
     )
 
 
 def _get_random_credit_scenario(price=None, size=None):
     return dict(
-        size=size if size else random_currency(),
-        price=price if price else random_percent(),
-        term=random_years(),
-        value=random_percent(),
-        structure=random_structure()
+        size=size if size else _random_currency(),
+        price=price if price else _random_percent(),
+        term=_random_years(),
+        value=_random_percent(),
+        structure=_random_structure()
     )
 
 
@@ -575,4 +576,4 @@ def get_forecast(portal_model, fixed, ask):
 
 def get_landscape_summary(portal_model):
     portal_model['summary']['needs'] += 1
-    return portal_model, get_landscape_summary()
+    return portal_model, _get_landscape_summary()
