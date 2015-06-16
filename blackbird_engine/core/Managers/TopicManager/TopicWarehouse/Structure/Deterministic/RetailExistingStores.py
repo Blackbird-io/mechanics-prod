@@ -423,13 +423,22 @@ def scenario_6(topic):
     #
     #Step 5:
     #Customize the batch units and insert them into the top_unit. This scenario
-    #assumes that clones are identical except for their age.
+    #assumes that clones are identical except for their age. The scenario also
+    #assumes that the first and last store are still open and adjusts their life
+    #spans accordingly. Since user has specified an existing store count,
+    #allowing some of the early stores to close by virtue of age would require
+    #the company to have opened new stores. The topic does not make this
+    #assumption on its own. <------------------------------------------------------------------------
     first_bu = ordered_batch.pop(0)
     first_bu.life.date_of_conception = first_dob_date - avg_gestation
+    if not first_bu.life.alive:
+        extend_life(first_bu, ref_date)
     top_bu.addComponent(first_bu)
     #
     last_bu = ordered_batch.pop()
     last_bu.life.date_of_conception = latest_dob_date - avg_gestation
+    if not last_bu.life.alive:
+        extend_life(last_bu, ref_date)
     top_bu.addComponent(last_bu)
     #ordered_batch now 2 units shorter than unit_count. apply distribution to
     #all remaining units.
@@ -451,9 +460,19 @@ def scenario_6(topic):
         next_conception_date = next_conception_date + avg_gestation
         next_conception_date = min(next_conception_date,
                                    latest_conception_date)
+        if not bu.life.alive:
+            extend_life(bu, ref_date)
+            #
+            #assume that an existing store can be no more than 90% of the way
+            #through their life as of the ref date. adjust unit life
+            #accordingly. in other words, assume that some of the earlier
+            #stores can live longer than the cookie cutter new ones.
+            #
+        #
         if bu.life.alive:
             top_bu.addComponent(bu)
         else:
+            #
             c = "Topic detected non-living unit: \n%s\nTopic expected to"
             c += " generate living units only."
             c = c % bu
@@ -495,7 +514,25 @@ def scenario_6(topic):
         #the new tags. 
     #                 
     topic.wrap_topic()
-    
+
+def extend_life(bu, ref_date, max_current_age = 0.90):
+    """
+
+
+    extend_life(bu, ref_date, max_current_age = 0.90) -> None
+
+
+    Function adjusts unit lifespan so that the unit 90% old as of ref date.
+    Function only updates unit lifespan if the new value is longer than the
+    existing one. 
+    """
+    known_period = ref_date - bu.life.date_of_birth
+    adj_lifespan = known_period * (1/ max_current_age)
+    adj_lifespan = max(timedelta(0), adj_lifespan)
+    #life span must be positive
+    if adj_lifespan > bu.life.span:
+        bu.life.span = adj_lifespan
+        bu.life._date_of_death = None
         
 def end_scenario(topic):
     #user pressed stop interview
