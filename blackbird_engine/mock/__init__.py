@@ -3,6 +3,7 @@ import random
 
 from ..core import BBGlobalVariables as Globals
 
+
 EndInterview = Globals.END_INTERVIEW
 
 _mock_questions = [
@@ -28,7 +29,11 @@ _mock_questions = [
         ],
         input_type='text',
         input_sub_type=None,
-        transcribe=False
+        transcribe=False,
+        show_if=dict(
+            input_type='binary',
+            main_caption='Do you want to answer this question?',
+        ),
     ),
     dict(
         question_id='some_email',
