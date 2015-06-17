@@ -52,7 +52,7 @@ input_type = "number"
 input_sub_type = "percent"
 bp = "What percentage of your development spending do you allocate to product cost?" 
 basic_prompt = bp
-custom_prompt = None
+custom_prompt = "How much development spending does {company_name} allocate to product cost (as opposed to R&D)?"
 short = "Cost allocation"
 transcribe = True
 active_elements = 1
@@ -65,7 +65,9 @@ active_elements = 1
 #Advanced Configuration: input element details.
 #See Blackbird Engine API for parameters available with each question type. 
 #
-element1 = dict()
-element1["r_min"] = 0
-element1["r_max"] = 100
+element_1 = dict()
+element_1["r_min"] = 0
+element_1["r_max"] = 100
+
+element_details = [element_0]
 
