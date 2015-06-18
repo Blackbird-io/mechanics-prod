@@ -52,7 +52,7 @@ from DataStructures.Modelling.LineItem import LineItem
 
 #globals
 topic_content = True
-name = "development expense allocation"
+name = "development expense allocation to cost"
 topic_author = "Ilya Podolyako"
 date_created = "2015-06-16"
 extra_prep = False
@@ -226,9 +226,29 @@ def apply_data(topic, datapoint):
     model = topic.MR.activeModel
     #1.1. business units
     product_unit = model.time_line.current_period.content
+    product_template = model.taxonomy.get("product")
+    targets = [product_unit]
+    if product_template:
+        targets.append(product_template)
+    for unit in targets:
+        financials = unit.financials
+        financials.buildDictionaries()
+        if line_cost.name not in financials.dNames:
+            #index by name for revenue, summary revenue
+            #add after summary revenue
+            #get 
+            financials.add_line_to(line_cost.copy, "income statement")
+            
+        
+    #for each unit in product units:
+        #if line cost is not in financials, insert it
+        #if line "development allocation" is not in financials, insert it
+        #
+    
     #
-    ##for the product unit:
-        #insert line "cost"
+    ##for the product unit and for product templates:
+        #if cost is not in there
+            #insert line "cost"
             #insert line "development allocation"
         #also insert a symmetric line into EE\Dev
             #"allocation to cost"
@@ -246,6 +266,12 @@ def apply_data(topic, datapoint):
             #must be a negative number
         #requires new formula: multiply_component_line_value
             #data: component_name, target_line, multiplier
+            #not really necessary to look in the dev component, because you run consolidate first, then derive.
+                #so by the time you run derive on product, you already know the bottom-up dev expense
+                #
+
+        #driver for negative adjustment to actual expense has to just take the cost adjust and multiply it by -1
+            #also has to not freak out if the cost adjustment is not there yet. 
             
     personnel_bbid = product_unit.components.by_name["personnel"]
     personnel_unit = product_unit.components[teams_bbid]
