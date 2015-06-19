@@ -33,6 +33,7 @@ n/a
 from . import Generic
 from . import Retail
 from . import PathFinders
+from . import Software
 #Warehouse packages have to import their contents. Catalog managers walk the
 #directory by looking at the top-level names of the package object. Without
 #imports through __init__, the walker function will not see any of the

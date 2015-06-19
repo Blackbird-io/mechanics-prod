@@ -66,27 +66,30 @@ def func(line, business_unit, data, driver_signature):
     """
     bu = business_unit
     stage = bu.life._stages.find_stage(bu.life.percent)
-    stage_name = stage["name"]
-    stage_start = stage["start"]
-    stage_end = stage["end"]
-    #
-    annual_revenue = data["annual_rev_per_mature_unit"]
-    monthly_revenue = annual_revenue/12
-    #
-    if stage_name == "maturity":
-        line.setValue(monthly_revenue, driver_signature)
+    if stage is None:
+        pass
+    else:
+        stage_name = stage["name"]
+        stage_start = stage["start"]
+        stage_end = stage["end"]
         #
-    elif stage_name == "youth":
-        growth_adjustment = (business_unit.life.percent / 
-                             (stage_end - stage_start))
-        adj_growth_revenue = growth_adjustment * monthly_revenue
-        line.setValue(adj_growth_revenue, driver_signature)
+        annual_revenue = data["annual_rev_per_mature_unit"]
+        monthly_revenue = annual_revenue/12
         #
-    elif stage_name == "decline":
-        decline_adjustment = ((100 - business_unit.life.percent) / 
-                              (stage_end - stage_start))
-        adj_decline_revenue = decline_adjustment * monthly_revenue
-        line.setValue(adj_decline_revenue, driver_signature)
-        #
+        if stage_name == "maturity":
+            line.setValue(monthly_revenue, driver_signature)
+            #
+        elif stage_name == "youth":
+            growth_adjustment = (business_unit.life.percent / 
+                                 (stage_end - stage_start))
+            adj_growth_revenue = growth_adjustment * monthly_revenue
+            line.setValue(adj_growth_revenue, driver_signature)
+            #
+        elif stage_name == "decline":
+            decline_adjustment = ((100 - business_unit.life.percent) / 
+                                  (stage_end - stage_start))
+            adj_decline_revenue = decline_adjustment * monthly_revenue
+            line.setValue(adj_decline_revenue, driver_signature)
+            #
     #always return None
     return None

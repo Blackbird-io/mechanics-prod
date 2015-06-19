@@ -100,7 +100,7 @@ class TimePeriod(Tags):
         self.prior = None
 
     def __str__(self):
-        dots = "*"*Globals.defaultScreenWidth
+        dots = "*"*Globals.screen_width
         s = "\t starts:  \t%s\n" % self.start.isoformat()
         e = "\t ends:    \t%s\n" % self.end.isoformat()
         c = "\t content: \t%s\n" % self.content

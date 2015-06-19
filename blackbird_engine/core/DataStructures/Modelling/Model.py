@@ -42,7 +42,7 @@ from DataStructures.Platform.Tags import Tags
 from Tools import Parsing as ParsingTools
 
 from .Header import Header
-from .Taxonomy import Taxonomy
+##from .Taxonomy import Taxonomy
 from .TimeLine import TimeLine
 from .TimePeriod import TimePeriod
 
@@ -130,7 +130,7 @@ class Model(Tags):
         self.interview = InterviewTracker()
         self.portal_data = dict()
         self.summary = BusinessSummary()
-        self.taxonomy = Taxonomy()
+        self.taxonomy = dict()
         self.time_line = TimeLine()
         self.time_line.id.setNID(self.id.namespace_id)
 

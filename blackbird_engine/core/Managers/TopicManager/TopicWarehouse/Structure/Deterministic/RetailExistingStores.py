@@ -326,8 +326,7 @@ def scenario_6(topic):
     else:
         top_name = (M.name or Globals.default_unit_name)
         top_bu = BusinessUnit(top_name)
-        M.currentPeriod.setContent(top_bu)
-        
+        M.currentPeriod.setContent(top_bu)  
     #
     standard_fins = StandardFinancials.standard_financials.copy()
     M.defaultFinancials = standard_fins.copy()
@@ -335,7 +334,7 @@ def scenario_6(topic):
     atx = Analytics()
     top_bu.setAnalytics(atx)
     #
-    bu_template = BusinessUnit("Unit Template", standard_fins)
+    bu_template = BusinessUnit("Standard Store Unit", standard_fins)
     #figure out unit lifespan, set accordingly
     life_in_years = M.interview.work_space["unit_life_years"]
     life_in_days = life_in_years * Globals.days_in_year
@@ -392,11 +391,19 @@ def scenario_6(topic):
         tag6 = "response difficulty"
         bu_template.tag(tag4, tag5, tag6)
     #template configuation complete
+    M.tag("defined standard operating unit")
     #
     #Step 3:
     #Add template to model taxonomy
-    M.taxonomy["operating"] = bu_template
-    #later topics can sub-type "operating" into "small", "large", etc. 
+    M.taxonomy["standard"] = bu_template
+    M.taxonomy["operating"] = dict()
+    M.taxonomy["operating"]["standard"] = bu_template
+    #
+    #later topics can sub-type "operating" into "small", "large", etc. since the
+    #custom Taxonomy class doesnt unpickle correctly, ``taxonomy`` is a simple
+    #dictionary where the "standard" key always points to a business unit object
+    #and all other keys point to other dictionaries with a similar
+    #configuration.
     #
     #Step 4:
     #Use the template operating unit to create a batch of clones. The clones
@@ -416,13 +423,22 @@ def scenario_6(topic):
     #
     #Step 5:
     #Customize the batch units and insert them into the top_unit. This scenario
-    #assumes that clones are identical except for their age.
+    #assumes that clones are identical except for their age. The scenario also
+    #assumes that the first and last store are still open and adjusts their life
+    #spans accordingly. Since user has specified an existing store count,
+    #allowing some of the early stores to close by virtue of age would require
+    #the company to have opened new stores. The topic does not make this
+    #assumption on its own. <------------------------------------------------------------------------
     first_bu = ordered_batch.pop(0)
     first_bu.life.date_of_conception = first_dob_date - avg_gestation
+    if not first_bu.life.alive:
+        extend_life(first_bu, ref_date)
     top_bu.addComponent(first_bu)
     #
     last_bu = ordered_batch.pop()
     last_bu.life.date_of_conception = latest_dob_date - avg_gestation
+    if not last_bu.life.alive:
+        extend_life(last_bu, ref_date)
     top_bu.addComponent(last_bu)
     #ordered_batch now 2 units shorter than unit_count. apply distribution to
     #all remaining units.
@@ -444,39 +460,79 @@ def scenario_6(topic):
         next_conception_date = next_conception_date + avg_gestation
         next_conception_date = min(next_conception_date,
                                    latest_conception_date)
+        if not bu.life.alive:
+            extend_life(bu, ref_date)
+            #
+            #assume that an existing store can be no more than 90% of the way
+            #through their life as of the ref date. adjust unit life
+            #accordingly. in other words, assume that some of the earlier
+            #stores can live longer than the cookie cutter new ones.
+            #
+        #
         if bu.life.alive:
             top_bu.addComponent(bu)
         else:
+            #
             c = "Topic detected non-living unit: \n%s\nTopic expected to"
             c += " generate living units only."
             c = c % bu
             raise BBExceptions.BBAnalyticalError(c)
     #
-    tag7 = "small number of units"
+    ##provide guidance for additional processing
     small_num = 10
-    tag8 = "medium number of units"
     med_num = 50
+    more_structure_processing = False
+    tag7 = "small number of units"
+    tag8 = "medium number of units"
     tag9 = "large number of units"
     if unit_count <= small_num:
         top_bu.tag(tag7)
+        M.tag(tag7)
     elif unit_count <= med_num:
         top_bu.tag(tag8)
+        M.tag(tag8)
+        M.tag("medium analysis depth permitted")
+        more_structure_processing = True
     else:
         top_bu.tag(tag9)
+        M.tag(tag9)
+        M.tag("medium analysis depth permitted")
+        M.tag("high analysis depth permitted")
+        more_structure_processing = True
     #
-    #Step 6:
-    #prep top_bu for further processing.
-    i_structure = M.interview.path.indexByName("structure")
-    line_structure = M.interview.path[i_structure]
-    line_structure.tag("ready for expected growth analysis")
-##    line_structure.guide.quality.setStandards(3, 5)---------------------------------------------------un comment to turn on addtl analysis
-    ##line will now need additional processing to look complete ot InterviewController;
-    ##Yenta should select a growth topic next, because the tag will act like a homing
-    ##beacon
-    #   
+    if more_structure_processing:
+        M.tag("check for stores in progress")
+        #this tag functions like a homing beacon.
+        i_structure = M.interview.path.indexByName("structure")
+        step_structure = M.interview.path[i_structure]
+        step_structure.guide.quality.setStandards(3, 5)
+        #
+        step_structure.guide.selection.eligible.clear()
+        #since we modified the criteria on the focal point, now have to clear
+        #the cache of eligible topics to force yenta to search through the full
+        #catalog. otherwise, yenta would only see the eligible topics from before
+        #the new tags. 
     #                 
     topic.wrap_topic()
-    
+
+def extend_life(bu, ref_date, max_current_age = 0.90):
+    """
+
+
+    extend_life(bu, ref_date, max_current_age = 0.90) -> None
+
+
+    Function adjusts unit lifespan so that the unit 90% old as of ref date.
+    Function only updates unit lifespan if the new value is longer than the
+    existing one. 
+    """
+    known_period = ref_date - bu.life.date_of_birth
+    adj_lifespan = known_period * (1/ max_current_age)
+    adj_lifespan = max(timedelta(0), adj_lifespan)
+    #life span must be positive
+    if adj_lifespan > bu.life.span:
+        bu.life.span = adj_lifespan
+        bu.life._date_of_death = None
         
 def end_scenario(topic):
     #user pressed stop interview
