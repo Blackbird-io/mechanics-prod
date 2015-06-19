@@ -235,45 +235,6 @@ class Financials(list, Tags, Equalities):
                 #one step to the right. no nested trees can come up because we
                 #are considering only top level items. 
         self.insert(j, line)
-    
-    def add_line_to(self, line, parent, *ancestors):
-        """
-
-
-        Financials.add_line_to(line, target_name) -> None
-
-
-        Method finds first target that matches target_name, sets the target as
-        line's parentObject, and inserts the line immediately prior to target's
-        next peer. 
-        """
-        i_target = self.indexByName(target_name)
-        target = self[i_target]
-        line.setPartOf(target)
-        j_peer = self.find_peer_or_senior(i_target)
-        #j_bound = j_peer:
-            #would run this bounded by first ancestor
-            #if ancestors:
-                #j_bound:
-                    #on ancestor_0, know that you need to find i_anc_0 > i_parent; then j_anc_0 is the first
-                    #peer or senior to i_anc_0 that's left of j_parent (j_anc_0 < j_parent). and if there is
-                    #no such j_anc_0, return j_parent.
-                    #
-                    #make a locator function that does this. run it recursively. locator should expect built
-                    #dictionaries. 
-        self.insert(line, j_peer)
-        #
-        #<--------------------------------------------------------------should take star positional args for
-        #target: f(bonus_line, "g&a", "dev"). first locate g&a, then between g&a and its next peer locate "dev"
-        #
-        #<--------------------------------------------------------------should return KeyError(arg) if not foudn
-        #
-        #if not duplicate, should raise error if line already exists
-        #
-        #
-        #check if line name is already in dNames. if it is, raise error of some sort
-        #use spot_in_tree() to locate spot and parent
-        #set line part of parent
 
     def add_line_to(self, line, *ancestor_tree, allow_duplicates = False):
         """
@@ -328,7 +289,9 @@ class Financials(list, Tags, Equalities):
                 raise SomeSortOfError
         i, j, parent = self.spot_in_tree(*ancestor_tree)
         line.setPartOf(parent)
-        self.insert(line, j)
+        self.insert(j, line)
+        #
+        return (i, j, parent)
     
     def spot_in_tree(self, *ancestor_tree, start = None, end = None):
         """

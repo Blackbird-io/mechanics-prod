@@ -48,7 +48,7 @@ optionalTags = []
 #
 array_caption = None
 comment = "We are looking to understand the "
-comment =+ "net price per month (including any discounts or grace periods you may offer)."
+comment += "net price per month (including any discounts or grace periods you may offer)."
 input_type = "number"
 input_sub_type = "currency"
 basic_prompt = "What's the monthly price of your subscription for an average customer?"
