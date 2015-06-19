@@ -40,6 +40,7 @@ n/a
 from . import Financials
 from . import Introduction
 from . import Structure
+from . import operations
 
 
 

@@ -76,9 +76,15 @@ extra_prep = False
 
 #standard topic prep
 user_outline_label = "Configure interview."
-requiredTags = ["intro",
+requiredTags = ["introduction",
                 "ready for path"]
-optionalTags = []
+
+optionalTags = ["start",
+                "configuration",
+                "software",
+                "saas",
+                "enterprise software",
+                "pathfinder"]
 #
 applied_drivers = dict()
 formula_names = []
@@ -96,6 +102,26 @@ standard_path = Financials(populate = False)
 standard_path.extend(SK.standard_open)
 standard_path.extend(SK.standard_core)
 standard_path.extend(SK.standard_close)
+#
+#refine standard path
+employee_expense = LineItem("Employee Expense")
+employee_expense.tag(
+                     "base compensation",
+                     "bonus",
+                     "compensation",
+                     "full-time employees",
+                     "incentive compensation",
+                     "part-time employees",
+                     "personnel",
+                     "salaries",
+                     "staff",
+                     "staffing",
+                     "stock compensation",
+                     #
+                     "payroll taxes",
+                     "health insurance",
+                     "benefits")
+standard_path.add_line_to(employee_expense, "sg&a")
 
 
 
@@ -122,8 +148,8 @@ def apply_data(topic):
     #
     intro_line = model.interview.focal_point
     while not model.interview.point_standard(intro_line):
-        intro_line.quality.increment()
-    
+        intro_line.guide.quality.increment()
+    #
     private_path = Financials(populate = False)
     private_path.append(intro_line)
     #
@@ -134,8 +160,14 @@ def apply_data(topic):
     #
     model.interview.set_path(private_path)
     model.interview.set_focal_point(next_step)
-    
+
+def end_scenario(topic):
+    c = "Topic %s does not ask questions. Process should not be in "
+    c += "end_scenario."
+    c = c % topic.name
+    raise BBExceptions.AnalyticalError(c)
     
 scenarios[None] = scenario_1
+scenarios[Globals.user_stop] = end_scenario
 
 
