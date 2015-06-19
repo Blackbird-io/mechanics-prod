@@ -1,27 +1,37 @@
 #BB Exceptions Module
 
 #Custom Exception objects: 
-class BlackbirdError(Exception): pass
+class BlackbirdError(Exception): 
     #parent class for all custom errors defined for the Blackbird Environment
+    pass
 
-class BookMarkError(BlackbirdError): pass
+class BookMarkError(BlackbirdError): 
     #used to alert missing bookmarks
+    pass
 
-class StructureError(BlackbirdError): pass
+class StructureError(BlackbirdError):
+    pass
 
-class IOPMechanicalError(StructureError): pass
-    #raise if a test reveals that something is coded in a way that's not intended
+class IOPMechanicalError(StructureError):
+    #raise if a test reveals that something is coded in a way that's not
+    #intended
+    pass
 
-class HierarchyError(StructureError): pass
+class HierarchyError(StructureError):
     #special error you raise when something doesnt fit into a hierarchy
+    pass
 
-class AccountingError(BlackbirdError): pass
+class AccountingError(BlackbirdError):
+    pass
 
-class ValueFormatError(AccountingError, TypeError): pass
+class ValueFormatError(AccountingError, TypeError):
+    pass
 
-class ManagedAttributeError(BlackbirdError): pass
+class ManagedAttributeError(BlackbirdError):
+    pass
 
-class AbstractMethodError(BlackbirdError): pass
+class AbstractMethodError(BlackbirdError):
+    pass
 
 class BBAnalyticalError(BlackbirdError):
     """

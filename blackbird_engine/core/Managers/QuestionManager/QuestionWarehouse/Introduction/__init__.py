@@ -4,10 +4,10 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Engine
-#Module: QuestionWarehouse.Structure.__init__
+#Module: QuestionWarehouse.Overview.__init__
 """
 
-Package contains content modules for questions about business structure.  
+Package contains directories with content modules for user questions. 
 
 ====================  ==========================================================
 Attribute             Description
@@ -31,17 +31,18 @@ n/a
 
 
 #imports
+#[intentionally left blank]
 #
-#must import any modules contained here at init for manager to see and add to
-#catalog
+#Do not import anything here to avoid creating any unnecessary dependencies
+#(e.g. A imports B imports C import A). Each subpackage handles its own imports
+#directly or through relative paths.
 #
-from . import FirstStoreOpen
-from . import LatestStoreOpen
-from . import MonthsToUnitMaturity
-from . import NumberOfUnits
-from . import UnitLifeSpan
-from . import MonthsToLeaseStore
-from . import MonthsToOpenStore
-##from . import Any_or_Number_SignedStoreLeases
-from . import Number_SignedStoreLeases
+from . import CompanyIndustry
+from . import CompanyStartDate
+from . import CompanyName
+from . import UserName
+from . import UserPosition
+from . import SoftwareFunction
+
+
 

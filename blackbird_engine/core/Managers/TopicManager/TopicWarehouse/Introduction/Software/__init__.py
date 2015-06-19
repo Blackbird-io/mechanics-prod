@@ -4,10 +4,10 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Engine
-#Module: QuestionWarehouse.Structure.__init__
+#Module: TopicWarehouse.Introduction.Software.__init__
 """
 
-Package contains content modules for questions about business structure.  
+Contains topics related to the software industry.
 
 ====================  ==========================================================
 Attribute             Description
@@ -21,9 +21,6 @@ n/a
 
 CLASSES:
 n/a
-
-MODULES:
-n/a
 ====================  ==========================================================
 """
 
@@ -31,17 +28,10 @@ n/a
 
 
 #imports
-#
-#must import any modules contained here at init for manager to see and add to
-#catalog
-#
-from . import FirstStoreOpen
-from . import LatestStoreOpen
-from . import MonthsToUnitMaturity
-from . import NumberOfUnits
-from . import UnitLifeSpan
-from . import MonthsToLeaseStore
-from . import MonthsToOpenStore
-##from . import Any_or_Number_SignedStoreLeases
-from . import Number_SignedStoreLeases
+#relative package imports
+from . import SoftwareFunctionality
+
+
+    
+
 

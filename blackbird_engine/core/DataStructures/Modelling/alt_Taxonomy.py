@@ -26,7 +26,7 @@ Taxonomy              organizes objects into standards and child sub-types
 
 
 #imports
-#n/a
+from collections import defaultdict
 
 
 
@@ -34,7 +34,7 @@ Taxonomy              organizes objects into standards and child sub-types
 #n/a
 
 #classes
-class Taxonomy(dict):
+class Taxonomy(defaultdict):
     """
 
     The Taxonomy class uses a dictionary to organize objects into one standard
@@ -79,27 +79,21 @@ class Taxonomy(dict):
     ====================  ======================================================
     """
     def __init__(self, standard = None):
-        dict.__init__(self)
         self.standard = standard
 
-##    def __getitem__(self, k):
-##        """
-##
-##
-##        Taxonomy.__getitem__(k) -> obj
-##
-##
-##        If ``k`` in instance.keys(), method returns value for k; otherwise,
-##        method returns instance.
-##
-##        Method guarantees no KeyError on instance[k].standard calls. 
-##        """
-##        result = None
-##        try:
-##            result = dict.__getitem__(self, k)
-##        except KeyError:
-##            result = self
-##        return result
+    def __missing__(self, k):
+        """
+
+
+        Taxonomy.__getitem__(k) -> obj
+
+
+        If ``k`` in instance.keys(), method returns value for k; otherwise,
+        method returns instance.
+
+        Method guarantees no KeyError on instance[k].standard calls. 
+        """
+        return self
 
     def __setitem__(self, k, v):
         """
@@ -111,5 +105,6 @@ class Taxonomy(dict):
         Method sets instance[k] to a child taxonomy with standard set to v. The
         child taxonomy is a new instance of the caller's .__class__. 
         """
-        child = Taxonomy(v)
-        dict.__setitem__(self, k, child)
+        child = Taxonomy()
+        child.standard = v
+        defaultdict.__setitem__(self, k, child)
