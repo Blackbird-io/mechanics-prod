@@ -4,12 +4,10 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: Managers.QuestionManager.QuestionWarehouse.QuestionTemplate_Detailed
+#Module: QW.Financials.Revenue.SubscriptionPrice_Monthly
 """
 
-A template for question content modules. Includes all parameters available for
-customization. Content modules should not import modules or create any routines
-or classes.
+Question about monthly subscription price. 
 
 ====================  ==========================================================
 Attribute             Description
@@ -38,8 +36,8 @@ n/a
 ====================  ==========================================================
 """
 question_content = True
-name = "Is this a template for question_content modules?"
-question_author = "Sue Knuth"
+name = "monthly subscription price?"
+question_author = "Ilya Podolyako"
 
 #Engine parameters
 #
@@ -49,12 +47,13 @@ optionalTags = []
 #Portal parameters
 #
 array_caption = None
-comment = None
-input_type = "text"
-input_sub_type = None
-basic_prompt = None
-custom_prompt = None
-short = None
-transcribe = False
+comment = "We are looking to understand the "
+comment =+ "net price per month (including any discounts or grace periods you may offer)."
+input_type = "number"
+input_sub_type = "currency"
+basic_prompt = "What's the monthly price of your subscription for an average customer?"
+custom_prompt = "How much does an average customer pay per month to subscribe to {product_name}?"
+short = "Subscription Price"
+transcribe = True
 active_elements = 1
 

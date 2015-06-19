@@ -135,6 +135,7 @@ default_model_name = "Blank Blackbird Model"
 default_unit_name = "Blank Unit"
 default_periods_back = 36
 default_periods_fwd = 36
+max_unit_count = 100
 
 #Market
 cc_haircut = 0.20
