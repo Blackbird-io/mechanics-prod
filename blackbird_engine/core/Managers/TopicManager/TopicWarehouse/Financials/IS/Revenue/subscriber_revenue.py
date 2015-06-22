@@ -46,8 +46,8 @@ import BBGlobalVariables as Globals
 import BBExceptions
 
 from DataStructures.Modelling.BusinessUnit import BusinessUnit
-
-from ..StandardFinancials import standard_financials
+from DataStructures.Modelling.Driver import Driver
+from Managers.TopicManager.TopicWarehouse.Structure.StandardFinancials import standard_financials
 
 
 
@@ -98,8 +98,9 @@ def prepare(new_topic):
 
 #drivers:
 D1 = Driver()
+D1.setName("subscription revenue driver")
 D1.setWorkConditions("subscriptions")
-applied_drivers["D1"]
+applied_drivers["D1"] = D1
 
 #scenarios
 #
@@ -147,7 +148,7 @@ def scenario_2(topic):
     processing. 
     """
     model = topic.MR.activeModel
-    stated_price = topic.get_first_answer())
+    stated_price = topic.get_first_answer()
     model.interview.work_space["monthly_subscription_price"] = stated_price
     apply_data(topic, stated_price)
     topic.wrap_topic()

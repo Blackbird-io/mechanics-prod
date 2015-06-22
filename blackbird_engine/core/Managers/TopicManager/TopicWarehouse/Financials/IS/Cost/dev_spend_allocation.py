@@ -4,11 +4,11 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: TW.Financials.IS.OpEx.Labor.dev_spend_allocation
+#Module: TW.Financials.IS.cost.dev_spend_allocation
 """
 
-Topic asks about the percent of total development spend the company allocates
-to cost (versus R&D / SGA) for each product. 
+Topic asks about the percent of development spend the company allocates
+to product cost (versus SG&A/R&D). Topic adjusts model accordingly.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -52,7 +52,7 @@ from DataStructures.Modelling.LineItem import LineItem
 
 #globals
 topic_content = True
-name = "development expense allocation to cost"
+name = "development expense allocation to product cost"
 topic_author = "Ilya Podolyako"
 date_created = "2015-06-16"
 extra_prep = False
@@ -63,45 +63,18 @@ tg_product_modification = "modifies product unit"
 #standard topic prep
 user_outline_label = "Cost"
 requiredTags = ["employee expense",
-                "known team composition"]
+                "known employee expense",
+                "software"]
 
-optionalTags = [tg_single_product,
+optionalTags = ["cost",
                 "commission",
                 #
-                #software ------------------------------------------------------------------------------------update tags
                 "adjusts allocation of known value",
-                "all current",
-                "assumes simple comission structure",
-                "assumes current pay",
-                "assumes no deferred elements",
-                "assumes no clawback",
-                #
-                "bonus",
-                "expenses",
-                "incentive compensation",
-                "industry-specific compensation scale",
-                #
-                "may distort cash flow",
-                "no deferred",
-                #
-                "percent of revenue",
-                "percent of product sales",
-                "performance-based",
-                "points",
-                "recurring expense",
+                "product cost",
+                "income-neutral",
+                "GAAP adjustment",
                 "refines template",
-                "sales team in place",
-                #                
-                "selling",
-                "selling expense",
-                "selling, general & administrative",
-                "sg&a",
-                #
-                "smooths cash flow",
-                "smoothing assumptions",
-                #
-                "software",
-                "team-specific analysis"]
+                "sales team in place"]
 
 applied_drivers = dict()
 formula_names = []
@@ -109,16 +82,13 @@ question_names = []
 scenarios = dict()
 work_plan = dict()
 
-formula_names = ["set line based on source value and multiplier."] #<--------------------------------------------------
+formula_names = ["set line based on source value and multiplier.",
+                 "product of line from named component."]
 
-question_names = ["development allocation to product cost?"] #should only ask about a single product------------- tag accordingly
-#get value, add line to cost in product, add offsetting entry to sga or wherever. 
+question_names = ["percent of development spend allocated to product cost?"] 
 
-work_plan["employee expense"] = 2 #<----------------------------------------------------- update
-work_plan["expenses"] = 1
-work_plan["operations"] = 1
-work_plan["bonuses"] = 1
-work_plan["commission"] = 1
+work_plan["employee expense"] = 1 
+work_plan["cost"] = 1
 work_plan["product"] = 1
 
 #custom prep
@@ -127,9 +97,14 @@ def prepare(new_topic):
     return new_topic
 
 #drivers:
-topic.applied_drivers["team commission"] = Driver()
-#place the driver on the topic, so can access without going through the content
-#module's namespace. 
+#define driver shells to make sure they receive bbids and signatures
+dr_cost = Driver()
+dr_cost.setName("write portion of development expense to cost")
+applied_drivers["allocate part of dev to cost"] = dr_cost
+#
+dr_dev = Driver()
+dr_dev.setName("mirror allocation of development to cost")
+applied_drivers["mirror dev cost allocation"] = dr_dev
 
 
 #scenarios
@@ -148,21 +123,20 @@ def scenario_1(topic):
 
 
     **opening scenario**
-    **dual mode**
 
-    Scenario concludes with wrap_scenario(question) OR wrap_topic().
+    Scenario concludes with wrap_scenario(question).
 
-    Function checks if the model includes sales teams that would be likely to
-    earn commission.
+    Function asks user about development cost allocation.
 
-    If the top product includes sales teams, function asks user about their
-    commission take.
-
-    If top product does not include any sales teams, function wraps topic. 
+    This scenario performs a very limited amount of work: it pulls out the
+    question object and sets it up for the user input.    
     """
+    q_name = "percent of development spend allocated to product cost?"
+    new_question = topic.questions[q_name]
     #
-    new_question = topic.questions["development allocation to product cost?"]
-    #always the same question; dont even both updating it for models
+    #could check if product units include personnel. in multi-product version,
+    #can plug in product names into the question's input_array.
+    #
     topic.wrap_scenario(new_question)
 
 def scenario_2(topic):
@@ -176,9 +150,8 @@ def scenario_2(topic):
 
     Scenario concludes with wrap_topic()
 
-    Function pulls out user response for each team's commmission, records the
-    response in work_space, and then passes it on to apply_data() for
-    processing.
+    Function pulls out user's allocation policy, records it in work_space, and
+    passes the data to apply_data() for processing.
     """
     model = topic.MR.activeModel
     portal_question = topic.MR.activeQuestion
@@ -196,13 +169,11 @@ def end_scenario(topic):
 
     **end scenario**
 
-    Scenario concludes with force_exit().
     
-    Function applies standard bonus data to model. 
+    Function applies industry-standard allocation policy from Subject Knowledge
+    to model. 
     """
-    standard_data = SK.software.commissions #<-----------------------------------update
-    #should pick out applicable data by industry and size
-    #
+    standard_data = SK.software["development expense allocation to product cost"]
     topic.apply_data(topic, standard_data)
 
 def apply_data(topic, datapoint):
@@ -214,11 +185,17 @@ def apply_data(topic, datapoint):
 
     ``datapoint`` is annual stock bonus per team as a percentage of salary.
 
-    Function adds lines and drivers to each personnel unit that track a monthly
-    bonus accrual based on the team-specific structure.
+    [ ]
+    Function adjusts product-level financials to allocate part of the
+    development expense to cost. 
+    
+    When Blackbird fills out financials for a product unit, the product unit
+    first picks up costs from daughter personnel units through consolidate().
+    Product unit then runs derive() to compute its own lines.
 
-    Function sets all teams that did not get specific data from the user to the
-    catch-call "everyone else" bonus.
+    Product financials should therefore include the personnel-level development
+    expense by the time the product unit starts to derive its own lines.
+    
     """
     #Step 1. Unpack each of the objects used here as parts
     #(ordered from largest to smallest)
@@ -230,86 +207,62 @@ def apply_data(topic, datapoint):
     targets = [product_unit]
     if product_template:
         targets.append(product_template)
-    for unit in targets:
-        financials = unit.financials
-        financials.buildDictionaries()
-        if line_cost.name not in financials.dNames:
-            #index by name for revenue, summary revenue
-            #add after summary revenue
-            #get 
-            financials.add_line_to(line_cost.copy, "income statement")
-            
-        
-    #for each unit in product units:
-        #if line cost is not in financials, insert it
-        #if line "development allocation" is not in financials, insert it
-        #
-    
-    #
-    ##for the product unit and for product templates:
-        #if cost is not in there
-            #insert line "cost"
-            #insert line "development allocation"
-        #also insert a symmetric line into EE\Dev
-            #"allocation to cost"
-            #again, at the top level
-            #negative value.
-            #drivers are mirror images of each other
-            #but distinct objects. point to the same formula.
-        #EBITDA neutral
-        #
-        #insert 2 drivers that do the work
-        #driver: look at employment expense in the "dev" team:
-            #find the "dev" component
-            #find the "total employee expense" line
-            #apply the thing at the parent level
-            #must be a negative number
-        #requires new formula: multiply_component_line_value
-            #data: component_name, target_line, multiplier
-            #not really necessary to look in the dev component, because you run consolidate first, then derive.
-                #so by the time you run derive on product, you already know the bottom-up dev expense
-                #
-
-        #driver for negative adjustment to actual expense has to just take the cost adjust and multiply it by -1
-            #also has to not freak out if the cost adjustment is not there yet. 
-            
-    personnel_bbid = product_unit.components.by_name["personnel"]
-    personnel_unit = product_unit.components[teams_bbid]
-    all_teams = personnel_unit.components
-    staff_template_unit = model.taxonomy["personnel"]
-    product_template_unit = model.taxonomy["product"]
     #1.2. drivers
-    dr_average_commission = Driver()
-    dr_team_commission = topic.applied_drivers["team commission"]
+    dr_cost = topic.applied_drivers["allocate part of dev to cost"]
+    dr_dev = topic.applied_drivers["mirror dev cost allocation"]
     #1.3. formulas
     f_multiplier = topic.formulas["set line based on source value and multiplier."]
-    f_fixed = topic.formulas["set line to fixed monthly value."]
-    #1.4. lines
-    l_average_commission = LineItem("commission (% of product revenue)")
+    f_component = topic.formulas["product of line from named component."]
+    #1.4. Lines
+    cost = LineItem("cost")
+    cost_adj = LineItem("development expense (allocation)")
+    cost_adj.tag("development", field = "req")
+    cost_adj.tag("adjustment",
+                 "allocation",
+                 "expense",
+                 "expense allocation",
+                 "GAAP differs from operating reality",
+                 "personnel")
+    dev_adj = cost_adj.copy()
+    dev_adj.setName("allocation to product cost")
+    dev_adj.tag("reduces development expense")
     #
-    l_team_commission = LineItem("commission (team)")
-    l_team_commission.tag("accrual")
-    l_team_commission.tag("year-end")
-    #<-------------------------------------------------------tag("distorts cash timing"; "smooths out cash disbursements")
-    l_team_commission.tag("ratable")
+    cost_adj.tag("increases product cost")
+    #tag cost line after we make a copy; this tag does **not** go on dev
+    #1.5. Configure objects
+    dr_cost.setWorkConditions(cost_adj.name,
+                              "cost")
+    cost_adjustment_data = dict()
+    cost_adjustment_data["component_name"] = "personnel"
+    cost_adjustment_data["source_line_name"] = "total expense"
+    cost_adjustment_data["source_multiplier"] = datapoint
     #
-
-    #1.5. labels
-    team_label_template = "commission (%s team)"
-    #1.6. data
-    #assumes commission only for enumerated teams #<------------------------------------------ tag accordingly
-    #1.7. adjust objects to fit each other
-    dr_average_commission.setWorkConditions(l_average_commission.name)
+    dr_cost.configure(cost_adjustment_data,
+                      f_multiplier)    
+    #
+    dr_dev.setWorkConditions(dev_adj.name,
+                             None,
+                             "development")
+    dev_adjustment_data = dict()
+    dev_adjustment_data["source_multiplier"] = -1
+    dev_adjustment_data["source_line_name"] = "development expense (allocation)"
+    #
+    dr_dev.configure(dev_adjustment_data,
+                     f_multiplier)
     
     #Step 2. Populate model with new information
-    #2.1. Update each team with their specific commission
-    for (team_name, team_commission) in datapoint.items():
-        team_bbid = all_teams.by_name[team_name]
-        team = all_teams[team_bbid]
-        #
-        #delegate repetitive work to unit_work()
-        unit_work(team, team_commission)
-        #
+    for product in targets:
+        product.resetFinancials()
+        fins = unit.financials
+        fins.buildDictionaries()
+        if cost.name not in fins.dNames:
+            fins.add_top_line(cost.copy, after = "revenue")
+        if cost_adj.name not in fins.dNames:
+            fins.add_line_to(cost_adj.copy(), "cost")
+        if dev_adj.name not in fins.dNames:
+            fins.add_line_to(dev_adj.name(), "expense")
+        unit.addDriver(dr_cost.copy())
+        unit.addDriver(dr_dev.copy())
 
     #Step 3. Prepare model for further processing
     #3.1. Add tags to model
@@ -318,64 +271,10 @@ def apply_data(topic, datapoint):
     #n/a
     #
     #THE END
-    
-    
-def unit_work(team, team_commission):
-    """
-
-
-    unit_work(team, team_salary) -> None
-
-
-    Function manages repetitive work. Here, unit_work() adds bonus-related
-    lines and drivers to each team unit. 
-    """
-    #
-    team_label = team_label_template % team.name
-    #
-    overview_data = dict()
-    overview_data["fixed_monthly_value"] = team_commission
-    #
-    team_data = dict()
-    team_data["source_line_name"] = "subscriptions"
-    team_data["source_multiplier"] = team_commission / 100
-    #
-    #team-specific lines
-    l_own_commission = l_team_commission.copy()
-    l_own_commission.setName(team_label)
-    #
-    #team-specific drivers
-    dr_own_average = dr_average_commission.copy()
-    dr_own_average.configure(overview_data, f_fixed)
-    #
-    dr_own_commission = dr_team_commission.copy()
-    dr_own_commission.setWorkConditions(team_label)
-    dr_own_commission.configure(team_data, f_multiplier)
-    #
-    #add the overview line and driver to team
-    team.financials.add_line_to(l_average_commission.copy(), "overview")
-    team.addDriver(dr_own_average)
-    #
-    #add a line and a driver for the team's commission to the product unit;
-    #add the same to the product template, so commission drivers and lines are
-    #built in
-    for unit in [product_unit, product_template_unit]:
-        unit.financials.add_line_to(l_own_commission, "employee expense")    
-        unit.addDriver(dr_own_commission)
-        unit.tag(tg_known_commission)
-    #
-    if "generic bonus" in team.allTags:
-        team.remove_drivers(generic_bonus_cash)
-        team.remove_drivers(generic_bonus_stock)
-        #or remove lines from fins.
-        team.restFinancials()
         
-    team.tag(tg_known_commission)
-    #
-    
 scenarios[None] = scenario_1
 #
-scenarios["commission on subscription revenues for open teams?"] = scenario_2
+scenarios["percent of development spend allocated to product cost?"] = scenario_2
 #
 scenarios[Globals.user_stop] = end_scenario
 

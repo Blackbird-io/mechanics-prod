@@ -129,7 +129,13 @@ def prepare(new_topic):
     return new_topic
 
 #drivers:
-topic.applied_drivers["team commission"] = Driver()
+team_commission = Driver()
+team_commission.setName("team commission driver")
+applied_drivers["team commission"] = team_commission
+#
+avg_comx = Driver()
+avg_comx.setName("average commission driver")
+applied_drivers["average commission"] = avg_comx
 #place the driver on the topic, so can access without going through the content
 #module's namespace. 
 
@@ -302,7 +308,7 @@ def apply_data(topic, datapoint):
     staff_template_unit = model.taxonomy["personnel"]
     product_template_unit = model.taxonomy["product"]
     #1.2. drivers
-    dr_average_commission = Driver()
+    dr_average_commission = topic.applied_drivers["average commission"]
     dr_team_commission = topic.applied_drivers["team commission"]
     #1.3. formulas
     f_multiplier = topic.formulas["set line based on source value and multiplier."]

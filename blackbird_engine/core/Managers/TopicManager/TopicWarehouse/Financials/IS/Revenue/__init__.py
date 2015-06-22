@@ -33,8 +33,8 @@ n/a
 #imports
 #module should import all content modules that go in the topic catalog. topic
 #manager cannot see modules unless they show up as attributes of a package. 
-from . import GenericRevenue
-from . import SubscriberRevenue
+from . import generic_revenue
+from . import subscriber_revenue
 
 
 

@@ -41,6 +41,7 @@ from . import cash_bonus_open_teams
 from . import employee_count_software
 from . import salary_open_teams
 from . import salary_software_teams
+from . import sbx_commission_open_teams
 from . import stock_bonus_open_teams
 
 

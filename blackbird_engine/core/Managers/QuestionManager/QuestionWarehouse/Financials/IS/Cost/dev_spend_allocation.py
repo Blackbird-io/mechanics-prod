@@ -36,7 +36,7 @@ n/a
 ====================  ==========================================================
 """
 question_content = True
-name = "percent of dev spend allocated to cost?"
+name = "percent of development spend allocated to product cost?"
 question_author = "Ilya Podolyako"
 
 #Engine parameters
@@ -65,9 +65,9 @@ active_elements = 1
 #Advanced Configuration: input element details.
 #See Blackbird Engine API for parameters available with each question type. 
 #
-element_1 = dict()
-element_1["r_min"] = 0
-element_1["r_max"] = 100
+element_0 = dict()
+element_0["r_min"] = 0
+element_0["r_max"] = 100
 
 element_details = [element_0]
 
