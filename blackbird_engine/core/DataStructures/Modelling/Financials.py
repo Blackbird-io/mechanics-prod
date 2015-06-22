@@ -100,7 +100,8 @@ class Financials(list, Tags, Equalities):
     
 
     FUNCTIONS:
-    add_line_to()         add line as target detail
+    add_line_to()         add line as bottom detail in tree
+    add_top_line()        add line to top of instance, optionally after another
     buildDictionaries()   make name:{i} and partOf:{i} dicts for contents
     buildHierarchyGroups()
     buildHierarchyMap()
@@ -118,6 +119,7 @@ class Financials(list, Tags, Equalities):
     setSummaryPrefix()    [obs?]
     spotByBookMark()
     spotGenerally()
+    spot_in_tree()        locates insertion index in tree of parent names
     toggleContextualFormatting()
     updatePart()
     updateSummaries()
@@ -196,46 +198,6 @@ class Financials(list, Tags, Equalities):
         """
         return Equalities.__ne__(self,comparator,trace,tab_width)
 
-    def add_top_line(self, line, after = None, allow_duplicates = False):
-        """
-
-
-        Financials.add_top_line(line, after = None) -> int()
-
-
-        Insert line at the top level of instance. Method expects ``after`` to
-        be the name of the item after which caller wants to insert line. If
-        ``after`` == None, method appends line to self.
-
-        If ``allow_duplicates`` == False, method will raise error when dealing
-        with a line that has a symmetrical name to one that's already in the
-        instance. 
-        """
-        self.buildDictionaries()
-        insert = True
-        if not allow_duplicates:
-            if line.name in self.dNames:
-                raise ErrorOfSomeSort #bad duplicates!
-        #
-        #do all the real work
-        self.buildHierarchyMap()
-        line.setPartOf(self)
-        j = None
-        if not after:
-            j = len(self)
-        else:
-            i = self.indexByName(after)
-            j = self.hierarchyMap.index(0, i)
-                #find the first top-level item after position ``i``. command
-                #completely escapes any tree that contains ``after``
-            j_line = self[j]
-            if summaryTag in j_line.allTags:
-                j = j + 1
-                #if the next top-level line is a summary of the line at i, move
-                #one step to the right. no nested trees can come up because we
-                #are considering only top level items. 
-        self.insert(j, line)
-
     def add_line_to(self, line, *ancestor_tree, allow_duplicates = False):
         """
 
@@ -292,52 +254,47 @@ class Financials(list, Tags, Equalities):
         self.insert(j, line)
         #
         return (i, j, parent)
-    
-    def spot_in_tree(self, *ancestor_tree, start = None, end = None):
+
+    def add_top_line(self, line, after = None, allow_duplicates = False):
         """
 
-        Financials.spot_in_tree(*ancestor_tree
-           [, l_bound = None[, r_bound = None]]) -> (i, j, parent)
 
-        Method locates a position in index ``j`` that represents the last line
-        in the most junior member of the ancestor_tree. The ``parent`` is that
-        most junior member. ``i`` is the parent's location.
+        Financials.add_top_line(line, after = None) -> int()
 
-        Inserting an object into instance at j will append it to the most junior
-        member of the ancestor_tree.
 
-        Method expects:
+        Insert line at the top level of instance. Method expects ``after`` to
+        be the name of the item after which caller wants to insert line. If
+        ``after`` == None, method appends line to self.
 
-        -- ``ancestor tree`` to be a tuple of 1+ strings that match the names of
-           lines in instance,
-        -- ``start`` to be the starting index for a search, and
-        -- ``end`` to be the ending index for a search.
-
-        Method will raise a KeyError if instance[start, end] does not contain
-        the ancestor_tree structure.
-
-        Method will raise an error if ancestor_tree is blank on the first call.
+        If ``allow_duplicates`` == False, method will raise error when dealing
+        with a line that has a symmetrical name to one that's already in the
+        instance. 
         """
-        i = start
-        j = end
-        parent = self
-        if not ancestor_tree:
-            raise ErrorOfSomeSort #? #return (l_bound, r_bound, self)?
-        if ancestor_tree:
-            parent_name = ancestor_tree[0]
-        i = self.indexByName(parent_name)
-        parent = self[i]
-        j = self.find_peer_or_senior(i)
-        descendants = ancestor_tree[1:]
-        if descendants:
-            i, j, parent = self.spot_in_tree(*descendants,
-                                             start = i,
-                                             end = j)
-        return (i, j, parent)
-    
+        self.buildDictionaries()
+        insert = True
+        if not allow_duplicates:
+            if line.name in self.dNames:
+                raise ErrorOfSomeSort #bad duplicates!
+        #
+        #do all the real work
+        self.buildHierarchyMap()
+        line.setPartOf(self)
+        j = None
+        if not after:
+            j = len(self)
+        else:
+            i = self.indexByName(after)
+            j = self.hierarchyMap.index(0, i)
+                #find the first top-level item after position ``i``. command
+                #completely escapes any tree that contains ``after``
+            j_line = self[j]
+            if summaryTag in j_line.allTags:
+                j = j + 1
+                #if the next top-level line is a summary of the line at i, move
+                #one step to the right. no nested trees can come up because we
+                #are considering only top level items. 
+        self.insert(j, line)
         
-        
-
     def buildDictionaries(self,*tagsToOmit):
         """
 
@@ -1622,6 +1579,50 @@ class Financials(list, Tags, Equalities):
             finally:
                 return L
 
+    def spot_in_tree(self, *ancestor_tree, start = None, end = None):
+        """
+
+
+        Financials.spot_in_tree(*ancestor_tree
+           [, l_bound = None[, r_bound = None]]) -> (i, j, parent)
+
+
+        Method locates a position in index ``j`` that represents the last line
+        in the most junior member of the ancestor_tree. The ``parent`` is that
+        most junior member. ``i`` is the parent's location.
+
+        Inserting an object into instance at j will append it to the most junior
+        member of the ancestor_tree.
+
+        Method expects:
+
+        -- ``ancestor tree`` to be a tuple of 1+ strings that match the names of
+           lines in instance,
+        -- ``start`` to be the starting index for a search, and
+        -- ``end`` to be the ending index for a search.
+
+        Method will raise a KeyError if instance[start, end] does not contain
+        the ancestor_tree structure.
+
+        Method will raise an error if ancestor_tree is blank on the first call.
+        """
+        i = start
+        j = end
+        parent = self
+        if not ancestor_tree:
+            raise ErrorOfSomeSort #? #return (l_bound, r_bound, self)?
+        if ancestor_tree:
+            parent_name = ancestor_tree[0]
+        i = self.indexByName(parent_name)
+        parent = self[i]
+        j = self.find_peer_or_senior(i)
+        descendants = ancestor_tree[1:]
+        if descendants:
+            i, j, parent = self.spot_in_tree(*descendants,
+                                             start = i,
+                                             end = j)
+        return (i, j, parent)
+    
     def summarize(self, *tagsToOmit):
         """
 

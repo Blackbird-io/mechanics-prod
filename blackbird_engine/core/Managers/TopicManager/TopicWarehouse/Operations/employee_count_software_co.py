@@ -47,8 +47,7 @@ import BBGlobalVariables as Globals
 import BBExceptions
 
 from DataStructures.Modelling.BusinessUnit import BusinessUnit
-
-from ..StandardFinancials import standard_financials
+from Managers.TopicManager.TopicWarehouse.Structure.StandardFinancials import standard_financials
 
 
 
@@ -212,7 +211,7 @@ def apply_data(topic, datapoint):
     #tags:
     staff_unit.tag("staff unit")
     staff_unit.tag("personnel")
-    staff_unit.tag("team)
+    staff_unit.tag("team")
     staff_unit.tag("cost center")
     staff_unit.tag("non-revenue generating")
     staff_unit.tag("size is head count for a particular team")

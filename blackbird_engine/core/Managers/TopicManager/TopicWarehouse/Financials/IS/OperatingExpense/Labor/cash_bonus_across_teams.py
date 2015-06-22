@@ -108,8 +108,13 @@ def prepare(new_topic):
     return new_topic
 
 #drivers:
-topic.applied_drivers["average bonus"] = Driver()
-topic.applied_drivers["team bonus"] = Driver()
+avg_bonus = Driver()
+avg_bonus.setName("average bonus")
+applied_drivers["average bonus"] = avg_bonus
+#
+team_bonus = Driver()
+team_bonus.setName("team bonus")
+applied_drivers["team bonus"] = team_bonus
 #place the driver on the topic, so can access without going through the content
 #module's namespace. 
 
@@ -271,7 +276,7 @@ def apply_data(topic, datapoint):
     all_teams = personnel_unit.components
     staff_template_unit = model.taxonomy["personnel"]
     #1.2. drivers
-    dr_average_bonus = Driver()
+    dr_average_bonus = topic.applied_drivers["average bonus"]
     dr_team_bonus = topic.applied_drivers["team bonus"]
     #1.3. formulas
     f_multiplier = topic.formulas["set line based on source value and multiplier."]

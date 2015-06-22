@@ -102,8 +102,13 @@ def prepare(new_topic):
     return new_topic
 
 #drivers:
-topic.applied_drivers["average salary"] = Driver()
-topic.applied_drivers["team salary"] = Driver()
+avg_salary = Driver()
+avg_salary.setName("average salary driver")
+applied_drivers["average salary"] = avg_salary
+#
+team_salary = Driver()
+team_salary.setName("team salary driver")
+applied_drivers["team salary"] = Driver()
 #place the driver on the topic, so can access without going through the content
 #module's namespace. 
 
