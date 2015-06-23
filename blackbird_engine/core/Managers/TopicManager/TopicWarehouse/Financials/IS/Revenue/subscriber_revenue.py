@@ -85,7 +85,7 @@ scenarios = dict()
 work_plan = dict()
 
 question_names = ["price per subscription?"]
-formula_names = ["fixed monthly value multiplied by unit size"]
+formula_names = ["fixed monthly value multiplied by unit size."]
 
 work_plan["subscriptions"] = 1 
 work_plan["revenue"] = 1
