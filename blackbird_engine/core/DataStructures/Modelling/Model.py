@@ -29,6 +29,7 @@ Model                 structured snapshots of a company across time periods
 
 #imports
 import copy
+import dill
 import time
 import BBExceptions
 import BBGlobalVariables as Globals
@@ -41,6 +42,7 @@ from DataStructures.Platform.Tags import Tags
 from Tools import Parsing as ParsingTools
 
 from .Header import Header
+##from .Taxonomy import Taxonomy
 from .TimeLine import TimeLine
 from .TimePeriod import TimePeriod
 
@@ -103,8 +105,9 @@ class Model(Tags):
                           Analyzer and MatchMaker modules
     started               bool; property, tracks whether engine has begun work
     portal_data           dict; stores data from Portal related to the instance
-    summary               dict or obj; instance of BusinessSummary 
-    timeLine              list of TimePeriod objects
+    summary               dict or obj; instance of BusinessSummary
+    taxonomy              Taxonomy; collection of prototypical business units
+    time_line              list of TimePeriod objects
 
     FUNCTIONS:
     from_portal()         class method, extracts model out of API-format
@@ -127,17 +130,18 @@ class Model(Tags):
         self.interview = InterviewTracker()
         self.portal_data = dict()
         self.summary = BusinessSummary()
-        self.timeLine = TimeLine()
-        self.timeLine.id.setNID(self.id.namespace_id)
+        self.taxonomy = dict()
+        self.time_line = TimeLine()
+        self.time_line.id.setNID(self.id.namespace_id)
 
     class dyn_current_manager:
         def __get__(self,instance,owner):
-            return instance.timeLine.current_period
+            return instance.time_line.current_period
 
         def __set__(self,instance,value):
             c = ""
             c += "Model.currentPeriod is a write-only attribute. Modifications"
-            c += "\nmust go through Model.timeLine"            
+            c += "\nmust go through Model.time_line"            
             raise BBExceptions.ManagedAttributeError(c)
 
     currentPeriod = dyn_current_manager()
@@ -154,12 +158,19 @@ class Model(Tags):
 
         Method extracts a Model from portal_model.
 
+        Method expects ``portal_model`` to be a string serialized by dill (or
+        pickle).
+
         If portal_model does not specify a Model object, method creates a new
         instance. Method stores all portal data other than the Model in the
         output's .portal_data dictionary.         
         """
-        M = portal_model["e_model"]
-        if not M:
+        M = None
+        flat_model = portal_model["e_model"]
+        #
+        if flat_model:
+            M = dill.loads(flat_model)
+        else:
             business_name = portal_model["business_name"]
             if not business_name:
                 business_name = Globals.default_model_name
@@ -168,32 +179,32 @@ class Model(Tags):
         del M.portal_data["e_model"]
         return M
 
-    def recordTopic(self,T):
-        """
+##    def recordTopic(self,T):
+##        """
+##
+##
+##        M.recordTopic(T) -> None
+##
+##        
+##        Method records a topic's tdex in the instance's ``appliedTopics`` list.
+##        Allows other modules to ensure that the same topic doesn't run twice on
+##        a given model unless it's specifically tagged as recursive.
+##        """
+##        self.appliedTopics.append(T.TDEX)
 
-
-        M.recordTopic(T) -> None
-
-        
-        Method records a topic's tdex in the instance's ``appliedTopics`` list.
-        Allows other modules to ensure that the same topic doesn't run twice on
-        a given model unless it's specifically tagged as recursive.
-        """
-        self.appliedTopics.append(T.TDEX)
-
-    def setDefaultFinancials(self,fins):
-        """
-
-
-        M.setDefaultFinancials(fins) -> None
-
-
-        Method sets instance.defaultFinancials to the template object provided
-        as an argument. Analytical objects in the environment can then quickly
-        configure new business units with the correct template when adding them
-        to the model. 
-        """
-        self.defaultFinancials = fins
+##    def setDefaultFinancials(self,fins):
+##        """
+##
+##
+##        M.setDefaultFinancials(fins) -> None
+##
+##
+##        Method sets instance.defaultFinancials to the template object provided
+##        as an argument. Analytical objects in the environment can then quickly
+##        configure new business units with the correct template when adding them
+##        to the model. 
+##        """
+##        self.defaultFinancials = fins
 
     def start(self):
         """

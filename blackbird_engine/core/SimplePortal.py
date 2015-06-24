@@ -26,6 +26,7 @@ script                dict; object that contains pre-baked responses
 screen_width          int; width of user output in chars, derived from Globals
 starting_message      dict; message that Shell can use to start Engine
 ux                    str; screen caption for user or script responses
+user_attempt_limit    int; max number of responses w bad format for same q
 web_mode              bool; if True, Shell returns fully flattened objects
 
 FUNCTIONS:
@@ -68,6 +69,7 @@ script = None
 blank_model = PortalModel().to_portal()
 starting_message = {"M" : blank_model, "Q" : None, "R" : None}
 screen_width = Globals.screen_width - 20
+user_attempt_limit = 5
 web_mode = True
 
 bb = " Blackbird:  "
@@ -326,6 +328,7 @@ def process(msg, display=True):
                     print(input_element.__str__().expandtabs(element_indent))
                     loop = True
                     while loop:
+                        count = 0
                         try:
                             #get the raw string response, either from script or user
                             if script:
@@ -354,7 +357,11 @@ def process(msg, display=True):
                                 loop = False
                         except BBExceptions.ResponseFormatError as E:
                             print(E)
-                            continue
+                            if count < user_attempt_limit:
+                                count = count + 1
+                                continue
+                            else:
+                                raise E
                     else:
                         #only get here if loop exited without a break when
                         #``toggled`` to False

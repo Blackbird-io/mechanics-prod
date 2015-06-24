@@ -100,6 +100,7 @@ class Financials(list, Tags, Equalities):
     
 
     FUNCTIONS:
+    add_to()              add object as target detail
     buildDictionaries()   make name:{i} and partOf:{i} dicts for contents
     buildHierarchyGroups()
     buildHierarchyMap()
@@ -128,7 +129,7 @@ class Financials(list, Tags, Equalities):
     #retain as explicit empty list to force Equalities to use list.__eq__ but
     #support tracing.
     
-    def __init__(self):
+    def __init__(self, populate = True):
         list.__init__(self)
         Tags.__init__(self, name = "Financials")
         ovw = LineItem(name = "Overview")
@@ -148,12 +149,18 @@ class Financials(list, Tags, Equalities):
         self.bookMarks = [sIntro,eIntro,sIS,eIS,sCFS,eCFS,sSBS,eSBS,sEBS,eEBS]
         for item in self.bookMarks:
             item.tag(builtInTag)
-        self.append(ovw)
+        #
+        if populate:
+            self.append(ovw)
+        #
         self.dNames = {}
         self.dParts = {}
-        self.extend(self.bookMarks)
-        for item in self:
-            item.setPartOf(self)
+        #
+        if populate:
+            self.extend(self.bookMarks)
+            for item in self:
+                item.setPartOf(self)
+        #
         self.topLevelNames = [None, self.name, "financials", "Financials"]
         self.hierarchyGroups = None
         self.hierarchyMap = None
@@ -188,6 +195,23 @@ class Financials(list, Tags, Equalities):
         Method explicitly delegates all work to Equalities. 
         """
         return Equalities.__ne__(self,comparator,trace,tab_width)
+
+    def add_to(self, target_name, obj):
+        """
+
+
+        Financials.add_to(target_name, obj) -> None
+
+
+        Method finds first target that matches target_name, sets the target as
+        obj's parentObject, and inserts the obj immediately prior to target's
+        next peer. 
+        """
+        i_target = self.indexByName(target_name)
+        target = self[i_target]
+        obj.setPartOf(target)
+        j_peer = self.find_peer_or_senior(i_target)
+        self.insert(obj, j_peer)
 
     def buildDictionaries(self,*tagsToOmit):
         """
@@ -696,34 +720,6 @@ class Financials(list, Tags, Equalities):
             B = -1
         return B
 
-##    def findNextPeer(self, refIndex, minH=0):
-##        """
-##
-##
-##        F.findNextPeer(self, refIndex) -> int
-##
-##        **OBSOLETE, DELETE AFTER TESTING**
-##
-##        Method returns index (``L``) of first line item in self that is both
-##        located to the right of refIndex and has a hierarchyMap value equal to
-##        that of self[refIndex].
-##
-##        L is always suitable for list.insert(L,obj).
-##
-##        If no peer item found, L == len(self)
-##        """
-##        refH = self.hierarchyMap[refIndex]
-##        while refH >= minH:
-##            try:
-##                L = self.hierarchyMap.index(refH, refIndex+1)
-##                break
-##            except ValueError:
-##                refH = refH - 1
-##                continue
-##        else:
-##            L = len(self)
-##        return L
-
     def find_peer_or_senior(self, ref_index):
         """
 
@@ -780,7 +776,7 @@ class Financials(list, Tags, Equalities):
         spots = list(spots)
         spots.sort()
         i = spots[0]
-        return i
+        return i        
 
     def inheritTags(self, recur = True):
         """

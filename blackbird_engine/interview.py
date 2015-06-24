@@ -2,7 +2,8 @@ from django.http import Http404
 
 from . import models
 from . import serializers
-from .core.engine import EndInterview, process_interview, get_landscape_summary, get_forecast
+from .core.engine import EndInterview, process_interview, get_landscape_summary as calc_summary, get_forecast as \
+    calc_forecast
 
 
 def _send_engine_msg(bb_model, question=None, response=None):
@@ -41,7 +42,7 @@ def _get_bb_model_dict(bb_model):
 
 def _save_bb_model_dict(business, model_dict, end=False):
     s = serializers.InternalBlackbirdModelSerializer(data=_strip_nones(model_dict))
-    assert s.is_valid(), 'BlackbirdModel from Engine is valid'
+    s.is_valid(raise_exception=True)
     return s.save(business=business, complete=end)
 
 
@@ -50,9 +51,10 @@ def _get_question_dict(question):
 
 
 def _save_question_dict(business, answered_question, model, end, stop, question_dict):
-    s = serializers.InternalQuestionSerializer(data=_strip_nones(question_dict))
-    assert s.is_valid(), 'Question from Engine is valid'
-    question_dict = s.validated_data
+    if not end:
+        s = serializers.InternalQuestionSerializer(data=_strip_nones(question_dict))
+        s.is_valid(raise_exception=True)
+        question_dict = s.validated_data
     return models.Question.objects.create_next(answered_question, end, stop, business=business, blackbird_model=model,
                                                **question_dict)
 
@@ -93,7 +95,13 @@ def get_landscape_summary(business):
     if not business.current_model.complete:
         raise Http404()
     cur_bb_model_dict = _get_bb_model_dict(business.current_model)
-    model_dict, landscape_summary = get_landscape_summary(cur_bb_model_dict)
+    model_dict, landscape_summary = calc_summary(cur_bb_model_dict)
+    landscape_summary['price_lo'] = landscape_summary['price'].pop('lo')
+    landscape_summary['price_hi'] = landscape_summary['price'].pop('hi')
+    landscape_summary['size_lo'] = landscape_summary['size'].pop('lo')
+    landscape_summary['size_hi'] = landscape_summary['size'].pop('hi')
+    landscape_summary.pop('price')
+    landscape_summary.pop('size')
     _save_bb_model_dict(business, model_dict, end=True)
     return landscape_summary
 
@@ -104,7 +112,10 @@ def get_forecast(business, price=None, size=None):
     cur_bb_model_dict = _get_bb_model_dict(business.current_model)
     fixed = 'price' if price else 'size'
     ask = price if price else size
-    model_dict, fixed_out, ask_out, forecast = get_forecast(cur_bb_model_dict, fixed, ask)
+    model_dict, fixed_out, ask_out, forecast = calc_forecast(cur_bb_model_dict, fixed, ask)
+    forecast = {k: v for (k, v) in forecast.items() if k in {'bad', 'mid', 'good'}}
+    for v in forecast.values():
+        v['value'] = v.pop('bb_value')
     _save_bb_model_dict(business, model_dict, end=True)
     return forecast
 

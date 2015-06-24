@@ -49,10 +49,13 @@ class TimePeriod(Tags):
     """
 
     TimePeriod objects represent periods of time and store a snapshot of some
-    data during that period in their ``content`` attribute. If one thinks of a
-    TimeLine as a clothesrack, TimePeriods are individual hangers. This
-    structure enables Blackbird to track the evolution of the data over
-    (real-world wall/calendar) time. 
+    data during that period in their ``content`` attribute.
+
+    Class represents an interval that includes its endpoints: [start, end].
+    
+    If one thinks of a TimeLine as a clothesrack, TimePeriods are individual
+    hangers. This structure enables Blackbird to track the evolution of the data
+    over real-world wall/calendar) time. 
 
     The data in ``content`` is usually a top-level business unit. TimePeriod
     provides a reference table ``bu_directory`` for objects that the data
@@ -67,13 +70,11 @@ class TimePeriod(Tags):
     DATA:
     bu_directory          dict; all business units in this period, keyed by bbid
     content               pointer to content, usually a business unit
-    end                   float; ending POSIX timestamp (secs since Epoch)
-    end_date              datetime.date object corresponding to end timestamp
+    end                   datetime.date; last date in period 
     id                    instance of ID class
     length                float; seconds between start and end
     prior                 pointer to immediately preceding time period
-    start                 float; starting POSIX timestamp (secs since Epoch)
-    start_date            datetime.date object corresponding to start timestamp
+    start                 datetime.date; first date in period.
     
     FUNCTIONS:
     __str__               basic print, shows starts, ends, and content
@@ -89,53 +90,22 @@ class TimePeriod(Tags):
     setPrior()            sets pointer to preceding time period    
     ====================  ======================================================
     """
-    def __init__(self, start_time, end_time, periodContent = None):
+    def __init__(self, start_date, end_date, content = None):
         Tags.__init__(self)
-        self.start = start_time
-        self.end = end_time
+        self.start = start_date
+        self.end = end_date
         self.bu_directory = {}
-        self.content = periodContent
+        self.content = content
         self.id = ID()
         self.prior = None
 
     def __str__(self):
-        dots = "*"*Globals.defaultScreenWidth
-        s = "\t starts:  \t%s\n" % self.start_date
-        e = "\t ends:    \t%s\n" % self.end_date
+        dots = "*"*Globals.screen_width
+        s = "\t starts:  \t%s\n" % self.start.isoformat()
+        e = "\t ends:    \t%s\n" % self.end.isoformat()
         c = "\t content: \t%s\n" % self.content
         result = dots+"\n"+s+e+c+dots+"\n"
         return result 
-      
-    class dyn_cal_manager:
-        """
-
-        Descriptor for ``start_date``, ``end_date``, and ``length``. Length is
-        always the difference between period.end and period.start. Descriptor
-        uses datetime.date.fromtimestamp() to calculate fresh date values. 
-        """
-        def __init__(self, targetAttribute):
-            self.target = targetAttribute
-          
-        def __get__(self,instance,owner):
-            if self.target == "start_date":
-                result = datetime.date.fromtimestamp(instance.start)
-                return result
-            elif self.target == "end_date":
-                result = datetime.date.fromtimestamp(instance.end)
-                return result
-            elif self.target == "length":
-                result = instance.end - instance.start
-                return result
-
-        def __set__(self,instance,value):
-            c = ""
-            c += "``%s`` is a managed attribute. Direct writes prohibted."
-            c = c % self.target
-            raise BBExceptions.ManagedAttributeError(c)
-
-    end_date = dyn_cal_manager("end_date")
-    start_date = dyn_cal_manager("start_date")
-    length = dyn_cal_manager("length")
 
     def clear(self):
         """
@@ -160,10 +130,13 @@ class TimePeriod(Tags):
         copy of the caller content. 
         """
         result = Tags.copy(self,enforce_rules)
+        result.start = copy.copy(self.start)
+        result.end = copy.copy(self.end)
         if self.content:
             new_content = self.content.copy(enforce_rules)
             result.setContent(new_content, updateID = False)
-        #same id namesapce (old model)
+        #same id namespace (old model)
+        #
         return result
     
     def extrapolate_to(self,target):

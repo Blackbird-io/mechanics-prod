@@ -42,10 +42,13 @@ n/a
 
 
 #imports
+import datetime
+import time
+
 import BBGlobalVariables as Globals
 
 from DataStructures import Modelling
-
+from DataStructures.Modelling.BusinessUnit import BusinessUnit
 
 
 
@@ -60,6 +63,7 @@ extra_prep = False
 #
 requiredTags = []
 optionalTags = ["Overview",
+                "Introduction",
                 "Start",
                 "Automatic",
                 "Default"]
@@ -68,12 +72,13 @@ applied_drivers = dict()
 formula_names = []
 question_names = ["company name?",
                   "company industry?",
+                  "company start date?",
                   "user name?",
                   "user position?",
                   ]
 work_plan = {}
 #instead of using a work_plan, this topic manually increments overview in
-#scenario 5 to track legacy structure
+#scenario 5 to track legacy topic architecture
 
 #scenarios filled in at bottom of module, after any defs
 
@@ -94,17 +99,11 @@ def scenario_3(topic):
     R = topic.get_first_answer()
     #pull out substantive response
     M = topic.MR.activeModel
-    topBU = M.currentPeriod.content
-    i_overview = topBU.financials.indexByName("Overview")
-    line_overview = topBU.financials[i_overview]
     if R in known_industries:
         M.tag("known industry")
-        line_overview.tag("known industry")
     else:
         M.tag("unknown industry")
-        line_overview.tag("unknown industry")
     M.tag(R)
-    line_overview.tag(R)
     M.header.profile["industry"] = R
     #
     new_question = topic.questions["user name?"]
@@ -116,6 +115,8 @@ def scenario_4(topic):
     M = topic.MR.activeModel
     M.header.profile["author name"] = R
     new_question = topic.questions["user position?"]
+    if M.name:
+        new_question.context["company_name"] = str(M.name)
     topic.wrap_scenario(new_question)
 
 def scenario_5(topic):
@@ -141,19 +142,39 @@ def scenario_5(topic):
     big_roles = set(decision_people + fin_people)
     R = R.casefold()
     M.header.profile["author role"] = R
-    topBU = M.currentPeriod.content
-    i_overview = topBU.financials.indexByName("Overview")
-    line_overview = topBU.financials[i_overview]
     if R in decision_people:
         M.tag("author role: decision")
-        line_overview.tag("author role: decision")
     if R in fin_people:
         M.tag("author role: finance")
-        line_overview.tag("author role: fiunance")
     if R in big_roles:
         M.tag("author role: big")
-        line_overview.tag("author role: big")
-    line_overview.guide.quality.increment(1)
+    #
+    new_question = topic.questions["company start date?"]
+    if M.name:
+        new_question.context["company_name"] = str(M.name)
+    today_date_string = datetime.date.today().isoformat()
+    new_question.input_array[0].r_max = today_date_string
+    topic.wrap_scenario(new_question)
+
+def scenario_6(topic):
+    #
+    M = topic.MR.activeModel
+    R = topic.get_first_answer()
+    #R is a string in YYYY-MM-DD format; split into integers so can create an
+    #actual date object
+    #
+    adj_r = [int(x) for x in R.split("-")]
+    date_of_birth = datetime.date(*adj_r)
+    #
+    top_bu = BusinessUnit(M.name)
+    estimated_conception = date_of_birth - top_bu.life.gestation
+    top_bu.life.date_of_conception = estimated_conception
+    M.currentPeriod.setContent(top_bu)
+    #
+    fp = M.interview.focal_point
+    fp.guide.quality.increment(1)
+    M.tag("ready for path")
+    #
     topic.wrap_topic()
 
 def end_scenario(topic):
@@ -167,6 +188,7 @@ scenarios["company name?"] = scenario_2
 scenarios["company industry?"] = scenario_3
 scenarios["user name?"] = scenario_4
 scenarios["user position?"] = scenario_5
+scenarios["company start date?"] = scenario_6
 #
 scenarios[Globals.user_stop] = end_scenario
 
