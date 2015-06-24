@@ -1,19 +1,26 @@
-from .Shell import *
+
+
+
+
+
+#imports
+from . import BBGlobalVariables as Globals
+from . import Shell as Engine
+from .. import mock as MockEngine
+
+
+
+#globals
+Engine.low_error  = True
+Engine.enable_web_mode()
 
 EndInterview = Globals.END_INTERVIEW
 
-
-##from .mock import MockEngine
-##
-##EndInterview = 'END_interview'
-##
-##
-##class Engine(MockEngine):
-##    def process_interview(self, portal_msg):
-##        return super(Engine, self).process_interview(portal_msg)
-##
-##    def get_forecast(self, portal_model, fixed, ask):
-##        return super(Engine, self).get_forecast(portal_model, fixed, ask)
-##
-##    def get_landscape_summary(self, portal_model):
-##        return super(Engine, self).get_landscape_summary(portal_model)
+if True:
+    get_forecast = Engine.get_forecast
+    get_landscape_summary = Engine.get_landscape_summary
+    process_interview = Engine.process_interview
+else:
+    get_forecast = MockEngine.get_forecast
+    get_landscape_summary = MockEngine.get_landscape_summary
+    process_interview = MockEngine.process_interview

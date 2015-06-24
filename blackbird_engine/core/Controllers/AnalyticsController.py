@@ -35,7 +35,7 @@ from .Protocol import Protocol
 
 
 #globals
-test_MinComplete = CompletionTests.test_MinComplete
+test_MinComplete = CompletionTests.t_min_quality
 
 #classes
 class AnalyticsController(Controller):
