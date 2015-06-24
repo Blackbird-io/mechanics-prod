@@ -7,24 +7,22 @@
 #Module: Controllers.Starter
 
 """
-This module responds to the (_,_,_) message that kicks off every session.
+Module responds to a blank starter message (_,_,_) that kicks off every session
+with a (M,_,_) message suitable for Analyzer processing. 
 
-The module always returns a MQ_ message.
+====================  ==========================================================
+Attribute             Description
+====================  ==========================================================
 
-The module contains an interface that's symmetric to Analyzer.
+DATA:
+MR                    instance of Messenger class, stores last message
 
-Module actions in detail: 
-        gets a _,_,_ message
-            Creates a model
-            Names it something
-            Creates a timeline in it
-            configures default financials
-            configures default bookmarks
-            Adds a business unit to its current period
-            Does some tagging stuff
-            May be does some basic lifeCycle stuff?
-            picks the first topic and question
-        returns a M,Q,_ message
+FUNCTIONS:
+process()             always returns (M,_,_)
+
+CLASSES:
+n/a
+====================  ==========================================================
 
 """
 
@@ -32,34 +30,39 @@ Module actions in detail:
 
 
 #imports
-import copy
-import time
-import BBGlobalVariables as Globals
-import Managers.TopicManager as TopicManager
+import datetime
 
-from DataStructures.Valuation.Analytics import Analytics
+import BBGlobalVariables as Globals
+
 from DataStructures.Modelling.Model import Model
-from DataStructures.Modelling.BusinessUnit import BusinessUnit
 from DataStructures.Platform.Messenger import Messenger
 
 
 
 
-
 #globals
-#Intro Topic
-intro_topic_name = "simple introduction for generic model."
-startLM = Messenger()
+MR = Messenger()
 
 #functions
 def process(msg):
+    """
+
+
+    process(msg) -> MQR message
+
+
+    Function always returns an (M,None,None) message. If the inbound message
+    is empty (_,_,_), function creates a new model. Function then starts the
+    model and builds out a time line around either the current or globally
+    fixed reference date. 
+    """
     if Globals.fix_ref_date == True:
-        refDate = Globals.t0
+        ref_date = Globals.t0
     else:
-        refDate = time.time()
-    startLM.clearMessageOut()
-    startLM.clearMessageIn()
-    startLM.receive(msg)
+        ref_date = datetime.date.today()
+    MR.clearMessageOut()
+    MR.clearMessageIn()
+    MR.receive(msg)
     #
     M = msg[0]
     if M:
@@ -72,35 +75,21 @@ def process(msg):
     else:
         M = Model(Globals.default_model_name)
     M.start()
+    #
     #make sure to officially ``start`` the model so that it never comes
     #back here; otherwise, all data will be lost
     #
-    M.timeLine.build(refDate,
+    M.time_line.build(ref_date,
                      Globals.default_periods_fwd,
                      Globals.default_periods_back)
-    topBU = BusinessUnit(Globals.default_unit_name)
-    topBU.lifeCycle.setRefDate(refDate)
-    atx = Analytics()
-    topBU.setAnalytics(atx)
-    M.currentPeriod.setContent(topBU)
-    i_overview = topBU.financials.indexByName("overview")
-    line_overview = topBU.financials[i_overview]
-    line_overview.tag("Start")
-    line_overview.tag("Configuration")
-    M.interview.setFocalPoint(line_overview)
-    def fFIXED(L):
-        result = False
-        if L.guide.quality.current >= L.guide.quality.minStandard:
-            result = True
-        return result
-    M.interview.setPointStandard(fFIXED)
-    #
     message = (M, None, None)
     #
-    #run intro topic
-    intro_topic_bbid = TopicManager.local_catalog.by_name[intro_topic_name]
-    intro_topic = TopicManager.local_catalog.issue(intro_topic_bbid)
-    message = intro_topic.process(message)
-    #
     return message
+    #
+    #SessionController will pass this message to Analyzer, which will use Yenta
+    #to select the best intro topic. As is, all models start with the same intro
+    #topic, but in the future, the introduction can be customized by geography
+    #or business type (based on sign-up code, for example). 
+    
+
 

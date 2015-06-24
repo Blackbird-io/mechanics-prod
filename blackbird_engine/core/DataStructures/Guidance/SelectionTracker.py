@@ -7,9 +7,7 @@
 #Module: DataStructures.Guidance.SelectionTracker
 
 """
-This module subclasses Counter into a SelectionTracker object. Instances of
-SelectionTracker record topics that are suitable for or selected to work on a
-particular object.
+Module subclasses Counter into a SelectionTracker object.
 ====================  ==========================================================
 Object                Description
 ====================  ==========================================================
@@ -20,10 +18,9 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-SelectionTracker      specialized gauge to track MatchMaker selections
+SelectionTracker      specialized gauge to track topic selections
 ====================  ==========================================================
 """
-
 
 
 
@@ -41,66 +38,64 @@ from .Counter import Counter
 class SelectionTracker(Counter):
     """
 
-    Specialized Counter subclass for tracking the MatchMaker's selections for a
-    particular object. Relies on Counter attributes to track primary dimension.
-    That is, ``self.current`` shows number of times MatchMaker has run a
-    topic selection process on the object.
+    The SelectionTracker provides a Counter subclass specialized for tracking
+    topics selected for a particular object. The SelectionTracker relies on
+    Counter attributes (.current) to count attempts and other attributes.
 
-    This counter features a deactivated ``cutOff`` attribute.
-
-    The class includes record-keeping attributes for secondary selection
-    metrics, such as ``dryRuns`` (situations where MatchMaker cannot find any
-    eligible, unused Topics for the object). Class also provides state for
-    MatchMaker caching (``eligibleTopics``,``allScores``).
-
-    NOTE: To reduce memory use, attributes describing topic collections should
-    store ONLY TDEXs. Other modules can locate and issue instances of these
-    topics from the warehouse as necessary at runtime.
+    NOTE: Sets of topics should store only bbids for those topics.
+    Storing pointers to actual topic objects can break serialization and deep
+    copying. 
 
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
-    finishedCatalog       bool, True if no eligible unused Topics in catalog
-    eligibleTopics        list of Topics previously determined to be eligible
-    usedTopics            list of Topics previously used on the object
-    allScores             dictionary of TDEX:(match-making scores) for eligibles
 
-    clearEligibleTopics() resets eligibleTopics to a blank list
-    recordDryRun()        toggles instance.finishedCatalog to True
-    recordUsedTopic()     adds the topic's TDEX to self.usedTopics
-    setEligibles          sets instance.eligibleTopics to passed list of TDEXes
+    DATA:
+    finished_catalog      bool; True if all eligible topics in catalog used
+    eligible              list; bbid cache for topics that can run on obj
+    used                  list; bbids for topics that have already processed obj
+    
+    FUNCTIONS:
+    record_dry_run()      sets finished_catalog to True
+    record_used_topic()   adds topic bbid to used list
+    set_eligibles         sets eligible to argument
     ====================  ======================================================
     """
     def __init__(self):
         Counter.__init__(self)
-        self.finishedCatalog = False
-        self.eligibleTopics = []
-        self.usedTopics = []
-        self.allScores = None
+        self.finished_catalog = False
+        self.eligible = []
+        self.used = []
     
-    def recordDryRun(self):
+    def record_dry_run(self):
         """
 
-        SelectTr.recordDryRun() -> None
 
-        Sets instance.finishedCatalog to True
+        ST.record_dry_run() -> None
+
+
+        Sets instance.finished_catalog to True
         """
-        self.finishedCatalog = True
+        self.finished_catalog = True
 
-    def recordUsedTopic(self,T):
+    def record_used_topic(self,T):
         """
 
-        STr.recordUsedTopic(T) -> None
 
-        Records T.id.bbid in instance.usedTopics
+        ST.record_used_topic(T) -> None
+
+
+        Method appends topic bbid to instance.used list.
         """
-        self.usedTopics.append(T.id.bbid)
+        self.used.append(T.id.bbid)
             
-    def clearEligibleTopics(self):
+    def set_eligible(self, known_eligibles):
         """
-        STr.clearEligibleTopics() -> None
-        """
-        self.eligibleTopics = []
 
-    def setEligibles(self,knownEligibles):
-        self.eligibleTopics = knownEligibles
+
+        ST.set_eligible(known_eligibles) -> None
+
+
+        Method sets instance.eligible to argument
+        """
+        self.eligible = known_eligibles

@@ -29,9 +29,17 @@ unit_life_spans["default"] = 5
 unit_labels = dict()
 unit_labels["retail"] = {"singular": "store", "plural" : "stores"}
 
-unit_number_limit = 1000
+unit_number_limit = 500
 #max number of units in a model
 
 unit_months_to_mature = dict()
 unit_months_to_mature["default"] = unit_months_to_mature[None] = 12
 unit_months_to_mature["retail"] = 30
+
+months_to_first_unit = dict()
+months_to_first_unit["default"] = 14
+months_to_first_unit["retail"] = 10
+
+gestation_rate_boost = 0.20
+#how much faster unit gestation gets from first unit to subsequent
+#units; one-time step up in rate. 

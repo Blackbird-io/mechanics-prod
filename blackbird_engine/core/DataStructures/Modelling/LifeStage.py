@@ -29,10 +29,7 @@ LifeStage             objects that provide descriptions of a stage of life
 
 
 #imports
-from DataStructures.Platform.Tags import Tags
-from BBGlobalVariables import *
-
-from .Equalities import Equalities
+#n/a
 
 
 
@@ -41,81 +38,26 @@ from .Equalities import Equalities
 #n/a
 
 #classes
-class LifeStage(Tags,Equalities):
+class LifeStage(dict):
     """
 
-    Class produces lifeStage objects that fill out a lifeCycle's
-    ``allLifeStages`` attribute. Name should be set through self.setName()
-    method inherited from Tags class.
-    
-    Lifestage objects specify temporal values (starts, ends) as percent of
-    lifespan completed. 
-
-    NOTE: Drivers or other objects filling out components of larger objects may
-    reference current values of life stages. ACCORDINGLY, CARE SHOULD BE TAKEN
-    WHEN INTRODUCING NON-DEFAULT LIFESTAGES TO AN OBJECT.
+    Class defines a dictionary with two keys set at __init__: ``name`` and
+    ``start``. Start should be an integer or float expressing the percentage of
+    object life where the stage starts.
 
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
+
     DATA:
-    irrelevantAttributes  ["partOf","parentObject"]
-    starts                float or int; lifestage starting point, in percent
-    ends                  float or int; lifestage ending point, in percent
-    first                 bool; is this stage #1 in list of lifestages
-    last                  bool; is this the last stage in list of lifestages
+    n/a
    
     FUNCTIONS:
-    makeFirst()           sets stage to first (starts = 0)
-    makeLast()            sets stage to last (ends = 100)
-    
+    n/a
     ====================  ======================================================
-
-    """
-    #define key attributes to simplify comparisons
-    keyAttributes = ["starts","ends","name"]
-##    irrelevantAttributes = ["allTags","partOf", "parentObject","skipPrefixes"]
-    
-    def __init__(self, stageName = None, stageStarts = 0, stageEnds = 100):
-        Tags.__init__(self)
-        Tags.setName(self,stageName)
-        self.starts = stageStarts
-        self.ends = stageEnds
-        self.first = False
-        self.last = False
+    """    
+    def __init__(self, name, start):
+        dict.__init__(self)
+        self["name"] = name
+        self["start"] = start
         
-    def __str__(self):
-        res = ""
-        sep = "^"
-        width = 10
-        if self.first:
-            res += sep*width+"\n"
-            res += sep*width+"\n"
-        else:
-            res += sep*width+"\n"
-        res += ("NAME:   %s\n" % self.name)
-        res += ("starts: %s\n" % self.starts)
-        res += ("ends:   %s\n" % self.ends)
-        res += ("first:  %s\n" % self.first)
-        res += ("last:   %s\n" % self.last)
-        if self.last:
-            res += sep*width+"\n"
-            res += sep*width+"\n"
-        else:
-            res += sep*width+"\n"
-        return res
-        
-    def makeFirst(self):
-        """
-        First stage in a allLifeStages list must begin at 0 percentDone.
-        """
-        self.first = True
-        self.starts = 0
-
-    def makeLast(self):
-        """
-        Last stage in an allLifeStages list must terminate at 100 percentDone.
-        A LifeStage object may be both first and last. 
-        """
-        self.last = True
-        self.ends = 100 

@@ -38,6 +38,7 @@ n/a
 #directly or through relative paths.
 #
 from . import CompanyIndustry
+from . import CompanyStartDate
 from . import CompanyName
 from . import UserName
 from . import UserPosition

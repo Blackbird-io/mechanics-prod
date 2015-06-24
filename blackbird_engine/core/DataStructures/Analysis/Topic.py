@@ -127,8 +127,7 @@ class Topic:
         #directly when the module assembles the TopicCatalog
         #
         self.record_containers = []
-        self.record_strings = ["M.interview.path",
-                             "M.currentPeriod.content.financials"]
+        self.record_strings = ["M.interview.path"]
         self.record_on_exit = True
         self.scenarios = None
         self.work_plan = {}
@@ -289,23 +288,24 @@ class Topic:
         """
         if self.work_plan != {}:
             for C in self.record_containers:
-                C.buildDictionaries()
-                for (lineName,contribution) in self.work_plan.items():
-                    if lineName in C.dNames.keys():
-                        spots_name = C.dNames[lineName]
-                        spots_name = list(spots_name)
-                        spots_name.sort()
-                        i_name = spots_name[0]
-                        L = C[i_name]
-                        L.guide.quality.increment(contribution)
-                    else:
-                        if lineName.casefold() in C.dNames.keys():
-                            spots_name = C.dNames[lineName.casefold()]
+                if C:
+                    C.buildDictionaries()
+                    for (lineName,contribution) in self.work_plan.items():
+                        if lineName in C.dNames.keys():
+                            spots_name = C.dNames[lineName]
                             spots_name = list(spots_name)
                             spots_name.sort()
                             i_name = spots_name[0]
                             L = C[i_name]
                             L.guide.quality.increment(contribution)
+                        else:
+                            if lineName.casefold() in C.dNames.keys():
+                                spots_name = C.dNames[lineName.casefold()]
+                                spots_name = list(spots_name)
+                                spots_name.sort()
+                                i_name = spots_name[0]
+                                L = C[i_name]
+                                L.guide.quality.increment(contribution)
 
     def reset_work_plan(self):
         """
@@ -410,7 +410,7 @@ class Topic:
         #question the user sees to show that they are moving along
         #
         new_progress = M.interview.progress + Globals.min_progress_per_question
-        M.interview.setProgress(new_progress)
+        M.interview.set_progress(new_progress)
         Q.progress = new_progress
         #
         self.MR.generateMessage(M,Q,R)
