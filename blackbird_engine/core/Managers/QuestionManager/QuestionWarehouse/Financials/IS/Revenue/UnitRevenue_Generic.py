@@ -49,14 +49,14 @@ array_caption = None
 comment = None
 input_type = "number"
 input_sub_type = "currency"
-basic_prompt = "How much revenue does your average unit generate at maturity?"
+basic_prompt = "How much annual revenue does your average unit generate at maturity?"
 #
 cp = ""
 cp += "How much annual revenue does your average {unit_label_singular} generate"
 cp += "after {years_to_maturity} years?"
 custom_prompt = cp
 #
-short = "Sales"
+short = "Annual Sales"
 transcribe = True
 active_elements = 1
 

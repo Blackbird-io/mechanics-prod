@@ -68,7 +68,7 @@ def func(line, business_unit, data, driver_signature):
     -- "active_gross_margin"
     
     """
-    gross_margin = data["active_gross_margin"]
+    gross_margin = float(data["active_gross_margin"])
     fins = business_unit.financials
     i_rev = None
     try:
@@ -77,7 +77,7 @@ def func(line, business_unit, data, driver_signature):
         pass
     if i_rev:
         rev = fins[i_rev].value
-    if business_unit.lifeCycle.alive and rev:
+    if business_unit.life.alive and rev:
         COGS = rev * (1 - gross_margin)
         line.setValue(COGS, driver_signature)
     #

@@ -118,6 +118,7 @@ class Question(models.Model):
     input_array = json_field.JSONField(default=list)
     input_type = models.CharField(max_length=64, default='text')
     input_sub_type = models.CharField(max_length=64, null=True)
+    show_if = json_field.JSONField(null=True, blank=True, default=None)
 
     # for building business transcript
     transcribe = models.BooleanField(default=False)
