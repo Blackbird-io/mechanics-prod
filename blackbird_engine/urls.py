@@ -2,6 +2,8 @@ from django.conf.urls import url, include, patterns
 from rest_framework_nested import routers
 from django.contrib import admin
 
+from . import fileview
+
 
 def get_v0_patterns():
     from .views import BusinessView, QuestionView
@@ -12,6 +14,7 @@ def get_v0_patterns():
     question_router.register(r'question', QuestionView)
 
     return patterns('',
+
                     url(r'', include(router.urls)),
                     url(r'', include(question_router.urls)),
                     )
@@ -20,6 +23,7 @@ def get_v0_patterns():
 urlpatterns = patterns('',
                        url(r'^admin/', include(admin.site.urls)),
                        url(r'api/v0/', include(get_v0_patterns())),
+                       url(r'^api/v0/media/(?P<filename>.+)$', fileview.file_view),
                        )
 '''
 Endpoints:
