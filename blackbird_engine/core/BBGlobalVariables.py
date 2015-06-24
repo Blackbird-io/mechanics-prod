@@ -33,11 +33,16 @@ checkStatus()         compare message to known patterns, returns fit
 """
 
 
-#Calendar:
-t0 = 1427688000.0
-#March 30, 2015, 00:00:00 am
-fix_ref_date = True
-#whether models always start on the same date; keep True for testing
+
+
+#imports
+#built-in modules only
+from datetime import date, timedelta
+
+
+
+
+#globals
 
 #Tags:
 dropDownReplicaTag = "dropdownreplica"
@@ -130,4 +135,36 @@ default_model_name = "Blank Blackbird Model"
 default_unit_name = "Blank Unit"
 default_periods_back = 36
 default_periods_fwd = 36
+
+#Market
 cc_haircut = 0.20
+
+#Calendar
+t0 = date(2015,6,16)
+fix_ref_date = True
+#whether models always start on the same date; keep True for testing
+days_in_month = 30
+days_in_year = 365
+
+#Object Life Cycle
+#all dates as datetime.date objects;
+#all time periods as datetime.timedelta objects
+conception_date_min = date(1974, 1, 1)
+conception_date_max = date(2100, 1, 1)
+#
+gestation_period_def = timedelta(365 * 1)
+gestation_period_max = timedelta(365 * 15)
+gestation_period_min = timedelta(0)
+#
+life_span_def = timedelta(365 * 50)
+#50 years
+life_span_max = timedelta(365 * 300)
+life_span_min = timedelta(0)
+#
+ref_date_max = date(2100, 1, 1)
+ref_date_min = date(1970, 1, 1)
+#
+default_life_stages = [("youth", 0),
+                       ("maturity", 30),
+                       ("decline", 70)]
+                       

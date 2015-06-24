@@ -48,7 +48,7 @@ optionalTags = []
 #
 array_caption = None
 comment = "Employee expense includes salary, bonuses, benefits, unemployment"
-comment += "insurance, and taxes." 
+comment += " insurance, and taxes." 
 input_type = "number"
 input_sub_type = "currency"
 basic_prompt = "What is the annual employee expense for a given unit?"

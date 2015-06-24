@@ -29,6 +29,10 @@ DateInput             Describes field that collects a low and high date value
 
 
 #imports
+import datetime
+
+from Tools import Parsing
+
 from .Number import NumberInput
 
 
@@ -89,9 +93,9 @@ class DateInput(NumberInput):
         hi = datetime.date.fromordinal(1000000)
         #Nov. 28, 2738
         if self.r_min:
-            lo = datetime.date(r_min.split("-"))
+            lo = Parsing.date_from_iso(self.r_min)
         if self.r_max:
-            hi = datetime.date(r_max.split("_"))
+            hi = Parsing.date_from_iso(self.r_max)
         entry_count = len(proposed_response)
         if entry_count < 1:
             result = False
@@ -100,7 +104,7 @@ class DateInput(NumberInput):
                 result = False            
         if result:            
             for entry in proposed_response:
-                n = datetime.date(entry.split("-"))
+                n = Parsing.date_from_iso(entry)
                 if lo <= n <= hi:
                     continue
                 else:
