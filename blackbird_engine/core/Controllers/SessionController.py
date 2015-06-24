@@ -71,7 +71,6 @@ def check_started(message):
     if M:
         if M.started:
             result = True
-    #
     return result
     
 def process(message_in):
@@ -104,7 +103,8 @@ def process(message_in):
         raise BBExceptions.PortalError(c)
     #
     if not check_started(message_in):
-        message_out = Starter.process(message_in)
+        message_mid = Starter.process(message_in)
+        message_out = Analyzer.process(message_mid)
     else:
         message_out = Analyzer.process(message_in)
         #

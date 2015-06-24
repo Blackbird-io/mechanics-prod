@@ -17,6 +17,8 @@ q11 = "average monthly rent for a unit?"
 q12 = "unit employee expense per year?"
 q13 = "ltm whole company marketing spend?"
 q14 = "ltm whole company overhead, excluding marketing?"
+#
+q15 = "company start date?"
 
 #answer format: track api
 #list is the PortalResponse object; dictionary is the ResponseElement object;
@@ -50,3 +52,6 @@ answers[q13] = [{"response" : "412"}]
 answers[q14] = [{"response" : "8080"}]
 #ltm whole company overhead of eight thousand eighty and 0/100 dollars
 #
+answers[q15] = [{"response" : "1998-05-01"}]
+#company started in may 1998
+                

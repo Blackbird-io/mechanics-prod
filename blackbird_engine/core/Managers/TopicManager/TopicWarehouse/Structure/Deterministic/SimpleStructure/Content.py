@@ -1,4 +1,4 @@
- #PROPRIETARY AND CONFIDENTIAL
+#PROPRIETARY AND CONFIDENTIAL
 #Property of Blackbird Logical Applications, LLC
 #Copyright Blackbird Logical Applications, LLC 2015
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
@@ -39,6 +39,8 @@ n/a
 
 
 #imports
+import datetime
+
 import BBGlobalVariables as Globals
 import Tools
 
@@ -46,6 +48,8 @@ from DataStructures.Modelling.BusinessUnit import BusinessUnit
 
 from . import PrivateKnowledge
 from ... import SharedKnowledge as SubjectKnowledge
+
+
 
 
 #globals
@@ -59,7 +63,10 @@ extra_prep = False
 #standard prep
 #
 requiredTags = []
-optionalTags = ["Simple","Deterministic","Structure","Generic"]
+optionalTags = ["Simple",
+                "Deterministic",
+                "Structure",
+                "Generic"]
 applied_drivers = dict()
 scenarios = dict()
     #ks are question names, None, or user_stop
@@ -223,26 +230,30 @@ def scenario_4(topic):
     stnd_fins  = M.defaultFinancials.copy()
     #
     bu_0 = BusinessUnit("BU0: Template", stnd_fins)
-    bu_0.lifeCycle.setLifeSpan(life_in_seconds)
+    bu_0.life.span = datetime.timedelta(0, life_in_seconds)
     if Globals.fix_ref_date:
         ref_date = Globals.t0
     else:
-        ref_date = time.time()
-    bu_0.lifeCycle.setRefDate(ref_date)
+        ref_date = datetime.date.today()
+    bu_0.life.set_ref_date(ref_date)
     #
     if youth_ends_percent < 50:
-        #maturation less than 50% of lifespan
-        bu_0.lifeCycle.allLifeStages[0].ends = youth_ends_percent
-        bu_0.lifeCycle.allLifeStages[1].starts = youth_ends_percent + 1
-        bu_0.lifeCycle.allLifeStages[1].ends = youth_ends_percent + 30
-        bu_0.lifeCycle.allLifeStages[2].starts = youth_ends_percent + 30 + 1
+        #maturation less than 50% of lifespan; create custom life stage pattern
+        maturity = bu_0.life._stages.by_name["maturity"]
+        decline = bu_0.life._stages.by_name["decline"]
+        #
+        maturity["start"] = youth_ends_percent + 1
+        decline["start"] = youth_ends_percent + 30 + 1
+        #make sure stages reorganized data now that we've changed start points
+        bu_0.life._stages.organize()
+        #
         tag1 = "long adolescence"
         tag2 = "rapid decline"
         tag3 = "unusual LifeCycle"
         bu_0.tag(tag1, tag2, tag3)
     else:
         #maturation too long, assume lifespan too short, set to 3x maturity
-        bu_0.lifeCycle.setLifeSpan(mature_in_seconds * 3)
+        bu_0.life.span = datetime.date.timedelta(0, mature_in_seconds * 3)
         tag4 = "standard LifeCycle"
         tag5 = "pro forma lifeSpan"
         tag6 = "response difficulty"
@@ -252,13 +263,15 @@ def scenario_4(topic):
     component_batch = []
     for n in range(number_of_units):
         clone = bu_0.copy(enforce_rules = False)
-        #clone was originally a deepcopy; can try reverting if doesnt work
         c_name = "Cloned Unit %s" % n
         clone.setName(c_name)
         clone.id.assignBBID(clone.name)
-        fixed_age = 0.40 * life_in_seconds
-        #assume a particular age, uniform across units
-        clone.lifeCycle.setInitialAge(fixed_age, ref_date)
+        #
+        fixed_age_seconds = 0.40 * life_in_seconds
+        fixed_age = datetime.timedelta(0, fixed_age_seconds)
+        #convert age into a timedelta obj, where main unit is days.
+        #
+        clone.life.set_age(fixed_age, ref_date)
         component_batch.append(clone)
         M.currentPeriod.content.addComponent(clone)
     #

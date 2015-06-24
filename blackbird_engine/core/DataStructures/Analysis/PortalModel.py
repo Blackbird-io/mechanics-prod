@@ -29,6 +29,7 @@ PortalModel        object that follows Engine-Wrapper API schema
 
 #imports
 import copy
+import dill
 
 from .ReadyForPortal import ReadyForPortal
 
@@ -108,8 +109,11 @@ class PortalModel(ReadyForPortal):
         if seed:
             if seed.portal_data:
                 result.update(seed.portal_data)
-            result["e_model"] = seed
+            #
             seed.portal_data.clear()
+            flattened = dill.dumps(seed)
+            result["e_model"] = flattened
+            #
             result["industry"] = seed.header.profile.get("industry")
             result["summary"] = seed.summary.copy()
         #summary.copy() will return a plain vanilla dictionary
@@ -239,21 +243,3 @@ class PortalModel(ReadyForPortal):
                 
                         #now.extrapolate_to(next)
                     
-            
-                #get past
-                
-                    #
-
-            #timeLine.get_ordered()
-            #timeLine.get_past()
-            #timeLine.get_future():
-            #   #
-            #
-            #
-            #
-            #
-            #
-            #
-            #
-    
-    

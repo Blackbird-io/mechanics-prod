@@ -53,7 +53,7 @@ class CR_Scenario(Pattern):
     n/a
 
     FUNCTIONS:
-    n/a
+    to_portal()           Return a dictionary with instance contents
     ====================  ======================================================
     """
     
@@ -63,4 +63,20 @@ class CR_Scenario(Pattern):
         self.applyStandard(standard)
         #default structure score: 
         self.changeElement("structure", Parameters.gl_structure_score)
+
+    def to_portal(self, seed = None):
+        """
+
+
+        CR_Scenario.to_portal([seed = None]) -> dict()
+
+
+        Method updates an empty dictionary with data from seed. If ``seed`` is
+        None, method uses instance as seed.
+        """
+        if not seed:
+            seed = self
+        result = dict()
+        result.update(seed)
+        return result
 

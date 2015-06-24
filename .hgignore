@@ -1,0 +1,13 @@
+syntax: glob
+
+#Trying out hg-ignore functionality to avoid tracking pycache files. Running testing suite
+#on Engine automatically generates these. 
+
+#Any file with a .pyc extension in the folders
+**.pyc
+
+#All done. 
+
+db.sqlite3
+.idea
+.elasticbeanstalk

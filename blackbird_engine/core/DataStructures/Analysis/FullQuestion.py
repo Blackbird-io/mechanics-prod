@@ -272,7 +272,7 @@ class FullQuestion:
         if input_type not in self._types.keys():
             c = "Portal does not recognize %s as valid input_type."
             c = c % input_type
-            raise typing_error
+            raise BBExceptions.QuestionFormatError(c)
         else:
             self.input_type = input_type
             self.input_array = []

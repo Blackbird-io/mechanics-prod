@@ -1,18 +1,38 @@
 #PROPRIETARY AND CONFIDENTIAL
-#Property of Ilya Podolyako
+#Property of Blackbird Logical Applications, LLC
+#Copyright Blackbird Logical Applications, LLC 2015
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
-#Blackbird Credit Market
-#Parsing Tools
-#v2.0
-#By Ilya Podolyako
+#Blackbird Engine
+#Module: DataStructures.Tools.Parsing
+"""
+
+Module provides convenience functions for parsing user data. 
+
+====================  ==========================================================
+Attribute             Description
+====================  ==========================================================
+
+DATA:
+n/a
+
+FUNCTIONS:
+date_from_iso()       convert ``YYYY-MM-DD`` string into datetime.date object
+seconds_from_iso()    convert ``YYYY-MM-DD`` string into seconds since Epoch
+
+CLASSES:
+n/a
+====================  ==========================================================
+"""
 
 
 
 
 #imports
-import time
 import copy
+import datetime
+import time
+
 import BBExceptions
 from BBGlobalVariables import *
 
@@ -33,87 +53,96 @@ def secondsToMonths(seconds):
     months = seconds / secondsPerMonth
     return months    
 
-def monthStartTime(currentTime):
-    """
-    Returns the UTC time for the first day of the month that the currentTime occurs in.
-    Specifically, returns the time in seconds for the second after midnight on Day 1 of the month.
-    """
-    #gives you a time.struct_time object that's iterable
-    currentTimeTuple = time.localtime(currentTime)
-    #gives you a list of items in the current time tuple, so you can change them
-    currentTimeList = [x for x in currentTimeTuple]
-    #gives you a copy of the currentTimeList to work on
-    currentMonthStartList = copy.deepcopy(currentTimeList)
-    #month starts when the date is equal to 1
-    currentMonthStartList[2] = 1
-    #set hour, min, and seconds to 0
-    #by zeroing out currentMonthStartList[3:6]
-    for i in range(len(currentMonthStartList)):
-        if i>=3 and i<6:
-            currentMonthStartList[i] = 0
-    #now currentMonthStartList should look like: [yy, mm, 1, 0, 0, 0, ?, ?]
-    #last two items in the list are the day in the year and DST variables
-    #let library conform those as necessary
-    currentMonthStartTuple = time.struct_time(currentMonthStartList)
-    #turn the struct into a seconds to make incrementation easier
-    currentMonthStartSeconds = time.mktime(currentMonthStartTuple)
-    return currentMonthStartSeconds
+##def monthStartTime(currentTime):
+##    """
+##    Returns the UTC time for the first day of the month that the currentTime occurs in.
+##    Specifically, returns the time in seconds for the second after midnight on Day 1 of the month.
+##    """
+##    #gives you a time.struct_time object that's iterable
+##    currentTimeTuple = time.localtime(currentTime)
+##    #gives you a list of items in the current time tuple, so you can change them
+##    currentTimeList = [x for x in currentTimeTuple]
+##    #gives you a copy of the currentTimeList to work on
+##    currentMonthStartList = copy.deepcopy(currentTimeList)
+##    #month starts when the date is equal to 1
+##    currentMonthStartList[2] = 1
+##    #set hour, min, and seconds to 0
+##    #by zeroing out currentMonthStartList[3:6]
+##    for i in range(len(currentMonthStartList)):
+##        if i>=3 and i<6:
+##            currentMonthStartList[i] = 0
+##    #now currentMonthStartList should look like: [yy, mm, 1, 0, 0, 0, ?, ?]
+##    #last two items in the list are the day in the year and DST variables
+##    #let library conform those as necessary
+##    currentMonthStartTuple = time.struct_time(currentMonthStartList)
+##    #turn the struct into a seconds to make incrementation easier
+##    currentMonthStartSeconds = time.mktime(currentMonthStartTuple)
+##    return currentMonthStartSeconds
+##
+##  DELETE WHEN TESTED <--------------------------------------------------------
 
-def missingAttributeCatcher(obj,attr,plug):
-    """
-    A function for returning default values in event that an attribute is missing.
-    The function attempts to run getattr(obj,attr).
-    If an AttributeError arises, returns plug.
+##def missingAttributeCatcher(obj,attr,plug):
+##    """
+##    A function for returning default values in event that an attribute is missing.
+##    The function attempts to run getattr(obj,attr).
+##    If an AttributeError arises, returns plug.
+##
+##    NOTE: getattr requires that the desired attribute name be specified as a string.
+##    """
+##    try:
+##        return getattr(obj,attr)
+##    except AttributeError:
+##        return plug
+##
+##  DELETE WHEN TESTED <--------------------------------------------------------
 
-    NOTE: getattr requires that the desired attribute name be specified as a string.
-    """
-    try:
-        return getattr(obj,attr)
-    except AttributeError:
-        return plug
+##def valueReplacer(test,plug,*badValues):
+##    result = test
+##    if result in badValues:
+##        result = plug
+##    return result
+##
+##  DELETE WHEN TESTED <--------------------------------------------------------
 
-def valueReplacer(test,plug,*badValues):
-    result = test
-    if result in badValues:
-        result = plug
-    return result        
-
-def checkNameIntegrity(containerObject, nameDictionary = None, returnAll = False):
-    """
-    A function for checking whether items in a container share names.
-    Returns a tuple of (bool, {1}, {2}), where:
-        -- bool is True if no items share a name other than None, and False otherwise
-        -- {1} is a dictionary of items with duplicative names in the format of [item.name]:[item1,...]
-        -- {2} is a dictionary of all item names for the container in the format of [item.name]:[item1,...]
-    Function uses the missingAttributeCatcher exception handler to classify items without a .name as having name = None.
-    Function returns True even if more than one item in the container has a None name.
-    
-    User can provide a pre-built name dictionary for the container to increase speed.
-
-    Setting returnAll to True ensures return of the three-item tuple above.
-    Setting returnAll to False returns a two item tuple (bool, {1})
-    """
-    allNames = {}
-    if nameDictionary:
-        allNames = nameDictionary
-    status = True
-    duplicateNames = {}
-    f1 = missingAttributeCatcher
-    for item in containerObject:
-        nameOrNone = f1(item,"name",None)
-        if nameOrNone in allNames.keys():
-            allNames[nameOrNone].append(item)
-            if nameOrNone != None and len(allNames[nameOrNone]) >= 2:
-                status = False
-                duplicateNames[item.name] = allNames[item.name]
-                #ok to call item.name above because block only trigerred if nameOrNone is not None
-                #that is, item.name did not generate an attribute error
-        else:
-            allNames[nameOrNone] = [item]
-    if returnAll:
-        return (status, duplicateNames, allNames)
-    else:
-        return (status, duplicateNames)
+##
+##def checkNameIntegrity(containerObject, nameDictionary = None, returnAll = False):
+##    """
+##    A function for checking whether items in a container share names.
+##    Returns a tuple of (bool, {1}, {2}), where:
+##        -- bool is True if no items share a name other than None, and False otherwise
+##        -- {1} is a dictionary of items with duplicative names in the format of [item.name]:[item1,...]
+##        -- {2} is a dictionary of all item names for the container in the format of [item.name]:[item1,...]
+##    Function uses the missingAttributeCatcher exception handler to classify items without a .name as having name = None.
+##    Function returns True even if more than one item in the container has a None name.
+##    
+##    User can provide a pre-built name dictionary for the container to increase speed.
+##
+##    Setting returnAll to True ensures return of the three-item tuple above.
+##    Setting returnAll to False returns a two item tuple (bool, {1})
+##    """
+##    allNames = {}
+##    if nameDictionary:
+##        allNames = nameDictionary
+##    status = True
+##    duplicateNames = {}
+##    f1 = missingAttributeCatcher
+##    for item in containerObject:
+##        nameOrNone = f1(item,"name",None)
+##        if nameOrNone in allNames.keys():
+##            allNames[nameOrNone].append(item)
+##            if nameOrNone != None and len(allNames[nameOrNone]) >= 2:
+##                status = False
+##                duplicateNames[item.name] = allNames[item.name]
+##                #ok to call item.name above because block only trigerred if nameOrNone is not None
+##                #that is, item.name did not generate an attribute error
+##        else:
+##            allNames[nameOrNone] = [item]
+##    if returnAll:
+##        return (status, duplicateNames, allNames)
+##    else:
+##        return (status, duplicateNames)
+##
+##  DELETE WHEN TESTED <--------------------------------------------------------
 
 
 def locateByName(container,startingMark,endingMark):
@@ -135,6 +164,7 @@ def locateByName(container,startingMark,endingMark):
             continue
     return (startMarkIndex, endMarkIndex)
 #NOTE: ABOVE FUNCTION IS NOT FLEXIBLE AND SHOULD BE REVISITED
+##  DELETE WHEN TESTED <--------------------------------------------------------
 
 def locateByTag(container, *targetTags):
     """
@@ -151,6 +181,7 @@ def locateByTag(container, *targetTags):
     else:
         location = -1
     return location
+##  DELETE WHEN TESTED <--------------------------------------------------------
 
 def findByTag(container, *targetTags):
     """
@@ -209,6 +240,7 @@ def provideListOfNames(container, missing = "ATTRIBUTE ERROR!"):
     for item in container:
         result.append(missingAttributeCatcher(item,"name",missing))
     return result
+##  DELETE WHEN TESTED <--------------------------------------------------------
     
 def padAndZip(*thingsToZip, padding = None, trace = False):
     """
@@ -309,3 +341,50 @@ def deCase(obj):
     except AttributeError:
         pass
     return result
+
+
+def seconds_from_iso(string):
+    """
+
+
+    seconds_from_iso(string) -> float
+
+
+    Function takes a string in "YYYY-MM-DD" format and returns a POSIX timestamp
+    representing seconds since Epoch. Function ignores any whitespace around the
+    POSIX data. 
+    """
+    calendar = date_from_iso(string)
+    to_time = calendar.timetuple()
+    result = time.mktime(to_time)
+    #
+    return result
+
+def date_from_iso(string):
+    """
+
+
+    date_from_iso(string) -> datetime.date
+
+
+    Function takes a string in "YYYY-MM-DD" format and returns an instance of
+    datetime.date. Function ignores any whitespace around the POSIX data. 
+    """
+    elements = [int(x) for x in string.split("-")]
+    result = datetime.date(*elements)
+    #
+    return result
+
+def seconds_from_years(yrs):
+    """
+
+
+    seconds_from_years(yrs) -> int or float
+
+
+    Function returns value corresponding to the number of seconds in ``yrs``,
+    assuming a 365-day year.
+    """
+    result = yrs * 365 * 24 * 60 * 60
+    return result
+    
