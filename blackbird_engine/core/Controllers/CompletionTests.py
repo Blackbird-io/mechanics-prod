@@ -17,9 +17,9 @@ DATA:
 n/a
 
 FUNCTIONS:
-test_MinComplete      returns True if obj's quality at least equals min standard
-test_MaxComplete      returns True if obj's quality at least equals max standard
-test_MaxOrAllowance   returns True if obj's quality is below lower of max or
+t_min_quality         returns True if obj's quality at least equals min standard
+t_max_quality         returns True if obj's quality at least equals max standard
+t_max_or_allowance    returns True if obj's quality is below lower of max or
                       attention allowance
 
 CLASSES:
@@ -43,11 +43,11 @@ n/a
 #n/a
 
 #functions
-def test_MinComplete(item):
+def t_min_quality(item):
     """
 
 
-    test_MinComplete(item) -> bool
+    t_min_quality(item) -> bool
 
 
     Expects item to have a properly configured ``guide`` attribute.
@@ -63,15 +63,15 @@ def test_MinComplete(item):
         result = False
     elif currentQ >= standard:
         result = True
-    if item.guide.selection.finishedCatalog:
+    if item.guide.selection.finished_catalog:
         result = True
     return result
 
-def test_MaxComplete(item):
+def t_max_quality(item):
     """
 
 
-    test_MaxComplete(item) -> bool
+    t_max_quality(item) -> bool
     
 
     Function returns True if item's current quality equals or exceeds its
@@ -87,11 +87,11 @@ def test_MaxComplete(item):
     elif currentQ >= standard:
         result = True
 
-def test_MaxOrAllowance(item):
+def t_max_or_allowance(item):
     """
 
 
-    test_MaxOrAllowance(item) -> bool
+    t_max_or_allowance(item) -> bool
 
     
     Function returns True if item's current quality equals or exceeds the

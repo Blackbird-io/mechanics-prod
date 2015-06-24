@@ -222,7 +222,7 @@ def scenario_3(topic):
     m_ref_date = M.currentPeriod.end
     if Globals.fix_ref_date:
         m_ref_date = Globals.t0
-    m_ref_year = datetime.date.fromtimestamp(m_ref_date).year
+    m_ref_year = m_ref_date.year
     #
     employee_data["ref_year"] = m_ref_year  
     #
@@ -339,8 +339,6 @@ def scenario_3(topic):
         for (k,tDriver) in local_drivers.items():
             clean_dr = tDriver.copy()
             bu.addDriver(clean_dr,k)
-    #
-    M.interview.clearCache()
     #
     topic.wrap_topic()
 

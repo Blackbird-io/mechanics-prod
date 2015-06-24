@@ -27,6 +27,7 @@ do()                  0-argument function, runs test's task script and returns
 check()               takes output as an argument, checks it against a
                       predefined standard, usually by passing both to a
                       dedicated Grader module
+====================  ==========================================================
 """
 
 
@@ -34,6 +35,8 @@ check()               takes output as an argument, checks it against a
 
 #imports
 from . import Basic
+from . import Legacy
+from . import Stateful
 
 
 
