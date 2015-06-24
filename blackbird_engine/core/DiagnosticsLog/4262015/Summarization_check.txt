@@ -1,0 +1,91 @@
+running Summarization.check() on result...
+load standard object
+	standard object loaded
+first, check whether build completed do() without generating an exception.
+that is, check whether output is a descendant of the Exception class.
+build completed test.do() successfully.
+compare output to standard.
+
+
+        This test checks whether the summary of a model built from known inputs
+        in the current build matches the summary of the known (intended) output
+        of that model in a verified build.
+
+        Grader will award an affirmative score ("pass") for all new summaries
+        that include the entirety of information from known summaries.
+        
+        
+T16.01: compare model summaries
+
+        new_summary = o["T16.01"]["summary"]
+        known_summary = standard["T16.01"]["summary"]
+        
+new_summary: 
+	cost:.............................3499999.9999999995
+	credit_capacity:..................12195840.0
+	ebitda:...........................3175999.9999999995
+	revenue:..........................10000000.0
+	sg&a:.............................8533.2
+
+
+known_summary: 
+	cost:.............................3499999.9999999995
+	credit_capacity:..................12195840.0
+	ebitda:...........................3175999.9999999995
+	revenue:..........................10000000.0
+	sg&a:.............................8533.2
+
+
+
+        known_keys = sorted(known_summary.keys())
+        
+Known keys: 
+ ['cost', 'credit_capacity', 'ebitda', 'revenue', 'sg&a']
+Iterate through known_keys, check that values in new summary
+        match those in known summary. New summary may include additional
+        data and still pass the test.
+0. Key: cost
+	Known value: 3499999.9999999995
+	New value:   3499999.9999999995
+
+1. Key: credit_capacity
+	Known value: 12195840.0
+	New value:   12195840.0
+
+2. Key: ebitda
+	Known value: 3175999.9999999995
+	New value:   3175999.9999999995
+
+3. Key: revenue
+	Known value: 10000000.0
+	New value:   10000000.0
+
+4. Key: sg&a
+	Known value: 8533.2
+	New value:   8533.2
+
+
+
+new_summary is a superset of known_summary:  True
+T16.01 finished. 
+
+
+RUBRIC:
+
+T16.01.01: summaries match .................................. True
+T16.01: confirmed ........................................... True
+********************************************************************************
+********************************************************************************
+Model_01_Retail passed:  True
+********************************************************************************
+********************************************************************************
+Grader level: 
+Passed:  True
+Summarization result: True 
+
+start time:  1430061694.801817
+end time:    1430061694.989307
+run time:    0.18748998641967773
+****************************************
+PASSED:  True
+****************************************

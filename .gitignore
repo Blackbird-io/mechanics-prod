@@ -1,5 +1,0 @@
-*__pycache__
-.idea
-db.sqlite3
-queries.log
-.elasticbeanstalk/
