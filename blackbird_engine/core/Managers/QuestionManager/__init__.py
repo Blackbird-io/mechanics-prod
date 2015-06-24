@@ -175,10 +175,16 @@ def make_portal(mini_q, language = "English", web = False):
     the Engine-Wrapper API. Dictionary contains only built-in types and is
     compatible with the json module.
     """
-    full_q = make_full(mini_q, language)
-    full_q.set_prompt()
     blank_pq = PortalQuestion()
+    #
+    if mini_q:
+        full_q = make_full(mini_q, language)
+        full_q.set_prompt()
+    else:
+        full_q = PortalQuestion()
+    #
     result = blank_pq.to_portal(full_q, web)
+    #
     return result
     #keeps PortalQuestion independent of QuestionManager
     #keeps FullQuestion independent of QuestionManager
@@ -255,7 +261,23 @@ def make_question(content_module, catalog = local_catalog):
         #input elements, so that Topic authors never have to add any manually.
         #The input elements are turned off (._active = False) by default. Logic
         #steps through the list and turns on the number specified by the content
-        #module. 
+        #module.
+    #
+    #advanced configuration: input element details
+    if getattr(content_module, "element_details", False):
+        for i in range(content_module.active_elements):
+            element = new_question.input_array[i]
+            spec = content_module.element_details[i]
+            element.update(spec)
+    #
+    #advanced configuration: show_if rule
+    #[blank for now]
+    #if content_module.show_if:
+        #new_question.set_rule(content_module.show_if_spec)
+        ##show_if_spec is a dictionary w parameters for a binary input_element
+        ##FQ will try to configure and attach an element according to spec.
+        ##also need to change to_portal
+    #
     reverse_keys = [new_question.tags.name]
     catalog.register(new_question, *reverse_keys)
     #

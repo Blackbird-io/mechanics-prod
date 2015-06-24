@@ -53,6 +53,7 @@ class QuestionSerializer(serializers.HyperlinkedModelSerializer):
     sequence_num = serializers.IntegerField(required=False, read_only=True)
 
     input_array = JSONSerializerField(read_only=True)
+    show_if = JSONSerializerField(required=False, read_only=True)
     response_array = JSONSerializerField()
 
     def update(self, instance, validated_data):
@@ -67,7 +68,7 @@ class QuestionSerializer(serializers.HyperlinkedModelSerializer):
         model = models.Question
         read_only_fields = ('created_timestamp', 'sequence_num',
                             'topic_name', 'progress', 'short', 'prompt', 'comment',
-                            'array_caption', 'input_array', 'input_type', 'input_sub_type')
+                            'array_caption', 'input_array', 'input_type', 'input_sub_type', 'show_if')
         fields = read_only_fields + ('response_array', )
 
 
@@ -97,9 +98,10 @@ class InternalBlackbirdModelSerializer(serializers.ModelSerializer):
 
 class InternalQuestionSerializer(serializers.ModelSerializer):
     input_array = JSONSerializerField()
+    show_if = JSONSerializerField(required=False)
 
     class Meta:
         model = models.Question
         fields = ('question_id', 'topic_name', 'progress', 'short',
                   'prompt', 'comment', 'array_caption', 'input_array',
-                  'input_type', 'input_sub_type', 'transcribe')
+                  'input_type', 'input_sub_type', 'transcribe', 'show_if')

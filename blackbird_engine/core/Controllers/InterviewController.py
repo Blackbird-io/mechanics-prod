@@ -39,7 +39,7 @@ from .Protocol import Protocol
 
 
 #globals
-test_MinComplete = CompletionTests.test_MinComplete
+test_MinComplete = CompletionTests.t_min_quality
 
 #classes
 class InterviewController(Controller):
@@ -227,8 +227,8 @@ class InterviewController(Controller):
         Controller.process(self,msgIn)
         Model = self.MR.activeModel
         newFP = None
-        oldFP = Model.interview.focalPoint
-        activeTest = Model.interview.pointStandard
+        oldFP = Model.interview.focal_point
+        activeTest = Model.interview.point_standard
         protocolKey = self.defaultProtocolKey
         #can later actually pick up key that caller specifies
         if oldFP and activeTest and not activeTest(oldFP):
@@ -248,13 +248,13 @@ class InterviewController(Controller):
                     #protocol.select notes newFP, activeTest function on model's
                     #interviewTracker object
             else:
-                Model.interview.clearCache()
+                Model.interview.clear_cache()
                 path = Model.interview.path
                 newStructure = self.prioritize(path)
-                Model.interview.setStructure(newStructure)
+                Model.interview.set_structure(newStructure)
                 pMaker = self.makerFunctions[protocolKey]
                 newProtocol = pMaker()
-                Model.interview.setProtocol(newProtocol)
+                Model.interview.set_protocol(newProtocol)
                 newFP = newProtocol.select(Model)
         if newFP == None:
             self.wrapInterview(Model)
@@ -288,7 +288,7 @@ class InterviewController(Controller):
                     new_progress = i/len(Model.interview.path)
                     new_progress = new_progress * 100
                     new_progress = int(new_progress)
-                    Model.interview.setProgress(new_progress)
+                    Model.interview.set_progress(new_progress)
                     #could wrap this whole thing in an exception handler
                     #
                 except ValueError:
@@ -361,8 +361,8 @@ class InterviewController(Controller):
                          workLevel.finished = True
                          #went through this level, couldnt find an open item
                          #need to go to next level and repeat search
-            Model.interview.setFocalPoint(newFP)
-            Model.interview.setPointStandard(test_MinComplete)
+            Model.interview.set_focal_point(newFP)
+            Model.interview.set_point_standard(test_MinComplete)
             return newFP
         minProtocol = self.buildProtocol(min_select)
         minProtocol.name = "allMin"

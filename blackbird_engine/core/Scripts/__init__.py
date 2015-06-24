@@ -7,7 +7,7 @@
 #Module: Scripts.__init__
 """
 
-Package contains scripted responses to interviews. 
+Package contains scripted responses to interviews. No imports here. 
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================

@@ -58,7 +58,7 @@ cp += "What are annual sales at your average store {years_to_maturity} years"
 cp += "after opening?"
 custom_prompt = cp
 #
-short = "Sales"
+short = "Annual Sales"
 transcribe = True
 active_elements = 1
 
