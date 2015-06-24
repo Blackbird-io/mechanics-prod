@@ -1,4 +1,6 @@
 from rest_framework import serializers
+import dill
+from django.core.files.base import ContentFile
 
 from . import models
 
@@ -11,6 +13,17 @@ class JSONSerializerField(serializers.Field):
 
     def to_representation(self, value):
         return value
+
+
+class PickleField(serializers.Field):
+    """ Serializer for JSONField -- required to make field writable"""
+
+    def to_representation(self, value):
+        return dill.load(value) if value else None
+
+    # turns into model object
+    def to_internal_value(self, data):
+        return ContentFile(dill.dumps(data), name='model.pickle')
 
 
 class QuestionUrlMixin():
@@ -40,6 +53,7 @@ class QuestionSerializer(serializers.HyperlinkedModelSerializer):
     sequence_num = serializers.IntegerField(required=False, read_only=True)
 
     input_array = JSONSerializerField(read_only=True)
+    show_if = JSONSerializerField(required=False, read_only=True)
     response_array = JSONSerializerField()
 
     def update(self, instance, validated_data):
@@ -54,7 +68,7 @@ class QuestionSerializer(serializers.HyperlinkedModelSerializer):
         model = models.Question
         read_only_fields = ('created_timestamp', 'sequence_num',
                             'topic_name', 'progress', 'short', 'prompt', 'comment',
-                            'array_caption', 'input_array', 'input_type', 'input_sub_type')
+                            'array_caption', 'input_array', 'input_type', 'input_sub_type', 'show_if')
         fields = read_only_fields + ('response_array', )
 
 
@@ -74,7 +88,7 @@ class InternalBlackbirdModelSerializer(serializers.ModelSerializer):
     business_id = serializers.CharField(read_only=True)
     summary = JSONSerializerField(required=False)
     tags = JSONSerializerField(required=False)
-    e_model = JSONSerializerField()
+    e_model = PickleField()
 
     class Meta:
         model = models.BlackbirdModel
@@ -83,11 +97,11 @@ class InternalBlackbirdModelSerializer(serializers.ModelSerializer):
 
 
 class InternalQuestionSerializer(serializers.ModelSerializer):
-    e_question = JSONSerializerField()
     input_array = JSONSerializerField()
+    show_if = JSONSerializerField(required=False)
 
     class Meta:
         model = models.Question
-        fields = ('e_question', 'question_id', 'topic_name', 'progress', 'short',
+        fields = ('question_id', 'topic_name', 'progress', 'short',
                   'prompt', 'comment', 'array_caption', 'input_array',
-                  'input_type', 'input_sub_type', 'transcribe')
+                  'input_type', 'input_sub_type', 'transcribe', 'show_if')

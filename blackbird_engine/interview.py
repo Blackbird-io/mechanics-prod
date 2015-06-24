@@ -2,11 +2,12 @@ from django.http import Http404
 
 from . import models
 from . import serializers
-from .core.engine import EndInterview, Engine
+from .core.engine import EndInterview, process_interview, get_landscape_summary as calc_summary, get_forecast as \
+    calc_forecast
 
 
 def _send_engine_msg(bb_model, question=None, response=None):
-    msg = Engine().process_interview(dict(M=bb_model, Q=question, R=response))
+    msg = process_interview(dict(M=bb_model, Q=question, R=response))
     return msg['M'], msg['Q'], msg['R']
 
 
@@ -14,8 +15,25 @@ def _strip_nones(d):
     return {k: v for k, v in d.items() if v is not None}
 
 
+def try_float(s):
+    try:
+        return float(s)
+    except ValueError:
+        return s
+
+
+def _prep_response(response_array):
+    for d in response_array:
+        if d['input_type'] == 'bool':
+            d['response'] = [(True if e else False) for e in d['response']]
+        elif d['input_type'] == 'number':
+            d['response'] = [try_float(e) for e in d['response']]
+        elif d['input_type'] == 'number-range':
+            d['response'] = [[try_float(e2) for e2 in e] for e in d['response']]
+    return response_array
+
 def _get_response_dict(question, end=False):
-    return EndInterview if end else question.response_array
+    return EndInterview if end else _prep_response(question.response_array)
 
 
 def _get_bb_model_dict(bb_model):
@@ -24,7 +42,7 @@ def _get_bb_model_dict(bb_model):
 
 def _save_bb_model_dict(business, model_dict, end=False):
     s = serializers.InternalBlackbirdModelSerializer(data=_strip_nones(model_dict))
-    assert s.is_valid(), 'BlackbirdModel from Engine is valid'
+    s.is_valid(raise_exception=True)
     return s.save(business=business, complete=end)
 
 
@@ -33,8 +51,12 @@ def _get_question_dict(question):
 
 
 def _save_question_dict(business, answered_question, model, end, stop, question_dict):
+    if not end:
+        s = serializers.InternalQuestionSerializer(data=_strip_nones(question_dict))
+        s.is_valid(raise_exception=True)
+        question_dict = s.validated_data
     return models.Question.objects.create_next(answered_question, end, stop, business=business, blackbird_model=model,
-                                               **_strip_nones(question_dict))
+                                               **question_dict)
 
 
 def _get_model(business, question=None):
@@ -55,7 +77,6 @@ def _engine_update(business, cur_question=None, stop=False):
     else:
         engine_msg = _send_engine_msg(cur_bb_model_dict)
     model_dict, question_dict, engine_end = engine_msg
-    assert model_dict and (question_dict or engine_end), 'Message from Engine is valid'
     end = engine_end == EndInterview
     model = _save_bb_model_dict(business, model_dict, end)
     question = _save_question_dict(business, cur_question, model, end, stop, question_dict or dict())
@@ -74,7 +95,13 @@ def get_landscape_summary(business):
     if not business.current_model.complete:
         raise Http404()
     cur_bb_model_dict = _get_bb_model_dict(business.current_model)
-    model_dict, landscape_summary = Engine().get_landscape_summary(cur_bb_model_dict)
+    model_dict, landscape_summary = calc_summary(cur_bb_model_dict)
+    landscape_summary['price_lo'] = landscape_summary['price'].pop('lo')
+    landscape_summary['price_hi'] = landscape_summary['price'].pop('hi')
+    landscape_summary['size_lo'] = landscape_summary['size'].pop('lo')
+    landscape_summary['size_hi'] = landscape_summary['size'].pop('hi')
+    landscape_summary.pop('price')
+    landscape_summary.pop('size')
     _save_bb_model_dict(business, model_dict, end=True)
     return landscape_summary
 
@@ -85,7 +112,10 @@ def get_forecast(business, price=None, size=None):
     cur_bb_model_dict = _get_bb_model_dict(business.current_model)
     fixed = 'price' if price else 'size'
     ask = price if price else size
-    model_dict, fixed_out, ask_out, forecast = Engine().get_forecast(cur_bb_model_dict, fixed, ask)
+    model_dict, fixed_out, ask_out, forecast = calc_forecast(cur_bb_model_dict, fixed, ask)
+    forecast = {k: v for (k, v) in forecast.items() if k in {'bad', 'mid', 'good'}}
+    for v in forecast.values():
+        v['value'] = v.pop('bb_value')
     _save_bb_model_dict(business, model_dict, end=True)
     return forecast
 
