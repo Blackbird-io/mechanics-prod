@@ -47,14 +47,14 @@ import BBExceptions
 
 from DataStructures.Modelling.BusinessUnit import BusinessUnit
 
-from ..StandardFinancials import standard_financials
+from .StandardFinancials import standard_financials
 
 
 
 
 #globals
 topic_content = True
-name = "saas subscriber count"
+name = "subscriber count saas"
 topic_author = "Ilya Podolyako"
 date_created = "2015-06-10"
 extra_prep = False
@@ -106,7 +106,7 @@ optionalTags = ["customers",
                 tg_critical,
                 tg_expands_taxonomy,
                 tg_single_product,
-                tg_assumed_age_distribution,
+                tg_assumed_age_dist,
                 tg_assumed_norm_population]
 #
 applied_drivers = dict()
@@ -119,8 +119,6 @@ question_names = ["subscriber count?"]
 work_plan["subscriber population"] = 1
 work_plan["customers"] = 1
 work_plan["structure"] = 1
-
-SK = SubjectKnowledge
 
 #custom prep
 def prepare(new_topic):
@@ -170,7 +168,7 @@ def scenario_2(topic):
     workspace, and passes it to apply_data() for implementation.     
     """
     model = topic.MR.activeModel
-    stated_count = topic.get_first_answer())
+    stated_count = topic.get_first_answer()
     model.interview.work_space["subscriber_count"] = stated_count
     apply_data(topic, stated_count)
     topic.wrap_topic()
@@ -254,7 +252,6 @@ def apply_data(topic, datapoint):
     batch_count = unit_count
     batch_size = 1
     rump_size = 0
-    sbr_tags = [tg_
     #
     if unit_count > Globals.max_unit_count:
         batch_size = round(unit_count / Globals.max_unit_count)
@@ -294,7 +291,7 @@ def apply_data(topic, datapoint):
     earliest_conception_in_range = ref_date - assumed_oldest_age - gestation
     latest_conception_in_range = ref_date - assumed_youngest_age - gestation
     latest_permitted_conception = min(latest_conception_in_range,
-                                     (ref_date - gestation - timedelta(1))
+                                     (ref_date - gestation - timedelta(1)))
     earliest_permitted_conception = (ref_date -
                                      gestation -
                                      (subscriber_template.life.span - timedelta(1)))

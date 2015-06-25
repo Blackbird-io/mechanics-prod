@@ -70,6 +70,8 @@ class Yenta():
     TM                    CLASS; pointer to TopicManager w populated catalog
 
     FUNCTION:
+    build_basic_profile() return a set of target tags, used as simple criteria
+    build_combo_profile() return a set of tags from target and model
     disconnect()          CLASS; set TM to None
     find_eligible()       return a list of 0+ ids for topics w all required tags
     pick_best()           return a list of 1+ ids for topics w most tags matched
@@ -275,8 +277,18 @@ class Yenta():
 
         Method excludes None from target criteria.
         """
+        #
+        #Algorithm:
+        # - first, score all the candidates and set the highest raw score as
+        #   the selection standard
+        # - second, pick out any scored candidate that matches the standard
+        #
+        #Have to separate scoring from selection to make sure that every topic
+        #has to live by the same standard. Otherwise, if bad topics go in front
+        #of good ones in candidates, the standard will be low at the outset and
+        #high later, so ``best_candidates`` will include sub-par topics.
+        #
         self.scores = dict()
-        best_raw_score = 0
         best_candidates = []
         #
         if combined:
@@ -284,6 +296,7 @@ class Yenta():
         else:
             criteria = self.build_basic_profile(target)
         #
+        best_raw_score = 0
         for bbid in candidates:
             #
             topic = self.TM.local_catalog.issue(bbid)
@@ -293,14 +306,17 @@ class Yenta():
             rel_score = raw_score/len(topic.tags.allTags)
             #
             self.scores[bbid] = [raw_score, rel_score]
-            #
             #save state on Yenta instance so subsequent routines can access
             #the information.
             #
             if raw_score >= best_raw_score:
-                best_candidates.append(bbid)
                 best_raw_score = raw_score
         #
+        for scored_bbid, [known_raw_score, known_rel_score] in self.scores.items():
+            if known_raw_score >= best_raw_score:
+                best_candidates.append(scored_bbid)
+            else:
+                continue
         return best_candidates
 
     def reset(self):

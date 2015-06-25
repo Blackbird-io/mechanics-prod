@@ -31,7 +31,10 @@ n/a
 #imports
 from . import Deterministic
 from . import SharedKnowledge
-
+#
+from . import contract_term_saas
+from . import subscriber_count_saas
+from . import subscriber_life_saas
 
     
 

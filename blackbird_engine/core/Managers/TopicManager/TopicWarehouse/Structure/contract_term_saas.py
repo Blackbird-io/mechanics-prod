@@ -49,7 +49,7 @@ import BBGlobalVariables as Globals
 
 #globals
 topic_content = True
-name = "saas contract term"
+name = "contract term saas"
 topic_author = "Ilya Podolyako"
 date_created = "2015-06-10"
 extra_prep = False
@@ -62,6 +62,7 @@ user_outline_label = "Contract Term"
 requiredTags = ["software",
                 "structure"]
 optionalTags = ["saas",
+                "deterministic",
                 "lifecycle",
                 "contract term",
                 "modifies path",
@@ -76,8 +77,6 @@ work_plan = dict()
 
 question_names = ["subscription term in months?"]
 work_plan["subscription term"] = 1
-
-SK = SubjectKnowledge
 
 #custom prep
 def prepare(new_topic):
@@ -126,7 +125,7 @@ def scenario_2(topic):
     """
     model = topic.MR.activeModel
     stated_term = topic.get_first_answer()
-    model.interview.work_space["subscription_term_months"] = months
+    model.interview.work_space["subscription_term_months"] = stated_term
     apply_data(topic, stated_term)
     topic.wrap_topic()
 

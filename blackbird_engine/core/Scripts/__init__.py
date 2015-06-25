@@ -7,7 +7,7 @@
 #Module: Scripts.__init__
 """
 
-Package contains scripted responses to interviews. No imports here. 
+Package contains scripted responses to interviews.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -27,7 +27,9 @@ n/a
 
 
 #imports
-#[intentionally left blank]
+from . import Retail1_Raw
+from . import Retail2_Raw
+from . import retail_3_raw
 
 
 

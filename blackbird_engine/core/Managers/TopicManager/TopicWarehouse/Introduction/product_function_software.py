@@ -4,11 +4,10 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: Managers.TopicManager.TopicWarehouse.TopicTemplate
+#Module: TW.Introduction.product_function_software
 """
 
-A template for topic content modules. Includes all parameters available for
-customization. 
+Topic asks free-form question about what a borrower's software actually does. 
 
 ====================  ==========================================================
 Attribute             Description

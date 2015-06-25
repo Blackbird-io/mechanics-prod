@@ -37,7 +37,8 @@ from . import Software
 #Warehouse packages have to import their contents. Catalog managers walk the
 #directory by looking at the top-level names of the package object. Without
 #imports through __init__, the walker function will not see any of the
-#subfolders or their constituent modules. 
+#subfolders or their constituent modules.
+from . import product_function_software
 
     
 

@@ -4,12 +4,10 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: QW.Structure.SubscriberLifeRange
+#Module: QW.structure.subscriber_life_range
 """
 
-A template for question content modules. Includes all parameters available for
-customization. Content modules should not import modules or create any routines
-or classes.
+Question about the range of active subscriptions, in months.
 
 ====================  ==========================================================
 Attribute             Description
@@ -38,7 +36,7 @@ n/a
 ====================  ==========================================================
 """
 question_content = True
-name = "customer life range?"
+name = "subscriber life range?"
 question_author = "Ilya Podolyako"
 
 #Engine parameters
