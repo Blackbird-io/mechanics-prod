@@ -64,8 +64,9 @@ extra_prep = False
 #store tags this topic uses multiple times in variables to avoid typos
 #
 tg_basic_depth = "basic analysis depth" #-----------------------------------------------------check phrasing here
+#should have ``analysis quality: low", ... medium, high
 tg_medium_depth = "medium analysis depth"
-tg_deep = "in-depth analysis"
+tg_high_depth = "in-depth analysis"
 #
 tg_actual_name = "actual name"
 tg_assumed_age_dist = "assumes age distribution"
@@ -98,8 +99,11 @@ sbr_tags = [tg_assumed_age_dist,
 #standard topic prep
 user_outline_label = "Subscriber Count"
 requiredTags = ["structure",
-                "subscriber population",]
+                "subscriber unit template: ready",
+                "taxonomy content"]
 optionalTags = ["customers",
+                "subscriber count",
+                "subscriber population",
                 "saas",
                 "software",
                 "product",

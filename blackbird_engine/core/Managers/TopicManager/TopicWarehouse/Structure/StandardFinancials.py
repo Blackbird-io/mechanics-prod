@@ -50,3 +50,6 @@ i_end_is = standard_financials.indexByName("|bb|end Income Statement")
 for L in income_lines[::-1]:
     standard_financials.insert(i_end_is,L)
     #insert last one first so can keep using same index
+
+basic_fins = standard_financials.copy()
+
