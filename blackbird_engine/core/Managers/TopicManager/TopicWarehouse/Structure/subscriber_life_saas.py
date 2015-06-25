@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: TW.Structure.Software.Saas_SubscriberLife
+#Module: TW.Structure.subscriber_life_saas
 """
 
 Topic asks about subscriber life distribution and uses that information to
@@ -44,6 +44,8 @@ from datetime import timedelta
 
 import BBGlobalVariables as Globals
 
+from DataStructures.Modelling.LineItem import LineItem
+
 
 
 
@@ -61,10 +63,15 @@ extra_prep = False
 user_outline_label = "Subscriber Life"
 requiredTags = ["software",
                 "structure",
-                "subscriber life"]
+                "taxonomy content",
+                "subscriber unit template"]
 optionalTags = ["saas",
-                "lifecycle",
-                "susbcriber population",
+                "deterministic",
+                "life",
+                "life cycle",
+                "subscriber population",
+                "subscriber life",
+                "subscriber unit template: in progress",
                 "assumed distribution",
                 "implied churn"]
 #
@@ -77,7 +84,8 @@ work_plan = dict()
 question_names = ["subscriber life range?"]
 work_plan["subscriber life"] = 1
 work_plan["structure"] = 1
-work_plan["lifecycle"] = 1
+work_plan["life cycle"] = 1
+work_plan["life"] = 1
 
 #custom prep
 def prepare(new_topic):
@@ -120,11 +128,11 @@ def scenario_1(topic):
     main_element = new_question.input_array[0]
     main_element.r_min = 0
     main_element.r_max = int(30 * segment_in_months)
-    anchor_min = 1 * segment_in_months
+    anchor_min = round(0.5 * segment_in_months)
     anchor_max = 5 * segment_in_months
     main_element.shadow = str(anchor_min)
     main_element.shadow_2 = str(anchor_max)
-    main_element.r_step = 1
+##    main_element.r_step = 1
     #
     topic.wrap_scenario(new_question)
     
@@ -195,6 +203,7 @@ def apply_data(topic, datapoint):
     Function also computes churn on the theory that at the mean age, each
     customer has a 50% chance of cancelling at the next contract cycle. 
     """
+    datapoint = [float(x) for x in datapoint]
     #
     model = topic.MR.activeModel
     subscriber_unit_template = model.taxonomy["subscriber"]["standard"]
@@ -210,7 +219,7 @@ def apply_data(topic, datapoint):
     #upper limit is longest likely life for the population. even for non-normal
     #distributions, ~98% of observations should fall w/ in 3 st devs
     #
-    avg_contract_count = mean / prod_unit_template.life.segment
+    avg_contract_count = mean / subscriber_unit_template.life.segment
     churn = 0.50 / avg_contract_count
     #assume that at the mean age, the average customer has a 50% probability of
     #renewing their contract and a 50% probability of cancelling it. The
@@ -228,9 +237,27 @@ def apply_data(topic, datapoint):
     subscriber_unit_template.life.span = upper_limit
     subscriber_unit_template.life.sigma = sigma
     subscriber_unit_template.life.mean = mean
-    susbcriber_unit_template.life.churn = churn
+    subscriber_unit_template.life.churn = churn
     #
+    #modify path
+    path = model.interview.path
+    model.interview.clear_cache()
+    #always clear interview cache before modifying path, otherwise controller
+    #may follow old plan
+    #
+    subscriber_count = LineItem("subscriber count")
+    subscriber_count.guide.quality.setStandards(1,5)
+    subscriber_count.guide.priority.increment(3)
+    path.add_line_to(subscriber_count, "structure")
+    #
+    ##    model.interview.set_focal_point(subscriber_count)
+    #direct controller attention to focal point
+    #
+    #annotate model
     model.tag("known subscriber life")
+    model.unTag("subscriber unit template: in progress")
+    model.tag("subscriber unit template: ready")
+    
     
 
 scenarios[None] = scenario_1

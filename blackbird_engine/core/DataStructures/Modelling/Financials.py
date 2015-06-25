@@ -246,6 +246,7 @@ class Financials(list, Tags, Equalities):
         
         #ancestors is a list of names of ancestors
         self.buildDictionaries()
+        self.buildHierarchyMap()
         if not allow_duplicates:
             if line.name in self.dNames:
                 raise SomeSortOfError

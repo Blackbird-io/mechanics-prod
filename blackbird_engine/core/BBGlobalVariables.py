@@ -135,7 +135,14 @@ default_model_name = "Blank Blackbird Model"
 default_unit_name = "Blank Unit"
 default_periods_back = 36
 default_periods_fwd = 36
-max_unit_count = 100
+max_unit_count = 200
+mid_unit_count = 20
+high_unit_count = 50
+#mid and high unit count serve as thresholds for medium and in-depth analysis.
+#blackbird will analyze a model with a medium number of units reasonably well,
+#and a model with a large number of units carefully. it is up to individual
+#topics to support this type of depth control.
+
 
 #Market
 cc_haircut = 0.20

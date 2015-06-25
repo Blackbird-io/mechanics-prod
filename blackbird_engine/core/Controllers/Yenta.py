@@ -355,13 +355,7 @@ class Yenta():
         Method returns a clean instance of a topic that fits the current
         interview focal point better than any other candidates.
 
-        Method computes best fit against other candidates in a pool. If the
-        focal point carries a cache of known topic ids, method computes
-        rankings against that pool. Otherwise, or if no suitable topic exists
-        in the pool, method computes rankings for all topics in the catalog.
-
-        NOTE: The best candidate from an existing cache may be **worse** than
-        a candidate located elsewhere in the catalog.
+        Method computes best fit against all topics in the catalog.
 
         Method returns None if no topics in catalog are eligible to work on the
         model's focal point. 
@@ -388,18 +382,7 @@ class Yenta():
         fp = model.interview.focal_point
         fp.guide.selection.increment(1)
         #
-        known_eligibles = fp.guide.selection.eligible
-        if known_eligibles != []:
-            eligibles = self.find_eligible(fp, model, pool = known_eligibles)
-            if eligibles == []:
-                eligibles = self.find_eligible(fp, model)
-            #
-            #Method accepts the conclusion that no topics can work on target
-            #only after checking both the cache and the full catalog
-            #
-        else:
-            eligibles = self.find_eligible(fp, model)
-        fp.guide.selection.set_eligible(eligibles)
+        eligibles = self.find_eligible(fp, model)
         #
         if len(eligibles) == 0:
             pass

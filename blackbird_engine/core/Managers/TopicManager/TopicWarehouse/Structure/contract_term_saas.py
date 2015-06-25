@@ -4,12 +4,11 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: Managers.TopicManager.TopicWarehouse.TopicTemplate
+#Module: TW.structure.contract_term_saas
 """
 
-A template for topic content modules. Includes all parameters available for
-customization. 
-
+Topic that asks about the standard contract term and configures life segments
+accordingly. 
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -40,9 +39,15 @@ n/a
 
 
 #imports
+from datetime import timedelta
+
 import BBGlobalVariables as Globals
 
-##from TopicWarehouse.ParentDirectory import SharedKnowledge as SubjectKnowledge
+from DataStructures.Modelling.BusinessUnit import BusinessUnit
+from DataStructures.Modelling.LineItem import LineItem
+
+from . import knowledge_re_software
+from . import StandardFinancials
 
 
 
@@ -63,11 +68,17 @@ requiredTags = ["software",
                 "structure"]
 optionalTags = ["saas",
                 "deterministic",
-                "lifecycle",
+                "life cycle",
                 "contract term",
                 "modifies path",
                 "basic",
-                "basic analysis depth"]
+                "basic analysis depth",
+                "subscriber life",
+                "life segment",
+                "subscription term",
+                "standard subscription term",
+                "standard term",
+                "term"]
 #
 applied_drivers = dict()
 formula_names = []
@@ -77,6 +88,10 @@ work_plan = dict()
 
 question_names = ["subscription term in months?"]
 work_plan["subscription term"] = 1
+work_plan["structure"] = 1
+work_plan["life"] = 1
+work_plan["life cycle"] = 1
+work_plan["subscriber life"] = 1
 
 #custom prep
 def prepare(new_topic):
@@ -105,7 +120,7 @@ def scenario_1(topic):
 
     Scenario concludes with wrap_scenario(question).
 
-    Function asks question. 
+    Function asks question about the length of standard subscription term. 
     """
     new_question = topic.questions["subscription term in months?"]
     topic.wrap_scenario(new_question)
@@ -121,10 +136,13 @@ def scenario_2(topic):
 
     Scenario concludes with wrap_topic()
 
-    Function pulls out user response and [. . . ]
+    Function pulls out user response, records it in the interview work_space
+    under ``subscription_term_months``, and passes the stated term to
+    apply_data() for processing. 
     """
     model = topic.MR.activeModel
     stated_term = topic.get_first_answer()
+    stated_term = float(stated_term)
     model.interview.work_space["subscription_term_months"] = stated_term
     apply_data(topic, stated_term)
     topic.wrap_topic()
@@ -139,9 +157,10 @@ def end_scenario(topic):
 
     Scenario concludes with wrap_to_end().
     
-    [] 
+    Scenario assumes the standard subscription term and passes the assumption
+    to apply_data() for implementation.
     """
-    assumed_term = 12
+    assumed_term = knowledge_re_software.standard_subscription_term_months
     apply_data(topic, assumed_term)
     topic.wrap_to_end()
 
@@ -152,24 +171,38 @@ def apply_data(topic, datapoint):
     apply_data(topic, datapoint) -> None
 
 
-    [describe substantive work that topic does to model based on data] -------------------------------------------
+    ``datapoint`` should be a number of months in the standard contract term
+    
+    Function creates a template business unit that represents subscribers and
+    sets the length of a life segment for that unit to the datapoint (translated
+    into days). Function then adds the unit template to the model taxonomy.
+
+    Function annotates path and adds tags to model.
     """
     model = topic.MR.activeModel
-    subscriber_unit_template = BusinessUnit()
-    #--------------------------------------------------------------------------------can add basic fins here?
+    #
+    u = BusinessUnit(name = "subscriber unit template",
+                     fins = StandardFinancials.basic_fins.copy())
+    subscriber_unit_template = u
+    #
     model.taxonomy["subscriber"] = dict()
-    model.taxonomy["subscriber"]["standard"] = susbcriber_unit_template
+    model.taxonomy["subscriber"]["standard"] = subscriber_unit_template
     #
     term_in_months = datapoint
     term_in_days = datapoint * Globals.days_in_month
     subscriber_unit_template.life.segment = timedelta(term_in_days)
+    #life segement is the smallest increment of time over which descriptive life
+    #attributes can change status. 
     #
-    subscriber_life = LineItem(name = "subscriber_life")
-    subscriber_life.guide.quality.setStandards(1,5)
-    model.path.add_to("structure", subscriber_life)
+    path = model.interview.path
+    subscriber_life = LineItem(name = "subscriber life")
+    subscriber_life.guide.quality.setStandards(2,5)
+    path.add_line_to(subscriber_life, "structure")
+    model.interview.clear_cache()
     #
     model.tag("known subscription length")
-    model.tag("subscriber unit template: definition in progress")
+    model.tag("subscriber unit template")
+    model.tag("subscriber unit template: in progress")
     model.tag("taxonomy content")    
 
 scenarios[None] = scenario_1
