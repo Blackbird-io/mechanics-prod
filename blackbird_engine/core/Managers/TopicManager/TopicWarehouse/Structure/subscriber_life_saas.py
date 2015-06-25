@@ -79,8 +79,6 @@ work_plan["subscriber life"] = 1
 work_plan["structure"] = 1
 work_plan["lifecycle"] = 1
 
-SK = SubjectKnowledge
-
 #custom prep
 def prepare(new_topic):
     #always return the topic
@@ -147,7 +145,7 @@ def scenario_2(topic):
     implementation.     
     """
     model = topic.MR.activeModel
-    stated_range = topic.get_first_answer())
+    stated_range = topic.get_first_answer()
     model.interview.work_space["subscriber_life_range"] = stated_range
     apply_data(topic, stated_range)
     topic.wrap_topic()

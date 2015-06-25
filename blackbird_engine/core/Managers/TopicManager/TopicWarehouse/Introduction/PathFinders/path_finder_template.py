@@ -21,7 +21,7 @@ locates a healthcare business with a large portion of revenue coming from
 Medicare, that topic can insert a "Fraud" line into the path to ensure further
 analysis. 
 
-PathFinder topcis usually run right after introductory topics complete general
+PathFinder topics usually run right after introductory topics complete general
 information gathering and can differentiate one business from another somewhat
 (usually by industry).
 ====================  ==========================================================

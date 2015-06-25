@@ -29,7 +29,7 @@ n/a
 
 
 #imports
-from . import PF_Generic
+from . import pf_generic
 from . import SharedKnowledge
 #Warehouse packages have to import their contents. Catalog managers walk the
 #directory by looking at the top-level names of the package object. Without

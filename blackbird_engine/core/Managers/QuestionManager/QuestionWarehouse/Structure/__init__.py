@@ -46,7 +46,7 @@ from . import MonthsToOpenStore
 from . import Number_SignedStoreLeases
 
 #
-from . import SubscriberLifeRange
-from . import SubscriberCount
-
+from . import subscriber_life_range
+from . import subscriber_count
+from . import subscription_term_months
 
