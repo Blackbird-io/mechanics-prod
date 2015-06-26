@@ -71,7 +71,7 @@ tg_high_depth = "in-depth analysis"
 tg_actual_name = "actual name"
 tg_assumed_age_dist = "assumes age distribution"
 tg_assumed_name = "assumed name"
-tg_assumed_norm_population = "assumes normal population"
+tg_assumed_normal_population = "assumes normal population"
 tg_batch = "batch unit"
 tg_critical = "critical user input"
 tg_est_age = "estimated age"
@@ -111,7 +111,7 @@ optionalTags = ["customers",
                 tg_expands_taxonomy,
                 tg_single_product,
                 tg_assumed_age_dist,
-                tg_assumed_norm_population]
+                tg_assumed_normal_population]
 #
 applied_drivers = dict()
 formula_names = []
@@ -173,6 +173,7 @@ def scenario_2(topic):
     """
     model = topic.MR.activeModel
     stated_count = topic.get_first_answer()
+    stated_count = int(stated_count)
     model.interview.work_space["subscriber_count"] = stated_count
     apply_data(topic, stated_count)
     topic.wrap_topic()
@@ -221,7 +222,11 @@ def apply_data(topic, datapoint):
     model = topic.MR.activeModel
     subscriber_template = model.taxonomy["subscriber"]["standard"]
     #
-    #make sure product (top) unit is set up
+    #in a software organization, the company should theoretically be built
+    #around one or more product units. in the simplest software company, there
+    #is only one product, which appears as the top-level container.  #<----------------------------------------------------------------------------------should probably change this
+    #
+    #
     product_unit = model.currentPeriod.content
     if not product_unit:
         product_template = BusinessUnit("Product Template", standard_financials.copy())
@@ -258,7 +263,7 @@ def apply_data(topic, datapoint):
     rump_size = 0
     #
     if unit_count > Globals.max_unit_count:
-        batch_size = round(unit_count / Globals.max_unit_count)
+        batch_size = round(unit_count / Globals.batch_count)
         batch_count = unit_count // batch_size
         rump_size = unit_count % batch_size
     #
@@ -284,10 +289,10 @@ def apply_data(topic, datapoint):
     percent_in_range = 0.95
     #assume normal distribution, where 95% w/in 2 sigma of mean
     #
-    gestation = subscriber_unit.life.gestation
+    gestation = subscriber_template.life.gestation
     ref_date = model.time_line.current_period.start
-    sigma = subscriber_unit.life.sigma
-    assumed_median_age = 0.50 * subscriber_unit.life.span
+    sigma = subscriber_template.life.sigma
+    assumed_median_age = 0.50 * subscriber_template.life.span
     #assume median age is 50 percent of lifespan
     #
     assumed_youngest_age = assumed_median_age - (assumed_range * sigma)
@@ -322,7 +327,7 @@ def apply_data(topic, datapoint):
         label = sbr_label_template % i
         sbr = BusinessUnit(label, standard_financials.copy())
         sbr.size = batch_size
-        conception = conception + time_increment
+        conception = conception + increment
         conception = max(conception, earliest_permitted_conception)
         conception = min(conception, latest_permitted_conception)
         #
@@ -356,7 +361,7 @@ def apply_data(topic, datapoint):
     model.tag(tg_single_product)
     model.tag(tg_populated)
     model.tag(tg_assumed_age_dist)
-    model.tag(tg_assumed_normal_dist)
+    model.tag(tg_assumed_normal_population)
                                       
 
 scenarios[None] = scenario_1

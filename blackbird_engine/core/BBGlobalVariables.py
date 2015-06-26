@@ -142,6 +142,14 @@ high_unit_count = 50
 #blackbird will analyze a model with a medium number of units reasonably well,
 #and a model with a large number of units carefully. it is up to individual
 #topics to support this type of depth control.
+batch_count = 100
+batch_count = min(batch_count, max_unit_count)
+#batch count is the number of units that a company with more units than the
+#max count will be split into. as batch_count goes up, models become more
+#granular and more unwieldy. batch_count <= max_unit_count. the two parameters
+#are distinct because Blackbird may want to capture full detail on a 200-store
+#business if that means a performance hit, but when dealing with 10,000 clients
+#optimize to something more compact. 
 
 
 #Market

@@ -47,6 +47,7 @@ import BBExceptions
 
 from DataStructures.Modelling.BusinessUnit import BusinessUnit
 from DataStructures.Modelling.Driver import Driver
+from DataStructures.Modelling.LineItem import LineItem
 from Managers.TopicManager.TopicWarehouse.Structure.StandardFinancials import standard_financials
 
 
@@ -124,6 +125,7 @@ def scenario_1(topic):
     Function asks user about the monthly price of their subscription. 
     """
     #
+    model = topic.MR.activeModel
     new_question = topic.questions["monthly subscription price?"]
     product_name = model.interview.work_space.get("product_name")
     if product_name:
@@ -195,7 +197,7 @@ def apply_data(topic, datapoint):
     #
     D1.configure(local_data, rev_formula)
     #
-    for sbr_unit in M.currentPeriod.selectBottomUnits():
+    for sbr_unit in model.time_line.current_period.selectBottomUnits():
         #
         own_d1 = D1.copy()
         own_line = subscriptions_line.copy()
@@ -207,7 +209,7 @@ def apply_data(topic, datapoint):
         sbr_unit.tag(tg_constant_price)
         sbr_unit.tag(tg_no_inflation)
     #
-    model.tag(sbx_revenue)
+    model.tag(tg_sbx_revenue)
     
 scenarios[None] = scenario_1
 #

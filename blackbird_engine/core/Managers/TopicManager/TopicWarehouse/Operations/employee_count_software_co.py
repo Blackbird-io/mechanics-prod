@@ -69,11 +69,13 @@ tg_size_significant = "size value is significant"
 #standard topic prep
 user_outline_label = "Team composition"
 requiredTags = ["software",
-                "head count"]
+                "operating expense"]
 optionalTags = [tg_critical,
                 tg_single_product,
                 "full time employees",
+                "employee expense",
                 "teams",
+                "employee head count",
                 "personnel",
                 "staffing",
                 tg_static_count,
@@ -150,7 +152,7 @@ def scenario_2(topic):
     #
     count_by_role = dict()
     #
-    for i in len(input_array):
+    for i in range(len(input_array)):
         role = input_array[i]["main_caption"]
         count = portal_response[i]["response"]
         count_by_role[role] = count
@@ -222,11 +224,11 @@ def apply_data(topic, datapoint):
     #teams unit contains personnel for the top product
     prod_unit.addComponent(teams)
     #
-    for (role, head_count) in datapoint.values():
+    for (role, head_count) in datapoint.items():
         team = staff_unit.copy()
         team.setName(role)
         team.size = head_count
-        teams.addComponent(new_personnel_unit)
+        teams.addComponent(team)
     #    
     
 scenarios[None] = scenario_1
