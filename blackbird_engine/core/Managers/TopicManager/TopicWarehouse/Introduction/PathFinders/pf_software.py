@@ -57,6 +57,7 @@ n/a
 #imports
 import BBGlobalVariables as Globals
 
+from DataStructures.Modelling.LineItem import LineItem
 from DataStructures.Modelling.Financials import Financials
 
 from . import SharedKnowledge as SK
@@ -66,7 +67,7 @@ from . import SharedKnowledge as SK
 
 #globals
 topic_content = True
-name = "Generic PathFinder topic: standard path, all industries"
+name = "PathFinder for software companies"
 topic_author = "Ilya Podolyako"
 date_created = "2015-06-08"
 extra_prep = False
@@ -78,12 +79,15 @@ extra_prep = False
 user_outline_label = "Configure interview."
 requiredTags = ["introduction",
                 "ready for path"]
-
 optionalTags = ["start",
                 "configuration",
                 "software",
                 "saas",
                 "enterprise software",
+                "service-type business",
+                "compensation is the most significant expense",
+                "human-capital-intensive business",
+                "personnel-intensive",
                 "pathfinder"]
 #
 applied_drivers = dict()
@@ -99,11 +103,23 @@ work_plan["intro"] = 1
 
 #paths:
 standard_path = Financials(populate = False)
-standard_path.extend(SK.standard_open)
-standard_path.extend(SK.standard_core)
-standard_path.extend(SK.standard_close)
+standard_path.extend(SK.standard_open.copy())
+standard_path.extend(SK.standard_core.copy())
+standard_path.extend(SK.standard_close.copy())
 #
 #refine standard path
+#1. reduce the significance of product cost
+cost_i = standard_path.indexByName("cost")
+cost = standard_path[cost_i]
+cost.guide.priority.reset()
+cost.guide.priority.increment(1)
+#
+opex_i = standard_path.indexByName("operating expense")
+opex = standard_path[opex_i]
+opex.guide.priority.reset()
+opex.guide.priority.increment(1)
+#opex details are more important here than the general thing
+#
 employee_expense = LineItem("Employee Expense")
 employee_expense.tag(
                      "base compensation",
@@ -121,7 +137,10 @@ employee_expense.tag(
                      "payroll taxes",
                      "health insurance",
                      "benefits")
-standard_path.add_line_to(employee_expense, "sg&a")
+employee_expense.guide.priority.reset()
+employee_expense.guide.priority.increment(3)
+employee_expense.guide.quality.setStandards(4,5)
+standard_path.add_line_to(employee_expense.copy(), "operating expense")
 
 
 
@@ -152,12 +171,15 @@ def apply_data(topic):
     #
     private_path = Financials(populate = False)
     private_path.append(intro_line)
+    #if elaborating on intro, should do so here<<<<<<
+    #should replace intro with the actual used line
     #
     new_steps = standard_path.copy()
     private_path.extend(new_steps)
     next_step = private_path[1]
     #expect next_step to be structure
     #
+    model.interview.clear_cache()
     model.interview.set_path(private_path)
     model.interview.set_focal_point(next_step)
 

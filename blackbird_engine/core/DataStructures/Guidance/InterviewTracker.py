@@ -45,8 +45,7 @@ from .SelectionTracker import SelectionTracker
 #globals
 intro_line = LineItem("introduction")
 intro_line.tag("start",
-               "configuration",
-               "generic")
+               "configuration")
 intro_line.guide.quality.setStandards(2,5)
 
 #classes
