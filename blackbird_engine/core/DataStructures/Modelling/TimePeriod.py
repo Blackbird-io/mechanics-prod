@@ -75,6 +75,7 @@ class TimePeriod(Tags):
     length                float; seconds between start and end
     prior                 pointer to immediately preceding time period
     start                 datetime.date; first date in period.
+    ty_directory          dict; keys are strings, values are sets of bbids
     
     FUNCTIONS:
     __str__               basic print, shows starts, ends, and content
@@ -94,10 +95,26 @@ class TimePeriod(Tags):
         Tags.__init__(self)
         self.start = start_date
         self.end = end_date
+        #
         self.bu_directory = {}
+        self.ty_directory = {}
+        #
         self.content = content
         self.id = ID()
         self.prior = None
+        #
+        #the current approach to indexing units within a period assumes that
+        #Blackbird will rarely remove existing units from a model. both
+        #the ``bu`` and ``ty`` directories are static: they do not know if
+        #the unit whose bbid they reference is no longer in their domain. if
+        #this poses a problem, can change them to properties.
+        #
+        #the potential for trouble is more significant for ty_directory. a unit
+        #can theoretically change type.
+        #
+        #approach: type is a property. can set if blank, otherwise raises error.
+            #to change, need to reset_type() and then set again.
+            #error on del
 
     def __str__(self):
         dots = "*"*Globals.screen_width
@@ -265,9 +282,11 @@ class TimePeriod(Tags):
         TimePeriod.resetDirectory() -> None
 
 
-        Method sets instance.bu_directory to a blank dictionary. 
+        Method sets instance.bu_directory and instance.ty_directory to blank
+        dictionaries. 
         """
         self.bu_directory = {}
+        self.ty_directory = {}
 
     def selectBottomUnits(self):
         """
