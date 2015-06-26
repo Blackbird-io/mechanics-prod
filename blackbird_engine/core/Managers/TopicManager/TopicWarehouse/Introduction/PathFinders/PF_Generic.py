@@ -96,9 +96,9 @@ work_plan["intro"] = 1
 
 #paths:
 standard_path = Financials(populate = False)
-standard_path.extend(SK.standard_open)
-standard_path.extend(SK.standard_core)
-standard_path.extend(SK.standard_close)
+standard_path.extend(SK.standard_open.copy())
+standard_path.extend(SK.standard_core.copy())
+standard_path.extend(SK.standard_close.copy())
 
 
 

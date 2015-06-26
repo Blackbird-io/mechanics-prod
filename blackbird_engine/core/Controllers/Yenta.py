@@ -163,7 +163,49 @@ class Yenta():
         criteria = criteria - {None}
         #
         return criteria    
-        
+
+    def build_target_requirements(target):
+        reqs = set(target.requiredTags) - {None} - {target.partOf}
+        return reqs
+
+    def build_topic_requirements(topic):
+        #excludes name, returns set
+        reqs = set(topic.tags.requiredTags[2:]) - {None}
+    
+    def check_topic_name(self, target, model, topic_name, combined = True):
+        #
+        work = dict()
+        result = False
+        #
+        topic_bbid = self.TM.local_catalog.by_name[topic_name]
+        topic = self.TM.local_catalog.issue(topic_bbid)
+        #
+        targ_criterion = self.build_target_requirements(target)
+        if combined:
+            targ_profile = self.build_combo_profile(target, model)
+        else:
+            targ_profile = self.build_simple_profile(target)
+        #
+        topic_criterion = self.build_topic_requirements(topic)
+        topic_profile = self.build_simple_profile(topic)
+        #
+        missed_target_reqs = targ_criterion - topic_profile
+        missed_topic_reqs = topic_criterion - targ_profile
+        #
+        work["missed target reqs"] = missed_target_reqs
+        work["missed topic reqs"] = missed_topic_reqs
+        work["target criterion"] = target_criterion
+        work["target profile"] = target_profile
+        work["topic criterion"] = topic_criterion
+        work["topic profile"] = topic_profile        
+        #
+        if any([missed_target_reqs, missed_topic_reqs]):
+            result = False
+        else:
+            result = True
+        #
+        return (result, work)    
+    
     def find_eligible(self, target, model, pool = None, combined = True):
         """
 

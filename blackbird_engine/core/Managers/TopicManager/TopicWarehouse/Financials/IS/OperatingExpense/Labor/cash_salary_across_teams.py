@@ -44,6 +44,7 @@ n/a
 import operator
 
 import BBGlobalVariables as Globals
+import MarketColor
 
 from DataStructures.Modelling.BusinessUnit import BusinessUnit
 from DataStructures.Modelling.Driver import Driver
@@ -72,9 +73,11 @@ requiredTags = ["employee expense",
                 "known team composition"]
 optionalTags = [tg_single_product,
                 "adjust for inflation",
+                "base compensation",
                 "cash compensation",
-                "expenses",
-                "full time employees",
+                "cash expense",
+                "expense",
+                "full-time employees",
                 "refines template",
                 "salaries", 
                 "team-specific analysis",
@@ -145,7 +148,7 @@ def scenario_1(topic):
     #
     product_unit = model.time_line.current_period.content
     personnel_bbid = product_unit.components.by_name["personnel"]
-    personnel_unit = product_unit.components[teams_bbid]
+    personnel_unit = product_unit.components[personnel_bbid]
     teams = personnel_unit.components
     #
     #pull out the catch-all team to make sure its input element appears
@@ -162,29 +165,29 @@ def scenario_1(topic):
         everyone_else = teams.pop(everyone_else_bbid)
     #
     teams_large_to_small = sorted(teams.values(),
-                                  operator.attrgetter("size"),
+                                  key = operator.attrgetter("size"),
                                   reverse = True)
     #
     #configure question w existing roles:
-    input_array = new_question["input_array"]
+    input_array = new_question.input_array
     #
     ask_about = len(input_array)
     if everyone_else:
         ask_about = len(input_array[:-1])
         #save the last element for everyone_else
-    ask_about = min(ask_about, len(team_large_to_small))
+    ask_about = min(ask_about, len(teams_large_to_small))
     #if there are fewer teams than element slots, limit accordingly
     #
     for i in range(ask_about):
         element = input_array[i]
-        element["main_caption"] = team_large_to_small[i].name
-        element["_active"] = True
+        element.main_caption = teams_large_to_small[i].name
+        element._active = True
         #when topic gets this question object, elements 2-5 will be inactive.
     else:
         if everyone_else:
             last_element = input_array[ask_about]
-            last_element["main_caption"] = everyone_else.name
-            last_element["_active"] = True
+            last_element.main_caption = everyone_else.name
+            last_element._active = True
         else:
             pass
     #
@@ -211,7 +214,7 @@ def scenario_2(topic):
     #
     salary_by_role = dict()
     #
-    for i in len(input_array):
+    for i in range(len(input_array)):
         role = input_array[i]["main_caption"]
         salary = portal_response[i]["response"]
         salary_by_role[role] = salary
@@ -255,7 +258,7 @@ def apply_data(topic, datapoint):
     #1.1. business units
     product_unit = model.time_line.current_period.content
     personnel_bbid = product_unit.components.by_name["personnel"]
-    personnel_unit = product_unit.components[teams_bbid]
+    personnel_unit = product_unit.components[personnel_bbid]
     all_teams = personnel_unit.components
     staff_template_unit = model.taxonomy["personnel"]
     #1.2. drivers
@@ -274,12 +277,24 @@ def apply_data(topic, datapoint):
     #1.6. data
     shared_data = dict()
     shared_data["ref_year"] = product_unit.life.ref_date.year
-    shared_data["annual_inflation"] = Globals.annual_inflation
+    shared_data["annual_inflation"] = MarketColor.annualInflation
     generic_salary = datapoint.get("everyone else")
     if not generic_salary:
         generic_salary = datapoint.get("other")
     #1.7. adjust objects to fit each other
     dr_average_salary.setWorkConditions(l_average_salary.name)
+    #
+    materials = dict()
+    materials["team_label_template"] = team_label_template
+    materials["shared_data"] = shared_data
+    materials["l_team_salaries"] = l_team_salaries
+    materials["l_average_salary"] = l_average_salary
+    materials["l_employee_expense"] = l_employee_expense
+    materials["l_salaries"] = l_salaries
+    materials["dr_average_salary"] = dr_average_salary
+    materials["dr_team_salary"] = dr_team_salary
+    materials["f_annualized"] = f_annualized
+    materials["f_monthly"] = f_monthly
     
     #Step 2. Populate model with new information
     #2.1. Update each team with their specific salary
@@ -289,7 +304,7 @@ def apply_data(topic, datapoint):
         team = all_teams[team_bbid]
         #
         #delegate repetitive work to unit_work()
-        unit_work(team, team_salary)
+        unit_work(team, team_salary, **materials)
         #
     #2.2. Update remaining teams with the generic salary
     unspecified_team_names = set(all_teams.keys()) - set(datapoint.keys())
@@ -315,7 +330,23 @@ def apply_data(topic, datapoint):
     #THE END
     
     
-def unit_work(team, team_salary):
+def unit_work(team,
+              team_salary,
+              team_label_template,
+              #
+              shared_data,
+              #
+              l_team_salaries,
+              l_average_salary,
+              l_employee_expense,
+              l_salaries,
+              #
+              dr_average_salary,
+              dr_team_salary,
+              #
+              f_annualized,
+              f_monthly
+              ):
     """
 
 
@@ -325,6 +356,7 @@ def unit_work(team, team_salary):
     Function manages repetitive work. Here, unit_work() adds salary-related
     lines and drivers to each team unit. 
     """
+    #unpack materials
     #
     team_label = team_label_template % team.name
     #
@@ -344,10 +376,17 @@ def unit_work(team, team_salary):
     dr_own_salaries.configure(team_data, f_monthly)    
     #
     #add objects to team
-    team.financials.add_line_to(l_average_salary.copy(), "overview")
-    team.financials.add_line_to(l_employee_expense.copy(), "g&a")
-    team.financials.add_line_to(l_salaries.copy(), "g&a", "employee expense")
-    team.financials.add_line_to(l_own_salaries, "g&a", "employee expense", "salaries") 
+    team.financials.add_line_to(l_average_salary.copy(),
+                                "overview")
+    team.financials.add_line_to(l_employee_expense.copy(),
+                                "operating expense")
+    team.financials.add_line_to(l_salaries.copy(),
+                                "operating expense",
+                                l_employee_expense.name)
+    team.financials.add_line_to(l_own_salaries,
+                                "operating expense",
+                                l_employee_expense.name,
+                                l_salaries.name) 
     #
     team.addDriver(dr_own_average)
     team.addDriver(dr_own_salaries)

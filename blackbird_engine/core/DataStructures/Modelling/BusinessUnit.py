@@ -81,6 +81,8 @@ class BusinessUnit(Tags,Equalities):
     sig_consolidate       global signature updated for unit name
     size                  int; number of real-life equivalents obj represents
     tagSources            list; CLASS attribute, sources for tag inheritance
+    type                  str or None; describes the unit's in-model type (e.g.,
+                          "product" or "team").
     
     FUNCTIONS:
     add_component()       adds bus with verified ids to components
@@ -130,6 +132,7 @@ class BusinessUnit(Tags,Equalities):
         gl_sig_con = Globals.signatures["BusinessUnit.consolidate"]
         self.sig_consolidate =  gl_sig_con % self.name
         self.size = 1
+        self.type = None
         
     def __hash__(self):
         return self.id.__hash__()
@@ -1021,6 +1024,10 @@ class BusinessUnit(Tags,Equalities):
                 raise BBExceptions.IDCollisionError(c)
             else:
                 self.period.bu_directory[self.id.bbid] = self
+                #
+                brethren = self.period.ty_directory.setdefault(self.id.bbid, set())
+                brethren.add(self.id.bbid)
+                #
         else:
             self.period.bu_directory[self.id.bbid] = self
         if recur:

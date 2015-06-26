@@ -120,27 +120,82 @@ opex.guide.priority.reset()
 opex.guide.priority.increment(1)
 #opex details are more important here than the general thing
 #
-employee_expense = LineItem("Employee Expense")
-employee_expense.tag(
-                     "base compensation",
-                     "bonus",
-                     "compensation",
-                     "full-time employees",
-                     "incentive compensation",
-                     "part-time employees",
-                     "personnel",
-                     "salaries",
-                     "staff",
-                     "staffing",
-                     "stock compensation",
-                     #
-                     "payroll taxes",
-                     "health insurance",
-                     "benefits")
-employee_expense.guide.priority.reset()
-employee_expense.guide.priority.increment(3)
-employee_expense.guide.quality.setStandards(4,5)
-standard_path.add_line_to(employee_expense.copy(), "operating expense")
+#opex details:
+head_count = LineItem("employee count")
+head_count.tag("all teams",
+               "full-time employees",
+               "head count",
+               "part-time employees",
+               "personnel",
+               "staff",
+               "staffing",
+               "staffing structure"
+               "team composition",
+               "team structure")
+
+base_comp = LineItem("base compensation")
+base_comp.tag("compensation",
+              "employee expense",
+              "operating expense",
+              "expense",
+              "salaries",
+              "cash expense")
+
+bonus_cash = LineItem("cash bonus")
+bonus_cash.tag("compensation",
+               "employee expense",
+               "operating expense",
+               "expense",
+               "cash expense",
+               "incentive compensation",
+               "bonus",
+               "variable",
+               "variable compensation",
+               "cash bonus")
+
+bonus_stock = LineItem("equity bonus")
+bonus_stock.tag("compensation",
+                "employee expense",
+                "operating expense",
+                "expense",
+                "non-cash expense",
+                "ebitda adjustment",
+                "add-back",
+                "cash flow add-back",
+                "cash flow adjustment",
+                "incentive compensation",
+                "bonus",
+                "variable",
+                "variable compensation")
+
+taxes = LineItem("employment taxes")
+taxes.tag("employee expense",
+          "payroll taxes",
+          "workers' comp",
+          "medicare")
+
+benefits = LineItem("benefits")
+benefits.tag("employee expense",
+             "health insurance")
+
+opex_details = [head_count,
+                base_comp,
+                bonus_cash,
+                bonus_stock,
+                taxes,
+                benefits]
+#
+for line in opex_details:
+    line.guide.priority.reset()
+    line.guide.priority.increment(3)
+    line.guide.quality.setStandards(3,5)
+    standard_path.add_line_to(line.copy(), "operating expense")
+
+adj_ebitda = LineItem("Adjusted EBITDA")
+standard_path.add_top_line(adj_ebitda.copy(), after = "ebitda")
+
+
+
 
 
 

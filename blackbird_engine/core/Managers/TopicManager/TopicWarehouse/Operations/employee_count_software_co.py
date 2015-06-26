@@ -74,6 +74,7 @@ optionalTags = [tg_critical,
                 tg_single_product,
                 "full time employees",
                 "employee expense",
+                "employee count",
                 "teams",
                 "employee head count",
                 "personnel",
@@ -230,6 +231,7 @@ def apply_data(topic, datapoint):
         team.size = head_count
         teams.addComponent(team)
     #    
+    model.tag("known team composition")
     
 scenarios[None] = scenario_1
 #
