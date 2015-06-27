@@ -48,7 +48,6 @@ import BBExceptions
 from DataStructures.Modelling.BusinessUnit import BusinessUnit
 from DataStructures.Modelling.Driver import Driver
 from DataStructures.Modelling.LineItem import LineItem
-from Managers.TopicManager.TopicWarehouse.Structure.StandardFinancials import standard_financials
 
 
 

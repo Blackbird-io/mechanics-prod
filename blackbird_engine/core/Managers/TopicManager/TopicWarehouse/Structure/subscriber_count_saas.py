@@ -47,7 +47,7 @@ import BBExceptions
 
 from DataStructures.Modelling.BusinessUnit import BusinessUnit
 
-from .StandardFinancials import standard_financials
+from .standard_financials import basic_fins
 
 
 
@@ -229,7 +229,7 @@ def apply_data(topic, datapoint):
     #
     product_unit = model.currentPeriod.content
     if not product_unit:
-        product_template = BusinessUnit("Product Template", standard_financials.copy())
+        product_template = BusinessUnit("Product Template", basic_fins.copy())
         product_unit = product_template.copy()
         #
         product_template.tag(tg_product)
@@ -325,7 +325,7 @@ def apply_data(topic, datapoint):
     conception = first_applied_conception
     for i in range(batch_count):
         label = sbr_label_template % i
-        sbr = BusinessUnit(label, standard_financials.copy())
+        sbr = BusinessUnit(label, basic_fins.copy())
         sbr.size = batch_size
         conception = conception + increment
         conception = max(conception, earliest_permitted_conception)

@@ -49,6 +49,8 @@ import BBGlobalVariables as Globals
 
 from DataStructures import Modelling
 from DataStructures.Modelling.BusinessUnit import BusinessUnit
+from Managers.TopicManager.TopicWarehouse.Structure.standard_financials import basic_fins
+
 
 
 
@@ -158,22 +160,30 @@ def scenario_5(topic):
 
 def scenario_6(topic):
     #
-    M = topic.MR.activeModel
-    R = topic.get_first_answer()
+    model = topic.MR.activeModel
+    response = topic.get_first_answer()
     #R is a string in YYYY-MM-DD format; split into integers so can create an
     #actual date object
     #
-    adj_r = [int(x) for x in R.split("-")]
+    adj_r = [int(x) for x in response.split("-")]
     date_of_birth = datetime.date(*adj_r)
     #
-    top_bu = BusinessUnit(M.name)
-    estimated_conception = date_of_birth - top_bu.life.gestation
-    top_bu.life.date_of_conception = estimated_conception
-    M.currentPeriod.setContent(top_bu)
+    company = BusinessUnit(model.name, fins = basic_fins.copy())
+    estimated_conception = date_of_birth - company.life.gestation
+    company.life.date_of_conception = estimated_conception
     #
-    fp = M.interview.focal_point
+    basic_unit = company.copy()
+    basic_unit.setName("Basic Unit Template")
+    #basic unit shares company's life characteristics and fins, but doesn't
+    #have a type
+    #
+    company.type = "company"
+    model.time_line.current_period.setContent(company)
+    model.taxonomy["standard"] = basic_unit
+    #
+    fp = model.interview.focal_point
     fp.guide.quality.increment(1)
-    M.tag("ready for path")
+    model.tag("ready for path")
     #
     topic.wrap_topic()
 

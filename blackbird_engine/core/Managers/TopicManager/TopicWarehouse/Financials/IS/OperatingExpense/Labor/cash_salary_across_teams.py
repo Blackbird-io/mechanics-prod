@@ -50,9 +50,6 @@ from DataStructures.Modelling.BusinessUnit import BusinessUnit
 from DataStructures.Modelling.Driver import Driver
 from DataStructures.Modelling.LineItem import LineItem
 
-from Managers.TopicManager.TopicWarehouse.Structure import StandardFinancials
-#standard financials should always be a direct import so that you can move topic
-#from folder to folder in the warehouse.
 
 
 

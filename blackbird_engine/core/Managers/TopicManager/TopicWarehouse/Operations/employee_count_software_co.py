@@ -47,7 +47,6 @@ import BBGlobalVariables as Globals
 import BBExceptions
 
 from DataStructures.Modelling.BusinessUnit import BusinessUnit
-from Managers.TopicManager.TopicWarehouse.Structure.StandardFinancials import standard_financials
 
 
 

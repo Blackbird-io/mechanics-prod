@@ -47,7 +47,7 @@ from DataStructures.Modelling.BusinessUnit import BusinessUnit
 from DataStructures.Modelling.LineItem import LineItem
 
 from . import knowledge_re_software
-from . import StandardFinancials
+from .standard_financials import basic_fins
 
 
 
@@ -182,7 +182,7 @@ def apply_data(topic, datapoint):
     model = topic.MR.activeModel
     #
     u = BusinessUnit(name = "subscriber unit template",
-                     fins = StandardFinancials.basic_fins.copy())
+                     fins = basic_fins.copy())
     subscriber_unit_template = u
     #
     model.taxonomy["subscriber"] = dict()

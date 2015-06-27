@@ -118,7 +118,7 @@ opex_i = standard_path.indexByName("operating expense")
 opex = standard_path[opex_i]
 opex.guide.priority.reset()
 opex.guide.priority.increment(1)
-#opex details are more important here than the general thing
+#opex details are more important here than the general category
 #
 #opex details:
 head_count = LineItem("employee count")
