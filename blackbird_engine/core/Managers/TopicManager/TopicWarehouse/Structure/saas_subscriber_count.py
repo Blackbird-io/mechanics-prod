@@ -47,7 +47,8 @@ import BBExceptions
 
 from DataStructures.Modelling.BusinessUnit import BusinessUnit
 
-from .standard_financials import basic_fins
+from .standard_financials import basic_fins #<------------------------------------- this topic should be able to get by
+                                            # w/o importing fins because it should just use the unit in the taxonomy (which already has fins)
 
 
 
@@ -227,8 +228,8 @@ def apply_data(topic, datapoint):
     #is only one product, which appears as the top-level container.  #<----------------------------------------------------------------------------------should probably change this
     #
     #
-    product_unit = model.currentPeriod.content
-    if not product_unit:
+    product_unit = model.currentPeriod.content #this should be the COMPANY unit
+    if not product_unit:                    #<------------------------------------------------- clean and eliminate
         product_template = BusinessUnit("Product Template", basic_fins.copy())
         product_unit = product_template.copy()
         #
@@ -248,7 +249,8 @@ def apply_data(topic, datapoint):
         model.taxonomy["product"]["standard"] = product_template
         model.tag(tg_multi_taxonomy)
     #
-    container_unit = model.taxonomy.get("container")
+    container_taxonomy = model.taxonomy.get("container") #<------------------------------- also unclear if this is necessary here
+    container_unit = container_taxonomy.get("standard")
     if not container_unit:    
         container_unit = BusinessUnit("Container Template")
         #tags:

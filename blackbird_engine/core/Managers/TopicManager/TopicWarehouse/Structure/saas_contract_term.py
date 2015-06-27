@@ -70,6 +70,8 @@ optionalTags = ["saas",
                 "deterministic",
                 "life cycle",
                 "contract term",
+                "expands taxonomy",
+                "defines new unit type",
                 "modifies path",
                 "basic",
                 "basic analysis depth",
@@ -181,9 +183,10 @@ def apply_data(topic, datapoint):
     """
     model = topic.MR.activeModel
     #
-    u = BusinessUnit(name = "subscriber unit template",
-                     fins = basic_fins.copy())
-    subscriber_unit_template = u
+    basic_unit_template = model.taxonomy["standard"]
+    subscriber_unit_template = basic_unit_template.copy()
+    subscriber_unit_template.setName("subscriber unit template")
+    subscriber_unit_template.type = "subscriber"
     #
     model.taxonomy["subscriber"] = dict()
     model.taxonomy["subscriber"]["standard"] = subscriber_unit_template
