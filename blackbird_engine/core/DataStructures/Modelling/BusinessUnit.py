@@ -112,6 +112,7 @@ class BusinessUnit(Tags,Equalities):
         
     def __init__(self, name, fins = None):
         Tags.__init__(self,name) 
+        self._type = None
         self.analytics = None
         #
         self.components = None
@@ -132,7 +133,35 @@ class BusinessUnit(Tags,Equalities):
         gl_sig_con = Globals.signatures["BusinessUnit.consolidate"]
         self.sig_consolidate =  gl_sig_con % self.name
         self.size = 1
-        self.type = None
+        
+    @property
+    def type(self):
+        """
+        """
+        return self._type
+
+    @type.setter
+    def type(self, value):
+        #
+        old_type = self.type
+        self._type = value
+        #
+        if self.period:
+            old_entry = self.period.ty_directory.get(old_type)
+            old_entry.remove(self.id.bbid)
+            new_entry = self.period.ty_directory.setdefault(value, set())
+            new_entry.add(self.id.bbid)
+            #entries are sets of bbids for units that belong to that type
+        #
+        #period should also be a property; setting or changing it should change
+        #registration automatically (ie run the method). so going from self.period == None
+        #to self.period = p1 will always run the updates. 
+        
+
+    @type.deleter
+    def type(self):
+        c = "cant delete type; set to None if you want undifferentiated unit"
+        raise ManagedAttrError(c)
         
     def __hash__(self):
         return self.id.__hash__()

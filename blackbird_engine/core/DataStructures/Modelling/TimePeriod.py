@@ -292,20 +292,59 @@ class TimePeriod(Tags):
         """
 
 
-        T.selectBottomUnits() -> list
+        TimePeriod.selectBottomUnits() -> list
 
 
-        Method returns a list of ground-level components (components that do
-        not contain any other business units).
+        **OBSOLETE**
+
+        Legacy interface. Delegates all work to select_bottom_units().
+
+        During delegration, method permits runs on empty pool to ensure
+        that new results stay consistent with old ones for calls on instances
+        with no registered units in the directory. 
         """
-        foundation = []
-        for bbid in sorted(self.bu_directory.keys()):
-            bu = self.bu_directory[bbid]
-            if bu.components == {}:
-                foundation.append(bu)
-            else:
-                continue
-        return foundation
+        result = self.select_bottom_units(run_on_empty = True)
+        return result
+    
+    def select_bottom_units(self, pool = None, run_on_empty = False):
+        """
+
+
+        TimePeriod.select_bottom_units([pool = None
+          [, run_on_empty = False]]) -> list
+
+
+        Method returns a list of units in pool that have no components. If
+        ``pool`` is None, method will build its own pool from all keys in
+        the instance's bu_directory.
+
+        Method will raise error if asked to run on an empty pool unless
+        ``run_on_empty`` == True.
+        
+        NOTE: method performs identity check (``is``) for building own pool;
+        accordingly, running a.select_bottom_units(pool = set()) will raise
+        an exception.         
+        """
+        if pool is None:
+            pool = sorted(self.bu_directory.keys())
+        if any([pool, run_on_empty]):
+            #
+            foundation = []
+            #
+            for bbid in pool:
+                bu = self.bu_directory[bbid]
+                if bu.components:
+                    continue
+                else:
+                    foundation.append(bu)
+            #
+            return foundation
+            #
+        else:
+            c = "method will not run on empty pool unless explicitly instructed to do so"
+            raise ErrorOfSomeSort(c) 
+            
+                            
     
     def setContent(self,bu,updateID = True):
         """
