@@ -60,12 +60,13 @@ date_created = "2015-06-12"
 extra_prep = False
 
 #store tags this topic uses multiple times in variables to avoid typos
-tg_constant_life_revenue = "constant revenue over lifecycle"
+tg_constant_life_rev = "constant revenue over lifecycle"
 tg_constant_price = "constant price over time"
 tg_critical = "critical user input"
 tg_no_inflation = "no inflation"
+tg_product_rev = "revenue from product sales"
 tg_single_product = "describes resources associated with one product"
-tg_sbx_revenue = "subscription-based revenue"
+tg_subscription_rev = "subscription-based revenue"
 
 #standard topic prep
 user_outline_label = "Subscription Pricing"
@@ -75,8 +76,10 @@ optionalTags = ["subscriptions",
                 "saas",
                 "software",
                 tg_critical,
+                tg_constant_life_rev,
+                tg_product_rev,
                 tg_single_product,
-                tg_constant_life_revenue]
+                tg_subscription_rev,]
 
 applied_drivers = dict()
 formula_names = []
@@ -207,11 +210,13 @@ def apply_data(topic, datapoint):
         sbr_unit.financials.add_line_to(own_line, "revenue")
         sbr_unit.addDriver(own_d1)
         #
-        sbr_unit.tag(tg_constant_life_revenue)
-        sbr_unit.tag(tg_constant_price)
-        sbr_unit.tag(tg_no_inflation)
+        sbr_unit.tag(tg_constant_life_rev,
+                     tg_constant_price,
+                     tg_no_inflation)
     #
-    model.tag(tg_sbx_revenue)
+    model.tag(tg_product_rev,
+              tg_subscription_rev,
+              "subscriptions")
     
 scenarios[None] = scenario_1
 #

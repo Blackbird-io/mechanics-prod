@@ -304,12 +304,13 @@ def apply_data(topic, datapoint):
     #Step 2. Populate model with new information
     #2.1. Update each team with their specific salary
     for (team_name, team_salary) in datapoint.items():
-        #can wrap this whole thing in KeyError handler? --------------------------- for production
-        team_bbid = all_teams.by_name[team_name]
-        team = all_teams[team_bbid]
-        #
-        #delegate repetitive work to unit_work()
-        unit_work(team, team_salary, **materials)
+        team_bbid = all_teams.by_name.get(team_name)
+        if team_bbid:
+            team = all_teams[team_bbid]
+            #delegate repetitive work to unit_work()
+            unit_work(team, team_salary, **materials)
+        else:
+            continue
         #
     #2.2. Update remaining teams with the generic salary
     unspecified_team_names = set(all_teams.by_name.keys()) - set(datapoint.keys())

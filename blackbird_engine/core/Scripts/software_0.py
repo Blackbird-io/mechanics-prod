@@ -14,6 +14,7 @@ q10 = "employee head count across software company roles?"
 q11 = "average annual salary across unspecified teams?"
 q12 = "annual cash bonus as percent of salary for open teams?"
 q13 = "annual stock bonus as percent of salary for open teams?"
+q14 = "net subscription revenues after commission?"
 
 
 #answer format: track api
@@ -63,3 +64,6 @@ answers[q13] = [{"response" : "60"},
                 #stock bonus equal to 5% of salary for everyone else
                 #
                 #NOTE: this question should exclude the sales team
+answers[q14] = [{"response" : "95"}]
+                #keep 95% of revenue, pay out 5% in commissions
+
