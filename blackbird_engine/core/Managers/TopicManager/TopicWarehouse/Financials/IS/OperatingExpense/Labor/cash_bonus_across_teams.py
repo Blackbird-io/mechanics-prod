@@ -63,6 +63,7 @@ extra_prep = False
 #store tags this topic uses multiple times in variables to avoid typos
 tg_known_bonus = "known bonus structure"
 tg_single_product = "describes resources associated with one product"
+tg_variable_comp = "variable compensation"
 
 #standard topic prep
 user_outline_label = "Salaries"
@@ -83,9 +84,9 @@ optionalTags = [tg_single_product,
                 "refines template",
                 "salaries",
                 "software",
+                tg_variable_comp,
                 "team-specific analysis",
                 "variable",
-                "variable compensation",
                 "variable teams"]
 
 applied_drivers = dict()
