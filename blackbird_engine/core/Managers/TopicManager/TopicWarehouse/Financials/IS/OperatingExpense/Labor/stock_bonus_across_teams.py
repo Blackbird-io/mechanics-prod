@@ -157,13 +157,18 @@ def scenario_1(topic):
     #
     model = topic.MR.activeModel
     #
-    product_unit = model.time_line.current_period.content
-    personnel_bbid = product_unit.components.by_name["personnel"]
-    personnel_unit = product_unit.components[teams_bbid]
-    teams = personnel_unit.components.copy()
-    #filter out sales team
+    current_period = model.time_line.current_period
+    office_ids = current_period.ty_directory["office"]
+    hq = current_period.get_units(office_ids)[0]    
+    personnel_bbid = hq.components.by_name["personnel"]
+    personnel = hq.components[personnel_bbid]
+    teams = personnel.components
+    teams = teams.copy()
+    #run logic on copy so as not to ruin the original
+    #pull out sales team, will figure out their comp separately
     sales_bbid = teams.by_name.get("sales")
-    sales = teams.pop(sales_bbid)
+    if sales_bbid:
+        sales = teams.pop(sales_bbid)
     #
     #pull out the catch-all team to make sure its input element appears
     #last; otherwise, due to unstable dict key order, elements could read
@@ -177,33 +182,33 @@ def scenario_1(topic):
         everyone_else = teams.pop(everyone_else_bbid)
     #
     teams_large_to_small = sorted(teams.values(),
-                                  operator.attrgetter("size"),
+                                  key = operator.attrgetter("size"),
                                   reverse = True)
     #
     #configure question w existing roles:
-    input_array = new_question["input_array"]
+    input_array = new_question.input_array
     #
     ask_about = len(input_array)
     if everyone_else:
         ask_about = len(input_array[:-1])
         #save the last element for everyone_else
-    ask_about = min(ask_about, len(team_large_to_small))
+    ask_about = min(ask_about, len(teams_large_to_small))
     #if there are fewer teams than element slots, limit accordingly
     #
     for i in range(ask_about):
         element = input_array[i]
-        element["main_caption"] = team_large_to_small[i].name
-        element["_active"] = True
-        element["r_min"] = 0
-        element["r_max"] = 1000
+        element.main_caption = teams_large_to_small[i].name
+        element._active = True
+        element.r_min = 0
+        element.r_max = 1000
         #when topic gets this question object, elements 2-5 will be inactive.
     else:
         if everyone_else:
             last_element = input_array[ask_about]
-            last_element["main_caption"] = everyone_else.name
-            last_element["_active"] = True
-            last_element["r_min"] = 0
-            last_element["r_max"] = 1000
+            last_element.main_caption = everyone_else.name
+            last_element._active = True
+            last_element.r_min = 0
+            last_element.r_max = 1000
         else:
             pass
     #
@@ -231,9 +236,15 @@ def scenario_2(topic):
     #
     bonus_by_role = dict()
     #
-    for i in len(input_array):
+    for i in range(len(input_array)):
         role = input_array[i]["main_caption"]
-        bonus = portal_response[i]["response"]
+        raw_bonus = portal_response[i]["response"]
+        #responses are lists of a number. have to manually extract the number;
+        #for single-element questions, topic.get_first_response() does that
+        #automatically.
+        bonus = float(raw_bonus[0])
+        #portal sends the number as a decimal, convert into float for
+        #portability
         bonus_by_role[role] = bonus
     #
     model.interview.work_space["stock_bonus_by_team"] = bonus_by_role
@@ -277,12 +288,15 @@ def apply_data(topic, datapoint):
     #(ordered from largest to smallest)
     #1.0. model
     model = topic.MR.activeModel
+    current_period = model.time_line.current_period
     #1.1. business units
-    product_unit = model.time_line.current_period.content
-    personnel_bbid = product_unit.components.by_name["personnel"]
-    personnel_unit = product_unit.components[teams_bbid]
-    all_teams = personnel_unit.components
-    staff_template_unit = model.taxonomy["personnel"]
+    company = current_period.content
+    hq_bbid = company.components.by_name["headquarters"]
+    hq = company.components[hq_bbid]
+    personnel_bbid = hq.components.by_name["personnel"]
+    personnel = hq.components[personnel_bbid]
+    all_teams = personnel.components
+    staff_template_unit = model.taxonomy["team"]["standard"]
     #1.2. drivers
     dr_average_bonus = topic.applied_drivers["average bonus"]
     dr_team_bonus = topic.applied_drivers["team bonus"]
@@ -305,12 +319,20 @@ def apply_data(topic, datapoint):
     #1.5. labels
     team_label_template = "stock bonus reserved (%s)"
     #1.6. data
-    ##    shared_data = dict()
     generic_bonus = datapoint.get("everyone else")
-    if not generic_salary:
+    if not generic_bonus:
         generic_bonus = datapoint.get("other")
     #1.7. adjust objects to fit each other
     #n/a
+    materials = dict()
+    materials["team_label_template"] = team_label_template
+    materials["l_average_bonus"] = l_average_bonus
+    materials["l_team_bonus"] = l_team_bonus
+    materials["dr_average_bonus"] = dr_average_bonus
+    materials["dr_team_bonus"] = dr_team_bonus
+    materials["f_multiplier"] = f_multiplier
+    materials["f_fixed"] = f_fixed
+        
     
     #Step 2. Populate model with new information
     #2.1. Update each team with their specific bonus
@@ -319,22 +341,22 @@ def apply_data(topic, datapoint):
         team = all_teams[team_bbid]
         #
         #delegate repetitive work to unit_work()
-        unit_work(team, team_bonus_percent)
+        unit_work(team, team_bonus_percent, **materials)
         #
     #2.2. Update remaining teams with the generic salary
-    unspecified_team_names = set(all_teams.keys()) - set(datapoint.keys())
+    unspecified_team_names = set(all_teams.by_name.keys()) - set(datapoint.keys())
     for team_name in unspecified_team_names:
         team_bbid = all_teams.by_name[team_name]
         team = all_teams[team_bbid]
         #
         #delegate repetitive work to unit_work()
-        unit_work(team, generic_bonus)
+        unit_work(team, generic_bonus, **materials)
         #
         #custom tags
         team.tag("generic bonus")
         team.tag("estimated bonus")
     #2.3. Update staff unit template with generic salary:
-    unit_work(staff_template_unit, generic_salary)
+    unit_work(staff_template_unit, generic_bonus, **materials)
 
     #Step 3. Prepare model for further processing
     #3.1. Add tags to model
@@ -345,7 +367,18 @@ def apply_data(topic, datapoint):
     #THE END
     
     
-def unit_work(team, team_bonus_percent):
+def unit_work(team,
+              team_bonus_percent,
+              team_label_template,
+              #
+              l_average_bonus,
+              l_team_bonus,
+              #
+              dr_average_bonus,
+              dr_team_bonus,
+              #
+              f_fixed,
+              f_multiplier):
     """
 
 
@@ -378,8 +411,12 @@ def unit_work(team, team_bonus_percent):
     dr_own_bonus.configure(team_data, f_multiplier)
     #
     #add objects to team
-    team.financials.add_line_to(l_average_bonus.copy(), "overview")
-    team.financials.add_line_to(l_own_bonus, "g&a", "employee expense", "bonus") 
+    team.financials.add_line_to(l_average_bonus.copy(),
+                                "overview")
+    team.financials.add_line_to(l_own_bonus,
+                                "operating expense",
+                                "employee expense",
+                                "bonus") 
     #
     team.addDriver(dr_own_average)
     team.addDriver(dr_own_bonus)

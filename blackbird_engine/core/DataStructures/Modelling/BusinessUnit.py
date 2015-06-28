@@ -130,6 +130,8 @@ class BusinessUnit(Tags,Equalities):
         #get the id functionality but do NOT assign a bbid yet
         self.life = LifeCycle()
         self.period = None
+        #may want to consider changing period to a property, so that changes
+        #in period value will always cause the unit to rerun registration. 
         gl_sig_con = Globals.signatures["BusinessUnit.consolidate"]
         self.sig_consolidate =  gl_sig_con % self.name
         self.size = 1
@@ -137,6 +139,17 @@ class BusinessUnit(Tags,Equalities):
     @property
     def type(self):
         """
+
+
+        **property**
+
+
+        Getter returns instance._type.
+
+        Setter registers instance bbid under the new value key and removes old
+        registration (when instance.period is defined). 
+
+        Deletion prohibited.
         """
         return self._type
 
@@ -152,16 +165,12 @@ class BusinessUnit(Tags,Equalities):
             new_entry = self.period.ty_directory.setdefault(value, set())
             new_entry.add(self.id.bbid)
             #entries are sets of bbids for units that belong to that type
-        #
-        #period should also be a property; setting or changing it should change
-        #registration automatically (ie run the method). so going from self.period == None
-        #to self.period = p1 will always run the updates. 
-        
 
     @type.deleter
     def type(self):
-        c = "cant delete type; set to None if you want undifferentiated unit"
-        raise ManagedAttrError(c)
+        c = "``type`` is a property; delete prohibited. to represent generic "
+        c += "unit, set to None instead."
+        raise BBExceptions.ManagedAttributeError(c)
         
     def __hash__(self):
         return self.id.__hash__()
@@ -1054,7 +1063,7 @@ class BusinessUnit(Tags,Equalities):
             else:
                 self.period.bu_directory[self.id.bbid] = self
                 #
-                brethren = self.period.ty_directory.setdefault(self.id.bbid, set())
+                brethren = self.period.ty_directory.setdefault(self.type, set())
                 brethren.add(self.id.bbid)
                 #
         else:

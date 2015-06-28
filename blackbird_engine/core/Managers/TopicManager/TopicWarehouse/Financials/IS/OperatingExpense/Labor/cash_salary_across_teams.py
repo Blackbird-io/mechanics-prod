@@ -142,11 +142,14 @@ def scenario_1(topic):
     new_question = topic.questions["average annual salary across unspecified teams?"]
     #
     model = topic.MR.activeModel
-    #
-    product_unit = model.time_line.current_period.content
-    personnel_bbid = product_unit.components.by_name["personnel"]
-    personnel_unit = product_unit.components[personnel_bbid]
-    teams = personnel_unit.components
+    current_period = model.time_line.current_period
+    office_ids = current_period.ty_directory["office"]
+    hq = current_period.get_units(office_ids)[0]    
+    personnel_bbid = hq.components.by_name["personnel"]
+    personnel = hq.components[personnel_bbid]
+    teams = personnel.components
+    teams = teams.copy()
+    #run logic on copy so that filtering operations dont ruin the original
     #
     #pull out the catch-all team to make sure its input element appears
     #last; otherwise, due to unstable dict key order, elements could read
@@ -213,7 +216,9 @@ def scenario_2(topic):
     #
     for i in range(len(input_array)):
         role = input_array[i]["main_caption"]
-        salary = portal_response[i]["response"]
+        raw_salary = portal_response[i]["response"]
+        #raw salary is a list of one decimal
+        salary = float(raw_salary[0])
         salary_by_role[role] = salary
     #
     model.interview.work_space["employee_salary_by_role"] = salary_by_role
@@ -252,12 +257,15 @@ def apply_data(topic, datapoint):
     #(ordered from largest to smallest)
     #1.0. model
     model = topic.MR.activeModel
+    current_period = model.time_line.current_period
     #1.1. business units
-    product_unit = model.time_line.current_period.content
-    personnel_bbid = product_unit.components.by_name["personnel"]
-    personnel_unit = product_unit.components[personnel_bbid]
-    all_teams = personnel_unit.components
-    staff_template_unit = model.taxonomy["personnel"]
+    company = current_period.content
+    hq_bbid = company.components.by_name["headquarters"]
+    hq = company.components[hq_bbid]
+    personnel_bbid = hq.components.by_name["personnel"]
+    personnel = hq.components[personnel_bbid]
+    all_teams = personnel.components
+    staff_template_unit = model.taxonomy["team"]["standard"]
     #1.2. drivers
     dr_average_salary = topic.applied_drivers["average salary"]
     dr_team_salary = topic.applied_drivers["team salary"]
@@ -273,7 +281,7 @@ def apply_data(topic, datapoint):
     team_label_template = "salaries (%s)"
     #1.6. data
     shared_data = dict()
-    shared_data["ref_year"] = product_unit.life.ref_date.year
+    shared_data["ref_year"] = company.life.ref_date.year
     shared_data["annual_inflation"] = MarketColor.annualInflation
     generic_salary = datapoint.get("everyone else")
     if not generic_salary:
@@ -304,19 +312,19 @@ def apply_data(topic, datapoint):
         unit_work(team, team_salary, **materials)
         #
     #2.2. Update remaining teams with the generic salary
-    unspecified_team_names = set(all_teams.keys()) - set(datapoint.keys())
+    unspecified_team_names = set(all_teams.by_name.keys()) - set(datapoint.keys())
     for team_name in unspecified_team_names:
         team_bbid = all_teams.by_name[team_name]
         team = all_teams[team_bbid]
         #
         #delegate repetitive work to unit_work()
-        unit_work(team, generic_salary)
+        unit_work(team, generic_salary, **materials)
         #
         #custom tags
         team.tag("generic salary")
         team.tag("assumed salary")
     #2.3. Update staff unit template with generic salary:
-    unit_work(staff_template_unit, generic_salary)
+    unit_work(staff_template_unit, generic_salary, **materials)
 
     #Step 3. Prepare model for further processing
     #3.1. Add tags to model

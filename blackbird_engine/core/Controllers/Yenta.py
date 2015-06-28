@@ -164,13 +164,16 @@ class Yenta():
         #
         return criteria    
 
-    def build_target_requirements(target):
+    def build_target_requirements(self, target):
         reqs = set(target.requiredTags) - {None} - {target.partOf}
+        #
         return reqs
 
-    def build_topic_requirements(topic):
+    def build_topic_requirements(self, topic):
         #excludes name, returns set
         reqs = set(topic.tags.requiredTags[2:]) - {None}
+        #
+        return reqs
     
     def check_topic_name(self, target, model, topic_name, combined = True):
         #
@@ -184,18 +187,18 @@ class Yenta():
         if combined:
             targ_profile = self.build_combo_profile(target, model)
         else:
-            targ_profile = self.build_simple_profile(target)
+            targ_profile = self.build_basic_profile(target)
         #
         topic_criterion = self.build_topic_requirements(topic)
-        topic_profile = self.build_simple_profile(topic)
+        topic_profile = self.build_basic_profile(topic)
         #
         missed_target_reqs = targ_criterion - topic_profile
         missed_topic_reqs = topic_criterion - targ_profile
         #
         work["missed target reqs"] = missed_target_reqs
         work["missed topic reqs"] = missed_topic_reqs
-        work["target criterion"] = target_criterion
-        work["target profile"] = target_profile
+        work["target criterion"] = targ_criterion
+        work["target profile"] = targ_profile
         work["topic criterion"] = topic_criterion
         work["topic profile"] = topic_profile        
         #

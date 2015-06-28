@@ -154,7 +154,10 @@ def scenario_2(topic):
     #
     for i in range(len(input_array)):
         role = input_array[i]["main_caption"]
-        count = portal_response[i]["response"]
+        raw_count = portal_response[i]["response"]
+        #per api, raw_count (a number response) is a list of one decimal
+        count = round(raw_count[0])
+        #head count has to be an integer. round
         count_by_role[role] = count
     #
     model.interview.work_space["employee_count_by_role"] = count_by_role
@@ -199,17 +202,33 @@ def apply_data(topic, datapoint):
     one from scratch and adds it in. 
     """
     model = topic.MR.activeModel
-    prod_unit = model.time_line.current_period.content
+    current_period = model.time_line.current_period
+    company = current_period.content
     #
-    container_unit = model.taxonomy.get("container")
-    if not container_unit:    
-        container_unit = BusinessUnit("Container Template")
-        #tags:
-        container_unit.tag("container")
-        container_unit.tag("organizes similar units into bundles")
-        model.taxonomy["container"] = container_unit 
+    basic_template = model.taxonomy["standard"]
     #
-    staff_unit = BusinessUnit("Staff Template")
+    office_ids = current_period.ty_directory.get("office")
+    #
+    if office_ids:
+        hq = current_period.get_units(office_ids)[0]
+    else:
+        #check if office template in place
+        office_taxonomy = model.taxonomy.setdefault("office", dict())
+        if office_taxonomy:
+            office_template = office_taxonomy["standard"]
+        else:
+            #make an office template from scratch
+            office_template = basic_template.copy()
+            office_template.setName("office unit template")
+            office_template.tag("office")
+            office_template.type = "office"
+        hq = office_template.copy()
+        hq.setName("headquarters")
+        company.addComponent(hq)
+    #
+    staff_unit = basic_template.copy()
+    staff_unit.setName("Staff Template")
+    staff_unit.type = "team"
     #tags:
     staff_unit.tag("staff unit")
     staff_unit.tag("personnel")
@@ -217,12 +236,12 @@ def apply_data(topic, datapoint):
     staff_unit.tag("cost center")
     staff_unit.tag("non-revenue generating")
     staff_unit.tag("size is head count for a particular team")
-    model.taxonomy["personnel"] = staff_unit
+    team_taxonomy = model.taxonomy.setdefault("team", dict())
+    team_taxonomy["standard"] = staff_unit
     #
-    teams = container_unit.copy()
+    teams = basic_template.copy()
     teams.setName("personnel")
-    #teams unit contains personnel for the top product
-    prod_unit.addComponent(teams)
+    hq.addComponent(teams)
     #
     for (role, head_count) in datapoint.items():
         team = staff_unit.copy()
