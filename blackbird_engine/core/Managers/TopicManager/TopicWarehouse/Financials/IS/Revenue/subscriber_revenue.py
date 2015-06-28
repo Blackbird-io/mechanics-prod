@@ -166,7 +166,7 @@ def end_scenario(topic):
 
     Scenario concludes with force_exit().
     
-    No-op here. Subscriber count is critical information. Engine cannot
+    No-op here. Subscription price is critical information. Engine cannot
     afford to guess here.
     """
     topic.force_exit()
@@ -185,6 +185,7 @@ def apply_data(topic, datapoint):
     c
     """
     model = topic.MR.activeModel
+    current_period = model.time_line.current_period
     #
     subscriptions_line = LineItem("subscriptions")
     #
@@ -196,7 +197,9 @@ def apply_data(topic, datapoint):
     #
     D1.configure(local_data, rev_formula)
     #
-    for sbr_unit in model.time_line.current_period.selectBottomUnits():
+    subscriber_ids = current_period.ty_directory.get("subscriber")
+    subscribers = current_period.get_units(subscriber_ids)
+    for sbr_unit in subscribers:
         #
         own_d1 = D1.copy()
         own_line = subscriptions_line.copy()

@@ -174,10 +174,13 @@ def scenario_1(topic):
     #
     model = topic.MR.activeModel
     #
-    product_unit = model.time_line.current_period.content
-    personnel_bbid = product_unit.components.by_name["personnel"]
-    personnel_unit = product_unit.components[teams_bbid]
-    teams = personnel_unit.components.copy()
+    current_period = model.time_line.current_period
+    office_ids = current_period.ty_directory["office"]
+    hq = current_period.get_units(office_ids)[0]    
+    personnel_bbid = hq.components.by_name["personnel"]
+    personnel = hq.components[personnel_bbid]
+    teams = personnel.components
+    teams = teams.copy()
     sales_team_names = {"sales",
                         "bizdev",
                         "business development",
@@ -213,21 +216,21 @@ def scenario_1(topic):
         topic.wrap_topic()
     else:
         sales_teams_ordered = sorted(sales_team_in_place.values(),
-                                     operator.attrgetter("size"),
+                                     key = operator.attrgetter("size"),
                                      reverse = True) 
-        input_array = new_question["input_array"]
+        input_array = new_question.input_array
         ask_about = len(input_array)
         ask_about = min(ask_about, len(sales_teams_ordered))
         #if there are fewer teams than element slots, limit accordingly
         for i in range(ask_about):
             element = input_array[i]
-            element["_active"] = True
+            element._active = True
             #when topic gets this question object, elements 2-5 will be
             #inactive.
-            element["main_caption"] = sales_teams_ordered[i].name
-            element["r_min"] = 0
-            element["r_max"] = 100
-            element["shadow"] = 0
+            element.main_caption = sales_teams_ordered[i].name
+            element.r_min = 0
+            element.r_max = 100
+            element.shadow = 0
         #
         topic.wrap_scenario(new_question)
 
@@ -253,9 +256,11 @@ def scenario_2(topic):
     #
     commission_by_role = dict()
     #
-    for i in len(input_array):
+    for i in range(len(input_array)):
         role = input_array[i]["main_caption"]
-        commission = portal_response[i]["response"]
+        raw_ommission = portal_response[i]["response"]
+        #raw_commission is a list of one decimal
+        commission = float(raw_commission[0])
         commission_by_role[role] = commission
     #
     model.interview.work_space["commission_by_team"] = commission_by_role

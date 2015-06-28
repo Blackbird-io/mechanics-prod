@@ -221,43 +221,41 @@ def apply_data(topic, datapoint):
     #apply standard sizing and depth quality -----------------------------------------------------------------------------------------------------------
     #
     model = topic.MR.activeModel
-    subscriber_template = model.taxonomy["subscriber"]["standard"]
+    current_period = model.time_line.current_period
+    company = current_period.content
     #
-    #in a software organization, the company should theoretically be built
-    #around one or more product units. in the simplest software company, there
-    #is only one product, which appears as the top-level container.  #<----------------------------------------------------------------------------------should probably change this
-    #
-    #
-    product_unit = model.currentPeriod.content #this should be the COMPANY unit
-    if not product_unit:                    #<------------------------------------------------- clean and eliminate
-        product_template = BusinessUnit("Product Template", basic_fins.copy())
-        product_unit = product_template.copy()
-        #
-        product_template.tag(tg_product)
-        #
-        product_name = model.interview.work_space.get("product_name")
-        #dont know if interview touched on product name
-        #
-        if product_name:
-            product_unit.tag(tg_actual_name)
+    #subscribers go in product units. locate or create the appropriate unit.
+    #when control flow is done with the tree that follows, ``product`` will be
+    #defined.
+    product_bbids = current_period.ty_directory.get("product")
+    if product_bbids:
+        product = current_period.get_units(product_bbids)[0]
+        #topic assumes only one product is in place and performs all of its
+        #subscription work on the first matching unit
+    else:
+        #company does not yet contain any product-type units. the model may
+        #have a template for this type of unit. if it doesn't, we will create
+        #one and store it in taxonomy for future use. 
+        basic_template = model.taxonomy["standard"]
+        product_taxonomy = model.taxonomy.setdefault("product",dict())
+        if product_taxonomy:
+            product_template = product_taxonomy["standard"]
         else:
-            product_name = "Product A"
-            product_unit.tag(tg_assumed_name)
-        product_unit.setName(product_name)
+            product_template = basic_template.copy()
+            product_template.setName("product unit template")
+            product_template.type = "product"
+            product_template.tag("product",
+                                 "single product",
+                                 "generates revenue")
+            product_taxonomy["standard"] = product_template
         #
-        model.currentPeriod.setContent(product_unit)
-        model.taxonomy["product"]["standard"] = product_template
-        model.tag(tg_multi_taxonomy)
+        product = product_template.copy()
+        product.setName("Product A")
+        product.tag("assumed name")
+        #
+        company.addComponent(product)
     #
-    container_taxonomy = model.taxonomy.get("container") #<------------------------------- also unclear if this is necessary here
-    container_unit = container_taxonomy.get("standard")
-    if not container_unit:    
-        container_unit = BusinessUnit("Container Template")
-        #tags:
-        container_unit.tag("container")
-        container_unit.tag("organizes similar units into bundles")
-        model.taxonomy["container"] = container_unit
-        #can put subscribers into a ``subscribers`` container; skip for now
+    subscriber_template = model.taxonomy["subscriber"]["standard"]
     #
     unit_count = datapoint
     batch_count = unit_count
@@ -268,10 +266,6 @@ def apply_data(topic, datapoint):
         batch_size = round(unit_count / Globals.batch_count)
         batch_count = unit_count // batch_size
         rump_size = unit_count % batch_size
-    #
-    if rump_size:
-        rump_unit = subscriber_template.copy()
-        rump_unit.batch_size = rump_size
     #
     tg_quality = tg_basic_depth
     if Globals.mid_unit_count <= batch_count:
@@ -326,8 +320,13 @@ def apply_data(topic, datapoint):
     #
     conception = first_applied_conception
     for i in range(batch_count):
+        #
+        sbr = subscriber_template.copy()
+        #
         label = sbr_label_template % i
-        sbr = BusinessUnit(label, basic_fins.copy())
+        #
+        sbr.setName(label)
+        #
         sbr.size = batch_size
         conception = conception + increment
         conception = max(conception, earliest_permitted_conception)
@@ -339,26 +338,28 @@ def apply_data(topic, datapoint):
         sbr.tag(*sbr_tags)
         #
         if sbr.life.alive:
-            product_unit.addComponent(sbr)
+            product.addComponent(sbr)
         else:
-            product_unit.addComponent(sbr)
+            product.addComponent(sbr)
             c = "Method should only generate living units. Unit %s not alive."
             c = c % sbr.id.bbid
             raise BBExceptions.AnalyticalError(c)
     #
     if rump_size:
+        #
+        rump_unit = subscriber_template.copy()
+        rump_unit.size = rump_size
         label = sbr_label_template % (batch_count + 1)
-        rump_batch = BusinessUnit(name = label)
-        rump_batch.size = rump_size
-        rump_batch.life.set_age(assumed_median_age, ref_date)
         #
-        rump_batch.tag(tg_rump)
-        rump_batch.tag(tg_median_age)
-        rump_batch.tag(*sbr_tags)
+        rump_unit.life.set_age(assumed_median_age, ref_date)
         #
-        product_unit.addComponent(rump_batch)
+        rump_unit.tag(tg_rump,
+                      tg_median_age,
+                      *sbr_tags)
+        #
+        product.addComponent(rump_unit)
     #    
-    product_unit.tag(tg_populated)
+    product.tag(tg_populated)
     #
     model.tag(tg_single_product)
     model.tag(tg_populated)

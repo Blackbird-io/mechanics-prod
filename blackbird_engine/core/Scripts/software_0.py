@@ -12,6 +12,8 @@ q8 = "subscriber count?"
 q9 = "monthly subscription price?"
 q10 = "employee head count across software company roles?"
 q11 = "average annual salary across unspecified teams?"
+q12 = "annual cash bonus as percent of salary for open teams?"
+q13 = "annual stock bonus as percent of salary for open teams?"
 
 
 #answer format: track api
@@ -44,5 +46,20 @@ answers[q11] = [{"response" : "120000"},
                 #$140,000/yr for managers
                 {"response" : "60000"}]
                 #$60,000/yr for everyone else
-
-
+answers[q12] = [{"response" : "25"},
+                #cash bonus equal to 25% of salary for developers
+                {"response" : "100"},
+                #cash bonus equal to 100% of salary for managers (who set their
+                #own bonus policy)
+                {"response" : "15"}]
+                #cash bonus equal to 15% of salary for everyone else
+                #
+                #NOTE: this question should exclude the sales team
+answers[q13] = [{"response" : "60"},
+                #stock bonus equal to 60% of salary for developers
+                {"response" : "30"},
+                #stock bonus equal to 30% of salary for managers
+                {"response" : "5"}]
+                #stock bonus equal to 5% of salary for everyone else
+                #
+                #NOTE: this question should exclude the sales team
