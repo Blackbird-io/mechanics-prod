@@ -87,7 +87,7 @@ scenarios = dict()
 work_plan = dict()
 
 formula_names = ["inflation-adjusted monthly value multiplied by unit size.",
-                 "inflation-adjusted annualized value multiplied by unit size."]
+                 "inflation-adjusted annual value."]
 
 question_names = ["average annual salary across unspecified teams?"]
 
@@ -271,7 +271,7 @@ def apply_data(topic, datapoint):
     dr_team_salary = topic.applied_drivers["team salary"]
     #1.3. formulas
     f_monthly = topic.formulas["inflation-adjusted monthly value multiplied by unit size."]
-    f_annualized = topic.formulas["inflation-adjusted annualized value multiplied by unit size."]
+    f_annual = topic.formulas["inflation-adjusted annual value."]
     #1.4. lines
     l_average_salary = LineItem("average annual salary")
     l_employee_expense = LineItem("employee expense")
@@ -298,7 +298,7 @@ def apply_data(topic, datapoint):
     materials["l_salaries"] = l_salaries
     materials["dr_average_salary"] = dr_average_salary
     materials["dr_team_salary"] = dr_team_salary
-    materials["f_annualized"] = f_annualized
+    materials["f_annualized"] = f_annual
     materials["f_monthly"] = f_monthly
     
     #Step 2. Populate model with new information
@@ -366,8 +366,10 @@ def unit_work(team,
     #
     team_label = team_label_template % team.name
     #
+    overview_data = shared_data.copy()
+    overview_data["base_annual_value"] = team_salary
     team_data = shared_data.copy()
-    team_data["fixed_monthly_value"] = team_salary
+    team_data["fixed_monthly_value"] = team_salary / 12
     #
     #team-specific lines
     l_own_salaries = l_team_salaries.copy()
@@ -375,7 +377,7 @@ def unit_work(team,
     #
     #team-specific drivers
     dr_own_average = dr_average_salary.copy()
-    dr_own_average.configure(team_data, f_annualized)
+    dr_own_average.configure(overview_data, f_annualized)
     #
     dr_own_salaries = dr_team_salary.copy()
     dr_own_salaries.setWorkConditions(team_label)

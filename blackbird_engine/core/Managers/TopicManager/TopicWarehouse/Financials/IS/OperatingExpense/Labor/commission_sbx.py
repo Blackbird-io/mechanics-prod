@@ -201,6 +201,7 @@ def scenario_2(topic):
     """
     model = topic.MR.activeModel
     net_revenue = topic.get_first_answer()
+    net_revenue = float(net_revenue)
     commission = 100 - net_revenue
     model.interview.work_space["commission_on_subscriptions"] = commission
     apply_data(topic, commission)
@@ -252,7 +253,7 @@ def apply_data(topic, datapoint):
     f_fixed = topic.formulas["set line to fixed monthly value."]
     #1.4. lines
     l_average_commission = LineItem("commission (% of product revenue)")
-    l_commissions = LineItem("commissions")
+    l_commissions = LineItem("commission")
     l_ee = LineItem("employee expense")
     l_product_commission = LineItem("commission (product)")
     l_product_commission.tag("accrual",

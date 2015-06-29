@@ -153,6 +153,7 @@ def scenario_2(topic):
     """
     model = topic.MR.activeModel
     stated_price = topic.get_first_answer()
+    stated_price = float(stated_price)
     model.interview.work_space["monthly_subscription_price"] = stated_price
     apply_data(topic, stated_price)
     topic.wrap_topic()

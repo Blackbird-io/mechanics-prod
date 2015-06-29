@@ -15,6 +15,9 @@ q11 = "average annual salary across unspecified teams?"
 q12 = "annual cash bonus as percent of salary for open teams?"
 q13 = "annual stock bonus as percent of salary for open teams?"
 q14 = "net subscription revenues after commission?"
+q15 = "ltm whole company marketing spend?"
+q16 = "ltm whole company overhead, excluding marketing?"
+
 
 
 #answer format: track api
@@ -66,4 +69,7 @@ answers[q13] = [{"response" : "60"},
                 #NOTE: this question should exclude the sales team
 answers[q14] = [{"response" : "95"}]
                 #keep 95% of revenue, pay out 5% in commissions
-
+answers[q15] = [{"response" : "250000"}]
+                #$250,000 LTM marketing spend
+answers[q16] = [{"response" : "30000"}]
+                #$30,000 in g&a

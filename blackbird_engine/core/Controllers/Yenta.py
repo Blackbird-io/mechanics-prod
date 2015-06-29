@@ -239,7 +239,7 @@ class Yenta():
         combined profile. In other words, if ``combined`` is True, method will
         check whether a given topic fits the whole model.         
         
-        NOTE: Method skips topics that appear in target's guide.usedTopics list.        
+        NOTE: Method skips topics whose bbids appear in model's used set. 
         """
         eligibles = []
         targ_criterion = set(target.requiredTags) - {target.partOf}
@@ -258,7 +258,7 @@ class Yenta():
         if not pool:
             pool = self.TM.local_catalog.by_id.keys()
         #
-        pool = set(pool) - set(target.guide.selection.used)
+        pool = set(pool) - model.interview.used
         pool = sorted(pool)
         #sort pool into list to maintain stable evaluation order and results
         #
