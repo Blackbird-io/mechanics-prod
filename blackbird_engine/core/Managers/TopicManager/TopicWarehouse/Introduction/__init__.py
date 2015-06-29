@@ -30,14 +30,17 @@ n/a
 
 #imports
 #relative package imports here
-from . import Generic
-from . import Retail
-from . import PathFinders
-from . import Software
+from . import path_finders
 #Warehouse packages have to import their contents. Catalog managers walk the
 #directory by looking at the top-level names of the package object. Without
 #imports through __init__, the walker function will not see any of the
-#subfolders or their constituent modules. 
+#subfolders or their constituent modules.
+from . import fins_retail
+from . import basic_intro_five_q
+from . import product_function_software
+
+
+
 
     
 
