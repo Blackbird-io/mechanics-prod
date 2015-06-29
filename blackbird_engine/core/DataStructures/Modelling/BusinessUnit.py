@@ -79,7 +79,10 @@ class BusinessUnit(Tags,Equalities):
     id                    instance of ID object
     life                  instance of LifeCycle object
     sig_consolidate       global signature updated for unit name
+    size                  int; number of real-life equivalents obj represents
     tagSources            list; CLASS attribute, sources for tag inheritance
+    type                  str or None; describes the unit's in-model type (e.g.,
+                          "product" or "team").
     
     FUNCTIONS:
     add_component()       adds bus with verified ids to components
@@ -109,6 +112,7 @@ class BusinessUnit(Tags,Equalities):
         
     def __init__(self, name, fins = None):
         Tags.__init__(self,name) 
+        self._type = None
         self.analytics = None
         #
         self.components = None
@@ -126,8 +130,47 @@ class BusinessUnit(Tags,Equalities):
         #get the id functionality but do NOT assign a bbid yet
         self.life = LifeCycle()
         self.period = None
+        #may want to consider changing period to a property, so that changes
+        #in period value will always cause the unit to rerun registration. 
         gl_sig_con = Globals.signatures["BusinessUnit.consolidate"]
         self.sig_consolidate =  gl_sig_con % self.name
+        self.size = 1
+        
+    @property
+    def type(self):
+        """
+
+
+        **property**
+
+
+        Getter returns instance._type.
+
+        Setter registers instance bbid under the new value key and removes old
+        registration (when instance.period is defined). 
+
+        Deletion prohibited.
+        """
+        return self._type
+
+    @type.setter
+    def type(self, value):
+        #
+        old_type = self.type
+        self._type = value
+        #
+        if self.period:
+            old_entry = self.period.ty_directory.get(old_type)
+            old_entry.remove(self.id.bbid)
+            new_entry = self.period.ty_directory.setdefault(value, set())
+            new_entry.add(self.id.bbid)
+            #entries are sets of bbids for units that belong to that type
+
+    @type.deleter
+    def type(self):
+        c = "``type`` is a property; delete prohibited. to represent generic "
+        c += "unit, set to None instead."
+        raise BBExceptions.ManagedAttributeError(c)
         
     def __hash__(self):
         return self.id.__hash__()
@@ -1019,6 +1062,10 @@ class BusinessUnit(Tags,Equalities):
                 raise BBExceptions.IDCollisionError(c)
             else:
                 self.period.bu_directory[self.id.bbid] = self
+                #
+                brethren = self.period.ty_directory.setdefault(self.type, set())
+                brethren.add(self.id.bbid)
+                #
         else:
             self.period.bu_directory[self.id.bbid] = self
         if recur:

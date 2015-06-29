@@ -45,8 +45,7 @@ from .SelectionTracker import SelectionTracker
 #globals
 intro_line = LineItem("introduction")
 intro_line.tag("start",
-               "configuration",
-               "generic")
+               "configuration")
 intro_line.guide.quality.setStandards(2,5)
 
 #classes
@@ -80,10 +79,12 @@ class InterviewTracker:
     protocol                    generator function that selected current focus
     structure                   dict of priorityLevel items keyed by priority
     transcript                  list of tuples containing message and timestamp
+    used                        set of bbids for used topics
     work_space                  unmanaged scrap paper for Topic or other state
     
     FUNCTIONS:
-    transcribe()                add item to transcript
+    clear_cache()               set protocol,structure, activeTest, and fPoint to
+                                None
     set_attention_budget()      set attentionBudget to new value
     set_structure()             set structure to new object
     set_path()                  set path to a new object
@@ -91,8 +92,7 @@ class InterviewTracker:
     set_protocol()              attach a pointer to a new protocol object
     set_focal_point()           attach a pointer to the current focal point
     set_point_standard()        attach a decision function for the focal point
-    clear_cache()               set protocol,structure, activeTest, and fPoint to
-                                None
+    transcribe()                add item to transcript
     ==========================  ================================================
     """
     def __init__(self):
@@ -105,6 +105,7 @@ class InterviewTracker:
         self.protocol = None
         self.structure = None
         self.transcript = []
+        self.used = set()
         self.work_space = {}
 
     def clear_cache(self):
@@ -141,16 +142,19 @@ class InterviewTracker:
         self.focal_point = fP
 
     
-    def set_path(self,aPath):
+    def set_path(self, new_path):
         """
 
 
-        ITr.set_path(aPath) -> None
+        ITr.set_path(new_path) -> None
 
 
-        Method sets instance.path to the specified object
+        Method sets instance.path to the specified object. Method turns off
+        automatic summarization for the new path. 
         """
-        self.path = aPath
+        self.path = new_path
+        if self.path.autoSummarize:
+            self.path.autoSummarize = False
 
     def set_point_standard(self,standard):
         """

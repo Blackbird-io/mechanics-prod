@@ -39,7 +39,15 @@ from . import Tax
 from . import Unusual
 
 #content modules:
-from . import FixedValue
-from . import SourceMultiplier
+from . import annual_value_with_inflation
+from . import annual_sized_value_with_inflation
+from . import component_line_multiplier
+from . import fixed_value
+from . import monthly_sized_value_fixed
+from . import monthly_sized_value_with_inflation
+from . import monthly_value_with_inflation
+
 from . import MonthlyExpense_FromAnnual
 from . import MonthlyExpense_FromAnnual_Inflation
+from . import SourceMultiplier
+

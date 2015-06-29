@@ -216,14 +216,15 @@ def scenario_3(topic):
     #insert lines and drivers into model
     #a) template fins: lines only
     templateFins = M.defaultFinancials
-    i_sga = templateFins.indexByName("SG&A")
-    line_sga = templateFins[i_sga]
-    for L in lines[::-1]:
-        if L.name in templateFins.dNames.keys():
-            continue
-        localL = copy.deepcopy(L)
-        templateFins.insert(i_sga+1,localL)
-        localL.setPartOf(line_sga)
+    if templateFins:
+        i_sga = templateFins.indexByName("SG&A")
+        line_sga = templateFins[i_sga]
+        for L in lines[::-1]:
+            if L.name in templateFins.dNames.keys():
+                continue
+            localL = copy.deepcopy(L)
+            templateFins.insert(i_sga+1,localL)
+            localL.setPartOf(line_sga)
     #b) lines and drivers into top unit only (because this is SGA)
     #Unit SGA can be a different topic
     topBU = M.currentPeriod.content

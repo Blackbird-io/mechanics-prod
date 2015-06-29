@@ -50,7 +50,7 @@ from DataStructures.Modelling.LifeStage import LifeStage
 from DataStructures.Valuation.Analytics import Analytics
 
 from .. import SharedKnowledge as SubjectKnowledge
-from .. import StandardFinancials
+from .. import standard_financials
 
 
 
@@ -328,7 +328,7 @@ def scenario_6(topic):
         top_bu = BusinessUnit(top_name)
         M.currentPeriod.setContent(top_bu)  
     #
-    standard_fins = StandardFinancials.standard_financials.copy()
+    standard_fins = standard_financials.basic_fins.copy()
     M.defaultFinancials = standard_fins.copy()
     top_bu.setFinancials(standard_fins.copy())
     atx = Analytics()

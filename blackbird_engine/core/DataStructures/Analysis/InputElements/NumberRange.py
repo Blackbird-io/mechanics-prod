@@ -29,6 +29,7 @@ NumberRangeInput      Describes field that takes a low and high numeric value
 
 
 #imports
+import decimal
 import re
 
 from .Generic import GenericInput
@@ -103,9 +104,9 @@ class NumberRangeInput(GenericInput):
         lo = decimal.Decimal("-Infinity")
         hi = decimal.Decimal("Infinity")
         if self.r_min:
-            lo = decimal.Decimal(r_min)
+            lo = decimal.Decimal(self.r_min)
         if self.r_max:
-            hi = decimal.Decimal(r_max)
+            hi = decimal.Decimal(self.r_max)
         entry_count = len(proposed_response)
         if entry_count < 1:
             result = False

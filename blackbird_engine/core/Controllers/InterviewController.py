@@ -211,12 +211,12 @@ class InterviewController(Controller):
             standards
             
         Algorithm applied:
-          1) check whether Model already has a focal point
-          2) if fP exists, check for presence of activeTest
-          3) if activeTest in place, run test on fP
-          4) if fP doesn't pass activeTest, fP stays constant
-          5) if it does, run protocol.next()
-          6) return focalPoint
+          (1) check whether Model already has a focal point
+          (2) if fP exists, check for presence of activeTest
+          (3) if activeTest in place, run test on fP
+          (4) if fP doesn't pass activeTest, fP stays constant
+          (5) if it does, run protocol.next()
+          (6) return focalPoint
 
         For this method to work, Model needs to come with a filled out attribute
         at interview.path. 
@@ -250,10 +250,10 @@ class InterviewController(Controller):
             else:
                 Model.interview.clear_cache()
                 path = Model.interview.path
-                newStructure = self.prioritize(path)
-                Model.interview.set_structure(newStructure)
-                pMaker = self.makerFunctions[protocolKey]
-                newProtocol = pMaker()
+                new_structure = self.prioritize(path)
+                Model.interview.set_structure(new_structure)
+                p_maker = self.makerFunctions[protocolKey]
+                newProtocol = p_maker()
                 Model.interview.set_protocol(newProtocol)
                 newFP = newProtocol.select(Model)
         if newFP == None:
