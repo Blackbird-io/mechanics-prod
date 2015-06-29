@@ -88,6 +88,9 @@ def prepare(new_topic):
     return new_topic
 
 #drivers:
+#
+#define driver shells to make sure they receive bbids and signatures!
+#
 #create each driver object used in Topic and place in applied_drivers to make
 #sure they receive proper signatures and ids. Provide data and formulas
 #during runtime through scenarios. At that point, topic will carry dictionaries

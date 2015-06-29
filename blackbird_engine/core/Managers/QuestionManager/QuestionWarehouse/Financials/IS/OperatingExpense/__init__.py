@@ -40,6 +40,10 @@ from . import Marketing
 from . import Occupancy
 from . import Research
 
+from . import company_office_expense_monthly
+from . import dev_spend_contractors_annual
+from . import hosting_spend_monthly
+
 
 
 

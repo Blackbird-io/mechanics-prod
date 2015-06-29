@@ -9,3 +9,7 @@ industry_gross_margin["epc"] = (0.50,0.35,0.20)
 #industry_gross_margin["healthcare-primary"] 
 #industry_gross_margin["SpecialtyFinance"] 
 industry_gross_margin[None] = (0.60,0.50,0.40)
+
+
+software = dict()
+software["development expense allocation to product cost"] = 0.20

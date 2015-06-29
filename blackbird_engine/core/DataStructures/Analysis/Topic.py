@@ -41,7 +41,6 @@ from DataStructures.Platform.Tags import Tags
 
 
 
-
 #globals
 user_stop = Globals.user_stop
 
@@ -384,8 +383,9 @@ class Topic:
             scene_name = applied_scenario.__name__
         mark["scenario_name"] = scene_name
         mark["timestamp"] = time.time()
-        M = self.MR.activeModel
-        M.interview.transcribe(mark)
+        model = self.MR.activeModel
+        model.interview.transcribe(mark)
+        model.interview.used.add(self.id.bbid)
         
     def wrap_scenario(self, Q):
         """
