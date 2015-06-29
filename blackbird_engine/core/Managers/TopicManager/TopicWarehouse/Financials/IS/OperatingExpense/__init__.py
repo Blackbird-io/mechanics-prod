@@ -35,8 +35,10 @@ from . import Research
 from . import SGA
 
 #content modules
+from . import external_dev_spend
+from . import hosting_spend
+from . import office_expense_basic
 from . import SimpleOpEx_Retail
-
 
 
 
