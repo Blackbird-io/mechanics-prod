@@ -17,6 +17,7 @@ q13 = "annual stock bonus as percent of salary for open teams?"
 q14 = "net subscription revenues after commission?"
 q15 = "ltm whole company marketing spend?"
 q16 = "ltm whole company overhead, excluding marketing?"
+q17 = "annual spend on development and design contractors?"
 
 
 
@@ -73,3 +74,5 @@ answers[q15] = [{"response" : "250000"}]
                 #$250,000 LTM marketing spend
 answers[q16] = [{"response" : "30000"}]
                 #$30,000 in g&a
+answers[q17] = [{"response" : "180000"}]
+                #$180,000 in annual spend on 3d party developers
