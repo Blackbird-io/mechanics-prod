@@ -40,6 +40,8 @@ from . import Marketing
 from . import Occupancy
 from . import Research
 
+from . import dev_spend_contractors
+
 
 
 

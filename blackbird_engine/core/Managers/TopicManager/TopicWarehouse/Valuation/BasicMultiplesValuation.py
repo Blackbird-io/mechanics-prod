@@ -57,6 +57,7 @@ n/a
 import BBGlobalVariables as Globals
 import MarketColor
 
+from DataStructures.Valuation.Analytics import Analytics
 from DataStructures.Valuation.CR_Scenario import CR_Scenario
 
 
@@ -112,6 +113,10 @@ def scenario_1(topic):
     topBU.fillOut()
     fins = topBU.financials
     atx = topBU.analytics
+    if not atx:
+        clean_atx = Analytics()
+        topBU.setAnalytics(clean_atx)
+        atx = topBU.analytics
     i_ebitda = fins.indexByName("EBITDA")
     line_ebitda = fins[i_ebitda]
     #line is monthly, multiply by 12 for simplicity, though could do day-by-day
