@@ -129,7 +129,7 @@ head_count.tag("all teams",
                "personnel",
                "staff",
                "staffing",
-               "staffing structure"
+               "staffing structure",
                "team composition",
                "team structure")
 

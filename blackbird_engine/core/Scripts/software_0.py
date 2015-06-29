@@ -18,7 +18,8 @@ q14 = "net subscription revenues after commission?"
 q15 = "ltm whole company marketing spend?"
 q16 = "ltm whole company overhead, excluding marketing?"
 q17 = "annual spend on development and design contractors?"
-
+q18 = "average seats per subscriber?"
+q19 = "monthly office expense for whole company?"
 
 
 #answer format: track api
@@ -76,3 +77,8 @@ answers[q16] = [{"response" : "30000"}]
                 #$30,000 in g&a
 answers[q17] = [{"response" : "180000"}]
                 #$180,000 in annual spend on 3d party developers
+answers[q18] = [{"response" : "6"}]
+                #seats per subscriber
+answers[q19] = [{"response" : "50000"}]
+                #$50,000 /month for office space for the company
+

@@ -4,12 +4,11 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: TW.Financials.IS.OpEx.Labor.commission_sbx
+#Module: TW.Financials.IS.OpEx.Labor.office_expense_basic
 """
 
-Topic asks about commissions that the company pays out from product subscriptions.
-Topic treats the commission as a ratable expense throughout the year (assumes
-that company moves cash into a reserve account as appropriate). 
+Topic asks about the company's monthly office expense. Topic then splits that
+expense ratably between every office in the model. 
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -54,38 +53,41 @@ from DataStructures.Modelling.LineItem import LineItem
 
 #globals
 topic_content = True
-name = "annual spend on development contractors"
+name = "basic office expense"
 topic_author = "Ilya Podolyako"
-date_created = "2015-06-15"
+date_created = "2015-06-29"
 extra_prep = False
 
 #store tags this topic uses multiple times in variables to avoid typos
-tg_product_rev = "revenue from product sales"
+tg_hc_intensive = "human-capital-intensive business",
+tg_person_intensive = "personnel-intensive"
+tg_service = "service-type business"
 
 #standard topic prep
-user_outline_label = "External Developers"
-requiredTags = ["software",
-                tg_product_rev]
-
-optionalTags = ["product",
+user_outline_label = "Office Expense"
+requiredTags = ["operating expense"]
+optionalTags = ["occupancy",
+                "office",
+                "headquarters",
+                "common area maintenance",
+                "CAM",
+                "fully loaded",
+                "expense location",
+                "sensitive to location",
+                tg_hc_intensive,
+                tg_service,
+                tg_person_intensive,
                 #
-                "cost",
-                "company",
-                "company-level",
-                "expense",
-                "development",
-                "development expense",
-                "top-level",
-                "technical expense",
-                "r&d",
-                "research & development",
-                "research and development",
-                "contracted technical work",
-                "contracted development",
-                "third-party development",
+                "utilities",
+                "core infrastructure",
+                "core services",
+                "critical services",
+                "critical infrastructure",
                 "recurring expense",
                 #
-                "operating expense",
+                "g&a",
+                "general & administrative",
+                "general and administrative",
                 "selling, general & administrative",
                 "sg&a"]
 
@@ -96,14 +98,16 @@ question_names = []
 scenarios = dict()
 work_plan = dict()
 
-formula_names = ["inflation-adjusted monthly expense from known annual start."]
+formula_names = ["fixed monthly value multiplied by unit size."]
 
-question_names = ["annual spend on development and design contractors?"]
+question_names = ["monthly office expense for whole company?"]
 
 work_plan["expense"] = 1
 work_plan["operating expense"] = 1
-work_plan["product"] = 1
-work_plan["cost"] = 1
+work_plan["office"] = 1
+work_plan["occupancy"] = 1
+work_plan["occupancy expense"] = 1
+work_plan["sg&a"] = 1
 
 #custom prep
 def prepare(new_topic):
@@ -111,9 +115,9 @@ def prepare(new_topic):
     return new_topic
 
 #drivers:
-dr_dev = Driver()
-dr_dev.setName("external development spend driver")
-applied_drivers["dev spend"] = dr_dev
+dr_occupancy = Driver()
+dr_occupancy.setName("occupancy expense driver")
+applied_drivers["occupancy"] = dr_occupancy
 #place the driver on the topic, so can access without going through the content
 #module's namespace. 
 
@@ -137,10 +141,10 @@ def scenario_1(topic):
 
     Scenario concludes with wrap_scenario(question).
 
-    Function asks user about annual spend on development and design contractors. 
+    Function asks user about monthly spend on hosting. 
     """
     #
-    q_name = "annual spend on development and design contractors?"
+    q_name = "monthly office expense for whole company?"
     new_question = topic.questions[q_name]
     #
     topic.wrap_scenario(new_question)
@@ -156,16 +160,16 @@ def scenario_2(topic):
 
     Scenario concludes with wrap_topic()
 
-    Function pulls out user response for external development spend, records the
+    Function pulls out user response for monthly hosting spend, records the
     response in work_space, and then passes the data on to apply_data() for
     implementation.
     """
     model = topic.MR.activeModel
-    external_dev_spend = topic.get_first_answer()
-    external_dev_spend = float(external_dev_spend)
+    office_expense = float(topic.get_first_answer())
+    #answer comes in as a decimal by default
     work_space = model.interview.work_space
-    work_space["annual_external_development_spend"] = external_dev_spend
-    apply_data(topic, external_dev_spend)
+    work_space["monthly_company_office_expense"] = office_expense
+    apply_data(topic, office_expense)
     topic.wrap_topic()
 
 def end_scenario(topic):
@@ -179,9 +183,9 @@ def end_scenario(topic):
 
     Scenario concludes with force_exit().
     
-    Function applies standard development spend data to model. 
+    Function applies standard hosting spend data to model. 
     """
-    standard_data = knowledge_re_software.dev_spend
+    standard_data = knowledge_re_software.hosting_spend
     #should pick out applicable data by industry and size
     #
     topic.apply_data(topic, standard_data)
@@ -194,10 +198,11 @@ def apply_data(topic, datapoint):
     apply_data(topic, datapoint) -> None
 
 
-    ``datapoint`` is annual spend on external developers and designers, in
-    dollars.
+    ``datapoint`` is monthly office expense, in dollars.
 
-    Function adds development line and driver to the top-level (company) unit. 
+    Function computes total size of all known offices, then adds in drivers and
+    lines into each office. Function uses a size-sensitive formula that creates
+    a ratable allocation of the stated office expense between locations. 
     """
     #Step 1. Unpack each of the objects used here as parts
     #(ordered from largest to smallest)
@@ -206,27 +211,48 @@ def apply_data(topic, datapoint):
     current_period = model.time_line.current_period
     #1.1. business units
     company = current_period.content
+    office_ids = current_period.ty_directory.get("office")
+    if office_ids:
+        all_offices = current_period.get_units(office_ids)
+    else:
+        all_offices = [company]
+    office_taxonomy = model.taxonomy.get("office")
+    office_template = None
+    if office_taxonomy:
+        office_template = office_taxonomy["standard"]
     #1.2. drivers
-    dr_dev_spend = topic.applied_drivers["dev spend"]
+    dr_occupancy = topic.applied_drivers["occupancy"]
     #1.3. formulas
-    f_monthly = topic.formulas["inflation-adjusted monthly expense from known annual start."]
+    f_monthly = topic.formulas["fixed monthly value multiplied by unit size."]
     #1.4. lines
-    l_dev = LineItem("external development")
-    l_dev.tag("accrual")
+    l_occupancy = LineItem("occupancy")
+    l_occupancy.tag("accrual")
+    l_occupancy.tag("expense")
+    l_occupancy.tag("ratable")
+    l_occupancy.tag("adjusted for size")
     #1.5. labels
     #n/a
     #1.6. data
-    dev_data = dict()
-    dev_data["ref_year"] = company.life.ref_date.year
-    dev_data["annual_inflation"] = MarketColor.annualInflation
-    dev_data["base_annual_expense"] = datapoint
+    office_sizes = [x.size for x in all_offices]
+    if len(all_offices) == 1:
+        total_size = 1
+    else:
+        total_size = sum(office_sizes)
+    #
+    data = dict()
+    data["base_monthly_value"] = datapoint / total_size
     #1.7. adjust objects to fit each other
-    dr_dev.setWorkConditions(l_dev.name)
-    dr_dev.configure(dev_data, f_monthly)
+    dr_occupancy.setWorkConditions(l_occupancy.name)
+    dr_occupancy.configure(data, f_monthly)
     
     #Step 2. Populate model with new information
-    company.financials.add_line_to(l_dev, "operating expense")
-    company.addDriver(dr_dev)
+    all_offices.append(office_template)
+    for office in all_offices:
+        office.financials.add_line_to(l_occupancy.copy(), "operating expense")
+        office.addDriver(dr_occupancy.copy())
+        office.tag("size represents square footage",
+                   "size represents relative area",
+                   "occupancy expense adjusted to size")
     
     #Step 3. Prepare model for further processing
     #3.1. Add tags to model
@@ -238,7 +264,7 @@ def apply_data(topic, datapoint):
     
 scenarios[None] = scenario_1
 #
-scenarios["annual spend on development and design contractors?"] = scenario_2
+scenarios["monthly office expense for whole company?"] = scenario_2
 #
 scenarios[Globals.user_stop] = end_scenario
 
