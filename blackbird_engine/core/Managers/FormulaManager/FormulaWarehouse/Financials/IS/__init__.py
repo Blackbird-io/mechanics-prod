@@ -39,6 +39,7 @@ from . import Tax
 from . import Unusual
 
 #content modules:
+from . import annual_value_with_inflation
 from . import annual_sized_value_with_inflation
 from . import component_line_multiplier
 from . import fixed_value

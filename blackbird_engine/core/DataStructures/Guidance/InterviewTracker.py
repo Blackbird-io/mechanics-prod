@@ -79,6 +79,7 @@ class InterviewTracker:
     protocol                    generator function that selected current focus
     structure                   dict of priorityLevel items keyed by priority
     transcript                  list of tuples containing message and timestamp
+    used                        set of bbids for used topics
     work_space                  unmanaged scrap paper for Topic or other state
     
     FUNCTIONS:
@@ -104,6 +105,7 @@ class InterviewTracker:
         self.protocol = None
         self.structure = None
         self.transcript = []
+        self.used = set()
         self.work_space = {}
 
     def clear_cache(self):

@@ -390,7 +390,7 @@ def unit_work(team,
     overview_data["fixed_monthly_value"] = team_bonus_percent
     #
     team_data = dict()
-    team_data["source_line_name"] = "salary (%s)" % team.name
+    team_data["source_line_name"] = "salaries (%s)" % team.name
     team_data["source_multiplier"] = team_bonus_percent / 100
     #
     #team-specific lines
