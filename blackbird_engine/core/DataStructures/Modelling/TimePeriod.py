@@ -75,6 +75,7 @@ class TimePeriod(Tags):
     length                float; seconds between start and end
     prior                 pointer to immediately preceding time period
     start                 datetime.date; first date in period.
+    ty_directory          dict; keys are strings, values are sets of bbids
     
     FUNCTIONS:
     __str__               basic print, shows starts, ends, and content
@@ -84,8 +85,10 @@ class TimePeriod(Tags):
     extrapolate_to()      updates inheritance then delegates to Tags
     ex_to_default()       creates result from seed, sets to target start/end
     ex_to_special()       starts w target copy, new content is seed.ex(target)
+    get_units()           return list of units from bbid pool
+    get_lowest_units()    return list of units w/o components from bbid pool
     resetDirectory()      sets bu_directory to blank dictionary
-    selectBottomUnits()   returns a list of components w/o other biz units
+    selectBottomUnits()   OBS; legacy intefface for get_lowest_units()
     setContent()          sets instance content to argument
     setPrior()            sets pointer to preceding time period    
     ====================  ======================================================
@@ -94,10 +97,18 @@ class TimePeriod(Tags):
         Tags.__init__(self)
         self.start = start_date
         self.end = end_date
+        #
         self.bu_directory = {}
+        self.ty_directory = {}
+        #
         self.content = content
         self.id = ID()
         self.prior = None
+        #
+        #the current approach to indexing units within a period assumes that
+        #Blackbird will rarely remove existing units from a model. both
+        #the ``bu`` and ``ty`` directories are static: they do not know if
+        #the unit whose bbid they reference is no longer in their domain. 
 
     def __str__(self):
         dots = "*"*Globals.screen_width
@@ -139,6 +150,70 @@ class TimePeriod(Tags):
         #
         return result
     
+    def get_units(self, pool):
+        """
+
+
+        TimePeriod.get_units(pool) -> list
+
+
+        Method returns a list of objects from instance.bu_directory that
+        correspond to each bbid in ``pool``. Method sorts pool prior to
+        processing.
+
+        Method expects ``pool`` to be an iterable of bbids. 
+        """
+        pool = sorted(pool)
+        #make sure to sort pool for stable output order
+        units = []
+        for bbid in pool:
+            u = self.bu_directory[bbid]
+            units.append(u)
+        return units
+
+    def get_lowest_units(self, pool = None, run_on_empty = False):
+        """
+
+
+        TimePeriod.get_lowest_units([pool = None
+          [, run_on_empty = False]]) -> list
+
+
+        Method returns a list of units in pool that have no components.
+        
+        Method expects ``pool`` to be an iterable of bbids. 
+
+        If ``pool`` is None, method will build its own pool from all keys in
+        the instance's bu_directory. Method will raise error if asked to run
+        on an empty pool unless ``run_on_empty`` == True.
+        
+        NOTE: method performs identity check (``is``) for building own pool;
+        accordingly, running a.select_bottom_units(pool = set()) will raise
+        an exception.         
+        """
+        if pool is None:
+            pool = sorted(self.bu_directory.keys())
+        else:
+            pool = sorted(pool)
+        #make sure to sort pool for stable output order
+        #
+        if any([pool, run_on_empty]):
+            #
+            foundation = []
+            #
+            for bbid in pool:
+                bu = self.bu_directory[bbid]
+                if bu.components:
+                    continue
+                else:
+                    foundation.append(bu)
+            #
+            return foundation
+            #
+        else:
+            c = "``pool`` is empty, method requires explicit permission to run."
+            raise BBExceptions.ProcessError(c) 
+        
     def extrapolate_to(self,target):
         """
 
@@ -265,29 +340,30 @@ class TimePeriod(Tags):
         TimePeriod.resetDirectory() -> None
 
 
-        Method sets instance.bu_directory to a blank dictionary. 
+        Method sets instance.bu_directory and instance.ty_directory to blank
+        dictionaries. 
         """
         self.bu_directory = {}
+        self.ty_directory = {}
 
     def selectBottomUnits(self):
         """
 
 
-        T.selectBottomUnits() -> list
+        TimePeriod.selectBottomUnits() -> list
 
 
-        Method returns a list of ground-level components (components that do
-        not contain any other business units).
+        **OBSOLETE**
+
+        Legacy interface. Delegates all work to get_lowest_units().
+
+        During delegration, method permits runs on empty pool to ensure
+        that new results stay consistent with old ones for calls on instances
+        with no registered units in the directory. 
         """
-        foundation = []
-        for bbid in sorted(self.bu_directory.keys()):
-            bu = self.bu_directory[bbid]
-            if bu.components == {}:
-                foundation.append(bu)
-            else:
-                continue
-        return foundation
-    
+        result = self.get_lowest_units(run_on_empty = True)
+        return result
+                
     def setContent(self,bu,updateID = True):
         """
 

@@ -34,6 +34,7 @@ n/a
 #n/a
 
 #content modules
+from . import dev_spend_allocation
 from . import SimpleCogs
 
 

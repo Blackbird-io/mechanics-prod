@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Engine
-#Module: TopicWarehouse.Operations.__init__
+#Module: TW.Operations.__init__
 """
 
 Contains specialized packages.
@@ -29,7 +29,7 @@ n/a
 
 #imports
 #relative package imports
-#n/a
+from . import employee_count_software_co
 
 
     
