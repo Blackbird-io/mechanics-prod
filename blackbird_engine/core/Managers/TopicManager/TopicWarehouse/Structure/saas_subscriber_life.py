@@ -207,6 +207,7 @@ def apply_data(topic, datapoint):
     #
     model = topic.MR.activeModel
     subscriber_unit_template = model.taxonomy["subscriber"]["standard"]
+    sbr_count_label = "subscriber count"
     #
     lo = timedelta(datapoint[0] * Globals.days_in_month)
     hi = timedelta(datapoint[1] * Globals.days_in_month)
@@ -245,10 +246,14 @@ def apply_data(topic, datapoint):
     #always clear interview cache before modifying path, otherwise controller
     #may follow old plan
     #
-    subscriber_count = LineItem("subscriber count")
-    subscriber_count.guide.quality.setStandards(1,5)
-    subscriber_count.guide.priority.increment(3)
-    path.add_line_to(subscriber_count, "structure")
+    path.buildDictionaries()
+    if sbr_count_label in path.dNames:
+        pass
+    else:
+        subscriber_count = LineItem(sbr_count_label)
+        subscriber_count.guide.quality.setStandards(1,5)
+        subscriber_count.guide.priority.increment(3)
+        path.add_line_to(subscriber_count, "structure")
     #
     ##    model.interview.set_focal_point(subscriber_count)
     #direct controller attention to focal point
