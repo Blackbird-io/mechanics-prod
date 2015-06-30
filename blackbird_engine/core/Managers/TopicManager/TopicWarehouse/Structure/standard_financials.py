@@ -52,4 +52,8 @@ for L in income_lines[::-1]:
     #insert last one first so can keep using same index
 
 basic_fins = standard_financials.copy()
-
+b_sga_i = basic_fins.indexByName("sg&a")
+b_opex_i = basic_fins.indexByName("operating expense")
+b_sga = basic_fins[b_sga_i]
+b_opex = basic_fins[b_opex_i]
+b_sga.setPartOf(b_opex)
