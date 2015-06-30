@@ -38,8 +38,8 @@ from . import path_finders
 from . import fins_retail
 from . import basic_intro_five_q
 from . import product_function_software
+from . import software_seat_pricing_check
 from . import software_subscription_product
-
 
 
     

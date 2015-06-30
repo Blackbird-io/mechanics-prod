@@ -163,29 +163,35 @@ def apply_data(topic, datapoint):
 
     No-op in this topic. 
     """
+    saas = False
+    if datapoint == "subscription":
+        saas = True
     #1 unpack
     model = topic.MR.activeModel
     path = model.interview.path
-    price_structure = LineItem("subscription price structure")
+    price_structure = LineItem("pricing element")
     price_structure.guide.priority.reset()
     price_structure.guide.priority.increment(3)
     price_structure.guide.quality.setStandards(1,5)
 
     #2 apply
-    saas = False
-    if datapoint == "subscription":
-        saas = True
-    model.tag("subscription",
-              "internet",
-              "online",
-              "web-based",
-              "term license",
-              "saas",
-              "software as a service")
+    if saas:
+        model.tag("subscription",
+                  "internet",
+                  "online",
+                  "web-based",
+                  "term license",
+                  "saas",
+                  "software as a service")
+    else:
+        pass
 
     #3 update guidance attributes
-    path.add_line_to(price_structure, "introduction")
-    model.interview.clear_cache()
+    if saas:
+        path.add_line_to(price_structure, "introduction")
+        model.interview.clear_cache()
+    else:
+        pass
     #
     
 

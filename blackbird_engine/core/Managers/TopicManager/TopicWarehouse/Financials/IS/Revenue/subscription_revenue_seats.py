@@ -4,12 +4,12 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: TW.Structure.Software.Saas_SubscriberCount
+#Module: TW.Financials.IS.Revenue.subscription_revenue_seats
 """
 
-Topic asks about subscriber life distribution and uses that information to
-compute population life span and renewal statistics. 
-
+Topic asks about monthly seat price and applies the information to the
+subscriber population. Topic inserts a driver that determines revenue by
+multiplying the per-seat price times subscriber size. 
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -54,9 +54,9 @@ from DataStructures.Modelling.LineItem import LineItem
 
 #globals
 topic_content = True
-name = "saas-oriented subscriber revenue"
+name = "seat-based subscription revenue"
 topic_author = "Ilya Podolyako"
-date_created = "2015-06-12"
+date_created = "2015-06-30"
 extra_prep = False
 
 #store tags this topic uses multiple times in variables to avoid typos
@@ -68,10 +68,16 @@ tg_product_rev = "revenue from product sales"
 tg_single_product = "describes resources associated with one product"
 tg_subscription_rev = "subscription-based revenue"
 
+tg_element_seat = "pricing element: seat"
+tg_price_by_seat = "price by seat"
+tg_sbr_per_seat = "subscriptions priced per seat"
+
+
 #standard topic prep
 user_outline_label = "Subscription Pricing"
 requiredTags = ["revenue",
-                "known subscriber pool"]
+                "known subscriber pool",
+                tg_price_by_seat]
 optionalTags = ["subscriptions",
                 "saas",
                 "software",
@@ -79,6 +85,7 @@ optionalTags = ["subscriptions",
                 tg_constant_life_rev,
                 tg_product_rev,
                 tg_single_product,
+                tg_sbr_per_seat,
                 tg_subscription_rev,]
 
 applied_drivers = dict()
@@ -87,11 +94,12 @@ question_names = []
 scenarios = dict()
 work_plan = dict()
 
-question_names = ["monthly subscription price?"]
-formula_names = ["set line to fixed monthly value."]
+question_names = ["monthly seat price?"]
+formula_names = ["fixed monthly value multiplied by unit size."]
 
 work_plan["subscriptions"] = 1 
 work_plan["revenue"] = 1
+wrok_plan["revenue build"]
 
 
 #custom prep
@@ -154,7 +162,7 @@ def scenario_2(topic):
     model = topic.MR.activeModel
     stated_price = topic.get_first_answer()
     stated_price = float(stated_price)
-    model.interview.work_space["monthly_subscription_price"] = stated_price
+    model.interview.work_space["monthly_seat_price"] = stated_price
     apply_data(topic, stated_price)
     topic.wrap_topic()
 
@@ -185,7 +193,7 @@ def apply_data(topic, datapoint):
 
     ``datapoint`` is monthly subscription cost in dollars. 
 
-    Function adds a ``subscriptions`` line to each subscriber unit in 
+    Function adds a ``subscriptions`` line to each subscriber unit in #<------------------
     c
     """
     model = topic.MR.activeModel
@@ -194,7 +202,7 @@ def apply_data(topic, datapoint):
     subscriptions_line = LineItem("subscriptions")
     #
     D1 = topic.applied_drivers["D1"]
-    rev_formula = topic.formulas["set line to fixed monthly value."]
+    rev_formula = topic.formulas["fixed monthly value multiplied by unit size."]
     #
     local_data = dict()
     local_data["fixed_monthly_value"] = datapoint
@@ -203,6 +211,9 @@ def apply_data(topic, datapoint):
     #
     subscriber_ids = current_period.ty_directory.get("subscriber")
     subscribers = current_period.get_units(subscriber_ids)
+    sbr_template = model.taxonomy["subscriber"]["standard"]
+    subscribers.append(sbr_template)
+    #
     for sbr_unit in subscribers:
         #
         own_d1 = D1.copy()
@@ -221,7 +232,7 @@ def apply_data(topic, datapoint):
     
 scenarios[None] = scenario_1
 #
-scenarios["monthly subscription price?"] = scenario_2
+scenarios["monthly seat price?"] = scenario_2
 #
 scenarios[Globals.user_stop] = end_scenario
 
