@@ -99,7 +99,7 @@ formula_names = ["fixed monthly value multiplied by unit size."]
 
 work_plan["subscriptions"] = 1 
 work_plan["revenue"] = 1
-wrok_plan["revenue build"]
+work_plan["revenue build"] = 1
 
 
 #custom prep
