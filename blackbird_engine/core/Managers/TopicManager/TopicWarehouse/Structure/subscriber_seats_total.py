@@ -63,6 +63,7 @@ tg_high = "analysis quality: high"
 tg_single_product = "describes resources associated with one product"
 tg_subscriber_unit = "subscribers"
 tg_element_seat = "pricing element: seat"
+tg_populated = "known subscriber pool"
 tg_price_by_seat = "price by seat"
 tg_sbr_per_seat = "subscriptions priced per seat"
 
@@ -76,8 +77,8 @@ tg_sbr_per_seat = "subscriptions priced per seat"
 #standard topic prep
 user_outline_label = "Subscriber Seats"
 requiredTags = ["structure",
-                "subscriber count",
                 "seat count",
+                tg_populated,
                 tg_price_by_seat]
 optionalTags = ["customers",
                 "subscriber count",
@@ -198,6 +199,7 @@ def apply_data(topic, datapoint):
 
     Functio[] #<-----------------------------------------------------------fix
     """
+    total_seats = datapoint
     model = topic.MR.activeModel
     current_period = model.time_line.current_period
     company = current_period.content
@@ -206,16 +208,16 @@ def apply_data(topic, datapoint):
     all_subscribers = current_period.get_units(subscriber_ids)
     sbr_count = len(subscriber_ids)
     #
-    avg_seats = datapoint // sbr_count
+    average_seats = total_seats // sbr_count
     #
     subscriber_taxonomy = model.taxonomy.get("subscriber")
     if subscriber_taxonomy:
         subscriber_template = subscriber_taxonomy["standard"]
-        subscriber_template.size = avg_seats
+        subscriber_template.size = average_seats
 
     #2. put data into model
-    seats_remaining = copy.copy(total_seats)
-    
+    seats_remaining = total_seats
+    #
     for i in range(sbr_count):
         subscriber = all_subscribers[i]
         if i == (sbr_count - 1):
@@ -228,6 +230,11 @@ def apply_data(topic, datapoint):
         if not seats_remaining == 0:
             raise SeriousErrorInProcessing
     #loop makes sure subscriber population accounts for all paying seats
+    #check work:
+    sizes_built = [x.size for x in all_subscribers]
+    total_built = sum(sizes_built)
+    if total_built != total_seats:
+        raise SeriousErrorInProcessingAgain
 
     #3. tag model
     #n/a

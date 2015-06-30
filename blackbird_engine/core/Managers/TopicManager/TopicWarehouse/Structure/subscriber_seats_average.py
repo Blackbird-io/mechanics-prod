@@ -60,6 +60,7 @@ extra_prep = False
 tg_basic = "analysis quality: basic"
 tg_medium = "analysis quality: medium"
 tg_high = "analysis quality: high"
+tg_populated = "known subscriber pool"
 tg_single_product = "describes resources associated with one product"
 tg_subscriber_unit = "subscribers"
 #
@@ -70,7 +71,9 @@ tg_subscriber_unit = "subscribers"
 
 #standard topic prep
 user_outline_label = "Subscriber Seats"
-requiredTags = ["structure"]
+requiredTags = ["structure",
+                "seat count",
+                tg_populated]
 optionalTags = ["customers",
                 "subscriber count",
                 "subscriber population",

@@ -49,10 +49,10 @@ optionalTags = []
 #Portal parameters
 #
 array_caption = None
-comment = None
+comment = "Total for all subscribers."
 input_type = "number"
 input_sub_type = None
-basic_prompt = "How many paying seats make up your subscription revenue?"
+basic_prompt = "How many paying seats do you have?"
 custom_prompt = "How many paying seats make up {company_name}'s subscription revenue?"
 short = "Subscriber Seats"
 transcribe = True

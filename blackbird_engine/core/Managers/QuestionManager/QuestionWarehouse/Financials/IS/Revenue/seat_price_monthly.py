@@ -47,7 +47,7 @@ optionalTags = []
 #Portal parameters
 #
 array_caption = None
-comment = "We are looking to understand your"
+comment = "We are looking to understand your "
 comment += "net price per month (including any discounts or grace periods you may offer)."
 input_type = "number"
 input_sub_type = "currency"

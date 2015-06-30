@@ -109,6 +109,11 @@ standard_path.extend(SK.standard_core.copy())
 standard_path.extend(SK.standard_close.copy())
 #
 #refine standard path
+#0. increase the quality requirements for structure
+st_i = standard_path.indexByName("structure")
+structure = standard_path[st_i]
+structure.guide.quality.setStandards(3,5)
+#
 #1. reduce the significance of product cost
 cost_i = standard_path.indexByName("cost")
 cost = standard_path[cost_i]

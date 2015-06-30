@@ -136,7 +136,7 @@ def scenario_1(topic):
     """
     #
     model = topic.MR.activeModel
-    new_question = topic.questions["monthly subscription price?"]
+    new_question = topic.questions["monthly seat price?"]
     product_name = model.interview.work_space.get("product_name")
     if product_name:
         new_question.context["product_name"] = product_name
