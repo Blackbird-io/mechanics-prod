@@ -35,6 +35,7 @@ n/a
 #manager cannot see modules unless they show up as attributes of a package. 
 from . import generic_revenue
 from . import subscriber_revenue
+from . import subscription_revenue_seats
 
 
 

@@ -4,11 +4,11 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: TW.Introduction.software_license_status
+#Module: TW.Introduction.software_seat_pricing
 """
 
-Topic asks a binary question about whether the user sells software as a product
-or as a service. 
+Topic asks a binary question about whether the user charges subscribers per seat
+or a flat fee. 
 
 ====================  ==========================================================
 Attribute             Description
@@ -46,29 +46,42 @@ from DataStructures.Modelling.LineItem import LineItem
 
 
 
+
 #globals
 topic_content = True
-name = "software subscription pricing structure"
+name = "software seat pricing check"
 topic_author = "Ilya Podolyako"
 date_created = "2015-06-30"
 extra_prep = False
 
 #standard topic prep
 user_outline_label = "Distribution"
+
+#tag storage
+tg_element_seat = "pricing element: seat"
+tg_price_by_seat = "price by seat"
+tg_sbr_per_seat = "subscriptions priced per seat"
+
+
 requiredTags = ["software",
                 "introduction"]
 optionalTags = ["distribution model",
                 "license structure",
                 "distribution structure",
-                "perpetual license",
-                "term or perpetual",
                 "saas",
                 "subscription",
                 "product",
                 "software as a service",
                 "software-as-a-service",
                 "SaaS",
-                "term license"]
+                "term license",
+                "pricing",
+                "pricing element",
+                "subscription pricing structure",
+                "subscription pricing element",
+                tg_element_seat,
+                tg_price_by_seat,
+                tg_sbr_per_seat]
 #
 applied_drivers = dict()
 formula_names = []
@@ -76,11 +89,14 @@ question_names = []
 scenarios = dict()
 work_plan = dict()
 
-question_names = ["do subscribers pay by seat?"]
-#<--------------------------------------------------------then need to figure out total seats
+question_names = ["do you charge subscribers by seat?"]
+
 #put in back of structure, apply to size. 
 work_plan["introduction"] = 1
 work_plan["distribution model"] = 1
+work_plan["structure"] = 1
+work_plan["pricing element"] = 1
+work_plan["pricing"] = 1
 
 #custom prep
 def prepare(new_topic):
@@ -112,7 +128,7 @@ def scenario_1(topic):
     Function asks question about software function. 
     """
     model = topic.MR.activeModel
-    new_question = topic.questions["software subscription or product?"]
+    new_question = topic.questions["do you charge subscribers by seat?"]
     if model.name:
         new_question.context["company_name"] = model.name
         #can fill in product name here too
@@ -132,10 +148,10 @@ def scenario_2(topic):
     Function pulls out user response and stores it in model's interview
     workspace. 
     """
-    license_status = topic.get_first_answer()
+    pricing_element = topic.get_first_answer()
     model = topic.MR.activeModel
-    model.interview.work_space["license status"] = license_status
-    apply_data(topic, license_status)
+    model.interview.work_space["pricing element"] = pricing_element
+    apply_data(topic, pricing_element)
     topic.wrap_topic()
 
 def end_scenario(topic):
@@ -153,7 +169,7 @@ def end_scenario(topic):
     #user pressed stop interview in middle of question
     #do nothing here
     topic.wrap_to_end()
-    #<---------------------------------------------------------------------assume subscription ?
+    #<---------------------------------------------------------------------assume by subscriber ?
     #
 
 def apply_data(topic, datapoint):
@@ -165,34 +181,37 @@ def apply_data(topic, datapoint):
 
     No-op in this topic. 
     """
+    seat_pricing = False
+    if datapoint.casefold().startswith(("yes",
+                                        "seat")):
+        seat_pricing = True
     #1 unpack
     model = topic.MR.activeModel
     path = model.interview.path
-    price_structure = LineItem("subscription price structure")
-    price_structure.guide.priority.reset()
-    price_structure.guide.priority.increment(3)
-    price_structure.guide.quality.setStandards(1,5)
+    if not seat_pricing:
+        pass
+        #dont bother doing anything
+    else:
+        seat_count = LineItem("seat count")
+        seat_count.guide.priority.reset()
+        seat_count.guide.priority.increment(3)
+        seat_count.guide.quality.setStandards(1,5)
 
     #2 apply
-    saas = False
-    if datapoint == "subscription":
-        saas = True
-    model.tag("subscription",
-              "internet",
-              "online",
-              "web-based",
-              "term license",
-              "saas",
-              "software as a service")
+    if seat_pricing:
+        model.tag(tg_element_seat,
+                  tg_price_by_seat,
+                  tg_sbr_per_seat)
 
     #3 update guidance attributes
-    path.add_line_to(price_structure, "introduction")
-    model.interview.clear_cache()
+    if seat_pricing:
+        path.add_line_to(seat_count, "structure")
+        model.interview.clear_cache()
     #
     
 
 scenarios[None] = scenario_1
-scenarios["software subscription or product?"] = scenario_2
+scenarios["do you charge subscribers by seat?"] = scenario_2
 scenarios[Globals.user_stop] = end_scenario
 
 

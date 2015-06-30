@@ -36,6 +36,8 @@ n/a
 #catalog
 from . import UnitRevenue_Generic
 from . import UnitRevenue_Retail
-from . import SubscriptionPrice_Monthly
+
+from . import seat_price_monthly
+from . import subscription_price_monthly
 
 

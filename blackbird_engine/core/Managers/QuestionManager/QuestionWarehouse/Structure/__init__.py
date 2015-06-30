@@ -46,7 +46,8 @@ from . import MonthsToOpenStore
 from . import Number_SignedStoreLeases
 
 #
-from . import average_subscriber_seats
 from . import subscriber_life_range
 from . import subscriber_count
 from . import subscription_term_months
+from . import subscriber_seats_average
+from . import subscriber_seats_total_paying

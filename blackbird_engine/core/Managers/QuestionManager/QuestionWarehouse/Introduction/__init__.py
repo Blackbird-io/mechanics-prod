@@ -44,5 +44,6 @@ from . import UserName
 from . import UserPosition
 from . import software_function
 from . import software_license_status
+from . import subscription_by_seat
 
 
