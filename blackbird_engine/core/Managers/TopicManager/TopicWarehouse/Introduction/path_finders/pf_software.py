@@ -203,6 +203,7 @@ for line in opex_details:
 sga_i = standard_path.indexByName("sg&a")
 sga = standard_path[sga_i]
 sga.guide.quality.setStandards(4,6)
+sga.setPartOf(opex)
 
 #4. add an AEBITDA line
 adj_ebitda = LineItem("Adjusted EBITDA")

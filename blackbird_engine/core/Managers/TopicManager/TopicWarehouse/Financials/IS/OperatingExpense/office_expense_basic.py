@@ -240,13 +240,14 @@ def apply_data(topic, datapoint):
         total_size = sum(office_sizes)
     #
     data = dict()
-    data["base_monthly_value"] = datapoint / total_size
+    data["fixed_monthly_value"] = datapoint / total_size
     #1.7. adjust objects to fit each other
     dr_occupancy.setWorkConditions(l_occupancy.name)
     dr_occupancy.configure(data, f_monthly)
     
     #Step 2. Populate model with new information
-    all_offices.append(office_template)
+    if office_template:
+        all_offices.append(office_template)
     for office in all_offices:
         office.financials.add_line_to(l_occupancy.copy(), "operating expense")
         office.addDriver(dr_occupancy.copy())
