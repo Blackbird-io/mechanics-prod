@@ -42,7 +42,7 @@ from . import CompanyStartDate
 from . import CompanyName
 from . import UserName
 from . import UserPosition
-from . import SoftwareFunction
-
+from . import software_function
+from . import software_license_status
 
 

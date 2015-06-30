@@ -96,7 +96,8 @@ question_names = []
 scenarios = dict()
 work_plan = dict()
 
-work_plan["intro"] = 1
+work_plan["introduction"] = 1
+work_plan["path"] = 1
 
 #drivers:
 #n/a
@@ -221,13 +222,13 @@ def apply_data(topic):
     model.unTag("ready for path")
     #
     intro_line = model.interview.focal_point
-    while not model.interview.point_standard(intro_line):
-        intro_line.guide.quality.increment()
+    intro_line.guide.quality.setStandards(4,6)
+    intro_line.guide.priority.reset()
+    intro_line.guide.priority.increment(3)
     #
     private_path = Financials(populate = False)
     private_path.append(intro_line)
     #if elaborating on intro, should do so here<<<<<<
-    #should replace intro with the actual used line
     #
     new_steps = standard_path.copy()
     private_path.extend(new_steps)
@@ -236,7 +237,7 @@ def apply_data(topic):
     #
     model.interview.clear_cache()
     model.interview.set_path(private_path)
-    model.interview.set_focal_point(next_step)
+##    model.interview.set_focal_point(intro_line)
 
 def end_scenario(topic):
     c = "Topic %s does not ask questions. Process should not be in "

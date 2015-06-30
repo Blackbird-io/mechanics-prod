@@ -63,7 +63,7 @@ tg_product_modification = "modifies product unit"
 #standard topic prep
 user_outline_label = "Cost"
 requiredTags = ["employee expense",
-                "known employee expense",
+                "known employee expense",  #<------------------------- can remove this tag
                 "software"]
 
 optionalTags = ["cost",
@@ -74,7 +74,8 @@ optionalTags = ["cost",
                 "income-neutral",
                 "GAAP adjustment",
                 "refines template",
-                "sales team in place"]
+                "sales team in place",
+                "sg&a"]
 
 applied_drivers = dict()
 formula_names = []
