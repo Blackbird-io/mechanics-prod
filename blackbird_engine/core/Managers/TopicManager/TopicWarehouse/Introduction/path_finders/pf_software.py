@@ -120,6 +120,7 @@ cost = standard_path[cost_i]
 cost.guide.priority.reset()
 cost.guide.priority.increment(1)
 #
+#2. add important details to opex
 opex_i = standard_path.indexByName("operating expense")
 opex = standard_path[opex_i]
 opex.guide.priority.reset()
@@ -197,6 +198,13 @@ for line in opex_details:
     line.guide.quality.setStandards(3,5)
     standard_path.add_line_to(line.copy(), "operating expense")
 
+#3. increase quality requirements for sg&a
+#(can also place it under opex here)
+sga_i = standard_path.indexByName("sg&a")
+sga = standard_path[sga_i]
+sga.guide.quality.setStandards(4,6)
+
+#4. add an AEBITDA line
 adj_ebitda = LineItem("Adjusted EBITDA")
 standard_path.add_top_line(adj_ebitda.copy(), after = "ebitda")
 
