@@ -67,4 +67,6 @@ active_elements = 1
 #See Blackbird Engine API for parameters available with each question type. 
 element_0 = dict()
 element_0["r_min"] = 0
-element_0["r_max"] = 1000000
+element_0["r_max"] = 10000000
+#assume no one in our target demo spends more than $10mm per month on offices
+element_details = [element_0]

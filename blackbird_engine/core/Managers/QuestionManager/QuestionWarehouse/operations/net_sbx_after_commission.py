@@ -52,7 +52,7 @@ input_sub_type = "percent"
 bp = "How much subscription revenue do you keep after paying commission?" 
 basic_prompt = bp
 custom_prompt = None
-short = "Commission"
+short = "Receipts & Commission"
 transcribe = True
 active_elements = 1
 
@@ -65,7 +65,7 @@ active_elements = 1
 #See Blackbird Engine API for parameters available with each question type. 
 #
 element_0 = dict()
-element_0["r_max"] = 100
+element_0["r_max"] = 1
 element_0["r_min"] = 0
 element_0["shadow"] = 90
 

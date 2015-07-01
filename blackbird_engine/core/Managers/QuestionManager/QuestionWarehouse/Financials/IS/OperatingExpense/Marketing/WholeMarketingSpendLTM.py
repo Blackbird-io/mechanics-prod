@@ -56,3 +56,9 @@ short = "LTM Marketing"
 transcribe = True
 active_elements = 1
 
+#Advanced Configuration: input element details.
+#See Blackbird Engine API for parameters available with each question type. 
+element_0 = {"r_max" : 60000000}
+#assume no one in our target demo spends more than $60mm per year on marketing
+element_details = [element_0]
+

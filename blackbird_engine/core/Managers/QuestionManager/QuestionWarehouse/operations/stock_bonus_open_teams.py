@@ -56,7 +56,7 @@ bp = "How large of an equity bonus do your teams receive annually, as a percent 
 basic_prompt = bp
 custom_prompt = "How much equity do teams at {company_name} receive annually,"
 custom_prompt += " as a percent of their salary?"
-short = "Incentive compensation (equity)"
+short = "Bonus (Equity)"
 transcribe = True
 active_elements = 1
 

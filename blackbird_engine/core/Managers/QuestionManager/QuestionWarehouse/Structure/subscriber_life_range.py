@@ -52,7 +52,13 @@ input_type = "number-range"
 input_sub_type = "months"
 basic_prompt = "How long do most customers keep their subscription?"
 custom_prompt = "How long do most customers keep their subscription to {product_name}?"
-short = "Subscriber Life Range"
+short = "Subscriber Life"
 transcribe = True
 active_elements = 1
+
+#Advanced Configuration: input element details.
+#See Blackbird Engine API for parameters available with each question type. 
+#
+element_0 = {"r_max" : 360}
+element_details = [element_0]
 

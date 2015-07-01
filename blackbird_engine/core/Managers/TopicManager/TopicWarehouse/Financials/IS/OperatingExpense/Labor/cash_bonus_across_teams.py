@@ -200,7 +200,8 @@ def scenario_1(topic):
         element._active = True
         element.r_min = 0
         element.r_max = 10
-        element.shadow = 0.30
+        #portal converts min and max to percent (x100) BUT LEAVES SHADOW RAW
+        element.shadow = 30
         #when topic gets this question object, elements 2-5 will be inactive.
     else:
         if everyone_else:
@@ -209,7 +210,8 @@ def scenario_1(topic):
             last_element._active = True
             last_element.r_min = 0
             last_element.r_max = 10
-            last_element.shadow = 0.10
+            #portal converts min and max to percent (x100) BUT LEAVES SHADOW RAW
+            last_element.shadow = 10
         else:
             pass
     #

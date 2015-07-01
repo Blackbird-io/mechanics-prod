@@ -51,7 +51,7 @@ input_sub_type = "currency"
 bp = "How much do you spend on external developers and designers per year?"
 basic_prompt = bp
 custom_prompt = None
-short = "Third-Party Development"
+short = "Technical Consultants"
 transcribe = True
 active_elements = 1
 
@@ -62,4 +62,5 @@ active_elements = 1
 
 #Advanced Configuration: input element details.
 #See Blackbird Engine API for parameters available with each question type. 
-#n/a
+element_0 = {"r_max" : 50000000}
+element_details = [element_0]

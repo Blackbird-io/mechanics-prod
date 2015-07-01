@@ -62,4 +62,5 @@ active_elements = 1
 
 #Advanced Configuration: input element details.
 #See Blackbird Engine API for parameters available with each question type. 
-#n/a
+element_0 = {"r_max" : "5000000"}
+element_details = [element_0]

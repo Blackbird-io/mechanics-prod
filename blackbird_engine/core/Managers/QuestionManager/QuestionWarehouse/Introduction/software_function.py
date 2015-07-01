@@ -53,7 +53,7 @@ input_type = "text"
 input_sub_type = None
 basic_prompt = "What does your software do?"
 custom_prompt = "What does {company_name}'s software do?"
-short = None
+short = "Function"
 transcribe = True
 active_elements = 1
 
