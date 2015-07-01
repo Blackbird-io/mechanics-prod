@@ -51,7 +51,7 @@ answers[q10] = [{"response" : "8"},
                 {"response" : "5"},
                 #5 managers
                 {"response" : "0"}]
-                #12 people in all other roles (``everyone else``)
+                #0 people in all other roles (``everyone else``)
 answers[q11] = [{"response" : "120000"},
                 #$120,000/yr for developers
                 {"response" : "80000"},
