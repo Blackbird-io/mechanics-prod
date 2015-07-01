@@ -244,10 +244,11 @@ def apply_data(topic, datapoint):
     hq.addComponent(teams)
     #
     for (role, head_count) in datapoint.items():
-        team = staff_unit.copy()
-        team.setName(role)
-        team.size = head_count
-        teams.addComponent(team)
+        if head_count:
+            team = staff_unit.copy()
+            team.setName(role)
+            team.size = head_count
+            teams.addComponent(team)
     #    
     model.tag("known team composition")
     

@@ -65,10 +65,10 @@ active_elements = 4
 #Advanced Configuration: input element details.
 #See Blackbird Engine API for parameters available with each question type. 
 #
-element_0 = {"main_caption" : "Development"}
-element_1 = {"main_caption" : "Sales"}
-element_2 = {"main_caption" : "Management"}
-element_3 = {"main_caption" : "Everyone else"}
+element_0 = {"main_caption" : "development"}
+element_1 = {"main_caption" : "sales"}
+element_2 = {"main_caption" : "management"}
+element_3 = {"main_caption" : "everyone else"}
 
 element_details = [element_0,
                    element_1,
