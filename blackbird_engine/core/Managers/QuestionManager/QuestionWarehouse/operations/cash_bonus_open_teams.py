@@ -54,7 +54,7 @@ input_sub_type = "percent"
 bp = "How large of a cash bonus do your teams get every year?"
 basic_prompt = bp
 custom_prompt = "How much do teams at {company_name} earn in annual cash bonuses, as a percent of their salary?"
-short = "Incentive Compensation (cash)"
+short = "Bonus (Cash)"
 transcribe = True
 active_elements = 1
 

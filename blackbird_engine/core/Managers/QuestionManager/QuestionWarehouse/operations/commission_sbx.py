@@ -52,7 +52,7 @@ input_sub_type = "percent"
 bp = "What percent of your subscription revenues go to commission and other incentives?"
 basic_prompt = bp
 custom_prompt = None
-short = "Receipts after commission"
+short = "Commission"
 transcribe = True
 active_elements = 1
 

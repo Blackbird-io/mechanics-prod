@@ -52,7 +52,7 @@ input_type = "binary"
 input_sub_type = None
 basic_prompt = "Do you sell your software as a subscription (term license) or a product (perpetual license)?"
 custom_prompt = "Do you sell {product_name} as a subscription (term license) or a product (perpetual license)?"
-short = None
+short = "Distribution model"
 transcribe = True
 active_elements = 1
 

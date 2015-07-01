@@ -54,7 +54,7 @@ input_sub_type = None
 bp = "How many people work in each of the following areas?"
 basic_prompt = bp
 custom_prompt = "How many people work in each of the following areas at {company_name}?" 
-short = "Team composition"
+short = "Team Size"
 transcribe = True
 active_elements = 4
 
@@ -66,10 +66,14 @@ active_elements = 4
 #Advanced Configuration: input element details.
 #See Blackbird Engine API for parameters available with each question type. 
 #
-element_0 = {"main_caption" : "development"}
-element_1 = {"main_caption" : "sales"}
-element_2 = {"main_caption" : "management"}
-element_3 = {"main_caption" : "everyone else"}
+element_0 = {"main_caption" : "development",
+             "r_max" : 5000}
+element_1 = {"main_caption" : "sales",
+             "r_max": 5000}
+element_2 = {"main_caption" : "management",
+             "r_max" : 5000}
+element_3 = {"main_caption" : "everyone else",
+             "r_max" : 5000}
 
 element_details = [element_0,
                    element_1,

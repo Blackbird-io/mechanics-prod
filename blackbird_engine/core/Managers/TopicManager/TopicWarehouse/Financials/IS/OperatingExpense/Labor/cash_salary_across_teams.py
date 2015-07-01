@@ -169,6 +169,8 @@ def scenario_1(topic):
                                   reverse = True)
     #
     #configure question w existing roles:
+    salary_cap = 5000000
+    #assume no one makes over 5mm per year
     input_array = new_question.input_array
     #
     ask_about = len(input_array)
@@ -182,12 +184,14 @@ def scenario_1(topic):
         element = input_array[i]
         element.main_caption = teams_large_to_small[i].name
         element._active = True
+        element.r_max = salary_cap
         #when topic gets this question object, elements 2-5 will be inactive.
     else:
         if everyone_else:
             last_element = input_array[ask_about]
             last_element.main_caption = everyone_else.name
             last_element._active = True
+            last_element.r_max = salary_cap
         else:
             pass
     #

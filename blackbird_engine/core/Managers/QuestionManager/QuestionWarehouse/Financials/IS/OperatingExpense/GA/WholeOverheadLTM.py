@@ -54,6 +54,6 @@ input_sub_type = "currency"
 basic_prompt = "In the last 12 months, what did you spend on company overhead?"
 custom_prompt = None
 short = "LTM Overhead"
-transcribe = False
+transcribe = True
 active_elements = 1
 

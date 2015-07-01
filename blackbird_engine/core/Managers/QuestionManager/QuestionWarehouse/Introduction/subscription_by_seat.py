@@ -52,7 +52,7 @@ input_type = "binary"
 input_sub_type = None
 basic_prompt = "Do you charge subscribers by seat?"
 custom_prompt = "Does {company_name} charge subscribers by seat?"
-short = None
+short = "Pricing model"
 transcribe = True
 active_elements = 1
 
