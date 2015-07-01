@@ -104,9 +104,10 @@ def scenario_1(topic):
     names_to_add = ["revenue",
                     "cost",
                     "cogs",
-                    "opex",
+                    "operating expense",
                     "sg&a",
                     "ebitda",
+                    "adjusted ebitda",
                     "capex"]
     #financials will generally have only one of ``cogs`` vs ``cost``
     #
