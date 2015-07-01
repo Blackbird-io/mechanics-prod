@@ -65,8 +65,8 @@ active_elements = 1
 #See Blackbird Engine API for parameters available with each question type. 
 #
 element_0 = dict()
-element_0["r_max"] = 100
+element_0["r_max"] = 1
 element_0["r_min"] = 0
-element_0["shadow"] = 8
+element_0["shadow"] = 0.08
 
 element_details = [element_0]

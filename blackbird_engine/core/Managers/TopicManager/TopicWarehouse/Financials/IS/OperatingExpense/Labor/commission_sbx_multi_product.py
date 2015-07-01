@@ -211,8 +211,8 @@ def scenario_1(topic):
         #inactive.
         element.main_caption = products[i].name
         element.r_min = 0
-        element.r_max = 50
-        element.shadow = 5
+        element.r_max = 0.50
+        element.shadow = 0.05
     #
     topic.wrap_scenario(new_question)
 
@@ -407,7 +407,7 @@ def unit_work(product,
     #
     product_data = dict()
     product_data["source_line_name"] = "subscriptions"
-    product_data["source_multiplier"] = commission / 100
+    product_data["source_multiplier"] = commission
     #
     #team-specific lines
     l_own_commission = l_product_commission.copy()
