@@ -202,7 +202,7 @@ def scenario_2(topic):
     model = topic.MR.activeModel
     net_revenue = topic.get_first_answer()
     net_revenue = float(net_revenue)
-    commission = 100 - net_revenue
+    commission = 1 - net_revenue
     model.interview.work_space["commission_on_subscriptions"] = commission
     apply_data(topic, commission)
     topic.wrap_topic()
@@ -347,7 +347,7 @@ def unit_work(product,
     #
     product_data = dict()
     product_data["source_line_name"] = "subscriptions"
-    product_data["source_multiplier"] = commission / 100
+    product_data["source_multiplier"] = commission
     #
     #team-specific lines
     l_own_commission = l_product_commission.copy()

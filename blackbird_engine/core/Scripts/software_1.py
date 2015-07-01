@@ -60,24 +60,24 @@ answers[q11] = [{"response" : "120000"},
                 #$140,000/yr for managers
                 {"response" : "60000"}]
                 #$60,000/yr for everyone else
-answers[q12] = [{"response" : "25"},
+answers[q12] = [{"response" : "0.25"},
                 #cash bonus equal to 25% of salary for developers
-                {"response" : "100"},
+                {"response" : "1.00"},
                 #cash bonus equal to 100% of salary for managers (who set their
                 #own bonus policy)
-                {"response" : "15"}]
+                {"response" : "0.15"}]
                 #cash bonus equal to 15% of salary for everyone else
                 #
                 #NOTE: this question should exclude the sales team
-answers[q13] = [{"response" : "60"},
+answers[q13] = [{"response" : "0.60"},
                 #stock bonus equal to 60% of salary for developers
-                {"response" : "30"},
+                {"response" : "0.30"},
                 #stock bonus equal to 30% of salary for managers
-                {"response" : "5"}]
+                {"response" : "0.5"}]
                 #stock bonus equal to 5% of salary for everyone else
                 #
                 #NOTE: this question should exclude the sales team
-answers[q14] = [{"response" : "95"}]
+answers[q14] = [{"response" : "0.95"}]
                 #keep 95% of revenue, pay out 5% in commissions
 answers[q15] = [{"response" : "250000"}]
                 #$250,000 LTM marketing spend

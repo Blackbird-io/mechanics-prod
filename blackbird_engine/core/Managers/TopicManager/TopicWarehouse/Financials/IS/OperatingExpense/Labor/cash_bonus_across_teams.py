@@ -199,7 +199,8 @@ def scenario_1(topic):
         element.main_caption = teams_large_to_small[i].name
         element._active = True
         element.r_min = 0
-        element.r_max = 1000
+        element.r_max = 10
+        element.shadow = 0.30
         #when topic gets this question object, elements 2-5 will be inactive.
     else:
         if everyone_else:
@@ -207,7 +208,8 @@ def scenario_1(topic):
             last_element.main_caption = everyone_else.name
             last_element._active = True
             last_element.r_min = 0
-            last_element.r_max = 1000
+            last_element.r_max = 10
+            last_element.shadow = 0.10
         else:
             pass
     #
@@ -391,7 +393,7 @@ def unit_work(team,
     #
     team_data = dict()
     team_data["source_line_name"] = "salaries (%s)" % team.name
-    team_data["source_multiplier"] = team_bonus_percent / 100
+    team_data["source_multiplier"] = team_bonus_percent
     #
     #team-specific lines
     l_own_bonus = l_team_bonus.copy()
