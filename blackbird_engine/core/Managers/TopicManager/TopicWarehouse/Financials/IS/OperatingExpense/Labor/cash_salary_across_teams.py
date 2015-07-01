@@ -286,6 +286,8 @@ def apply_data(topic, datapoint):
     generic_salary = datapoint.get("everyone else")
     if not generic_salary:
         generic_salary = datapoint.get("other")
+        if not generic_salary:
+            generic_salary = sum(datapoint.values()) / len(datapoint)
     #1.7. adjust objects to fit each other
     dr_average_salary.setWorkConditions(l_average_salary.name)
     #

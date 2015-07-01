@@ -318,6 +318,8 @@ def apply_data(topic, datapoint):
     generic_bonus = datapoint.get("everyone else")
     if not generic_bonus:
         generic_bonus = datapoint.get("other")
+        if not generic_bonus:
+            generic_bonus = min(datapoint.values())/2
     #1.7. adjust objects to fit each other
     #n/a
     materials = dict()
