@@ -55,7 +55,7 @@ bp = "How much commission do your teams earn on subscription revenue?"
 basic_prompt = bp
 custom_prompt = "How much commission do your teams earn on revenue from"
 custom_prompt += " {product_name} subscriptions?"
-short = "Commission"
+short = "Receipts after commission"
 transcribe = True
 active_elements = 1
 
