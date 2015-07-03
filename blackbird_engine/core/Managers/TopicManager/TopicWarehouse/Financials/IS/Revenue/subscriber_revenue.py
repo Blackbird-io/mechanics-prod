@@ -88,7 +88,7 @@ scenarios = dict()
 work_plan = dict()
 
 question_names = ["monthly subscription price?"]
-formula_names = ["set line to fixed monthly value."]
+formula_names = ["fixed monthly value multiplied by unit size."]
 
 work_plan["subscriptions"] = 1 
 work_plan["revenue"] = 1
@@ -194,7 +194,7 @@ def apply_data(topic, datapoint):
     subscriptions_line = LineItem("subscriptions")
     #
     D1 = topic.applied_drivers["D1"]
-    rev_formula = topic.formulas["set line to fixed monthly value."]
+    rev_formula = topic.formulas["fixed monthly value multiplied by unit size."]
     #
     local_data = dict()
     local_data["fixed_monthly_value"] = datapoint
