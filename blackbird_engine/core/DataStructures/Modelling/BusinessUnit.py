@@ -847,10 +847,22 @@ class BusinessUnit(Tags,Equalities):
                   "STAGE",
                   "TYPE",
                   "FILL",
+                  "SIZE",
                   "COMPS"]
         ##data
         data = {}
-        data["NAME"] = str(self.name)[:data_width]
+        unit_name = str(self.name)
+        if len(unit_name) > data_width:
+            #abbreviate unit name if its too long
+            unit_name_parts = unit_name.split()
+            if len(unit_name_parts) > 1:
+                last_part = unit_name_parts[-1]
+                initials = ""
+                for part in unit_name_parts[:-1]:
+                    initial = part[:1] + "."
+                    initials = initials + initial
+                unit_name = initials + last_part
+        data["NAME"] = unit_name[:data_width]
         #
         id_dots = "..."
         tail_width = data_width - len(id_dots)
@@ -873,12 +885,14 @@ class BusinessUnit(Tags,Equalities):
         stage = str(self.life.stage)[:data_width]
         data["STAGE"] = stage.upper()
         #
-        unit_type = str(None)
+        unit_type = str(self.type)[:data_width]
         data["TYPE"] = unit_type.upper()
         #
         data["FILL"] = str(self.filled)
         #
         data["COMPS"] = str(len(self.components.get_living()))
+        #
+        data["SIZE"] = str(self.size)[:data_width]
         #
         ##assemble the real thing
         ##DONT FORGET TO rjust(data_width)
@@ -940,6 +954,7 @@ class BusinessUnit(Tags,Equalities):
                 seg_a = line[:(up_pos)]
                 seg_b = line[(up_pos + 1):]
                 line = seg_a + "/" + seg_b
+                line = line.casefold()
                 #
                 alt_lines.append(line)
             lines = alt_lines

@@ -222,6 +222,7 @@ def apply_data(topic, datapoint):
             office_template.setName("office unit template")
             office_template.tag("office")
             office_template.type = "office"
+            office_taxonomy["standard"] = office_template
         hq = office_template.copy()
         hq.setName("headquarters")
         company.addComponent(hq)
