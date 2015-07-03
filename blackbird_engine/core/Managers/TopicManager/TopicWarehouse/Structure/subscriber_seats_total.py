@@ -66,7 +66,9 @@ tg_element_seat = "pricing element: seat"
 tg_populated = "known subscriber pool"
 tg_price_by_seat = "price by seat"
 tg_sbr_per_seat = "subscriptions priced per seat"
-
+tg_size_by_seat = "size represents a batch of seats"
+tg_sbr_batch_override = "seat count sizing overrides prior batch count"
+tg_size_by_batch = "size represents batch of subscribers"
 
 #
 #storing in tags in variables above is solely for the convenience of the author
@@ -225,7 +227,10 @@ def apply_data(topic, datapoint):
         else:
             applied_seats = average_seats
         subscriber.size = applied_seats
+        subscriber.tag(tg_size_by_seat)
+        subscriber.unTag(tg_size_by_batch)
         seats_remaining = seats_remaining - applied_seats
+        
     else:
         if not seats_remaining == 0:
             raise SeriousErrorInProcessing

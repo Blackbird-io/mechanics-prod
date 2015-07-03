@@ -85,12 +85,13 @@ tg_single_product = "describes resources associated with one product"
 tg_revenue_generating = "revenue generating"
 tg_rump = "rump batch"
 tg_subscriber_unit = "subscribers"
-
+tg_size_by_batch = "size represents batch of subscribers"
 
 sbr_tags = [tg_assumed_age_dist,
             tg_est_age,
             tg_subscriber_unit,
-            tg_revenue_generating]
+            tg_revenue_generating,
+            tg_size_by_batch]
 #
 #storing in tags in variables above is solely for the convenience of the author
 #
@@ -112,7 +113,8 @@ optionalTags = ["customers",
                 tg_expands_taxonomy,
                 tg_single_product,
                 tg_assumed_age_dist,
-                tg_assumed_normal_population]
+                tg_assumed_normal_population,
+                tg_size_by_batch]
 #
 applied_drivers = dict()
 formula_names = []

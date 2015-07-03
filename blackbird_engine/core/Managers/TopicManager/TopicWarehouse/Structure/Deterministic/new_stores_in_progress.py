@@ -129,7 +129,8 @@ def scenario_2(topic):
     model = topic.MR.activeModel
     spec_stores = round(topic.get_first_answer())
     model.interview.work_space["stores_in_progress"] = spec_stores
-    apply_data(topic, spec_stores)
+    if spec_stores:
+        apply_data(topic, spec_stores)
     topic.wrap_topic()
 
 def apply_data(topic, datapoint):

@@ -309,11 +309,11 @@ class Driver(Tags, AutoAlign):
         Sets instance.formula_bbid to that of the argument. Method first checks
         if instance data includes all parameters required by formula.
 
-        Method raises a DefinitionError if one of the parameters is missing or
-        False. Topics may inject drivers into business units at time A
-        with the intent that these drivers work only at some future time B (
-        when their work conditions or other logic has been satisfied). Time B
-        may be arbitrarily far away in the future. This method looks to avoid
+        Method raises a DefinitionError if one of the parameters is missing.
+        Topics may inject drivers into business units at time A with the
+        intent that these drivers work only at some future time B (when their
+        work conditions or other logic has been satisfied). Time B may be
+        arbitrarily far away in the future. This method looks to avoid
         confusing future errors by making sure that the Topic author is aware
         of the required formula parameters at the time the Topic runs.
         
@@ -328,14 +328,6 @@ class Driver(Tags, AutoAlign):
                 c = ""
                 c += "Instance data does not include required parameter ``%s``."
                 c = c % (parameter)
-                raise BBExceptions.DefinitionError(c)
-            if self.data[parameter]:
-                continue
-            else:
-                c = ""
-                c += "Formula requires parameter ``%s``. Instance data does not"
-                c += "\nprovide a True value for ``%s``."
-                c = c % (parameter, parameter)
                 raise BBExceptions.DefinitionError(c)
         if F.id.bbid:
             self.formula_bbid = F.id.bbid

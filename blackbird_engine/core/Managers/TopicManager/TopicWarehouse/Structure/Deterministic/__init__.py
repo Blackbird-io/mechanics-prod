@@ -30,8 +30,8 @@ n/a
 
 #imports
 from . import SimpleStructure
-from . import RetailExistingStores
-from . import NewStoresInProgress
+from . import retail_existing_stores
+from . import new_stores_in_progress
 ##from . import FutureStores_3yrs
 ##from . import StoreLocationSearch
 ##from . import StoreOpeningTime
