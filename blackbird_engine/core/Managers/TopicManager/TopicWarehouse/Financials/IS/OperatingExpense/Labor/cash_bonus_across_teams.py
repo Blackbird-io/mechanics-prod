@@ -312,7 +312,6 @@ def apply_data(topic, datapoint):
     l_team_bonus.tag("paid annually")
     l_team_bonus.tag("ratable")
     #
-    dr_average_bonus.setWorkConditions(l_average_bonus.name)
     #1.5. labels
     team_label_template = "cash bonus reserved (%s)"
     #1.6. data
@@ -391,6 +390,7 @@ def unit_work(team,
     """
     #
     team_label = team_label_template % team.name
+    avg_label = "avg %s bonus (cash, %% of salary)" % team.name
     #
     overview_data = dict()
     overview_data["fixed_monthly_value"] = team_bonus_percent
@@ -400,11 +400,14 @@ def unit_work(team,
     team_data["source_multiplier"] = team_bonus_percent
     #
     #team-specific lines
+    l_own_avg_bonus = l_average_bonus.copy()
+    l_own_avg_bonus.setName(avg_label)
     l_own_bonus = l_team_bonus.copy()
     l_own_bonus.setName(team_label)
     #
     #team-specific drivers
     dr_own_average = dr_average_bonus.copy()
+    dr_own_average.setWorkConditions(avg_label)
     dr_own_average.configure(overview_data, f_fixed)
     #
     dr_own_bonus = dr_team_bonus.copy()
@@ -412,7 +415,7 @@ def unit_work(team,
     dr_own_bonus.configure(team_data, f_multiplier)
     #
     #add objects to team
-    team.financials.add_line_to(l_average_bonus.copy(), "overview")
+    team.financials.add_line_to(l_own_avg_bonus, "overview")
     team.financials.add_line_to(l_bonus.copy(),
                                 "operating expense",
                                 "employee expense")

@@ -293,7 +293,7 @@ def apply_data(topic, datapoint):
         if not generic_salary:
             generic_salary = sum(datapoint.values()) / len(datapoint)
     #1.7. adjust objects to fit each other
-    dr_average_salary.setWorkConditions(l_average_salary.name)
+    #n/a
     #
     materials = dict()
     materials["team_label_template"] = team_label_template
@@ -371,6 +371,7 @@ def unit_work(team,
     #unpack materials
     #
     team_label = team_label_template % team.name
+    avg_label = "avg %s salary" % team.name
     #
     overview_data = shared_data.copy()
     overview_data["base_annual_value"] = team_salary
@@ -378,11 +379,14 @@ def unit_work(team,
     team_data["fixed_monthly_value"] = team_salary / 12
     #
     #team-specific lines
+    l_own_average_salary = l_average_salary.copy()
+    l_own_average_salary.setName(avg_label)
     l_own_salaries = l_team_salaries.copy()
     l_own_salaries.setName(team_label)
     #
     #team-specific drivers
     dr_own_average = dr_average_salary.copy()
+    dr_own_average.setWorkConditions(avg_label)
     dr_own_average.configure(overview_data, f_annualized)
     #
     dr_own_salaries = dr_team_salary.copy()
@@ -390,7 +394,7 @@ def unit_work(team,
     dr_own_salaries.configure(team_data, f_monthly)    
     #
     #add objects to team
-    team.financials.add_line_to(l_average_salary.copy(),
+    team.financials.add_line_to(l_own_average_salary,
                                 "overview")
     team.financials.add_line_to(l_employee_expense.copy(),
                                 "operating expense")

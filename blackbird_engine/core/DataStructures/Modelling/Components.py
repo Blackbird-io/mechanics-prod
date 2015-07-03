@@ -512,6 +512,9 @@ class Components(dict, Tags, Equalities):
                 for unit in bunch:
                     unit_box = unit.pretty_print()
                     boxes.append(unit_box)
+                if not box_width:
+                    box_width = len(boxes[0][0])
+                    #set box_width in case tail is the only group
                 #
                 filled_bunch_hdr = None
                 filled_unit_hdrs = []
@@ -550,6 +553,9 @@ class Components(dict, Tags, Equalities):
                 unit_box = unit.pretty_print()
                 boxes.append(unit_box)
             #
+            if not box_width:
+                box_width = len(boxes[0][0])
+                #set box_width in case the tail stub is the only row
             filled_bunch_hdr = None
             filled_unit_hdrs = []
             for k in range(j, (j + stub_count)):
