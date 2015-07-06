@@ -57,10 +57,11 @@ class Guide:
     ====================  ======================================================
     """
     def __init__(self):
-        self.quality = QualityTracker()
         self.attention = AttentionTracker()
-        self.selection = SelectionTracker()
+        self.complete = False
         self.priority = Counter(cutOff = 5)
+        self.quality = QualityTracker()
+        self.selection = SelectionTracker()
         #NOTE: should use global var here for maxPriority
 
     def reset(self):

@@ -86,17 +86,11 @@ answers[q16] = [{"response" : "240000"}]
                 #$30,000 in g&a
 answers[q17] = [{"response" : "300000"}]
                 #$180,000 in annual spend on 3d party developers
-##answers[q18] = [{"response" : "1"}]
-##                #seats per subscriber
 answers[q19] = [{"response" : "20000"}]
                 #$50,000 /month for office space for the company
 answers[q20] = [{"response" : "We help mutual funds sell to wholesale."}]
 answers[q21] = [{"response" : "subscription"}]
 answers[q22] = [{"response" : "No (flat subscription fee)"}]
-##answers[q23] = [{"response" : "1255"}]
-##                #1255 paying seats (across all subscribers)
-##answers[q24] = [{"response" : "2000"}]
-##                #$2k/month per seat
 answers[q25] = [{"response" : "4000"}]
                 #$3500 per month for hosting
     
