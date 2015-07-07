@@ -4,10 +4,17 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: Controllers.new_IC
+#Module: Controllers.interview_controller
 
 """
 
+Module defines the InterviewController class. IC objects process mqr messages to
+identify the item where Blackbird should focus its analysis at a givne point in
+time (the interview focal point). To do so, IC objects organize containers by
+priority. IC objects then select items within priority levels based on whether
+or not those items need additional work. IC objects can use several different
+criteria (``protocols``) for organizing and selecting the focal point. See the
+class docstring for more info on the difference between protocols. 
 
 ====================  ==========================================================
 Attribute             Description
@@ -19,15 +26,21 @@ n/a
 FUNCTIONS:
 n/a
 
+CLASSES:
+InterviewController   selects focal point for Blackbird analysis
 ====================  ==========================================================
 """
 
 
 
-#imports
-from . import completion_rules
 
-from .level import Level
+#imports
+import BBExceptions
+
+from . import UNF_completion_rules as completion_rules
+
+from .Controller import Controller
+from .UNF_level import Level
 
 
 
@@ -76,9 +89,9 @@ class InterviewController(Controller):
     ====================  ======================================================
 
     DATA:
-    _known_protocols
+    _protocol_routines
     _protocol
-    MR                    instance of Messenger class
+    protocol
 
     FUNCTIONS:
     prioritize()          orders path into a bunch of priority levels
@@ -90,6 +103,7 @@ class InterviewController(Controller):
     """
     #class vars    
     def __init__(self):
+        Controller.__init__(self)
         self._protocol = 1
 
     @property
@@ -101,8 +115,9 @@ class InterviewController(Controller):
         if value in self._protocol_routines:
             self._protocol = value
         else:
-            c = "Unknown protocol. Attribute accepts only known keys for protocol routines."
-            raise ManagedAttributeError(c)
+            c = "Unknown protocol. Attribute accepts only known keys for "
+            c += "protocol routines."
+            raise BBExceptions.ManagedAttributeError(c)
     
     def process(self, mqr):
         """
@@ -337,6 +352,7 @@ class InterviewController(Controller):
         return fp
 
 #
+IC = InterviewController
 IC._protocol_routines = dict()
 IC._protocol_routines[0] = IC.routine_basic
 IC._protocol_routines[1] = IC.routine_priority_tiers
