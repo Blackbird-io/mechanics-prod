@@ -8,7 +8,7 @@
 
 """
 
-Module provides tools for running individual tests. 
+Module provides testing tools for Blackbird Engine.
 ====================  ==========================================================
 Object                Description
 ====================  ==========================================================
@@ -17,6 +17,12 @@ DATA:
 n/a
 
 FUNCTIONS:
+generate_standard()   run test, save output as standard in test folder
+print_result()        pretty print for standard result dictionary
+run_battery()         --------------------->TO DO, run a bunch of tests, fail on any,
+                      #if finished = True, always finish,
+                      #always log
+run_test()            --------------------->TO DO, run do then check
 run_test_do()         returns dict, use build to perform one test's task
 run_test_check()      returns True if build output passes test, else False
 ====================  ==========================================================
@@ -26,16 +32,84 @@ run_test_check()      returns True if build output passes test, else False
 
 
 #imports:
+import copy
+import dill as pickle
+import inspect
 import os
 import sys
-import dill as pickle
 import time
-import copy
 
 
 
 
-#functions
+#globals
+def generate_standard(test, overwrite = False):
+    """
+
+
+    generate_standard(test[, overwrite = False]) -> None
+
+
+    Function runs the specified test and stores the output as the standard in
+    the test's directory.
+    """
+    cwd = os.getcwd()
+    
+    #Work in five steps.    
+    #1. figure out where test lives, relative to cwd
+    path_for_test = inspect.getfile(test)
+    path_for_test_folder = os.path.dirname(path_for_test)
+    file_name = "standard.pkl"
+    path_for_file = path_for_test_folder + "\\" + file_name
+    #normalize file path
+    path_for_file = os.path.normpath(path_for_file)
+
+    #2. check if file exists
+    exists = os.path.exists(path_for_file)
+    if exists and not overwrite:
+        c = "File named ``%s`` already in place in \n%s\n\n."
+        c = c % (file_name, path_for_test_folder)
+        raise Exception(c)
+    
+    #3. run the test
+    result = run_test_do(cwd, test)
+    #
+    #4. pull out the output and save it to
+    completed = result["completed"]
+    if not completed:
+        c = "Test failed to complete. Function only makes standards from "
+        c += "working tests."
+        raise Exception(c)
+        #use generic exceptions here to avoid unnecessary dependancies.
+    output = result["output"]
+    file = open(path_for_file, "wb")
+    pickle.dump(output, file)
+
+    #5. close file
+    file.close()
+    #the end
+
+def print_result(result,truncate = True):
+    """
+
+
+    print_result(result) -> str
+
+    
+    Pretty print function for standard ``result`` dictionary.
+    """
+    k_order = ["testName","output","errors","completed","passed","rubric"]
+    truncLength = 20
+    for key in k_order:
+        space = 15 - len(key)
+        line = "\t%s:"+space*" "+"%s \n"
+        val = result[key]
+        valLength = len(str(val))
+        if truncate and valLength > truncLength:
+            val = "... (truncated)"
+        print(line % (key,val))
+    print("")
+    
 def run_test_do(bLocation,
                 test,
                 retainState = False,
@@ -214,27 +288,6 @@ def run_test_check(bLocation,
     sys.stdout = sys.__stdout__
     #
     return passed
-
-def print_result(result,truncate = True):
-    """
-
-
-    print_result(result) -> str
-
-    
-    Pretty print function for standard ``result`` dictionary.
-    """
-    k_order = ["testName","output","errors","completed","passed","rubric"]
-    truncLength = 20
-    for key in k_order:
-        space = 15 - len(key)
-        line = "\t%s:"+space*" "+"%s \n"
-        val = result[key]
-        valLength = len(str(val))
-        if truncate and valLength > truncLength:
-            val = "... (truncated)"
-        print(line % (key,val))
-    print("")  
 
 
 

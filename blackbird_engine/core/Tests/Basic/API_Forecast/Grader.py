@@ -98,7 +98,7 @@ def walk_dict(std, new, tab = 4):
     #
     c = """
     \tStep through the keys in ``std``. If value is a dictionary, call the
-    \tfunction recursively for std[k] and new[k]. Otherwise, tcheck that value
+    \tfunction recursively for std[k] and new[k]. Otherwise, check that value
     \tequals new value.
 
     Return True if all the values match, False otherwise.
