@@ -34,7 +34,6 @@ import time
 import BBExceptions
 import BBGlobalVariables as Globals
 
-
 from .Equalities import Equalities
 from .Stages import Stages
 from .LifeStage import LifeStage
