@@ -82,24 +82,32 @@ class InterviewController(Controller):
 
     IC objects establish the focal point for an interview.
 
-    process() delegates to protocol-specific routine. process() provides unpack, wrap, and other shared elements.
-    
+    The process() method provides the main, integrated interface; it accepts and
+    returns mqr messages.
+
+    IC objects delegate substantive work to one of several built-in versions of
+    the search-and-prioritization routine. See doc strings for the values in
+    in _protocol_routines for more info.    
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
-    _protocol_routines
-    _protocol
-    protocol
+    _protocol             int; local state for protocol selection; 1 is default
+    _protocol_routines    dict; CLASS attr, protocol : routine
+    protocol              int; P, get _protocol, set iff in routine keys
 
     FUNCTIONS:
-    prioritize()          orders path into a bunch of priority levels
+    prioritize_single()
+    prioritize_multi()
     process()             in MQR message, sets model focal point
     set_progress()        sets progress bar
     wrap_interview()      ????
     
     ====================  ======================================================
+
+    ``P`` indicates attributes decorated as properties. See attribute-level doc
+    string for more information.
     """
     #class vars    
     def __init__(self):
@@ -108,6 +116,17 @@ class InterviewController(Controller):
 
     @property
     def protocol(self):
+        """
+
+
+        **property**
+
+
+        Property returns instance._protocol
+
+        Property setter accepts values that are in the class _protocol_routines
+        dictionary. Setter raises ManagedAttributeError otherwise.
+        """
         return self._protocol
 
     @protocol.setter
@@ -133,6 +152,8 @@ class InterviewController(Controller):
         #check known focal point
         old_fp = model.interview.focal_point
         known_rule = model.interview.completion_rule
+        routine = None
+        #
         if known_rule:
             if not known_rule(old_fp):
                 fp = old_fp
@@ -157,21 +178,36 @@ class InterviewController(Controller):
             #try again. dont want to finish prematurely.
         #
         if not fp:
-            new_mqr = self.wrap_interview()
+            new_mqr = self.wrap_interview() #<------------------------------------------------------------need to make this
         else:
-            self.set_progress(model)
-            new_mqr = self.wrap_to_point()
+            self.set_progress(model) #<-------------------------------------------------------------------need to make this
+            new_mqr = self.wrap_to_point() #<-------------------------------------------------------------need to make this
         #
         return new_mqr
 
     def prioritize_single(self, container):
         """
+
+
+        IC.prioritize_single(iterable) -> dict()
+
+
+        Method expects iterable to contain objects with a valid guide attribute.
+
+        Method organizes all non-zero-priority items in iterable into a single
+        level object. Method keyes that level to the highest priority Blackbird
+        permits.
+
+        For example, if the global maximum priority is 5, this method will
+        always deliver a dictionary where levels[5] contains a level with all
+        active-priority items in iterable. 
         """
         levels = dict()
         single_level = Level()
         levels[Globals.priority_max] = single_level
         for item in container.items():
             if not item.guide.priority.current:
+                #skip 0-priority items
                 continue
             else:
                 single_level.append(item)
@@ -180,6 +216,17 @@ class InterviewController(Controller):
 
     def prioritize_multi(self, container):
         """
+
+
+        IC.prioritize_multi(iterable) -> dict()
+
+
+        Method expects iterable to contain objects with a valid guide attribute.
+
+        Method organizes items in iterable into levels that correspond to their
+        priority. Method skips zero-priority items. Method then returns a
+        dictionary (``levels``) that contains each of the levels, keyed by
+        priority. 
         """
         levels = dict()
         for item in container.items:
@@ -194,10 +241,32 @@ class InterviewController(Controller):
         return levels                
 
     def focus(self, model, selector):
+        """
+
+
+        IC.focus(model, selector) -> fp
+        
+
+        Method returns an object that should serve as the model's focal point.
+        Method returns ``None`` when all objects are complete.
+
+        Method expects ``selector`` to be a callable that accepts two arguments
+        (level and model) and returns an object suitable for focus.
+        
+        Method expects model.interview.levels to contain a dictionary of
+        priority level objects keyed by priority. Method walks through the
+        levels from most to least important.
+
+        When method locates a level that is not yet complete, method applies
+        selector to that level. If selector returns a True object, method stops
+        analysis. Otherwise, when selector returns None, method marks the level
+        as complete and moves on to the next one.
+        """
         fp = None
         levels = model.interview.levels
-        #go through levels most to least important
-        for level in priorities:
+        priorities = sorted(levels.keys(), reverse = True)
+        for priority in priorities:
+            level = levels[priority]
             if level.complete:
                 continue
             else:
@@ -211,6 +280,21 @@ class InterviewController(Controller):
         return fp
 
     def selector_quality(self, level, model):
+        """
+
+
+        IC.selector_quality(level, model) -> fp
+
+        
+        Method selects a focal point from level.
+        Method returns ``None`` when all items in level are complete.
+
+        Method sets the interview completion rule to ``quality_only``. 
+
+        Method applies the completion rule to each object in level, starting at
+        the level.last position. Method stops as soon as it finds an object that
+        fails the rule. Method marks complete = True on all objects that pass. 
+        """
         fp = None
         #
         rule = completion_rules.quality_only
@@ -232,6 +316,28 @@ class InterviewController(Controller):
         return fp
 
     def selector_attention_breadth(self, level, model):
+        """
+
+
+        IC.selector_attention_breadth(level, model) -> fp
+
+        
+        Method selects a focal point from level.
+        Method returns ``None`` when all items in level are complete.
+
+        Method sets the interview completion rule to ``quality_and_attention``. 
+
+        Method imposes attention rationing if the total quality need for the
+        level exceeds the remaining attention budget for the model. Method
+        computes quality need as the difference between an object's quality
+        standard and existing quality.
+
+        In the event the method needs to ration attention 
+        
+        Method applies the completion rule to each object in level, starting at
+        the level.last position. Method stops as soon as it finds an object that
+        fails the rule. Method marks complete = True on all objects that pass.
+        """
         #
         #if level need exceeds availability, spreads available attention over the entire priority level. otherwise
         #runs vanilla quality 
@@ -264,7 +370,7 @@ class InterviewController(Controller):
             rationing = True
         #
         if not rationing:
-            fp = self.selector_quality(level, model)
+            fp = self.selector_quality(level, model) #<-----------------------skip fork, make rule do nothing on blank budget
         else:
             attention_cap = available_attention / len(remaining)
             #
