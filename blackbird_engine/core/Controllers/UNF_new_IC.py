@@ -62,6 +62,8 @@ protocols[2] = "Same as 1, but stop when attention runs out."
 
 ##attention tracking: 
 ## - model has to keep fixed attention budget
+##      - this can be a default number that then goes up or down with size or whatever
+##
 ## - someone has to tick up used attention for each question for the model as a    whole
 ## - ??someone has to tick up attention for each focal point??
 ##     may not be necessary to measure attn for each item if we measure attention in      the same units as quality
@@ -86,7 +88,7 @@ class InterviewController(Controller):
     returns mqr messages.
 
     IC objects delegate substantive work to one of several built-in versions of
-    the search-and-prioritization routine. See doc strings for the values in
+    the prioritization-and-search routine. The versions mix and match different See doc strings for the values in
     in _protocol_routines for more info.    
     ====================  ======================================================
     Attribute             Description
@@ -321,29 +323,31 @@ class InterviewController(Controller):
 
         IC.selector_attention_breadth(level, model) -> fp
 
+
+        **attention-sensitive routine**
         
         Method selects a focal point from level.
         Method returns ``None`` when all items in level are complete.
 
-        Method sets the interview completion rule to ``quality_and_attention``. 
+        Method sets the interview completion rule to ``quality_and_attention``.
 
         Method imposes attention rationing if the total quality need for the
         level exceeds the remaining attention budget for the model. Method
         computes quality need as the difference between an object's quality
         standard and existing quality.
 
-        In the event the method needs to ration attention 
+        Method assumes that one unit of attention is comparable to one unit of
+        quality. 
+
+        When attention requirements exceed availability, method splits available
+        attention ratably between level items that still need work. Method sets
+        this attention budget on each item.
         
         Method applies the completion rule to each object in level, starting at
         the level.last position. Method stops as soon as it finds an object that
         fails the rule. Method marks complete = True on all objects that pass.
         """
-        #
-        #if level need exceeds availability, spreads available attention over the entire priority level. otherwise
-        #runs vanilla quality 
-        #
         fp = None
-        #
         rule = completion_rules.quality_and_attention
         model.interview.set_completion_rule(rule)
         #
@@ -366,32 +370,44 @@ class InterviewController(Controller):
             total_need += item_need
         #
         rationing = False
+        attention_cap = None
         if total_need > available_attention:
             rationing = True
-        #
-        if not rationing:
-            fp = self.selector_quality(level, model) #<-----------------------skip fork, make rule do nothing on blank budget
-        else:
             attention_cap = available_attention / len(remaining)
+        #
+        for i in remaining:
+            item = level[i]
+            item.guide.attention.budget = attention_cap
+            #cap is None unless necessary to ration
             #
-            for i in remaining:
-                item = level[i]
-                item.guide.attention.budget = attention_cap
+            if rule(item):
+                #work on item is complete
+                item.guide.complete = True
+                continue
+            else:
                 #
-                if rule(item):
-                    #work on item is complete
-                    item.guide.complete = True
-                    continue
-                else:
-                    #
-                    item.guide.complete = False
-                    fp = item
-                    level.last = i
-                    break
+                item.guide.complete = False
+                fp = item
+                level.last = i
+                break
         #
         return fp
 
     def selector_attention_depth(self, level, model):
+        """
+
+
+        IC.selector_attention_breadth(level, model) -> fp
+
+
+        **attention-sensitive routine**
+        
+        Method selects a focal point from level.
+        Method returns ``None`` when all items in level are complete.
+
+        Method will skip rule analysis and return None when model is out of
+        attention. Otherwise, method will delegate work to IC.selector_quality.
+        """
         #
         #run quality selection as usual, stop when run out of attention
         #
@@ -405,7 +421,7 @@ class InterviewController(Controller):
         a_available = max(0, a_allowance)
         #allowance must be greater than or equal to zero
         if a_available:
-            fp = selector_quality(level, model)
+            fp = self.selector_quality(level, model)
         else:
             #no op if out of attention, keep fp blank
             pass
@@ -418,9 +434,17 @@ class InterviewController(Controller):
         pass
 
     def routine_basic(self, model):
-        #most basic
-        #treats all positive-priority items as same level of importance
-        #not sensitive to attention 
+        """
+
+
+        IC.routine_basic(model) -> fp
+
+
+        Method runs prioritize_single() on model path. Method then applies focus
+        using selector_quality.
+
+        Method treats all objects with defined priority as equally important. 
+        """
         path = model.interview.path
         model.interview.levels = self.prioritize_single(path)
         fp = self.focus(model,
@@ -429,6 +453,17 @@ class InterviewController(Controller):
         return fp
 
     def routine_priority_tiers(self, model):
+        """
+
+
+        IC.routine_basic(model) -> fp
+
+
+        Method runs prioritize_multi() on model path. Method then applies focus
+        using selector_quality.
+
+        This routine provides intuitive analysis patterns for most models.
+        """
         #prioritizes items into different levels
         #picks out first open one
         #
