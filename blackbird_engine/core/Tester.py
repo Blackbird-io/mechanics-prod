@@ -100,19 +100,28 @@ def print_result(result,truncate = True):
     
     Pretty print function for standard ``result`` dictionary.
     """
-    k_order = ["testName","output","errors","completed","passed","rubric"]
+    k_order = ["name",
+               "testName",
+               "output",
+               "errors",
+               "completed",
+               "passed",
+               "rubric"]
     trunc_length = 20
     for key in k_order:
         space = 15 - len(key)
         line = "\t%s:"+space*" "+"%s \n"
-        val = result[key]
-        val_length = len(str(val))
-        if truncate and val_length > trunc_length:
-            val = "... (truncated)"
-        print(line % (key,val))
+        try:
+            val = result[key]
+            val_length = len(str(val))
+            if truncate and val_length > trunc_length:
+                val = "... (truncated)"
+            print(line % (key,val))
+        except KeyError:
+            continue
     print("")
 
-def run_battery(build_path, *battery, finish = False):
+def run_battery(build_path, *battery, force_finish = False):
     """
 
 
@@ -134,7 +143,7 @@ def run_battery(build_path, *battery, finish = False):
         name = test.name
         status = run_test(build_path, test, log = True, timer = True)
         tracker[test.name] = status
-        if any(status, force_finish):
+        if any([status, force_finish]):
             continue
         else:
             break
@@ -224,7 +233,14 @@ def run_test_do(build_path,
         #
         if not os.path.exists(sFolderPath):
             os.makedirs(sFolderPath)
-        logFilePath = sFolderPath + "\\" + test.testName + "_do"+".txt"
+        #
+        #support old and new style names
+        test_name = getattr(test, "name", None)
+        if not test_name:
+            test_name = test.testName
+            #support old and new test module formats
+        #
+        logFilePath = sFolderPath + "\\" + test_name + "_do"+".txt"
         logFilePath = os.path.normpath(logFilePath)
         #create a system-neutral path
         #
@@ -300,7 +316,13 @@ def run_test_check(build_path,
         #
         if not os.path.exists(sFolderPath):
             os.makedirs(sFolderPath)
-        logFilePath = sFolderPath + "\\" + test.testName + "_check"+".txt"
+        #
+        #support old and new style test names
+        test_name = getattr(test, "name", None)
+        if not test_name:
+            test_name = test.testName
+        #
+        logFilePath = sFolderPath + "\\" + test_name + "_check"+".txt"
         logFilePath = os.path.normpath(logFilePath)
         #create a system-neutral path
         #

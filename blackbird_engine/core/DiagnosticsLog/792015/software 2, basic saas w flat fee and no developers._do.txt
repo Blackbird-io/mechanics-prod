@@ -1,0 +1,1272 @@
+
+BLACKBIRD DIAGNOSTICS BLACKBIRD DIAGNOSTICS BLACKBIRD DIAGNOSTICS BLACKBIRD DIA
+
+Build: c:\blackbird\engine\dev\blackbird_engine\core 
+
+Running Task.do() for ``software 2, basic saas w flat fee and no developers.`` test . . . .
+
+
+CWD: 
+c:\blackbird\Engine\dev\blackbird_engine\core
+
+Python Path (via sys): 
+['', 'C:\\WINDOWS\\SYSTEM32\\python33.zip', 'c:\\python33\\DLLs', 'c:\\python33\\lib', 'c:\\python33', 'c:\\python33\\lib\\site-packages', 'c:\\blackbird\\engine\\dev\\blackbird_engine\\core']
+
+FormulaManager successfully populated catalog with 18 formulas.
+QuestionManager successfully populated catalog with 43 questions.
+TopicManager successfully populated catalog with 34 topics.
+Use script: 
+{'annual spend on development and design contractors?': [{'response': '180000'}], 'subscriber count?': [{'response': '380'}], 'company industry?': [{'response': 'software'}], 'monthly hosting spend for whole company?': [{'response': '3500'}], 'ltm whole company overhead, excluding marketing?': [{'response': '30000'}], 'do you charge subscribers by seat?': [{'response': 'No (flat subscription fee)'}], 'user position?': [{'response': 'CEO'}], 'company start date?': [{'response': '1998-05-01'}], 'ltm whole company marketing spend?': [{'response': '250000'}], 'subscriber life range?': [{'response': '[24, 72]'}], 'software subscription or product?': [{'response': 'subscription'}], 'company name?': [{'response': 'goog'}], 'average seats per subscriber?': [{'response': '6'}], 'average annual salary across unspecified teams?': [{'response': '120000'}, {'response': '80000'}, {'response': '140000'}, {'response': '60000'}], 'monthly subscription price?': [{'response': '12000'}], 'software function?': [{'response': 'We search stuff.'}], 'annual cash bonus as percent of salary for open teams?': [{'response': '0.25'}, {'response': '1.00'}, {'response': '0.15'}], 'subscription term in months?': [{'response': '12'}], 'net subscription revenues after commission?': [{'response': '0.95'}], 'annual stock bonus as percent of salary for open teams?': [{'response': '0.60'}, {'response': '0.30'}, {'response': '0.5'}], 'employee head count across software company roles?': [{'response': '8'}, {'response': '7'}, {'response': '5'}, {'response': '0'}], 'monthly office expense for whole company?': [{'response': '50000'}], 'user name?': [{'response': 'Ilya'}]}
+
+Portal.set_script(active_script)
+msg_0 = Portal.starting_message
+Starting message: 
+{'M': {'industry': None, 'business_id': 99999999, 'tags': None, 'summary': None, 'e_model': None, 'user_context': None, 'business_name': None}, 'R': None, 'Q': None}
+
+final_message = None
+
+    Start with a blank portal message. Call Engine through the API interface for
+    the next message. Use the Simple Portal to process the engine output. Repeat
+    until Engine returns an end-interview message.
+    
+    For any message, Portal will collect the user response (here, from the
+    script), package the response into an API-spec PortalResponse object, and
+    return a new, conforming message.
+
+    Use the Engine's checkMessageStatus function to figure out when to stop.
+    
+in Analyzer.downStream
+starting analysis loop # 0
+finished analysis loop
+n is:  1
+
+
+
+ Blackbird:  What is the name of your company? 
+
+             input_type:.......................text
+             input_sub_type:...................None
+             _active:..........................True
+             main_caption:.....................None
+             response:.........................None
+             shadow:...........................None
+             show_if:..........................None
+             size:.............................None
+             user_can_add:.....................False
+
+ User:       goog
+
+
+
+ -----------------------------------------------------------
+ Progress:   |B                                            |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+finished analysis loop
+n is:  1
+
+
+
+ Blackbird:  What industry are you in? 
+
+             input_type:.......................text
+             input_sub_type:...................None
+             _active:..........................True
+             main_caption:.....................None
+             response:.........................None
+             shadow:...........................None
+             show_if:..........................None
+             size:.............................None
+             user_can_add:.....................False
+
+ User:       software
+
+
+
+ -----------------------------------------------------------
+ Progress:   |B                                            |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+finished analysis loop
+n is:  1
+
+
+
+ Blackbird:  What is your name? 
+
+             input_type:.......................text
+             input_sub_type:...................None
+             _active:..........................True
+             main_caption:.....................None
+             response:.........................None
+             shadow:...........................None
+             show_if:..........................None
+             size:.............................None
+             user_can_add:.....................False
+
+ User:       Ilya
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BB                                           |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+finished analysis loop
+n is:  1
+
+
+
+ Blackbird:  What is your role at goog? 
+
+             input_type:.......................text
+             input_sub_type:...................None
+             _active:..........................True
+             main_caption:.....................None
+             response:.........................None
+             shadow:...........................None
+             show_if:..........................None
+             size:.............................None
+             user_can_add:.....................False
+
+ User:       CEO
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBB                                          |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+finished analysis loop
+n is:  1
+
+
+
+ Blackbird:  When did goog start operating? 
+
+             You can approximate the date if you'd like. We
+             are trying to understandhow your company has
+             grown over time, so the month and year matter
+             most. 
+
+             input_type:.......................date
+             input_sub_type:...................None
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................2015-07-09
+             r_min:............................1970-01-01
+             response:.........................None
+             shadow:...........................None
+             user_can_add:.....................False
+
+ User:       1998-05-01
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBB                                         |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+starting analysis loop # 2
+finished analysis loop
+n is:  3
+
+
+
+ Blackbird:  What does goog's software do? 
+
+             The more detail you can provide, the better. We
+             are looking to get a sense of how your product
+             works and how people use it. 
+
+             input_type:.......................text
+             input_sub_type:...................None
+             _active:..........................True
+             main_caption:.....................None
+             response:.........................None
+             shadow:...........................None
+             show_if:..........................None
+             size:.............................None
+             user_can_add:.....................False
+
+ User:       We search stuff.
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBB                                        |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+finished analysis loop
+n is:  2
+
+
+
+ Blackbird:  Do you sell your software as a subscription
+             (term license) or a product (perpetual
+             license)? 
+
+             input_type:.......................binary
+             input_sub_type:...................None
+             _active:..........................True
+             main_caption:.....................None
+             response:.........................None
+             toggle_caption_false:.............product
+             toggle_caption_true:..............subscription
+
+ User:       subscription
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBB                                       |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+finished analysis loop
+n is:  2
+
+
+
+ Blackbird:  Does goog charge subscribers by seat? 
+
+             input_type:.......................binary
+             input_sub_type:...................None
+             _active:..........................True
+             main_caption:.....................None
+             response:.........................None
+             toggle_caption_false:.............No (flat subscription fee)
+             toggle_caption_true:..............Yes (charge by seat)
+
+ User:       No (flat subscription fee)
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBB                                      |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+finished analysis loop
+n is:  2
+
+
+
+ Blackbird:  How long is the standard subscription term for
+             your customers? 
+
+              under the subscription contract. Exclude any
+             options or renewals. 
+
+             input_type:.......................number
+             input_sub_type:...................months
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................90
+             r_min:............................0
+             response:.........................None
+             shadow:...........................6
+             user_can_add:.....................False
+
+ User:       12
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBB                                     |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+finished analysis loop
+n is:  2
+
+
+
+ Blackbird:  How long do most customers keep their
+             subscription? 
+
+             Think of a range that would cover 95 out of 100
+             cases. 
+
+             input_type:.......................number-range
+             input_sub_type:...................months
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................360
+             r_min:............................0
+             response:.........................None
+             shadow:...........................6
+             shadow_2:.........................60
+             user_can_add:.....................False
+
+ User:       [24, 72]
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBBB                                    |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+finished analysis loop
+n is:  2
+
+
+
+ Blackbird:  How many subscribers do you have? 
+
+             input_type:.......................number
+             input_sub_type:...................None
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................50000
+             r_min:............................0
+             response:.........................None
+             shadow:...........................100
+             user_can_add:.....................False
+
+ User:       380
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBBB                                    |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+starting analysis loop # 2
+finished analysis loop
+n is:  3
+
+
+
+ Blackbird:  What's the monthly price of your subscription
+             for an average customer? 
+
+             We are looking to understand the net price per
+             month (including any discounts or grace periods
+             you may offer). 
+
+             input_type:.......................number
+             input_sub_type:...................currency
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................1000000
+             r_min:............................0
+             response:.........................None
+             shadow:...........................2000
+             user_can_add:.....................False
+
+ User:       12000
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBBBBB                                  |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+finished analysis loop
+n is:  2
+
+
+
+ Blackbird:  How many people work in each of the following
+             areas? 
+
+             (Input Element #0)
+                 input_type:.......................number
+                 input_sub_type:...................None
+                 _active:..........................True
+                 main_caption:.....................development
+                 r_max:............................5000
+                 r_min:............................0
+                 response:.........................None
+                 shadow:...........................None
+                 user_can_add:.....................False
+
+ User:       8
+             (Input Element #1)
+                 input_type:.......................number
+                 input_sub_type:...................None
+                 _active:..........................True
+                 main_caption:.....................sales
+                 r_max:............................5000
+                 r_min:............................0
+                 response:.........................None
+                 shadow:...........................None
+                 user_can_add:.....................False
+
+ User:       7
+             (Input Element #2)
+                 input_type:.......................number
+                 input_sub_type:...................None
+                 _active:..........................True
+                 main_caption:.....................management
+                 r_max:............................5000
+                 r_min:............................0
+                 response:.........................None
+                 shadow:...........................None
+                 user_can_add:.....................False
+
+ User:       5
+             (Input Element #3)
+                 input_type:.......................number
+                 input_sub_type:...................None
+                 _active:..........................True
+                 main_caption:.....................everyone else
+                 r_max:............................5000
+                 r_min:............................0
+                 response:.........................None
+                 shadow:...........................None
+                 user_can_add:.....................False
+
+ User:       0
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBBBBBBBBBBBB                           |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+starting analysis loop # 2
+finished analysis loop
+n is:  3
+
+
+
+ Blackbird:  What annual salary do your employees earn, on
+             average? 
+
+             We think of salary as the baseline cash
+             compensation, excluding any bonus payments. 
+
+             Average Salary 
+
+             (Input Element #0)
+                 input_type:.......................number
+                 input_sub_type:...................currency
+                 _active:..........................True
+                 main_caption:.....................development
+                 r_max:............................5000000
+                 r_min:............................0
+                 response:.........................None
+                 shadow:...........................None
+                 user_can_add:.....................False
+
+ User:       120000
+             (Input Element #1)
+                 input_type:.......................number
+                 input_sub_type:...................currency
+                 _active:..........................True
+                 main_caption:.....................sales
+                 r_max:............................5000000
+                 r_min:............................0
+                 response:.........................None
+                 shadow:...........................None
+                 user_can_add:.....................False
+
+ User:       80000
+             (Input Element #2)
+                 input_type:.......................number
+                 input_sub_type:...................currency
+                 _active:..........................True
+                 main_caption:.....................management
+                 r_max:............................5000000
+                 r_min:............................0
+                 response:.........................None
+                 shadow:...........................None
+                 user_can_add:.....................False
+
+ User:       140000
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBBBBBBBBBBBBB                          |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+starting analysis loop # 2
+finished analysis loop
+n is:  3
+
+
+
+ Blackbird:  How large of a cash bonus do your teams get
+             every year? 
+
+             cash bonuses and incentive compensation only. 
+
+             % of average salary 
+
+             (Input Element #0)
+                 input_type:.......................number
+                 input_sub_type:...................percent
+                 _active:..........................True
+                 main_caption:.....................development
+                 r_max:............................10
+                 r_min:............................0
+                 response:.........................None
+                 shadow:...........................30
+                 user_can_add:.....................False
+
+ User:       0.25
+             (Input Element #1)
+                 input_type:.......................number
+                 input_sub_type:...................percent
+                 _active:..........................True
+                 main_caption:.....................management
+                 r_max:............................10
+                 r_min:............................0
+                 response:.........................None
+                 shadow:...........................30
+                 user_can_add:.....................False
+
+ User:       1.00
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBBBBBBBBBBBBBBBB                       |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+finished analysis loop
+n is:  2
+
+
+
+ Blackbird:  How much subscription revenue do you keep after
+             paying commission? 
+
+             You should provide a number net of all
+             incentives (SPIFs, prizes, etc.). 
+
+             % of subscription revenue 
+
+             input_type:.......................number
+             input_sub_type:...................percent
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................1
+             r_min:............................0
+             response:.........................None
+             shadow:...........................90
+             user_can_add:.....................False
+
+ User:       0.95
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBBBBBBBBBBBBBBBB                       |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+starting analysis loop # 2
+finished analysis loop
+n is:  3
+
+
+
+ Blackbird:  How large of an equity bonus do your teams
+             receive annually, as a percent of their salary? 
+
+             ``Equity`` includes stocks, options, warrants,
+             profit shares, and other units that represent
+             partial ownership of the company's earnings. 
+
+             % of average salary 
+
+             (Input Element #0)
+                 input_type:.......................number
+                 input_sub_type:...................percent
+                 _active:..........................True
+                 main_caption:.....................development
+                 r_max:............................10
+                 r_min:............................0
+                 response:.........................None
+                 shadow:...........................30
+                 user_can_add:.....................False
+
+ User:       0.60
+             (Input Element #1)
+                 input_type:.......................number
+                 input_sub_type:...................percent
+                 _active:..........................True
+                 main_caption:.....................management
+                 r_max:............................10
+                 r_min:............................0
+                 response:.........................None
+                 shadow:...........................30
+                 user_can_add:.....................False
+
+ User:       0.30
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBBBBBBBBBBBBBBBBBB                     |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+starting analysis loop # 2
+starting analysis loop # 3
+starting analysis loop # 4
+finished analysis loop
+n is:  5
+
+
+
+ Blackbird:  How much do you spend per month on hosting? 
+
+             per month 
+
+             input_type:.......................number
+             input_sub_type:...................currency
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................5000000
+             r_min:............................0
+             response:.........................None
+             shadow:...........................None
+             user_can_add:.....................False
+
+ User:       3500
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB               |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+finished analysis loop
+n is:  2
+
+
+
+ Blackbird:  How much do you spend on external developers
+             and designers per year? 
+
+             Annual spend on external development & design. 
+
+             input_type:.......................number
+             input_sub_type:...................currency
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................50000000
+             r_min:............................0
+             response:.........................None
+             shadow:...........................None
+             user_can_add:.....................False
+
+ User:       180000
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB              |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+finished analysis loop
+n is:  2
+
+
+
+ Blackbird:  What is your total monthly office expense? 
+
+             You should count all locations where you pay
+             rent together. Include common area,
+             maintenance, utilities, and any other charges
+             that go with the space.utilities, janitorial,
+             and other occupancy charges. 
+
+             per month 
+
+             input_type:.......................number
+             input_sub_type:...................currency
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................10000000
+             r_min:............................0
+             response:.........................None
+             shadow:...........................None
+             user_can_add:.....................False
+
+ User:       50000
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB             |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+finished analysis loop
+n is:  2
+
+
+
+ Blackbird:  In the last 12 months, how much did you spend
+             on marketing? 
+
+             Here, we are looking to understand the company
+             as a whole. 
+
+             input_type:.......................number
+             input_sub_type:...................currency
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................60000000
+             r_min:............................0
+             response:.........................None
+             shadow:...........................None
+             user_can_add:.....................False
+
+ User:       250000
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB            |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+finished analysis loop
+n is:  1
+
+
+
+ Blackbird:  In the last 12 months, what did you spend on
+             company overhead? 
+
+             G&A, excluding marketing: 
+
+             input_type:.......................number
+             input_sub_type:...................currency
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................1000000000
+             r_min:............................0
+             response:.........................None
+             shadow:...........................None
+             user_can_add:.....................False
+
+ User:       30000
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB           |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+starting analysis loop # 2
+starting analysis loop # 3
+starting analysis loop # 4
+starting analysis loop # 5
+sc1:      cr_scenario.........................................................None    
+annual ebitda:  46452000.0
+scaled:  23226000.0
+scaled = max(0,scaled)
+scaled (post-adj):  23226000.0
+using standard_scenario
+mod_scenario['term'] 3
+mod_scenario.changeElement("size",scaled)
+mod_scenario['size'] 23226000.0
+ref = CR_Reference(mod_scenario)
+ref:      cr_reference........................................................None    
+ref[bad]['size']:  23226000.0
+ref[mid]['size']:  23226000.0
+ref[good]['size']:  23226000.0
+scaled:  46452000.0
+scaled = max(0,scaled)
+scaled (post-adj):  46452000.0
+using standard_scenario
+mod_scenario['term'] 3
+mod_scenario.changeElement("size",scaled)
+mod_scenario['size'] 46452000.0
+ref = CR_Reference(mod_scenario)
+ref:      cr_reference........................................................None    
+ref[bad]['size']:  46452000.0
+ref[mid]['size']:  46452000.0
+ref[good]['size']:  46452000.0
+scaled:  69678000.0
+scaled = max(0,scaled)
+scaled (post-adj):  69678000.0
+using standard_scenario
+mod_scenario['term'] 3
+mod_scenario.changeElement("size",scaled)
+mod_scenario['size'] 69678000.0
+ref = CR_Reference(mod_scenario)
+ref:      cr_reference........................................................None    
+ref[bad]['size']:  69678000.0
+ref[mid]['size']:  69678000.0
+ref[good]['size']:  69678000.0
+scaled:  92904000.0
+scaled = max(0,scaled)
+scaled (post-adj):  92904000.0
+using standard_scenario
+mod_scenario['term'] 3
+mod_scenario.changeElement("size",scaled)
+mod_scenario['size'] 92904000.0
+ref = CR_Reference(mod_scenario)
+ref:      cr_reference........................................................None    
+ref[bad]['size']:  92904000.0
+ref[mid]['size']:  92904000.0
+ref[good]['size']:  92904000.0
+scaled:  116130000.0
+scaled = max(0,scaled)
+scaled (post-adj):  116130000.0
+using standard_scenario
+mod_scenario['term'] 3
+mod_scenario.changeElement("size",scaled)
+mod_scenario['size'] 116130000.0
+ref = CR_Reference(mod_scenario)
+ref:      cr_reference........................................................None    
+ref[bad]['size']:  116130000.0
+ref[mid]['size']:  116130000.0
+ref[good]['size']:  116130000.0
+scaled:  139356000.0
+scaled = max(0,scaled)
+scaled (post-adj):  139356000.0
+using standard_scenario
+mod_scenario['term'] 3
+mod_scenario.changeElement("size",scaled)
+mod_scenario['size'] 139356000.0
+ref = CR_Reference(mod_scenario)
+ref:      cr_reference........................................................None    
+ref[bad]['size']:  139356000.0
+ref[mid]['size']:  139356000.0
+ref[good]['size']:  139356000.0
+scaled:  162582000.0
+scaled = max(0,scaled)
+scaled (post-adj):  162582000.0
+using standard_scenario
+mod_scenario['term'] 3
+mod_scenario.changeElement("size",scaled)
+mod_scenario['size'] 162582000.0
+ref = CR_Reference(mod_scenario)
+ref:      cr_reference........................................................None    
+ref[bad]['size']:  162582000.0
+ref[mid]['size']:  162582000.0
+ref[good]['size']:  162582000.0
+scaled:  185808000.0
+scaled = max(0,scaled)
+scaled (post-adj):  185808000.0
+using standard_scenario
+mod_scenario['term'] 3
+mod_scenario.changeElement("size",scaled)
+mod_scenario['size'] 185808000.0
+ref = CR_Reference(mod_scenario)
+ref:      cr_reference........................................................None    
+ref[bad]['size']:  185808000.0
+ref[mid]['size']:  185808000.0
+ref[good]['size']:  185808000.0
+scaled:  209034000.0
+scaled = max(0,scaled)
+scaled (post-adj):  209034000.0
+using standard_scenario
+mod_scenario['term'] 3
+mod_scenario.changeElement("size",scaled)
+mod_scenario['size'] 209034000.0
+ref = CR_Reference(mod_scenario)
+ref:      cr_reference........................................................None    
+ref[bad]['size']:  209034000.0
+ref[mid]['size']:  209034000.0
+ref[good]['size']:  209034000.0
+scaled:  232260000.0
+scaled = max(0,scaled)
+scaled (post-adj):  232260000.0
+using standard_scenario
+mod_scenario['term'] 3
+mod_scenario.changeElement("size",scaled)
+mod_scenario['size'] 232260000.0
+ref = CR_Reference(mod_scenario)
+ref:      cr_reference........................................................None    
+ref[bad]['size']:  232260000.0
+ref[mid]['size']:  232260000.0
+ref[good]['size']:  232260000.0
+known_vals:  [23226000.0, 46452000.0, 69678000.0, 92904000.0, 116130000.0, 139356000.0, 162582000.0, 185808000.0, 209034000.0, 232260000.0]
+known_vals:  [23226000.0, 46452000.0, 69678000.0, 92904000.0, 116130000.0, 139356000.0, 162582000.0, 185808000.0, 209034000.0, 232260000.0]
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  23226000.0
+std_val:  23226000.0
+k:  69678000.0
+std_val:  69678000.0
+k:  mid
+std_val:  None
+all_keys:  [23226000.0, 69678000.0]
+clean_keys:  [23226000.0, 69678000.0]
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  46452000.0
+std_val:  46452000.0
+k:  mid
+std_val:  None
+all_keys:  [46452000.0]
+clean_keys:  [46452000.0]
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  92904000.0
+std_val:  92904000.0
+k:  mid
+std_val:  None
+all_keys:  [92904000.0]
+clean_keys:  [92904000.0]
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  232260000.0
+std_val:  232260000.0
+k:  mid
+std_val:  None
+all_keys:  [232260000.0]
+clean_keys:  [232260000.0]
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  116130000.0
+std_val:  116130000.0
+k:  mid
+std_val:  None
+all_keys:  [116130000.0]
+clean_keys:  [116130000.0]
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  232260000.0
+std_val:  232260000.0
+k:  209034000.0
+std_val:  209034000.0
+k:  mid
+std_val:  None
+all_keys:  [232260000.0, 209034000.0]
+clean_keys:  [232260000.0, 209034000.0]
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  139356000.0
+std_val:  139356000.0
+k:  mid
+std_val:  None
+all_keys:  [139356000.0]
+clean_keys:  [139356000.0]
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  23226000.0
+std_val:  23226000.0
+k:  mid
+std_val:  None
+all_keys:  [23226000.0]
+clean_keys:  [23226000.0]
+k:  185808000.0
+std_val:  185808000.0
+k:  162582000.0
+std_val:  162582000.0
+k:  mid
+std_val:  None
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  139356000.0
+std_val:  139356000.0
+all_keys:  [185808000.0, 162582000.0, 139356000.0]
+clean_keys:  [185808000.0, 162582000.0, 139356000.0]
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  209034000.0
+std_val:  209034000.0
+k:  mid
+std_val:  None
+all_keys:  [209034000.0]
+clean_keys:  [209034000.0]
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  185808000.0
+std_val:  185808000.0
+k:  mid
+std_val:  None
+all_keys:  [185808000.0]
+clean_keys:  [185808000.0]
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  185808000.0
+std_val:  185808000.0
+k:  162582000.0
+std_val:  162582000.0
+k:  mid
+std_val:  None
+all_keys:  [185808000.0, 162582000.0]
+clean_keys:  [185808000.0, 162582000.0]
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  69678000.0
+std_val:  69678000.0
+k:  mid
+std_val:  None
+all_keys:  [69678000.0]
+clean_keys:  [69678000.0]
+k:  69678000.0
+std_val:  69678000.0
+k:  46452000.0
+std_val:  46452000.0
+k:  mid
+std_val:  None
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  92904000.0
+std_val:  92904000.0
+all_keys:  [69678000.0, 46452000.0, 92904000.0]
+clean_keys:  [69678000.0, 46452000.0, 92904000.0]
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  116130000.0
+std_val:  116130000.0
+k:  139356000.0
+std_val:  139356000.0
+k:  mid
+std_val:  None
+all_keys:  [116130000.0, 139356000.0]
+clean_keys:  [116130000.0, 139356000.0]
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  92904000.0
+std_val:  92904000.0
+k:  mid
+std_val:  None
+all_keys:  [92904000.0]
+clean_keys:  [92904000.0]
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  23226000.0
+std_val:  23226000.0
+k:  mid
+std_val:  None
+all_keys:  [23226000.0]
+clean_keys:  [23226000.0]
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  162582000.0
+std_val:  162582000.0
+k:  mid
+std_val:  None
+all_keys:  [162582000.0]
+clean_keys:  [162582000.0]
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  46452000.0
+std_val:  46452000.0
+k:  mid
+std_val:  None
+all_keys:  [46452000.0]
+clean_keys:  [46452000.0]
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  232260000.0
+std_val:  232260000.0
+k:  209034000.0
+std_val:  209034000.0
+k:  mid
+std_val:  None
+all_keys:  [232260000.0, 209034000.0]
+clean_keys:  [232260000.0, 209034000.0]
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+k:  116130000.0
+std_val:  116130000.0
+k:  mid
+std_val:  None
+all_keys:  [116130000.0]
+clean_keys:  [116130000.0]
+starting analysis loop # 6
+starting analysis loop # 7
+in Analyzer.downStream
+finished analysis loop
+n is:  0
+{'price': {'hi': 0.165, 'lo': 0.0275}, 'size': {'hi': 232260000.0, 'lo': 23226000.0}}
+{'price': {'hi': 0.165, 'lo': 0.0275}, 'size': {'hi': 232260000.0, 'lo': 23226000.0}}
+finished analysis loop
+n is:  8
+
+    Start with a blank portal message. Call Engine through the API interface for
+    the next message. Use the Simple Portal to process the engine output. Repeat
+    until Engine returns an end-interview message.
+    
+    For any message, Portal will collect the user response (here, from the
+    script), package the response into an API-spec PortalResponse object, and
+    return a new, conforming message.
+
+    Use the Engine's checkMessageStatus function to figure out when to stop.
+    
+    loop = True
+    while loop:
+        msg_1 = Engine.process_interview(msg_0)
+        msg_mqr = Engine.to_engine(msg_1)
+        #
+        status = Globals.checkMessageStatus(msg_mqr)
+        if status == Globals.status_endSession:
+            final_message = msg_1
+            break
+        else:
+            msg_2 = Portal.process(msg_1)
+            msg_0 = msg_2
+            continue
+    
+
+
+
+    Engine successfully concluded the interview and stored the final message
+    for grading. 
+
+    Test does not print final_message because it contains a long string for the
+    serialized e_model.
+
+    Grader will individually evaluate whether the final message satisfies the
+    standard.
+    
+
+
+
+    Now store stateless string views of company financials for current period
+    and the current period iteself. Grader will compare these to standard too.
+
+    Pull both Blackbird objects from an engine-format conversion of the final
+    message.
+    
+
+
+
+    Discard PortalModel[``e_model``] to keep output compact.
+    
+
+BLACKBIRD DIAGNOSTICS BLACKBIRD DIAGNOSTICS BLACKBIRD DIAGNOSTICS BLACKBIRD DIA
+
+start time:  1436473682.416867
+end time:    1436473785.281077
+run time:    102.8642098903656
+****************************************
+
+RESULT:
+	name:           ... (truncated) 
+
+	output:         ... (truncated) 
+
+	errors:         [] 
+
+	completed:      True 
+
+	passed:         False 
+
+	rubric:         None 
+
+
