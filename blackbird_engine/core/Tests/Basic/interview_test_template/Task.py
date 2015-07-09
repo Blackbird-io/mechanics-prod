@@ -15,12 +15,13 @@ store string views of current period and company financials for comparison.
 
 NOTE: Test **discards** e-model prior to returning result.
 
-2-STEP QUICK USE GUIDE:
+3-STEP QUICK USE GUIDE:
 
 1) REPLACE ``template_module`` in line 46 w actual answer module
-2) GENERATE real standard file through Tester.generate_standard()
+2) FILL IN a short, descriptive test name in line 58 (will appear in logs)
+3) GENERATE standard file through Tester.generate_standard()
 
-THAT's IT.
+That's it. 
 ====================  ==========================================================
 Object                Description
 ====================  ==========================================================
@@ -54,6 +55,8 @@ from Scripts import template_module as seed          #REPLACE WITH ACTUAL TO USE
 #globals
 output = {}
 active_script = seed.answers
+test_name = None                                     #FILL IN FOR BETTER LOGGING
+#<------------------------------------------------------------------------------
 
 #functions
 def do():
@@ -70,8 +73,6 @@ def do():
 
     Function runs through an interview script until Engine declares completion. 
     """
-    #
-    #T17.01
     #
     c = ""
     c+= "Use script: \n%s\n" % active_script
@@ -134,8 +135,7 @@ def do():
             continue
     """
     print(c)
-    output["T"] = {}
-    output["T"]["final message"] = final_message
+    output["1. final message"] = final_message
     #
     c = """
 
@@ -165,8 +165,8 @@ def do():
     model = final_mqr[0]
     current_period = model.time_line.current_period
     company = current_period.content
-    output["T"]["current_period"] = str(current_period)
-    output["T"]["company_financials"] = str(company.financials)
+    output["2. current_period"] = str(current_period)
+    output["3. company_financials"] = str(company.financials)
     #
     c = """
 

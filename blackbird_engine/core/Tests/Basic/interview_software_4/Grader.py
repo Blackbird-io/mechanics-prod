@@ -4,12 +4,11 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Diagnostics
-#Module: Tests.Basic.interview_template.Grader
+#Module: Tests.Basic.interview_test_template.Grader
 """
 Grader for interview_template
 
-Check whether concluding message includes all of the expected data. 
-
+Check whether concluding message includes all of the expected data.
 ====================  ==========================================================
 Object                Description
 ====================  ==========================================================
@@ -33,16 +32,32 @@ n/a
 import sys
 import traceback
 
+from .Task import test_name
+from Tests.tools import walk_dict
+
 
 
 
 #globals
-#n/a
+generic_label = "Build passes test: "
+custom_label = "Build passes ``%s`` test:  "
+success_label = generic_label
+if test_name:
+    custom_label = custom_label % test_name
+    success_label = custom_label
 
 #functions
 def printRubric(r, width = 60):
+    """
+
+
+    printRubric(r[, width = 60]) -> tuple
+
+
+    Function prints the Grader rubric nicely and returns a tuple of results.
+    """
     print("RUBRIC:\n")
-    ks = list(rubric.keys())
+    ks = list(r.keys())
     ks.sort()
     stepks = []
     confks = []
@@ -53,11 +68,20 @@ def printRubric(r, width = 60):
             stepks.append(k)
     for k in ks:
         dots = "."*(width-len(k))
-        print(k,dots,rubric[k])
-    return (stepks,confks)
-
+        print(k, dots, r[k])
+    return (stepks, confks)
 
 def check(result,standard):
+    """
+
+
+    check(result, standard) -> tuple
+
+
+    Function checks whether result satisfies standard. Returns bool result
+    and scoring rubric. 
+    """
+    #
     #standard is a stored version of the ``perfect`` output, w symmetrical
     #keys
     global rubric
@@ -67,67 +91,46 @@ def check(result,standard):
     try:
         c = """
 
-        This Grader checks whether the contents of the message that the Engine
-        returns at the conclusion of a simple scripted interview include all
-        of the required data from a standard end-of-interview message.
-
-        This Grader uses a standard message with a **deleted** e_model to
-        remain neutral towards model structure. 
+        This Grader checks whether the Engine delivered output that matches
+        expectations for a known set of inputs.
         
-        Grader will award an affirmative score ("pass") for all new messages
-        that include the entirety of information from known summaries.
         """
         print(c)
-        o = result["output"]
-        #17.01:
-        print("T.01: compare concluding messages.")
+        #T.01:
+        print("T.01: compare output.")
         rubric["T.01: confirmed"] = True
-        new_msg = o["T.01"]["final message"]
         #
-        std_msg = standard["T.01"]["final message"]
-        print("""
-        new_msg = o["T.01"]["final message"]
-        std_msg = standard["T.01"]["final message"]
-        """)
-        print("new_msg: \n%s\n" % new_msg)
-        print("std_msg: \n%s\n" % std_msg)
+        new_output = result["output"]
+        std_output = standard["output"]
         #
-        known_keys = sorted(std_msg.keys())
-        #maintain fixed order of keys
         print("""
-        known_keys = sorted(std_msg.keys())
+        new_output = result["output"]
+        std_output = standard["output"]
         """)
-        print("Known keys: \n", known_keys)
+        #
         c = """
-        Iterate through known_keys, check that values in new message
-        match those in known message. New summary may include additional
-        data and still pass the test.
+
+        Check that new output contains all of the standard data. New output can
+        pass test when it supplements expected data with additional information.
+        
         """
         print(c)
         #
-        outcome = True
-        for (i,k) in enumerate(known_keys):
-            known_value = std_msg[k]
-            new_value = new_msg[k]
-            c = ""
-            c += "%s. Key: %s\n" % (i,k)
-            c += "\tKnown value: %s\n" % known_value
-            c += "\tNew value:   %s\n" % new_value
-            print(c)
-            if known_value != new_value:
-                print("known value != new value")
-                outcome = False
-            else:
-                continue
-        else:
-            print("\n")
+        c = """
+
+        outcome = walk_dict(std_output, new_output)
+        
+        """
+        print(c)
+        outcome = walk_dict(std_output, new_output)
+        #
         if not outcome:
-            print("New message includes all expected data: ", False)
-            rubric["T.01.01: summaries match"]=False
+            print("New output includes expected data: ", False)
+            rubric["T01.01: new includes standard"]=False
             rubric["T.01: confirmed"] = False
         else:
-            print("New message includes all expected data: ", True)
-            rubric["T.01.01: summaries match"]=True
+            print("New output includes expected data: ", True)
+            rubric["T.01: new includes standard"]=True
         #
         print("T.01 finished. \n\n")
         #
@@ -141,7 +144,7 @@ def check(result,standard):
                 print("*"*80)
                 print("*"*80)
                 print(k, " ", rubric[k])
-                print("Test passed: ", False)
+                print(success_label, False)
                 print("*"*80)
                 print("*"*80)
                 break
@@ -150,7 +153,7 @@ def check(result,standard):
         else:
             print("*"*80)
             print("*"*80)
-            print("Test passed: ", True)
+            print(success_label, True)
             print("*"*80)
             print("*"*80)
     except Exception as X:
@@ -162,7 +165,7 @@ def check(result,standard):
         traceback.print_exc(file = sys.stdout)
         traceback.print_stack(file = sys.stdout)
         print("\n")
-        stepks,confks = printRubric(r=rubric)
+        stepks, confks = printRubric(r=rubric)
         passed = False
         print("passed set to False by Grader")
     finally:
