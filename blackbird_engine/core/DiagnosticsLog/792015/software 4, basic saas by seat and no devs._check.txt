@@ -1,0 +1,7 @@
+
+BLACKBIRD DIAGNOSTICS BLACKBIRD DIAGNOSTICS BLACKBIRD DIAGNOSTICS BLACKBIRD DIA
+
+Running check() on ``software 4, basic saas by seat and no devs.`` result . . . .
+
+
+[<module 'Tests.Basic.software_4' from '.\\Tests\\Basic\\software_4\\__init__.py'>, <module 'Tests.Basic.software_5' from '.\\Tests\\Basic\\software_5\\__init__.py'>]
