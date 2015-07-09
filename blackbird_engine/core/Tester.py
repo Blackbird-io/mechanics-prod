@@ -16,11 +16,10 @@ DATA:
 n/a
 
 FUNCTIONS:
-generate_standard()   run test, save output as standard in test folder
+generate_standard()   run tests, save output as standard in test folder
 print_result()        pretty print for standard result dictionary
-run_battery()         --------------------->TO DO, run a bunch of tests, fail on any,
-        
-run_test()            --------------------->TO DO, run do then check
+run_battery()         returns dict w results for each test
+run_test()            returns bool, run task then grader for a single test
 run_test_do()         returns dict, use build to perform one test's task
 run_test_check()      returns True if build output passes test, else False
 ====================  ==========================================================
@@ -41,51 +40,55 @@ import time
 
 
 #globals
-def generate_standard(test, overwrite = False):
+#n/a
+
+#functions
+def generate_standard(build_path, *tests, overwrite = False):
     """
 
 
-    generate_standard(test[, overwrite = False]) -> None
+    generate_standard(build_path, *tests[, overwrite = False]) -> None
 
 
-    Function runs the specified test and stores the result as the standard in
+    For each test in tests, function stores the result as the standard in
     the test's directory. The result object contains the test's output and
     other identifying information. 
     """
-    cwd = os.getcwd()
-    
-    #Work in five steps.    
-    #1. figure out where test lives, relative to cwd
-    path_for_test = inspect.getfile(test)
-    path_for_test_folder = os.path.dirname(path_for_test)
-    file_name = "standard.pkl"
-    path_for_file = path_for_test_folder + "\\" + file_name
-    #normalize file path
-    path_for_file = os.path.normpath(path_for_file)
-
-    #2. check if file exists
-    exists = os.path.exists(path_for_file)
-    if exists and not overwrite:
-        c = "File named ``%s`` already in place in \n%s\n\n."
-        c = c % (file_name, path_for_test_folder)
-        raise Exception(c)
-    
-    #3. run the test
-    result = run_test_do(cwd, test)
-    #
-    #4. pull out the output and save it to
-    completed = result["completed"]
-    if not completed:
-        c = "Test failed to complete. Function only makes standards from "
-        c += "working tests."
-        raise Exception(c)
-        #use generic exceptions here to avoid unnecessary dependancies.
-    standard = result
-    file = open(path_for_file, "wb")
-    pickle.dump(standard, file)
-
-    #5. close file
-    file.close()
+    for test in tests:
+        #Work in five steps.
+        #
+        #1. figure out where test lives, relative to cwd
+        path_for_test = inspect.getfile(test)
+        path_for_test_folder = os.path.dirname(path_for_test)
+        file_name = "standard.pkl"
+        path_for_file = path_for_test_folder + "\\" + file_name
+        #normalize file path
+        path_for_file = os.path.normpath(path_for_file)
+        #
+        #2. check if file exists
+        exists = os.path.exists(path_for_file)
+        if exists and not overwrite:
+            c = "File named ``%s`` already in place in \n%s\n\n."
+            c = c % (file_name, path_for_test_folder)
+            raise Exception(c)
+        #
+        #3. run the test
+        result = run_test_do(build_path, test)
+        #
+        #4. pull out the output and save it to
+        completed = result["completed"]
+        if not completed:
+            c = "Test ``%s`` failed to complete. Function only makes standards "
+            c += "\nfrom working tests."
+            c = c % test.name
+            raise Exception(c)
+            #use generic exceptions here to avoid unnecessary dependancies.
+        standard = result
+        file = open(path_for_file, "wb")
+        pickle.dump(standard, file)
+        #
+        #5. close file
+        file.close()
     #the end
 
 def print_result(result,truncate = True):
@@ -110,6 +113,20 @@ def print_result(result,truncate = True):
     print("")
 
 def run_battery(build_path, *battery, finish = False):
+    """
+
+
+    run_test(build_path, *battery [, finish = False]) -> dict()
+
+    -- ``build_path`` must be a string path for an existing directory;
+    -- ``battery`` should be one or more test modules.
+
+    Function calls run_test() for each test in battery. Function collates
+    pass status for each test into a dictionary by test name. Function always
+    logs and times each test.
+
+    Function stops working after first fail, unless ``force_finish`` is True. 
+    """    
     #if finished = True, always finish,
                       #always log
     tracker = dict()
@@ -124,8 +141,23 @@ def run_battery(build_path, *battery, finish = False):
     return tracker
         
 def run_test(build_path, test, log = False, timer = False):
+    """
+
+
+    run_test(build_path, test, log = False, timer = False) -> bool
+
+
+    Function gets build output for Task through run_test_do, then grades it
+    with run_test_check. Returns True if build passes test, False otherwise.
+
+    -- ``build_path`` must be a string path for an existing directory.
+    -- ``test`` must be the test **module**
+    -- ``log``, when True, saves trace to build's DiagnosticsLog folder
+    -- ``timer``, when True, times Grader analysis
+    """
     r = run_test_do(build_path, test, log = log, timer = timer)
     s = run_test_check(build_path, test, r, log = log, timer = timer)
+    #
     return s
     
 def run_test_do(build_path,
@@ -147,13 +179,13 @@ def run_test_do(build_path,
     Function returns a dictionary in the standard test reporting format. See
     test module doc string for details on the response contents.
     
-    -- ``build_path`` must be an existing directory. 
-    -- ``log``: if True, function prints a report to the build's DiagnosticsLog
-       folder; otherwise, function prints report to stdout
-    -- ``timer``: if True, function times how long the test's task takes.
+    -- ``build_path`` must be a string path for an existing directory;
+    -- ``test`` must be the test **module**;
+    -- ``log``, when True, saves trace to build's DiagnosticsLog folder;
+    -- ``timer``, when True, times Grader analysis;
     -- ``retain_state``: if True, test attempts to preserve state on exceptions.
 
-    NOTE: Function switches CWD to bLocation for the duration of the test
+    NOTE: Function switches CWD to build_path for the duration of the test
     
     Function returns to the original working directory after the test completes
     operation. 
@@ -219,7 +251,7 @@ def run_test_do(build_path,
     #
     return result
 
-def run_test_check(bLocation,
+def run_test_check(build_path,
                    test,
                    result,
                    log = False,
@@ -227,35 +259,23 @@ def run_test_check(bLocation,
     """
 
 
-    run_test_check(bLocation, test, result
-                                [, log = False
-                                [, timer = False]]) -> bool
+    run_test_check(bLocation,
+                   test,
+                   result
+                   [, log = False
+                   [, timer = False]]) -> bool
+                   
 
+    Function returns True if Grader is satisfied with result, False otherwise.
 
-    Function returns True if the test's Grader module finds result satisfactory,
-    and False otherwise.
-
-    E.g.:
-
-    >>> import Tests
-    >>> import Tester
-    >>> p = r"c:\blackbird\blackbird_engine\core"
-    >>> t = Tests.Basic.Model_01_Retail
-    >>> r = Tester.runTest_do(p, t)
-    >>> s = Tester.runTest_check(p, t, r)
-
-    If ``s`` is True, build passes test ``t``. 
-  
-    Function returns a dictionary in the standard test reporting format. See
-    test module doc string for details on the response contents.
-    
-    -- ``bLocation`` must be an existing directory. 
-    -- ``log``: if True, function prints a report to the build's DiagnosticsLog
-       folder; otherwise, function prints report to stdout
-    -- ``timer``: if True, function times how long the test's task takes. 
+    -- ``build_path`` must be a string path for an existing directory;
+    -- ``test`` must be the test **module**;
+    -- ``result`` should be the build's Task result;
+    -- ``log``, when True, saves trace to build's DiagnosticsLog folder;
+    -- ``timer``, when True, times Grader analysis.
     """
     #
-    bLocation = os.path.normpath(bLocation)
+    bLocation = os.path.normpath(build_path)
     #make bLocation system-neutral
     #
     #change working directory so testing files can locate and store inputs
