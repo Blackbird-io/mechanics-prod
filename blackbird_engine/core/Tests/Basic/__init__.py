@@ -39,6 +39,18 @@ from . import API_Forecast
 from . import API_Interview
 from . import API_Landscape
 
-from . import interview_retail_2_ext
-from . import interview_software_0
-from . import interview_software_4
+from . import software_1
+from . import software_2
+from . import software_3
+from . import software_4
+from . import software_5
+
+#test batteries
+batteries = {}
+batteries["software"] = [software_1,
+                         software_2,
+                         software_3,
+                         software_4,
+                         software_5]
+
+
