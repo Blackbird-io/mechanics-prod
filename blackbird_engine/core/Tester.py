@@ -5,7 +5,6 @@
 
 #Blackbird Diagnostics
 #Module: Tester
-
 """
 
 Module provides testing tools for Blackbird Engine.
@@ -20,8 +19,7 @@ FUNCTIONS:
 generate_standard()   run test, save output as standard in test folder
 print_result()        pretty print for standard result dictionary
 run_battery()         --------------------->TO DO, run a bunch of tests, fail on any,
-                      #if finished = True, always finish,
-                      #always log
+        
 run_test()            --------------------->TO DO, run do then check
 run_test_do()         returns dict, use build to perform one test's task
 run_test_check()      returns True if build output passes test, else False
@@ -50,8 +48,9 @@ def generate_standard(test, overwrite = False):
     generate_standard(test[, overwrite = False]) -> None
 
 
-    Function runs the specified test and stores the output as the standard in
-    the test's directory.
+    Function runs the specified test and stores the result as the standard in
+    the test's directory. The result object contains the test's output and
+    other identifying information. 
     """
     cwd = os.getcwd()
     
@@ -81,9 +80,9 @@ def generate_standard(test, overwrite = False):
         c += "working tests."
         raise Exception(c)
         #use generic exceptions here to avoid unnecessary dependancies.
-    output = result["output"]
+    standard = result
     file = open(path_for_file, "wb")
-    pickle.dump(output, file)
+    pickle.dump(standard, file)
 
     #5. close file
     file.close()
@@ -93,34 +92,53 @@ def print_result(result,truncate = True):
     """
 
 
-    print_result(result) -> str
+    print_result(result) -> None
 
     
     Pretty print function for standard ``result`` dictionary.
     """
     k_order = ["testName","output","errors","completed","passed","rubric"]
-    truncLength = 20
+    trunc_length = 20
     for key in k_order:
         space = 15 - len(key)
         line = "\t%s:"+space*" "+"%s \n"
         val = result[key]
-        valLength = len(str(val))
-        if truncate and valLength > truncLength:
+        val_length = len(str(val))
+        if truncate and val_length > trunc_length:
             val = "... (truncated)"
         print(line % (key,val))
     print("")
+
+def run_battery(build_path, *battery, finish = False):
+    #if finished = True, always finish,
+                      #always log
+    tracker = dict()
+    for test in battery:
+        name = test.name
+        status = run_test(build_path, test, log = True, timer = True)
+        tracker[test.name] = status
+        if any(status, force_finish):
+            continue
+        else:
+            break
+    return tracker
+        
+def run_test(build_path, test, log = False, timer = False):
+    r = run_test_do(build_path, test, log = log, timer = timer)
+    s = run_test_check(build_path, test, r, log = log, timer = timer)
+    return s
     
-def run_test_do(bLocation,
+def run_test_do(build_path,
                 test,
-                retainState = False,
                 log = False,
-                timer = False):
+                timer = False,
+                retain_state = False,):
     """
 
 
-    run_test_do(bLocation, test [,retainState = False
-                                [, log = False
-                                [, timer = False]]]) -> dict
+    run_test_do(build_path, test [, log = False
+                                 [, timer = False
+                                 [, retain_state = False]]]) -> dict
 
 
     Function runs the task portion of the specified test module for the build in
@@ -129,12 +147,11 @@ def run_test_do(bLocation,
     Function returns a dictionary in the standard test reporting format. See
     test module doc string for details on the response contents.
     
-    -- ``bLocation`` must be an existing directory. 
-
-    -- ``retainState``: if True, test attempts to preserve state on exceptions.
+    -- ``build_path`` must be an existing directory. 
     -- ``log``: if True, function prints a report to the build's DiagnosticsLog
        folder; otherwise, function prints report to stdout
     -- ``timer``: if True, function times how long the test's task takes.
+    -- ``retain_state``: if True, test attempts to preserve state on exceptions.
 
     NOTE: Function switches CWD to bLocation for the duration of the test
     
@@ -142,7 +159,7 @@ def run_test_do(bLocation,
     operation. 
     """
     #
-    bLocation = os.path.normpath(bLocation)
+    bLocation = os.path.normpath(build_path)
     #make bLocation system-neutral
     #
     if not os.path.exists(bLocation):
@@ -182,7 +199,7 @@ def run_test_do(bLocation,
         logFile = open(logFilePath,"w")
         sys.stdout = logFile
     tStart = time.time()
-    result = test.do(retainState)
+    result = test.do(retain_state)
     tEnd = time.time()
     tRun = tEnd - tStart
     if timer:
