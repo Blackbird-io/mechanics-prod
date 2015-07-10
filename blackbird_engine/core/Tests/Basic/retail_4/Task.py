@@ -4,25 +4,16 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Diagnostics
-#Module: Tests.Basic.interview_template.Task
+#Module: Tests.Basic.retail_2.Task
 """
 Task Module
 
-SCRIPT: TEMPLATE
+SCRIPT: retail_2_ext
 
 Run through scripted interview using only API interface, return last message,
 store string views of current period and company financials for comparison.
 
 NOTE: Test **discards** e-model prior to returning result.
-
-4-STEP QUICK USE GUIDE:
-
-1) REPLACE ``template_module`` in line 46 w actual answer module
-2) FILL IN a short, descriptive test name for __init__.name
-3) ADD the module package name to imports in the parent directory's __init__.py
-4) GENERATE standard file through Tester.generate_standard()
-
-That's it.
 ====================  ==========================================================
 Object                Description
 ====================  ==========================================================
@@ -47,8 +38,7 @@ import BBGlobalVariables as Globals
 import Shell as Engine
 import SimplePortal as Portal
 
-from Scripts import template_module as seed #<<<<<<<<<REPLACE WITH ACTUAL TO USE
-#<------------------------------------------------------------------------------
+from Scripts import retail_4_no_new_stores as seed
 
 
 
