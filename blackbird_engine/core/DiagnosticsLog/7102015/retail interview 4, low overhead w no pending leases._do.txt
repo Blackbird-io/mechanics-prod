@@ -1,0 +1,954 @@
+
+BLACKBIRD DIAGNOSTICS BLACKBIRD DIAGNOSTICS BLACKBIRD DIAGNOSTICS BLACKBIRD DIA
+
+Build: c:\blackbird\engine\dev\blackbird_engine\core 
+
+Running Task.do() for ``retail interview 4, low overhead w no pending leases.`` test . . . .
+
+
+Use script: 
+{'company start date?': [{'response': '1998-05-01'}], 'user name?': [{'response': 'Ilya'}], 'latest store open date?': [{'response': '2014-05-01'}], 'months to unit maturity?': [{'response': '36'}], 'ltm whole company marketing spend?': [{'response': '412'}], 'average monthly rent for a unit?': [{'response': '2000'}], 'unit employee expense per year?': [{'response': '300000'}], 'ltm whole company overhead, excluding marketing?': [{'response': '8080'}], 'company industry?': [{'response': 'Retail'}], 'number of signed new store leases?': [{'response': '0'}], 'user position?': [{'response': 'CEO'}], 'unit lifespan in years?': [{'response': '15'}], 'company name?': [{'response': 'Wal-Mart'}], 'number of business units?': [{'response': '30'}], 'average gross margin at a mature unit?': [{'response': '65'}], 'first store open date?': [{'response': '1999-03-01'}], 'annual unit revenue at maturity?': [{'response': '1000000'}], 'annual revenue at mature stores?': [{'response': '1000000'}]}
+
+Portal.set_script(active_script)
+msg_0 = Portal.starting_message
+Starting message: 
+{'Q': None, 'R': None, 'M': {'e_model': None, 'business_id': 99999999, 'tags': None, 'user_context': None, 'business_name': None, 'industry': None, 'summary': None}}
+
+final_message = None
+
+    Start with a blank portal message. Call Engine through the API interface for
+    the next message. Use the Simple Portal to process the engine output. Repeat
+    until Engine returns an end-interview message.
+    
+    For any message, Portal will collect the user response (here, from the
+    script), package the response into an API-spec PortalResponse object, and
+    return a new, conforming message.
+
+    Use the Engine's checkMessageStatus function to figure out when to stop.
+    
+in Analyzer.downStream
+starting analysis loop # 0
+finished analysis loop
+n is:  1
+
+
+
+ Blackbird:  What is the name of your company? 
+
+             input_type:.......................text
+             input_sub_type:...................None
+             _active:..........................True
+             main_caption:.....................None
+             response:.........................None
+             shadow:...........................None
+             show_if:..........................None
+             size:.............................None
+             user_can_add:.....................False
+
+ User:       Wal-Mart
+
+
+
+ -----------------------------------------------------------
+ Progress:   |B                                            |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+finished analysis loop
+n is:  1
+
+
+
+ Blackbird:  What industry are you in? 
+
+             input_type:.......................text
+             input_sub_type:...................None
+             _active:..........................True
+             main_caption:.....................None
+             response:.........................None
+             shadow:...........................None
+             show_if:..........................None
+             size:.............................None
+             user_can_add:.....................False
+
+ User:       Retail
+
+
+
+ -----------------------------------------------------------
+ Progress:   |B                                            |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+finished analysis loop
+n is:  1
+
+
+
+ Blackbird:  What is your name? 
+
+             input_type:.......................text
+             input_sub_type:...................None
+             _active:..........................True
+             main_caption:.....................None
+             response:.........................None
+             shadow:...........................None
+             show_if:..........................None
+             size:.............................None
+             user_can_add:.....................False
+
+ User:       Ilya
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BB                                           |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+finished analysis loop
+n is:  1
+
+
+
+ Blackbird:  What is your role at wal-mart? 
+
+             input_type:.......................text
+             input_sub_type:...................None
+             _active:..........................True
+             main_caption:.....................None
+             response:.........................None
+             shadow:...........................None
+             show_if:..........................None
+             size:.............................None
+             user_can_add:.....................False
+
+ User:       CEO
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBB                                          |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+finished analysis loop
+n is:  1
+
+
+
+ Blackbird:  When did wal-mart start operating? 
+
+             You can approximate the date if you'd like. We
+             are trying to understandhow your company has
+             grown over time, so the month and year matter
+             most. 
+
+             input_type:.......................date
+             input_sub_type:...................None
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................2015-07-10
+             r_min:............................1970-01-01
+             response:.........................None
+             shadow:...........................None
+             user_can_add:.....................False
+
+ User:       1998-05-01
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBB                                         |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+starting analysis loop # 2
+finished analysis loop
+n is:  3
+
+
+
+ Blackbird:  How many stores do you have? 
+
+             input_type:.......................number
+             input_sub_type:...................None
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................500
+             r_min:............................0
+             response:.........................None
+             shadow:...........................None
+             user_can_add:.....................False
+
+ User:       30
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBB                                        |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+finished analysis loop
+n is:  1
+
+
+
+ Blackbird:  For how many years does a typical store
+             operate? 
+
+             Our goal is to get a sense of how the
+             foundation of your business evolves over time.
+             The lifecycle of a business unit is the time
+             between when it starts operating and when it
+             stops producing revenue. 
+
+             input_type:.......................number
+             input_sub_type:...................years
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................30
+             r_min:............................0
+             response:.........................None
+             shadow:...........................8
+             user_can_add:.....................False
+
+ User:       15
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBB                                       |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+finished analysis loop
+n is:  1
+
+
+
+ Blackbird:  How many months does it take for revenue from a
+             typical store to level out? 
+
+             A business unit is mature when it's revenue
+             from period to period stays relatively
+             constant. 
+
+             input_type:.......................number
+             input_sub_type:...................months
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................120
+             r_min:............................0
+             response:.........................None
+             shadow:...........................30
+             user_can_add:.....................False
+
+ User:       36
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBB                                      |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+finished analysis loop
+n is:  1
+
+
+
+ Blackbird:  When did you open your first store? 
+
+             You can approximate the date if you'd like. We
+             are trying to understandhow your company has
+             grown over time, so the month and year matter
+             most. 
+
+             input_type:.......................date
+             input_sub_type:...................None
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................2015-07-10
+             r_min:............................1998-05-01
+             response:.........................None
+             shadow:...........................1999-02-25
+             user_can_add:.....................False
+
+ User:       1999-03-01
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBB                                     |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+finished analysis loop
+n is:  1
+
+
+
+ Blackbird:  When did you open your most recent store? 
+
+             You can approximate the date if you'd like. We
+             are trying to understandhow your company has
+             grown over time, so the month and year matter
+             most. 
+
+             input_type:.......................date
+             input_sub_type:...................None
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................2015-07-10
+             r_min:............................1999-03-01
+             response:.........................None
+             shadow:...........................2014-09-13
+             user_can_add:.....................False
+
+ User:       2014-05-01
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBBB                                    |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+finished analysis loop
+n is:  2
+
+
+
+ Blackbird:  How many leases do you have signed for new
+             stores? 
+
+             input_type:.......................number
+             input_sub_type:...................None
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................100
+             r_min:............................0
+             response:.........................None
+             shadow:...........................None
+             user_can_add:.....................False
+
+ User:       0
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBBB                                    |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+finished analysis loop
+n is:  2
+
+
+
+ Blackbird:  How much revenue does your average store
+             generate per year at maturity? 
+
+             Revenue (sales) per year 
+
+             input_type:.......................number
+             input_sub_type:...................currency
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................1000000000
+             r_min:............................0
+             response:.........................None
+             shadow:...........................None
+             user_can_add:.....................False
+
+ User:       1000000
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBBBB                                   |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+starting analysis loop # 2
+finished analysis loop
+n is:  3
+
+
+
+ Blackbird:  How much is monthly rent for your average
+             store? 
+
+             including maintenance and any common area or
+             similar charges. 
+
+             input_type:.......................number
+             input_sub_type:...................currency
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................1000000000
+             r_min:............................0
+             response:.........................None
+             shadow:...........................None
+             user_can_add:.....................False
+
+ User:       2000
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBBBBBBBBBBB                            |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+finished analysis loop
+n is:  1
+
+
+
+ Blackbird:  What is the annual employee expense for a
+             store? 
+
+             Employee expense includes salary, bonuses,
+             benefits, unemployment insurance, and taxes. 
+
+             input_type:.......................number
+             input_sub_type:...................currency
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................1000000000
+             r_min:............................0
+             response:.........................None
+             shadow:...........................None
+             user_can_add:.....................False
+
+ User:       300000
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBBBBBBBBBBBB                           |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+finished analysis loop
+n is:  2
+
+
+
+ Blackbird:  In the last 12 months, how much did you spend
+             on marketing? 
+
+             Here, we are looking to understand the company
+             as a whole. 
+
+             input_type:.......................number
+             input_sub_type:...................currency
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................60000000
+             r_min:............................0
+             response:.........................None
+             shadow:...........................None
+             user_can_add:.....................False
+
+ User:       412
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBBBBBBBBBBBBBBB                        |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+finished analysis loop
+n is:  1
+
+
+
+ Blackbird:  In the last 12 months, what did you spend on
+             company overhead? 
+
+             G&A, excluding marketing: 
+
+             input_type:.......................number
+             input_sub_type:...................currency
+             _active:..........................True
+             main_caption:.....................None
+             r_max:............................1000000000
+             r_min:............................0
+             response:.........................None
+             shadow:...........................None
+             user_can_add:.....................False
+
+ User:       8080
+
+
+
+ -----------------------------------------------------------
+ Progress:   |BBBBBBBBBBBBBBBBBBBBBB                       |
+ -----------------------------------------------------------
+
+
+in Analyzer.downStream
+starting analysis loop # 0
+starting analysis loop # 1
+starting analysis loop # 2
+starting analysis loop # 3
+sc1:      cr_scenario.........................................................None    
+annual ebitda:  1444433.599999994
+scaled:  722216.8
+scaled = max(0,scaled)
+scaled (post-adj):  722216.8
+using standard_scenario
+mod_scenario['term'] 3
+mod_scenario.changeElement("size",scaled)
+mod_scenario['size'] 722216.8
+ref = CR_Reference(mod_scenario)
+ref:      cr_reference........................................................None    
+ref[bad]['size']:  722216.8
+ref[mid]['size']:  722216.8
+ref[good]['size']:  722216.8
+scaled:  1444433.6
+scaled = max(0,scaled)
+scaled (post-adj):  1444433.6
+using standard_scenario
+mod_scenario['term'] 3
+mod_scenario.changeElement("size",scaled)
+mod_scenario['size'] 1444433.6
+ref = CR_Reference(mod_scenario)
+ref:      cr_reference........................................................None    
+ref[bad]['size']:  1444433.6
+ref[mid]['size']:  1444433.6
+ref[good]['size']:  1444433.6
+scaled:  2166650.4
+scaled = max(0,scaled)
+scaled (post-adj):  2166650.4
+using standard_scenario
+mod_scenario['term'] 3
+mod_scenario.changeElement("size",scaled)
+mod_scenario['size'] 2166650.4
+ref = CR_Reference(mod_scenario)
+ref:      cr_reference........................................................None    
+ref[bad]['size']:  2166650.4
+ref[mid]['size']:  2166650.4
+ref[good]['size']:  2166650.4
+scaled:  2888867.2
+scaled = max(0,scaled)
+scaled (post-adj):  2888867.2
+using standard_scenario
+mod_scenario['term'] 3
+mod_scenario.changeElement("size",scaled)
+mod_scenario['size'] 2888867.2
+ref = CR_Reference(mod_scenario)
+ref:      cr_reference........................................................None    
+ref[bad]['size']:  2888867.2
+ref[mid]['size']:  2888867.2
+ref[good]['size']:  2888867.2
+scaled:  3611084.0
+scaled = max(0,scaled)
+scaled (post-adj):  3611084.0
+using standard_scenario
+mod_scenario['term'] 3
+mod_scenario.changeElement("size",scaled)
+mod_scenario['size'] 3611084.0
+ref = CR_Reference(mod_scenario)
+ref:      cr_reference........................................................None    
+ref[bad]['size']:  3611084.0
+ref[mid]['size']:  3611084.0
+ref[good]['size']:  3611084.0
+scaled:  4333300.8
+scaled = max(0,scaled)
+scaled (post-adj):  4333300.8
+using standard_scenario
+mod_scenario['term'] 3
+mod_scenario.changeElement("size",scaled)
+mod_scenario['size'] 4333300.8
+ref = CR_Reference(mod_scenario)
+ref:      cr_reference........................................................None    
+ref[bad]['size']:  4333300.8
+ref[mid]['size']:  4333300.8
+ref[good]['size']:  4333300.8
+scaled:  5055517.6
+scaled = max(0,scaled)
+scaled (post-adj):  5055517.6
+using standard_scenario
+mod_scenario['term'] 3
+mod_scenario.changeElement("size",scaled)
+mod_scenario['size'] 5055517.6
+ref = CR_Reference(mod_scenario)
+ref:      cr_reference........................................................None    
+ref[bad]['size']:  5055517.6
+ref[mid]['size']:  5055517.6
+ref[good]['size']:  5055517.6
+scaled:  5777734.4
+scaled = max(0,scaled)
+scaled (post-adj):  5777734.4
+using standard_scenario
+mod_scenario['term'] 3
+mod_scenario.changeElement("size",scaled)
+mod_scenario['size'] 5777734.4
+ref = CR_Reference(mod_scenario)
+ref:      cr_reference........................................................None    
+ref[bad]['size']:  5777734.4
+ref[mid]['size']:  5777734.4
+ref[good]['size']:  5777734.4
+scaled:  6499951.2
+scaled = max(0,scaled)
+scaled (post-adj):  6499951.2
+using standard_scenario
+mod_scenario['term'] 3
+mod_scenario.changeElement("size",scaled)
+mod_scenario['size'] 6499951.2
+ref = CR_Reference(mod_scenario)
+ref:      cr_reference........................................................None    
+ref[bad]['size']:  6499951.2
+ref[mid]['size']:  6499951.2
+ref[good]['size']:  6499951.2
+scaled:  7222168.0
+scaled = max(0,scaled)
+scaled (post-adj):  7222168.0
+using standard_scenario
+mod_scenario['term'] 3
+mod_scenario.changeElement("size",scaled)
+mod_scenario['size'] 7222168.0
+ref = CR_Reference(mod_scenario)
+ref:      cr_reference........................................................None    
+ref[bad]['size']:  7222168.0
+ref[mid]['size']:  7222168.0
+ref[good]['size']:  7222168.0
+known_vals:  [722216.8, 1444433.6, 2166650.4, 2888867.2, 3611084.0, 4333300.8, 5055517.6, 5777734.4, 6499951.2, 7222168.0]
+known_vals:  [722216.8, 1444433.6, 2000000, 2166650.4, 2888867.2, 3611084.0, 4333300.8, 5055517.6, 5777734.4, 6499951.2, 7222168.0]
+k:  2000000.0
+std_val:  2000000.0
+k:  mid
+std_val:  None
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+all_keys:  [2000000.0]
+clean_keys:  [2000000.0]
+k:  2000000.0
+std_val:  2000000.0
+k:  mid
+std_val:  None
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+all_keys:  [2000000.0]
+clean_keys:  [2000000.0]
+k:  mid
+std_val:  None
+k:  2888867.2
+std_val:  2888867.2
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+all_keys:  [2888867.2]
+clean_keys:  [2888867.2]
+k:  7222168.0
+std_val:  7222168.0
+k:  mid
+std_val:  None
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+all_keys:  [7222168.0]
+clean_keys:  [7222168.0]
+k:  2000000.0
+std_val:  2000000.0
+k:  mid
+std_val:  None
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+all_keys:  [2000000.0]
+clean_keys:  [2000000.0]
+k:  7222168.0
+std_val:  7222168.0
+k:  mid
+std_val:  None
+k:  6499951.2
+std_val:  6499951.2
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+all_keys:  [7222168.0, 6499951.2]
+clean_keys:  [7222168.0, 6499951.2]
+k:  mid
+std_val:  None
+k:  6499951.2
+std_val:  6499951.2
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+all_keys:  [6499951.2]
+clean_keys:  [6499951.2]
+k:  mid
+std_val:  None
+k:  4333300.8
+std_val:  4333300.8
+k:  5777734.4
+std_val:  5777734.4
+k:  good
+std_val:  None
+k:  5055517.6
+std_val:  5055517.6
+k:  bad
+std_val:  None
+all_keys:  [4333300.8, 5055517.6, 5777734.4]
+clean_keys:  [4333300.8, 5777734.4, 5055517.6]
+k:  mid
+std_val:  None
+k:  5055517.6
+std_val:  5055517.6
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+all_keys:  [5055517.6]
+clean_keys:  [5055517.6]
+k:  mid
+std_val:  None
+k:  5777734.4
+std_val:  5777734.4
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+all_keys:  [5777734.4]
+clean_keys:  [5777734.4]
+k:  mid
+std_val:  None
+k:  5055517.6
+std_val:  5055517.6
+k:  5777734.4
+std_val:  5777734.4
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+all_keys:  [5055517.6, 5777734.4]
+clean_keys:  [5055517.6, 5777734.4]
+k:  mid
+std_val:  None
+k:  2166650.4
+std_val:  2166650.4
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+all_keys:  [2166650.4]
+clean_keys:  [2166650.4]
+k:  mid
+std_val:  None
+k:  2166650.4
+std_val:  2166650.4
+k:  2888867.2
+std_val:  2888867.2
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+all_keys:  [2166650.4, 2888867.2]
+clean_keys:  [2166650.4, 2888867.2]
+k:  mid
+std_val:  None
+k:  3611084.0
+std_val:  3611084.0
+k:  4333300.8
+std_val:  4333300.8
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+all_keys:  [4333300.8, 3611084.0]
+clean_keys:  [3611084.0, 4333300.8]
+k:  mid
+std_val:  None
+k:  2888867.2
+std_val:  2888867.2
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+all_keys:  [2888867.2]
+clean_keys:  [2888867.2]
+k:  mid
+std_val:  None
+k:  3611084.0
+std_val:  3611084.0
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+all_keys:  [3611084.0]
+clean_keys:  [3611084.0]
+k:  mid
+std_val:  None
+k:  2166650.4
+std_val:  2166650.4
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+all_keys:  [2166650.4]
+clean_keys:  [2166650.4]
+k:  mid
+std_val:  None
+k:  4333300.8
+std_val:  4333300.8
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+all_keys:  [4333300.8]
+clean_keys:  [4333300.8]
+k:  7222168.0
+std_val:  7222168.0
+k:  mid
+std_val:  None
+k:  6499951.2
+std_val:  6499951.2
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+all_keys:  [7222168.0, 6499951.2]
+clean_keys:  [7222168.0, 6499951.2]
+k:  mid
+std_val:  None
+k:  3611084.0
+std_val:  3611084.0
+k:  bad
+std_val:  None
+k:  good
+std_val:  None
+all_keys:  [3611084.0]
+clean_keys:  [3611084.0]
+starting analysis loop # 4
+starting analysis loop # 5
+in Analyzer.downStream
+finished analysis loop
+n is:  0
+{'size': {'hi': 7222168.0, 'lo': 2000000}, 'price': {'hi': 0.165, 'lo': 0.0325}}
+{'size': {'hi': 7222168.0, 'lo': 2000000}, 'price': {'hi': 0.165, 'lo': 0.0325}}
+finished analysis loop
+n is:  6
+
+    Start with a blank portal message. Call Engine through the API interface for
+    the next message. Use the Simple Portal to process the engine output. Repeat
+    until Engine returns an end-interview message.
+    
+    For any message, Portal will collect the user response (here, from the
+    script), package the response into an API-spec PortalResponse object, and
+    return a new, conforming message.
+
+    Use the Engine's checkMessageStatus function to figure out when to stop.
+    
+    loop = True
+    while loop:
+        msg_1 = Engine.process_interview(msg_0)
+        msg_mqr = Engine.to_engine(msg_1)
+        #
+        status = Globals.checkMessageStatus(msg_mqr)
+        if status == Globals.status_endSession:
+            final_message = msg_1
+            break
+        else:
+            msg_2 = Portal.process(msg_1)
+            msg_0 = msg_2
+            continue
+    
+
+
+
+    Engine successfully concluded the interview and stored the final message
+    for grading. 
+
+    Test does not print final_message because it contains a long string for the
+    serialized e_model.
+
+    Grader will individually evaluate whether the final message satisfies the
+    standard.
+    
+
+
+
+    Now store stateless string views of company financials for current period
+    and the current period iteself. Grader will compare these to standard too.
+
+    Pull both Blackbird objects from an engine-format conversion of the final
+    message.
+    
+
+
+
+    Discard PortalModel[``e_model``] to keep output compact.
+    
+
+BLACKBIRD DIAGNOSTICS BLACKBIRD DIAGNOSTICS BLACKBIRD DIAGNOSTICS BLACKBIRD DIA
+
+start time:  1436534132.781164
+end time:    1436534154.752722
+run time:    21.971558094024658
+****************************************
+
+RESULT:
+	name:           ... (truncated) 
+
+	output:         ... (truncated) 
+
+	errors:         [] 
+
+	completed:      True 
+
+	passed:         False 
+
+	rubric:         None 
+
+

@@ -6,7 +6,7 @@
 #Blackbird Diagnostics
 #Module: Tests.Basic.interview_test_template.__init__
 """
-Standard test interface module. See the 4-step Quick Use instructions in
+Standard test interface module. See the 3-step Quick Use instructions in
 Task. 
 
 Reporting structure: 
@@ -46,7 +46,7 @@ import traceback
 
 
 #globals
-name = "interview_test_template"
+name = "retail interview 4, low overhead w no pending leases."
 #
 element = "BLACKBIRD DIAGNOSTICS "
 border = element * 100
