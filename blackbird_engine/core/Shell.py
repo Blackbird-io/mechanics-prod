@@ -87,13 +87,19 @@ def continuous(first_message = None, cycles = 200, portal_format = False):
     """
 
 
-    Shell.continuous([max_tries = 200]) -> msg
+    Shell.continuous([first_message = None
+                     [, cycles = 200
+                     [, portal_format = False]]]) -> obj
 
 
     Function runs a continuous processing loop until Engine completes the
     interview or the number of iterations exceeds the ``cycles``
     circuit-breaker, whichever is earlier. Function then returns the last
     message.
+
+    Cycles count the number of moves between Shell and Engine, so each question
+    or answer takes up one cycle. To get a model after 6 scripted answers, run
+    the function for 12 cycles.
 
     Function will start work from the first_message, if one is specified. The
     first message **must** be in PortalMessage format. Without a first message,
