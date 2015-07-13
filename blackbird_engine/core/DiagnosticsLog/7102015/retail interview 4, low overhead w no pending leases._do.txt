@@ -7,12 +7,12 @@ Running Task.do() for ``retail interview 4, low overhead w no pending leases.`` 
 
 
 Use script: 
-{'company start date?': [{'response': '1998-05-01'}], 'user name?': [{'response': 'Ilya'}], 'latest store open date?': [{'response': '2014-05-01'}], 'months to unit maturity?': [{'response': '36'}], 'ltm whole company marketing spend?': [{'response': '412'}], 'average monthly rent for a unit?': [{'response': '2000'}], 'unit employee expense per year?': [{'response': '300000'}], 'ltm whole company overhead, excluding marketing?': [{'response': '8080'}], 'company industry?': [{'response': 'Retail'}], 'number of signed new store leases?': [{'response': '0'}], 'user position?': [{'response': 'CEO'}], 'unit lifespan in years?': [{'response': '15'}], 'company name?': [{'response': 'Wal-Mart'}], 'number of business units?': [{'response': '30'}], 'average gross margin at a mature unit?': [{'response': '65'}], 'first store open date?': [{'response': '1999-03-01'}], 'annual unit revenue at maturity?': [{'response': '1000000'}], 'annual revenue at mature stores?': [{'response': '1000000'}]}
+{'annual revenue at mature stores?': [{'response': '1000000'}], 'number of signed new store leases?': [{'response': '0'}], 'user name?': [{'response': 'Ilya'}], 'latest store open date?': [{'response': '2014-05-01'}], 'unit employee expense per year?': [{'response': '300000'}], 'unit lifespan in years?': [{'response': '15'}], 'user position?': [{'response': 'CEO'}], 'number of business units?': [{'response': '30'}], 'ltm whole company marketing spend?': [{'response': '412'}], 'company start date?': [{'response': '1998-05-01'}], 'company name?': [{'response': 'Wal-Mart'}], 'company industry?': [{'response': 'Retail'}], 'annual unit revenue at maturity?': [{'response': '1000000'}], 'ltm whole company overhead, excluding marketing?': [{'response': '8080'}], 'months to unit maturity?': [{'response': '36'}], 'first store open date?': [{'response': '1999-03-01'}], 'average gross margin at a mature unit?': [{'response': '65'}], 'average monthly rent for a unit?': [{'response': '2000'}]}
 
 Portal.set_script(active_script)
 msg_0 = Portal.starting_message
 Starting message: 
-{'Q': None, 'R': None, 'M': {'e_model': None, 'business_id': 99999999, 'tags': None, 'user_context': None, 'business_name': None, 'industry': None, 'summary': None}}
+{'M': {'tags': None, 'e_model': None, 'user_context': None, 'business_id': 99999999, 'summary': None, 'business_name': None, 'industry': None}, 'Q': None, 'R': None}
 
 final_message = None
 
@@ -656,23 +656,23 @@ ref[mid]['size']:  7222168.0
 ref[good]['size']:  7222168.0
 known_vals:  [722216.8, 1444433.6, 2166650.4, 2888867.2, 3611084.0, 4333300.8, 5055517.6, 5777734.4, 6499951.2, 7222168.0]
 known_vals:  [722216.8, 1444433.6, 2000000, 2166650.4, 2888867.2, 3611084.0, 4333300.8, 5055517.6, 5777734.4, 6499951.2, 7222168.0]
-k:  2000000.0
-std_val:  2000000.0
 k:  mid
 std_val:  None
-k:  bad
-std_val:  None
+k:  2000000.0
+std_val:  2000000.0
 k:  good
+std_val:  None
+k:  bad
 std_val:  None
 all_keys:  [2000000.0]
 clean_keys:  [2000000.0]
-k:  2000000.0
-std_val:  2000000.0
 k:  mid
 std_val:  None
-k:  bad
-std_val:  None
+k:  2000000.0
+std_val:  2000000.0
 k:  good
+std_val:  None
+k:  bad
 std_val:  None
 all_keys:  [2000000.0]
 clean_keys:  [2000000.0]
@@ -680,41 +680,51 @@ k:  mid
 std_val:  None
 k:  2888867.2
 std_val:  2888867.2
-k:  bad
-std_val:  None
 k:  good
+std_val:  None
+k:  bad
 std_val:  None
 all_keys:  [2888867.2]
 clean_keys:  [2888867.2]
-k:  7222168.0
-std_val:  7222168.0
 k:  mid
 std_val:  None
-k:  bad
-std_val:  None
-k:  good
-std_val:  None
-all_keys:  [7222168.0]
-clean_keys:  [7222168.0]
 k:  2000000.0
 std_val:  2000000.0
-k:  mid
+k:  good
 std_val:  None
 k:  bad
-std_val:  None
-k:  good
 std_val:  None
 all_keys:  [2000000.0]
 clean_keys:  [2000000.0]
-k:  7222168.0
-std_val:  7222168.0
 k:  mid
 std_val:  None
-k:  6499951.2
-std_val:  6499951.2
+k:  7222168.0
+std_val:  7222168.0
+k:  good
+std_val:  None
 k:  bad
 std_val:  None
+all_keys:  [7222168.0]
+clean_keys:  [7222168.0]
+k:  mid
+std_val:  None
+k:  3611084.0
+std_val:  3611084.0
 k:  good
+std_val:  None
+k:  bad
+std_val:  None
+all_keys:  [3611084.0]
+clean_keys:  [3611084.0]
+k:  mid
+std_val:  None
+k:  7222168.0
+std_val:  7222168.0
+k:  6499951.2
+std_val:  6499951.2
+k:  good
+std_val:  None
+k:  bad
 std_val:  None
 all_keys:  [7222168.0, 6499951.2]
 clean_keys:  [7222168.0, 6499951.2]
@@ -722,33 +732,33 @@ k:  mid
 std_val:  None
 k:  6499951.2
 std_val:  6499951.2
-k:  bad
-std_val:  None
 k:  good
+std_val:  None
+k:  bad
 std_val:  None
 all_keys:  [6499951.2]
 clean_keys:  [6499951.2]
-k:  mid
-std_val:  None
 k:  4333300.8
 std_val:  4333300.8
+k:  good
+std_val:  None
 k:  5777734.4
 std_val:  5777734.4
-k:  good
+k:  bad
+std_val:  None
+k:  mid
 std_val:  None
 k:  5055517.6
 std_val:  5055517.6
-k:  bad
-std_val:  None
 all_keys:  [4333300.8, 5055517.6, 5777734.4]
 clean_keys:  [4333300.8, 5777734.4, 5055517.6]
 k:  mid
 std_val:  None
 k:  5055517.6
 std_val:  5055517.6
-k:  bad
-std_val:  None
 k:  good
+std_val:  None
+k:  bad
 std_val:  None
 all_keys:  [5055517.6]
 clean_keys:  [5055517.6]
@@ -756,9 +766,9 @@ k:  mid
 std_val:  None
 k:  5777734.4
 std_val:  5777734.4
-k:  bad
-std_val:  None
 k:  good
+std_val:  None
+k:  bad
 std_val:  None
 all_keys:  [5777734.4]
 clean_keys:  [5777734.4]
@@ -768,9 +778,9 @@ k:  5055517.6
 std_val:  5055517.6
 k:  5777734.4
 std_val:  5777734.4
-k:  bad
-std_val:  None
 k:  good
+std_val:  None
+k:  bad
 std_val:  None
 all_keys:  [5055517.6, 5777734.4]
 clean_keys:  [5055517.6, 5777734.4]
@@ -778,9 +788,9 @@ k:  mid
 std_val:  None
 k:  2166650.4
 std_val:  2166650.4
-k:  bad
-std_val:  None
 k:  good
+std_val:  None
+k:  bad
 std_val:  None
 all_keys:  [2166650.4]
 clean_keys:  [2166650.4]
@@ -790,9 +800,9 @@ k:  2166650.4
 std_val:  2166650.4
 k:  2888867.2
 std_val:  2888867.2
-k:  bad
-std_val:  None
 k:  good
+std_val:  None
+k:  bad
 std_val:  None
 all_keys:  [2166650.4, 2888867.2]
 clean_keys:  [2166650.4, 2888867.2]
@@ -802,9 +812,9 @@ k:  3611084.0
 std_val:  3611084.0
 k:  4333300.8
 std_val:  4333300.8
-k:  bad
-std_val:  None
 k:  good
+std_val:  None
+k:  bad
 std_val:  None
 all_keys:  [4333300.8, 3611084.0]
 clean_keys:  [3611084.0, 4333300.8]
@@ -812,29 +822,19 @@ k:  mid
 std_val:  None
 k:  2888867.2
 std_val:  2888867.2
-k:  bad
-std_val:  None
 k:  good
+std_val:  None
+k:  bad
 std_val:  None
 all_keys:  [2888867.2]
 clean_keys:  [2888867.2]
 k:  mid
 std_val:  None
-k:  3611084.0
-std_val:  3611084.0
-k:  bad
-std_val:  None
-k:  good
-std_val:  None
-all_keys:  [3611084.0]
-clean_keys:  [3611084.0]
-k:  mid
-std_val:  None
 k:  2166650.4
 std_val:  2166650.4
-k:  bad
-std_val:  None
 k:  good
+std_val:  None
+k:  bad
 std_val:  None
 all_keys:  [2166650.4]
 clean_keys:  [2166650.4]
@@ -842,21 +842,21 @@ k:  mid
 std_val:  None
 k:  4333300.8
 std_val:  4333300.8
-k:  bad
-std_val:  None
 k:  good
+std_val:  None
+k:  bad
 std_val:  None
 all_keys:  [4333300.8]
 clean_keys:  [4333300.8]
-k:  7222168.0
-std_val:  7222168.0
 k:  mid
 std_val:  None
+k:  7222168.0
+std_val:  7222168.0
 k:  6499951.2
 std_val:  6499951.2
-k:  bad
-std_val:  None
 k:  good
+std_val:  None
+k:  bad
 std_val:  None
 all_keys:  [7222168.0, 6499951.2]
 clean_keys:  [7222168.0, 6499951.2]
@@ -864,9 +864,9 @@ k:  mid
 std_val:  None
 k:  3611084.0
 std_val:  3611084.0
-k:  bad
-std_val:  None
 k:  good
+std_val:  None
+k:  bad
 std_val:  None
 all_keys:  [3611084.0]
 clean_keys:  [3611084.0]
@@ -875,8 +875,8 @@ starting analysis loop # 5
 in Analyzer.downStream
 finished analysis loop
 n is:  0
-{'size': {'hi': 7222168.0, 'lo': 2000000}, 'price': {'hi': 0.165, 'lo': 0.0325}}
-{'size': {'hi': 7222168.0, 'lo': 2000000}, 'price': {'hi': 0.165, 'lo': 0.0325}}
+{'size': {'lo': 2000000, 'hi': 7222168.0}, 'price': {'lo': 0.0325, 'hi': 0.165}}
+{'size': {'lo': 2000000, 'hi': 7222168.0}, 'price': {'lo': 0.0325, 'hi': 0.165}}
 finished analysis loop
 n is:  6
 
@@ -933,9 +933,9 @@ n is:  6
 
 BLACKBIRD DIAGNOSTICS BLACKBIRD DIAGNOSTICS BLACKBIRD DIAGNOSTICS BLACKBIRD DIA
 
-start time:  1436534132.781164
-end time:    1436534154.752722
-run time:    21.971558094024658
+start time:  1436534334.451752
+end time:    1436534356.832419
+run time:    22.380666971206665
 ****************************************
 
 RESULT:

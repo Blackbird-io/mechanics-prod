@@ -42,17 +42,21 @@ from .SelectionTracker import SelectionTracker
 #classes
 class Guide:
     """
+
     This class provides an instrumentation cluster for objects that may serve as
     a focal point for MatchMaker.
-
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
-    quality               instance of QualityTracker
-    attention             instance of AttentionTracker
-    selection             instance of SelectionTracker
-    priority              instance of Counter
 
+    DATA:
+    attention             instance of AttentionTracker
+    complete              bool; convenience marker used by external objects
+    quality               instance of QualityTracker
+    priority              instance of Counter
+    selection             instance of SelectionTracker
+    
+    FUNCTIONS:
     reset()               reruns __init__ on self
     ====================  ======================================================
     """

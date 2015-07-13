@@ -40,7 +40,7 @@ import BBExceptions
 from . import completion_rules
 from . import selection_rules
 
-from .controller import Controller
+from .controller import GenericController as Controller
 from .level import Level
 
 
@@ -162,14 +162,14 @@ class Interviewer(Controller):
         priorities = sorted(levels.keys(), reverse = True)
         for priority in priorities:
             level = levels[priority]
-            if level.complete:
+            if level.guide.complete:
                 continue
             else:
                 fp = selector(level, model)
                 if fp:
                     break
                 else:
-                    level.complete = True
+                    level.guide.complete = True
                     continue
         #
         return fp
@@ -189,14 +189,14 @@ class Interviewer(Controller):
         priority. 
         """
         levels = dict()
-        for item in container.items:
+        for item in container:
             if not item.guide.priority.current:
                 #skip 0-priority items
                 continue
             else:
                 p = item.guide.priority.current
                 peer_level = levels.setdefault(p, Level())
-                peer_level.append(p)
+                peer_level.append(item)
         #
         return levels
 
@@ -253,7 +253,7 @@ class Interviewer(Controller):
         """
         #
         fp = None
-        Controller.process(self, msg)
+        Controller.process(self, mqr)
         #
         model = self.MR.activeModel
         #
@@ -263,7 +263,9 @@ class Interviewer(Controller):
         routine = None
         #
         if known_rule:
-            if not known_rule(old_fp):
+            if known_rule(old_fp):
+                pass
+            else:
                 fp = old_fp
                 #rule says that old_fp is not yet complete. keep fp constant.
         if not fp:
@@ -279,16 +281,21 @@ class Interviewer(Controller):
             #explicitly.
             #
             fp = routine(self, model)
+        double_check = False
         if not fp:
+            double_check = True
+        if double_check:
             model.interview.reset_cache()
             fp = routine(self, model)
             #if protocol routine doesnt find a focal point, reset cache and
             #try again. dont want to finish prematurely.
         #
+        model.interview.set_focal_point(fp)
+        #
         if not fp:
             new_mqr = self.wrap_interview(model)
         else:
-            self.set_progress(model)
+            self.set_progress(model)   
             new_mqr = self.wrap_point(model)
         #
         return new_mqr
@@ -344,7 +351,7 @@ class Interviewer(Controller):
         using selector_quality.
 
         Method treats all objects with defined priority as equally important. 
-        """
+        """ 
         path = model.interview.path
         model.interview.levels = self.prioritize_single(path)
         fp = self.focus(model, selection_rules.for_quality)
@@ -390,15 +397,16 @@ class Interviewer(Controller):
         """
         fp = model.interview.focal_point
         path = model.interview.path
-        try:
-            i = path.index(fp)
-            new_progress = i/len(path)
-            new_progress = new_progress * 100
-            new_progress = round(new_progress)
-            model.interview.set_progress(new_progress)
-        except ValueError:
-            #external focal point, do nothing            
-            pass
+        if path:
+            try:
+                i = path.index(fp)
+                new_progress = i/len(path)
+                new_progress = new_progress * 100
+                new_progress = round(new_progress)
+                model.interview.set_progress(new_progress)
+            except ValueError:
+                #external focal point, do nothing            
+                pass
 
     def wrap_interview(self, model):
         """
@@ -412,7 +420,9 @@ class Interviewer(Controller):
         message. Instance.MR stores the message until reset.     
         """
         stop = Globals.END_INTERVIEW
-        new_mqr = self.MR.generateMessage(m = model, r = stop)
+        #
+        self.MR.generateMessage(m = model, r = stop)
+        new_mqr = self.MR.messageOut
         #
         return new_mqr
 
@@ -430,7 +440,9 @@ class Interviewer(Controller):
         m = model
         q = self.MR.activeQuestion
         r = self.MR.activeResponse
-        new_mqr = self.MR.generateMessage(m, q, r)
+        #
+        self.MR.generateMessage(m, q, r)
+        new_mqr = self.MR.messageOut
         #
         return new_mqr        
     

@@ -47,12 +47,17 @@ def check_quality_only(item):
 
     Function returns True iff:
     (1) item quality is at or above item's own quality standard.
+
+    Function marks complete = True on objects that pass and False on those that
+    fail.
     """
     complete = False
     #
     standard = item.guide.quality.standard
     if item.guide.quality.current >= standard:
         complete = True
+    #
+    item.guide.complete = complete
     #
     return complete
 
@@ -65,7 +70,10 @@ def check_quality_or_attention(item):
 
     Function returns True iff:
     (1) item quality is at or above item's own quality standard, or
-    (2) item attention spend is at or above item's own attention budget.    
+    (2) item attention spend is at or above item's own attention budget.
+
+    Function marks complete = True on objects that pass and False on those that
+    fail.
     """
     complete = False
     #
@@ -83,5 +91,7 @@ def check_quality_or_attention(item):
     #
     if any(worked_out, asked_out):
         complete = True
+    #
+    item.guide.complete = complete
     #
     return complete

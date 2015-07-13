@@ -42,8 +42,8 @@ import BBExceptions
 
 from DataStructures.Platform.Messenger import Messenger
 
-from . import Analyzer
-from . import Starter
+from . import analyzer
+from . import starter
 
 
 
@@ -84,8 +84,8 @@ def process(message_in):
 
     Function delegates all work to more junior modules. For messages that are
     empty (msg == (None, None, None)) or signal the start of an interview under
-    the Engine-Wrapper API, function delegates work to Starter. For all other
-    messages, function delegates work to Analyzer.
+    the Engine-Wrapper API, function delegates work to starter. For all other
+    messages, function delegates work to analyzer.
 
     To allow admin to look inside the function-time operation, function stores
     message_in on MR. Function clears MR at the beginning of each call. 
@@ -103,13 +103,13 @@ def process(message_in):
         raise BBExceptions.PortalError(c)
     #
     if not check_started(message_in):
-        message_mid = Starter.process(message_in)
-        message_out = Analyzer.process(message_mid)
+        message_mid = starter.process(message_in)
+        message_out = analyzer.process(message_mid)
     else:
-        message_out = Analyzer.process(message_in)
+        message_out = analyzer.process(message_in)
         #
-        #Analyzer will determine when it's time to conclude the interview. At
-        #that time, Analyzer will return a M_End message. In continuous
+        #analyzer will determine when it's time to conclude the interview. At
+        #that time, analyzer will return a M_End message. In continuous
         #operation, Shell will terminate the collection-analysis loop when it
         #receives this type of message. Web Portal reacts the same way.
     #
@@ -126,13 +126,13 @@ def process_analytics(starting_model):
     Function returns the starting model with market analytics data. 
     
     Function packages the starting model into a (M,_,_) message. Function then
-    passes the message down to Analyzer.process_analytics() for actual work.
+    passes the message down to analyzer.process_analytics() for actual work.
 
     NOTE: The output model should generally have the same memory address as the
     input model, but function does not guarantee shared or different identity. 
     """
     msg = (starting_model, None, None)
-    msg = Analyzer.process_analytics(msg)
+    msg = analyzer.process_analytics(msg)
     updated_model = msg[0]
     return updated_model
 
@@ -146,13 +146,13 @@ def process_summary(starting_model):
     Function returns the starting model with a summary.
     
     Function packages the starting model into a (M,_,_) message. Function then
-    passes the message down to Analyzer.process_summary() for actual work.
+    passes the message down to analyzer.process_summary() for actual work.
 
     NOTE: The output model should generally have the same memory address as the
     input model, but function does not guarantee shared or different identity. 
     """
     msg = (starting_model, None, None)
-    msg = Analyzer.process_summary(msg)
+    msg = analyzer.process_summary(msg)
     updated_model = msg[0]
     return updated_model
     
