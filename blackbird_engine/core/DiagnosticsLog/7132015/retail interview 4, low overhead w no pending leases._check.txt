@@ -1,0 +1,393 @@
+
+BLACKBIRD DIAGNOSTICS BLACKBIRD DIAGNOSTICS BLACKBIRD DIAGNOSTICS BLACKBIRD DIA
+
+Running check() on ``retail interview 4, low overhead w no pending leases.`` result . . . .
+
+
+
+
+First, check whether build completed result without exceptions.
+No exceptions in result, build completed Task successfully.
+
+
+Second, check whether output matches standard.
+
+
+        This Grader checks whether the Engine delivered output that matches
+        expectations for a known set of inputs.
+        
+        
+T.01: compare output.
+
+        new_output = result["output"]
+        std_output = standard["output"]
+        
+
+
+        Check that new output contains all of the standard data. New output can
+        pass test when it supplements expected data with additional information.
+        
+        
+
+
+        outcome = walk_dict(std_output, new_output)
+        
+        
+
+        Running walk_dict() for the following:
+    
+        std = {'2. current period': '********************************************************************************\n\t starts:  \t2015-06-01\n\t ends:    \t2015-06-30\n\t content: \t\n+=====================+\n| NAME  :    wal-mart |\n| ID    : ...cfaae4f5 |\n| DOB   :  1998-05-01 |\n| LIFE  :         34% |\n| STAGE :    MATURITY |\n| TYPE  :     COMPANY |\n| FILL  :        True |\n| SIZE  :           1 |\n| COMPS :          30 |\n+=====================+\n\n********************************************************************************\n', '1. final message': {'R': 'END_interview', 'Q': None, 'M': {'user_context': None, 'summary': {'credit_capacity': 5777734.4, 'cost': 6156500.000000002, 'operating expense': 9980533.2, 'revenue': 17589999.999999996, 'ebitda': 1444433.599999994, 'sg&a': 8533.2}, 'business_id': 99999999, 'tags': None, 'industry': 'Retail', 'business_name': None}}, '3. company financials': '\n  overview................................................................None  \n  |bb|start introduction..................................................None  \n  |bb|end introduction....................................................None  \n  |bb|start income statement..............................................None  \n  revenue...........................................................1465833.33  \n  cost...............................................................513041.67  \n  operating expense.......................................................None  \n    sg&a..................................................................None  \n      marketing..........................................................37.77  \n      g&a...............................................................673.33  \n    total sg&a..........................................................711.10  \n    employee expense.................................................750000.00  \n    rent..............................................................60000.00  \n    utilities..........................................................3000.00  \n    miscellanious.........................................................None  \n      security.........................................................3000.00  \n      it..............................................................15000.00  \n    total miscellanious...............................................18000.00  \n  total operating expense............................................831711.10  \n  ebitda.............................................................120369.47  \n  |bb|end income statement................................................None  \n  |bb|start cash flow statement...........................................None  \n  |bb|end cash flow statement.............................................None  \n  |bb|start starting balance sheet........................................None  \n  |bb|end starting balance sheet..........................................None  \n  |bb|start ending balance sheet..........................................None  \n  |bb|end starting balance sheet..........................................None  \n'}
+        new = {'3. company financials': '\n  overview................................................................None  \n  |bb|start introduction..................................................None  \n  |bb|end introduction....................................................None  \n  |bb|start income statement..............................................None  \n  revenue...........................................................1465833.33  \n  cost...............................................................513041.67  \n  operating expense.......................................................None  \n    sg&a..................................................................None  \n      marketing..........................................................37.77  \n      g&a...............................................................673.33  \n    total sg&a..........................................................711.10  \n    employee expense.................................................750000.00  \n    rent..............................................................60000.00  \n    utilities..........................................................3000.00  \n    miscellanious.........................................................None  \n      security.........................................................3000.00  \n      it..............................................................15000.00  \n    total miscellanious...............................................18000.00  \n  total operating expense............................................831711.10  \n  ebitda.............................................................120369.47  \n  |bb|end income statement................................................None  \n  |bb|start cash flow statement...........................................None  \n  |bb|end cash flow statement.............................................None  \n  |bb|start starting balance sheet........................................None  \n  |bb|end starting balance sheet..........................................None  \n  |bb|start ending balance sheet..........................................None  \n  |bb|end starting balance sheet..........................................None  \n', '1. final message': {'R': 'END_interview', 'Q': None, 'M': {'tags': None, 'business_name': None, 'business_id': 99999999, 'summary': {'credit_capacity': 5777734.4, 'cost': 6156500.000000002, 'operating expense': 9980533.2, 'revenue': 17589999.999999996, 'sg&a': 8533.2, 'ebitda': 1444433.599999994}, 'industry': 'Retail', 'user_context': None}}, '2. current period': '********************************************************************************\n\t starts:  \t2015-06-01\n\t ends:    \t2015-06-30\n\t content: \t\n+=====================+\n| NAME  :    wal-mart |\n| ID    : ...cfaae4f5 |\n| DOB   :  1998-05-01 |\n| LIFE  :         34% |\n| STAGE :    MATURITY |\n| TYPE  :     COMPANY |\n| FILL  :        True |\n| SIZE  :           1 |\n| COMPS :          30 |\n+=====================+\n\n********************************************************************************\n'}
+        tab = 4
+    
+    
+    outcome = True
+    known_keys = std.keys()
+
+    0. Key: ``2. current period``
+
+        Known value: 
+        ********************************************************************************
+     starts:    2015-06-01
+     ends:      2015-06-30
+     content:   
++=====================+
+| NAME  :    wal-mart |
+| ID    : ...cfaae4f5 |
+| DOB   :  1998-05-01 |
+| LIFE  :         34% |
+| STAGE :    MATURITY |
+| TYPE  :     COMPANY |
+| FILL  :        True |
+| SIZE  :           1 |
+| COMPS :          30 |
++=====================+
+
+********************************************************************************
+
+
+        New value:   
+        ********************************************************************************
+     starts:    2015-06-01
+     ends:      2015-06-30
+     content:   
++=====================+
+| NAME  :    wal-mart |
+| ID    : ...cfaae4f5 |
+| DOB   :  1998-05-01 |
+| LIFE  :         34% |
+| STAGE :    MATURITY |
+| TYPE  :     COMPANY |
+| FILL  :        True |
+| SIZE  :           1 |
+| COMPS :          30 |
++=====================+
+
+********************************************************************************
+
+
+
+    1. Key: ``1. final message``
+
+        Known value: 
+        {'R': 'END_interview', 'Q': None, 'M': {'user_context': None, 'summary': {'credit_capacity': 5777734.4, 'cost': 6156500.000000002, 'operating expense': 9980533.2, 'revenue': 17589999.999999996, 'ebitda': 1444433.599999994, 'sg&a': 8533.2}, 'business_id': 99999999, 'tags': None, 'industry': 'Retail', 'business_name': None}}
+
+        New value:   
+        {'R': 'END_interview', 'Q': None, 'M': {'tags': None, 'business_name': None, 'business_id': 99999999, 'summary': {'credit_capacity': 5777734.4, 'cost': 6156500.000000002, 'operating expense': 9980533.2, 'revenue': 17589999.999999996, 'sg&a': 8533.2, 'ebitda': 1444433.599999994}, 'industry': 'Retail', 'user_context': None}}
+
+
+
+        Running walk_dict() for the following:
+    
+        std = {'R': 'END_interview', 'Q': None, 'M': {'user_context': None, 'summary': {'credit_capacity': 5777734.4, 'cost': 6156500.000000002, 'operating expense': 9980533.2, 'revenue': 17589999.999999996, 'ebitda': 1444433.599999994, 'sg&a': 8533.2}, 'business_id': 99999999, 'tags': None, 'industry': 'Retail', 'business_name': None}}
+        new = {'R': 'END_interview', 'Q': None, 'M': {'tags': None, 'business_name': None, 'business_id': 99999999, 'summary': {'credit_capacity': 5777734.4, 'cost': 6156500.000000002, 'operating expense': 9980533.2, 'revenue': 17589999.999999996, 'sg&a': 8533.2, 'ebitda': 1444433.599999994}, 'industry': 'Retail', 'user_context': None}}
+        tab = 8
+    
+    
+        outcome = True
+        known_keys = std.keys()
+
+        0. Key: ``R``
+
+            Known value: 
+        END_interview
+
+            New value:   
+        END_interview
+
+
+        1. Key: ``Q``
+
+            Known value: 
+        None
+
+            New value:   
+        None
+
+
+        2. Key: ``M``
+
+            Known value: 
+        {'user_context': None, 'summary': {'credit_capacity': 5777734.4, 'cost': 6156500.000000002, 'operating expense': 9980533.2, 'revenue': 17589999.999999996, 'ebitda': 1444433.599999994, 'sg&a': 8533.2}, 'business_id': 99999999, 'tags': None, 'industry': 'Retail', 'business_name': None}
+
+            New value:   
+        {'tags': None, 'business_name': None, 'business_id': 99999999, 'summary': {'credit_capacity': 5777734.4, 'cost': 6156500.000000002, 'operating expense': 9980533.2, 'revenue': 17589999.999999996, 'sg&a': 8533.2, 'ebitda': 1444433.599999994}, 'industry': 'Retail', 'user_context': None}
+
+
+
+            Running walk_dict() for the following:
+    
+            std = {'user_context': None, 'summary': {'credit_capacity': 5777734.4, 'cost': 6156500.000000002, 'operating expense': 9980533.2, 'revenue': 17589999.999999996, 'ebitda': 1444433.599999994, 'sg&a': 8533.2}, 'business_id': 99999999, 'tags': None, 'industry': 'Retail', 'business_name': None}
+            new = {'tags': None, 'business_name': None, 'business_id': 99999999, 'summary': {'credit_capacity': 5777734.4, 'cost': 6156500.000000002, 'operating expense': 9980533.2, 'revenue': 17589999.999999996, 'sg&a': 8533.2, 'ebitda': 1444433.599999994}, 'industry': 'Retail', 'user_context': None}
+            tab = 12
+    
+    
+            outcome = True
+            known_keys = std.keys()
+
+            0. Key: ``user_context``
+
+                Known value: 
+            None
+
+                New value:   
+            None
+
+
+            1. Key: ``summary``
+
+                Known value: 
+            {'credit_capacity': 5777734.4, 'cost': 6156500.000000002, 'operating expense': 9980533.2, 'revenue': 17589999.999999996, 'ebitda': 1444433.599999994, 'sg&a': 8533.2}
+
+                New value:   
+            {'credit_capacity': 5777734.4, 'cost': 6156500.000000002, 'operating expense': 9980533.2, 'revenue': 17589999.999999996, 'sg&a': 8533.2, 'ebitda': 1444433.599999994}
+
+
+
+                Running walk_dict() for the following:
+    
+                std = {'credit_capacity': 5777734.4, 'cost': 6156500.000000002, 'operating expense': 9980533.2, 'revenue': 17589999.999999996, 'ebitda': 1444433.599999994, 'sg&a': 8533.2}
+                new = {'credit_capacity': 5777734.4, 'cost': 6156500.000000002, 'operating expense': 9980533.2, 'revenue': 17589999.999999996, 'sg&a': 8533.2, 'ebitda': 1444433.599999994}
+                tab = 16
+    
+    
+                outcome = True
+                known_keys = std.keys()
+
+                0. Key: ``credit_capacity``
+
+                    Known value: 
+                5777734.4
+
+                    New value:   
+                5777734.4
+
+
+                1. Key: ``cost``
+
+                    Known value: 
+                6156500.000000002
+
+                    New value:   
+                6156500.000000002
+
+
+                2. Key: ``operating expense``
+
+                    Known value: 
+                9980533.2
+
+                    New value:   
+                9980533.2
+
+
+                3. Key: ``revenue``
+
+                    Known value: 
+                17589999.999999996
+
+                    New value:   
+                17589999.999999996
+
+
+                4. Key: ``ebitda``
+
+                    Known value: 
+                1444433.599999994
+
+                    New value:   
+                1444433.599999994
+
+
+                5. Key: ``sg&a``
+
+                    Known value: 
+                8533.2
+
+                    New value:   
+                8533.2
+
+
+
+
+                outcome = True
+
+                return outcome
+
+                --
+
+
+
+            2. Key: ``business_id``
+
+                Known value: 
+            99999999
+
+                New value:   
+            99999999
+
+
+            3. Key: ``tags``
+
+                Known value: 
+            None
+
+                New value:   
+            None
+
+
+            4. Key: ``industry``
+
+                Known value: 
+            Retail
+
+                New value:   
+            Retail
+
+
+            5. Key: ``business_name``
+
+                Known value: 
+            None
+
+                New value:   
+            None
+
+
+
+
+            outcome = True
+
+            return outcome
+
+            --
+
+
+
+
+
+        outcome = True
+
+        return outcome
+
+        --
+
+
+
+    2. Key: ``3. company financials``
+
+        Known value: 
+        
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue...........................................................1465833.33  
+  cost...............................................................513041.67  
+  operating expense.......................................................None  
+    sg&a..................................................................None  
+      marketing..........................................................37.77  
+      g&a...............................................................673.33  
+    total sg&a..........................................................711.10  
+    employee expense.................................................750000.00  
+    rent..............................................................60000.00  
+    utilities..........................................................3000.00  
+    miscellanious.........................................................None  
+      security.........................................................3000.00  
+      it..............................................................15000.00  
+    total miscellanious...............................................18000.00  
+  total operating expense............................................831711.10  
+  ebitda.............................................................120369.47  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+
+
+        New value:   
+        
+  overview................................................................None  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue...........................................................1465833.33  
+  cost...............................................................513041.67  
+  operating expense.......................................................None  
+    sg&a..................................................................None  
+      marketing..........................................................37.77  
+      g&a...............................................................673.33  
+    total sg&a..........................................................711.10  
+    employee expense.................................................750000.00  
+    rent..............................................................60000.00  
+    utilities..........................................................3000.00  
+    miscellanious.........................................................None  
+      security.........................................................3000.00  
+      it..............................................................15000.00  
+    total miscellanious...............................................18000.00  
+  total operating expense............................................831711.10  
+  ebitda.............................................................120369.47  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+
+
+
+
+
+    outcome = True
+
+    return outcome
+
+    --
+
+
+
+New output includes expected data:  True
+T.01 finished. 
+
+
+RUBRIC:
+
+T.01.01: new includes standard .............................. True
+T.01: confirmed ............................................. True
+********************************************************************************
+********************************************************************************
+Build passes ``retail interview 4, low overhead w no pending leases.`` test:   True
+********************************************************************************
+********************************************************************************
+
+BLACKBIRD DIAGNOSTICS BLACKBIRD DIAGNOSTICS BLACKBIRD DIAGNOSTICS BLACKBIRD DIA
+
+start time:  1436796017.422023
+end time:    1436796017.437648
+run time:    0.015625
+****************************************
+PASSED:  True
+****************************************

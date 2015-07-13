@@ -54,7 +54,7 @@ from Managers import TopicManager
 
 from .yenta import Yenta
 
-from .AnalyticsController import AnalyticsController
+from .analytics_controller import AnalyticsController
 from .interviewer import Interviewer
 
 
@@ -302,7 +302,7 @@ def atx_up(self,msg):
     mStatus = Globals.checkMessageStatus(msg)
     self.setStatus(mStatus)
     M = msg[0]
-    self.upReady = M.analytics.protocol.complete
+    self.upReady = M.analytics.guide.complete
     return msg
 
 aLM2.upController = atx_up.__get__(aLM2)

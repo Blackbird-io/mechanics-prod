@@ -43,8 +43,8 @@ from .Pattern import Pattern
 #classes
 class Analytics(Pattern):
     """
-    Class organizes market analytics data about a company.
 
+    Class organizes market analytics data about a company.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -62,7 +62,6 @@ class Analytics(Pattern):
     """
     def __init__(self,name="Analytics"):
         Pattern.__init__(self,name)
-        self.protocol = None
         activity = Pattern(name="activity")
         cc = CreditCapacity()
         color = Color()

@@ -36,6 +36,7 @@ InterviewController   selects focal point for Blackbird analysis
 
 #imports
 import BBExceptions
+import BBGlobalVariables as Globals
 
 from . import completion_rules
 from . import selection_rules
@@ -285,7 +286,7 @@ class Interviewer(Controller):
         if not fp:
             double_check = True
         if double_check:
-            model.interview.reset_cache()
+            model.interview.clear_cache()
             fp = routine(self, model)
             #if protocol routine doesnt find a focal point, reset cache and
             #try again. dont want to finish prematurely.
@@ -420,8 +421,11 @@ class Interviewer(Controller):
         message. Instance.MR stores the message until reset.     
         """
         stop = Globals.END_INTERVIEW
+        m = model
+        q = self.MR.activeQuestion
+        r = stop
         #
-        self.MR.generateMessage(m = model, r = stop)
+        self.MR.generateMessage(m, q, r)
         new_mqr = self.MR.messageOut
         #
         return new_mqr
