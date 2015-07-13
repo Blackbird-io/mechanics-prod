@@ -28,7 +28,7 @@ class AnalyticsController    simple Controller that goes through atx until all e
 
 #imports
 from . import CompletionTests
-from .Controller import Controller
+from .controller import GenericController as Controller
 from .Protocol import Protocol
 
 

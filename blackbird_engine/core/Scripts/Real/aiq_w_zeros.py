@@ -42,7 +42,7 @@ answers[q5] = [{"response" : "2010-02-01"}]
 answers[q6] = [{"response" : "12"}]
 answers[q7] = [{"response" : "[36, 72]"}]
 answers[q8] = [{"response" : "1050"}]
-                #380 subscribers
+                #1050 subscribers
 answers[q9] = [{"response" : "750"}]
                 #$12000/mo per subscriber
 answers[q10] = [{"response" : "5"},
@@ -62,20 +62,20 @@ answers[q11] = [{"response" : "125000"},
                 {"response" : "65000"}]
                 #$60,000/yr for everyone else
 answers[q12] = [{"response" : "0"},
-                #cash bonus equal to 25% of salary for developers
+                #cash bonus equal to 0% of salary for developers
                 {"response" : "0"},
-                #cash bonus equal to 100% of salary for managers (who set their
+                #cash bonus equal to 0% of salary for managers (who set their
                 #own bonus policy)
                 {"response" : "0"}]
-                #cash bonus equal to 15% of salary for everyone else
+                #cash bonus equal to 0% of salary for everyone else
                 #
                 #NOTE: this question should exclude the sales team
 answers[q13] = [{"response" : "0"},
-                #stock bonus equal to 60% of salary for developers
+                #stock bonus equal to 0% of salary for developers
                 {"response" : "0"},
-                #stock bonus equal to 30% of salary for managers
+                #stock bonus equal to 0% of salary for managers
                 {"response" : "0"}]
-                #stock bonus equal to 5% of salary for everyone else
+                #stock bonus equal to 0% of salary for everyone else
                 #
                 #NOTE: this question should exclude the sales team
 answers[q14] = [{"response" : "0.88"}]

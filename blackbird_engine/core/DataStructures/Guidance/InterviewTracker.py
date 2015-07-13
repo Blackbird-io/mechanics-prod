@@ -31,7 +31,7 @@ InterviewTracker      plan and monitor machine-user interview
 import decimal
 import time
 
-from Controllers import CompletionTests
+from Controllers import completion_rules
 from DataStructures.Modelling.LineItem import LineItem
 
 from .AttentionTracker import AttentionTracker
@@ -47,6 +47,7 @@ intro_line = LineItem("introduction")
 intro_line.tag("start",
                "configuration")
 intro_line.guide.quality.setStandards(2,5)
+quality_rule = completion_rules.check_quality_only
 
 #classes
 class InterviewTracker:
@@ -66,44 +67,36 @@ class InterviewTracker:
     
     applied_topics              set of topic bbids applied to the Model to date     
     attention_budget            integer representing total attention resources
+    completion_rule             pointer to function that checks completion
     focal_point                 criterion for MatchMaker's selection
+    levels                      dict or None; priority groups of items in path
     path                        list of lineitems that act as raw template
-    point_standard              function that tests fp against some internal
-                                completion standard. function should return
-                                ``True`` iff fp satisfies that standard and
-                                False otherwise. pointStandard usually set by
-                                an external protocol object. May vary over time
-                                for any given focalPoint, as protocol cycles
-                                through more and more rigorous standards.
     progress                    decimal
-    protocol                    generator function that selected current focus
-    structure                   dict of priorityLevel items keyed by priority
+    
     transcript                  list of tuples containing message and timestamp
     used                        set of bbids for used topics
     work_space                  unmanaged scrap paper for Topic or other state
     
     FUNCTIONS:
-    clear_cache()               set protocol,structure, activeTest, and fPoint to
-                                None
+    clear_cache()               clear focal point, rule and levels
     set_attention_budget()      set attentionBudget to new value
+    set_completion_rule()       attach a new completion rule to instance
     set_structure()             set structure to new object
     set_path()                  set path to a new object
     set_progress()              set progress to higher of current or new,0<=p<=1
     set_protocol()              attach a pointer to a new protocol object
     set_focal_point()           attach a pointer to the current focal point
-    set_point_standard()        attach a decision function for the focal point
     transcribe()                add item to transcript
     ==========================  ================================================
     """
     def __init__(self):
         self.applied_topics = set()
         self.attention_budget = None
+        self.completion_rule = quality_rule
         self.focal_point = intro_line.copy()
+        self.levels = None
         self.path = None
-        self.point_standard = CompletionTests.t_min_quality
         self.progress = 0
-        self.protocol = None
-        self.structure = None
         self.transcript = []
         self.used = set()
         self.work_space = {}
@@ -115,11 +108,12 @@ class InterviewTracker:
         ITr.clear_cache() -> None
 
 
+        Method clears instance ``completion_rule``, ``focal_point``, and
+        ``levels`` attributes.
         """
-        self.structure = None
-        self.protocol = None
+        self.completion_rule = None
         self.focal_point = None
-        self.point_standard = None
+        self.levels = None
 
     def set_attention_budget(self,aB):
         """
@@ -130,6 +124,21 @@ class InterviewTracker:
 
         """
         self.attention_budget = aB
+        
+
+    def set_completion_rule(self, rule):
+        """
+
+
+        ITr.set_completion_rule(rule) -> None
+
+
+        Method sets instance.completion_rule to argument. Rule should be a
+        callable that takes one argument and returns bool (True iff the
+        argument is complete).
+        """
+        self.completion_rule = rule
+
         
     def set_focal_point(self,fP):
         """
@@ -155,18 +164,6 @@ class InterviewTracker:
         self.path = new_path
         if self.path.autoSummarize:
             self.path.autoSummarize = False
-
-    def set_point_standard(self,standard):
-        """
-
-
-        ITr.set_point_standard(standard) -> None
-
-
-        ``standard`` should be a one-argument function that returns a bool
-        when applied to an object w a ``guide`` attribute.
-        """
-        self.point_standard = standard
         
     def set_progress(self, p, override = False):
         """

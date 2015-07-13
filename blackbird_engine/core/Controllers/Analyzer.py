@@ -52,17 +52,17 @@ import DataStructures.Platform as Platform
 
 from Managers import TopicManager
 
-from .Yenta import Yenta
+from .yenta import Yenta
 
 from .AnalyticsController import AnalyticsController
-from .InterviewController import InterviewController
+from .interviewer import Interviewer
 
 
 
 
 #globals
 yenta = Yenta()
-interview_controller = InterviewController()
+interviewer = Interviewer()
 Messenger = Platform.Messenger.Messenger
 
 TopicManager.populate()
@@ -219,7 +219,7 @@ class analyzerLM(Messenger):
         upWorthy = {Globals.status_pendingQuestion, Globals.status_endSession}
         mStatus = checkStatus(message)
         if mStatus == Globals.status_topicNeeded:
-            message = interview_controller.process(message)
+            message = interviewer.process(message)
             mStatus = checkStatus(message)
             #only run one message transformation per call (via IC.process(msg))
         if mStatus == Globals.status_endSession:

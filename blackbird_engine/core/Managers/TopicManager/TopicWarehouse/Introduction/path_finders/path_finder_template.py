@@ -162,7 +162,7 @@ def apply_data(topic, datapoint):
     model = topic.MR.activeModel
     model.tag("path set")
     model.unTag("ready for path")
-    while not model.interview.point_standard(intro_line):
+    while not model.interview.completion_rule(intro_line):
         intro_line.quality.increment()
     #
     vip_status = datapoint

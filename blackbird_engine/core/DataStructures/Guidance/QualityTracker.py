@@ -70,5 +70,4 @@ class QualityTracker(Counter):
         Method sets minStandard, maxStandard for the instance to user-specified
         values or None. 
         """
-        self.minStandard = minStandard
-        self.maxStandard = maxStandard
+        self.standard = minStandard

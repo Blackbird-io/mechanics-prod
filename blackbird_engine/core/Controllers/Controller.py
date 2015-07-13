@@ -4,10 +4,10 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: Controllers.Controller
+#Module: Controllers.controller
 """
 
-Module defines Controller class.  
+Module defines GenericController class.  
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -19,7 +19,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-class Controller      shell for objects responsible for focal point selection
+GenericController     shell for mqr message processing
 ====================  ==========================================================
 """
 
@@ -36,7 +36,7 @@ from DataStructures.Platform.Messenger import Messenger
 #n/a
 
 #classes
-class Controller:
+class GenericController:
     """
 
     This class provides a basic shell for objects that select focal points.
@@ -58,7 +58,7 @@ class Controller:
     def process(self,msgIn):
         """
 
-        Controller.process(msgIn) -> None
+        GenericController.process(msgIn) -> None
 
         Method takes an mqr message and unpacks it
         """

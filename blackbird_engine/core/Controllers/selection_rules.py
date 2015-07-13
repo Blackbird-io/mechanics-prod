@@ -31,12 +31,15 @@ n/a
 
 
 #imports
-#n/a
+from . import completion_rules
 
 
 
 
 #globals
+#n/a
+
+#functions
 def for_attentive_breadth(level, model):
     """
 
@@ -65,10 +68,10 @@ def for_attentive_breadth(level, model):
     
     Function applies the completion rule to each object in level, starting at
     the level.last position. Function stops as soon as it finds an object that
-    fails the rule. Function marks complete = True on all objects that pass.
+    fails the rule.
     """
     fp = None
-    rule = completion_rules.quality_and_attention
+    rule = completion_rules.check_quality_or_attention
     model.interview.set_completion_rule(rule)
     #
     remaining = range(level.last, len(level))
@@ -102,11 +105,9 @@ def for_attentive_breadth(level, model):
         #
         if rule(item):
             #work on item is complete
-            item.guide.complete = True
             continue
         else:
             #
-            item.guide.complete = False
             fp = item
             level.last = i
             break
@@ -162,22 +163,20 @@ def for_quality(level, model):
 
     Function applies the completion rule to each object in level, starting at
     the level.last position. Function stops as soon as it finds an object that
-    fails the rule. Function marks complete = True on all objects that pass. 
+    fails the rule.
     """
     fp = None
     #
-    rule = completion_rules.quality_only
+    rule = completion_rules.check_quality_only
     model.interview.set_completion_rule(rule)
     #
     remaining = range(level.last, len(level))
     for i in remaining:
         item = level[i]
         if rule(item):
-            item.guide.complete = True
             continue
         else:
             #if item is not complete
-            item.guide.complete = False
             fp = item
             level.last = i
             break
