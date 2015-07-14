@@ -9,7 +9,6 @@
 
 Module builds and administers a catalog of Topic objects from content modules
 in TopicWarehouse. 
-
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -19,6 +18,7 @@ local_catalog         instance of Platform.Catalog;by_name also keyed by content
 id                    instance of Platform.ID; bbid set to "TopicManager"
 
 FUNCTIONS:
+clean_questions()     put clean mini questions on a topic
 load_drivers()        id and validate content drivers, put them on topic
 load_formulas()       put formulas on topic from catalog based on content spec
 load_questions()      put questions on topic from catalog based on content spec
@@ -27,10 +27,9 @@ make_topic()          create a Topic object that applies logic in content module
 populate()            create and record all Topics in TopicWarehouse in catalog               
 
 CLASSES:
-n/a
+LocalCatalog          subclass of Catalog that cleans questions on every call
 ====================  ==========================================================
 """
-
 
 
 
@@ -51,19 +50,85 @@ from . import TopicWarehouse
 
 
 
-
 #globals
 FormulaManager.populate()
 QuestionManager.populate()
 
-local_catalog = Catalog()
 id = ID()
 id.assignBBID("TopicManager")
+#globals continued at the end of module
 
 #classes
-#n/a
+class LocalCatalog(Catalog):
+    """
+
+    Class customizes Platform.Catalog. Provides a specialized issue method that
+    puts a new set of clean mini questions on every topic instance prior to
+    release. 
+    ==========================  ================================================
+    Attribute                   Description
+    ==========================  ================================================
+
+    DATA:
+    n/a
+
+    FUNCTIONS:
+    issue()                     returns topic with clean mini questions
+    ==========================  ================================================
+    """
+    def __init__(self):
+        Catalog.__init__(self)
+
+    def issue(self, key):
+        """
+
+
+        LocalCatalog.issue(key) -> topic
+
+
+        Method retries a topic through Catalog.issue(), clears the topic's
+        ``questions`` attribute and then refills the topic with new instances of
+        the mini questions it originally carried.
+
+        Throwing away mini questions after every use ensures that Blackbird
+        doesn't pollute new interviews with prior objects customizing the same
+        question module.
+        """
+        topic = Catalog.issue(self, key)
+        q_names = sorted(topic.questions.keys())
+        del topic.questions
+        clean_questions(topic, q_names)
+        #
+        return topic
+
+#globals (continued)
+local_catalog = LocalCatalog()
 
 #functions
+def clean_questions(topic, question_names, outline_label = None):
+    """
+
+
+    clean_questions(topic, question_names) -> None
+
+
+    Function sets topic.questions to a blank dictionary, then populates the
+    dictionary with MiniQuestion objects.
+
+    Function walks through ``question_names``. For each name, function locates
+    a matching FullQuestion object in QuestionManager.catalog and condenses the
+    FullQuestion into a MiniQuestion using QuestionManager.make_mini(). Function
+    then adds the MiniQuestion to topic's ``questions`` dictionary, keyed under
+    question's **name** for ease of access.
+    """
+    topic.questions = dict()
+    for question_name in question_names:
+        full_question = QuestionManager.local_catalog.issue(question_name)
+        mini_question = QuestionManager.make_mini(full_question)
+        if outline_label:
+            mini_question.topic_name = outline_label
+        topic.questions[question_name] = mini_question
+
 def load_drivers(topic, content_module):
     """
 
@@ -129,23 +194,12 @@ def load_questions(topic, content_module):
     load_questions(topic, content_module) -> None
 
 
-    Function sets topic.questions to a blank dictionary, then populates the
-    dictionary with MiniQuestion objects.
-
-    Function walks through content's ``question_names`` list. For each name,
-    function locates a matching FullQuestion object in QuestionManager.catalog
-    and condenses the FullQuestion into a MiniQuestion using
-    QuestionManager.make_mini(). Function then adds the MiniQuestion to topic's
-    ``questions`` dictionary, keyed under question's **name** for ease of
-    access.
+    Function populatesf topic with questions named in content module. Function
+    delegates work to clean_questions().
     """
-    topic.questions = dict()
-    for question_name in content_module.question_names:
-        full_question = QuestionManager.local_catalog.issue(question_name)
-        mini_question = QuestionManager.make_mini(full_question)
-        if getattr(content_module, "user_outline_label", None):
-            mini_question.topic_name = content_module.user_outline_label
-        topic.questions[question_name] = mini_question
+    q_names = content_module.question_names
+    q_label = getattr(content_module, "user_outline_label", None)
+    clean_questions(topic, q_names, q_label)
 
 def load_scenarios(topic, content_module):
     """
@@ -283,4 +337,5 @@ def populate():
         print(c)
     else:
         pass
-        
+
+
