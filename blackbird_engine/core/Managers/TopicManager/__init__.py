@@ -37,6 +37,7 @@ LocalCatalog          subclass of Catalog that cleans questions on every call
 #imports
 import BBExceptions
 import BBGlobalVariables as Globals
+import Managers.ColorManager as ColorManager
 import Managers.FormulaManager as FormulaManager
 import Managers.QuestionManager as QuestionManager
 import Tools.ForManagers
@@ -51,6 +52,7 @@ from . import TopicWarehouse
 
 
 #globals
+ColorManager.populate()
 FormulaManager.populate()
 QuestionManager.populate()
 

@@ -23,6 +23,7 @@ CLASSES:
 n/a
 
 MODULES:
+ColorManager          manages catalog of market color snapshots
 FormulaManager        builds and manages catalog of formulas used by drivers
 QuestionManager       builds and manages catalog of user-facing questions
 TopicManager          builds and manages catalog of analytical topics

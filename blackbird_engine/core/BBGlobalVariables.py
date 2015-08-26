@@ -16,6 +16,7 @@ Attribute             Description
 ====================  ==========================================================
 
 DATA:
+default_inflation     num; expected inflation at macro equilibrium
 messagePatterns       dictionary of message patterns and related statuses
 p_topicNeeded         bool pattern for ``topic needed`` messages (M__)
 p_pendingQuestion     bool pattern for ``pending question`` messages (MQ_)
@@ -26,6 +27,7 @@ status_topicNeeded    string
 status_pendingQuestion  string
 status_pendingResponse  string
 status_endSession       string
+user_correction       num; expected difference between user input and actual
 
 FUNCTIONS:
 checkStatus()         compare message to known patterns, returns fit
@@ -154,6 +156,8 @@ batch_count = min(batch_count, max_unit_count)
 
 #Market
 cc_haircut = 0.20
+default_inflation = 0.03
+user_correction = 0.10
 
 #Calendar
 t0 = date(2015,6,16)
