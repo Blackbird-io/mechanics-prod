@@ -1,0 +1,459 @@
+
+BLACKBIRD DIAGNOSTICS BLACKBIRD DIAGNOSTICS BLACKBIRD DIAGNOSTICS BLACKBIRD DIA
+
+Running check() on ``software 5, saas w small profit and no bonus.`` result . . . .
+
+
+
+
+First, check whether build completed result without exceptions.
+No exceptions in result, build completed Task successfully.
+
+
+Second, check whether output matches standard.
+
+
+        This Grader checks whether the Engine delivered output that matches
+        expectations for a known set of inputs.
+        
+        
+T.01: compare output.
+
+        new_output = result["output"]
+        std_output = standard["output"]
+        
+
+
+        Check that new output contains all of the standard data. New output can
+        pass test when it supplements expected data with additional information.
+        
+        
+
+
+        outcome = walk_dict(std_output, new_output)
+        
+        
+
+        Running walk_dict() for the following:
+    
+        std = {'2. current period': '********************************************************************************\n\t starts:  \t2015-06-01\n\t ends:    \t2015-06-30\n\t content: \t\n+=====================+\n| NAME  :   i.s.works |\n| ID    : ...cbb8858e |\n| DOB   :  2010-02-01 |\n| LIFE  :         11% |\n| STAGE :       YOUTH |\n| TYPE  :     COMPANY |\n| FILL  :        True |\n| SIZE  :           1 |\n| COMPS :           2 |\n+=====================+\n\n********************************************************************************\n', '3. company financials': '\n  overview................................................................None  \n    avg sales salary.................................................125000.00  \n    avg sales bonus (cash, % of salary)...................................None  \n    avg sales bonus (equity, % of salary).................................None  \n    avg development salary...........................................125000.00  \n    avg development bonus (cash, % of salary).............................None  \n    avg development bonus (equity, % of salary)...........................None  \n    avg everyone else salary..........................................65000.00  \n    avg everyone else bonus (cash, % of salary)...........................None  \n    avg everyone else bonus (equity, % of salary).........................None  \n    avg management salary............................................180000.00  \n    avg management bonus (cash, % of salary)..............................None  \n    avg management bonus (equity, % of salary)............................None  \n    commission (% of product revenue).....................................0.12  \n  total overview.....................................................495000.12  \n  |bb|start introduction..................................................None  \n  |bb|end introduction....................................................None  \n  |bb|start income statement..............................................None  \n  revenue.................................................................None  \n    subscriptions....................................................787500.00  \n  total revenue......................................................787500.00  \n  cost....................................................................None  \n  operating expense.......................................................None  \n    sg&a..................................................................None  \n      marketing.......................................................29791.67  \n      g&a.............................................................20000.00  \n    total sg&a........................................................49791.67  \n    hosting............................................................4000.00  \n    external development..............................................25000.00  \n    occupancy.........................................................20000.00  \n    employee expense......................................................None  \n      salaries............................................................None  \n        salaries (sales).............................................114583.33  \n        salaries (development)........................................52083.33  \n        salaries (everyone else)......................................86666.67  \n        salaries (management).........................................30000.00  \n      total salaries.................................................283333.33  \n      bonus...............................................................None  \n        cash bonus reserved (sales).......................................None  \n        stock bonus reserved (sales)......................................None  \n        cash bonus reserved (development).................................None  \n        stock bonus reserved (development)................................None  \n        cash bonus reserved (everyone else)...............................None  \n        stock bonus reserved (everyone else)..............................None  \n        cash bonus reserved (management)..................................None  \n        stock bonus reserved (management).................................None  \n      total bonus.........................................................0.00  \n      commission..........................................................None  \n        commission (product a)........................................94500.00  \n      total commission................................................94500.00  \n    total employee expense...........................................377833.33  \n  total operating expense............................................476625.00  \n  ebitda.............................................................261083.33  \n  |bb|end income statement................................................None  \n  |bb|start cash flow statement...........................................None  \n  |bb|end cash flow statement.............................................None  \n  |bb|start starting balance sheet........................................None  \n  |bb|end starting balance sheet..........................................None  \n  |bb|start ending balance sheet..........................................None  \n  |bb|end starting balance sheet..........................................None  \n', '1. final message': {'Q': None, 'R': 'END_interview', 'M': {'tags': None, 'industry': 'software', 'user_context': None, 'business_id': 99999999, 'business_name': None, 'summary': {'revenue': 9450000.0, 'cost': 0, 'operating expense': 5719500.0, 'sg&a': 597500.0, 'credit_capacity': 12532000.0, 'ebitda': 3133000.0}}}}
+        new = {'2. current period': '********************************************************************************\n\t starts:  \t2015-06-01\n\t ends:    \t2015-06-30\n\t content: \t\n+=====================+\n| NAME  :   i.s.works |\n| ID    : ...cbb8858e |\n| DOB   :  2010-02-01 |\n| LIFE  :         11% |\n| STAGE :       YOUTH |\n| TYPE  :     COMPANY |\n| FILL  :        True |\n| SIZE  :           1 |\n| COMPS :           2 |\n+=====================+\n\n********************************************************************************\n', '3. company financials': '\n  overview................................................................None  \n    avg sales salary.................................................125000.00  \n    avg sales bonus (cash, % of salary)...................................None  \n    avg sales bonus (equity, % of salary).................................None  \n    avg development salary...........................................125000.00  \n    avg development bonus (cash, % of salary).............................None  \n    avg development bonus (equity, % of salary)...........................None  \n    avg everyone else salary..........................................65000.00  \n    avg everyone else bonus (cash, % of salary)...........................None  \n    avg everyone else bonus (equity, % of salary).........................None  \n    avg management salary............................................180000.00  \n    avg management bonus (cash, % of salary)..............................None  \n    avg management bonus (equity, % of salary)............................None  \n    commission (% of product revenue).....................................0.12  \n  total overview.....................................................495000.12  \n  |bb|start introduction..................................................None  \n  |bb|end introduction....................................................None  \n  |bb|start income statement..............................................None  \n  revenue.................................................................None  \n    subscriptions....................................................787500.00  \n  total revenue......................................................787500.00  \n  cost....................................................................None  \n  operating expense.......................................................None  \n    sg&a..................................................................None  \n      marketing.......................................................29791.67  \n      g&a.............................................................20000.00  \n    total sg&a........................................................49791.67  \n    hosting............................................................4000.00  \n    external development..............................................25000.00  \n    occupancy.........................................................20000.00  \n    employee expense......................................................None  \n      salaries............................................................None  \n        salaries (sales).............................................114583.33  \n        salaries (development)........................................52083.33  \n        salaries (everyone else)......................................86666.67  \n        salaries (management).........................................30000.00  \n      total salaries.................................................283333.33  \n      bonus...............................................................None  \n        cash bonus reserved (sales).......................................None  \n        stock bonus reserved (sales)......................................None  \n        cash bonus reserved (development).................................None  \n        stock bonus reserved (development)................................None  \n        cash bonus reserved (everyone else)...............................None  \n        stock bonus reserved (everyone else)..............................None  \n        cash bonus reserved (management)..................................None  \n        stock bonus reserved (management).................................None  \n      total bonus.........................................................0.00  \n      commission..........................................................None  \n        commission (product a)........................................94500.00  \n      total commission................................................94500.00  \n    total employee expense...........................................377833.33  \n  total operating expense............................................476625.00  \n  ebitda.............................................................261083.33  \n  |bb|end income statement................................................None  \n  |bb|start cash flow statement...........................................None  \n  |bb|end cash flow statement.............................................None  \n  |bb|start starting balance sheet........................................None  \n  |bb|end starting balance sheet..........................................None  \n  |bb|start ending balance sheet..........................................None  \n  |bb|end starting balance sheet..........................................None  \n', '1. final message': {'Q': None, 'R': 'END_interview', 'M': {'tags': None, 'user_context': None, 'business_id': 99999999, 'summary': {'revenue': 9450000.0, 'cost': 0, 'operating expense': 5719500.0, 'sg&a': 597500.0, 'credit_capacity': 12532000.0, 'ebitda': 3133000.0}, 'industry': 'software', 'business_name': None}}}
+        tab = 4
+    
+    
+    outcome = True
+    known_keys = std.keys()
+
+    0. Key: ``2. current period``
+
+        Known value: 
+        ********************************************************************************
+     starts:    2015-06-01
+     ends:      2015-06-30
+     content:   
++=====================+
+| NAME  :   i.s.works |
+| ID    : ...cbb8858e |
+| DOB   :  2010-02-01 |
+| LIFE  :         11% |
+| STAGE :       YOUTH |
+| TYPE  :     COMPANY |
+| FILL  :        True |
+| SIZE  :           1 |
+| COMPS :           2 |
++=====================+
+
+********************************************************************************
+
+
+        New value:   
+        ********************************************************************************
+     starts:    2015-06-01
+     ends:      2015-06-30
+     content:   
++=====================+
+| NAME  :   i.s.works |
+| ID    : ...cbb8858e |
+| DOB   :  2010-02-01 |
+| LIFE  :         11% |
+| STAGE :       YOUTH |
+| TYPE  :     COMPANY |
+| FILL  :        True |
+| SIZE  :           1 |
+| COMPS :           2 |
++=====================+
+
+********************************************************************************
+
+
+
+    1. Key: ``3. company financials``
+
+        Known value: 
+        
+  overview................................................................None  
+    avg sales salary.................................................125000.00  
+    avg sales bonus (cash, % of salary)...................................None  
+    avg sales bonus (equity, % of salary).................................None  
+    avg development salary...........................................125000.00  
+    avg development bonus (cash, % of salary).............................None  
+    avg development bonus (equity, % of salary)...........................None  
+    avg everyone else salary..........................................65000.00  
+    avg everyone else bonus (cash, % of salary)...........................None  
+    avg everyone else bonus (equity, % of salary).........................None  
+    avg management salary............................................180000.00  
+    avg management bonus (cash, % of salary)..............................None  
+    avg management bonus (equity, % of salary)............................None  
+    commission (% of product revenue).....................................0.12  
+  total overview.....................................................495000.12  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue.................................................................None  
+    subscriptions....................................................787500.00  
+  total revenue......................................................787500.00  
+  cost....................................................................None  
+  operating expense.......................................................None  
+    sg&a..................................................................None  
+      marketing.......................................................29791.67  
+      g&a.............................................................20000.00  
+    total sg&a........................................................49791.67  
+    hosting............................................................4000.00  
+    external development..............................................25000.00  
+    occupancy.........................................................20000.00  
+    employee expense......................................................None  
+      salaries............................................................None  
+        salaries (sales).............................................114583.33  
+        salaries (development)........................................52083.33  
+        salaries (everyone else)......................................86666.67  
+        salaries (management).........................................30000.00  
+      total salaries.................................................283333.33  
+      bonus...............................................................None  
+        cash bonus reserved (sales).......................................None  
+        stock bonus reserved (sales)......................................None  
+        cash bonus reserved (development).................................None  
+        stock bonus reserved (development)................................None  
+        cash bonus reserved (everyone else)...............................None  
+        stock bonus reserved (everyone else)..............................None  
+        cash bonus reserved (management)..................................None  
+        stock bonus reserved (management).................................None  
+      total bonus.........................................................0.00  
+      commission..........................................................None  
+        commission (product a)........................................94500.00  
+      total commission................................................94500.00  
+    total employee expense...........................................377833.33  
+  total operating expense............................................476625.00  
+  ebitda.............................................................261083.33  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+
+
+        New value:   
+        
+  overview................................................................None  
+    avg sales salary.................................................125000.00  
+    avg sales bonus (cash, % of salary)...................................None  
+    avg sales bonus (equity, % of salary).................................None  
+    avg development salary...........................................125000.00  
+    avg development bonus (cash, % of salary).............................None  
+    avg development bonus (equity, % of salary)...........................None  
+    avg everyone else salary..........................................65000.00  
+    avg everyone else bonus (cash, % of salary)...........................None  
+    avg everyone else bonus (equity, % of salary).........................None  
+    avg management salary............................................180000.00  
+    avg management bonus (cash, % of salary)..............................None  
+    avg management bonus (equity, % of salary)............................None  
+    commission (% of product revenue).....................................0.12  
+  total overview.....................................................495000.12  
+  |bb|start introduction..................................................None  
+  |bb|end introduction....................................................None  
+  |bb|start income statement..............................................None  
+  revenue.................................................................None  
+    subscriptions....................................................787500.00  
+  total revenue......................................................787500.00  
+  cost....................................................................None  
+  operating expense.......................................................None  
+    sg&a..................................................................None  
+      marketing.......................................................29791.67  
+      g&a.............................................................20000.00  
+    total sg&a........................................................49791.67  
+    hosting............................................................4000.00  
+    external development..............................................25000.00  
+    occupancy.........................................................20000.00  
+    employee expense......................................................None  
+      salaries............................................................None  
+        salaries (sales).............................................114583.33  
+        salaries (development)........................................52083.33  
+        salaries (everyone else)......................................86666.67  
+        salaries (management).........................................30000.00  
+      total salaries.................................................283333.33  
+      bonus...............................................................None  
+        cash bonus reserved (sales).......................................None  
+        stock bonus reserved (sales)......................................None  
+        cash bonus reserved (development).................................None  
+        stock bonus reserved (development)................................None  
+        cash bonus reserved (everyone else)...............................None  
+        stock bonus reserved (everyone else)..............................None  
+        cash bonus reserved (management)..................................None  
+        stock bonus reserved (management).................................None  
+      total bonus.........................................................0.00  
+      commission..........................................................None  
+        commission (product a)........................................94500.00  
+      total commission................................................94500.00  
+    total employee expense...........................................377833.33  
+  total operating expense............................................476625.00  
+  ebitda.............................................................261083.33  
+  |bb|end income statement................................................None  
+  |bb|start cash flow statement...........................................None  
+  |bb|end cash flow statement.............................................None  
+  |bb|start starting balance sheet........................................None  
+  |bb|end starting balance sheet..........................................None  
+  |bb|start ending balance sheet..........................................None  
+  |bb|end starting balance sheet..........................................None  
+
+
+
+    2. Key: ``1. final message``
+
+        Known value: 
+        {'Q': None, 'R': 'END_interview', 'M': {'tags': None, 'industry': 'software', 'user_context': None, 'business_id': 99999999, 'business_name': None, 'summary': {'revenue': 9450000.0, 'cost': 0, 'operating expense': 5719500.0, 'sg&a': 597500.0, 'credit_capacity': 12532000.0, 'ebitda': 3133000.0}}}
+
+        New value:   
+        {'Q': None, 'R': 'END_interview', 'M': {'tags': None, 'user_context': None, 'business_id': 99999999, 'summary': {'revenue': 9450000.0, 'cost': 0, 'operating expense': 5719500.0, 'sg&a': 597500.0, 'credit_capacity': 12532000.0, 'ebitda': 3133000.0}, 'industry': 'software', 'business_name': None}}
+
+
+
+        Running walk_dict() for the following:
+    
+        std = {'Q': None, 'R': 'END_interview', 'M': {'tags': None, 'industry': 'software', 'user_context': None, 'business_id': 99999999, 'business_name': None, 'summary': {'revenue': 9450000.0, 'cost': 0, 'operating expense': 5719500.0, 'sg&a': 597500.0, 'credit_capacity': 12532000.0, 'ebitda': 3133000.0}}}
+        new = {'Q': None, 'R': 'END_interview', 'M': {'tags': None, 'user_context': None, 'business_id': 99999999, 'summary': {'revenue': 9450000.0, 'cost': 0, 'operating expense': 5719500.0, 'sg&a': 597500.0, 'credit_capacity': 12532000.0, 'ebitda': 3133000.0}, 'industry': 'software', 'business_name': None}}
+        tab = 8
+    
+    
+        outcome = True
+        known_keys = std.keys()
+
+        0. Key: ``Q``
+
+            Known value: 
+        None
+
+            New value:   
+        None
+
+
+        1. Key: ``R``
+
+            Known value: 
+        END_interview
+
+            New value:   
+        END_interview
+
+
+        2. Key: ``M``
+
+            Known value: 
+        {'tags': None, 'industry': 'software', 'user_context': None, 'business_id': 99999999, 'business_name': None, 'summary': {'revenue': 9450000.0, 'cost': 0, 'operating expense': 5719500.0, 'sg&a': 597500.0, 'credit_capacity': 12532000.0, 'ebitda': 3133000.0}}
+
+            New value:   
+        {'tags': None, 'user_context': None, 'business_id': 99999999, 'summary': {'revenue': 9450000.0, 'cost': 0, 'operating expense': 5719500.0, 'sg&a': 597500.0, 'credit_capacity': 12532000.0, 'ebitda': 3133000.0}, 'industry': 'software', 'business_name': None}
+
+
+
+            Running walk_dict() for the following:
+    
+            std = {'tags': None, 'industry': 'software', 'user_context': None, 'business_id': 99999999, 'business_name': None, 'summary': {'revenue': 9450000.0, 'cost': 0, 'operating expense': 5719500.0, 'sg&a': 597500.0, 'credit_capacity': 12532000.0, 'ebitda': 3133000.0}}
+            new = {'tags': None, 'user_context': None, 'business_id': 99999999, 'summary': {'revenue': 9450000.0, 'cost': 0, 'operating expense': 5719500.0, 'sg&a': 597500.0, 'credit_capacity': 12532000.0, 'ebitda': 3133000.0}, 'industry': 'software', 'business_name': None}
+            tab = 12
+    
+    
+            outcome = True
+            known_keys = std.keys()
+
+            0. Key: ``tags``
+
+                Known value: 
+            None
+
+                New value:   
+            None
+
+
+            1. Key: ``industry``
+
+                Known value: 
+            software
+
+                New value:   
+            software
+
+
+            2. Key: ``user_context``
+
+                Known value: 
+            None
+
+                New value:   
+            None
+
+
+            3. Key: ``business_id``
+
+                Known value: 
+            99999999
+
+                New value:   
+            99999999
+
+
+            4. Key: ``business_name``
+
+                Known value: 
+            None
+
+                New value:   
+            None
+
+
+            5. Key: ``summary``
+
+                Known value: 
+            {'revenue': 9450000.0, 'cost': 0, 'operating expense': 5719500.0, 'sg&a': 597500.0, 'credit_capacity': 12532000.0, 'ebitda': 3133000.0}
+
+                New value:   
+            {'revenue': 9450000.0, 'cost': 0, 'operating expense': 5719500.0, 'sg&a': 597500.0, 'credit_capacity': 12532000.0, 'ebitda': 3133000.0}
+
+
+
+                Running walk_dict() for the following:
+    
+                std = {'revenue': 9450000.0, 'cost': 0, 'operating expense': 5719500.0, 'sg&a': 597500.0, 'credit_capacity': 12532000.0, 'ebitda': 3133000.0}
+                new = {'revenue': 9450000.0, 'cost': 0, 'operating expense': 5719500.0, 'sg&a': 597500.0, 'credit_capacity': 12532000.0, 'ebitda': 3133000.0}
+                tab = 16
+    
+    
+                outcome = True
+                known_keys = std.keys()
+
+                0. Key: ``revenue``
+
+                    Known value: 
+                9450000.0
+
+                    New value:   
+                9450000.0
+
+
+                1. Key: ``cost``
+
+                    Known value: 
+                0
+
+                    New value:   
+                0
+
+
+                2. Key: ``operating expense``
+
+                    Known value: 
+                5719500.0
+
+                    New value:   
+                5719500.0
+
+
+                3. Key: ``sg&a``
+
+                    Known value: 
+                597500.0
+
+                    New value:   
+                597500.0
+
+
+                4. Key: ``credit_capacity``
+
+                    Known value: 
+                12532000.0
+
+                    New value:   
+                12532000.0
+
+
+                5. Key: ``ebitda``
+
+                    Known value: 
+                3133000.0
+
+                    New value:   
+                3133000.0
+
+
+
+
+                outcome = True
+
+                return outcome
+
+                --
+
+
+
+
+
+            outcome = True
+
+            return outcome
+
+            --
+
+
+
+
+
+        outcome = True
+
+        return outcome
+
+        --
+
+
+
+
+
+    outcome = True
+
+    return outcome
+
+    --
+
+
+
+New output includes expected data:  True
+T.01 finished. 
+
+
+RUBRIC:
+
+T.01.01: new includes standard .............................. True
+T.01: confirmed ............................................. True
+********************************************************************************
+********************************************************************************
+Build passes ``software 5, saas w small profit and no bonus.`` test:   True
+********************************************************************************
+********************************************************************************
+
+BLACKBIRD DIAGNOSTICS BLACKBIRD DIAGNOSTICS BLACKBIRD DIAGNOSTICS BLACKBIRD DIA
+
+start time:  1440693134.913866
+end time:    1440693134.929495
+run time:    0.015629053115844727
+****************************************
+PASSED:  True
+****************************************
