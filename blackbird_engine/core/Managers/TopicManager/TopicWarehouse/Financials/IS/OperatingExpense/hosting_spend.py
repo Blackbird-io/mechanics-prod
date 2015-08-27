@@ -42,7 +42,6 @@ n/a
 import operator
 
 import BBGlobalVariables as Globals
-import MarketColor
 
 from DataStructures.Modelling.Driver import Driver
 from DataStructures.Modelling.LineItem import LineItem
@@ -216,6 +215,7 @@ def apply_data(topic, datapoint):
     #1.0. model
     model = topic.MR.activeModel
     current_period = model.time_line.current_period
+    market_conditions = topic.CM.get_color(current_period.end)
     #1.1. business units
     company = current_period.content
     #1.2. drivers
@@ -231,7 +231,7 @@ def apply_data(topic, datapoint):
     #1.6. data
     data = dict()
     data["ref_year"] = company.life.ref_date.year
-    data["annual_inflation"] = MarketColor.annualInflation
+    data["annual_inflation"] = market_conditions.inflation.annual
     data["base_monthly_value"] = datapoint
     #1.7. adjust objects to fit each other
     dr_host.setWorkConditions(l_host.name)

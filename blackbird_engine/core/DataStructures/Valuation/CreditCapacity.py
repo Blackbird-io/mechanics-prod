@@ -29,8 +29,7 @@ class CreditCapacity  container for name-specific credit information
 #imports
 import copy
 
-import MarketColor
-
+from . import industry_data
 from . import Parameters
 
 from .ABL import ABL
@@ -90,13 +89,15 @@ class CreditCapacity(Pattern):
                        standard_scenario = None,autoPopulate = False):
         """
 
-        CC.buildSizeLandscape(yCurve,scalingFactor,
-            standard_scenario,autoPopulate = False) -> dict()
+
+        CC.buildSizeLandscape(yCurve, scalingFactor
+            [, standard_scenario = None
+            [, autoPopulate = False]]) -> dict()
+
 
         Method returns a dictionary showing the reference landscape by size.
 
         Method expects:
-
          -- yCurve to be a dict-type object w a spread key
          -- scalingFactor to be numeric & supports multiplication
          -- standard_scenario to be a CR_Scenario or dictionary
@@ -119,9 +120,10 @@ class CreditCapacity(Pattern):
         p_scape = {}
         workingCurve = yCurve.copy()
         #make a shallow copy to work on, just in case
-        spread = workingCurve.pop(MarketColor.key_spread)
-        delta_ceiling = workingCurve.pop(MarketColor.key_delta_ceiling)
-        #have to pop the keys to make sure the workingCurve is all numeric
+        spread = workingCurve.pop(industry_data.key_spread)
+        delta_ceiling = workingCurve.pop(industry_data.key_delta_ceiling)
+        #have to pop the keys to make sure the workingCurve is all numeric; use
+        #whatever key names are standard
         bad = Parameters.fields_CR_Reference[0]
         mid = Parameters.fields_CR_Reference[1]
         good = Parameters.fields_CR_Reference[2]

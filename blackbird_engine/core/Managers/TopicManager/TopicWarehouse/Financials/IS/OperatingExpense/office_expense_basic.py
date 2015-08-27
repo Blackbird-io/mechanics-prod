@@ -43,7 +43,6 @@ n/a
 import operator
 
 import BBGlobalVariables as Globals
-import MarketColor
 
 from DataStructures.Modelling.Driver import Driver
 from DataStructures.Modelling.LineItem import LineItem

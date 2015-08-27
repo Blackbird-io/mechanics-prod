@@ -55,7 +55,6 @@ n/a
 
 #imports
 import BBGlobalVariables as Globals
-import MarketColor
 
 from DataStructures.Valuation.Analytics import Analytics
 from DataStructures.Valuation.CR_Scenario import CR_Scenario
@@ -109,6 +108,9 @@ def scenario_1(topic):
     #1) Compute EV
     #For now, run on current period unless know otherwise
     M = topic.MR.activeModel
+    ref_date = M.time_line.current_period.end
+    market_conditions = topic.CM.get_color(ref_date)
+    #
     topBU = M.currentPeriod.content
     topBU.fillOut()
     fins = topBU.financials
@@ -128,20 +130,22 @@ def scenario_1(topic):
     #this topic theoretically runs for either retail or generic
     i_ovw = fins.indexByName("Overview")
     line_overview = fins[i_ovw]
-    industryColor = MarketColor.industryColor
+##    industryColor = MarketColor.industryColor
     k = None
     if "retail" in line_overview.allTags:
         k = "retail"
-    specColor = industryColor[k]
-    for k,v in specColor.items():
-        atx.color.addElement(k,v)
-    specCurve = specColor["landscape"]["x_ebitda"]
+    specColor = market_conditions[k]
+    #
+    for k,v in specColor.__dict__.items():
+        #<-------------------------------------------------------this freezes inconsistent order, embeds randomness
+        atx.color.addElement(k, v)
+    specCurve = specColor.landscape["x_ebitda"]
     atx.color.yieldCurves.changeElement("x_ebitda",specCurve)
     atx.color.guide.quality.increment(2)
     #Part 2 done
     #
     #finish up Part 1
-    m = specColor["ev_x_ebitda"]
+    m = specColor.ev_x_ebitda
     ev = m * annual_ebitda 
     atx.ev.setValue(ev, topic.tags.name)
     #<------------------------------------------------------------------------------------------need real signature above
@@ -151,15 +155,15 @@ def scenario_1(topic):
     #3) Make a name-specific credit landscape
     #Use standard tools from Credit Capacity module
     sc1 = CR_Scenario()
-    stdTerm = specColor["term"]
+    stdTerm = specColor.term
     sc1.changeElement("term",stdTerm)
     print("sc1: ",sc1)
     print("annual ebitda: ", annual_ebitda)
     landscape_by_size = atx.cc.buildSizeLandscape(specCurve,annual_ebitda,
                                                   sc1,autoPopulate = True)
     #trim the landscape boundaries to fit min/max sanity check
-    debt_x_ebitda = specColor["debt_x_ebitda"]
-    ltv_max = specColor["ltv_max"]
+    debt_x_ebitda = specColor.debt_x_ebitda
+    ltv_max = specColor.ltv_max
     cc_hi = min(ltv_max*ev,debt_x_ebitda*annual_ebitda)
     cc_hi = max(0,cc_hi)
     cc_hi = round(cc_hi,6)

@@ -44,7 +44,6 @@ import copy
 import datetime
 
 import BBGlobalVariables as Globals
-import MarketColor
 
 from DataStructures.Modelling.Driver import Driver
 from DataStructures.Modelling.LineItem import LineItem
@@ -169,9 +168,6 @@ def scenario_3(topic):
     marketing_fn = "inflation-adjusted monthly expense from known annual start."
     marketing_formula = topic.formulas[marketing_fn]
     #
-    inflation = copy.copy(MarketColor.annualInflation)
-    marketing_data["annual_inflation"] = inflation
-    #
     m_ref_date = M.currentPeriod.end
     if Globals.fix_ref_date:
         m_ref_date = Globals.t0
@@ -179,8 +175,12 @@ def scenario_3(topic):
     #
     marketing_data["ref_year"] = m_ref_year
     #
+    market_conditions = topic.CM.get_color(m_ref_date)
+    inflation = market_conditions.inflation.annual
+    marketing_data["annual_inflation"] = inflation
+    #
     ltm_marketing_spend = M.interview.work_space["ltm marketing"]
-    expected_user_understatement = MarketColor.standardUnderstatement
+    expected_user_understatement = market_conditions.corrections.understatement
     adj_marketing_spend = (ltm_marketing_spend *
                            (1 + expected_user_understatement))
     marketing_data["base_annual_expense"] = adj_marketing_spend
