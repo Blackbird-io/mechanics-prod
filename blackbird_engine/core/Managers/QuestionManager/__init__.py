@@ -53,8 +53,8 @@ import Tools.ForManagers
 from DataStructures.Analysis.FullQuestion import FullQuestion
 from DataStructures.Analysis.MiniQuestion import MiniQuestion
 from DataStructures.Analysis.PortalQuestion import PortalQuestion
-from DataStructures.Platform.Catalog import Catalog as StandardCatalog
 from DataStructures.Platform.ID import ID
+from DataStructures.Platform.protected_catalog import ProtectedCatalog
 
 from . import QuestionWarehouse as Warehouse
 
@@ -62,58 +62,9 @@ from . import QuestionWarehouse as Warehouse
 
 
 #globals
-#globals after class definitions; use class instances
-
-#classes
-class LocalCatalog(StandardCatalog):
-    """
-
-    Class customizes Platform.Catalog. Provides a specialized issue method that
-    looks up questions by both name and bbid and returns a copy of the matching
-    entry. FullQuestion objects are stateful in ``input_array`` and ``context``.
-    Issuing a copy instead of the original makes sure that the Engine can ask
-    two or more custom versions of the same question in parallel processes.     
-    ==========================  ================================================
-    Attribute                   Description
-    ==========================  ================================================
-
-    DATA:
-    n/a
-
-    FUNCTIONS:
-    issue()                     returns copy of entry with matching id or name
-    ==========================  ================================================
-    """
-    def __init__(self):
-        StandardCatalog.__init__(self)
-
-    def issue(self,key):
-        """
-
-
-        Catalog.issue(key) -> FullQuestion
-
-
-        Method locates catalog entry and returns its copy. ``key`` can be either
-        object name or bbid. 
-        """
-        result= None
-        entry = None
-        try:
-            #assume key is bbid
-            entry = StandardCatalog.issue(self, key)
-        except KeyError:
-            #key not in main table, check if it's a name
-            q_bbid = self.by_name[key]
-            entry = StandardCatalog.issue(self, q_bbid)
-        result = entry.copy()    
-        #
-        return result
-
-#globals
-local_catalog = LocalCatalog()
 id = ID()
 id.assignBBID("QuestionManager")
+local_catalog = ProtectedCatalog()
 
 #functions
 def make_full(mini_q, language = "English"):

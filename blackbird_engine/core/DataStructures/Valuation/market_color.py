@@ -60,20 +60,20 @@ class MarketColor(dict):
     ====================  ======================================================
 
     DATA:
-    as_of                 date of recorded market conditions
     author                name of instance author
     corrections           instance of Corrections, tracks user adjustments
-    id                    instance of Platform.ID.ID class
+    id                    instance of Platform.ID.ID class; set on ref_date
     inflation             instance of Inflation, tracks expected and observed
+    ref_date              date of recorded market conditions
     
     FUNCTIONS:
     add_industry()        inserts an IndustryData instance under industry key
     copy()                returns a deep copy of instance
     ====================  ======================================================
     """
-    def __init__(self, author, as_of_iso):
+    def __init__(self, author, ref_date_iso):
         dict.__init__(self)
-        self.as_of = parsing_tools.date_from_iso(as_of_iso)
+        self.ref_date = parsing_tools.date_from_iso(ref_date_iso)
         self.author = author
         #
         self.corrections = Corrections()

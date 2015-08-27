@@ -59,11 +59,11 @@ class Inflation:
         self._annual = Globals.default_inflation
 
     @property
-    def inflation(self):
+    def annual(self):
         return self._annual
 
-    @inflation.setter
-    def inflation(self, value):
+    @annual.setter
+    def annual(self, value):
         if -1 <= value <= 1:
             self._annual = value
         else:

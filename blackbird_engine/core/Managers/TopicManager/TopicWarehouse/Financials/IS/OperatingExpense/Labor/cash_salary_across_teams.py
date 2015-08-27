@@ -44,7 +44,6 @@ n/a
 import operator
 
 import BBGlobalVariables as Globals
-import MarketColor
 
 from DataStructures.Modelling.BusinessUnit import BusinessUnit
 from DataStructures.Modelling.Driver import Driver
@@ -260,8 +259,11 @@ def apply_data(topic, datapoint):
     #Step 1. Unpack each of the objects used here as parts
     #(ordered from largest to smallest)
     #1.0. model
-    model = topic.MR.activeModel
+    model = topic.MR.activeModel        
     current_period = model.time_line.current_period
+    #
+    market_conditions = topic.CM.get_color(current_period.end)
+    #
     #1.1. business units
     company = current_period.content
     hq_bbid = company.components.by_name["headquarters"]
@@ -286,7 +288,7 @@ def apply_data(topic, datapoint):
     #1.6. data
     shared_data = dict()
     shared_data["ref_year"] = company.life.ref_date.year
-    shared_data["annual_inflation"] = MarketColor.annualInflation
+    shared_data["annual_inflation"] = market_conditions.inflation.annual
     generic_salary = datapoint.get("everyone else")
     if not generic_salary:
         generic_salary = datapoint.get("other")

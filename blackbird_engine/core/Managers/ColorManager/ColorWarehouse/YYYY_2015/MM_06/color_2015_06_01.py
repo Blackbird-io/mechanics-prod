@@ -35,7 +35,7 @@ from DataStructures.Valuation.market_color import MarketColor
 
 #globals
 color_content = True
-color = MarketColor(author = "IOP", ref_date_iso = "2015-08-24")
+color = MarketColor(author = "IOP", ref_date_iso = "2015-06-01")
 key_delta_ceiling = industry_data.key_delta_ceiling
 key_spread = industry_data.key_spread
 
@@ -51,14 +51,14 @@ industry.ev_x_ebitda = 8
 industry.debt_x_ebitda = 5
 industry.ltv_max = 0.80
 industry.term = 3
-generic_x_ebitda = [(0.5,0.04),
-                    (1.0,0.05),
-                    (1.5,0.06),
-                    (2.0,0.07),
-                    (2.5,0.08),
-                    (3.0,0.10),
-                    (3.5,0.12),
-                    (4.0,0.12),
+generic_x_ebitda = [(0.5,0.03),
+                    (1.0,0.04),
+                    (1.5,0.04),
+                    (2.0,0.05),
+                    (2.5,0.07),
+                    (3.0,0.07),
+                    (3.5,0.10),
+                    (4.0,0.10),
                     (4.5,0.14),
                     (5.0,0.14),
                     (key_spread,0.0050),
