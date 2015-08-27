@@ -43,7 +43,6 @@ import copy
 import datetime
 
 import BBGlobalVariables as Globals
-import MarketColor
 
 from DataStructures.Modelling.Driver import Driver
 from DataStructures.Modelling.LineItem import LineItem
@@ -215,14 +214,17 @@ def scenario_3(topic):
     ee_formula_name = "inflation-adjusted monthly expense from known annual start."
     employee_formula = topic.formulas[ee_formula_name]
     #
-    inflation = copy.copy(MarketColor.annualInflation)
-    employee_data["annual_inflation"] = inflation
-    employee_data["base_annual_expense"] = annual_unit_comp
-    #
     m_ref_date = M.currentPeriod.end
     if Globals.fix_ref_date:
         m_ref_date = Globals.t0
     m_ref_year = m_ref_date.year
+    #
+    market_conditions = topic.CM.get_color(m_ref_date)
+    #
+    inflation = market_conditions.inflation.annual
+    employee_data["annual_inflation"] = inflation
+    employee_data["base_annual_expense"] = annual_unit_comp
+    #
     #
     employee_data["ref_year"] = m_ref_year  
     #

@@ -38,7 +38,7 @@ from . import SGA
 from . import external_dev_spend
 from . import hosting_spend
 from . import office_expense_basic
-from . import SimpleOpEx_Retail
+from . import simple_op_ex_retail
 
 
 
