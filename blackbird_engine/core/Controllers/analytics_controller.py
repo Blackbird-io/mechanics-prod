@@ -41,8 +41,7 @@ class AnalyticsController(Controller):
     """
 
     This class manages protocols that provide a focal point for MatchMaker
-    analysis. Daughter of Controller class. 
-
+    analysis. Daughter of Controller class.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
