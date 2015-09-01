@@ -61,7 +61,6 @@ class EnterpriseValue:
     #purely storage and guidance
     #
 
-
 class CreditCapacity:
     def __init__(self):
         self.abl = Landscape()
@@ -85,9 +84,15 @@ class CreditCapacity:
             #
         #can also have a smoothing feature:
             #w/in [10]% of the end of a curve, take average, not lowest
+
+        #other important functionality:
+            #if no leverage capacity, but abl, should still show all the abl elements
+            #same w 
         pass
 
 #
+#also make a special path add-on for valuation
+
 
     
 
