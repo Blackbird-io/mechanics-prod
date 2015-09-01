@@ -33,11 +33,8 @@ import time
 import BBExceptions
 import BBGlobalVariables as Globals
 
-
-
 from DataStructures.Guidance.Guide import Guide
 from DataStructures.Platform.Tags import Tags
-from DataStructures.Platform.print_as_line import PrintAsLine
 
 from .Equalities import Equalities
 
@@ -48,7 +45,7 @@ from .Equalities import Equalities
 #n/a
 
 #classes
-class LineItem(PrintAsLine, Tags, Equalities):
+class LineItem(Tags,Equalities):
     """
     Instances of this class become components of a BusinessUnit.Financials list.
 
@@ -63,7 +60,7 @@ class LineItem(PrintAsLine, Tags, Equalities):
     DATA:
     _sign                 instance-level state for sign
     _value                instance-level state for value
-    formatted             ``[name] ... [value]`` string for pretty printing
+    alignedInfo           string of lineitem for pretty printing
     guide                 instance of Guide object
     irrelevantAttributes  list, CLASS, attributes Eq.__eq__ always skips
     keyAttributes         list, CLASS, parameters for comparison by Equalities
@@ -81,7 +78,7 @@ class LineItem(PrintAsLine, Tags, Equalities):
     extrapolate_to()      delegates to Tags.extrapolate_to()
     ex_to_default()       returns a Line.copy() of self w target parentObject
     ex_to_special()       delegates to Tags.ex_to_special()
-    pre_format()          make the ``formatted`` string
+    preFormat()           make an alignedInfo string
     replicate()           make a copy and fix line name
     setValue()            sets value to input, records signature
     toggleSign()          change sign to 0 or 1
@@ -98,10 +95,10 @@ class LineItem(PrintAsLine, Tags, Equalities):
 ##    lineItem. See Equalities docs for more info.
     
     def __init__(self, name = None, value = None):
-        PrintAsLine.__init__(self)
         Tags.__init__(self, name)
         self._value = None
         self._sign = 1
+        self.alignedInfo = None
         self.guide = Guide()
         self.modifiedBy = []
         if value != None:
@@ -125,6 +122,18 @@ class LineItem(PrintAsLine, Tags, Equalities):
             #kind of like saying a Ford Taurus is a Ford Taurus, but may differ
             #in mileage, condition, color, etc.
         #or tighter: same as equal criteria?
+
+    def __str__(self):
+        #Check if lineItem is already formatted so other objects can perform
+        #fancy formatting outside the print expression. 
+        if not self.alignedInfo:
+            #format if havent already
+            self.preFormat()
+        result = self.alignedInfo[:]
+        #Reset the formatting after every call to ensure that print() does not
+        #show stale information
+        self.alignedInfo = None
+        return result
  
     class dyn_ValManager:
         """
@@ -259,7 +268,49 @@ class LineItem(PrintAsLine, Tags, Equalities):
         if ex_s_sig not in result.modifiedBy[-1]:
             r_val = result.value
             result.setValue(r_val,ex_s_sig)
-        return result        
+        return result
+
+    def preFormat(self, prefix = "",showAsHeader=False,
+                  width=Globals.screen_width,
+                  leftTab = 4, rightTab = 4):
+        """
+
+
+        LineItem.preFormat([prefix = ""[,showAsHeader = False
+          [, width = Globals.screen_width[, leftTab = 4
+          [, rightTab = 4]]]]]) -> None
+
+
+        Method formats lineItem for display.
+        Separate to ensure that __str__() receives only one argument (self).
+        Otherwise, potential for misalignment between print() calls. 
+
+        Prints lineItem at a constant width.
+        fills space between name and value with dots.
+
+        showAsHeader = True hides the dots and the value.
+        Setting useful for displaying empty top-level lineitems before details.
+        """
+        maxChars = width - leftTab - rightTab
+        dot = "."
+        blank = " "
+        headerMark = ":"
+        #add a trailing space to any nonempty prefix
+        if not prefix == "":
+            prefix = prefix + " "
+        try:
+            val = "%.2F" % self.value
+        except (TypeError,ValueError):
+            val = str(self.value)
+        dots = dot*(maxChars - len(prefix) - len(str(self.name)) - len(val))
+        blanks = " "*(maxChars - len(prefix) - len(str(self.name)) - len(headerMark))
+        info = None
+        if not showAsHeader:
+            info = prefix + str(self.name)+dots+val
+        else:    
+            info = prefix + str(self.name)+headerMark
+        leftTabbedInfo = info.rjust(leftTab+len(info))
+        self.alignedInfo = leftTabbedInfo.ljust(rightTab + len(leftTabbedInfo))
 
     def replicate(self,compIndex = None, fixName = True):
         """

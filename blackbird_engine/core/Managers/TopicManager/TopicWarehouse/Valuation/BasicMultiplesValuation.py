@@ -130,7 +130,6 @@ def scenario_1(topic):
     #this topic theoretically runs for either retail or generic
     i_ovw = fins.indexByName("Overview")
     line_overview = fins[i_ovw]
-##    industryColor = MarketColor.industryColor
     k = None
     if "retail" in line_overview.allTags:
         k = "retail"
@@ -164,11 +163,11 @@ def scenario_1(topic):
     #trim the landscape boundaries to fit min/max sanity check
     debt_x_ebitda = specColor.debt_x_ebitda
     ltv_max = specColor.ltv_max
-    cc_hi = min(ltv_max*ev,debt_x_ebitda*annual_ebitda)
-    cc_hi = max(0,cc_hi)
+    cc_hi = min(ltv_max*ev, debt_x_ebitda*annual_ebitda)
+    cc_hi = max(0, cc_hi)
     cc_hi = round(cc_hi,6)
     cc_lo = 2000000
-    atx.cc.trimLandscape("size",lo_bound = cc_lo,hi_bound = cc_hi)
+    atx.cc.trimLandscape("size", lo_bound = cc_lo, hi_bound = cc_hi)
     #now that we have a completed size landscape, build a price landscape from
     #its contents. get the clean, trimmed size landscape and feed it into the
     #buildSecondary() method

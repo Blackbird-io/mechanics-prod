@@ -33,11 +33,10 @@ import time
 import BBExceptions
 import BBGlobalVariables as Globals
 
-
+import Tools.for_printing as printing_tools
 
 from DataStructures.Guidance.Guide import Guide
 from DataStructures.Platform.Tags import Tags
-from DataStructures.Platform.print_as_line import PrintAsLine
 
 from .Equalities import Equalities
 
@@ -48,7 +47,7 @@ from .Equalities import Equalities
 #n/a
 
 #classes
-class LineItem(PrintAsLine, Tags, Equalities):
+class LineItem(Tags,Equalities):
     """
     Instances of this class become components of a BusinessUnit.Financials list.
 
@@ -98,10 +97,10 @@ class LineItem(PrintAsLine, Tags, Equalities):
 ##    lineItem. See Equalities docs for more info.
     
     def __init__(self, name = None, value = None):
-        PrintAsLine.__init__(self)
         Tags.__init__(self, name)
         self._value = None
         self._sign = 1
+        self.formatted = None
         self.guide = Guide()
         self.modifiedBy = []
         if value != None:
@@ -125,6 +124,18 @@ class LineItem(PrintAsLine, Tags, Equalities):
             #kind of like saying a Ford Taurus is a Ford Taurus, but may differ
             #in mileage, condition, color, etc.
         #or tighter: same as equal criteria?
+
+    def __str__(self):
+        #Check if lineItem is already formatted so other objects can perform
+        #fancy formatting outside the print expression. 
+        if not self.formatted:
+            #format if havent already
+            self.preFormat()
+        result = self.formatted[:]
+        #Reset the formatting after every call to ensure that print() does not
+        #show stale information
+        self.formatted = None
+        return result
  
     class dyn_ValManager:
         """
@@ -259,7 +270,21 @@ class LineItem(PrintAsLine, Tags, Equalities):
         if ex_s_sig not in result.modifiedBy[-1]:
             r_val = result.value
             result.setValue(r_val,ex_s_sig)
-        return result        
+        return result
+
+    def pre_format(self, **kargs):
+        """
+
+
+        LineItem.pre_format(**kargs) -> None
+
+
+        Method formats instance for display. Method delegates all work to
+        printing_tools.format_as_line(). Method stores that function's
+        output at instance.formatted.
+        """
+        self.formatted = printing_tools.format_as_line(self, **kargs)
+        
 
     def replicate(self,compIndex = None, fixName = True):
         """

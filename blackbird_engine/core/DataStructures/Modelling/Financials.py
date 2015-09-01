@@ -909,22 +909,22 @@ class Financials(list, Tags, Equalities):
             if self.hierarchyMap[n] != self.misfitLabel:
                 if (self.contextualFormatting and
                     dropDownReplicaTag in lineItem.allTags):
-                    lineItem.preFormat(prefix = replicaPrefix,
-                                       leftTab = indentPerLevel*(1+self.hierarchyMap[n]),
-                                       rightTab = indentPerLevel)
+                    lineItem.pre_format(prefix = replicaPrefix,
+                                       left_tab = indentPerLevel*(1+self.hierarchyMap[n]),
+                                       right_tab = indentPerLevel)
                 elif (self.contextualFormatting and
                       not n == (len(self)-1) and 
                       dropDownReplicaTag in self[n+1].allTags):
-                    lineItem.preFormat(showAsHeader = True,
-                                       leftTab = indentPerLevel*(1+self.hierarchyMap[n]),
-                                       rightTab = indentPerLevel)
+                    lineItem.pre_format(header = True,
+                                       left_tab = indentPerLevel*(1+self.hierarchyMap[n]),
+                                       right_tab = indentPerLevel)
                 else:
-                    lineItem.preFormat(leftTab = indentPerLevel*(1+self.hierarchyMap[n]),
-                                       rightTab = indentPerLevel)
+                    lineItem.pre_format(left_tab = indentPerLevel*(1+self.hierarchyMap[n]),
+                                       right_tab = indentPerLevel)
                 result = result + str(lineItem) + "\n"
             else:
                 mWidth = defaultScreenWidth - len(misfitPrefix) - indentPerLevel*2
-                lineItem.preFormat(width = mWidth, leftTab = 0, rightTab = 0)
+                lineItem.pre_format(width = mWidth, left_tab = 0, right_tab = 0)
                 stamped = " "*indentPerLevel + misfitPrefix + str(self[n])
                 result = result + stamped + "\n"
         return result
