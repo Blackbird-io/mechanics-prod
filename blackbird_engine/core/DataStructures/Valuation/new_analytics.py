@@ -29,7 +29,9 @@ class Analytics       upper-level container for all analytics
 #imports
 import copy
 
+from .Color import Color
 from .CreditCapacity import CreditCapacity
+from .EnterpriseValue import EnterpriseValue
 from .Pattern import Pattern
 
 
@@ -60,14 +62,20 @@ class Analytics(Pattern):
     """
     def __init__(self,name="Analytics"):
         Pattern.__init__(self,name)
+        activity = Pattern(name="activity")
         cc = CreditCapacity()
+        color = Color()
+        ev = EnterpriseValue()
         #elements have a specific order:
+        self.addElement("color",color)
+        self.addElement("ev",ev)
         self.addElement("cc",cc)
+        self.addElement("activity",activity)
         self.tag("Analytics",field = "req")
         self.tag("ABL")
         self.tag("CC")
         self.tag("EV")
-        for e in [self, cc]:   
+        for e in [self,cc,color,ev]:   
             e.guide.priority.increment(1)
             e.guide.quality.setStandards(1,3)
 

@@ -21,6 +21,35 @@ n/a
 CLASSES:
 class CreditCapacity  container for name-specific credit information
 ====================  ==========================================================
+
+use a path to organize the order
+  can have a different path: model.analytics.path
+  or can attach the details to the existing path, under the analytics bookmark
+    then have one path
+    in one place
+  problem:
+    ic would then include?  
+
+the reason why i have all this stuff in analytics is because i was trying to control order before there was a path, because i was really resistant to this idea of a path. 
+
+but now i do have a path. so all of this pre-baked stuff is kind of non-sense. 
+  the path provides ordering
+  it can contain any object w a guide attribute and tags
+    the object doesnt have to be a line item, though it helps if it is (for printing)
+  if i need to create bundles of attributes (e.g., "ev") for standard record keeping,
+    i can either create lists or classes
+
+change "parameters" to "schema"
+
+make the analytics path separately as default, then call always tack it on to the 
+normal one; add "analytics" bookmarks
+
+revised analytics path:
+ - compute ev
+ - compute abl landscape
+ - compute lev landscape
+
+
 """
 
 
@@ -30,12 +59,10 @@ class CreditCapacity  container for name-specific credit information
 import copy
 
 from . import industry_data
-from . import Parameters as schema
-
+from . import schema
 
 from .credit_landscape import CR_Landscape
 from .CR_Reference import CR_Reference
-from .Pattern import Pattern
 
 
 
@@ -62,14 +89,18 @@ class CreditCapacity:
     ====================  ======================================================
 
     DATA:
-    abl                   instance of ABL object
-    landscape             instance of CR_Landscape (dict w Reference values)
-    ll                    instance of LL object
-    
+    abl                   asset-backed loan price landscape for company
+    cf                    leveraged loan price landscape for company
+    bonds                 bond price landscape
+    combined              combined loan price landscape for company                  
+        
     FUNCTIONS:
+    build_by_size()
+    
+    combine()             pick lowest price generally? or populate a scenario w all the keys
+                          #pick lowest price, can also average the prices where necessary
     buildSizeLandscape()  generates a dict of full references from a yield curve
-    buildSecondaryLandscape()  organizes  existing landscape into new ref points
-    trimLandscape()       cuts off ref points outside an external range
+    flip_landscape()      flips existing landscape to a different axis  #<--- goes
     ====================  ======================================================
     
     """
@@ -78,9 +109,14 @@ class CreditCapacity:
         self.auto_update = True
         self.landscape = CR_Landscape(standard = {})
         
-
-    def buildSizeLandscape(self, yCurve, scalingFactor,
-                       standard_scenario = None,autoPopulate = False):
+    def combine(self):
+        #delete current (self.combined = None)
+        #combine all known landscapes
+        #
+        pass
+    
+    def build_landscape(self, yield_curve, scaling_factor,
+                       standard_scenario = None, store = False):
         """
 
 
@@ -90,16 +126,17 @@ class CreditCapacity:
 
 
         Method returns a dictionary showing the reference landscape by size.
+        Method computes the name-specific landscape by multiplying the generic
+        leverage data in yield_curve, expressed as price per multiple, by the
+        company's specific ``scaling_factor``.
 
         Method expects:
-         -- yCurve to be a dict-type object w a spread key
-         -- scalingFactor to be numeric & supports multiplication
-         -- standard_scenario to be a CR_Scenario or dictionary
+         -- ``yield_curve`` to be a dict-type object w a spread key
+         -- ``scaling_factor`` to be a number that supports multiplication
+         -- ``standard_scenario`` to be a CR_Scenario or dictionary
 
-        If ``autoPopulate`` is True, method updates instance.landscape with the
+        If ``store`` is True, method updates instance.landscape with the
         size landscapes it generates.
-
-        #<---------------------------------------------------------------------------should call this var ``store``
 
         All values in the landscape are CR_Reference instances
         populated with versions of the standard scenario. The method adjusts
@@ -107,14 +144,14 @@ class CreditCapacity:
 
          -- for size, scaling the leverage by the scaling factor (e.g., ebitda)
          -- for price, by applying the leveraged spread to the input yield
-         (price goes up for bad scenarios and down for good scenarios)
+            (price goes up for bad scenarios and down for good scenarios)
          -- for structure, by manually adjusting it from loose to tight as
-         leverage goes up, based on percentile rank
+            leverage goes up, based on percentile rank
 
         """
         s_scape = {}
         p_scape = {}
-        workingCurve = yCurve.copy()
+        workingCurve = yield_curve.copy()
         #make a shallow copy to work on, just in case
         spread = workingCurve.pop(industry_data.key_spread)
         delta_ceiling = workingCurve.pop(industry_data.key_delta_ceiling)
@@ -144,8 +181,9 @@ class CreditCapacity:
             return p
         #
         steps = sorted(workingCurve.keys())
+        step_count = len(steps)
         #make the size landscape:
-        for i in range(len(steps)):
+        for i in range(step_count):
             lev_point = steps[i]
             #
             bad_price = make_bad_price(lev_point)
@@ -153,7 +191,7 @@ class CreditCapacity:
             good_price = make_good_price(lev_point)
             prices = [bad_price,mid_price,good_price]
             #
-            scaled = lev_point*scalingFactor
+            scaled = lev_point * scaling_factor
             scaled = round(scaled,6)
             print("scaled: ",scaled)
             scaled = max(0,scaled)
@@ -176,8 +214,7 @@ class CreditCapacity:
             ref[mid].changeElement("price",mid_price)
             ref[good].changeElement("price",good_price)
             #adjust ref structure:
-            rank = i/len(steps)
-                #<-------------------------------------------------------------- compute length once
+            rank = i/step_count
             if rank < 0.34:
                 ref[bad].changeElement("structure",1)
                 ref[mid].changeElement("structure",2)
@@ -194,21 +231,23 @@ class CreditCapacity:
             #structure score should be btwn 0 (open)-9 (tight)
             #low leverage lending is loose, higher leverage more constrained
             #the above can be a matrix: [max_percentile: {sc_key: score}...]
-        if autoPopulate:
-            self.landscape.changeElement("size",s_scape)
+##        if store:
+##            self.landscape.changeElement("size",s_scape)
         return s_scape
 
-    def buildSecondaryLandscape(self,s_scape,ref_key = "price",
-                            scoring_var = "size", autoPopulate = False):
+    def flip_landscape(self, ref_scape, ref_key = "price",
+                       scoring_var = "size", store = False):
         """
 
-        CC.buildSecondaryLandscape(s_scape,[ref_key = "price"
-            [,scoring_var = "size"[,autoPopulate = False]]] -> dict
+
+        CC.flip_landscape(ref_scape, [ref_key = "price"
+                          [,scoring_var = "size"[, store = False]]]) -> dict
+
 
         Method builds and returns a secondary landscape using scenarios present
-        in the input ``s_scape`` (usually a landscape keyed by size).
+        in the input ``ref_scape`` (usually a landscape keyed by size).
 
-        Method goes through each reference point in s_scape. For each scenario
+        Method goes through each reference point in ref_scape. For each scenario
         within each reference point, method pulls out the value associated with
         the ``ref_key`` key (for example, ``price`` or ``structure``). bSL()
         then creates a new reference object for each unique ref_val, enters the
@@ -241,45 +280,21 @@ class CreditCapacity:
         after this method concludes its work.
         """
         p_scape = {}
-        for ref in s_scape.values():
+        for ref in ref_scape.values():
             for scenario in ref.values():
-                pricePoint = scenario[ref_key]
-                sizePoint = scenario[scoring_var]
-                if pricePoint not in p_scape.keys():
-                    newRef = CR_Reference()
-                    newRef.setAll(ref_key,pricePoint)
-                    p_scape[pricePoint] = newRef
-                p_scape[pricePoint][sizePoint] = scenario
-        if autoPopulate:
+                price_point = scenario[ref_key]
+                size_point = scenario[scoring_var]
+                if price_point not in p_scape.keys():
+                    new_ref = CR_Reference()
+                    new_ref.setAll(ref_key,price_point)
+                    p_scape[price_point] = new_ref
+                #
+                p_scape[price_point][size_point] = scenario
+                #
+        if store:
             self.landscape.changeElement(ref_key,p_scape)
+        #
         return p_scape
 
-        #<--------------------------------------------------call this flip_landscape or invert_landscape
-        #main parameter should be called ref_scape
 
-    def trimLandscape(self,field,lo_bound=None,hi_bound=None):
-        """
-
-
-        CreditCapacity.trimLandscape(field,lo_bound=None,hi_bound=None) -> None
-
-
-        Method for specified field in landscape, delete items w keys smaller
-        than the lo_bound or larger than the hi_bound. 
-        """
-        old = self.landscape.keepForecasts
-        self.landscape.keepForecasts = True
-        if lo_bound:
-            ref_lo = self.landscape.forecast(ask=lo_bound, field=field)
-        if hi_bound:
-            ref_hi = self.landscape.forecast(ask=hi_bound, field=field)
-        F = self.landscape[field]
-        points = sorted(F.keys())
-        for p in points:
-            if lo_bound and (p < lo_bound):
-                F.pop(p)
-            elif hi_bound and (p > hi_bound):
-                F.pop(p)
-        self.landscape.keepForecasts = old
-        #<------------------------------------------------------------this should be landscape.trim()
-
+ 
