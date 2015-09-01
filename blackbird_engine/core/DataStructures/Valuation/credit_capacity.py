@@ -56,13 +56,7 @@ revised analytics path:
 
 
 #imports
-import copy
-
-from . import industry_data
-from . import schema
-
-from .credit_landscape import CR_Landscape
-from .CR_Reference import CR_Reference
+from .price_landscape import Landscape
 
 
 
@@ -94,18 +88,20 @@ class CreditCapacity:
     bonds                 bond price landscape
     combined              combined loan price landscape for company                  
         
-    FUNCTIONS:
-    build_by_size()
-    
+    FUNCTIONS:    
     combine()             pick lowest price generally? or populate a scenario w all the keys
                           #pick lowest price, can also average the prices where necessary
-    buildSizeLandscape()  generates a dict of full references from a yield curve
-    flip_landscape()      flips existing landscape to a different axis  #<--- goes
     ====================  ======================================================
     
     """
 
     def __init__(self):
+        self.asset_backed = Landscape()
+        self.converts = None
+        self.lev_loans = Landscape()
+        self.bonds = Landscape()
+        self.combined = None
+
         self.auto_update = True
         self.landscape = CR_Landscape(standard = {})
         
@@ -234,67 +230,6 @@ class CreditCapacity:
 ##        if store:
 ##            self.landscape.changeElement("size",s_scape)
         return s_scape
-
-    def flip_landscape(self, ref_scape, ref_key = "price",
-                       scoring_var = "size", store = False):
-        """
-
-
-        CC.flip_landscape(ref_scape, [ref_key = "price"
-                          [,scoring_var = "size"[, store = False]]]) -> dict
-
-
-        Method builds and returns a secondary landscape using scenarios present
-        in the input ``ref_scape`` (usually a landscape keyed by size).
-
-        Method goes through each reference point in ref_scape. For each scenario
-        within each reference point, method pulls out the value associated with
-        the ``ref_key`` key (for example, ``price`` or ``structure``). bSL()
-        then creates a new reference object for each unique ref_val, enters the
-        reference under the ref_val in the result landscape, and enters the
-        scenario that triggerred this whole operation in the reference under
-        the scenario[scoring_var] key.
-
-        The resulting dictionary contains references for each unique ref_key
-        value in the input landscape, and each of those references contains
-        a range of scenarios, keyed by their scoring_variable result.
-
-        For example, this method can be used to generate a price landscape from
-        a size landscape. The price landscape should be keyed by price in
-        percent, so ref_key := ``price``. Each key should point towards a
-        reference that contains every scenario with a given price (e.g., 8%).
-        
-        There may be many such scenarios, so the reference should key them by
-        whatever metric describes their relative desirability (from the
-        perspective of the borrower). When price is constant, size is the most
-        significant variable - a company wants to borrow as much as possible at
-        a given price. So in the p_scape, each reference would contain keys of
-        different loan sizes, with values pointing to scenarios that describe a
-        loan of that size (w/r/to structure, term, or anything else) at the
-        given price (8%).
-        
-        NOTE: Method does **not** label scenarios as "bad","good", etc.
-        The scenarios associated with any default reference keys are blank. 
-
-        Use landscape.updateLabels() to assign specific scenarios to the keys
-        after this method concludes its work.
-        """
-        p_scape = {}
-        for ref in ref_scape.values():
-            for scenario in ref.values():
-                price_point = scenario[ref_key]
-                size_point = scenario[scoring_var]
-                if price_point not in p_scape.keys():
-                    new_ref = CR_Reference()
-                    new_ref.setAll(ref_key,price_point)
-                    p_scape[price_point] = new_ref
-                #
-                p_scape[price_point][size_point] = scenario
-                #
-        if store:
-            self.landscape.changeElement(ref_key,p_scape)
-        #
-        return p_scape
 
 
  

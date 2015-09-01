@@ -17,6 +17,7 @@ n/a
 
 FUNCTIONS:
 format_as_line()      format data into a ``name...value`` line
+format_completed()    format as line with a completed indicator
 
 CLASSES:
 n/a
@@ -123,6 +124,20 @@ def format_as_line(obj,
 def format_completed(obj, *kargs):
     """
 
+
+    format_completed(obj, *kargs) -> str
+
+
+    Function formats obj and arguments as a line with a completeness indicator
+    (``[ ]`` or ``[x]``).
+
+    Function shows line as complete iff obj.guide.complete is True. In all other
+    cases, function shows line as incomplete. Function intercepts attribute
+    errors for objects without a ``guide`` attribute.
+    
+    Function only sets the ``value`` key in kargs; format_as_line() then does
+    all of the real formatting work. 
+
     EXAMPLE:
     
     ...
@@ -138,11 +153,13 @@ def format_completed(obj, *kargs):
     """
     result = None
     #
-    completed = False
     mark_full = "[x]"
     mark_empty = "[ ]"
+    try:
+        completed = obj.guide.complete
+    except AttributeError:
+        completed = False
     #
-    completed = getattr(obj, "blah")
     if completed:
         kargs["value"] = mark_full
     else:
