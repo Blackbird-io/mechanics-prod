@@ -14,9 +14,8 @@ Attribute             Description
 ====================  ==========================================================
 
 DATA:
-key_delta_ceiling
-key_spread
-keys_landscape
+default_delta_ceiling max total spread btwn mid and good outcomes; 150 bps
+default_spread        spread per turn btwn mid and good/bad price; 50 bps
 
 FUNCTIONS:
 n/a
@@ -30,19 +29,12 @@ IndustryData          standard record for sector-specific rate environment
 
 
 #imports
-#n/a
-
+from . import schema
 
 
 
 
 #globals
-#formatting parameters
-key_delta_ceiling = "delta_ceiling"
-key_spread = "spread_per_turn"
-keys_landscape = ["x_ebitda", "x_revenue"]
-#
-#leverage function parameters
 default_delta_ceiling = 0.0150
 default_spread = 0.0050
 
@@ -64,7 +56,7 @@ class IndustryData:
     ev_x_ebitda           enterprise value multiple(s) on ebitda
     ev_x_revenue          enterprise value multiple(s) on revenue] #<------------------- values should be size charts
     industry_name         
-    landscape             mid-point expected cost of debt capital as f(leverage)
+    price_curves          mid-point expected cost of debt capital as f(leverage)
     ltv_max               maximum loan to enterprise value (leverage) ratio
     term                  industry 
     
@@ -76,8 +68,8 @@ class IndustryData:
         self.ev_x_ebitda = None
         self.debt_x_ebitda = None
         self.industry = industry_name
-        self.landscape = dict.fromkeys(keys_landscape)
         self.ltv_max = None
+        self.price_curves = dict.fromkeys(schema.x_axes_for_price_curves)
         self.term = None
 
     def set_curve(self, points, field_index = 0):
@@ -87,17 +79,17 @@ class IndustryData:
         IndustryData.set_curve(points, [field_index = 0]) -> None
 
 
-        Method sets the specified field in instance landscape to a dictionary
+        Method sets the specified field in instance price_curves to a dictionary
         made from ``points``. Method supplements points with spread and delta
         ceiling data where they are missing.
         """
         curve = dict(points)
-        if key_spread not in curve:
-            curve[key_spread] = default_spread
-        if key_delta_ceiling not in curve:
-            curve[key_delta_ceiling] = default_delta_ceiling
+        if schema.key_spread not in curve:
+            curve[schema.key_spread] = default_spread
+        if schema.key_delta_ceiling not in curve:
+            curve[schema.key_delta_ceiling] = default_delta_ceiling
         #
-        field = keys_landscape[field_index]
+        field = schema.x_axes_for_price_curves[field_index]
         #
-        self.landscape[field] = curve
+        self.price_curves[field] = curve
 

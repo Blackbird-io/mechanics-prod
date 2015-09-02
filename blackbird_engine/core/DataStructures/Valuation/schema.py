@@ -49,5 +49,9 @@ fields_yieldCurves = ["x_ebitda","x_revenue"]
 
 gl_structure_score = 4
 
+key_delta_ceiling = "delta_ceiling"
+key_spread = "spread_per_turn"
+x_axes_for_price_curves = ["x_ebitda", "x_revenue"]
+
 #classes
 #n/a

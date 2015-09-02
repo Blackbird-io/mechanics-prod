@@ -27,7 +27,7 @@ class CR_Reference    reference point for a credit outcome w/3 scenarios
 
 
 #imports
-from . import Parameters
+from . import schema
 
 from .CR_Scenario import CR_Scenario
 from .Pattern import Pattern
@@ -69,7 +69,7 @@ class CR_Reference(Pattern):
     
     def __init__(self, name = "CR_Reference",standard = None):
         Pattern.__init__(self,name)
-        self.fromkeys(Parameters.fields_CR_Reference)
+        self.fromkeys(schema.fields_CR_Reference)
         if not standard:
             standard = CR_Scenario()
         self.applyStandard(standard)
