@@ -33,6 +33,9 @@ from Tools import for_pricing_credit as pricing_tools
 
 from . import schema
 
+from .CR_Reference import CR_Reference
+from .CR_Scenario import CR_Scenario
+
 
 
 
@@ -42,7 +45,7 @@ mid_label = schema.fields_CR_Reference[1]
 good_label = schema.fields_CR_Reference[2]
 
 #classes
-class Landscape:
+class Landscape(dict):
     """
 
     Class provides a dict-like container for tracking credit landscapes. Each
@@ -55,7 +58,6 @@ class Landscape:
     keep_forecasts        bool, if True, keep forecasts.
     
     FUNCTIONS:
-    average_references()  takes two references, returns a new one w avg values
     build_size()          construct size-based surface from price curve
     forecast()            returns a reference for a price or size ask
     get_summary()         returns dict w min & max values for each field
@@ -65,71 +67,8 @@ class Landscape:
     ====================  ======================================================
     """
     def __init__(self):
+        dict.__init__(self)
         self.keep_forecasts = True
-
-    def average_references(self, a_ref, b_ref, a_weight = 1, b_weight = 1):
-        """
-
-
-        Landscape.average_references(a_ref, b_ref
-          [, a_weight = 1 [, b_weight = 1]]) -> obj
-
-        
-        Method generates an ``average`` reference (m_ref) from two others. The
-        average reference has all of the keys shared by a and b. Values in m_ref
-        are:
-        
-        -- an average_reference, if the key's value in a is a dict-type obj
-        -- the arithmetic mean of a[k] and b[k], if it's possible to compute
-        -- a[k] (in all other cases).
-        
-        Method accepts any reference object that is descended from a dictionary.
-        Method returns a new object of the same class as reference a.
-
-        a_weight and b_weight are optional multipliers that allow the method to
-        compute weighted averages. 
-        """
-        #
-        m_ref = a_ref.__class__()
-        #
-        shared_keys = set(a_ref) & set(b_ref)
-        for k in shared_keys:
-            a_val = a_ref[k]
-            b_val = b_ref[k]
-            m_val = None
-            if dict().__class__ in a_val.__class__.__mro__:
-                m_val = self.average_references(a_val, b_val, a_weight, b_weight)
-            else:
-                try: 
-                    a_val = a_val * a_weight
-                    b_val = b_val * b_weight
-                    m_val = (a_val + b_val)/2
-                    m_val = round(m_val,6)
-                except TypeError:
-                    m_val = a_val
-            m_ref[k] = m_val
-        #
-        return m_ref
-        #NOTE: Method assumes that a reference contains either numeric values OR
-        #dict / pattern objects, NOT lineItems. 
-        #
-        #can expand this method to take in arbitrarily many references:
-        #def avg_ref(self,*references):
-            #keys = [x.keys() for x in references]
-            #sharedKeys = zip(*keys)
-            #for ks in sharedKeys:
-                #k = ks[0]
-                #subRefs = [x[k]] for x in references]
-                #if dict().__class__ in subRefs[0].__class__.__mro__:
-                    #mVal = self.averageReferences(subRefs)
-                #else:
-                    #try:
-                        #mval = sum(subRefs)/len(subRefs)
-                    #else:
-                        #mval = subRefs[0]
-                #mSc[k] = mval
-            #return mSc
-
 
     def build_main(self, price_curve, multiplier,
                    standard_scenario = None, store = False):
@@ -227,196 +166,40 @@ class Landscape:
         #
         return main_surface
     
-    def pivot(self, new_x_axis = "price", new_y_axis = "size", store = False):
+    def forecast(self, ask, field = "size"):
         """
 
 
-        Landscape.pivot([new_x_axis = "price"
-          [, new_y_axis = "size" [, store = False]]]) -> dict
+        Landscape.forecast(ask[, field="size"]) -> reference
 
-
-        Method constructs a new scenario surface along the new_x_axis and then
-        the new_y_axis from the data points in each of the existing surfaces.
-
-        #builds 3-d surfaces: scenarios as a function of (x, y):
-           #scenarios as a function of x
-           #references as a function of y
-        
-        #REF_SCAPE is now always instance
-        
-        #ALWAYS goes through every surface in instance; will build new landscape from "by_term", "by_fit", etc.
-            #if you want to limit this scope, remove keys manually?
-        #MOST COMMON OPERATION: flip landscape keyed by size into one keyed by price <--------------------------------------------------------------------------
-        #overwrites old data on ``store``
-        #vars should probably be called "new_x_axis", "new_y_axis"
-
-        Method goes through each reference point in ref_scape. For each scenario
-        within each reference point, method pulls out the value associated with
-        the ``ref_key`` key (for example, ``price`` or ``structure``). bSL()
-        then creates a new reference object for each unique ref_val, enters the
-        reference under the ref_val in the result landscape, and enters the
-        scenario that triggerred this whole operation in the reference under
-        the scenario[scoring_var] key.
-
-        The resulting dictionary contains references for each unique ref_key
-        value in the input landscape, and each of those references contains
-        a range of scenarios, keyed by their scoring_variable result.
-
-        For example, this method can be used to generate a price landscape from
-        a size landscape. The price landscape should be keyed by price in
-        percent, so ref_key := ``price``. Each key should point towards a
-        reference that contains every scenario with a given price (e.g., 8%).
-        
-        There may be many such scenarios, so the reference should key them by
-        whatever metric describes their relative desirability (from the
-        perspective of the borrower). When price is constant, size is the most
-        significant variable - a company wants to borrow as much as possible at
-        a given price. So in the p_scape, each reference would contain keys of
-        different loan sizes, with values pointing to scenarios that describe a
-        loan of that size (w/r/to structure, term, or anything else) at the
-        given price (8%).
-        
-        NOTE: Method does **not** label scenarios as "bad","good", etc.
-        The scenarios associated with any default reference keys are blank. 
-
-        To assign scenarios in a landscape to standard quality keys, run
-        Landscape.label().
-        """
-        new_surface = {}
-        #
-        for existing_surface in sorted(self.values()):
-            #sort existing keys to ensure stable order and output
-            for scenario in existing_surface.values():
-                new_x_value = scenario[new_x_axis]
-                #in the size-to-price landscape transform, x_value would be the
-                #price for the loan size that scenario describes
-                #
-                new_y_value = scenario[new_y_axis]
-                #in the size-to-price landscape transform, y_value would be the
-                #size of the loan in the scenario.
-                #
-                if new_x_value not in new_surface.keys():
-                    new_ref = CR_Reference()
-                    #the reference is going to store a bunch of scenarios, keyed
-                    #by y-value
-                    new_ref.setAll(new_x_axis, new_x_value)
-                    #hold the x_value constant across all scenarios in the ref
-                    new_surface[new_x_value] = new_ref
-                #
-                new_surface[new_x_value][new_y_value] = scenario
-                #
-        if store:
-            self[new_x_axis] = new_surface
-        #
-        return new_surface
-        #
-        #this method pulls data from all price surfaces in the instance. 
-        #accordingly, we have to pull the y_value explicitly here. since python
-        #dictionaries do not guarantee key order, we do not know which surface
-        #we are walking at any given cycle of the loop. all we know is how to
-        #transform data points on that surface into the data points we need. for
-        #example, we could be walking a surface keyed by loan term (in months).
-        #we should still key all of its scenarios by their price and then by
-        #their size.
-        #
-        #the situation where the instance has only one surface, keyed by size,
-        #then by price, and we want to create a price-based landscape is a
-        #special case. there, references  on the only existing_surface are
-        #already keyed by the new_y_value we want. in this one situation,
-        #pulling the new y value explicitly can seem redundant.
-    
-    def forecast(self, ask = None, field = "size"):
-        """
-
-
-        CR_Landscape.forecast(ask=None[,field="size"]) -> reference
-        
         
         Method provides a basic forecasting function for a business with a known
-        credit landscape. Method takes either a price or size ask (but not both)
-        and tries to find the best-matching reference.
+        credit landscape.
+     
+        -- ``field`` must be a key in the instance pointing to a surface
+        -- ``ask`` should be a value on the x-axis of the surface
+        
+        Method delegates all substantive work to the forecast() function in
+        Tools.for_pricing_credit. 
 
-        This reference is either:
-         -- a pre-recorded value, or
-         -- an extrapolated value
-
-        The method returns pre-recorded references when the ask is one of the
-        keys to the relevant part (size or price) of the landscape. The method
-        also returns a pre-recorded reference when the ask is either less than
-        the smallest key (returns the min key's reference) or larger than the
-        largest key specified (returns the max key's reference).
-
-        If the ask is between the smallest and largest specified key, the method
-        generates a new reference. It does so by calling average_references() on
-        the two values whose keys are closest to the ask.
-
-        If instance.keep_forecasts is True, method adds the resulting reference
-        to  self. 
-        """       
-        result = None
-        if field not in self.keys():
-            label = "fixed variable not in landscape keys"
-            raise Exception(label)
-        if not ask:
-            label = "must specify ask"
-            raise Exception(label)
-        #check if ask is within known range
-        options = self[field]
-        known_vals = sorted(options.keys())
-        if ask in known_vals:
-            result = options[ask]
-        else:
-            lo = known_vals[0]
-            hi = known_vals[-1]
-            if ask < lo:
-                pass
-                #keep result as None
-                #or can set to a Note:
-                #result = CR_Reference()
-                #comment = "too  small" 
-                #result.changeElement("note",comment)
-            elif ask > hi:
-                pass
-                #keep result as None
-            else:
-                #ask in known range but not specified, so need to extrapolate the
-                #reference. do so by finding first value larger than ask. then
-                #average that value with its smaller neighbor. 
-                i_less = None
-                i_more = None
-                less_wgt = 1
-                more_wgt = 1
-                for i in range(len(known_vals)):
-                    val = known_vals[i]
-                    if val < ask:
-                        continue
-                    else:
-                        i_more = i
-                        more_wgt = ask/val
-                        break
-                #should always find i_more before continuing. otherwise, ask either
-                #equals or exceeds the upper boundary, both of which tested negative 
-                i_less = i_more-1
-                less_wgt = ask/known_vals[i_less]
-                b = options[known_vals[i_more]]
-                a = options[known_vals[i_less]]
-                result = self.average_references(a,b,less_wgt,more_wgt)
-                try:
-                    result.tag("extrapolated")
-                except AttributeError:
-                    pass
-                if self.keep_forecasts:
-                    try:
-                        options.addElement(ask,result)
-                    except AttributeError:
-                        options[ask] = result
+        If instance.keep_forecasts is True, method stores the forecast in the
+        field.
+        """
+        surface = self[field]
+        result = pricing_tools.forecast(surface, ask)
+##        try:
+##            result.tag("extrapolated")
+##        except AttributeError:
+##            pass
+        if self.keep_forecasts:
+            surface[ask] = result
         return result
 
     def get_summary(self, padding = None):
         """
 
 
-        CR_Landscape.get_summary([padding = None]) -> dict
+        Landscape.get_summary([padding = None]) -> dict
 
 
         Method returns a dictionary keyed by fields in self. Each key points to
@@ -533,11 +316,109 @@ class Landscape:
         #
         return surface
     
+    def pivot(self, new_x_axis = "price", new_y_axis = "size", store = False):
+        """
+
+
+        Landscape.pivot([new_x_axis = "price"
+          [, new_y_axis = "size" [, store = False]]]) -> dict
+
+
+        Method constructs a new scenario surface along the new_x_axis and then
+        the new_y_axis from the data points in each of the existing surfaces.
+
+        #builds 3-d surfaces: scenarios as a function of (x, y):
+           #scenarios as a function of x
+           #references as a function of y
+        
+        #REF_SCAPE is now always instance
+        
+        #ALWAYS goes through every surface in instance; will build new landscape from "by_term", "by_fit", etc.
+            #if you want to limit this scope, remove keys manually?
+        #MOST COMMON OPERATION: flip landscape keyed by size into one keyed by price <--------------------------------------------------------------------------
+        #overwrites old data on ``store``
+        #vars should probably be called "new_x_axis", "new_y_axis"
+
+        Method goes through each reference point in ref_scape. For each scenario
+        within each reference point, method pulls out the value associated with
+        the ``ref_key`` key (for example, ``price`` or ``structure``). bSL()
+        then creates a new reference object for each unique ref_val, enters the
+        reference under the ref_val in the result landscape, and enters the
+        scenario that triggerred this whole operation in the reference under
+        the scenario[scoring_var] key.
+
+        The resulting dictionary contains references for each unique ref_key
+        value in the input landscape, and each of those references contains
+        a range of scenarios, keyed by their scoring_variable result.
+
+        For example, this method can be used to generate a price landscape from
+        a size landscape. The price landscape should be keyed by price in
+        percent, so ref_key := ``price``. Each key should point towards a
+        reference that contains every scenario with a given price (e.g., 8%).
+        
+        There may be many such scenarios, so the reference should key them by
+        whatever metric describes their relative desirability (from the
+        perspective of the borrower). When price is constant, size is the most
+        significant variable - a company wants to borrow as much as possible at
+        a given price. So in the p_scape, each reference would contain keys of
+        different loan sizes, with values pointing to scenarios that describe a
+        loan of that size (w/r/to structure, term, or anything else) at the
+        given price (8%).
+        
+        NOTE: Method does **not** label scenarios as "bad","good", etc.
+        The scenarios associated with any default reference keys are blank. 
+
+        To assign scenarios in a landscape to standard quality keys, run
+        Landscape.label().
+        """
+        new_surface = {}
+        #
+        for existing_surface in sorted(self.values()):
+            #sort existing keys to ensure stable order and output
+            for scenario in existing_surface.values():
+                new_x_value = scenario[new_x_axis]
+                #in the size-to-price landscape transform, x_value would be the
+                #price for the loan size that scenario describes
+                #
+                new_y_value = scenario[new_y_axis]
+                #in the size-to-price landscape transform, y_value would be the
+                #size of the loan in the scenario.
+                #
+                if new_x_value not in new_surface.keys():
+                    new_ref = CR_Reference()
+                    #the reference is going to store a bunch of scenarios, keyed
+                    #by y-value
+                    new_ref.setAll(new_x_axis, new_x_value)
+                    #hold the x_value constant across all scenarios in the ref
+                    new_surface[new_x_value] = new_ref
+                #
+                new_surface[new_x_value][new_y_value] = scenario
+                #
+        if store:
+            self[new_x_axis] = new_surface
+        #
+        return new_surface
+        #
+        #this method pulls data from all price surfaces in the instance. 
+        #accordingly, we have to pull the y_value explicitly here. since python
+        #dictionaries do not guarantee key order, we do not know which surface
+        #we are walking at any given cycle of the loop. all we know is how to
+        #transform data points on that surface into the data points we need. for
+        #example, we could be walking a surface keyed by loan term (in months).
+        #we should still key all of its scenarios by their price and then by
+        #their size.
+        #
+        #the situation where the instance has only one surface, keyed by size,
+        #then by price, and we want to create a price-based landscape is a
+        #special case. there, references  on the only existing_surface are
+        #already keyed by the new_y_value we want. in this one situation,
+        #pulling the new y value explicitly can seem redundant.
+        
     def trim(self, field, lo_bound=None, hi_bound=None):
         """
 
 
-        CR_Landscape.trim(field, lo_bound=None, hi_bound=None) -> None
+        Landscape.trim(field, lo_bound=None, hi_bound=None) -> None
 
 
         For specified field in landscape, method deletes items w keys smaller
