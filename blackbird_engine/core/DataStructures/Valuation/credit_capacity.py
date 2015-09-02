@@ -96,20 +96,38 @@ class CreditCapacity:
     """
 
     def __init__(self):
+        #
         self.asset_backed = Landscape()
+        self.bonds = None
+        self.combined = None
         self.converts = None
         self.lev_loans = Landscape()
-        self.bonds = Landscape()
-        self.combined = None
-
-        self.auto_update = True
-        self.landscape = CR_Landscape(standard = {})
+        #bonds and converts should be a landscape in the future
         
     def combine(self):
-        #delete current (self.combined = None)
-        #combine all known landscapes
-        #
-        pass
+        """
 
+        blend data from all known landscapes
 
- 
+        rules:
+        - always pick the lowest price
+        """
+        #routine here:
+        #make a new landscape.
+        #run landscape.combine(*feeder_fields)
+        #run landscape.label()
+        #thats it
+        
+        #routine:
+        #(1) sort the surfaces by price
+        #(2) start w the cheapest surface
+        #(3) copy all the datapoints in that surface to the combined
+        #(4) also add datapoints from other surfaces that are within range on the scoring var
+            #
+            #(a) for every datapoint in that surface, get a forecast from every other surface
+            #(b) if the forecast is within range of base on the scoring var, record it under the scoring var.
+            #(c) otherwise, discard it.
+        #(6) repeat with all others, but not for values within the range we have already done
+        #(7) update labels
+                    
+                
