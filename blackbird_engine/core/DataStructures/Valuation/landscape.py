@@ -438,3 +438,176 @@ class Landscape(dict):
             elif hi_bound and (p > hi_bound):
                 F.pop(p)
         self.keep_forecasts = old
+
+    def combine(self, surfaces, x_axis = "size", y_axis = "price", y_delta = 0.04):
+        #routine:
+        #(1) sort the surfaces by price
+        #(2) start w the cheapest surface
+        #(3) copy all the datapoints in that surface to the combined
+        #(4) also add datapoints from other surfaces that are within range on the scoring var
+            #
+            #(a) for every datapoint in that surface, get a forecast from every other surface
+            #(b) if the forecast is within range of base on the scoring var, record it under the scoring var.
+            #(c) otherwise, discard it.
+        #(6) repeat with all others, but not for values within the range we have already done
+            #in other words, for values in excess of the cheapest surface on the x-axis
+        #(7) update labels
+        #
+        #alt 4: for every remaining surface, copy datapoints within 
+
+        result = None
+        #
+        by_price = sort_surfaces(surfaces, y_axis)
+        cheapest_surface = by_price[0]
+        remaining = by_price[1:]
+        result = cheapest_surface.copy()
+        for surface in remaining:
+            self.enrich(result, surface, x_axis, y_axis, y_delta)
+        cut_off = max(result)
+        #for the next surface:
+            #extend result by datapoints above cutoff
+            #get 
+        #
+        for surface in remaining:
+            
+        result = by_price[0].copy()
+        #
+        for i in range(len(by_price)):
+            cheapest_surface = by_price[i]
+            remaining_surfaces = by_price[(i+1):]
+            #
+            result.update(cheapest_surface)
+            #
+            for surface in remaining_surfaces:
+                self.enrich(result, surface, x_axis, y_axis, y_delta)
+                #pulls in all the data points within result's x range
+        #
+        #start w a copy of the cheapest surface
+        #for surface in remaining:
+            #simple_combo = self.enrich(result, surface)
+            ##enrich and extend by one
+            ##but now, the simple_combo may have more overlap w even more distant surfaces
+            ##so have to run enrich on all of them
+            #for next_surface in further:
+                #self.enrich(simple_combo, next_surface, extend = False)
+        #
+        #return result
+
+        result = None
+        #
+        stack = self.sort(surfaces, x_axis, y_axis)
+        result = stack[0].copy()
+        #start with a copy of the cheapest surface
+        #start loop at the next most expensive
+        for i in range(1, len(stack)):
+            #
+            neighbor_surface = stack[i]
+            higher_stack = stack[(i+1):]
+            result = self.enrich(result, neighbor_surface, x_axis, y_axis, y_delta)
+        #
+        return result               
+        
+
+    def enrich(self, base, source, x_axis = "size", y_axis = "price", y_delta, extend = True):
+        """
+
+        -> dict()
+
+        enriches a copy of base with data points from source that fall within
+        y_delta of base y-values for any x.
+
+        common application: create a blended price surface that includes all of
+        the data from base (e.g., ABL) and those data points from source (e.g., LL)
+        where the leveraged loan costs within 400 bps (y_dela := 0.04) of an ABL
+        loan of the same size
+
+        will not lengthen a surface (will only enrich (y,z) within [min(x), max(x)]
+
+        or could have this be an extension too:
+          probably easier
+          if datapoint outside of base x range, add it
+
+        base should be a dict type object
+        """
+        result = None
+        #
+        result = base.copy()
+        #should i pivot here? probably, otherwsie will get sort errors?
+        #probably accept errors, so as not to waste effort
+        #
+        lo_bound = 0
+        hi_bound = 0
+        if base:
+            x_lo_bound = min(base)
+            x_hi_bound = min(base)
+        #
+        aligned = self.pivot(source, x_axis, y_axis)
+        #
+        for (x, new_ref) in aligned.items():
+            #should the items be sorted?
+            #x is a size value
+            #y is a reference with multiple scenarios keyed by price
+            if x_lo_bound <= x <= x_hi_bound:
+                #
+                base_ref = forecast(result, x, store = True)
+                #store the forecast to make sure result[x] is a valid call
+                    #what to do on a failed forecast?
+                    #should test if base_ref is True?
+                    #or not bother with enrichment outside the max?
+                #should really only run if x is in base already
+                y_hi_bound = max(base_ref) + y_delta
+                y_lo_bound = min(base_ref) - y_delta
+                for (y, new_scenario) in new_ref:
+                    if y_lo_bound <= y <= y_hi_bound:
+                        result[x][y] = new_scenario.copy()
+                    else:
+                        pass
+            else:
+                if extend:
+                    result[x] = copy.deepcopy(new_ref)
+        #
+        return result
+    
+    def sort(surfaces, scoring_key, lower_is_better = True):
+        #blah
+        pass
+                     
+    def find_best_surface(surfaces, scoring_key = "price", lower_is_better = True):
+        """
+        #returns the surface with the best outcome for 
+        #given a set of surfaces, returns the cheapest
+
+        algo:
+        (1) choose the surface with the smallest max size
+        (2) get the forecast for that size on every surface
+        (3) find the best price in the forecast, which may have 3+ scenarios
+        (4) store the surface under its best forecasted price
+        (5) figure out the best price globally across all surfaces
+        (6) the best surface is the one with the best price
+        """
+        best_surface = None
+        #
+        choose = max
+        if lower_is_better:
+            choose = min
+        by_size = sorted(surfaces, lambda x: max(x))
+        #choose the surface with the smallest max
+        smallest_upper_limit = max(by_size[0])
+        quotes = {}
+        for i in range(len(by_size)):
+            surface = by_size[i]
+            ref = forecast(surface, smallest_upper_limit)
+            #ref is CR_Reference object that contains multiple scenarios
+            scores = [scenario[scoring_key] for scenario in ref]
+            #scores would usually be prices
+            best_score_in_ref = choose(scores)
+            quotes[best_score_in_ref] = (i, surface, ref)
+        #
+        best_score = choose(quotes.keys())
+        best_surface = quotes[best_score][1]
+        i_best = quotes[best_score][0]\
+        by_size.pop(i_best)
+        #pull out winner from by_size
+        runners_up = by_size
+        #
+        return (best_surface, runners_up)
