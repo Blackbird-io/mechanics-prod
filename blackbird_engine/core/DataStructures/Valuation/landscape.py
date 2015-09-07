@@ -48,8 +48,9 @@ good_label = schema.fields_CR_Reference[2]
 class Landscape(dict):
     """
 
-    Class provides a dict-like container for tracking credit landscapes. Each
-    key should point to a dictionary where values are CR_References.
+    Class provides a dict-like container for building and storing credit
+    landscapes (surfaces of credit scenarios). Each key should point to a
+    dictionary where values are CR_References.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -316,7 +317,7 @@ class Landscape(dict):
         #
         return surface
     
-    def pivot(self, new_x_axis = "price", new_y_axis = "size", store = False):
+    def pivot(self, sources = None, new_x_axis = "price", new_y_axis = "size", store = False):
         """
 
 
@@ -372,8 +373,12 @@ class Landscape(dict):
         Landscape.label().
         """
         new_surface = {}
+        sources = None
+        if not sources:
+            ordered_keys = sorted(self.keys())
+            sources = [self[k] for k in ordered_keys]
         #
-        for existing_surface in sorted(self.values()):
+        for existing_surface in sources:
             #sort existing keys to ensure stable order and output
             for scenario in existing_surface.values():
                 new_x_value = scenario[new_x_axis]
@@ -453,161 +458,260 @@ class Landscape(dict):
             #in other words, for values in excess of the cheapest surface on the x-axis
         #(7) update labels
         #
-        #alt 4: for every remaining surface, copy datapoints within 
-
+        #alt 4: for every remaining surface, copy datapoints within
         result = None
         #
-        by_price = sort_surfaces(surfaces, y_axis)
-        cheapest_surface = by_price[0]
-        remaining = by_price[1:]
-        result = cheapest_surface.copy()
-        for surface in remaining:
-            self.enrich(result, surface, x_axis, y_axis, y_delta)
-        cut_off = max(result)
-        #for the next surface:
-            #extend result by datapoints above cutoff
-            #get 
+        stack = self.sort(surfaces, scoring_axis = y_axis)
+        result = copy.deepcopy(stack[0])
         #
-        for surface in remaining:
-            
-        result = by_price[0].copy()
-        #
-        for i in range(len(by_price)):
-            cheapest_surface = by_price[i]
-            remaining_surfaces = by_price[(i+1):]
-            #
-            result.update(cheapest_surface)
-            #
-            for surface in remaining_surfaces:
-                self.enrich(result, surface, x_axis, y_axis, y_delta)
-                #pulls in all the data points within result's x range
-        #
-        #start w a copy of the cheapest surface
-        #for surface in remaining:
-            #simple_combo = self.enrich(result, surface)
-            ##enrich and extend by one
-            ##but now, the simple_combo may have more overlap w even more distant surfaces
-            ##so have to run enrich on all of them
-            #for next_surface in further:
-                #self.enrich(simple_combo, next_surface, extend = False)
-        #
-        #return result
-
-        result = None
-        #
-        stack = self.sort(surfaces, x_axis, y_axis)
-        result = stack[0].copy()
-        #start with a copy of the cheapest surface
-        #start loop at the next most expensive
         for i in range(1, len(stack)):
-            #
-            neighbor_surface = stack[i]
-            higher_stack = stack[(i+1):]
-            result = self.enrich(result, neighbor_surface, x_axis, y_axis, y_delta)
+            neighbor = stack[i]
+            aligned = self.pivot(neighbor, x_axis, y_axis)
+            result = self.enrich(result, neighbor, y_delta)
         #
         return result               
         
 
-    def enrich(self, base, source, x_axis = "size", y_axis = "price", y_delta, extend = True):
+    def enrich(self, main_surface, other_surface,
+               x_axis = "size", y_axis = "price",
+               y_delta = 0.04, extend = True):
         """
 
         -> dict()
 
-        enriches a copy of base with data points from source that fall within
-        y_delta of base y-values for any x.
 
-        common application: create a blended price surface that includes all of
-        the data from base (e.g., ABL) and those data points from source (e.g., LL)
-        where the leveraged loan costs within 400 bps (y_dela := 0.04) of an ABL
-        loan of the same size
+        Method populates main_surface with data points from other_surface.
+        For any x-axis value on the other surface, method picks up data points
+        whose y-value falls within ``y_delta`` of the corresponding y-value on
+        the main surface. Method then adds copies of these datapoints to the
+        main surface.
 
-        will not lengthen a surface (will only enrich (y,z) within [min(x), max(x)]
+        If ``extend`` is True, method will also add data points for any
+        ``other_surface`` x that falls outside the x-value range covered by
+        ``main_surface``. Method will skip these out-of-range points if
+        ``extend`` is False
 
-        or could have this be an extension too:
-          probably easier
-          if datapoint outside of base x range, add it
+        Method expects main_surface and other_surface to align along both axes.
 
-        base should be a dict type object
+        Sample Use Case: Talladega Fruit Company (``TFC``)
+
+        Blackbird has modelled operations and financial results at TFC. TFC has
+        some unencumbered hard assets (refridgeration and warehousing facilities)
+        worth $20mm. TFC also generates $10mm a year of EBITDA. As a result, TFC
+        faces 2 distinct credit environments: the company can borrow up to 80%
+        of its hard-asset value from a bank in the form of a cheap ABL loan. TFC
+        can also borrow up to 5x EBITDA from a fund on a leveraged basis. The
+        ABL loans all range from 2.00% to 5.00% WACD. Leveraged loans range from
+        6% to 20% WACD, and start at $2mm in size.
+
+        The TFC model carries both of these landscapes on its valuation record.
+        Blackbird built both landscapes from price curves, so each exists along
+        the size-price axes. The FTC model has no other landscapes. 
+
+        Blackbird now has to generate a ``global`` credit landscape for the
+        company. To do so, Blackbird will use Landscape.enrich() to pull in some
+        of the expensive data from the LL landscape onto a copy of the ABL one.
+
+        The enrichment process follows two guidelines. First, all things being
+        equal, a rational borrower will always prefer a cheaper loan to a more
+        expensive one at the same size. The option to borrow $8mm at 9% is not
+        a real option when TFC can also borrow the same $8mm at 4.5%.
+
+        Second, individual institutions make their own lending decisions
+        independently, so even if **some** bank can loan 80% LTV to TFC at
+        4.50%, there is no guarantee that TFC will find such a bank, either on
+        Blackbird or elsewhere. Accordingly, TFC may end up seeing only the
+        more expensive LL quote when it goes to look for $8mm.
+
+        In such an event, TFC may rationally transact at a price higher than the
+        one that exists in the best (most favorable) market. TFC may choose the
+        more expensive fund loan even when the company knows a cheaper ABL
+        alternative should be available. The company will do so when it thinks
+        its unlikely to find the cheap ABL lender, or the search is not worth
+        its time. 
+
+        We can balance these considerations by assuming that the probability of
+        the company taking a loan from a more expensive market (surface) is
+        inversely proportional to the difference in price between the surfaces.
+        When the difference is high, TFC will keep searching. When the
+        difference is low, TFC may settle for what's in front of it.
+
+        When builindg a global landscape through enrich(), we can reflect these
+        considerations by defining a ``y_delta`` within which we expect TFC to
+        seriously consider all offers. So if our y_delta is 4%, we are saying
+        that TFC may actually take a loan that's 4% more expensive than the
+        theoretical best outcome. Beyond that spread, the company will keep
+        looking. The y_delta analysis applies only to situations where the same
+        amount of debt can come from two distinct markets. If the size is large
+        enough, say $35mm, such that the loan only exists on the LL surface,
+        y_delta reasoning doesn't apply. Here. ``extend`` = True will pick up
+        the LL quote as-is.        
         """
-        result = None
+        x_lo_bound = 0
+        x_hi_bound = 0
+        if main_surface:
+            x_lo_bound = min(main_surface)
+            x_hi_bound = max(main_surface)
         #
-        result = base.copy()
-        #should i pivot here? probably, otherwsie will get sort errors?
-        #probably accept errors, so as not to waste effort
-        #
-        lo_bound = 0
-        hi_bound = 0
-        if base:
-            x_lo_bound = min(base)
-            x_hi_bound = min(base)
-        #
-        aligned = self.pivot(source, x_axis, y_axis)
-        #
-        for (x, new_ref) in aligned.items():
-            #should the items be sorted?
-            #x is a size value
-            #y is a reference with multiple scenarios keyed by price
+        for (x, new_ref) in other_surface.items():
+            #unsorted pseudo-RANDOM order
             if x_lo_bound <= x <= x_hi_bound:
                 #
-                base_ref = forecast(result, x, store = True)
-                #store the forecast to make sure result[x] is a valid call
-                    #what to do on a failed forecast?
-                    #should test if base_ref is True?
-                    #or not bother with enrichment outside the max?
-                #should really only run if x is in base already
+                base_ref = forecast(main_surface, x, store = True)
+                #store the forecast to make sure main[x] is a valid call later
                 y_hi_bound = max(base_ref) + y_delta
                 y_lo_bound = min(base_ref) - y_delta
                 for (y, new_scenario) in new_ref:
                     if y_lo_bound <= y <= y_hi_bound:
-                        result[x][y] = new_scenario.copy()
+                        main_surface[x][y] = new_scenario.copy()
+                        #we know that main_surface[x] exists because the
+                        #forecast() call above created it if the key wasn't
+                        #there before
                     else:
                         pass
             else:
                 if extend:
-                    result[x] = copy.deepcopy(new_ref)
+                    main_surface[x] = copy.deepcopy(new_ref)
         #
-        return result
-    
-    def sort(surfaces, scoring_key, lower_is_better = True):
-        #blah
-        pass
+        return main_surface
                      
-    def find_best_surface(surfaces, scoring_key = "price", lower_is_better = True):
+    def pick_best(surfaces, scoring_axis = "price",
+                  lower_is_better = True, sort = True):
         """
-        #returns the surface with the best outcome for 
-        #given a set of surfaces, returns the cheapest
 
-        algo:
-        (1) choose the surface with the smallest max size
-        (2) get the forecast for that size on every surface
-        (3) find the best price in the forecast, which may have 3+ scenarios
-        (4) store the surface under its best forecasted price
-        (5) figure out the best price globally across all surfaces
-        (6) the best surface is the one with the best price
+
+        Landscape.pick_best(surfaces
+          [, scoring_axis = "price"
+          [, lower_is_better = True
+          [, sort = True]]]) -> (best_surface, runners_up)
+
+
+        Method selects an object from ``surfaces`` in which a standard query
+        generates the best value along the ``scoring_axis``. Method returns a
+        tuple of (i) the best surface and (ii) a list of the runners up, sorted
+        by size. 
+
+        If ``lower_is_better`` is True, method will choose the lowest value as
+        the best. Otherwise, method will choose the highest value as the best.
+
+        If ``sort`` is True, method will sort the surfaces before picking one
+        from which to choose the standard query. The objects in ``runners_up``
+        retain this order. Accordingly, you can set ``sort`` to ``False`` when
+        running the function recursively to preserve processing cycles.
+
+        Method assumes ``surfaces`` align on the same x_axis. 
+
+        Algorithm:
+        (1) choose the surface with the smallest max size (x value)
+        (2) set that max x-value as the standard query
+        (3) get a forecast for the standard query on every surface
+        (4) find the ``best`` scoring_axis value in the forecast's scenarios
+        (5) store the surface under the best scoring value
+        (6) select the surface with the best scoring value globally
         """
         best_surface = None
+        runners_up = None
         #
         choose = max
         if lower_is_better:
             choose = min
-        by_size = sorted(surfaces, lambda x: max(x))
-        #choose the surface with the smallest max
-        smallest_upper_limit = max(by_size[0])
+        if sort:
+            by_size = sorted(surfaces, key = lambda x: max(x))
+        else:
+            by_size = surfaces[:]
+        standard_surface = by_size[0]
+        standard_query = max(standard_surface)
+        #
+        #here, we choose the surface whose x axis ends with the smallest value
+        #as our standard (``lowest``) surface. we then pick a standard x value
+        #from that surface. we will score surfaces based on how their outputs
+        #along the scoring_axis for our standard x value. this selection logic
+        #depends on the standard value falling within the bounds of each
+        #surface (otherwise, the surface won't be able to return a reference we
+        #can compare). accordingly, we use the max x-value from the lowest
+        #surface, on the assumption that it's the number that's most likely to
+        #fit into other x axes.
+        #
+        #we can improve this function by querying the surfaces across multiple
+        #shared datapoints. we could then score the surfaces along their average
+        #result or even their slope. implementation would depend on finding
+        #an overlapping range. 
+        #
+        #the slope calculation could be a (f(max x) - f(min x)/(max x - min x)
+        #or something more involved, such as a d(y)/d(x) for all datapoints.
+        #
         quotes = {}
         for i in range(len(by_size)):
             surface = by_size[i]
             ref = forecast(surface, smallest_upper_limit)
-            #ref is CR_Reference object that contains multiple scenarios
-            scores = [scenario[scoring_key] for scenario in ref]
-            #scores would usually be prices
+            scores = [scenario[scoring_key] for scenario in ref.values()]
             best_score_in_ref = choose(scores)
+            #since the order of ref values is pseudo-random, the scenario that
+            #generates the best score may differ from run to run. for example,
+            #if scoring_axis is "structure" and scenarios A and B both have a
+            #score of 8, their 8's will appear at different positions in
+            #``scores`` every time we run the routine. this will occur because
+            #the order of scores matches the order of scenarios, and python
+            #stores scenarios (dict values) in a pseudo-random order.
+            #
+            #the randomness is ok here because we care only about the magnitude
+            #of the best score, not the specific scenario where that score
+            #occurs.
+            #
+            #if we move the selection logic to one that looks at a scenario
+            #more whollistically, we would need to move to a stable evaluation
+            #order to avoid getting randomized results. 
             quotes[best_score_in_ref] = (i, surface, ref)
         #
-        best_score = choose(quotes.keys())
-        best_surface = quotes[best_score][1]
-        i_best = quotes[best_score][0]\
-        by_size.pop(i_best)
-        #pull out winner from by_size
-        runners_up = by_size
+        #this method **ignores** a surface's y-axis by looking deeper, right
+        #into each scenario's z-score (value on the scoring_axis). for example,
+        #if the scoring_axis is ``structure``, the method will score a surface
+        #based on its output's best ``structure`` value. since the function
+        #walks through each scenario in the forecasted reference, its output
+        #is the same regardless of how the reference keys its scenarios in the
+        #the first place (i.e., the surface's y-axis). 
         #
+        best_score_overall = choose(quotes.keys())
+        best_surface = quotes[best_score][1]
+        i_best = quotes[best_score][0]
+        by_size.pop(i_best)
+        #pull out winner, keep the runners up
+        runners_up = by_size
         return (best_surface, runners_up)
+
+    def sort(surfaces, scoring_axis = "price",
+             lower_is_better = True, reverse = False):
+        """
+
+
+        Landscape.sort(surfaces,
+            [scoring_axis = "price"[, lower_is_better = True]]) -> list
+
+
+        Method organizes objects in ``surfaces`` into a list by their relative
+        quality along the ``scoring_axis``. Method returns a list from worst
+        (lowest score) to best (highest score). If ``reverse`` is True, method
+        returns a list from best to worst.
+
+        Method expects surfaces to share an x-axis. Method delegates selection
+        work to Landscape.pick_best() and iterates through remainder until there
+        is nothing left.
+        """
+        result = []
+        best, remainder = self.pick_best(surfaces, scoring_axis, lower_is_better)
+        result.append(best)
+        while remainder:
+            if len(remainder) == 1:
+                best = remainder.pop()
+            else:
+                best, remainder = self.pick_best(remainder, scoring_axis,
+                                                 lower_is_better, sort = False)
+                #old remainder is already sorted by the scoring_axis from prior
+                #runs. save cycles by skipping the repeated sort.
+            result.append(best)
+        #
+        if not reverse:
+            result = result[::-1]
+        #
+        return result
+
