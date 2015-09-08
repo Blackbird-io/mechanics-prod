@@ -39,7 +39,7 @@ n/a
 
 
 #globals
-#n/a
+from DataStructures.Markets import schema
 
 #functions
 def average_references(a_ref, b_ref, a_weight = 1, b_weight = 1):
@@ -126,14 +126,14 @@ def forecast(surface, x_val):
     else:
         lo = known_vals[0]
         hi = known_vals[-1]
-        if ask < lo:
+        if x_val < lo:
             pass
             #keep result as None
             #or can set to a Note:
             #result = CR_Reference()
             #comment = "too  small" 
             #result.changeElement("note",comment)
-        elif ask > hi:
+        elif x_val > hi:
             pass
             #keep result as None #<------------------------------------------------------------------------------------fix!
         else:
@@ -173,7 +173,7 @@ def price_high(price_curve, units_of_leverage):
     spread.
     """
     spread = price_curve[schema.key_spread]
-    mid = make_mid_price(price_curve, units_of_leverage)
+    mid = price_mid(price_curve, units_of_leverage)
     adj = spread * units_of_leverage
     p = mid + adj
     p = round(p, 6)
@@ -191,7 +191,7 @@ def price_low(price_curve, units_of_leverage):
     turn-based spread, or (ii) the curve's delta_ceiling. Function also makes
     sure the price clears the credit_price_floor defined in Globals.
     """
-    mid = make_mid_price(price_curve, units_of_leverage)
+    mid = price_mid(price_curve, units_of_leverage)
     spread = price_curve[schema.key_spread]
     delta_ceiling = price_curve[schema.key_delta_ceiling]
     #

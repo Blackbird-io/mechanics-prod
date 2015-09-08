@@ -134,12 +134,21 @@ def scenario_1(topic):
     if "retail" in line_overview.allTags:
         k = "retail"
     specColor = market_conditions[k]
-    specCurve = specColor.price_curves["x_ebitda"]
+    #
+##    for k,v in specColor.__dict__.items():
+##        #<-------------------------------------------------------this freezes inconsistent order, embeds randomness
+##        atx.color.addElement(k, v)
+    specCurve = specColor.landscape["x_ebitda"]
+##    atx.color.yieldCurves.changeElement("x_ebitda",specCurve)
+##    atx.color.guide.quality.increment(2)
     #Part 2 done
     #
     #finish up Part 1
     m = specColor.ev_x_ebitda
     ev = m * annual_ebitda 
+    atx.ev.setValue(ev, topic.tags.name)
+    #<------------------------------------------------------------------------------------------need real signature above
+    atx.ev.guide.quality.increment(1)
     #Part 1 done
     #
     #3) Make a name-specific credit landscape
@@ -147,9 +156,8 @@ def scenario_1(topic):
     sc1 = CR_Scenario()
     stdTerm = specColor.term
     sc1.changeElement("term",stdTerm)
-    #build size landscape
-    atx.credit.lev_loans.build_main(specCurve, annual_ebitda, sc1, store = True)
-    #
+    landscape_by_size = atx.cc.buildSizeLandscape(specCurve,annual_ebitda,
+                                                  sc1,autoPopulate = True)
     #trim the landscape boundaries to fit min/max sanity check
     debt_x_ebitda = specColor.debt_x_ebitda
     ltv_max = specColor.ltv_max
@@ -157,13 +165,19 @@ def scenario_1(topic):
     cc_hi = max(0, cc_hi)
     cc_hi = round(cc_hi,6)
     cc_lo = 2000000
-    atx.credit.lev_loans.trim("size", lo_bound = cc_lo, hi_bound = cc_hi)
+    atx.cc.trimLandscape("size", lo_bound = cc_lo, hi_bound = cc_hi)
+    #now that we have a completed size landscape, build a price landscape from
+    #its contents. get the clean, trimmed size landscape and feed it into the
+    #buildSecondary() method
+    clean_size_landscape = atx.cc.landscape["size"]
+    atx.cc.buildSecondaryLandscape(clean_size_landscape,ref_key = "price",
+                                   scoring_var = "size",autoPopulate = True)
+    #price landscape in place in raw form, now need to figure out which
+    #scenarios are bad and which are good. run landscape.updateLabels()
+    atx.cc.landscape.updateLabels()
     #
-    clean_size_landscape = atx.credit.lev_loans["size"]
-    by_price = atx.credit.lev_loans.pivot([clean_size_landscape], store = True)
-    atx.credit.lev_loans.label(surface = by_price)
     #manually record work
-    atx.credit.guide.quality.increment(2)
+    atx.cc.guide.quality.increment(2)
     atx.guide.quality.increment(2)
     #Part 3 done
     #
