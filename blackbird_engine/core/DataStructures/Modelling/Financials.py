@@ -962,6 +962,10 @@ class Financials(list, Tags, Equalities):
         -- ``catch_values`` : if True, method will increment the line
            triggering a header insertion by the header's value      
         """
+        #things i should do:
+        #  make compatible with composition-style tags from the getgo
+        #    perhaps by putting together a dictionary?
+        #  toggle whether the copy goes on top (new style) or on the bottom (old style)
         #
         #prep area
         sig = Globals.signatures["Financials.manageDropDownReplicas"]
