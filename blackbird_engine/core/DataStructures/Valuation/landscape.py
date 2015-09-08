@@ -35,7 +35,7 @@ from . import schema
 
 from .CR_Reference import CR_Reference
 from .CR_Scenario import CR_Scenario
-
+from .val_base import ValBase
 
 
 
@@ -45,7 +45,7 @@ mid_label = schema.fields_CR_Reference[1]
 good_label = schema.fields_CR_Reference[2]
 
 #classes
-class Landscape(dict):
+class Landscape(dict, ValBase):
     """
 
     Class provides a dict-like container for building and storing surfaces of
@@ -74,6 +74,7 @@ class Landscape(dict):
     """
     def __init__(self):
         dict.__init__(self)
+        ValBase.__init__(self)
         self.keep_forecasts = True
 
     def build_main(self, price_curve, multiplier,
@@ -128,9 +129,12 @@ class Landscape(dict):
             #
             units_of_leverage = steps[i]
             #
-            bad_price = pricing_tools.make_bad_price(price_curve, units_of_leverage)
-            mid_price = pricing_tools.make_mid_price(price_curve, units_of_leverage)
-            good_price = pricing_tools.make_good_price(price_curve, units_of_leverage)
+            bad_price = pricing_tools.make_price(level = "high",
+                                                 price_curve, units_of_leverage)
+            mid_price = pricing_tools.make_price(level = "mid",
+                                                 price_curve, units_of_leverage)
+            good_price = pricing_tools.make_price(level = "low",
+                                                  price_curve, units_of_leverage)
             #
             prices = [bad_price, mid_price, good_price]
             #

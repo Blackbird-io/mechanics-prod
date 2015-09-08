@@ -47,7 +47,7 @@ import Tools
 
 from DataStructures.Modelling.BusinessUnit import BusinessUnit
 from DataStructures.Modelling.LifeStage import LifeStage
-from DataStructures.Valuation.Analytics import Analytics
+from DataStructures.Valuation.company_value import CompanyValue
 
 from .. import SharedKnowledge as SubjectKnowledge
 from .. import standard_financials

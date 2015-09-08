@@ -7,8 +7,9 @@
 #Module: Tools.for_pricing_credit
 """
 
-Module defines functions for computing credit prices in standalone, CR_Scenrio,
-and CR_Reference forms. 
+Module defines functions for computing credit prices. Functions usually rely on
+a price curve that defines cost of capital for a known number of units (turns
+on EBITDA, turns on revenue, etc.).
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -19,6 +20,10 @@ n/a
 FUNCTIONS:
 average_references()  takes two references, returns a new one w avg values
 forecast()            returns a reference for a value on surface x axis
+make_price()          compute price from curve, for given quality
+price_low()           compute low price for units on curve
+price_mid()           compute high price for units on curve
+price_high()          compute mid price for units on curve
 
 CLASSES:
 n/a
@@ -130,7 +135,7 @@ def forecast(surface, x_val):
             #result.changeElement("note",comment)
         elif ask > hi:
             pass
-            #keep result as None
+            #keep result as None #<------------------------------------------------------------------------------------fix!
         else:
             #ask in known range but not specified, so need to extrapolate the
             #reference. do so by finding first value larger than ask. then
@@ -157,7 +162,16 @@ def forecast(surface, x_val):
     #
     return result
     
-def make_high_price(price_curve, units_of_leverage):
+def price_high(price_curve, units_of_leverage):
+    """
+
+
+    make_high_price(price_curve, units_of_leverage) -> float
+
+
+    Function returns the mid price increased by the cumulative turn-based
+    spread.
+    """
     spread = price_curve[schema.key_spread]
     mid = make_mid_price(price_curve, units_of_leverage)
     adj = spread * units_of_leverage
@@ -166,9 +180,16 @@ def make_high_price(price_curve, units_of_leverage):
     #
     return p
 
-def make_low_price(price_curve, units_of_leverage):
+def price_low(price_curve, units_of_leverage):
     """
-    doesn't change the price curve
+
+
+    make_low_price(price_curve, units_of_leverage) -> float
+
+
+    Function returns the mid price decreased by the smaller of (i) cumulative
+    turn-based spread, or (ii) the curve's delta_ceiling. Function also makes
+    sure the price clears the credit_price_floor defined in Globals.
     """
     mid = make_mid_price(price_curve, units_of_leverage)
     spread = price_curve[schema.key_spread]
@@ -177,14 +198,41 @@ def make_low_price(price_curve, units_of_leverage):
     adj = spread * units_of_leverage
     adj = min(adj, delta_ceiling)
     p = mid - adj
+##    p = max(p, Globals.credit_price_floor) #<--------------------------------------------------------------------------------- implement me!
     p = round(p, 6)
     #
     return p
 
-def make_mid_price(price_curve, units_of_leverage):
+def price_mid(price_curve, units_of_leverage):
+    """
+
+
+    make_low_price(price_curve, units_of_leverage) -> float
+
+
+    Function returns the mid price decreased by the smaller of (i) cumulative
+    turn-based spread, or (ii) the curve's delta_ceiling. Function also makes
+    sure the price clears the credit_price_floor defined in Globals.
+    """
     p = price_curve[units_of_leverage]
     p = round(p, 6)
     #
     return p
 
+def make_price(level, price_curve, units_of_leverage):
+    """
 
+
+    make_price(level, price_curve, units_of_leverage) -> float
+
+
+    Function returns the unit-based price for leverage. Delegates all work
+    to level-appropriate subroutines. 
+    """
+    routines = {"mid" : price_mid,
+                "low" : price_low,
+                "high" : price_high}
+    routine = routines[level]
+    p = routine(price_curve, units_of_leverage)
+    #
+    return p

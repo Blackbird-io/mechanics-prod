@@ -8,7 +8,7 @@ from .ev import EnterpriseValue
 from .val_base import ValBase
 
 #classes
-class Valuation(ValBase):
+class CompanyValue(ValBase):
     def __init__(self, name = "valuation"):
         ValBase.__init__(self, name)
         self.credit = CreditCapacity()
