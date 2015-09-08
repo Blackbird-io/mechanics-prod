@@ -1276,17 +1276,14 @@ class Financials(list, Tags, Equalities):
         # of this list. if a line is eligible, check if it has a replica. if it
         #does, increment the replica by the line's value, then zero the line.
         #if the line doesn't have a replica, insert one.
-        #
         fixed_order = self[:]
         fixed_count = len(fixed_order)
         off_set = 0
-        #
         for position in range(0, (fixed_count-1)):
             line = fixed_order[position]
             neighbor = fixed_order[position+1]
             existing_replica = None
             first_detail = None
-            #
             #0) kick out lines that dont have a value
             if line.value is None:
                 continue
@@ -1301,17 +1298,15 @@ class Financials(list, Tags, Equalities):
             #3) kick out replicas themselves
             if (line.name == line.partOf 
                 or dropDownReplicaTag in line.allTags):
-                #line is a replica, move on
                 continue
             #
             if first_detail.name == line.name:
                 existing_replica = first_detail
                 #detail has the same name as line, detail is a replica
             if existing_replica:
-                #if replica exists, increment it by line value. we know line
-                #has a defined value, otherwise we would kick it out in 0
+                #if replica exists, increment it by line value. 
                 f3 = ParsingTools.valueReplacer
-                new_value = f3(existing_replica.value, 0, None) + f3(line.value, 0, None)
+                new_value = f3(existing_replica.value, 0, None) + line.value
                 #update replica signature block to exactly match the top
                 existing_replica.modifiedBy = copy.copy(line.modifiedBy)
                 existing_replica.setValue(new_value, signature)
@@ -1322,9 +1317,8 @@ class Financials(list, Tags, Equalities):
                 if not dropDownReplicaTag in existing_replica.allTags:
                     existing_replica.tag(dropDownReplicaTag)
                 line.setValue(0,signature)
-                #line retains all substantive signatures
                 continue
-            else:
+            else: 
                 #line needs a replica. create and insert one. 
                 new_replica = LineItem.copy(line, enforce_rules = False)
                 #call LineItem.copy() method through class for clarity
@@ -1333,6 +1327,12 @@ class Financials(list, Tags, Equalities):
                 #inheritable ``out``, like specialTag).
                 new_replica.tag(dropDownReplicaTag)
                 new_replica.setPartOf(line)
+                if new_replica.value == line.value:
+                    #check that replica picked up value before zeroing original 
+                    line.setValue(0,signature)
+                else:
+                    c = "replica value does not equal line."
+                    raise BBExceptions.IOPMechanicalError(c, line, new_replica)
                 self.insert(position + off_set + 1, new_replica)
                 off_set = off_set + 1
     
