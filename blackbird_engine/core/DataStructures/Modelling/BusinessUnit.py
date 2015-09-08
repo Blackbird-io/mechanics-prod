@@ -69,7 +69,6 @@ class BusinessUnit(Tags,Equalities):
     ====================  ======================================================
 
     DATA:
-    analytics             instance of Analytics object, usually on top BUs
     components            instance of Components class, stores business units
     drivers               dict; tag/line name : set of driver bbids
     filled                bool; True if instance.fillOut() has run to completion
@@ -83,6 +82,7 @@ class BusinessUnit(Tags,Equalities):
     tagSources            list; CLASS attribute, sources for tag inheritance
     type                  str or None; describes the unit's in-model type (e.g.,
                           "product" or "team").
+    valuation             Valuation object showing market facing unit
     
     FUNCTIONS:
     add_component()       adds bus with verified ids to components
@@ -113,7 +113,6 @@ class BusinessUnit(Tags,Equalities):
     def __init__(self, name, fins = None):
         Tags.__init__(self,name) 
         self._type = None
-        self.analytics = None
         #
         self.components = None
         self.setComponents()
@@ -135,6 +134,7 @@ class BusinessUnit(Tags,Equalities):
         gl_sig_con = Globals.signatures["BusinessUnit.consolidate"]
         self.sig_consolidate =  gl_sig_con % self.name
         self.size = 1
+        self.valuation = None
         
     @property
     def type(self):
@@ -556,7 +556,6 @@ class BusinessUnit(Tags,Equalities):
         The method then sets the following attributes on the new bu to either
         deep or class-specific copies of the instance values:
 
-        - analytics
         - components
         - drivers
         - financials
@@ -569,12 +568,7 @@ class BusinessUnit(Tags,Equalities):
         respective class documenation for mode detail.
         """
         result = Tags.copy(self, enforce_rules)
-        if self.analytics:
-            alt_atx = copy.copy(self.analytics)
-            alt_atx.parentObject = None
-            alt_atx.disconnect()
-            result.analytics = copy.deepcopy(alt_atx)
-            #Upgrade-S: could also just set analytics on any copies to None
+        #
         r_comps = self.components.copy(enforce_rules)
         result.setComponents(r_comps)
         r_drivers = self.drivers.copy(enforce_rules)
@@ -589,6 +583,7 @@ class BusinessUnit(Tags,Equalities):
         result.id = copy.copy(self.id)
         #header.profile should be the only object pointing to others on header
         result.life = self.life.copy()
+        result.valuation = None
         #
         return result
 
@@ -988,8 +983,8 @@ class BusinessUnit(Tags,Equalities):
         Method sets instance.analytics to passed-in argument, sets analytics
         object to point to instance as its parent. 
         """
-        atx.setPartOf(self)
-        self.analytics = atx
+        atx.tags.setPartOf(self)
+        self.valuation = atx
 
     def setComponents(self,comps = None):
         """

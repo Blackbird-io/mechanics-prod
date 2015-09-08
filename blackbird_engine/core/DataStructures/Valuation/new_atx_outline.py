@@ -23,22 +23,8 @@ all objs should have guide attrs
 
 add a "comment" section to CR_Scenario
 
-question:
-  to what extent should i integrate LineItem into the mix
-  desirable lineitem features:
-    - printing
-    - combination of other attrs used for guidance and matching
-  can make all of these things lineItems I guess
-
-pull LineItem formatting method into a new module called printing tools
-
 store analytics path in a financials-type object
-  each attribute is an object
-
-class LineBase:
-    guide
-    tags
-    __str__
+  each attribute is a line
 
 put "ev" and "atx" into a financials object, extend path by it
 
@@ -60,35 +46,6 @@ class EnterpriseValue:
         self.blah = None
     #purely storage and guidance
     #
-
-class CreditCapacity:
-    def __init__(self):
-        self.abl = Landscape()
-        self.lev = Landscape()
-        self.bonds = Landscape()
-        self.combined = None
-
-    def combine(self):
-        #combine all known landscapes into combo
-        #always start from scratch
-            #create new landscape instance
-            #build landscape by size, manually
-            #invert landscape into price through method
-            #
-        #two options:
-            #1) for every size, take only if no other curve has same or larger size at a lower price
-            #(always take the lowest price); discards known datapoints
-            #2) for every size, take all datapoints, keyed by price
-            #then have to label them
-            #and can have very wide dispersion
-            #
-        #can also have a smoothing feature:
-            #w/in [10]% of the end of a curve, take average, not lowest
-
-        #other important functionality:
-            #if no leverage capacity, but abl, should still show all the abl elements
-            #same w 
-        pass
 
 #
 #also make a special path add-on for valuation
