@@ -78,7 +78,7 @@ class CreditCapacity(ValBase):
     DATA:
     asset_backed          asset-backed loan price landscape
     bonds                 bond price landscape
-    combined              combined loan price landscape
+    combined              landscape across all market segements
     converts              convertible debt landscape
     lev_loans             leveraged loan price landscape
         
@@ -97,5 +97,24 @@ class CreditCapacity(ValBase):
         self.converts = None
         self.lev_loans = Landscape()
         #bonds and converts should be a landscape in the future
+
+    def combine(self):
+        self.combined = Landscape()
+        sources = [self.asset_backed, self.bonds, self.converts, self.lev_loans]
+        market_segments = []
+        for source in sources:
+            if source:
+                market_segments.append(source["size"])
+        if len(market_segments) == 1:
+            self.combined = copy.deepcopy(market_segments[0])
+        else:
+            by_size = self.combined.combine(market_segments, x_axis = "size", y_axis = "price")
+            by_size = self.label(by_size, x_axis = "size", y_axis = "price")
+            self.combined["size"] = by_size
+            #
+            by_price = self.combined.pivot([by_size], x_axis = "price", y_axis = "size")
+            by_price = self.combined.label(by_price, x_axis = "price", y_axis = "size")
+            self.combined["price"] = by_price
+        
                     
                 

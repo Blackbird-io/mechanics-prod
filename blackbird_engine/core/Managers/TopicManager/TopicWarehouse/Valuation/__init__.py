@@ -32,7 +32,7 @@ n/a
 #n/a
 
 #import content modules
-from . import BasicMultiplesValuation
+from . import basic_multiples_valuation
 
 
     

@@ -259,7 +259,7 @@ class analyzerLM(Messenger):
         alt_msg = (M, None, None)
         alt_msg = process_analytics(alt_msg)
         M = alt_msg[0]
-        l_sum = M.analytics.cc.landscape.getSummary()
+        l_sum = M.analytics.credit.combined.get_summary()
         print(l_sum)
         #
         alt_msg = process_summary(alt_msg)
@@ -311,7 +311,7 @@ def process_analytics(msgIn, trace = False):
     #half-baked
     M = msgIn[0]
     M.currentPeriod.content.fillOut()
-    M.analytics = M.currentPeriod.content.analytics
+    M.analytics = M.currentPeriod.content.valuation
     #super simple way of selecting which period to run analytics for
     #can have a function that does that
     aLM2.reset()
