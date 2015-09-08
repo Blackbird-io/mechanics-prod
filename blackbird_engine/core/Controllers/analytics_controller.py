@@ -68,7 +68,7 @@ class AnalyticsController(Controller):
             model.interview.set_completion_rule(rule)
         new_fp = None
         if not atx.guide.complete:
-            for element in atx.ordered:
+            for element in atx.path:
                 if rule(element):
                     continue
                 else:

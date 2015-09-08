@@ -983,7 +983,7 @@ class BusinessUnit(Tags,Equalities):
         Method sets instance.analytics to passed-in argument, sets analytics
         object to point to instance as its parent. 
         """
-        atx.tags.setPartOf(self)
+        atx.setPartOf(self)
         self.valuation = atx
 
     def setComponents(self,comps = None):
