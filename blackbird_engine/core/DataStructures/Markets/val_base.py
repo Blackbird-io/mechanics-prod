@@ -15,17 +15,17 @@ from DataStructures.Platform.Tags import Tags
 #n/a
 
 #classes
-class ValBase(PrintAsLine):
+class ValBase(Tags, PrintAsLine):
     def __init__(self, name = None):
+        Tags.__init__(self)
         PrintAsLine.__init__(self)
         self.guide = Guide()
-        self.tags = Tags()
-        self.tags.setName(name)
+        self.setName(name)
         
     def pre_format(self, **kargs):
         #custom formatting logic
-        if self.tags.name:
-            kargs["name"] = self.tags.name
+        if self.name:
+            kargs["name"] = self.name
         self.formatted = printing_tools.format_completed(self, **kargs)
         
         

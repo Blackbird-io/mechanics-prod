@@ -947,7 +947,7 @@ class Financials(list, Tags, Equalities):
         detail line items.
 
         Detail lines say that they are partOf a particular line. So if
-        line_A.partOf == ``revenue``, line_A is a detail of revenue.
+        line_A.partOf == ``revenue``, line_A is a detail of ``revenue``.
 
         Header lines have a name that other details are partOf and a None value. 
 

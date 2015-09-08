@@ -14,7 +14,7 @@ class CompanyValue(ValBase):
         self.credit = CreditCapacity()
         self.ev = EnterpriseValue()
         #
-        self.tags.tag("valuation", field = "req")
+        self.tag("valuation", field = "req")
 
 
     

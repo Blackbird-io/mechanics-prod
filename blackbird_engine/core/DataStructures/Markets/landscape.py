@@ -74,9 +74,9 @@ class Landscape(dict, ValBase):
     trim()                cuts off ref points outside an external range
     ====================  ======================================================
     """
-    def __init__(self):
+    def __init__(self, name = None):
         dict.__init__(self)
-        ValBase.__init__(self)
+        ValBase.__init__(self, name)
         self.keep_forecasts = True
 
     def build_main(self, price_curve, multiplier,
