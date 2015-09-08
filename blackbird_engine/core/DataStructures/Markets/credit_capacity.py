@@ -83,7 +83,7 @@ class CreditCapacity(ValBase):
             if source:
                 market_segments.append(source["size"])
         if len(market_segments) == 1:
-            self.combined = copy.deepcopy(market_segments[0])
+            self.combined["size"] = copy.deepcopy(market_segments[0])
         else:
             by_size = self.combined.combine(market_segments, x_axis = "size", y_axis = "price")
             by_size = self.label(by_size, x_axis = "size", y_axis = "price")

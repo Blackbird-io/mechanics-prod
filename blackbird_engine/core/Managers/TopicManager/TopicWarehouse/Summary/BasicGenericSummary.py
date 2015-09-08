@@ -130,7 +130,7 @@ def scenario_1(topic):
             continue
     #
     #manually add credit capacity
-    landscape_summary = M.analytics.cc.landscape.getSummary()
+    landscape_summary = M.analytics.credit.combined.get_summary()
     print(landscape_summary)
     cc_raw = landscape_summary["size"]["hi"]
     cc_adj = cc_raw * (1 - Globals.cc_haircut)
