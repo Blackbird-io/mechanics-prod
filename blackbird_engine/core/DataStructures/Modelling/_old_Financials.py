@@ -1272,69 +1272,142 @@ class Financials(list, Tags, Equalities):
         The method sets the value of the top to zero.
         The method inserts the replica immediately to the right of the current top.
         """
-        #this method inserts objects into a list, so walk through a fixed copy
-        # of this list. if a line is eligible, check if it has a replica. if it
-        #does, increment the replica by the line's value, then zero the line.
-        #if the line doesn't have a replica, insert one.
-        #
-        fixed_order = self[:]
-        fixed_count = len(fixed_order)
-        off_set = 0
-        #
-        for position in range(0, (fixed_count-1)):
-            line = fixed_order[position]
-            neighbor = fixed_order[position+1]
-            existing_replica = None
-            first_detail = None
-            #
-            #0) kick out lines that dont have a value
-            if line.value is None:
-                continue
-            #1) kick out lines that dont have details
-            if neighbor.partOf == line.name:
-                first_detail = neighbor
+        fullReview = False
+        replicasInserted = []
+        replicasIncremented = []
+        wellOrdered = True
+        #process a copy of the original list only, without new insertions
+        #otherwise loops after first replica cause i keeps list shifts while i stays the same
+        #think through how this works for fullReview
+        #shouldnt be too bad, cause fullReview doesnt insert, just looks for other stuff
+        toProcess = self[:]
+        for i in range(len(toProcess)):
+            if i == len(toProcess) - 1:
+                #check if at last item
+                #last lineItem cannot have any details that follow by definition
+                #so will never need a replica in a well-ordered financials object
+                break
+            currentLineItem = toProcess[i]
+            if (currentLineItem.name == currentLineItem.partOf
+                or dropDownReplicaTag in currentLineItem.allTags):
+                #the current item is a replica, this analysis doesnt apply, move on to next
+                continue    
             else:
-                continue
-            #2) kick out lines that we have to explicitly omit
-            if set(tagsToOmit) & set(line.allTags) != set():
-                continue
-            #3) kick out replicas themselves
-            if (line.name == line.partOf 
-                or dropDownReplicaTag in line.allTags):
-                #line is a replica, move on
-                continue
-            #
-            if first_detail.name == line.name:
-                existing_replica = first_detail
-                #detail has the same name as line, detail is a replica
-            if existing_replica:
-                #if replica exists, increment it by line value. we know line
-                #has a defined value, otherwise we would kick it out in 0
-                f3 = ParsingTools.valueReplacer
-                new_value = f3(existing_replica.value, 0, None) + f3(line.value, 0, None)
-                #update replica signature block to exactly match the top
-                existing_replica.modifiedBy = copy.copy(line.modifiedBy)
-                existing_replica.setValue(new_value, signature)
-                existing_replica.inheritTagsFrom(line, None)
-                #when calling inherit on a replica, override defaults and
-                #copy as much as possible. passing in None results in
-                #doNotInherit = (None,)
-                if not dropDownReplicaTag in existing_replica.allTags:
-                    existing_replica.tag(dropDownReplicaTag)
-                line.setValue(0,signature)
-                #line retains all substantive signatures
-                continue
-            else:
-                #line needs a replica. create and insert one. 
-                new_replica = LineItem.copy(line, enforce_rules = False)
-                #call LineItem.copy() method through class for clarity
-                #keep enforce_rules False so that both drop down replica and
-                #the original lineItem retain all tags (including those not
-                #inheritable ``out``, like specialTag).
-                new_replica.tag(dropDownReplicaTag)
-                new_replica.setPartOf(line)
-                self.insert(position + off_set + 1, new_replica)
-                off_set = off_set + 1
+                #currentLineItem is not itself a replica
+                rightHandNeighbor = toProcess[i+1]
+                firstDetail = None
+                allDetails = []
+                existingReplica = None
+                if set(tagsToOmit) & set(currentLineItem.allTags) != set():
+                    #lineitem has bad tags, go to next one
+                    continue
+                if rightHandNeighbor.partOf == currentLineItem.name:
+                    #check that current item is not itself a replica
+                    #replica's name and partOf are the same
+                    #accordingly, replicas will always have details that specify partOf as the replica's name
+                    firstDetail = rightHandNeighbor
+                    #to check for duplicate replicas, continue to fullReview here anyways
+                else:
+                    #right-hand neighbor is not a detail of currentLineItem
+                    #in a well-ordered financials object, that means current lineitem has no details
+                    #if fullReview turned off, assume object is well-ordered, move on to next lineitem
+                    if not fullReview:
+                        continue
+                    else:
+                        #if fullReview is turned on, check remainder of self for details
+                        #if details found in locations other than i+1, financials object is not well-ordered
+                        for otherLineItem in toProcess[i+2:]+toProcess[:i]:
+                            #checks the copy, so doesnt see this round of insertions
+                            #check for details before the current item too
+                            #already checked i+1
+                            if otherLineItem.partOf == currentLineItem.name:
+                                allDetails.append(otherLineItem)
+                                wellOrdered = False
+                        if allDetails != []:
+                            firstDetail = allDetails[0]
+                        else:
+                            #allDetails empty, currentLineItem has no details anywhere in self
+                            #analyze next lineitem
+                            continue
+                #if a non-replica lineitem has no details in self, above block will lead to continue
+                #get here only if at least one detail (aka firstdetail) found for currentLineItem
+                if firstDetail.name == currentLineItem.name:
+                    #detail has the same name as lineitem and is also part of the lineitem
+                    #detail is a dropDownReplica
+                    existingReplica = firstDetail
+                elif fullReview:
+                    #more detailed check for existing replicas
+                    #replicas are a special type of detail
+                    for detail in allDetails:
+                        if detail.name == currentLineItem.name:
+                            #replica found
+                            existingReplica = detail
+                            #Upgrade:
+                            #can drop a quick check for duplicate replicas (replica #2) here
+                            #but wont catch situations where a duplicate replica follows the top level right away
+                            #(cause first match skips duplicateSearch as written)
+                            break
+                        else:
+                            continue
+                #finished searching in all the places a replica could exist
+                #existingReplica is the first object to satisfy replica requirements for this lineitem
+                if existingReplica:
+                    #if replica exists, increment it by toplevel
+                    if currentLineItem.value == None and existingReplica.value == None:
+                        continue
+                    #if both the lineitem and replica are empty, move on to next set
+                    #if only lineitem is empty, treat it as zero
+                    #in either case, replica doesn't get changed
+                    f3 = ParsingTools.valueReplacer
+                    #only run f3 on existingReplica if lineItem has a real value
+                    #otherwise, if both have None, loop moves on through the if above
+                    #scenario can arise if lineItem incremented first while replica still in reset
+                    newValue = f3(existingReplica.value,0,None) + f3(currentLineItem.value,0,None)
+                    #update replica signature block to exactly match the top
+                    existingReplica.modifiedBy = copy.copy(currentLineItem.modifiedBy)
+                    existingReplica.setValue(newValue,signature)
+                    #now cap the top's signature list with this method's own
+                    #replica's modifiedBy is thus always top's + this method's signature 
+                    existingReplica.inheritTagsFrom(currentLineItem, None)
+                    #when calling inherit on a replica, override defaults and
+                    #copy as much as possible. passing in None results in
+                    #doNotInherit = (None,)
+                    if not dropDownReplicaTag in existingReplica.allTags:
+                        existingReplica.tag(dropDownReplicaTag)
+                    if trace:
+                        replicasIncremented.append(existingReplica)
+                    currentLineItem.setValue(0,signature)
+                    #existing top retains all substantive signatures
+                    #processing for this lineitem complete, move on to next lineitem
+                    continue
+                elif not existingReplica and currentLineItem.value != None:
+                    #current lineitem has details and a non-None value.
+                    #current Lineitem should have a drop-down replica but does
+                    #not. create and insert one
+                    newDropDownReplica = LineItem.copy(currentLineItem,
+                                                       enforce_rules = False)
+                    #call LineItem.copy() method through class for clarity
+                    #keep enforce_rules False so that both drop down replica and
+                    #the original lineItem retain all tags (including those not
+                    #inheritable ``out``, like specialTag).
+                    newDropDownReplica.tag(dropDownReplicaTag)
+                    newDropDownReplica.setPartOf(currentLineItem)
+                    if newDropDownReplica.value == currentLineItem.value:
+                        #double check that replica properly inherited value
+                        #before zeroing original; should always be the case
+                        #after deepcopy
+                        currentLineItem.setValue(0,signature)
+                    else:
+                        c = """deepcopy failed to create replica with identical
+                               value to original toplevel."""
+                        raise BBExceptions.IOPMechanicalError(c,currentLineItem,
+                                                              newDropDownReplica)
+                    currentPosition = self.index(currentLineItem)
+                    self.insert(currentPosition+1,newDropDownReplica)
+                    if trace:
+                        replicasInserted.append(newDropDownReplica)
+        if trace:
+            return(wellOrdered, replicasInserted, replicasIncremented)
     
     def matchBookMark(self,refBookMark,doubleCheck = True):
         """
