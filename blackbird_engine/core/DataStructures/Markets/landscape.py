@@ -29,6 +29,8 @@ Landscape             template for credit landscape objects (reference values)
 
 
 #imports
+import copy
+
 from Tools import for_pricing_credit as pricing_tools
 
 from . import schema
@@ -584,31 +586,33 @@ class Landscape(dict, ValBase):
         To assign scenarios to a new surface, run Landscape.label().
         """
         new_surface = {}
-        sources = None
         if not sources:
             ordered_keys = sorted(self.keys())
             sources = [self[k] for k in ordered_keys]
         #
         for existing_surface in sources:
             #sort existing keys to ensure stable order and output
-            for scenario in existing_surface.values():
-                new_x_value = scenario[new_x_axis]
-                #in the size-to-price landscape transform, x_value would be the
-                #price for the loan size that scenario describes
-                #
-                new_y_value = scenario[new_y_axis]
-                #in the size-to-price landscape transform, y_value would be the
-                #size of the loan in the scenario.
-                #
-                if new_x_value not in new_surface.keys():
-                    new_ref = CR_Reference()
-                    #the reference is going to store a bunch of scenarios, keyed
-                    #by y-value
-                    new_ref.setAll(new_x_axis, new_x_value)
-                    #hold the x_value constant across all scenarios in the ref
-                    new_surface[new_x_value] = new_ref
-                #
-                new_surface[new_x_value][new_y_value] = scenario
+            for reference in existing_surface.values():
+                #values on the surface are references, keyed by either quality
+                #labels and/or some other axis
+                for scenario in reference.values():
+                    new_x_value = scenario[new_x_axis]
+                    #in the size-to-price landscape transform, x_value would be the
+                    #price for the loan size that scenario describes
+                    #
+                    new_y_value = scenario[new_y_axis]
+                    #in the size-to-price landscape transform, y_value would be the
+                    #size of the loan in the scenario.
+                    #
+                    if new_x_value not in new_surface.keys():
+                        new_ref = CR_Reference()
+                        #the reference is going to store a bunch of scenarios, keyed
+                        #by y-value
+                        new_ref.setAll(new_x_axis, new_x_value)
+                        #hold the x_value constant across all scenarios in the ref
+                        new_surface[new_x_value] = new_ref
+                    #
+                    new_surface[new_x_value][new_y_value] = scenario
                 #
         if store:
             self[new_x_axis] = new_surface
