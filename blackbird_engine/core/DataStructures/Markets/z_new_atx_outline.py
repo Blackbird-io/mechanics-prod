@@ -1,25 +1,6 @@
 """
 Revised analytics architecture
 
-analytics is a container object
-has the following attrs:
-  - ev
-  - credit
-
-can also be flat
-can call it all "value" or "valuation"
-
-valuation would be an expanded version of the credit capacity object we have today
-- abl
-- lev
-- bonds
-- combined
-
-landscape would handle the "build" and "flip" methods
-    #should also have a pretty-print
-    #sort and print all keys in order, w values
-
-all objs should have guide attrs
 
 add a "comment" section to CR_Scenario
 
@@ -28,11 +9,39 @@ store analytics path in a financials-type object
 
 put "ev" and "atx" into a financials object, extend path by it
 
+###
+use a path to organize the order
+  can have a different path: model.analytics.path
+  or can attach the details to the existing path, under the analytics bookmark
+    then have one path
+    in one place
+  problem:
+    ic would then include all of the analytics details when forecasting int length?  
+
+the reason why i have all this stuff in analytics is because i was trying to control order before there was a path, because i was really resistant to this idea of a path. 
+
+but now i do have a path. so all of this pre-baked stuff is kind of non-sense. 
+  the path provides ordering
+  it can contain any object w a guide attribute and tags
+    the object doesnt have to be a line item, though it helps if it is (for printing)
+  if i need to create bundles of attributes (e.g., "ev") for standard record keeping,
+    i can either create lists or classes
+
+make the analytics path separately as default, then call always tack it on to the 
+normal one; add "analytics" bookmarks
+
+revised analytics path:
+ - compute ev
+ - compute abl landscape
+ - compute lev landscape
+
     
 """
 
 class Valuation:
     """
+
+    
     ev
     credit
     """

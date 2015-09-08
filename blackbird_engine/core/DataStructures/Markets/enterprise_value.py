@@ -63,6 +63,6 @@ class EnterpriseValue(ValBase):
 
     def __init__(self):
         #
-        ValBase.__init__(self)
+        ValBase.__init__(self, name = "enterprise value")
                     
                 
