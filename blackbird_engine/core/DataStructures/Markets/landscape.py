@@ -183,7 +183,7 @@ class Landscape(dict, ValBase):
 
 
         Method combines datapoints from multiple surfaces into a new surface
-        aligned on the specified axes. 
+        aligned on the specified axes. Result is unlabelled.
         """        
         result = None
         #
@@ -194,8 +194,6 @@ class Landscape(dict, ValBase):
             neighbor = stack[i]
             aligned = self.pivot(neighbor, x_axis, y_axis)
             result = self.enrich(result, neighbor, y_delta)
-        #
-        self.label(result, x_axis, y_axis)
         #
         return result               
         

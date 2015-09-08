@@ -162,6 +162,7 @@ def scenario_1(topic):
     clean_size_landscape = atx.credit.lev_loans["size"]
     by_price = atx.credit.lev_loans.pivot([clean_size_landscape], store = True)
     atx.credit.lev_loans.label(surface = by_price)
+    atx.credit.combine()
     #manually record work
     atx.credit.guide.quality.increment(2)
     atx.guide.quality.increment(2)
