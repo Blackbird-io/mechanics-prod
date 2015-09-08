@@ -59,9 +59,9 @@ import BBGlobalVariables as Globals
 
 from Controllers import SessionController
 from DataStructures.Analysis.PortalModel import PortalModel
+from DataStructures.Markets.CR_Reference import CR_Reference
 from DataStructures.Modelling.Model import Model as EngineModel
 from DataStructures.Platform.Messenger import Messenger
-from DataStructures.Valuation.CR_Reference import CR_Reference
 from Managers import QuestionManager
 
 
