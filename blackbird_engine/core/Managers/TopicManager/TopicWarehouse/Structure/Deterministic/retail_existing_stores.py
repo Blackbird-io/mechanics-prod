@@ -45,9 +45,10 @@ import BBExceptions
 import BBGlobalVariables as Globals
 import Tools
 
+from DataStructures.Markets.company_value import CompanyValue
 from DataStructures.Modelling.BusinessUnit import BusinessUnit
 from DataStructures.Modelling.LifeStage import LifeStage
-from DataStructures.Valuation.company_value import CompanyValue
+
 
 from .. import SharedKnowledge as SubjectKnowledge
 from .. import standard_financials
@@ -331,7 +332,7 @@ def scenario_6(topic):
     standard_fins = standard_financials.basic_fins.copy()
     M.defaultFinancials = standard_fins.copy()
     top_bu.setFinancials(standard_fins.copy())
-    atx = Analytics()
+    atx = CompanyValue()
     top_bu.setAnalytics(atx)
     #
     bu_template = BusinessUnit("Standard Store Unit", standard_fins)

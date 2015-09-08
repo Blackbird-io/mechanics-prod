@@ -129,12 +129,9 @@ class Landscape(dict, ValBase):
             #
             units_of_leverage = steps[i]
             #
-            bad_price = pricing_tools.make_price(level = "high",
-                                                 price_curve, units_of_leverage)
-            mid_price = pricing_tools.make_price(level = "mid",
-                                                 price_curve, units_of_leverage)
-            good_price = pricing_tools.make_price(level = "low",
-                                                  price_curve, units_of_leverage)
+            bad_price = pricing_tools.make_price("high", price_curve, units_of_leverage)
+            mid_price = pricing_tools.make_price("mid", price_curve, units_of_leverage)
+            good_price = pricing_tools.make_price("low", price_curve, units_of_leverage)
             #
             prices = [bad_price, mid_price, good_price]
             #
