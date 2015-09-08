@@ -4,7 +4,7 @@
 
 #imports
 from .credit_capacity import CreditCapacity
-from .ev import EnterpriseValue
+from .enterprise_value import EnterpriseValue
 from .val_base import ValBase
 
 #classes

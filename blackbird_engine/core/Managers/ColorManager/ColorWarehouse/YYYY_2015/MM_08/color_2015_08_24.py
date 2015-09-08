@@ -27,8 +27,8 @@ n/a
 
 
 #imports
-from DataStructures.Valuation import schema
-from DataStructures.Valuation.market_color import MarketColor
+from DataStructures.Markets import schema
+from DataStructures.Markets.market_color import MarketColor
 
 
 

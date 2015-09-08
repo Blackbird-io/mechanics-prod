@@ -6,8 +6,9 @@
 #imports
 import Tools.for_printing as printing_tools
 
+from DataStructures.Guidance.Guide import Guide
 from DataStructures.Platform.print_as_line import PrintAsLine
-
+from DataStructures.Platform.Tags import Tags
 
 
 #globals

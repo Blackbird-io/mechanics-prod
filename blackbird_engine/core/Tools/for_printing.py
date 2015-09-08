@@ -121,7 +121,7 @@ def format_as_line(obj,
     #
     return result
 
-def format_completed(obj, *kargs):
+def format_completed(obj, **kargs):
     """
 
 
@@ -165,7 +165,7 @@ def format_completed(obj, *kargs):
     else:
         kargs["value"] = mark_empty
     #
-    result = format_as_line(obj, *kargs)
+    result = format_as_line(obj, **kargs)
     return result
     
     
