@@ -127,15 +127,15 @@ def forecast(surface, x_val):
         lo = known_vals[0]
         hi = known_vals[-1]
         if x_val < lo:
-            pass
-            #keep result as None
+            result = surface[lo]
+            #add a comment #<------------------------------------------------------------------------------------fix!
             #or can set to a Note:
             #result = CR_Reference()
             #comment = "too  small" 
             #result.changeElement("note",comment)
         elif x_val > hi:
-            pass
-            #keep result as None #<------------------------------------------------------------------------------------fix!
+            result = surface[hi]
+            #add a comment #<------------------------------------------------------------------------------------fix!
         else:
             #ask in known range but not specified, so need to extrapolate the
             #reference. do so by finding first value larger than ask. then
