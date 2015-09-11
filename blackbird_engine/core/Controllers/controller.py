@@ -40,7 +40,6 @@ class GenericController:
     """
 
     This class provides a basic shell for objects that select focal points.
-
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
