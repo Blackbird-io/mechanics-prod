@@ -104,17 +104,24 @@ def average_references(a_ref, b_ref, a_weight = 1, b_weight = 1):
             #mSc[k] = mval
         #return mSc
 
-def forecast(surface, x_val):
+def forecast(surface, x_val, fill_edge = True):
     """
 
 
     forecast(surface, x_val) -> CR_Reference
     
     
-    Function returns a reference for a value on the surface's x-axis. If surface
-    already includes ``x_val``, function pulls the reference associated with
-    that value. Otherwise, function creates a new reference from the two known
-    points closest to x_val.
+    Function returns a reference for a value on the surface's x-axis.
+
+    The surface is usually a dict-type object that represents a matrix (2+ 
+    dimensional array) of scenario objects. If surface already includes
+    ``x_val``, function pulls the reference associated with that value.
+    Otherwise, function creates a new reference from the two known points
+    closest to x_val.
+
+    If ``fill_edge`` is True, function will return the closest edge case when
+    ``x_val`` falls outside the [min, max] range for the surface x-axis.
+    Otherwise, function will return None for out-of-bounds asks. 
     """
     #right now, function averages two closest data points. can turn into a line
     #of best fit analysis. 
@@ -127,14 +134,20 @@ def forecast(surface, x_val):
         lo = known_vals[0]
         hi = known_vals[-1]
         if x_val < lo:
-            result = surface[lo]
+            if fill_edge:
+                result = surface[lo]
+            else:
+                pass
             #add a comment #<------------------------------------------------------------------------------------fix!
             #or can set to a Note:
             #result = CR_Reference()
             #comment = "too  small" 
             #result.changeElement("note",comment)
         elif x_val > hi:
-            result = surface[hi]
+            if fill_edge:
+                result = surface[hi]
+            else:
+                pass
             #add a comment #<------------------------------------------------------------------------------------fix!
         else:
             #ask in known range but not specified, so need to extrapolate the
