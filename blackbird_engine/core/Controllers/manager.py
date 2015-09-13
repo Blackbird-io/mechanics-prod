@@ -48,14 +48,10 @@ process()             evaluates message, returns next one
 
 #imports
 import BBGlobalVariables as Globals
-import DataStructures.Platform as Platform
 
-from Managers import TopicManager
-
+from .interviewer import Interviewer
 from .yenta import Yenta
 
-from .analytics_controller import AnalyticsController
-from .interviewer import Interviewer
 
 
 
@@ -63,15 +59,10 @@ from .interviewer import Interviewer
 #globals
 yenta = Yenta()
 interviewer = Interviewer()
-Messenger = Platform.Messenger.Messenger
-
-TopicManager.populate()
-#TM.populate() should be a no-op here because Yenta will have already done so
-#and TM.local_catalog.populated will be True accordingly.
 summary_t_name = "basic model summary, annualized current with capex"
 
 #classes    
-class FlowController(Messenger):
+class WorkController(Messenger):
     """
 
     Class of objects that combine all functions necessary to go from one message
@@ -97,7 +88,7 @@ class FlowController(Messenger):
     """
     
     def __init__(self):
-        Messenger.__init__(self)
+        Messenger.__init__(self) #<--------------------------------------------------------------- is this necessary?
         self.max_cycles = 20
         self.needs_work = True
         self.status = None
@@ -196,12 +187,11 @@ class FlowController(Messenger):
         self.setStatus(status)
         return message
 
-    def work_on_model(self, message):
+    def process(self, message):
         """
-        #work_on_model()
 
 
-        FlowController.work_on_model(message) -> message
+        WorkController.process(message) -> message
 
 
         Method works to improve the model until it's either good enough to
@@ -216,7 +206,7 @@ class FlowController(Messenger):
             #
             if self.status == Globals.status_pendingResponse:
                 topic_bbid = model.interview.transcript[-1][0]["topic_bbid"]
-                topic = TopicManager.local_catalog.issue(topic_bbid)
+                topic = yenta.TM.local_catalog.issue(topic_bbid)
                 message = topic.process(message)
             #
             elif self.status == Globals.status_topicNeeded:
@@ -238,7 +228,6 @@ class FlowController(Messenger):
                 break
             #circuit-breaker logic
         #
-        print("finished analysis loop after %s passes" % n)
         return message
 
     def wrap_interview(self,message):
@@ -255,31 +244,138 @@ class FlowController(Messenger):
         For example, wrapInterview() can insert final questions or flag certain
         items for follow-up or review. 
         """
-        M = message[0]
-        Q = message[1]
-        R = message[2]
+##        M = message[0]
+##        Q = message[1]
+##        R = message[2]
+##        #
+##        #use M,_,_ here to avoid errors from incorrect wrap calls by Topic
+##        #scenarios (ie to make sure that if scenario wraps w wrap_topic, the
+##        #actual message this method returns still contains the original Q and
+##        #R)
+##        #
+##        #NOTE: Assumes that neither analytics nor summarization topics can
+##        #ask any questions.
+##        #
+##        alt_msg = (M, None, None)
+##        #
+##        alt_msg = process_analytics(alt_msg)
+##        alt_msg = process_summary(alt_msg)
+##        #
+##        message = (M,Q,R)
+##        #        
+##        return message
+        #basically, check for completion in various ways, if it's not complete
+        #point where necessary, and set message into m,_,_
         #
-        #use M,_,_ here to avoid errors from incorrect wrap calls by Topic
-        #scenarios (ie to make sure that if scenario wraps w wrap_topic, the
-        #actual message this method returns still contains the original Q and
-        #R)
+        model = message_in[0]
+        message_out = message_in
         #
-        #NOTE: Assumes that neither analytics nor summarization topics can
-        #ask any questions.
+        if not model.valuation.complete:
+            model.work_path = model.valuation.path
+            #set interviewer.default_protocol to 0
+            message_out = (model, None, None)
+            #send back for more work on valuation
         #
-        alt_msg = (M, None, None)
-        alt_msg = process_analytics(alt_msg)
-        M = alt_msg[0]
-        l_sum = M.analytics.credit.combined.get_summary()
-        print(l_sum)
+        if not model.summary.complete:
+            model.work_path = model.summary.path
+            #set interview.default_protocol to 0
+            message_out = (model, None, None)
+            #send back for more work on summary
+            #these can be methods in their own right
         #
-        alt_msg = process_summary(alt_msg)
+        return message_out
         #
-        message = (M,Q,R)
-        #        
+        #main question:
+            #what to do with path
+            #can have a path argument in interview controller that says use default
+            #can have a path argument on model that initially points to model.interview.path
+            #but can be changed (use a property to keep dynamic)
+            #
+            #
+        #or can be something like:
+        message = self.check_valuation(message)
+        message = self.check_summary(message)
         return message
-    
 
+    def check_valuation(self, message):
+        #check that message is m_End
+        #only do work then; otherwise dont touch <---------------------
+        message_in = message
+        message_out = message_in
+        #
+        model = message_in[0]
+        if not model.valuation.complete:
+            model.work_path = model.valuation.path
+            message_out = (model, None, None)
+        #
+        return message_out
+
+    def check_summary(self, message):
+        pass
+        #similar idea to above
+        
+##the process_summary() and process_valuation() functions should be at SessionController!
+##they dont need to be at manager. so force_valuation() could set pointer to some valuation
+##object and go from there.
+    #basically, that function wants to be able to run process on the valuation only! nothing
+    #else. for a particular period. so should be able to set model.valuation to that period,
+    #then pass down for regular old processing here? but then would need to set path to
+    #model.valuation.path. which is kind of ok i think? or if i dont want to touch path
+    #that high up, can have a process_valuation method here, which is just:
+
+#def process_valuation(self, message):
+    #message_in = message
+    #message_out = message_in
+    #model = message_in[0]
+    #model.path = model.valuation.path
+    ##already pointing to a particular date
+    #message_out = self.process(message_in)
+    #return message out
+
+    def process_summary(self, message):
+        #should be obsolete if i integrate summarization into path
+        #or alternatively can have a separate path called ``summarization``
+        #kind of like the new market_value interface
+        summary_topic_id = yenta.TM.local_catalog.by_name[summary_t_name]
+        summary_topic = yenta.TM.local_catalog.issue(summary_topic_id)
+        message = summary_topic.process(message)
+        #
+        return message
+        #
+        #should run interviewer on model.summary.path; can do lots of nice
+        #work there, similar format to analytics. 
+
+    def process_valuation(self, message):
+        #
+        #substantively, this should say: keep running process() until valuation
+        #object is all done. more specifically, until model.analytics.guide.complete
+        #is done.
+        #
+        #can either change the path...? or do something weird.
+        #
+        #set interview.path to company.valuation.path
+        #pass the whole thing to interviewer.process(message, protocol_key = 0)
+        model = message[0]
+        if not model.valuation.complete:
+            model.path = model.valuation.path
+            return message
+        if not 
+        #
+        return message
+        #
+        #but also need to run the full thing when outside calls?
+        #can be an independent method
+        #
+
+#could even skip all this stuff and just go through the pieces in conclude()
+#manager.conclude():
+        #if not model.valuation.complete:
+            #self.process_valuation()
+        #if not model.summary.complete:
+            #self.process_summary()
+
+##should be exact same process as normally, but along a specialized sub-path
+##
 
 
 

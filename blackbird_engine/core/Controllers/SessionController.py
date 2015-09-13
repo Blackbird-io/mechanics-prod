@@ -7,7 +7,7 @@
 #Module: Controllers.SessionController
 """
 
-SessionController delegates message prociessing to specialized junior modules. 
+SessionController delegates message processing to specialized junior modules. 
 
 SessionController sits directly below the Engine Shell. Shell calls
 SessionController whenever Shell receives a message (``message A``). SC

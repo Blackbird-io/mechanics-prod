@@ -86,9 +86,9 @@ class Interviewer(Controller):
     ====================  ======================================================
 
     DATA:
-    _protocol             int; local state for protocol selection; 1 is default
+    _default_protocol     int; local state for protocol selection; 1 is default
     _protocol_routines    dict; CLASS attr, protocol : routine
-    protocol              int; P, get _protocol, set iff in routine keys
+    default_protocol      int; P, get _protocol, set iff in routine keys
 
     FUNCTIONS:
     focus()               pick highest priority focal point
@@ -110,10 +110,10 @@ class Interviewer(Controller):
     #class vars    
     def __init__(self):
         Controller.__init__(self)
-        self._protocol = 1
+        self._default_protocol = 1
 
     @property
-    def protocol(self):
+    def default_protocol(self):
         """
 
 
@@ -125,12 +125,12 @@ class Interviewer(Controller):
         Property setter accepts values that are in the class _protocol_routines
         dictionary. Setter raises ManagedAttributeError otherwise.
         """
-        return self._protocol
+        return self._default_protocol
 
-    @protocol.setter
-    def protocol(self, value):
+    @default_protocol.setter
+    def default_protocol(self, value):
         if value in self._protocol_routines:
-            self._protocol = value
+            self._default_protocol = value
         else:
             c = "Unknown protocol. Attribute accepts only known keys for "
             c += "protocol routines."
@@ -230,15 +230,17 @@ class Interviewer(Controller):
         #
         return levels
 
-    def process(self, mqr):
+    def process(self, message, protocol_key = None):
         """
 
 
-        Interviewer.process(mqr) -> mqr
+        Interviewer.process(message[, protocol_key = None]) -> message
 
 
         Method identifies the object where Blackbird should focus its analysis
-        given the current model state.
+        given the current model state. Method applies protocol associated with
+        specified key in instance's routines dictionary. If ``protocol_key`` is
+        None, method applies the instance's default protocol.
 
         Algorithm:
 
@@ -254,7 +256,7 @@ class Interviewer(Controller):
         """
         #
         fp = None
-        Controller.process(self, mqr)
+        Controller.process(self, message)
         #
         model = self.MR.activeModel
         #
@@ -276,9 +278,11 @@ class Interviewer(Controller):
             #known focal point satisfies the known rule and Blackbird needs to
             #find a new one.
             #
-            routine = self._protocol_routines[self.protocol]
-            #find and apply the protocl-specific processing routine. IC stores
-            #routines as class methods, so need to pass in the instance
+            if protocol_key is None:
+                protocol_key = self.default_protocol
+            routine = self._protocol_routines[protocol_key]
+            #find and apply the protocl-specific processing routine. Interviewer
+            #stores routines as class methods, so need to pass in the instance
             #explicitly.
             #
             fp = routine(self, model)
