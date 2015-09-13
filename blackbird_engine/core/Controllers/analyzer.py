@@ -106,7 +106,9 @@ class analyzerLM(Messenger):
     def downStream(self,message,trace=False):
         """
 
+
         aLM.downStream(message[,trace=False]) -> message
+
 
         Method evaluates a message and generates the next one. downStream()
         first passes a message to upController to determine if additional
@@ -191,7 +193,9 @@ class analyzerLM(Messenger):
     def upController(self,message):
         """
 
+
         aLM.upController(message) -> message
+
 
         Method checks whether the message is of a type that can be returned to
         higher-level modules. Only two types of messages are suitable for upward
@@ -215,20 +219,42 @@ class analyzerLM(Messenger):
         In the event upController encounters a message in the endSession format,
         it will run self.wrapInterview() on the message before returning it.
         """
-        checkStatus = Globals.checkMessageStatus
-        upWorthy = {Globals.status_pendingQuestion, Globals.status_endSession}
-        mStatus = checkStatus(message)
-        if mStatus == Globals.status_topicNeeded:
+        check = Globals.checkMessageStatus
+        up_worthy = {Globals.status_pendingQuestion, Globals.status_endSession}
+        #
+        status = check(message)
+        if status == Globals.status_topicNeeded:
             message = interviewer.process(message)
-            mStatus = checkStatus(message)
-            #only run one message transformation per call (via IC.process(msg))
-        if mStatus == Globals.status_endSession:
+            status = check(message)
+            #only run one message transformation per call (via IC.process(msg));
+            #if interviewer doesn't find anything good, it will change status to
+            #end_session
+        #
+        if status == Globals.status_endSession:
             message = self.wrapInterview(message)
-            mStatus = checkStatus(message)
-        if mStatus in upWorthy:
+            #could potentially re-route selection to some other direction
+            status = check(message)
+        if status in up_worthy:
             self.upReady = True
-        self.setStatus(mStatus)
-        return message        
+        self.setStatus(status)
+        #
+        return message
+    #
+        #this could be something like
+            #find_next_step()
+                #next step is either a different topic or end session
+            #choose_next_step()
+
+##        #
+##        flow_controller
+##check_portal_ready
+##is_portal_ready()
+##is_up_ready()
+##
+##prep_up() #probably best
+##prep_for_release()
+
+    
 
     def wrapInterview(self,message):
         """
