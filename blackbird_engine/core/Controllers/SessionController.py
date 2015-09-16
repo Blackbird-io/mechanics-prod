@@ -136,23 +136,23 @@ def process_analytics(starting_model):
     updated_model = msg[0]
     return updated_model
 
-def process_summary(starting_model):
-    """
-
-
-    process_summary(starting_model) -> Model
-
-    
-    Function returns the starting model with a summary.
-    
-    Function packages the starting model into a (M,_,_) message. Function then
-    passes the message down to analyzer.process_summary() for actual work.
-
-    NOTE: The output model should generally have the same memory address as the
-    input model, but function does not guarantee shared or different identity. 
-    """
-    msg = (starting_model, None, None)
-    msg = analyzer.process_summary(msg)
-    updated_model = msg[0]
-    return updated_model
+##def process_summary(starting_model):
+##    """
+##
+##
+##    process_summary(starting_model) -> Model
+##
+##    
+##    Function returns the starting model with a summary.
+##    
+##    Function packages the starting model into a (M,_,_) message. Function then
+##    passes the message down to analyzer.process_summary() for actual work.
+##
+##    NOTE: The output model should generally have the same memory address as the
+##    input model, but function does not guarantee shared or different identity. 
+##    """
+##    msg = (starting_model, None, None)
+##    msg = analyzer.process_summary(msg)
+##    updated_model = msg[0]
+##    return updated_model
     

@@ -39,12 +39,10 @@ from DataStructures.Guidance.Guide import Guide
 from DataStructures.Guidance.InterviewTracker import InterviewTracker
 from DataStructures.Platform.ID import ID
 from DataStructures.Platform.Tags import Tags
-from Tools import Parsing as ParsingTools
 
 from .Header import Header
 ##from .Taxonomy import Taxonomy
 from .TimeLine import TimeLine
-from .TimePeriod import TimePeriod
 
 
 
@@ -94,34 +92,33 @@ class Model(Tags):
     ====================  ======================================================
 
     DATA:
+    _path                 instance state for ``path``, pass-through by default
     _started              bool; instance-level state for ``started`` property
-    appliedTopics         list of topic tdexes applied to model
     currentPeriod         pointer to timeline period that covers reference date
-    defaultFinancials     stores template financials for new business units
     guide                 instance of Guide object
     header                instance of Header object
     id                    instance of ID object, carries bbid for model 
-    interview             instance of an InterviewTracker object that guides
-                          Analyzer and MatchMaker modules
-    started               bool; property, tracks whether engine has begun work
+    interview             instance of an InterviewTracker object 
+    path                  property; dynamic pointer to interview or other path
     portal_data           dict; stores data from Portal related to the instance
+    started               bool; property, tracks whether engine has begun work
     summary               dict or obj; instance of BusinessSummary
     taxonomy              Taxonomy; collection of prototypical business units
     time_line              list of TimePeriod objects
 
     FUNCTIONS:
     from_portal()         class method, extracts model out of API-format
-    recordTopic()         appends topic's tdex to instance.appliedTopics
-    setDefaultFinancials()  set template financials
     start()               sets _started and started to True
     ====================  ======================================================
+    
+    ``P`` indicates attributes decorated as properties. See attribute-level doc
+    string for more information.
     
     """
     def __init__(self, name):
         Tags.__init__(self,name)
+        self._path = None
         self._started = False
-        self.appliedTopics = []
-        self.defaultFinancials = None
         self.guide = Guide()
         self.header = Header()
         self.id = ID()
@@ -179,32 +176,54 @@ class Model(Tags):
         del M.portal_data["e_model"]
         return M
 
-##    def recordTopic(self,T):
-##        """
-##
-##
-##        M.recordTopic(T) -> None
-##
-##        
-##        Method records a topic's tdex in the instance's ``appliedTopics`` list.
-##        Allows other modules to ensure that the same topic doesn't run twice on
-##        a given model unless it's specifically tagged as recursive.
-##        """
-##        self.appliedTopics.append(T.TDEX)
+    @property
+    def path(self):
+        """
 
-##    def setDefaultFinancials(self,fins):
-##        """
-##
-##
-##        M.setDefaultFinancials(fins) -> None
-##
-##
-##        Method sets instance.defaultFinancials to the template object provided
-##        as an argument. Analytical objects in the environment can then quickly
-##        configure new business units with the correct template when adding them
-##        to the model. 
-##        """
-##        self.defaultFinancials = fins
+
+        **property**
+
+
+        Property returns instance _path when that attribute points to a True
+        object, or instance.interview.path otherwise.
+
+        Since the default value for instance._path is None, property starts out
+        by pointing to interview.path and switches only if someone affirmatively
+        sets it to a different referent.
+        
+        Setter sets path to value. Deleter resets value to None. 
+        """
+        result = self._path
+        if result is None:
+            result = self.interview.path
+        return result
+
+    @path.setter
+    def path(self, value):
+        self._path = value
+
+    @path.deleter
+    def path(self):
+        self._path = None
+
+    @property
+    def started(self):
+        """
+
+
+        **read-only property**
+
+
+        Property returns instance _path when that attribute points to a True
+        object, or instance.interview.path otherwise.
+
+        Since the default value for instance._path is None, property starts out
+        by pointing to interview.path and switches only if someone affirmatively
+        sets it to a different referent.
+        
+        Setter sets path to value.
+        """
+        return self._started
 
     def start(self):
         """
@@ -217,9 +236,5 @@ class Model(Tags):
         """
         self._started = True
 
-    @property
-    def started(self):
-        "``started`` property; once True, difficult to undo."
-        return self._started
         
 
