@@ -15,7 +15,7 @@ from DataStructures.Platform.Tags import Tags
 #n/a
 
 #classes
-class ValBase(Tags, PrintAsLine):
+class WorkStep(Tags, PrintAsLine):
     def __init__(self, name = None):
         Tags.__init__(self)
         PrintAsLine.__init__(self)

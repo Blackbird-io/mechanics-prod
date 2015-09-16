@@ -28,23 +28,19 @@ Model                 structured snapshots of a company across time periods
 
 
 #imports
-import copy
 import dill
-import time
 import BBExceptions
 import BBGlobalVariables as Globals
 
 from DataStructures.Analysis.BusinessSummary import BusinessSummary
 from DataStructures.Guidance.Guide import Guide
-from DataStructures.Guidance.InterviewTracker import InterviewTracker
+from DataStructures.Guidance.interview_tracker import InterviewTracker
 from DataStructures.Platform.ID import ID
 from DataStructures.Platform.Tags import Tags
-from Tools import Parsing as ParsingTools
 
 from .Header import Header
 ##from .Taxonomy import Taxonomy
 from .TimeLine import TimeLine
-from .TimePeriod import TimePeriod
 
 
 
@@ -94,6 +90,7 @@ class Model(Tags):
     ====================  ======================================================
 
     DATA:
+    _stage                obj; instance-level state for ``stage``
     _started              bool; instance-level state for ``started`` property
     appliedTopics         list of topic tdexes applied to model
     currentPeriod         pointer to timeline period that covers reference date
@@ -111,17 +108,15 @@ class Model(Tags):
 
     FUNCTIONS:
     from_portal()         class method, extracts model out of API-format
-    recordTopic()         appends topic's tdex to instance.appliedTopics
-    setDefaultFinancials()  set template financials
     start()               sets _started and started to True
+    transcribe()          append message and timestamp to transcript
     ====================  ======================================================
     
     """
     def __init__(self, name):
         Tags.__init__(self,name)
+        self._stage = None
         self._started = False
-        self.appliedTopics = []
-        self.defaultFinancials = None
         self.guide = Guide()
         self.header = Header()
         self.id = ID()
@@ -131,7 +126,10 @@ class Model(Tags):
         self.portal_data = dict()
         self.summary = BusinessSummary()
         self.taxonomy = dict()
+        self.transcript = []
         self.time_line = TimeLine()
+        self.used = set()
+        #
         self.time_line.id.setNID(self.id.namespace_id)
 
     class dyn_current_manager:
@@ -145,6 +143,29 @@ class Model(Tags):
             raise BBExceptions.ManagedAttributeError(c)
 
     currentPeriod = dyn_current_manager()
+
+    @property
+    def stage(self):
+        """
+        pass-through at first, otherwise points to where you want to
+        """
+        result = self._stage
+        if result is None:
+            result = self.interview
+        return result
+
+    @stage.setter
+    def stage(self, value):
+        self._stage = value
+
+    @stage.deleter
+    def stage(self):
+        self._stage = None
+
+    @property
+    def started(self):
+        "``started`` property; once True, difficult to undo."
+        return self._started
 
     @classmethod
     def from_portal(cls, portal_model):
@@ -179,33 +200,6 @@ class Model(Tags):
         del M.portal_data["e_model"]
         return M
 
-##    def recordTopic(self,T):
-##        """
-##
-##
-##        M.recordTopic(T) -> None
-##
-##        
-##        Method records a topic's tdex in the instance's ``appliedTopics`` list.
-##        Allows other modules to ensure that the same topic doesn't run twice on
-##        a given model unless it's specifically tagged as recursive.
-##        """
-##        self.appliedTopics.append(T.TDEX)
-
-##    def setDefaultFinancials(self,fins):
-##        """
-##
-##
-##        M.setDefaultFinancials(fins) -> None
-##
-##
-##        Method sets instance.defaultFinancials to the template object provided
-##        as an argument. Analytical objects in the environment can then quickly
-##        configure new business units with the correct template when adding them
-##        to the model. 
-##        """
-##        self.defaultFinancials = fins
-
     def start(self):
         """
 
@@ -217,9 +211,18 @@ class Model(Tags):
         """
         self._started = True
 
-    @property
-    def started(self):
-        "``started`` property; once True, difficult to undo."
-        return self._started
+    def transcribe(self, message):
+        """
+
+
+        Model.transcribe(message) -> None
+
+
+        Appends a tuple of (message ,time of call) to instance.transcript.
+        """
+        time_stamp = time.time()
+        record = (messsage,time_stamp)
+        self.transcript.append(record)
+    
         
 

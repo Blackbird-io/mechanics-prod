@@ -30,10 +30,11 @@ CompanyValue          standard form for storing data about company value
 #imports
 from DataStructures.Modelling.BookMark import BookMark
 from DataStructures.Modelling.Financials import Financials
+from DataStructures.Guidance.work_stage import WorkStage
 
 from .credit_capacity import CreditCapacity
 from .enterprise_value import EnterpriseValue
-from .val_base import ValBase
+
 
 
 
@@ -41,7 +42,7 @@ from .val_base import ValBase
 #n/a
 
 #classes
-class CompanyValue(ValBase):
+class CompanyValue(WorkStage):
     """
 
     This class manages protocols that provide a focal point for MatchMaker
@@ -60,10 +61,9 @@ class CompanyValue(ValBase):
     ====================  ======================================================
     """
     def __init__(self, name = "valuation"):
-        ValBase.__init__(self, name)
+        WorkStage.__init__(self, name)
         self.credit = CreditCapacity()
         self.ev = EnterpriseValue()
-        self.path = None
         #
         self.build_path()
         self.tag("valuation", field = "req")
@@ -79,16 +79,13 @@ class CompanyValue(ValBase):
         to a standard valuation roadmap, built out of the instance's own
         attributes.
         """
-        path = Financials(populate = False)
-        path.autoSummarize = False
         steps = [BookMark("start Valuation", "Valuation"),
                  self.ev,
                  self.credit,
                  self.credit.asset_backed,
                  self.credit.lev_loans,
                  BookMark("end Valuation", "Valuation", "endStatement")]
-        path.extend(steps)
-        self.path = path
+        self.path.extend(steps)
 
 
     
