@@ -54,7 +54,7 @@ class Yenta():
     """
 
     The Yenta class selects the best topic to analyze an object. When deployed,
-    Yenta evaluates the focal point of the interview at a given point in time.
+    Yenta evaluates the focal point of the stage at a given point in time.
 
     Yenta evaluates fit based on target and candidate tags. See individual
     methods for fit scoring algorithms.
@@ -258,7 +258,7 @@ class Yenta():
         if not pool:
             pool = self.TM.local_catalog.by_id.keys()
         #
-        pool = set(pool) - model.interview.used
+        pool = set(pool) - model.used
         pool = sorted(pool)
         #sort pool into list to maintain stable evaluation order and results
         #
@@ -398,7 +398,7 @@ class Yenta():
 
         
         Method returns a clean instance of a topic that fits the current
-        interview focal point better than any other candidates.
+        stage focal point better than any other candidates.
 
         Method computes best fit against all topics in the catalog.
 
@@ -424,7 +424,7 @@ class Yenta():
         chosen_bbid = None
         chosen_topic = None
         #
-        fp = model.interview.focal_point
+        fp = model.stage.focal_point
         fp.guide.selection.increment(1)
         #
         eligibles = self.find_eligible(fp, model)

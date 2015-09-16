@@ -31,7 +31,8 @@ class CreditCapacity  container for name-specific credit information
 import copy
 
 from .landscape import Landscape
-from .val_base import ValBase
+
+from ..Guidance.step import Step
 
 
 
@@ -40,7 +41,7 @@ from .val_base import ValBase
 #n/a
 
 #classes
-class CreditCapacity(ValBase):
+class CreditCapacity(Step):
     """
 
     Class stores Blackbird estimates of company-specific credit outcomes in
@@ -66,7 +67,7 @@ class CreditCapacity(ValBase):
 
     def __init__(self):
         #
-        ValBase.__init__(self, name = "credit capacity")
+        Step.__init__(self, name = "credit capacity")
         self.asset_backed = Landscape("asset backed loans")
         self.bonds = None
         self.combined = None
