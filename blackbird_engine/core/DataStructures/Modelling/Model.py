@@ -28,15 +28,14 @@ Model                 structured snapshots of a company across time periods
 
 
 #imports
-import copy
-import dill
 import time
+import dill
 import BBExceptions
 import BBGlobalVariables as Globals
 
 from DataStructures.Analysis.BusinessSummary import BusinessSummary
 from DataStructures.Guidance.Guide import Guide
-from DataStructures.Guidance.InterviewTracker import InterviewTracker
+from DataStructures.Guidance.interview_tracker import InterviewTracker
 from DataStructures.Platform.ID import ID
 from DataStructures.Platform.Tags import Tags
 
@@ -92,7 +91,7 @@ class Model(Tags):
     ====================  ======================================================
 
     DATA:
-    _path                 instance state for ``path``, pass-through by default
+    _stage                obj; instance-level state for ``stage``
     _started              bool; instance-level state for ``started`` property
     currentPeriod         pointer to timeline period that covers reference date
     guide                 instance of Guide object
@@ -109,6 +108,7 @@ class Model(Tags):
     FUNCTIONS:
     from_portal()         class method, extracts model out of API-format
     start()               sets _started and started to True
+    transcribe()          append message and timestamp to transcript
     ====================  ======================================================
     
     ``P`` indicates attributes decorated as properties. See attribute-level doc
@@ -117,7 +117,7 @@ class Model(Tags):
     """
     def __init__(self, name):
         Tags.__init__(self,name)
-        self._path = None
+        self._stage = None
         self._started = False
         self.guide = Guide()
         self.header = Header()
@@ -128,7 +128,10 @@ class Model(Tags):
         self.portal_data = dict()
         self.summary = BusinessSummary()
         self.taxonomy = dict()
+        self.transcript = []
         self.time_line = TimeLine()
+        self.used = set()
+        #
         self.time_line.id.setNID(self.id.namespace_id)
 
     class dyn_current_manager:
@@ -142,6 +145,29 @@ class Model(Tags):
             raise BBExceptions.ManagedAttributeError(c)
 
     currentPeriod = dyn_current_manager()
+
+    @property
+    def stage(self):
+        """
+        pass-through at first, otherwise points to where you want to
+        """
+        result = self._stage
+        if result is None:
+            result = self.interview
+        return result
+
+    @stage.setter
+    def stage(self, value):
+        self._stage = value
+
+    @stage.deleter
+    def stage(self):
+        self._stage = None
+
+    @property
+    def started(self):
+        "``started`` property; once True, difficult to undo."
+        return self._started
 
     @classmethod
     def from_portal(cls, portal_model):
@@ -176,23 +202,6 @@ class Model(Tags):
         del M.portal_data["e_model"]
         return M
 
-    @property
-    def path(self):
-        """
-
-
-        **property**
-
-
-        Property returns instance _path when that attribute points to a True
-        object, or instance.interview.path otherwise.
-
-        Since the default value for instance._path is None, property starts out
-        by pointing to interview.path and switches only if someone affirmatively
-        sets it to a different referent.
-        
-        Setter sets path to value. Deleter resets value to None. 
-        """
         result = self._path
         if result is None:
             result = self.interview.path
@@ -224,7 +233,6 @@ class Model(Tags):
         Setter sets path to value.
         """
         return self._started
-
     def start(self):
         """
 
@@ -236,5 +244,18 @@ class Model(Tags):
         """
         self._started = True
 
+    def transcribe(self, message):
+        """
+
+
+        Model.transcribe(message) -> None
+
+
+        Appends a tuple of (message ,time of call) to instance.transcript.
+        """
+        time_stamp = time.time()
+        record = (message,time_stamp)
+        self.transcript.append(record)
+    
         
 

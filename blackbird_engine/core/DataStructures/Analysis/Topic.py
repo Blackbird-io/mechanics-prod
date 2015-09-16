@@ -358,9 +358,8 @@ class Topic:
         Topic.transcribe(msg1, msg2, applied_scenario) -> None
 
 
-        Method records a mark in active model's interview transcript. The
-        transcript allows human and machine readers to review and continue
-        analysis.
+        Method records a mark in active model's transcript. The transcript
+        allows human and machine readers to review and continue analysis.
         
         Each mark is a dictionary with the following keys:
         -- ``scenario_name``: name of scenario instance appplied to msg1
@@ -387,8 +386,8 @@ class Topic:
         mark["scenario_name"] = scene_name
         mark["timestamp"] = time.time()
         model = self.MR.activeModel
-        model.interview.transcribe(mark)
-        model.interview.used.add(self.id.bbid)
+        model.transcribe(mark)
+        model.used.add(self.id.bbid)
         
     def wrap_scenario(self, Q):
         """
