@@ -4,10 +4,10 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: DataStructures.Guidance.InterviewTracker
+#Module: DataStructures.Guidance.interview_tracker
 
 """
-This module defines the InterviewTracker class, which plans and monitors the
+This module defines the InterviewTracker class, a custom stage for managing the
 interview between Blackbird and a user. 
 ====================  ==========================================================
 Object                Description
@@ -22,7 +22,6 @@ CLASSES:
 InterviewTracker      plan and monitor machine-user interview
 ====================  ==========================================================
 """
-
 
 
 
@@ -47,12 +46,8 @@ quality_rule = completion_rules.check_quality_only
 class InterviewTracker(Stage):
     """
 
-    This class provides state storage for Model-level interview operations, such
-    as selecting a path or protocol or developing a structure for the interview.
-
-    By default, focal point is a LineItem named "Overview" and standard is the
-    min_quality test. 
-
+    This class provides a ready-to-go container for managing how Blackbird
+    interviews a user. Includes a default focal point and completion standard. 
     ==========================  ================================================
     Attribute                   Description
     ==========================  ================================================
@@ -60,6 +55,7 @@ class InterviewTracker(Stage):
     DATA:
     completion_rule             pointer to function that checks completion
     focal_point                 criterion for MatchMaker's selection
+    track_progress              True
     progress                    num; starts at 0
     
     FUNCTIONS:
@@ -70,13 +66,14 @@ class InterviewTracker(Stage):
         Stage.__init__(self)
         self.completion_rule = quality_rule
         self.focal_point = intro_line.copy()
+        self.track_progress = True
         self.progress = 0
         
     def set_progress(self, p, override = False):
         """
 
 
-        ITr.set_progress(p, override = False) -> None
+        InterviewTracker.set_progress(p, override = False) -> None
 
 
         Method sets instance progress indicator to the higher of current value

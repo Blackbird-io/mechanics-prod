@@ -149,9 +149,9 @@ class Interviewer(Controller):
         Method expects ``selector`` to be a callable that accepts two arguments
         (level and model) and returns an object suitable for focus.
         
-        Method expects model.interview.levels to contain a dictionary of
-        priority level objects keyed by priority. Method walks through the
-        levels from most to least important.
+        Method expects model.stage.levels to contain a dictionary of priority
+        level objects keyed by priority. Method walks through the levels from
+        most to least important.
 
         When method locates a level that is not yet complete, method applies
         selector to that level. If selector returns a True object, method stops
@@ -159,7 +159,7 @@ class Interviewer(Controller):
         as complete and moves on to the next one.
         """
         fp = None
-        levels = model.interview.levels
+        levels = model.stage.levels
         priorities = sorted(levels.keys(), reverse = True)
         for priority in priorities:
             level = levels[priority]
@@ -259,8 +259,8 @@ class Interviewer(Controller):
         model = self.MR.activeModel
         #
         #check known focal point
-        old_fp = model.interview.focal_point
-        known_rule = model.interview.completion_rule
+        old_fp = model.stage.focal_point
+        known_rule = model.stage.completion_rule
         routine = None
         #
         if known_rule:
@@ -286,12 +286,12 @@ class Interviewer(Controller):
         if not fp:
             double_check = True
         if double_check:
-            model.interview.clear_cache()
+            model.stage.clear_cache()
             fp = routine(self, model)
             #if protocol routine doesnt find a focal point, reset cache and
             #try again. dont want to finish prematurely.
         #
-        model.interview.set_focal_point(fp)
+        model.stage.set_focal_point(fp)
         #
         if not fp:
             new_mqr = self.wrap_interview(model)
@@ -315,8 +315,8 @@ class Interviewer(Controller):
         time, at the expense of depth. 
         """
         #tries to allocate attention ratably
-        path = model.interview.path
-        model.interview.levels = self.prioritize_multi(path)
+        path = model.stage.path
+        model.stage.levels = self.prioritize_multi(path)
         fp = self.focus(model, selection_rules.for_attentive_breadth)
         #
         return fp
@@ -335,8 +335,8 @@ class Interviewer(Controller):
         feels identical to r_prioritized(),
         """
         #like p1, but stops working when there is no more attention available
-        path = model.interview.path
-        model.interview.levels = self.prioritize_multi(path)
+        path = model.stage.path
+        model.stage.levels = self.prioritize_multi(path)
         fp = self.focus(model, selection_rules.for_attentive_depth)
         #
         return fp
@@ -353,8 +353,8 @@ class Interviewer(Controller):
 
         Method treats all objects with defined priority as equally important. 
         """ 
-        path = model.interview.path
-        model.interview.levels = self.prioritize_single(path)
+        path = model.stage.path
+        model.stage.levels = self.prioritize_single(path)
         fp = self.focus(model, selection_rules.for_quality)
         #
         return fp
@@ -374,8 +374,8 @@ class Interviewer(Controller):
         #prioritizes items into different levels
         #picks out first open one
         #
-        path = model.interview.path
-        model.interview.levels = self.prioritize_multi(path)
+        path = model.stage.path
+        model.stage.levels = self.prioritize_multi(path)
         fp = self.focus(model, selection_rules.for_quality)
         #
         return fp
@@ -396,18 +396,19 @@ class Interviewer(Controller):
         live outside a given model, method performs no-op when it cannot
         establish relative position.        
         """
-        fp = model.interview.focal_point
-        path = model.interview.path
-        if path:
-            try:
-                i = path.index(fp)
-                new_progress = i/len(path)
-                new_progress = new_progress * 100
-                new_progress = round(new_progress)
-                model.interview.set_progress(new_progress)
-            except ValueError:
-                #external focal point, do nothing            
-                pass
+        if model.stage.track_progress:
+            fp = model.stage.focal_point
+            path = model.stage.path
+            if path:
+                try:
+                    i = path.index(fp)
+                    new_progress = i/len(path)
+                    new_progress = new_progress * 100
+                    new_progress = round(new_progress)
+                    model.stage.set_progress(new_progress)
+                except ValueError:
+                    #external focal point, do nothing            
+                    pass
 
     def wrap_interview(self, model):
         """
