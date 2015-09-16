@@ -57,7 +57,7 @@ class CompanyValue(Stage):
     path                  ordered container of attributes to consider
     
     FUNCTIONS:
-    build_path()          make a list of important attributes for controllers
+    set_path()            make a list of important attributes for controllers
     ====================  ======================================================
     """
     def __init__(self, name = "valuation"):
@@ -65,10 +65,10 @@ class CompanyValue(Stage):
         self.credit = CreditCapacity()
         self.ev = EnterpriseValue()
         #
-        self.build_path()
+        self.set_path()
         self.tag("valuation", field = "req")
 
-    def build_path(self):
+    def set_path(self):
         """
 
 
@@ -78,6 +78,7 @@ class CompanyValue(Stage):
         Method appends a standard valuation roadmap, built out of the instance's own
         attributes, to instance.path.
         """
+        Stage.set_path(self)
         steps = [BookMark("start Valuation", "Valuation"),
                  self.ev,
                  self.credit,

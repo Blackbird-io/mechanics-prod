@@ -32,6 +32,8 @@ import time
 
 from .step import Step
 
+from ..Modelling.Financials import Financials
+
 
 
 
@@ -57,11 +59,12 @@ class Stage(Step):
     work_space                  unmanaged scrap paper for Topic or other state
     
     FUNCTIONS:
-    build_path()                set path to an empty Financials instance 
+     
     clear_cache()               clear focal point, rule and levels
     set_attention_budget()      set attentionBudget to new value
     set_completion_rule()       attach a new completion rule to instance
     set_focal_point()           attach a pointer to the current focal point
+    set_path()                  set path to argument or empty Financials 
     ==========================  ================================================
     """
     def __init__(self, name = None):
@@ -73,18 +76,6 @@ class Stage(Step):
         self.path = None
         self.track_progress = False
         self.work_space = {}
-
-    def build_path(self):
-        """
-
-
-        WorkStage.build_path() -> None
-
-
-        Method sets instance.path to an empty Financials object. 
-        """
-        self.path = Financials(populate = False)
-        self.path.autoSummarize = False
 
     def clear_cache(self):
         """
@@ -134,3 +125,22 @@ class Stage(Step):
 
         """
         self.focal_point = fP
+
+    def set_path(self, new_path = None):
+        """
+
+
+        WorkStage.build_path() -> None
+
+
+        Method sets instance.path to new_path or an empty Financials object.
+        Method always sets autoSummarize to False. 
+        """
+        if new_path:
+            self.path = new_path
+        else:
+            self.path = Financials(populate = False)
+        if self.path.autoSummarize:
+            self.path.autoSummarize = False
+        
+
