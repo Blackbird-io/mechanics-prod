@@ -28,6 +28,7 @@ Model                 structured snapshots of a company across time periods
 
 
 #imports
+import time
 import dill
 import BBExceptions
 import BBGlobalVariables as Globals
@@ -221,7 +222,7 @@ class Model(Tags):
         Appends a tuple of (message ,time of call) to instance.transcript.
         """
         time_stamp = time.time()
-        record = (messsage,time_stamp)
+        record = (message,time_stamp)
         self.transcript.append(record)
     
         
