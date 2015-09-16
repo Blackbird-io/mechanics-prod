@@ -29,7 +29,7 @@ class CreditCapacity  container for name-specific credit information
 
 
 #imports
-from .val_base import ValBase
+from ..Guidance.step import Step
 
 
 
@@ -38,7 +38,7 @@ from .val_base import ValBase
 #n/a
 
 #classes
-class EnterpriseValue(ValBase):
+class EnterpriseValue(Step):
     """
 
     Standard form for storing information about the enterprise value of a
@@ -63,6 +63,6 @@ class EnterpriseValue(ValBase):
 
     def __init__(self):
         #
-        ValBase.__init__(self, name = "enterprise value")
+        Step.__init__(self, name = "enterprise value")
                     
                 

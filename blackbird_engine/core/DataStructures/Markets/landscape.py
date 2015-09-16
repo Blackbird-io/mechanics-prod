@@ -37,7 +37,8 @@ from . import schema
 
 from .CR_Reference import CR_Reference
 from .CR_Scenario import CR_Scenario
-from .val_base import ValBase
+
+from ..Guidance.step import Step
 
 
 
@@ -47,7 +48,7 @@ mid_label = schema.fields_CR_Reference[1]
 good_label = schema.fields_CR_Reference[2]
 
 #classes
-class Landscape(dict, ValBase):
+class Landscape(dict, Step):
     """
 
     Class provides a dict-like container for building and storing surfaces of
@@ -76,7 +77,7 @@ class Landscape(dict, ValBase):
     """
     def __init__(self, name = None):
         dict.__init__(self)
-        ValBase.__init__(self, name)
+        Step.__init__(self, name)
         self.keep_forecasts = True
 
     def build_main(self, price_curve, multiplier,

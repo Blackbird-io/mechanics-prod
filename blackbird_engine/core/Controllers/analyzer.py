@@ -136,7 +136,7 @@ class analyzerLM(Messenger):
             Q = message[1]
             R = message[2]
             if self.upStatus == Globals.status_pendingResponse:
-                topic_bbid = M.interview.transcript[-1][0]["topic_bbid"]
+                topic_bbid = M.transcript[-1][0]["topic_bbid"]
                 T = TopicManager.local_catalog.issue(topic_bbid)
                 message = T.process(message)
                 #

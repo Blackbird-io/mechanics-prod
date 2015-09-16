@@ -30,10 +30,11 @@ CompanyValue          standard form for storing data about company value
 #imports
 from DataStructures.Modelling.BookMark import BookMark
 from DataStructures.Modelling.Financials import Financials
+from DataStructures.Guidance.stage import Stage
 
 from .credit_capacity import CreditCapacity
 from .enterprise_value import EnterpriseValue
-from .val_base import ValBase
+
 
 
 
@@ -41,7 +42,7 @@ from .val_base import ValBase
 #n/a
 
 #classes
-class CompanyValue(ValBase):
+class CompanyValue(Stage):
     """
 
     This class manages protocols that provide a focal point for MatchMaker
@@ -56,39 +57,35 @@ class CompanyValue(ValBase):
     path                  ordered container of attributes to consider
     
     FUNCTIONS:
-    build_path()          make a list of important attributes for controllers
+    set_path()            make a list of important attributes for controllers
     ====================  ======================================================
     """
     def __init__(self, name = "valuation"):
-        ValBase.__init__(self, name)
+        Stage.__init__(self, name)
         self.credit = CreditCapacity()
         self.ev = EnterpriseValue()
-        self.path = None
         #
-        self.build_path()
+        self.set_path()
         self.tag("valuation", field = "req")
 
-    def build_path(self):
+    def set_path(self):
         """
 
 
         CompanyValue.set_path() -> None
 
 
-        Method sets instance.path to a Financials object that contains pointers
-        to a standard valuation roadmap, built out of the instance's own
-        attributes.
+        Method appends a standard valuation roadmap, built out of the instance's own
+        attributes, to instance.path.
         """
-        path = Financials(populate = False)
-        path.autoSummarize = False
+        Stage.set_path(self)
         steps = [BookMark("start Valuation", "Valuation"),
                  self.ev,
                  self.credit,
                  self.credit.asset_backed,
                  self.credit.lev_loans,
                  BookMark("end Valuation", "Valuation", "endStatement")]
-        path.extend(steps)
-        self.path = path
+        self.path.extend(steps)
 
 
     
