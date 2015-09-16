@@ -217,29 +217,4 @@ class PortalModel(ReadyForPortal):
                     #
                     #
                 #price_model() can always run a selection process on valuation or smtg
-            #
-            #timeLine.extrapolate_all()
-                #starting_period = x
-                #extrapolater period_now to period_next
-
-            #M.fill_timeline():
-            #M.compute_across_time():
-            #M.extrapolate_all():
-                #segments = M.timeLine.get_date_segments()
-                #future = segments[2]
-                #past = segments[0]
-                #future_period_1 = M.timeline[future[0]]
-                #
-                #past_period_1
-                #M.currentPeriod.extrapolate_to
-                    #now.extrapolate_to(future[0])
-                    #for i in range(len(future)):
-                        #now_date = future[i]
-                        #next_date = future[i+1]
-                        #now_period = self.timeLine[now_date]
-                        #next_period = self.timeLine[next_date]
-                        #now_period.extrapolate_to(next_period)
-                #
-                
-                        #now.extrapolate_to(next)
-                    
+ 

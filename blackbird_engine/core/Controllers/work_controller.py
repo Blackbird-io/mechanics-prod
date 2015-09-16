@@ -4,11 +4,11 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: Analyzer
+#Module: Controllers.work_controller
 
 """
 
-This module gets a message and processes it until it gets a new message suitable
+[This module gets a message and processes it until it gets a new message suitable
 for return to upper level components. Only two types of messages are suitable
 for upward return:
     1) MQ_: those with an open question for the user
@@ -24,21 +24,16 @@ sentinel in R position.
 
 SessionManager provides Analyzer with its connector for resource access. The
 connector primarily comes into play when Analyzer locates a new topic and
-prepares it for use. 
+prepares it for use. ]
 
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
 
 DATA:
-aCR                   instance of PlatformComponents.Connector class
-aLM1                  instance of analyzerLM class
+
 
 FUNCTIONS:
-class analyzerLM()    class w message introspection and transformation methods
-connectAll()          connects aCR to a connector object
-prepareTopic()        connects topic's connecto to aCR
-process()             evaluates message, returns next one
 
 ====================  ==========================================================
 """
@@ -57,69 +52,66 @@ from .yenta import Yenta
 
 
 #globals
-yenta = Yenta()
 interviewer = Interviewer()
 summary_t_name = "basic model summary, annualized current with capex"
+yenta = Yenta()
 
 #classes    
-class WorkController(Messenger):
+class WorkController:
     """
 
     Class of objects that combine all functions necessary to go from one message
     to another.
-    
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
-    maxCycles             int; max number of attempts before return
+    max_cycles            int; max number of attempts before return
     upReady               bool; is current message ready for return 
     upStatus              specific status of message (static)
 
     FUNCTIONS:
-    downStream()          evaluate message, generate the next one
-    receive()             unpack and store a message
-    reset()               clear state to default
-    setStatus()           store message status on instance
+    set_status()          store message status on instance
     choose_direction()    point message to more analysis or portal
-    wrapInterview()       clean up / storage to run prior to end
+    wrap_interview()       clean up / storage to run prior to end
     ====================  ======================================================
     """
     
     def __init__(self):
-        Messenger.__init__(self) #<--------------------------------------------------------------- is this necessary?
         self.max_cycles = 20
         self.needs_work = True
         self.status = None
 
-    def reset(self):
+##    def reset(self):
+##        """
+##
+##        aLM.reset() -> None
+##
+##        Method clears instance message-dependent state and prepares the instance
+##        to process a new message
+##        """
+##        self.ready_for_portal = False
+##        self.status = None
+##        self.clearMessageOut()  
+##        self.clearMessageIn()
+
+    def set_status(self,new_status):
         """
 
-        aLM.reset() -> None
 
-        Method clears instance message-dependent state and prepares the instance
-        to process a new message
-        """
-        self.ready_for_portal = False
-        self.status = None
-        self.clearMessageOut()  
-        self.clearMessageIn()
+        WorkController.set_status(new_status) -> None
 
-    def setStatus(self,newStatus):
-        """
-
-        aLM.setStatus(newStatus) -> None
 
         Method sets instance.status to the new status.
         """
-        self.status = newStatus
+        self.status = new_status
 
-    def choose_direction(self,message):
+    def choose_direction(self, message):
         """
 
 
-        FlowController.choose_direction(message) -> message
+        WorkController.choose_direction(message) -> message
         
 
         Method reads the message and selects the direction that best suits its
@@ -184,7 +176,7 @@ class WorkController(Messenger):
         else:
             self.needs_work = True
         #
-        self.setStatus(status)
+        self.set_status(status)
         return message
 
     def process(self, message):
@@ -194,8 +186,9 @@ class WorkController(Messenger):
         WorkController.process(message) -> message
 
 
-        Method works to improve the model until it's either good enough to
-        consider done, or a question for the user comes up. 
+        Method works to improve the model until it's either (i) good enough to
+        stop work altogether or (ii) a question for the user comes up and the
+        Engine needs to pause work.
         """
         n = 0
         message = self.choose_direction(message)
@@ -230,11 +223,18 @@ class WorkController(Messenger):
         #
         return message
 
-    def wrap_interview(self,message):
+    def wrap_interview(self, message):
         """
         
-        aLM.wrapInterview(message) -> message
 
+        WorkController.wrap_interview(message) -> message
+
+
+        Method prepares a final message for portal. The final message should
+        contain a completed Engine model, as well as any API-format summary
+        and analytics data the portal expects. Accordingly, 
+
+        
         Method runs process_summary to summarize the model.
 
         More generally, wrapInterview() performs clean up, storage, and/or
@@ -244,58 +244,30 @@ class WorkController(Messenger):
         For example, wrapInterview() can insert final questions or flag certain
         items for follow-up or review. 
         """
-##        M = message[0]
-##        Q = message[1]
-##        R = message[2]
-##        #
-##        #use M,_,_ here to avoid errors from incorrect wrap calls by Topic
-##        #scenarios (ie to make sure that if scenario wraps w wrap_topic, the
-##        #actual message this method returns still contains the original Q and
-##        #R)
-##        #
-##        #NOTE: Assumes that neither analytics nor summarization topics can
-##        #ask any questions.
-##        #
-##        alt_msg = (M, None, None)
-##        #
-##        alt_msg = process_analytics(alt_msg)
-##        alt_msg = process_summary(alt_msg)
-##        #
-##        message = (M,Q,R)
-##        #        
-##        return message
         #basically, check for completion in various ways, if it's not complete
         #point where necessary, and set message into m,_,_
         #
         model = message_in[0]
         message_out = message_in
         #
-        if not model.valuation.complete:
-            model.work_path = model.valuation.path
-            #set interviewer.default_protocol to 0
+        if not model.valuation.guide.complete:
+            model.path = model.valuation.path
+            #set interviewer.default_protocol to 0 <--------------------? should be ok if always running on disposable instances?
             message_out = (model, None, None)
             #send back for more work on valuation
         #
-        if not model.summary.complete:
-            model.work_path = model.summary.path
+        if not model.summary.guide.complete:
+            model.path = model.summary.path
             #set interview.default_protocol to 0
             message_out = (model, None, None)
             #send back for more work on summary
-            #these can be methods in their own right
         #
         return message_out
-        #
-        #main question:
-            #what to do with path
-            #can have a path argument in interview controller that says use default
-            #can have a path argument on model that initially points to model.interview.path
-            #but can be changed (use a property to keep dynamic)
-            #
-            #
-        #or can be something like:
-        message = self.check_valuation(message)
-        message = self.check_summary(message)
-        return message
+    
+##        #or can be something like:
+##        message = self.run_valuation(message)
+##        message = self.run_summary(message)
+##        return message
 
     def check_valuation(self, message):
         #check that message is m_End
@@ -336,14 +308,16 @@ class WorkController(Messenger):
         #should be obsolete if i integrate summarization into path
         #or alternatively can have a separate path called ``summarization``
         #kind of like the new market_value interface
-        summary_topic_id = yenta.TM.local_catalog.by_name[summary_t_name]
-        summary_topic = yenta.TM.local_catalog.issue(summary_topic_id)
-        message = summary_topic.process(message)
-        #
-        return message
-        #
-        #should run interviewer on model.summary.path; can do lots of nice
-        #work there, similar format to analytics. 
+        if brute_force:
+            summary_topic_id = yenta.TM.local_catalog.by_name[summary_t_name]
+            summary_topic = yenta.TM.local_catalog.issue(summary_topic_id)
+            message = summary_topic.process(message)
+            #
+            return message
+        else:
+            pass
+            #set path to model.summary.path; return (m, None, None)
+
 
     def process_valuation(self, message):
         #
@@ -362,20 +336,7 @@ class WorkController(Messenger):
         if not 
         #
         return message
-        #
-        #but also need to run the full thing when outside calls?
-        #can be an independent method
-        #
 
-#could even skip all this stuff and just go through the pieces in conclude()
-#manager.conclude():
-        #if not model.valuation.complete:
-            #self.process_valuation()
-        #if not model.summary.complete:
-            #self.process_summary()
-
-##should be exact same process as normally, but along a specialized sub-path
-##
 
 
 

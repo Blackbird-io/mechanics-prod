@@ -28,16 +28,10 @@ InterviewTracker      plan and monitor machine-user interview
 
 
 #imports
-import decimal
 import time
 
 from Controllers import completion_rules
 from DataStructures.Modelling.LineItem import LineItem
-
-from .AttentionTracker import AttentionTracker
-from .Counter import Counter
-from .QualityTracker import QualityTracker
-from .SelectionTracker import SelectionTracker
 
 
 
@@ -188,26 +182,26 @@ class InterviewTracker:
         new_p = int(new_p)
         self.progress = new_p
         
-    def set_protocol(self,aProl):
-        """
-
-
-        ITr.set_protocol(aProl) -> None
-
-        
-        """
-        self.protocol = aProl
-    
-    def set_structure(self, new_structure):
-        """
-
-
-        ITr.set_structure(new_structure) -> None
-
-
-        Method sets instance.structure to argument. 
-        """
-        self.structure = new_structure
+##    def set_protocol(self,aProl):
+##        """
+##
+##
+##        ITr.set_protocol(aProl) -> None
+##
+##        
+##        """
+##        self.protocol = aProl
+##    
+##    def set_structure(self, new_structure):
+##        """
+##
+##
+##        ITr.set_structure(new_structure) -> None
+##
+##
+##        Method sets instance.structure to argument. 
+##        """
+##        self.structure = new_structure
 
     def transcribe(self,msg):
         """
