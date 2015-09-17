@@ -64,17 +64,17 @@ class TimeLine(dict):
     id                    instance of PlatformComponents.ID class, for interface
     
     FUNCTIONS:
-    add_period()           configures and records period, keyed by end date
+    add_period()          configures and records period, keyed by end date
     build()               populates instance with adjacent time periods
-    configure_period()     connects period to instance namespace id     
-    find_period()          returns period that contains queried time point
+    configure_period()    connects period to instance namespace id     
+    find_period()         returns period that contains queried time point
     extrapolate_all()     use seed to fill out all periods in instance
     extrapolate_dates()   use seed to fill out a range of dates
     get_fwd_start_date()  returns first date of next month
     get_red_end_date()    returns last date of current month
     getOrdered()          returns list of periods ordered by end point
-    set_current()          sets instance.current_period to argument
-    update_current()       updates current_period for reference or actual date
+    set_current()         sets instance.current_period to argument
+    update_current()      updates current_period for reference or actual date
     ====================  ======================================================
     """
     
@@ -277,7 +277,7 @@ class TimeLine(dict):
             seed = updated_period
         #
 
-    def find_period(self,query):
+    def find_period(self, query):
         """
 
 
