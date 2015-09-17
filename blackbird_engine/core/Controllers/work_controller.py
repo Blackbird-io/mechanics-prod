@@ -83,19 +83,6 @@ class WorkController:
         self.needs_work = True
         self.status = None
 
-##    def reset(self):
-##        """
-##
-##        aLM.reset() -> None
-##
-##        Method clears instance message-dependent state and prepares the instance
-##        to process a new message
-##        """
-##        self.ready_for_portal = False
-##        self.status = None
-##        self.clearMessageOut()  
-##        self.clearMessageIn()
-
     def set_status(self,new_status):
         """
 
@@ -107,7 +94,7 @@ class WorkController:
         """
         self.status = new_status
 
-    def choose_direction(self, message):
+    def choose_direction(self, message, *pargs, **kargs):
         """
 
 
@@ -162,7 +149,7 @@ class WorkController:
         #work. may also check direction here if conclude() needs to ask more
         #questions, so check status after too. 
         if status == Globals.status_endSession:
-            message = self.wrap_interview(message)
+            message = self.wrap_interview(message, *pargs, **kargs)
             #future versions of wrap_interview() may identify gaps in knowledge.
             #if that happens, wrap_interview() may either switch direction back
             #into full interview mode (perhaps by increasing the attention
@@ -179,7 +166,7 @@ class WorkController:
         self.set_status(status)
         return message
 
-    def process(self, message):
+    def process(self, message, *pargs, **kargs):
         """
 
 
@@ -191,14 +178,14 @@ class WorkController:
         Engine needs to pause work.
         """
         n = 0
-        message = self.choose_direction(message)
+        message = self.choose_direction(message, *pargs, **kargs)
         #use choose_direction() to for substantive work. method also weeds
         #out messages that are ready for portal delivery right away.
         while self.needs_work:
             model = message[0]
             #
             if self.status == Globals.status_pendingResponse:
-                topic_bbid = model.interview.transcript[-1][0]["topic_bbid"]
+                topic_bbid = model.transcript[-1][0]["topic_bbid"]
                 topic = yenta.TM.local_catalog.issue(topic_bbid)
                 message = topic.process(message)
             #
@@ -212,7 +199,7 @@ class WorkController:
                     #it couldn't find any matches in the Topic Catalog. In such
                     #an event, Yenta notes dry run on focal point and IC shifts
                     #to the next focal point
-            message = self.choose_direction(message)
+            message = self.choose_direction(message, *pargs, **kargs)
             #the engine has done more work on the model. use choose_direction()
             #to see if it can stop or needs to continue.
             #
@@ -223,7 +210,7 @@ class WorkController:
         #
         return message
 
-    def wrap_interview(self, message):
+    def wrap_interview(self, message, run_valuation = True, run_summary = True):
         """
         
 
@@ -333,11 +320,28 @@ class WorkController:
         if not model.valuation.complete:
             model.path = model.valuation.path
             return message
-        if not 
         #
         return message
+        #
+        #if not model.valuation.complete:
+            #model.stage = model.valuation
+            ##interviewer should pick up the protocol from model.stage? but then creates
+            ##this opportunity for latent error if it doesn't match? if not, then use
+            ##default. or if key error, use default?
+            #
+            #interviewer.protocol = 1
+            #
 
+    #def run_valuation()
+            #pass
+            #sets model.stage to model.valuation, then sends model through normal process
+                ##until it's done
+            
 
+    #def run_summary()
+            #pass
+            #or can just have bool toggles like auto_valuation = True, auto_summary = True
+            #
 
 
     

@@ -98,12 +98,14 @@ class Model(Tags):
     header                instance of Header object
     id                    instance of ID object, carries bbid for model 
     interview             instance of an InterviewTracker object 
-    path                  property; dynamic pointer to interview or other path
     portal_data           dict; stores data from Portal related to the instance
+    stage                 P; pointer to either interview or defined _stage
     started               bool; property, tracks whether engine has begun work
     summary               dict or obj; instance of BusinessSummary
     taxonomy              Taxonomy; collection of prototypical business units
-    time_line              list of TimePeriod objects
+    time_line             list of TimePeriod objects
+    transcript            list of entries that tracks Engine processing
+    used                  set of bbids for used topics
 
     FUNCTIONS:
     from_portal()         class method, extracts model out of API-format
@@ -149,10 +151,23 @@ class Model(Tags):
     @property
     def stage(self):
         """
-        pass-through at first, otherwise points to where you want to
+
+
+        **property**
+
+
+        When instance._stage points to a True object, property returns the
+        object. Otherwise property returns model.interview.
+
+        Since the default value for instance._path is None, property starts out
+        with a ``pass-through``, backwards-compatible value. 
+        
+        Setter sets _stage to value.
+
+        Deleter sets _stage to None to restore default pass-through state.
         """
         result = self._stage
-        if result is None:
+        if not result:
             result = self.interview
         return result
 
@@ -202,19 +217,6 @@ class Model(Tags):
         del M.portal_data["e_model"]
         return M
 
-        result = self._path
-        if result is None:
-            result = self.interview.path
-        return result
-
-    @path.setter
-    def path(self, value):
-        self._path = value
-
-    @path.deleter
-    def path(self):
-        self._path = None
-
     @property
     def started(self):
         """
@@ -229,10 +231,9 @@ class Model(Tags):
         Since the default value for instance._path is None, property starts out
         by pointing to interview.path and switches only if someone affirmatively
         sets it to a different referent.
-        
-        Setter sets path to value.
         """
         return self._started
+    
     def start(self):
         """
 

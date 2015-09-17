@@ -27,7 +27,7 @@ BusinessSummary       dictionary with pre-populated fields
 
 
 #imports
-#n/a
+from ..Guidance.stage import Stage
 
 
 
@@ -36,7 +36,7 @@ BusinessSummary       dictionary with pre-populated fields
 mandatory_summary_fields = ["credit_capacity"]
 
 #classes
-class BusinessSummary(dict):
+class BusinessSummary(dict, Stage):
     """
 
     Class is a daughter of dict, with prepopulated mandatory fields. 
@@ -53,7 +53,9 @@ class BusinessSummary(dict):
     """
     def __init__(self):
         dict.__init__(self)
+        Stage.__init__(self)
         self = dict.fromkeys(self, mandatory_summary_fields)
+        
     
     def __str__(self, tab = None):
         result = ""
