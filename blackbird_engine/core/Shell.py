@@ -268,11 +268,6 @@ def get_forecast(portal_model, fixed, ask):
     #ref comes back as a CR Reference object, with custom prints. Flatten to
     #primitive.
     #
-    #can resubmit at min or max landscape for refs that come in blank? 
-    #if not ref:
-        #alt_ask = None
-        #land = uM.atx.getSummary()
-        #if ask > land[field][
     if ref:
         ref = ref.to_portal()
     else:
