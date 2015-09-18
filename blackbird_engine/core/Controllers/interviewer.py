@@ -132,7 +132,7 @@ class Interviewer(Controller):
         if value in self._protocol_routines:
             self._default_protocol = value
         else:
-            c = "Unknown protocol. Attribute accepts only known keys for "
+            c = "Unknown protocol. Attribute only accepts keys for known"
             c += "protocol routines."
             raise BBExceptions.ManagedAttributeError(c)
     
@@ -230,17 +230,17 @@ class Interviewer(Controller):
         #
         return levels
 
-    def process(self, message, protocol_key = None):
+    def process(self, message):
         """
 
 
-        Interviewer.process(message[, protocol_key = None]) -> message
+        Interviewer.process(message) -> message
 
 
         Method identifies the object where Blackbird should focus its analysis
-        given the current model state. Method applies protocol associated with
-        specified key in instance's routines dictionary. If ``protocol_key`` is
-        None, method applies the instance's default protocol.
+        given the current model state. Method tries to apply the protocol that
+        the stage requests (stage.protocol_key). If the key is not in instance
+        routines, method applies the instance's default protocol.
 
         Algorithm:
 
@@ -263,6 +263,8 @@ class Interviewer(Controller):
         #check known focal point
         old_fp = model.stage.focal_point
         known_rule = model.stage.completion_rule
+        #
+        protocol_key = model.stage.protocol_key
         routine = None
         #
         if known_rule:
@@ -278,10 +280,10 @@ class Interviewer(Controller):
             #known focal point satisfies the known rule and Blackbird needs to
             #find a new one.
             #
-            if protocol_key is None:
+            if protocol_key not in self._protocol_routines:
                 protocol_key = self.default_protocol
             routine = self._protocol_routines[protocol_key]
-            #find and apply the protocl-specific processing routine. Interviewer
+            #find and apply the protocol-specific processing routine. Interviewer
             #stores routines as class methods, so need to pass in the instance
             #explicitly.
             #
