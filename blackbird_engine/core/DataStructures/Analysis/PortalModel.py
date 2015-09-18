@@ -115,8 +115,7 @@ class PortalModel(ReadyForPortal):
             result["e_model"] = flattened
             #
             result["industry"] = seed.header.profile.get("industry")
-            result["summary"] = seed.summary.copy()
-        #summary.copy() will return a plain vanilla dictionary
+            result["summary"] = seed.summary.to_portal()
         #
         del result["_var_attrs"]
         #

@@ -82,7 +82,8 @@ class BusinessUnit(Tags,Equalities):
     tagSources            list; CLASS attribute, sources for tag inheritance
     type                  str or None; describes the unit's in-model type (e.g.,
                           "product" or "team").
-    valuation             Valuation object showing market facing unit
+    summary               None or BusinessSummary, provides investment summary
+    valuation             None or CompanyValue, describes how unit fares on market
     
     FUNCTIONS:
     add_component()       adds bus with verified ids to components
@@ -134,6 +135,7 @@ class BusinessUnit(Tags,Equalities):
         gl_sig_con = Globals.signatures["BusinessUnit.consolidate"]
         self.sig_consolidate =  gl_sig_con % self.name
         self.size = 1
+        self.summary = None
         self.valuation = None
         
     @property
@@ -583,6 +585,7 @@ class BusinessUnit(Tags,Equalities):
         result.id = copy.copy(self.id)
         #header.profile should be the only object pointing to others on header
         result.life = self.life.copy()
+        result.summary = None
         result.valuation = None
         #
         return result
