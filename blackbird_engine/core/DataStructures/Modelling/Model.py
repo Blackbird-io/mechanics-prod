@@ -128,7 +128,6 @@ class Model(Tags):
         #Model uuids exist in the origin namespace
         self.interview = InterviewTracker()
         self.portal_data = dict()
-##        self.summary = BusinessSummary()
         self.taxonomy = dict()
         self.transcript = []
         self.time_line = TimeLine()
@@ -137,18 +136,6 @@ class Model(Tags):
         self.time_line.id.setNID(self.id.namespace_id)
 
     #DYNAMIC ATTRIBUTES
-    class dyn_current_manager:
-        def __get__(self,instance,owner):
-            return instance.time_line.current_period
-
-        def __set__(self,instance,value):
-            c = ""
-            c += "Model.currentPeriod is a write-only attribute. Modifications"
-            c += "\nmust go through Model.time_line"            
-            raise BBExceptions.ManagedAttributeError(c)
-
-    currentPeriod = dyn_current_manager()
-
     @property
     def stage(self):
         """
