@@ -42,7 +42,7 @@ import BBExceptions
 from DataStructures.Platform.Messenger import Messenger
 
 from . import starter
-from .analyst import Analyst
+from ._new_analyst import Analyst
 
 
 
@@ -88,10 +88,11 @@ def process(message):
     To allow admin to look inside the function-time operation, function stores
     message_in on MR. Function clears MR at the beginning of each call. 
     """
-    #Function makes a fresh analyst for every call to keep processing completely
-    #stateless for each model. The analyst delegates to topics as necessary.
-    #when the analyst determines that the model is done, they tell client
-    #modules higher up to conclude the interview by passing a (M,_,END) message.
+    #Function makes a fresh analyst for every call. This approach helps keep
+    #engine completely stateless. The analyst delegates to topics as necessary
+    #and then unilaterally determines when the model is done. The analyst
+    #returns messages with user-facing questions and a final (M,_,END) with the
+    #completed model.
     #
     MR.clearMessageIn()
     MR.clearMQR()
@@ -105,7 +106,7 @@ def process(message):
     #
     return message
 
-def process_analytics(model, ref_date = None):
+def process_analytics(model, ref_date = None, revert = True):
     """
 
 
@@ -114,9 +115,11 @@ def process_analytics(model, ref_date = None):
 
     Function locates the time period that includes the ``ref_date``, gets an
     analyst to process the company valuation for that time period, and returns
-    a model where model.valaution points at the ref_period's valuation. 
+    a model where model.valuation points at the ref_period's valuation. 
 
     ``ref_date`` can be datetime.date or ISO-format string object.
+    ``revert`` if True, model will go back to old ref_date; otherwise, will stay
+    pointing at the new one. 
     """
     if ref_date:
         model.time_line.update_current(ref_date)
@@ -129,9 +132,22 @@ def process_analytics(model, ref_date = None):
     #
     bella = Analyst()
     message = bella.process(message, run_summary = False)
+    #
     #think about whether you want to update summary here. theoretically, the
     #summary should stay the same; or may be want to remove the summary altogether?
-    #or put it on the business unit. which seems like it makes most sense. 
+    #or put it on the business unit. which seems like it makes most sense.
+    #
+    #basically, a summary is extra work. but then end up with a naked
+    #model.summary pointer.
+    #
+    #
+    #idea:
+    #  at the end of the day, revert ref_date to original?
+    #
+    #
+    #update model-level summary either when...
+        #change the current period (ie ref date is specified)
+        #or create a new summary
     updated_model = message[0]
     #
     return updated_model
