@@ -66,8 +66,9 @@ class InterviewTracker(Stage):
         Stage.__init__(self)
         self.completion_rule = quality_rule
         self.focal_point = intro_line.copy()
-        self.track_progress = True
         self.progress = 0
+        self.protocol_key = 1  #------------------------------------------------------------------- doc string
+        self.track_progress = True
         
     def set_progress(self, p, override = False):
         """

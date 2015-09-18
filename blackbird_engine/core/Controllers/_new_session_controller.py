@@ -130,7 +130,8 @@ def process_analytics(model, ref_date = None):
     bella = Analyst()
     message = bella.process(message, run_summary = False)
     #think about whether you want to update summary here. theoretically, the
-    #summary should stay the same 
+    #summary should stay the same; or may be want to remove the summary altogether?
+    #or put it on the business unit. which seems like it makes most sense. 
     updated_model = message[0]
     #
     return updated_model
