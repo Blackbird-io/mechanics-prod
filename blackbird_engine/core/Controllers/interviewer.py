@@ -393,7 +393,8 @@ class Interviewer(Controller):
         Interviewer.set_progress(model) -> None
 
 
-        Method updates progress status.
+        For stages that require progress tracking (stage.track_progress==True),
+        method updates progress indicator.
 
         Method uses rough rule of thumb: progress is proportional to the
         position of the focal point in the interview path. This estimate works

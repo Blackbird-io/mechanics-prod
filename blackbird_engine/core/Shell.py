@@ -308,6 +308,7 @@ def get_landscape_summary(portal_model):
         new_summary = uM.analytics.cc.landscape.getSummary()
         result.update(new_summary)
     new_model = pm_converter.to_portal(M)
+    #
     return [new_model, result]
 
 def next_question():
