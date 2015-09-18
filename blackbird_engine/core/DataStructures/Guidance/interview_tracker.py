@@ -47,7 +47,10 @@ class InterviewTracker(Stage):
     """
 
     This class provides a ready-to-go container for managing how Blackbird
-    interviews a user. Includes a default focal point and completion standard. 
+    interviews a user. Includes a default focal point and completion standard.
+
+    The default protocol key for instances is set to 1 to require interviewer
+    to balance quality with priority.
     ==========================  ================================================
     Attribute                   Description
     ==========================  ================================================
@@ -55,8 +58,9 @@ class InterviewTracker(Stage):
     DATA:
     completion_rule             pointer to function that checks completion
     focal_point                 criterion for MatchMaker's selection
-    track_progress              True
+    protocol_key                set to 1 by default
     progress                    num; starts at 0
+    track_progress              True
     
     FUNCTIONS:
     set_progress()              set progress to higher of current or new,0<=p<=1
@@ -67,7 +71,7 @@ class InterviewTracker(Stage):
         self.completion_rule = quality_rule
         self.focal_point = intro_line.copy()
         self.progress = 0
-        self.protocol_key = 1  #------------------------------------------------------------------- doc string
+        self.protocol_key = 1
         self.track_progress = True
         
     def set_progress(self, p, override = False):
