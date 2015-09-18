@@ -45,7 +45,12 @@ class Stage(Step):
     """
 
     This class provides a foundation for processing roadmaps. Instances start
-    out empty, but usually come to include a path of one or more Step objects. 
+    out empty, but usually come to include a path of one or more Step objects.
+
+    Instance.protocol_key controls how the interviewer will approach the stage.
+    The key must match one of the protocols that the interviewer knows. By
+    default, the value is 0, which requires maximum quality analysis for each
+    logical step.     
     ==========================  ================================================
     Attribute                   Description
     ==========================  ================================================
@@ -55,6 +60,7 @@ class Stage(Step):
     completion_rule             pointer to function that checks completion
     focal_point                 criterion for MatchMaker's selection
     levels                      dict or None; priority groups of items in path
+    protocol_key                num; which interview protocol should apply 
     track_progress              bool; whether stage supports progress tracking
     work_space                  unmanaged scrap paper for Topic or other state
     
@@ -74,6 +80,7 @@ class Stage(Step):
         self.focal_point = None
         self.levels = None
         self.path = None
+        self.protocol_key = 0
         self.track_progress = False
         self.work_space = {}
 
