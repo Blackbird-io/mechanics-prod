@@ -4,18 +4,20 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Engine
-#Module: Controllers.SessionController
+#Module: flow.supervisor
 """
 
-SessionController delegates message processing to specialized junior modules. 
+Module supervises how the Engine performs substantive work. 
 
-SessionController sits directly below the Engine Shell. Shell calls
-SessionController whenever Shell receives a message (``message A``). SC
-processes message A for Shell and returns a different well-formatted MQR
-message (``message B``). Shell then passes message B to Portal. Portal combines
-message B with user input to form message C. Portal then hands off message C
-back to Shell, Shell passes message C to SessionController, and so on.
+Conceptually, the Engine works by exchanging raw information it gets through
+Shell for processed information it produces. Supervisor sits directly below
+Shell. Shell calls supervisor whenever Shell receives a message (``message A``).
+Supervisor figures out a new message in response (``message B``) and returns it
+to Shell.
 
+Shell then passes message B to Portal. Portal combines message B with user input
+to form ``message C``. Portal then hands off message C back to Shell, Shell
+passes message C to supervisor, and so on.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -25,8 +27,10 @@ MR                    obj; instance of Messenger, stores current message
 
 FUNCTIONS:
 check_started()       returns True if message model is started, else False
+forecast_terms()      computes terms for a transaction on the model
 process()             returns next message from Engine
-update_valuation()    
+summarize_landscape() returns summary of transaction opportunity landscape
+update_valuation()    gets an analyst to compute valuation as of current period
 
 CLASSES:
 n/a
@@ -43,6 +47,7 @@ from DataStructures.Platform.Messenger import Messenger
 
 from . import starter
 from ._new_analyst import Analyst
+
 
 
 
@@ -67,43 +72,6 @@ def check_started(message):
         if model.started:
             result = True
     return result
-    
-def process(message):
-    """
-
-
-    process(message) -> message
-
-
-    Function returns a new MQR message that responds to the input. 
-
-    Function delegates all work to more junior modules. For messages that are
-    empty (msg == (None, None, None)) or signal the start of an interview under
-    the Engine-Wrapper API, function delegates work to starter. For all other
-    messages, function delegates work to analyzer.
-
-    To allow admin to look inside the function-time operation, function stores
-    message_in on MR. Function clears MR at the beginning of each call. 
-    """
-    #Function makes a fresh analyst for every call. This approach helps keep
-    #engine completely stateless. The analyst delegates to topics as necessary
-    #and then unilaterally determines when the model is done. The analyst
-    #returns messages with user-facing questions and a final (M,_,END) with the
-    #completed model.
-    #
-    MR.clearMessageIn()
-    MR.clearMQR()
-    MR.receive(message)
-    #only purpose of MR here is to allow an admin to look inside the engine at
-    #run time and see what went in/came out.
-    #
-    if not check_started(message):
-        message = starter.process(message)
-    #
-    alice = Analyst()
-    message = alice.process(message)
-    #
-    return message
 
 def forecast_terms(model, fixed, ask, ref_date = None):
     """
@@ -131,6 +99,43 @@ def forecast_terms(model, fixed, ask, ref_date = None):
     result = (model, ref)
     #
     return result
+
+def process(message):
+    """
+
+
+    process(message) -> message
+
+
+    Function returns a new MQR message that responds to the input. 
+
+    Function delegates all substantive work to junior modules. For messages that
+    are empty (msg == (None, None, None)) or signal the start of an interview
+    under the Engine-Wrapper API, function delegates work to starter. For all
+    other messages, function delegates work to an analyst.
+
+    To allow admin to look inside the function-time operation, function stores
+    message_in on MR. Function clears MR at the beginning of each call. 
+    """
+    #Function makes a fresh analyst for every call. This approach helps keep
+    #engine completely stateless. The analyst delegates to topics as necessary
+    #and then unilaterally determines when the model is done. The analyst
+    #returns messages with user-facing questions and a final (M,_,END) with the
+    #completed model.
+    #
+    MR.clearMessageIn()
+    MR.clearMQR()
+    MR.receive(message)
+    #only purpose of MR here is to allow an admin to look inside the engine at
+    #run time and see what went in/came out.
+    #
+    if not check_started(message):
+        message = starter.process(message)
+    #
+    alice = Analyst()
+    message = alice.process(message)
+    #
+    return message
     
 def summarize_landscape(model, ref_date = None):
     """
