@@ -106,49 +106,79 @@ def process(message):
     #
     return message
 
-def process_analytics(model, ref_date = None, revert = True):
+def update_valuation(model, ref_date = None):
     """
 
 
     proces_analytics(model[, ref_date = None]) -> model
     
 
-    Function locates the time period that includes the ``ref_date``, gets an
-    analyst to process the company valuation for that time period, and returns
-    a model where model.valuation points at the ref_period's valuation. 
+    Function gets an analyst to process valuation for the model, as of the
+    ref_date. If ref_date is None, function processes valuation for the current
+    period. If ``revert`` is True, function reverts the model to the original
+    period before returning it.
 
     ``ref_date`` can be datetime.date or ISO-format string object.
-    ``revert`` if True, model will go back to old ref_date; otherwise, will stay
-    pointing at the new one. 
     """
+    old_ref_date = model.time_line.current_period.start
     if ref_date:
         model.time_line.update_current(ref_date)
-    company_snapshot = model.time_line.current_period.content
     #
-    model.valuation = company_snapshot.valuation
     model.stage = model.valuation
-    #
     message = (model, None, None)
+    #set direction for analyst: model.valuation always points to current period
+    #valuation. 
     #
     bella = Analyst()
     message = bella.process(message, run_summary = False)
-    #
-    #think about whether you want to update summary here. theoretically, the
-    #summary should stay the same; or may be want to remove the summary altogether?
-    #or put it on the business unit. which seems like it makes most sense.
-    #
-    #basically, a summary is extra work. but then end up with a naked
-    #model.summary pointer.
-    #
-    #
-    #idea:
-    #  at the end of the day, revert ref_date to original?
-    #
-    #
-    #update model-level summary either when...
-        #change the current period (ie ref date is specified)
-        #or create a new summary
+    #skip summary for speed
+    del model
     updated_model = message[0]
     #
+    if revert:
+        updated_model.time_line.update_current(old_ref_date)
+    #
     return updated_model
+    #
+    #
+
+#Shell deals with Portal- and API- format objects, conforms things to Schema, etc,
+#but doesnt do substantive processing work. that goes to layers below. 
+
+def get_landscape_summary(model, ref_date = None, revert = True):
+    """
+    --> (model, summary)
+    """
+    result = None
+    #
+    #allow for reversion **here**
+    old_ref_date = model.time_line.current_period.start #should this be the end date? check what falls into period
+    if ref_date:
+        model.time_line.update_current(ref_date)
+    model = update_valuation(model) #<-----------------------------------runs only on current period, always; 
+    summary = model.valuation.cc.landscape.getSummary()
+    #
+    if revert:
+        model.time_line.update_current(old_ref_date)
+    #
+    result = [model, summary]
+    #
+    return result
+    #shell will then convert the model back into portal_model, make sure summary
+    #fits the schema, and call it a day
+
+#may be these methods should always revert?
+def get_forecast(model, x_axis, x_value, ref_date = None, revert = True):
+    result = None
+    #
+    old_ref_date = model.time_line.current_period.blah
+    if ref_date:
+        model.time_line.update_current(ref_date)
+    model = update_valuation(model)
+    ref = model.valuation.cc.landscape.forecast(ask = ask, field = fixed)
+    #
+    if revert:
+        model.time_line.update_current(old_ref_date)
+    return [model, ref]
+    
     
