@@ -60,28 +60,32 @@ class TimeLine(dict):
     ====================  ======================================================
 
     DATA:
-    current_period        P; period that represents a reference point in time
+    _current_period       instance state for ``current_period`` property
+    _old_current_period   storage for last value, to enable revert
+    current_period        P; pointer to the period that represents the present
     id                    instance of PlatformComponents.ID class, for interface
     
     FUNCTIONS:
     add_period()          configures and records period, keyed by end date
     build()               populates instance with adjacent time periods
     configure_period()    connects period to instance namespace id     
-    find_period()         returns period that contains queried time point
     extrapolate_all()     use seed to fill out all periods in instance
     extrapolate_dates()   use seed to fill out a range of dates
+    find_period()         returns period that contains queried time point
+    get_segments()        split time line into past, present, and future
     get_fwd_start_date()  returns first date of next month
     get_red_end_date()    returns last date of current month
     getOrdered()          returns list of periods ordered by end point
-    set_current()         sets instance.current_period to argument
-    update_current()      updates current_period for reference or actual date
+    pretty_print()        return a formatted string
+    revert_current()      go back to the prior current period
+    update_current()      updates current_period for reference or actual date    
     ====================  ======================================================
     """
     
     def __init__(self):
         dict.__init__(self)
         self._current_period = None
-        self.current_period = None
+        self._old_current_period = None
         self.id = ID()
         #timeline objects support the id interface and pass the model's id down
         #to time periods. the timeline instance itself does not get its own
@@ -89,6 +93,15 @@ class TimeLine(dict):
 
     @property
     def current_period(self):
+        """
+
+
+        **property**
+
+
+        Getter returns instance._current_period. Setter stores old value for
+        reversion, then sets new value. Deleter sets value to None.
+        """
         return self._current_period
 
     @current_period.setter
@@ -325,6 +338,10 @@ class TimeLine(dict):
         TimeLine.get_segments(self, ref_date = None) -> list
 
 
+        Method returns a list of the past, present, and future segments of the
+        instance, with respect to the ref_date. If ``ref_date`` is None, method
+        counts current period as the present.
+        
         output[0] = list of keys for periods before ref_date
         output[1] = list of ref period (len output[1] == 1)
         output[2] = list of keys for periods after ref_date
@@ -546,6 +563,14 @@ class TimeLine(dict):
         return clean_lines
         
     def revert_current(self):
+        """
+
+
+        TimeLine.revert_current() -> None
+
+
+        Method reverts instance.current_period to preceding value.
+        """
         self.current_period = self._old_current_period
         
 ##    def set_current(self,period):

@@ -4,11 +4,11 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: Model
+#Module: DataStructures.Modelling.Model
 """
 
-Module defines Model class.
-
+Module defines Model class, a container that fully describes a company's past,
+present, and future.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -85,7 +85,6 @@ class Model(Tags):
     they can add a new business unit as a component. If the business unit's bbid
     is already in the directory, they cannot. If it is new to the TimePeriod,
     they can.     
-
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -101,11 +100,12 @@ class Model(Tags):
     portal_data           dict; stores data from Portal related to the instance
     stage                 P; pointer to either interview or defined _stage
     started               bool; property, tracks whether engine has begun work
-    summary               dict or obj; instance of BusinessSummary
+    summary               P; pointer to current period summary
     taxonomy              Taxonomy; collection of prototypical business units
     time_line             list of TimePeriod objects
     transcript            list of entries that tracks Engine processing
     used                  set of bbids for used topics
+    valuation             P; pointer to current period valuation
 
     FUNCTIONS:
     from_portal()         class method, extracts model out of API-format
@@ -128,7 +128,7 @@ class Model(Tags):
         #Model uuids exist in the origin namespace
         self.interview = InterviewTracker()
         self.portal_data = dict()
-        self.summary = BusinessSummary()
+##        self.summary = BusinessSummary()
         self.taxonomy = dict()
         self.transcript = []
         self.time_line = TimeLine()
@@ -136,6 +136,7 @@ class Model(Tags):
         #
         self.time_line.id.setNID(self.id.namespace_id)
 
+    #DYNAMIC ATTRIBUTES
     class dyn_current_manager:
         def __get__(self,instance,owner):
             return instance.time_line.current_period
@@ -178,12 +179,58 @@ class Model(Tags):
     @stage.deleter
     def stage(self):
         self._stage = None
-
+   
     @property
     def started(self):
-        "``started`` property; once True, difficult to undo."
+        """
+
+
+        **read-only property**
+
+
+        Once True, difficult to undo (a toggle that sticks).
+        """
         return self._started
 
+    @property
+    def summary(self):
+        """
+
+
+        **read-only property**
+
+
+        Pointer to company summary on current period. 
+        """
+        snapshot = self.time_line.current_period
+        return snapshot.content.summary
+
+    @summary.setter
+    def summary(self, value):
+        c = "Assignment prohibited. ``model.summary`` serves only as a pointer"
+        c += " to the current period company summary."
+        raise BBExceptions.ManagedAttributeError(c)
+
+    @property
+    def valuation(self):
+        """
+
+
+        **read-only property**
+
+
+        Pointer to company valuation on current period. 
+        """
+        snapshot = self.time_line.current_period
+        return snapshot.content.valuation
+
+    @valuation.setter
+    def valuation(self, value):
+        c = "Assignment prohibited. ``model.valuation`` serves only as a pointer"
+        c += " to the current period company valuation."
+        raise BBExceptions.ManagedAttributeError(c)
+
+    #METHODS
     @classmethod
     def from_portal(cls, portal_model):
         """
@@ -216,23 +263,6 @@ class Model(Tags):
         M.portal_data.update(portal_model)
         del M.portal_data["e_model"]
         return M
-
-    @property
-    def started(self):
-        """
-
-
-        **read-only property**
-
-
-        Property returns instance _path when that attribute points to a True
-        object, or instance.interview.path otherwise.
-
-        Since the default value for instance._path is None, property starts out
-        by pointing to interview.path and switches only if someone affirmatively
-        sets it to a different referent.
-        """
-        return self._started
     
     def start(self):
         """
