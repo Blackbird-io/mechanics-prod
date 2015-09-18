@@ -272,8 +272,6 @@ class Analyst:
         #
         return message
 
-        #set interviewer.default_protocol to 0 <--------------------? should be ok if always running on disposable instances?
-
     def check_stage(self, message, stage):
         """
 

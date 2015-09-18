@@ -7,9 +7,12 @@
 #Module: Shell
 """
 
-Module provides a shell that supports the main Engine services. Shell uses
-SimplePortal to provide a command-line user interface.
+Module provides a shell that supports the main Engine services. Shell enforces
+schemas and acts as a type adapter between the inside and outside of the Engine.
+Shell generally avoids looking ``inside`` the Engine model. Instead, it prefers
+to delegate all such substantive work to lower-level components.
 
+SimplePortal to provide a command-line user interface.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -255,27 +258,22 @@ def get_forecast(portal_model, fixed, ask, ref_date = None):
     **API SPEC**
 
     Function returns a CreditReference that outlines bad, mid, and good
-    CreditScenarios. Function may update model during processing. 
-
-    Function first asks SessionController to process analytics for the model,
-    then returns the summary of that landscape. Returns blank CreditReference
-    on all non-exit exceptions.
-
-    #delegates substantive work and in-model digging around to SessionController
+    CreditScenarios.
     """
-    result = None
-    sc = SessionController
-    #
+    #convert portal_model to engine format, then send down to controller for
+    #substantive analysis.
     engine_model = EngineModel.from_portal(portal_model)
-    engine_model, ref = sc.get_forecast(engine_model, fixed, ask, ref_date)
-    #ref comes back as a CR Reference object, with custom prints. Flatten to
-    #primitive.
-    #
-    if ref:
-        ref = ref.to_portal()
-    else:
-        ref = blank_credit_reference.to_portal()
+    engine_model, ref = controller.forecast_terms(engine_model,
+                                                  fixed,
+                                                  ask,
+                                                  ref_date)
+    #ref comes back as a CR_Reference object. Flatten for output.
     new_model = pm_converter.to_portal(engine_model)
+    if not ref:
+        ref = blank_credit_reference
+    ref = ref.to_portal()
+    #ref is a rich CR_Reference object. flatten to primitive for output
+    #
     result = [new_model, fixed, ask, ref]
     return result
     
@@ -289,23 +287,21 @@ def get_landscape_summary(portal_model, ref_date = None):
     **API SPEC**
 
     Function returns a LandscapeSummary for the model, as well as the model.
-    Function may update model during processing.
-
-    Function first asks SessionController to process analytics for the model,
-    then returns the summary of that landscape. Returns blank LandscapeSummary
-    on all non-exit exceptions.
     """
-    result = {"price" : {"lo" : 0, "hi" : 0},
+    schema = {"price" : {"lo" : 0, "hi" : 0},
               "size" : {"lo" : 0, "hi" : 0}}
-    em = EngineModel.from_portal(portal_model)
-    em, summary = controller.get_landscape_summary(em, ref_date)
     #
-    result.update(summary)
+    engine_model = EngineModel.from_portal(portal_model)
+    engine_model, summary = controller.summarize_landscape(engine_model,
+                                                           ref_date)
+    #lower-level modules may send back a new or modified model
+    #
+    new_model = pm_converter.to_portal(engine_model)
+    schema.update(summary)
     #flatten summary down to primitive, try to preserve schema
-    new_model = pm_converter.to_portal(M)
     #
-    return [new_model, result]
-    
+    result = [new_model, schema]
+    return result    
 
 def next_question():
     """

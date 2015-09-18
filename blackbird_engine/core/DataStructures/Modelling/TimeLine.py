@@ -60,7 +60,7 @@ class TimeLine(dict):
     ====================  ======================================================
 
     DATA:
-    current_period        period that represents a reference point in time
+    current_period        P; period that represents a reference point in time
     id                    instance of PlatformComponents.ID class, for interface
     
     FUNCTIONS:
@@ -80,11 +80,25 @@ class TimeLine(dict):
     
     def __init__(self):
         dict.__init__(self)
+        self._current_period = None
         self.current_period = None
         self.id = ID()
         #timeline objects support the id interface and pass the model's id down
         #to time periods. the timeline instance itself does not get its own
         #bbid.
+
+    @property
+    def current_period(self):
+        return self._current_period
+
+    @current_period.setter
+    def current_period(self, value):
+        self._old_current_period = self._current_period
+        self._current_period = value
+
+    @current_period.deleter
+    def current_period(self):
+        self.current_period = None
 
     def __str__(self, lines = None):
         """
@@ -531,16 +545,19 @@ class TimeLine(dict):
         #
         return clean_lines
         
-    def set_current(self,period):
-        """
-
-
-        TimeLine.set_current(period) -> None
-
-
-        Method sets instance.current_period to argument.
-        """
-        self.current_period = period
+    def revert_current(self):
+        self.current_period = self._old_current_period
+        
+##    def set_current(self,period):
+##        """
+##
+##
+##        TimeLine.set_current(period) -> None
+##
+##
+##        Method sets instance.current_period to argument.
+##        """
+##        self.current_period = period
         
     def update_current(self, ref_date = None):
         """

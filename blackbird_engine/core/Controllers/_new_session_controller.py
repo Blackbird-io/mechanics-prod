@@ -26,7 +26,7 @@ MR                    obj; instance of Messenger, stores current message
 FUNCTIONS:
 check_started()       returns True if message model is started, else False
 process()             returns next message from Engine
-process_analytics()   returns model with market analytics data
+update_valuation()    
 
 CLASSES:
 n/a
@@ -48,9 +48,6 @@ from ._new_analyst import Analyst
 
 #globals
 MR = Messenger()
-
-#classes
-#n/a
 
 #functions
 def check_started(message):
@@ -97,6 +94,8 @@ def process(message):
     MR.clearMessageIn()
     MR.clearMQR()
     MR.receive(message)
+    #only purpose of MR here is to allow an admin to look inside the engine at
+    #run time and see what went in/came out.
     #
     if not check_started(message):
         message = starter.process(message)
@@ -106,79 +105,72 @@ def process(message):
     #
     return message
 
-def update_valuation(model, ref_date = None):
+def forecast_terms(model, fixed, ask, ref_date = None):
     """
 
 
-    proces_analytics(model[, ref_date = None]) -> model
-    
+    forecast_terms(model, fixed, ask[, ref_date = None]) -> (model, ref)
 
-    Function gets an analyst to process valuation for the model, as of the
-    ref_date. If ref_date is None, function processes valuation for the current
-    period. If ``revert`` is True, function reverts the model to the original
-    period before returning it.
+
+    Function returns a forecast for the terms of a credit transaction on the
+    ref_date. If ref_date is None, function returns summary for the existing
+    current period.
+
+    Function forecasts outcome on the combined credit surface.
 
     ``ref_date`` can be datetime.date or ISO-format string object.
     """
-    old_ref_date = model.time_line.current_period.start
-    if ref_date:
-        model.time_line.update_current(ref_date)
-    #
-    model.stage = model.valuation
-    message = (model, None, None)
-    #set direction for analyst: model.valuation always points to current period
-    #valuation. 
-    #
-    bella = Analyst()
-    message = bella.process(message, run_summary = False)
-    #skip summary for speed
-    del model
-    updated_model = message[0]
-    #
-    if revert:
-        updated_model.time_line.update_current(old_ref_date)
-    #
-    return updated_model
-    #
-    #
-
-#Shell deals with Portal- and API- format objects, conforms things to Schema, etc,
-#but doesnt do substantive processing work. that goes to layers below. 
-
-def get_landscape_summary(model, ref_date = None, revert = True):
-    """
-    --> (model, summary)
-    """
-    result = None
-    #
-    #allow for reversion **here**
-    old_ref_date = model.time_line.current_period.start #should this be the end date? check what falls into period
-    if ref_date:
-        model.time_line.update_current(ref_date)
-    model = update_valuation(model) #<-----------------------------------runs only on current period, always; 
-    summary = model.valuation.cc.landscape.getSummary()
-    #
-    if revert:
-        model.time_line.update_current(old_ref_date)
-    #
-    result = [model, summary]
-    #
-    return result
-    #shell will then convert the model back into portal_model, make sure summary
-    #fits the schema, and call it a day
-
-#may be these methods should always revert?
-def get_forecast(model, x_axis, x_value, ref_date = None, revert = True):
-    result = None
-    #
-    old_ref_date = model.time_line.current_period.blah
     if ref_date:
         model.time_line.update_current(ref_date)
     model = update_valuation(model)
-    ref = model.valuation.cc.landscape.forecast(ask = ask, field = fixed)
     #
-    if revert:
-        model.time_line.update_current(old_ref_date)
-    return [model, ref]
+    model.valuation.credit.combine()
+    ref = model.valuation.credit.combined.forecast(ask = ask, field = fixed)
+    #
+    model.time_line.revert_current()
+    result = (model, ref)
+    #
+    return result
     
+def summarize_landscape(model, ref_date = None):
+    """
+
+
+    summarize_landscape(model[, ref_date = None]) --> (model, summary)
+
+
+    Function returns a summary for the combined credit landscape on the
+    ref_date. If ref_date is None, function returns summary for the existing
+    current period. 
+
+    ``ref_date`` can be datetime.date or ISO-format string object.
+    """
+    if ref_date:
+        model.time_line.update_current(ref_date)
+    model = update_valuation(model)
+    #
+    model.valuation.credit.combine()
+    summary = model.valuation.credit.combined.get_summary()
+    #
+    model.time_line.revert_current()
+    result = (model, summary)
+    #
+    return result
+
+def update_valuation(model):
+    """
+
+
+    proces_analytics(model) -> model
     
+
+    Function gets an analyst to process valuation for the current period.
+    """
+    model.stage = model.valuation
+    #
+    message = (model, None, None)
+    bella = Analyst()
+    message = bella.process(message, run_summary = False)
+    #
+    updated_model = message[0]
+    return updated_model
