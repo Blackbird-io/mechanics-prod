@@ -46,7 +46,7 @@ import BBExceptions
 from DataStructures.Platform.Messenger import Messenger
 
 from . import starter
-from ._new_analyst import Analyst
+from .analyst import Analyst
 
 
 

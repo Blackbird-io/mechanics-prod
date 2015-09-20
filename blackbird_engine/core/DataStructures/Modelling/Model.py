@@ -187,10 +187,17 @@ class Model(Tags):
         **read-only property**
 
 
-        Pointer to company summary on current period. 
+        Pointer to company summary on current period. If current period has no
+        content, returns None.
         """
-        snapshot = self.time_line.current_period
-        return snapshot.content.summary
+        result = None
+        #
+        company = self.time_line.current_period.content
+        if company:
+            #catch periods with empty content
+            result = company.summary
+        #
+        return result
 
     @summary.setter
     def summary(self, value):
@@ -206,10 +213,17 @@ class Model(Tags):
         **read-only property**
 
 
-        Pointer to company valuation on current period. 
+        Pointer to company valuation on current period. If current period has no
+        content, returns None.
         """
-        snapshot = self.time_line.current_period
-        return snapshot.content.valuation
+        result = None
+        #
+        company = self.time_line.current_period.content
+        if company:
+            #catch periods with empty content
+            result = company.valuation
+        #
+        return result
 
     @valuation.setter
     def valuation(self, value):

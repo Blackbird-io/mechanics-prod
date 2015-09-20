@@ -173,7 +173,7 @@ class TimeLine(dict):
         current_end_date = fwd_start_date - timedelta(1)
         current_period = TimePeriod(current_start_date, current_end_date)
         self.add_period(current_period)
-        self.set_current(current_period)
+        self.current_period = current_period
         #
         back_end_date = current_start_date - timedelta(1)        
         #save known starting point for back chain build before fwd changes it

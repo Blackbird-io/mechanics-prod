@@ -231,7 +231,7 @@ def scenario_4(topic):
     months_to_mature = float(topic.get_first_answer())
     M.interview.work_space["months_to_mature"] = months_to_mature
     #
-    top_bu = M.currentPeriod.content
+    top_bu = M.time_line.current_period.content
     dob_company_date = top_bu.life.date_of_birth
     dob_company_string = dob_company_date.isoformat()
     #put in work_space to save work in later scenarios
@@ -322,12 +322,12 @@ def scenario_6(topic):
     #copying and customizing this template.
     #
     #2.1 - configure model (logic used to be in starter)
-    if M.currentPeriod.content:
-        top_bu = M.currentPeriod.content
+    if M.time_line.current_period.content:
+        top_bu = M.time_line.current_period.content
     else:
         top_name = (M.name or Globals.default_unit_name)
         top_bu = BusinessUnit(top_name)
-        M.currentPeriod.setContent(top_bu)  
+        M.time_line.current_period.setContent(top_bu)  
     #
     standard_fins = standard_financials.basic_fins.copy()
     M.defaultFinancials = standard_fins.copy()
@@ -340,7 +340,7 @@ def scenario_6(topic):
     life_in_years = M.interview.work_space["unit_life_years"]
     life_in_days = life_in_years * Globals.days_in_year
     bu_template.life.span = timedelta(life_in_days)
-    ref_date = M.currentPeriod.end
+    ref_date = M.time_line.current_period.end
     bu_template.life.set_ref_date(ref_date)
     #figure out unit gestation
     first_dob_date = M.interview.work_space["first_dob_date"]

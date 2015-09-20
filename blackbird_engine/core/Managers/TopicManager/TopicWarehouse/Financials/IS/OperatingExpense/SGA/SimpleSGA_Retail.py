@@ -168,7 +168,7 @@ def scenario_3(topic):
     marketing_fn = "inflation-adjusted monthly expense from known annual start."
     marketing_formula = topic.formulas[marketing_fn]
     #
-    m_ref_date = M.currentPeriod.end
+    m_ref_date = M.time_line.current_period.end
     if Globals.fix_ref_date:
         m_ref_date = Globals.t0
     m_ref_year = m_ref_date.year
@@ -227,7 +227,7 @@ def scenario_3(topic):
             localL.setPartOf(line_sga)
     #b) lines and drivers into top unit only (because this is SGA)
     #Unit SGA can be a different topic
-    topBU = M.currentPeriod.content
+    topBU = M.time_line.current_period.content
     activeBUs = [topBU]
     for bu in activeBUs:
         fins = bu.financials

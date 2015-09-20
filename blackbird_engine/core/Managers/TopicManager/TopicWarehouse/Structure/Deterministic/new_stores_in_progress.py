@@ -148,7 +148,7 @@ def apply_data(topic, datapoint):
     gestation period. 
     """
     model = topic.MR.activeModel
-    top_bu = model.currentPeriod.content
+    top_bu = model.time_line.current_period.content
     bu_template = model.taxonomy["operating"]["standard"]
     #use dict-style taxonomy interface. 
     age_increment = bu_template.life.gestation / datapoint

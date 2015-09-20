@@ -151,14 +151,14 @@ def sub_scenario_1a(topic):
     work space, put on driver, and insert driver into ground-level units. 
     """
     M = topic.MR.activeModel
-    top_bu = M.currentPeriod.content
+    top_bu = M.time_line.current_period.content
     D1 = topic.applied_drivers["D1"]
     cost_formula = topic.formulas["compute cost from known gross margin."]
     data = {}
     data["active_gross_margin"] = M.interview.work_space["active_gross_margin"]
     D1.setData(data)
     D1.setFormula(cost_formula)
-    for sub_bu in M.currentPeriod.selectBottomUnits():
+    for sub_bu in M.time_line.current_period.selectBottomUnits():
         sub_d1 = D1.copy()
         sub_bu.addDriver(sub_d1, "Cost", "COGS")
         fins = sub_bu.financials
@@ -218,14 +218,14 @@ def scenario_2(topic):
     R = topic.get_first_answer()
     adjR = R/100
     #use percent
-    top_bu = M.currentPeriod.content
+    top_bu = M.time_line.current_period.content
     D1 = topic.applied_drivers["D1"]
     cost_formula = topic.formulas["compute cost from known gross margin."]
     data = {}
     data["active_gross_margin"] = adjR
     D1.setData(data)
     D1.setFormula(cost_formula)
-    for sub_bu in M.currentPeriod.selectBottomUnits():
+    for sub_bu in M.time_line.current_period.selectBottomUnits():
         sub_d1 = D1.copy()
         sub_bu.addDriver(sub_d1,"Cost")
     topic.wrap_topic()
