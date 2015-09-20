@@ -111,7 +111,7 @@ def scenario_1(topic):
     ref_date = M.time_line.current_period.end
     market_conditions = topic.CM.get_color(ref_date)
     #
-    topBU = M.currentPeriod.content
+    topBU = M.time_line.current_period.content
     topBU.fillOut()
     fins = topBU.financials
     atx = topBU.valuation

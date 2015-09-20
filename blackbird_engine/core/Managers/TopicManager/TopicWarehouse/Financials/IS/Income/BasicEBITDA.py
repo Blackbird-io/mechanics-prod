@@ -109,7 +109,7 @@ def scenario_1(topic):
     #into top unit only; otherwise ground-level calculations will block top
     #from deriving it with its own line items taken into account
     #
-    top_bu = M.currentPeriod.content
+    top_bu = M.time_line.current_period.content
     top_bu.addDriver(driver_ebitda, "EBITDA", "ebitda")
     #
     #don't clear Model.interview cache (protocol, etc) because didnt add any

@@ -214,7 +214,7 @@ def scenario_3(topic):
     ee_formula_name = "inflation-adjusted monthly expense from known annual start."
     employee_formula = topic.formulas[ee_formula_name]
     #
-    m_ref_date = M.currentPeriod.end
+    m_ref_date = M.time_line.current_period.end
     if Globals.fix_ref_date:
         m_ref_date = Globals.t0
     m_ref_year = m_ref_date.year
@@ -325,8 +325,8 @@ def scenario_3(topic):
         if not local_line.partOf:
             local_line.setPartOf(line_opex)
     #b) bottom units: lines and drivers
-    top_bu = M.currentPeriod.content
-    bottom_bus = M.currentPeriod.selectBottomUnits()
+    top_bu = M.time_line.current_period.content
+    bottom_bus = M.time_line.current_period.selectBottomUnits()
     for bu in bottom_bus:
         fins = bu.financials
         i_opex = fins.indexByName("Operating Expense")

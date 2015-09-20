@@ -27,7 +27,7 @@ InterviewTracker      plan and monitor machine-user interview
 
 
 #imports
-from Controllers import completion_rules
+from flow import completion_rules
 from DataStructures.Modelling.LineItem import LineItem
 
 from .stage import Stage

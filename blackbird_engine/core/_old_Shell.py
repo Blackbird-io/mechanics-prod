@@ -7,12 +7,9 @@
 #Module: Shell
 """
 
-Module provides a shell that supports the main Engine services. Shell enforces
-schemas and acts as a type adapter between the inside and outside of the Engine.
-Shell generally avoids looking ``inside`` the Engine model. Instead, it prefers
-to delegate all such substantive work to lower-level components.
-
+Module provides a shell that supports the main Engine services. Shell uses
 SimplePortal to provide a command-line user interface.
+
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -30,8 +27,6 @@ continuous()          function runs analysis continuously until completion
 disable_script()      removes script reference
 disable_web_mode()    turns off web mode, permits rich InputElement objects
 enable_web_mode()     turns on web mode, requires API-compliant delivery
-get_forecast()        computes terms for a transaction on the model
-get_landscape_summary describes the opportunity landscape for all transactions 
 next_question()       uses SimplePortal to ask for the next user input
 step()                performs one analytical step, from User to Engine to User
 to_portal()           converts MQR message to Engine-Wrapper API dict format
@@ -62,7 +57,7 @@ if sub_folder not in sys.path:
 import SimplePortal as Portal
 import BBGlobalVariables as Globals
 
-from flow import supervisor
+from Controllers import SessionController
 from DataStructures.Analysis.PortalModel import PortalModel
 from DataStructures.Markets.CR_Reference import CR_Reference
 from DataStructures.Modelling.Model import Model as EngineModel
@@ -84,8 +79,8 @@ trace = False
 web_mode = True
 
 QuestionManager.populate()
-#QM.populate() should run a no-op here because downstram modules beat Shell to
-#the punch
+#QM.populate() should run a no-op here because SessionController or other
+#sub modules beat Shell to the punch
 
 #functions
 def continuous(first_message = None, cycles = 200, portal_format = False):
@@ -124,7 +119,7 @@ def continuous(first_message = None, cycles = 200, portal_format = False):
         #moving to loop
         MR.messageOut = Portal.launch("iop start")
         message_for_engine = to_engine(MR.messageOut)
-        MR.messageIn = supervisor.process(message_for_engine)
+        MR.messageIn = SessionController.process(message_for_engine)
         MR.messageOut = None
         #
         last_message = MR.messageIn
@@ -141,9 +136,9 @@ def continuous(first_message = None, cycles = 200, portal_format = False):
         status = Globals.checkMessageStatus(mock_engine_msg)
         if status == Globals.status_pendingQuestion:
             MR.messageIn = to_engine(first_message)
-            #convert message so it tracks standard supervisor output; that way,
-            #can use loop to keep track of cycles without running ``shadow``
-            #processing beforehand
+            #convert message so it tracks standard SessionController output;
+            #that way, can use loop to keep track of cycles without running
+            #``shadow`` processing beforehand
             #
         else:
             MR.messageOut = first_message
@@ -166,7 +161,7 @@ def continuous(first_message = None, cycles = 200, portal_format = False):
                     last_message = MR.messageOut
                 break
             else:
-                MR.messageIn = supervisor.process(message_for_engine)
+                MR.messageIn = SessionController.process(message_for_engine)
                 MR.messageOut = None
         elif MR.messageIn:
             status = Globals.checkMessageStatus(MR.messageIn)
@@ -247,7 +242,7 @@ def enable_web_mode():
     web_mode = True
     Portal.enable_web_mode()
 
-def get_forecast(portal_model, fixed, ask, ref_date = None):
+def get_forecast(portal_model, fixed, ask):
     """
     
 
@@ -260,26 +255,28 @@ def get_forecast(portal_model, fixed, ask, ref_date = None):
     **API SPEC**
 
     Function returns a CreditReference that outlines bad, mid, and good
-    CreditScenarios.
+    CreditScenarios. Function may update model during processing. 
+
+    Function first asks SessionController to process analytics for the model,
+    then returns the summary of that landscape. Returns blank CreditReference
+    on all non-exit exceptions.
     """
-    #convert portal_model to engine format, then send down to supervisor for
-    #substantive analysis.
-    engine_model = EngineModel.from_portal(portal_model)
-    engine_model, ref = supervisor.forecast_terms(engine_model,
-                                                  fixed,
-                                                  ask,
-                                                  ref_date)
-    #ref comes back as a CR_Reference object. Flatten for output.
-    new_model = pm_converter.to_portal(engine_model)
-    if not ref:
-        ref = blank_credit_reference
-    ref = ref.to_portal()
-    #ref is a rich CR_Reference object. flatten to primitive for output
+    result = None
+    M = EngineModel.from_portal(portal_model)
+    uM = SessionController.process_analytics(M)
+    ref = uM.analytics.cc.landscape.forecast(ask = ask, field = fixed)
+    #ref comes back as a CR Reference object, with custom prints. Flatten to
+    #primitive.
     #
+    if ref:
+        ref = ref.to_portal()
+    else:
+        ref = blank_credit_reference.to_portal()
+    new_model = pm_converter.to_portal(uM)
     result = [new_model, fixed, ask, ref]
     return result
     
-def get_landscape_summary(portal_model, ref_date = None):
+def get_landscape_summary(portal_model):
     """
 
 
@@ -289,21 +286,30 @@ def get_landscape_summary(portal_model, ref_date = None):
     **API SPEC**
 
     Function returns a LandscapeSummary for the model, as well as the model.
+    Function may update model during processing.
+
+    Function first asks SessionController to process analytics for the model,
+    then returns the summary of that landscape. Returns blank LandscapeSummary
+    on all non-exit exceptions.
     """
-    schema = {"price" : {"lo" : 0, "hi" : 0},
+    result = {"price" : {"lo" : 0, "hi" : 0},
               "size" : {"lo" : 0, "hi" : 0}}
+    M = EngineModel.from_portal(portal_model)
+    if low_error:
+        try:
+            uM = SessionController.process_analytics(M)
+            new_summary = uM.analytics.cc.landscape.getSummary()
+            result.update(new_summary)
+        except Exception:
+            pass
+    else:
+        #no exception handler
+        uM = SessionController.process_analytics(M)
+        new_summary = uM.analytics.cc.landscape.getSummary()
+        result.update(new_summary)
+    new_model = pm_converter.to_portal(M)
     #
-    engine_model = EngineModel.from_portal(portal_model)
-    engine_model, summary = supervisor.summarize_landscape(engine_model,
-                                                           ref_date)
-    #lower-level modules may send back a new or modified model
-    #
-    new_model = pm_converter.to_portal(engine_model)
-    schema.update(summary)
-    #flatten summary down to primitive, try to preserve schema
-    #
-    result = [new_model, schema]
-    return result    
+    return [new_model, result]
 
 def next_question():
     """
@@ -335,11 +341,11 @@ def process_interview(msg):
     API.
 
     Function converts msg to engine format using to_engine(), gets a new
-    response by calling supervisor.process(), converts the response into API
-    format, and delivers the converted result. 
+    response by calling SessionController.process(), converts the response into
+    portal format, and delivers the converted result. 
     """
     message_for_engine = to_engine(msg)
-    engine_response = supervisor.process(message_for_engine)
+    engine_response = SessionController.process(message_for_engine)
     message_for_portal = to_portal(engine_response)
     return message_for_portal
 
@@ -350,14 +356,9 @@ def step():
     step() -> None
 
 
-    Function performs one analytical step.
-
-    Function either:
-
-    1. picks up external messages from Portal and passes them to supervisor
-       (downstream) for processing, or
-    2. picks up internal messages from supervisor and passes them to Portal
-       (upstream) for display and user input. 
+    Function performs one analytical step. Function passes portal (external)
+    messages to SessionController for processing and engine (internal) messages
+    to SimplePortal for display. 
     """
     if not launched:
         MR.messageOut = Portal.launch()
@@ -366,7 +367,7 @@ def step():
         return
     if MR.messageOut:
         message_for_engine = to_engine(MR.messageOut)
-        MR.messageIn = supervisor.process(message_for_engine)
+        MR.messageIn = SessionController.process(message_for_engine)
         MR.messageOut = None
         return
     elif MR.messageIn:
