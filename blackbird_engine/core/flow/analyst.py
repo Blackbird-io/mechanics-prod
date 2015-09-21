@@ -56,6 +56,11 @@ check = Globals.checkMessageStatus
 interviewer = Interviewer()
 summary_t_name = "basic model summary, annualized current with capex"
 yenta = Yenta()
+#
+topic_needed = Globals.status_topicNeeded
+pending_question = Globals.status_pendingQuestion
+pending_response = Globals.status_pendingResponse
+end_session = Globals.status_endSession
 
 #classes    
 class Analyst:
@@ -69,13 +74,14 @@ class Analyst:
 
     DATA:
     max_cycles            int; max number of attempts before return
-    upReady               bool; is current message ready for return 
-    upStatus              specific status of message (static)
+    needs_work            bool; does engine need to work more or can send out?
+    status                state for message status so methods can communicate
 
     FUNCTIONS:
-    set_status()          store message status on instance
+    check_stage()         see if a particular stage is complete
     choose_direction()    point message to more analysis or portal
-    wrap_interview()       clean up / storage to run prior to end
+    process()             main interace, perform engine work until ready 
+    wrap_interview()      clean up / storage to run prior to end
     ====================  ======================================================
     """
     
@@ -84,16 +90,31 @@ class Analyst:
         self.needs_work = True
         self.status = None
 
-    def set_status(self,new_status):
+    def check_stage(self, message, stage):
         """
 
 
-        Analyst.set_status(new_status) -> None
+        Analyst.check_stage(message, stage) -> message
+    
 
-
-        Method sets instance.status to the new status.
+        For ***end_session messages only**, method checks if ``stage`` is
+        complete. If it is, returns message as-is. Otherwise, sets model.stage
+        to the argument and returns an (M,_,_) message so other routines can
+        continue work. 
         """
-        self.status = new_status
+        message_in = message
+        message_out = message_in
+        #
+        status = check(message_in)
+        if status == end_session:
+            if stage.guide.complete:
+                pass
+            else:
+                model = message_in[0]
+                model.stage = stage
+                message_out = (model, None, None)
+        #
+        return message_out
 
     def choose_direction(self, message, *pargs, **kargs):
         """
@@ -133,88 +154,51 @@ class Analyst:
         a final status check and note whether the message is ready for
         delivery to the portal. 
         """
-        
-        end_session = Globals.status_endSession
-        topic_needed = Globals.status_topicNeeded
-        pending_question = Globals.status_pendingQuestion
-        #
         status = check(message)
-        if status == topic_needed:
-            message = interviewer.process(message)
-            status = check(message)
-
-        if status == end_session:
-            message = self.wrap_interview(message)
-            status = check(message)
-            if status == topic_needed:
-                #dedicated second pass by interviewer, in case of ?
-                message = interviewer.process(message)
-                #what if this guy generates an end_
-                
-        
-        
-        ready_for_portal = {Globals.status_pendingQuestion,
-                            Globals.status_endSession}
         #
-        status = check(message)
-        #place follow-up status checks in if blocks because they only need them
-        #if someone may have changed the message.
-        if status == Globals.status_topicNeeded:
-            message = interviewer.process(message)
-            #interviewer may have decided that the model is good enough and that
-            #we should end the interview. refresh status. 
-            status = check(message)
-        #
-        #pass end-session messages to conclude() to go through required wrap-up
-        #work. may also check direction here if conclude() needs to ask more
-        #questions, so check status after too. 
-        if status == Globals.status_endSession:
-            message = self.wrap_interview(message, *pargs, **kargs)
-            #future versions of wrap_interview() may identify gaps in knowledge.
-            #if that happens, wrap_interview() may either switch direction back
-            #into full interview mode (perhaps by increasing the attention
-            #budget) or move the process into a fill-gaps functionality, where
-            #the Engine asks questions about critical holes, in MQEND format. 
-            #
-            #refresh status in case conclude() changed model or message.
-            status = check(message)
-        if status in ready_for_portal:
+        if status in [topic_needed, end_session]:
+            for i in range(2):
+                if i > 0:
+                    status = check(message)
+                    #save cycles
+                if status == topic_needed:
+                    message = interviewer.process(message)
+                    status = check(message)
+                    if status == topic_needed:
+                        break
+                #
+                if status == end_session:
+                    message = self.wrap_interview(message, *pargs, **kargs)
+                    status = check(message)
+                    if status == end_session:
+                        break
+                #
+        self.status = status
+        if status in [pending_question, end_session]:
             self.needs_work = False
         else:
             self.needs_work = True
         #
-        self.set_status(status)
-        #
         return message
-
-    
-        #if wrap_ returns end, all good
-        #otherwise, repeat through interviewer
+        #loop runs at most twice per call. interviewer and wrap_interview both
+        #can transform the message. we only want to deliver end_session messages
+        #if wrap_interview() has ``signed off`` on them.
         #
-
-        #so:
-        #run loop until wrap() returns end
-        #in loop:
-            #message = interviewer(message)
-            #if message == end_session:
-                #message = wrap(message)
-            #if message == topic_needed:
-                #continue
-            #else:
-                #break
-
-        #if status == topic_needed:
-            #message = interviewer(message)
-            #status = check(message)
+        #on the other hand, if interviewer says ``end_session``, we want to pass
+        #the message to wrap_interview() to confirm the action. similarly, if
+        #wrap() thinks that a message needs more work, we need to pass it to
+        #interviewer() to pick a focal point for that work.
         #
-        #if sttaus == end_message:
-            #message = wrap(message)
-            #status = check(message)
-            #if status == topic_needed:
-                #message = interviewer(message)
-                #status = check(message)
-
-        #or i can package the second logic chunk in wrap()
+        #hence the loop structure: each subroutine can deliver a message we
+        #trust, in which case we break. or it can deliver something the other
+        #routine needs to see, in which case we pass it on.
+        #
+        #the loop runs twice, so we always pick a direction (even, for example,
+        #if interviewer insists that a m,_,_ message it got from wrap() should
+        #turn to end session). if we don't put a fixed decision limit on the
+        #flow, we risk creating an infinite loop where the routines disagree
+        #with each other. the same problem prevents a recursive implementation.
+        #
 
     def process(self, message, *pargs, **kargs):
         """
@@ -235,12 +219,12 @@ class Analyst:
             #
             model = message[0]
             #
-            if self.status == Globals.status_pendingResponse:
+            if self.status == pending_response:
                 topic_bbid = model.transcript[-1][0]["topic_bbid"]
                 topic = yenta.TM.local_catalog.issue(topic_bbid)
                 message = topic.process(message)
             #
-            elif self.status == Globals.status_topicNeeded:
+            elif self.status == topic_needed:
                 topic = yenta.select_topic(model)
                 if topic:
                     message = topic.process(message)
@@ -259,96 +243,7 @@ class Analyst:
                 break
             #circuit-breaker logic
         #
-        return message
-        #alternate pattern:
-        #use model.guide.complete instead of the analyzer.needs_work indicator; #<--------------------------------------------------- should probably implement
-        #can make Analyzer completely stateless, but at the expense of knowing
-        #how to look inside the model a bit.
-        #
-        #
-        #model = message[0]
-        #while model.guide.needs_work:
-            #status = check(message)
-            #if status == pending_response:
-                #topic_bbid = model.transcript[-1]
-                #topic
-                #message = topic.process(message)
-            #elif status == topic_needed:
-                #topic = yenta.select_topic(model)
-                #if topic:
-                    #message = topic.process(message)
-                #else:
-                    #pass
-            #message = self.choose_direction(message, *pargs, **kargs)
-            #del model
-            #model = message[0]
-            ##update model pointer in case the object changed
-            ##circuit breaker
-        #
-        #return message
-        
-
-    #status = check(status)
-    #loop = False
-    #if status in [topic_needed, end_session, pending_response]:
-        #loop = 
-    #while loop:
-        #if status == open_question:
-            #break
-        #if status
-    #
-    #the problem: if interviewer delivers end_session, it's not good enough. you
-    #need wrapper to deliver the same to consider it done.
-
-    #so basically choose_direction() should deliver end_ only if wrap() does
-
-    #while status in [pending_response, topic_needed]:
-        #if status == topic_needed:
-            #self.choose_direction(message)
-            ##here, run interviewer. if interviewer returns end, run wrap
-            ##then do nothing?
-            ##but problem is i expect to choose a topic here
-            ##
-        #elif status == pending_response:
-            #self.process_response(message)
-            ##returns M,_,_
-        #status = check(message)
-        ##if mq_, end, pop out
-
-    #so what if i basically make choose:
-    #def choose()
-        #status(message)
-        #if status = topic_needed:
-            #interviewer.process(message)
-            #topic = yenta.process(model)
-            #message = topic.process(message)
-    
-        #if topic_needed
-        #interviewer.process(message)
-        #if status 
-    
-
-    def choose():
-        status = check(message)
-        if status = topic_needed:
-            message = interviewer.process(message)
-            status = check(message)
-        while status == end_session:
-            message = self.wrap(message)
-            status = check(message)
-            if status == topic_needed:
-                message = interviewer.process(message)
-                status = check(message)
-
-    #allow delivery of end_sesson only if wrap_interview() produces it
-    #while status = end_session:
-            #message = wrap_interview(message)
-                ##wrap_interview should run choose_direction() on topic_needed?
-                ##
-            #status = check(message)
-    
-            
-
+        return message           
 
     def wrap_interview(self, message, run_valuation = True, run_summary = True):
         """
@@ -383,31 +278,7 @@ class Analyst:
         #
         return message
 
-    def check_stage(self, message, stage):
-        """
-
-
-        Analyst.check_stage(message, stage) -> message
-    
-
-        For ***end_session messages only**, method checks if ``stage`` is
-        complete. If it is, returns message as-is. Otherwise, sets model.stage
-        to the argument and returns an (M,_,_) message so other routines can
-        continue work. 
-        """
-        message_in = message
-        message_out = message_in
-        #
-        status = check(message_in)
-        if status == Globals.status_endSession:
-            model = message_in[0]
-            if stage.guide.complete:
-                pass
-            else:
-                model.stage = stage
-                message_out = (model, None, None)
-        #
-        return message_out
+        
 
         
 
