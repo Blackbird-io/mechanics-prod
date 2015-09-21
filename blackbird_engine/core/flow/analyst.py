@@ -133,6 +133,26 @@ class Analyst:
         a final status check and note whether the message is ready for
         delivery to the portal. 
         """
+        
+        end_session = Globals.status_endSession
+        topic_needed = Globals.status_topicNeeded
+        pending_question = Globals.status_pendingQuestion
+        #
+        status = check(message)
+        if status == topic_needed:
+            message = interviewer.process(message)
+            status = check(message)
+
+        if status == end_session:
+            message = self.wrap_interview(message)
+            status = check(message)
+            if status == topic_needed:
+                #dedicated second pass by interviewer, in case of ?
+                message = interviewer.process(message)
+                #what if this guy generates an end_
+                
+        
+        
         ready_for_portal = {Globals.status_pendingQuestion,
                             Globals.status_endSession}
         #
@@ -166,6 +186,35 @@ class Analyst:
         self.set_status(status)
         #
         return message
+
+    
+        #if wrap_ returns end, all good
+        #otherwise, repeat through interviewer
+        #
+
+        #so:
+        #run loop until wrap() returns end
+        #in loop:
+            #message = interviewer(message)
+            #if message == end_session:
+                #message = wrap(message)
+            #if message == topic_needed:
+                #continue
+            #else:
+                #break
+
+        #if status == topic_needed:
+            #message = interviewer(message)
+            #status = check(message)
+        #
+        #if sttaus == end_message:
+            #message = wrap(message)
+            #status = check(message)
+            #if status == topic_needed:
+                #message = interviewer(message)
+                #status = check(message)
+
+        #or i can package the second logic chunk in wrap()
 
     def process(self, message, *pargs, **kargs):
         """
@@ -238,6 +287,68 @@ class Analyst:
         #
         #return message
         
+
+    #status = check(status)
+    #loop = False
+    #if status in [topic_needed, end_session, pending_response]:
+        #loop = 
+    #while loop:
+        #if status == open_question:
+            #break
+        #if status
+    #
+    #the problem: if interviewer delivers end_session, it's not good enough. you
+    #need wrapper to deliver the same to consider it done.
+
+    #so basically choose_direction() should deliver end_ only if wrap() does
+
+    #while status in [pending_response, topic_needed]:
+        #if status == topic_needed:
+            #self.choose_direction(message)
+            ##here, run interviewer. if interviewer returns end, run wrap
+            ##then do nothing?
+            ##but problem is i expect to choose a topic here
+            ##
+        #elif status == pending_response:
+            #self.process_response(message)
+            ##returns M,_,_
+        #status = check(message)
+        ##if mq_, end, pop out
+
+    #so what if i basically make choose:
+    #def choose()
+        #status(message)
+        #if status = topic_needed:
+            #interviewer.process(message)
+            #topic = yenta.process(model)
+            #message = topic.process(message)
+    
+        #if topic_needed
+        #interviewer.process(message)
+        #if status 
+    
+
+    def choose():
+        status = check(message)
+        if status = topic_needed:
+            message = interviewer.process(message)
+            status = check(message)
+        while status == end_session:
+            message = self.wrap(message)
+            status = check(message)
+            if status == topic_needed:
+                message = interviewer.process(message)
+                status = check(message)
+
+    #allow delivery of end_sesson only if wrap_interview() produces it
+    #while status = end_session:
+            #message = wrap_interview(message)
+                ##wrap_interview should run choose_direction() on topic_needed?
+                ##
+            #status = check(message)
+    
+            
+
 
     def wrap_interview(self, message, run_valuation = True, run_summary = True):
         """
