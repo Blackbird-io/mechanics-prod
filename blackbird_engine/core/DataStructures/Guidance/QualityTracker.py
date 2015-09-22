@@ -27,6 +27,8 @@ QualityTracker        specialized gauge to track quality, includes standards
 
 
 #imports
+import parameters.guidance
+
 from .Counter import Counter
 
 
@@ -56,11 +58,13 @@ class QualityTracker(Counter):
     setStandards()        sets minStandard and maxStandard
     ====================  ======================================================
     """
-    def __init__(self, minStandard=0, maxStandard=5):
-        Counter.__init__(self,cutOff = 10)
-        #NOTE: cutoff should probably be a global variable, same w maxStandard
-        #and minStandard
-        self.setStandards(minStandard,maxStandard)
+    def __init__(self,
+                 p_min = parameters.guidance.QUALITY_DEFAULT_MIN_STANDARD,
+                 p_max = parameters.guidance.QUALITY_DEFAULT_MAX_STANDARD):
+        #
+        Counter.__init__(self,
+                         cutOff = parameters.guidance.QUALITY_CUT_OFF)
+        self.setStandards(p_min, p_max)
 
     def setStandards(self,minStandard=None,maxStandard=None):
         """
@@ -71,3 +75,4 @@ class QualityTracker(Counter):
         values or None. 
         """
         self.standard = minStandard
+

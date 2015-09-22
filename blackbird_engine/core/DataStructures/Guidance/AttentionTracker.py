@@ -25,8 +25,9 @@ AttentionTracker      specialized gauge to track attention, includes allowance
 
 
 
-
 #imports
+import BBGlobalVariables as Globals
+
 from .Counter import Counter
 
 
@@ -64,8 +65,7 @@ class AttentionTracker(Counter):
     ====================  ======================================================
     """
     def __init__(self):
-        Counter.__init__(self,cutOff = 10)
-        #NOTE: need global var here for sure
+        Counter.__init__(self, cutOff = Globals.ATTENTION_MAX)
         self.allowance = None
         self.asked = 0
 

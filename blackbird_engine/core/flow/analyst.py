@@ -53,7 +53,8 @@ from .yenta import Yenta
 
 #globals
 check = Globals.checkMessageStatus
-interviewer = Interviewer()
+interviewer_a = Interviewer()
+interviewer_b = Interviewer()
 summary_t_name = "basic model summary, annualized current with capex"
 yenta = Yenta()
 #
@@ -99,22 +100,28 @@ class Analyst:
 
         For ***end_session messages only**, method checks if ``stage`` is
         complete. If it is, returns message as-is. Otherwise, sets model.stage
-        to the argument and returns an (M,_,_) message so other routines can
-        continue work. 
+        to the argument, gets an interviewer to pick out a focal point on that
+        stgage, and then returns the resulting message so that other routines
+        can continue work.
+
+        This method contemplates that interviewer will send back a (M,_,_)
+        message on the new stage, but **does not** require it to do so. So the
+        interviewer can decide that the stage is complete and return an
+        end_session message after all.
         """
-        message_in = message
-        message_out = message_in
         #
-        status = check(message_in)
+        status = check(message)
         if status == end_session:
             if stage.guide.complete:
                 pass
             else:
-                model = message_in[0]
+                model = message[0]
                 model.stage = stage
-                message_out = (model, None, None)
+                message = (model, None, None)
+                message = interviewer_b.process(message)
+                #make sure message comes out with a focal point
         #
-        return message_out
+        return message
 
     def choose_direction(self, message, *pargs, **kargs):
         """
@@ -154,51 +161,66 @@ class Analyst:
         a final status check and note whether the message is ready for
         delivery to the portal. 
         """
+##        status = check(message)
+##        #
+##        if status in [topic_needed, end_session]:
+##            for i in range(2):
+##                if i > 0:
+##                    status = check(message)
+##                    #save cycles
+##                if status == topic_needed:
+##                    message = interviewer_a.process(message)
+##                    status = check(message)
+##                    if status == topic_needed:
+##                        break
+##                #
+##                if status == end_session:
+##                    message = self.wrap_interview(message, *pargs, **kargs)
+##                    status = check(message)
+##                    if status == end_session:
+##                        break
+##                #
+##        self.status = status
+##        if status in [pending_question, end_session]:
+##            self.needs_work = False
+##        else:
+##            self.needs_work = True
+##        #
+##        return message
+##        #loop runs at most twice per call. interviewer and wrap_interview both
+##        #can transform the message. we only want to deliver end_session messages
+##        #if wrap_interview() has ``signed off`` on them.
+##        #
+##        #on the other hand, if interviewer says ``end_session``, we want to pass
+##        #the message to wrap_interview() to confirm the action. similarly, if
+##        #wrap() thinks that a message needs more work, we need to pass it to
+##        #interviewer() to pick a focal point for that work.
+##        #
+##        #hence the loop structure: each subroutine can deliver a message we
+##        #trust, in which case we break. or it can deliver something the other
+##        #routine needs to see, in which case we pass it on.
+##        #
+##        #the loop runs twice, so we always pick a direction (even, for example,
+##        #if interviewer insists that a m,_,_ message it got from wrap() should
+##        #turn to end session). if we don't put a fixed decision limit on the
+##        #flow, we risk creating an infinite loop where the routines disagree
+##        #with each other. the same problem prevents a recursive implementation.
+##        #
+##
+##    def choose_no_loop(self, message, *pargs, **kargs):
         status = check(message)
+        if status == topic_needed:
+            message = interviewer_a.process(message)
+            status = check(message)
         #
-        if status in [topic_needed, end_session]:
-            for i in range(2):
-                if i > 0:
-                    status = check(message)
-                    #save cycles
-                if status == topic_needed:
-                    message = interviewer.process(message)
-                    status = check(message)
-                    if status == topic_needed:
-                        break
-                #
-                if status == end_session:
-                    message = self.wrap_interview(message, *pargs, **kargs)
-                    status = check(message)
-                    if status == end_session:
-                        break
-                #
+        if status == end_session:
+            message = self.wrap_interview(message)
+            status = check(message)
+        #
         self.status = status
-        if status in [pending_question, end_session]:
-            self.needs_work = False
-        else:
-            self.needs_work = True
         #
         return message
-        #loop runs at most twice per call. interviewer and wrap_interview both
-        #can transform the message. we only want to deliver end_session messages
-        #if wrap_interview() has ``signed off`` on them.
-        #
-        #on the other hand, if interviewer says ``end_session``, we want to pass
-        #the message to wrap_interview() to confirm the action. similarly, if
-        #wrap() thinks that a message needs more work, we need to pass it to
-        #interviewer() to pick a focal point for that work.
-        #
-        #hence the loop structure: each subroutine can deliver a message we
-        #trust, in which case we break. or it can deliver something the other
-        #routine needs to see, in which case we pass it on.
-        #
-        #the loop runs twice, so we always pick a direction (even, for example,
-        #if interviewer insists that a m,_,_ message it got from wrap() should
-        #turn to end session). if we don't put a fixed decision limit on the
-        #flow, we risk creating an infinite loop where the routines disagree
-        #with each other. the same problem prevents a recursive implementation.
-        #
+
 
     def process(self, message, *pargs, **kargs):
         """
@@ -215,7 +237,7 @@ class Analyst:
         message = self.choose_direction(message, *pargs, **kargs)
         #use choose_direction() to for substantive work. method also weeds
         #out messages that are ready for portal delivery right away.       
-        while self.needs_work:
+        while self.status in [topic_needed, pending_response]:
             #
             model = message[0]
             #
