@@ -32,7 +32,7 @@ DateRangeInput        Describes field that collects a low and high date value
 import datetime
 import re
 
-from tools import parsing
+from tools import parsing as parsing_tools
 
 from .number_range import NumberRangeInput
 
@@ -93,9 +93,9 @@ class DateRangeInput(NumberRangeInput):
         hi = datetime.date.fromordinal(1000000)
         #Nov. 28, 2738
         if self.r_min:
-            lo = Parsing.date_from_iso(self.r_min)
+            lo = parsing_tools.date_from_iso(self.r_min)
         if self.r_max:
-            hi = Parsing.date_from_iso(self.r_max)
+            hi = parsing_tools.date_from_iso(self.r_max)
         entry_count = len(proposed_response)
         if entry_count < 1:
             result = False
@@ -107,8 +107,8 @@ class DateRangeInput(NumberRangeInput):
                 #entry is "YYYY-MM-DD, YYYY-MM-DD", with 0 or more whitespace
                 #between and around the elements
                 (a, b) = entry.split(",")
-                date_a = Parsing.date_from_iso(a)
-                date_b = Parsing.date_from_iso(b)
+                date_a = parsing_tools.date_from_iso(a)
+                date_b = parsing_tools.date_from_iso(b)
                 if lo <= date_a <= date_b <= hi:
                     continue
                 else:

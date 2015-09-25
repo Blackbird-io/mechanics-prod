@@ -44,6 +44,8 @@ from DataStructures.Modelling.BusinessUnit import BusinessUnit
 from .. import SharedKnowledge as SubjectKnowledge
 
 
+
+
 #globals
 name = "store location search period"
 topic_author = "IOP"

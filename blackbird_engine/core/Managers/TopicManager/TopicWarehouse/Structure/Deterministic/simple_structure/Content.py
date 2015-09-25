@@ -223,8 +223,8 @@ def scenario_4(topic):
     life_in_years = M.interview.work_space["unit lifespan in years"]
     ref_date = None
     #
-    life_in_seconds = Tools.Parsing.monthsToSeconds((life_in_years * 12))
-    mature_in_seconds = Tools.Parsing.monthsToSeconds(months_to_mature)
+    life_in_seconds = tools.parsing.monthsToSeconds((life_in_years * 12))
+    mature_in_seconds = tools.parsing.monthsToSeconds(months_to_mature)
     youth_ends_percent = int(mature_in_seconds/life_in_seconds * 100)
     #
     stnd_fins  = M.defaultFinancials.copy()

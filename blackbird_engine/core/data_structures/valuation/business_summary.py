@@ -62,7 +62,7 @@ class BusinessSummary(dict, Stage):
         dict.__init__(self)
         Stage.__init__(self, "business summary")
         self = dict.fromkeys(self, mandatory_summary_fields)
-        self.set_path()
+##        self.set_path()
         
     
     def __str__(self, tab = None):

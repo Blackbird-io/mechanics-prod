@@ -46,6 +46,8 @@ import BBGlobalVariables as Globals
 from .. import SharedKnowledge as SubjectKnowledge
 
 
+
+
 #globals
 name = "store pre-opening period"
 topic_author = "IOP"

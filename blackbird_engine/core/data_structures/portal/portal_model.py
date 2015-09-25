@@ -115,7 +115,11 @@ class PortalModel(ReadyForPortal):
             result["e_model"] = flattened
             #
             result["industry"] = seed.header.profile.get("industry")
-            result["summary"] = seed.summary.to_portal()
+            if seed.summary:
+                summary = seed.summary.to_portal()
+            else:
+                summary = {"credit capacity" : "dummy placeholder"}
+            result["summary"] = summary
         #
         del result["_var_attrs"]
         #
