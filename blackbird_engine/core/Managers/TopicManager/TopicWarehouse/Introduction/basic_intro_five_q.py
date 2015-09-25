@@ -47,9 +47,9 @@ import time
 
 import BBGlobalVariables as Globals
 
-from DataStructures import Modelling
-from DataStructures.Modelling.BusinessUnit import BusinessUnit
-from Managers.TopicManager.TopicWarehouse.Structure.standard_financials import basic_fins
+from data_structures import modelling
+from data_structures.modelling.business_unit import BusinessUnit
+from Managers.TopicManager.TopicWarehouse.structure.standard_financials import basic_fins
 
 
 

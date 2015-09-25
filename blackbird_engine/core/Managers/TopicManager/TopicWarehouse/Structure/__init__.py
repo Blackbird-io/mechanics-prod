@@ -29,7 +29,7 @@ n/a
 
 
 #imports
-from . import Deterministic
+from . import deterministic
 from . import SharedKnowledge
 #
 from . import saas_contract_term

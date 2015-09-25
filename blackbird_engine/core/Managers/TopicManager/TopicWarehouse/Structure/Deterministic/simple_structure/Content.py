@@ -42,9 +42,9 @@ n/a
 import datetime
 
 import BBGlobalVariables as Globals
-import Tools
+import tools
 
-from DataStructures.Modelling.BusinessUnit import BusinessUnit
+from data_structures.modelling.business_unit import BusinessUnit
 
 from . import PrivateKnowledge
 from ... import SharedKnowledge as SubjectKnowledge

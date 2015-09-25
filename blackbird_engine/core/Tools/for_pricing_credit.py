@@ -35,12 +35,11 @@ n/a
 
 
 #imports
-#n/a
-
+from data_structures.valuation import parameters
 
 
 #globals
-from data_structures.valuation import schema
+#n/a
 
 #functions
 def average_references(a_ref, b_ref, a_weight = 1, b_weight = 1):
@@ -186,7 +185,7 @@ def price_high(price_curve, units_of_leverage):
     Function returns the mid price increased by the cumulative turn-based
     spread.
     """
-    spread = price_curve[schema.key_spread]
+    spread = price_curve[parameters.key_spread]
     mid = price_mid(price_curve, units_of_leverage)
     adj = spread * units_of_leverage
     p = mid + adj
@@ -206,8 +205,8 @@ def price_low(price_curve, units_of_leverage):
     sure the price clears the credit_price_floor defined in Globals.
     """
     mid = price_mid(price_curve, units_of_leverage)
-    spread = price_curve[schema.key_spread]
-    delta_ceiling = price_curve[schema.key_delta_ceiling]
+    spread = price_curve[parameters.key_spread]
+    delta_ceiling = price_curve[parameters.key_delta_ceiling]
     #
     adj = spread * units_of_leverage
     adj = min(adj, delta_ceiling)

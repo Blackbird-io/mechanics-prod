@@ -34,7 +34,7 @@ n/a
 #must import any modules contained here at init for manager to see and add to
 #catalog
 #
-from . import SimpleSGA_Retail
+from . import simple_sga_retail
 
 
 

@@ -29,16 +29,16 @@ n/a
 
 
 #imports
-from . import Financials
-from . import Growth
-from . import Introduction
-from . import Management
-from . import Operations
-from . import Overview
-from . import Regulatory
-from . import Structure
+from . import financials
+from . import growth
+from . import introduction
+from . import management
+from . import operations
+from . import overview
+from . import regulatory
+from . import structure
 from . import summary
-from . import Valuation
+from . import valuation
 
 
     

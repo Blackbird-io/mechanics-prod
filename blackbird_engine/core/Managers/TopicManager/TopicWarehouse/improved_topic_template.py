@@ -41,13 +41,12 @@ n/a
 
 #imports
 import BBGlobalVariables as Globals
-import Managers.TopicManager.TopicWarehouse
 
 ##from Managers.TopicManager import SharedKnowledge as GeneralKnowledge
 ##from TopicWarehouse.ParentDirectory import SharedKnowledge as SubjectKnowledge
-##from DataStructures.Modelling.Model import Model
-##from DataStructures.Modelling.BusinessUnit import BusinessUnit
-##from DataStructures.Modelling.Driver import Driver
+##from data_structures.modelling.business_unit import BusinessUnit
+##from data_structures.modelling.driver import Driver
+##from data_structures.modelling.model import Model
 
 
 
@@ -76,8 +75,7 @@ work_plan = dict()
 formula_names = ["formula 1",
                  "formula 2",
                  "indy 500"]
-question_names = ["is this a template question?",
-                  "is this a real?"]
+question_names = ["is this a template question?"]
 work_plan["big sky line item"] = 1
 
 GK = GeneralKnowledge
@@ -90,6 +88,9 @@ def prepare(new_topic):
     return new_topic
 
 #drivers:
+#
+#define driver shells to make sure they receive bbids and signatures!
+#
 #create each driver object used in Topic and place in applied_drivers to make
 #sure they receive proper signatures and ids. Provide data and formulas
 #during runtime through scenarios. At that point, topic will carry dictionaries
@@ -115,26 +116,74 @@ applied_driver["Car Driver"] = driver_car
     #scenarios that respond to a user stop - topic.wrap_to_stop()
 
 def scenario_1(topic):
-    #opening scenario, begins topic analysis, may ask q1
+    """
+
+
+    scenario_1(topic) -> None
+
+
+    **opening scenario**
+
+    Scenario concludes with wrap_scenario(question).
+
+    Function asks question. 
+    """
+    #opening scenario, begins topic analysis, may ask q1. can configure
+    #question based on model data.
     pass
 
 def scenario_2(topic):
-    #process response to q1, ask q2
-    pass
+    """
 
-def scenario_3(topic):
-    #process response to q2
+
+    scenario_2(topic) -> None
+
+
+    **closing scenario**
+
+    Scenario concludes with wrap_topic()
+
+    Function pulls out user response and [. . . ]
+    """
+    #pull out user response, process as necessary; store in work_space, then
+    #run apply_data(topic, adj_response). then wrap_topic.
+    #
+    #ALL SUBSTANTIVE WORK SHOULD TAKE PLACE IN apply_data()
     pass
 
 def end_scenario(topic):
-    #user pressed stop interview in middle of question
+    """
+
+
+    end_scenario(topic) -> None
+
+    **end scenario**
+
+    Scenario concludes with wrap_to_end().
+    
+    [] 
+    """
     pass
 
+def apply_data(topic, datapoint):
+    """
+
+
+    apply_data(topic, datapoint) -> None
+
+
+    [describe substantive work that topic does to model based on data]
+    """
+    #function performs substantive work on model in light of new data
+
 scenarios[None] = scenario_1
+scenarios["is this a real question?"] = scenario_2
 scenarios[Globals.user_stop] = end_scenario
 #
 
 #Conventions and general notes:
+#-- Each Topic should ask at most one question. 
+#
 #-- Topics point to a Messenger object at ``MR``
 #
 #-- Topics must store drivers in applied_drivers. If they do not, TopicManager
@@ -173,6 +222,13 @@ scenarios[Globals.user_stop] = end_scenario
 #-- topics should map scenarios to the questions whose responses they handle by
 #   question name; question manager will then use that mapping to build up live
 #   dictionaries keyed by bbid.
-
+#
+#-- a topic should have 3 scenatrios: opening, follow-up, and end_scenario.
+#
+#-- topics should use an apply_data() function for substantive work in follow-up
+#   and end_scenarios. the only difference between the two should be the source
+#   of new data. the follow-up scenario should pull the data from a user's
+#   response. the end scenario should pull the data from Subject Knowledge or
+#   some other assumption. 
 
 

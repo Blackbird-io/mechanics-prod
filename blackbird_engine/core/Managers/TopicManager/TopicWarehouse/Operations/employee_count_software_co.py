@@ -46,7 +46,7 @@ from datetime import timedelta
 import BBGlobalVariables as Globals
 import BBExceptions
 
-from DataStructures.Modelling.BusinessUnit import BusinessUnit
+from data_structures.modelling.business_unit import BusinessUnit
 
 
 

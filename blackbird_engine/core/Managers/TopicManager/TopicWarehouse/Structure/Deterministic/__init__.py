@@ -29,9 +29,9 @@ n/a
 
 
 #imports
-from . import SimpleStructure
-from . import retail_existing_stores
 from . import new_stores_in_progress
+from . import retail_existing_stores
+from . import simple_structure
 ##from . import FutureStores_3yrs
 ##from . import StoreLocationSearch
 ##from . import StoreOpeningTime

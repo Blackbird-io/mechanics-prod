@@ -43,8 +43,8 @@ from datetime import timedelta
 
 import BBGlobalVariables as Globals
 
-from DataStructures.Modelling.BusinessUnit import BusinessUnit
-from DataStructures.Modelling.LineItem import LineItem
+from data_structures.modelling.business_unit import BusinessUnit
+from data_structures.modelling.line_item import LineItem
 
 from . import knowledge_re_software
 from .standard_financials import basic_fins
