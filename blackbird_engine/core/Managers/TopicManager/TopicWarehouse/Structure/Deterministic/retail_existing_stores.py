@@ -43,12 +43,11 @@ from datetime import date, timedelta
 
 import BBExceptions
 import BBGlobalVariables as Globals
-import Tools
+import tools
 
-from DataStructures.Markets.company_value import CompanyValue
-from DataStructures.Modelling.BusinessUnit import BusinessUnit
-from DataStructures.Modelling.LifeStage import LifeStage
-
+from data_structures.modelling.business_unit import BusinessUnit
+from data_structures.modelling.life_stage import LifeStage
+from data_structures.valuation.company_value import CompanyValue
 
 from .. import SharedKnowledge as SubjectKnowledge
 from .. import standard_financials

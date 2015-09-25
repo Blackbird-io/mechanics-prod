@@ -28,7 +28,7 @@ class CR_Scenario     template for summarizing a credit transaction
 
 
 #imports
-from . import schema
+from . import parameters
 
 from .pattern import Pattern
 
@@ -59,10 +59,10 @@ class CR_Scenario(Pattern):
     
     def __init__(self,name = "CR_Scenario",standard = None):
         Pattern.__init__(self,name)
-        self.fromkeys(schema.fields_CR_Scenario)
+        self.fromkeys(parameters.fields_CR_Scenario)
         self.applyStandard(standard)
         #default structure score: 
-        self.changeElement("structure", schema.gl_structure_score)
+        self.changeElement("structure", parameters.gl_structure_score)
 
     def to_portal(self, seed = None):
         """

@@ -34,7 +34,7 @@ n/a
 #n/a
 
 #content modules
-from . import BasicEBITDA
+from . import basic_ebitda
 
 
 #

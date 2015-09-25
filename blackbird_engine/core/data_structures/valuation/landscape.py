@@ -33,7 +33,7 @@ import copy
 
 from tools import for_pricing_credit as pricing_tools
 
-from . import schema
+from . import parameters
 
 from .cr_reference import CR_Reference
 from .cr_scenario import CR_Scenario
@@ -44,9 +44,9 @@ from ..guidance.step import Step
 
 
 #globals
-bad_label = schema.fields_CR_Reference[0]
-mid_label = schema.fields_CR_Reference[1]
-good_label = schema.fields_CR_Reference[2]
+bad_label = parameters.fields_CR_Reference[0]
+mid_label = parameters.fields_CR_Reference[1]
+good_label = parameters.fields_CR_Reference[2]
 
 #classes
 class Landscape(dict, Step):
@@ -123,8 +123,8 @@ class Landscape(dict, Step):
         main_surface = {}
         #
         working_curve = price_curve.copy()
-        working_curve.pop(schema.key_spread)
-        working_curve.pop(schema.key_delta_ceiling)
+        working_curve.pop(parameters.key_spread)
+        working_curve.pop(parameters.key_delta_ceiling)
         #make a copy so can modify, then pop out non-numeric keys to sort
         steps = sorted(working_curve.keys())
         step_count = len(steps)

@@ -42,7 +42,9 @@ n/a
 import copy
 
 import BBGlobalVariables as Globals
-from DataStructures.Modelling.Driver import Driver
+
+from data_structures.modelling.driver import Driver
+
 from . import SharedKnowledge as SubjectKnowledge
 
 

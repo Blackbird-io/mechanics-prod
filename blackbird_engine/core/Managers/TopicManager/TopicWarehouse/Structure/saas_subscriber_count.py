@@ -45,7 +45,7 @@ from datetime import timedelta
 import BBGlobalVariables as Globals
 import BBExceptions
 
-from DataStructures.Modelling.BusinessUnit import BusinessUnit
+from data_structures.modelling.business_unit import BusinessUnit
 
 from .standard_financials import basic_fins #<------------------------------------- this topic should be able to get by
                                             # w/o importing fins because it should just use the unit in the taxonomy (which already has fins)

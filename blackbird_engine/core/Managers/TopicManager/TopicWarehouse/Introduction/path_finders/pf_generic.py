@@ -57,7 +57,7 @@ n/a
 #imports
 import BBGlobalVariables as Globals
 
-from DataStructures.Modelling.Financials import Financials
+from data_structures.modelling.financials import Financials
 
 from . import SharedKnowledge as SK
 

@@ -56,8 +56,8 @@ n/a
 #imports
 import BBGlobalVariables as Globals
 
-from DataStructures.Markets.company_value import CompanyValue
-from DataStructures.Markets.CR_Scenario import CR_Scenario
+from data_structures.valuation.company_value import CompanyValue
+from data_structures.valuation.cr_scenario import CR_Scenario
 
 
 

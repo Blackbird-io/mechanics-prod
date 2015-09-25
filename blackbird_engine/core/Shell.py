@@ -63,10 +63,10 @@ import simple_portal as Portal
 import BBGlobalVariables as Globals
 
 from flow import supervisor
-from DataStructures.Analysis.PortalModel import PortalModel
-from DataStructures.Markets.CR_Reference import CR_Reference
-from DataStructures.Modelling.Model import Model as EngineModel
-from DataStructures.Platform.Messenger import Messenger
+from data_structures.modelling.model import Model as EngineModel
+from data_structures.portal.portal_model import PortalModel
+from data_structures.system.messenger import Messenger
+from data_structures.valuation.cr_reference import CR_Reference
 from Managers import QuestionManager
 
 

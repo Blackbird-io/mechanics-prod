@@ -42,7 +42,7 @@ n/a
 #imports
 import BBGlobalVariables as Globals
 
-from DataStructures.Modelling.LineItem import LineItem
+from data_structures.modelling.line_item import LineItem
 
 
 
