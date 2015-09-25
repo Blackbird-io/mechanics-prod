@@ -26,7 +26,7 @@ SelectionTracker      specialized gauge to track topic selections
 
 
 #imports
-from .Counter import Counter
+from .counter import Counter
 
 
 

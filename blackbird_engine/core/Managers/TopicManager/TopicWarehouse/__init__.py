@@ -37,7 +37,7 @@ from . import Operations
 from . import Overview
 from . import Regulatory
 from . import Structure
-from . import Summary
+from . import summary
 from . import Valuation
 
 

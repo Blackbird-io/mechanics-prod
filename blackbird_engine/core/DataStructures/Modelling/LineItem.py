@@ -35,7 +35,7 @@ import BBGlobalVariables as Globals
 
 
 
-from DataStructures.Guidance.Guide import Guide
+from DataStructures.Guidance.guide import Guide
 from DataStructures.Platform.Tags import Tags
 from DataStructures.Platform.print_as_line import PrintAsLine
 

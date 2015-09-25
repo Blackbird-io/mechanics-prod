@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: TW.Summary.BasicGenericSummary
+#Module: TW.summary.basic_generic_summary
 """
 
 Topic that prepares a basic summary of the model's financials.
@@ -48,8 +48,6 @@ n/a
 
 #imports
 import BBGlobalVariables as Globals
-
-from DataStructures.Analysis.BusinessSummary import BusinessSummary
 
 
 
@@ -99,7 +97,7 @@ def scenario_1(topic):
     M = topic.MR.activeModel
     top_bu = M.currentPeriod.content
     top_fins = top_bu.financials
-    summary = BusinessSummary()
+    summary = top_bu.summary
     #
     names_to_add = ["revenue",
                     "cost",

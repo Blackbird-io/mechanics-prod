@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: DataStructures.Guidance.QualityTracker
+#Module: DataStructures.Guidance.quality_tracker
 
 """
 This module subclasses Counter into a QualityTracker object
@@ -25,11 +25,10 @@ QualityTracker        specialized gauge to track quality, includes standards
 
 
 
-
 #imports
 import parameters.guidance
 
-from .Counter import Counter
+from .counter import Counter
 
 
 

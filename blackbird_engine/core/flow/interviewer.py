@@ -37,6 +37,7 @@ InterviewController   selects focal point for Blackbird analysis
 #imports
 import BBExceptions
 import BBGlobalVariables as Globals
+import parameters.guidance
 
 from . import completion_rules
 from . import selection_rules
@@ -220,8 +221,8 @@ class Interviewer(Controller):
         """
         levels = dict()
         single_level = Level()
-        levels[Globals.priority_max] = single_level
-        for item in container.items():
+        levels[parameters.guidance.PRIORITY_MAX] = single_level
+        for item in container:
             if not item.guide.priority.current:
                 #skip 0-priority items
                 continue

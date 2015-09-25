@@ -28,10 +28,10 @@ Guide                 gauge cluster that guides analysis
 
 
 #imports
-from .AttentionTracker import AttentionTracker
-from .Counter import Counter
-from .QualityTracker import QualityTracker
-from .SelectionTracker import SelectionTracker
+from .attention_tracker import AttentionTracker
+from .counter import Counter
+from .quality_tracker import QualityTracker
+from .selection_tracker import SelectionTracker
 
 
 
