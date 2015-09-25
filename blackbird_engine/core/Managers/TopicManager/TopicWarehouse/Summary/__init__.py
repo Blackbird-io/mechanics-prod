@@ -7,8 +7,8 @@
 #Module: TopicWarehouse.Summary.__init__
 """
 
-Contains specialized packages.
-
+Package module contains topics for summarizing a model into a Portal-compatible
+view.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -28,8 +28,7 @@ n/a
 
 
 #imports
-from . import BasicGenericSummary
-
+from . import basic_generic_summary
     
 
 

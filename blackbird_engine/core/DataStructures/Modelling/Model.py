@@ -33,8 +33,7 @@ import dill
 import BBExceptions
 import BBGlobalVariables as Globals
 
-from DataStructures.Analysis.BusinessSummary import BusinessSummary
-from DataStructures.Guidance.Guide import Guide
+from DataStructures.Guidance.guide import Guide
 from DataStructures.Guidance.interview_tracker import InterviewTracker
 from DataStructures.Platform.ID import ID
 from DataStructures.Platform.Tags import Tags

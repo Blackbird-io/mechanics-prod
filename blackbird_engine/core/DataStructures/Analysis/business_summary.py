@@ -53,7 +53,7 @@ class BusinessSummary(dict, Stage):
     """
     def __init__(self):
         dict.__init__(self)
-        Stage.__init__(self)
+        Stage.__init__(self, "business summary")
         self = dict.fromkeys(self, mandatory_summary_fields)
         
     

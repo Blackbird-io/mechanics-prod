@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: DataStructures.Guidance.QualityTracker
+#Module: DataStructures.Guidance.attention_tracker
 
 """
 This module subclasses Counter into a AttentionTracker object
@@ -26,9 +26,9 @@ AttentionTracker      specialized gauge to track attention, includes allowance
 
 
 #imports
-import BBGlobalVariables as Globals
+import parameters.guidance
 
-from .Counter import Counter
+from .counter import Counter
 
 
 
@@ -50,42 +50,44 @@ class AttentionTracker(Counter):
     NOTE: Use global variables to scale quality standards.
     A unit of "quality" is supposed to be roughly proportional to a unit of
     "attention."
-    
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
+
+    DATA:
     allowance             maximum attention this object can use before it stops
                           being worthwhile to analyze. Set externally.  
     asked                 number of questions asked (to the human user) about
                           this item. 
 
-    setAllowance()        sets allowance
-    countAsked()          increments asked by 1 
-    clearAsked()          sets asked to 0
+    FUNCTIONS:
+    clear_asked()         sets asked to 0
+    count_asked()         increments asked by 1 
+    set_allowance()       sets allowance
     ====================  ======================================================
     """
     def __init__(self):
-        Counter.__init__(self, cutOff = Globals.ATTENTION_MAX)
+        Counter.__init__(self, cutOff = parameters.guidance.ATTENTION_MAX)
         self.allowance = None
         self.asked = 0
-
-    def setAllowance(self,allowance):
-        """
-
-        ATr.setAllowance(allowance) -> None
-        """
-        self.allowance = allowance
-
-    def countAsked(self):
-        """
-
-        ATr.countAsked() -> None
-        """
-        self.asked +=1
         
-    def clearAsked(self):
+    def clear_asked(self):
         """
 
-        ATr.clearAsked() -> None
+        ATr.clear_asked() -> None
         """
         self.asked = 0
+
+    def count_asked(self):
+        """
+
+        ATr.count_asked() -> None
+        """
+        self.asked +=1
+
+    def set_allowance(self,allowance):
+        """
+
+        ATr.set_allowance(allowance) -> None
+        """
+        self.allowance = allowance

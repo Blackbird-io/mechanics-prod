@@ -34,7 +34,8 @@ import time
 import BBExceptions
 import BBGlobalVariables as Globals
 
-from DataStructures.Guidance.Guide import Guide
+from DataStructures.Analysis.business_summary import BusinessSummary
+from DataStructures.Guidance.guide import Guide
 from DataStructures.Platform.ID import ID
 from DataStructures.Platform.Tags import Tags
 
@@ -135,7 +136,7 @@ class BusinessUnit(Tags,Equalities):
         gl_sig_con = Globals.signatures["BusinessUnit.consolidate"]
         self.sig_consolidate =  gl_sig_con % self.name
         self.size = 1
-        self.summary = None
+        self.summary = BusinessSummary()
         self.valuation = None
         
     @property
