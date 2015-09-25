@@ -4,7 +4,8 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Engine
-#Module: Tools.for_calendar
+#Module: tools.for_calendar
+
 """
 
 Module contains functions for analyzing time and date. 
@@ -31,7 +32,7 @@ import BBExceptions
 
 from datetime import date
 
-from . import Parsing as for_parsing
+from . import parsing as for_parsing
 
 
 

@@ -4,12 +4,11 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: Controllers.Starter
+#Module: flow.starter
 
 """
 Module responds to a blank starter message (_,_,_) that kicks off every session
 with a (M,_,_) message suitable for Analyzer processing. 
-
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -33,8 +32,8 @@ import datetime
 
 import BBGlobalVariables as Globals
 
-from DataStructures.Modelling.Model import Model
-from DataStructures.Platform.Messenger import Messenger
+from data_structures.modelling.model import Model
+from data_structures.system.messenger import Messenger
 
 
 

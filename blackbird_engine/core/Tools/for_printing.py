@@ -4,7 +4,8 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: Tools.for_printing
+#Module: tools.for_printing
+
 """
 
 Module provides functions for formatting data into standard strings.

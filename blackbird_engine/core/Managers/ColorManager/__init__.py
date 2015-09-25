@@ -53,11 +53,11 @@ n/a
 
 #imports
 import BBExceptions
-import Tools.ForManagers
 
-from DataStructures.Platform.protected_catalog import ProtectedCatalog
-from DataStructures.Platform.ID import ID
-from Tools.for_calendar import find_most_recent
+from data_structures.system.protected_catalog import ProtectedCatalog
+from data_structures.system.bbid import ID
+from tools.for_calendar import find_most_recent
+from tools.for_managers import walk_package
 
 from . import ColorWarehouse as Warehouse
 
@@ -140,9 +140,7 @@ def populate():
     if catalog is already populated. 
     """
     if not local_catalog.populated:
-        snapshot_count = Tools.ForManagers.walk_package(Warehouse,
-                                                        "color_content",
-                                                        make_color)
+        snapshot_count = walk_package(Warehouse, "color_content", make_color)
         local_catalog.populated = True
         c = ""
         c += "ColorManager successfully populated catalog with %s market"

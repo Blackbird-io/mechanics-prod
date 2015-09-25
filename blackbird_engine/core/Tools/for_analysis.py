@@ -4,12 +4,12 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Engine
-#Module: DataStructures.Tools.ForManagers
+#Module: tools.for_analysis
+
 """
 
 Module provides convenience functions for common content management tasks
 handled by xManager modules (e.g., TopicManager, QuestionManager, etc.). 
-
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================

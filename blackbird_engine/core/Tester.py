@@ -13,7 +13,7 @@ Object                Description
 ====================  ==========================================================
 
 DATA:
-n/a
+FOLDER_NAME           name of storage folder for diagnostics logs
 
 FUNCTIONS:
 generate_standard()   run tests, save output as standard in test folder
@@ -40,7 +40,8 @@ import time
 
 
 #globals
-#n/a
+FOLDER_NAME = r"diagnostics_log"
+#where do logs go
 
 #functions
 def generate_standard(build_path, *tests, overwrite = False):
@@ -217,8 +218,7 @@ def run_test_do(build_path,
     ##    os.chdir(bLocation)
     #
     if log:
-        dFolderName = r"DiagnosticsLog"
-        dFolderPath = bLocation+"\\"+dFolderName
+        dFolderPath = bLocation+"\\"+FOLDER_NAME
         dFolderPath = os.path.normpath(dFolderPath)
         #create a system-neutral path
         #
@@ -300,8 +300,7 @@ def run_test_check(build_path,
 ##    os.chdir(bLocation)
     #
     if log:
-        dFolderName = r"DiagnosticsLog"
-        dFolderPath = bLocation+"\\"+dFolderName
+        dFolderPath = bLocation+"\\"+FOLDER_NAME
         dFolderPath = os.path.normpath(dFolderPath)
         #create a system-neutral path
         #
