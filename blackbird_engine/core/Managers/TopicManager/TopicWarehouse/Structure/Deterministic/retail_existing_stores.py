@@ -266,7 +266,7 @@ def scenario_5(topic):
     M = topic.MR.activeModel
     R = topic.get_first_answer()
     #R is a YYYY-MM-DD string
-    adj_r = Tools.Parsing.date_from_iso(R)
+    adj_r = tools.parsing.date_from_iso(R)
     M.interview.work_space["earliest_store_open"] = R
     M.interview.work_space["first_dob_date"] = adj_r
     #
@@ -312,7 +312,7 @@ def scenario_6(topic):
     #Step 1:
     #Retrieve and format user response
     R = topic.get_first_answer()
-    adj_R = Tools.Parsing.date_from_iso(R)
+    adj_R = tools.parsing.date_from_iso(R)
     M.interview.work_space["latest_store_open"] = R
     #
     #Step 2:
