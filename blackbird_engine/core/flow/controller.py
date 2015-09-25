@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: Controllers.controller
+#Module: flow.controller
 """
 
 Module defines GenericController class.  
@@ -27,7 +27,7 @@ GenericController     shell for mqr message processing
 
 
 #imports
-from DataStructures.Platform.Messenger import Messenger
+from data_structures.system.messenger import Messenger
 
 
 

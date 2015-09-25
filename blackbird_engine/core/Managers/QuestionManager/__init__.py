@@ -45,16 +45,15 @@ LocalCatalog          subclass of Platform.Catalog that issues copies of entries
 
 
 
-
 #imports
 import BBExceptions
-import Tools.ForManagers
 
-from DataStructures.Analysis.FullQuestion import FullQuestion
-from DataStructures.Analysis.MiniQuestion import MiniQuestion
-from DataStructures.Analysis.PortalQuestion import PortalQuestion
-from DataStructures.Platform.ID import ID
-from DataStructures.Platform.protected_catalog import ProtectedCatalog
+from data_structures.portal.full_question import FullQuestion
+from data_structures.portal.mini_question import MiniQuestion
+from data_structures.portal.portal_question import PortalQuestion
+from data_structures.system.bbid import ID
+from data_structures.system.protected_catalog import ProtectedCatalog
+from tools.for_managers import walk_package
 
 from . import QuestionWarehouse as Warehouse
 
@@ -249,9 +248,7 @@ def populate():
     if catalog is already populated. 
     """
     if not local_catalog.populated:
-        question_count = Tools.ForManagers.walk_package(Warehouse,
-                                                        "question_content",
-                                                        make_question)
+        question_count = walk_package(Warehouse, "question_content", make_question)
         local_catalog.populated = True
         c = ""
         c += "QuestionManager successfully populated catalog with %s questions."

@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: Controllers.level
+#Module: flow.level
 
 """
 
@@ -29,7 +29,7 @@ Level                 list that groups items by priority
 
 
 #imports
-from DataStructures.Guidance.guide import Guide
+from data_structures.guidance.guide import Guide
 
 
 

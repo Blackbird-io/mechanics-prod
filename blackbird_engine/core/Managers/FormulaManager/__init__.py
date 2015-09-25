@@ -39,11 +39,11 @@ n/a
 
 #imports
 import BBExceptions
-import Tools.ForManagers
 
-from DataStructures.Platform.Catalog import Catalog
-from DataStructures.Platform.ID import ID
-from DataStructures.Modelling.Formula import Formula
+from data_structures.system.catalog import Catalog
+from data_structures.system.bbid import ID
+from data_structures.modelling.formula import Formula
+from tools.for_managers import walk_package
 
 from . import FormulaWarehouse as Warehouse
 
@@ -107,9 +107,7 @@ def populate():
     if catalog is already populated. 
     """
     if not local_catalog.populated:
-        formula_count = Tools.ForManagers.walk_package(Warehouse,
-                                                       "formula_content",
-                                                       make_formula)
+        formula_count = walk_package(Warehouse, "formula_content", make_formula)
         local_catalog.populated = True
         c = ""
         c += "FormulaManager successfully populated catalog with %s formulas."

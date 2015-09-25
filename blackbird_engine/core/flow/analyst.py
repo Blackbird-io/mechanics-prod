@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: Controllers.work_controller
+#Module: flow.analyst
 
 """
 
@@ -25,7 +25,6 @@ sentinel in R position.
 SessionManager provides Analyzer with its connector for resource access. The
 connector primarily comes into play when Analyzer locates a new topic and
 prepares it for use. ]
-
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -46,7 +45,6 @@ import BBGlobalVariables as Globals
 
 from .interviewer import Interviewer
 from .yenta import Yenta
-
 
 
 

@@ -37,14 +37,15 @@ LocalCatalog          subclass of Catalog that cleans questions on every call
 #imports
 import BBExceptions
 import BBGlobalVariables as Globals
+
 import Managers.ColorManager as ColorManager
 import Managers.FormulaManager as FormulaManager
 import Managers.QuestionManager as QuestionManager
-import Tools.ForManagers
 
-from DataStructures.Analysis.Topic import Topic
-from DataStructures.Platform.Catalog import Catalog
-from DataStructures.Platform.ID import ID
+from data_structures.system.bbid import ID
+from data_structures.system.catalog import Catalog
+from data_structures.system.topic import Topic
+from tools.for_managers import walk_package
 
 from . import TopicWarehouse
 
@@ -329,9 +330,7 @@ def populate():
     if catalog is already populated.
     """
     if not local_catalog.populated:
-        topic_count = Tools.ForManagers.walk_package(TopicWarehouse,
-                                                     "topic_content",
-                                                     make_topic)
+        topic_count = walk_package(TopicWarehouse, "topic_content", make_topic)
         local_catalog.populated = True
         c = ""
         c += "TopicManager successfully populated catalog with %s topics."

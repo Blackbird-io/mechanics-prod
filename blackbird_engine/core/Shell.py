@@ -59,7 +59,7 @@ sub_folder = os.path.normpath(sub_folder)
 if sub_folder not in sys.path:
     sys.path.append(sub_folder)
 
-import SimplePortal as Portal
+import simple_portal as Portal
 import BBGlobalVariables as Globals
 
 from flow import supervisor

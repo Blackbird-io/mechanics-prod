@@ -4,7 +4,8 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: Tools.for_pricing_credit
+#Module: tools.for_pricing_credit
+
 """
 
 Module defines functions for computing credit prices. Functions usually rely on
@@ -39,7 +40,7 @@ n/a
 
 
 #globals
-from DataStructures.Markets import schema
+from data_structures.valuation import schema
 
 #functions
 def average_references(a_ref, b_ref, a_weight = 1, b_weight = 1):

@@ -27,8 +27,8 @@ n/a
 
 
 #imports
-from DataStructures.Markets import schema
-from DataStructures.Markets.market_color import MarketColor
+from data_structures.valuation import parameters
+from data_structures.valuation.market_color import MarketColor
 
 
 
@@ -36,8 +36,8 @@ from DataStructures.Markets.market_color import MarketColor
 #globals
 color_content = True
 color = MarketColor(author = "IOP", ref_date_iso = "2015-08-24")
-key_delta_ceiling = schema.key_delta_ceiling
-key_spread = schema.key_spread
+key_delta_ceiling = parameters.key_delta_ceiling
+key_spread = parameters.key_spread
 
 
 #configure

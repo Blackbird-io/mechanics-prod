@@ -4,7 +4,8 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Engine
-#Module: Tools.Parsing
+#Module: tools.parsing
+
 """
 
 Module provides convenience functions for parsing user data. 
