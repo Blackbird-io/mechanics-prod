@@ -26,8 +26,9 @@ Guide                 gauge cluster that guides analysis
 
 
 
-
 #imports
+import parameters.guidance
+
 from .attention_tracker import AttentionTracker
 from .counter import Counter
 from .quality_tracker import QualityTracker
@@ -60,13 +61,16 @@ class Guide:
     reset()               reruns __init__ on self
     ====================  ======================================================
     """
-    def __init__(self):
+    def __init__(self, priority = None, quality = None):
         self.attention = AttentionTracker()
         self.complete = False
-        self.priority = Counter(cutOff = 5)
+        self.priority = Counter(cutOff = parameters.guidance.PRIORITY_MAX)
         self.quality = QualityTracker()
         self.selection = SelectionTracker()
-        #NOTE: should use global var here for maxPriority
+        if priority:
+            self.priority.current = priority
+        if quality:
+            self.quality.setStandards(quality)
 
     def reset(self):
         """
