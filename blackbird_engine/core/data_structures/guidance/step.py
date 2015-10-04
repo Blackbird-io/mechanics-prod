@@ -19,10 +19,10 @@ from data_structures.system.tags import Tags
 
 #classes
 class Step(Tags, PrintAsLine):
-    def __init__(self, name = None):
+    def __init__(self, name = None, priority = None, quality = None):
         Tags.__init__(self)
         PrintAsLine.__init__(self)
-        self.guide = Guide()
+        self.guide = Guide(priority, quality)
         self.setName(name)
         
     def pre_format(self, **kargs):

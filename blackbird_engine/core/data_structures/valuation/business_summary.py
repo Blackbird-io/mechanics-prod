@@ -89,8 +89,8 @@ class BusinessSummary(Stage):
         """
         Stage.set_path(self)
         steps = [BookMark("start Summary", "Summary"),
-                 Step("annual financials"),
-                 Step("credit capacity"),
+                 Step("annual financials", priority = 1, quality = 1),
+                 Step("credit capacity", priority = 1, quality = 1),
                  BookMark("end Summary", "Summary", "endStatement")]
         self.path.extend(steps)
 

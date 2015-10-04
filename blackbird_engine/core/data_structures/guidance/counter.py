@@ -56,7 +56,10 @@ class Counter:
 
     def increment(self, step = 1):
         """
+
+
         C.increment([step]) ->  None
+
 
         Sets self.current to the sum of the existing value and the increment. If
         instance specifies a cutOff and the new value is greater than the
@@ -75,7 +78,10 @@ class Counter:
 
     def reset(self):
         """
+
+
         C.reset() -> None
+
 
         Resets self.current to 0.
         """
