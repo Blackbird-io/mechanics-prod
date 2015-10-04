@@ -289,10 +289,8 @@ class Interviewer(Controller):
             #explicitly.
             #
             fp = routine(self, model)
-        double_check = False
         if not fp:
-            double_check = True
-        if double_check:
+            #double-check before concluding without a focal point
             model.stage.clear_cache()
             fp = routine(self, model)
             #if protocol routine doesnt find a focal point, reset cache and
@@ -425,14 +423,15 @@ class Interviewer(Controller):
         Interviewer.wrap_interview(model) -> mqr tuple
 
 
-        Method packages model, the current active question, and the
-        END_INTERVIEW sentinel into an mqr message. Method then returns said
-        message. Instance.MR stores the message until reset.     
+        Method marks current stage complete on model, returns a (M,Q,END)
+        message.
         """
         stop = Globals.END_INTERVIEW
         m = model
         q = self.MR.activeQuestion
         r = stop
+        #
+        model.stage.guide.complete = True
         #
         self.MR.generateMessage(m, q, r)
         new_mqr = self.MR.messageOut
