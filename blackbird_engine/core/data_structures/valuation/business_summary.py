@@ -42,29 +42,28 @@ from ..modelling.book_mark import BookMark
 mandatory_summary_fields = ["credit_capacity"]
 
 #classes
-class BusinessSummary(dict, Stage):
+class BusinessSummary(Stage):
     """
 
-    Class is a daughter of dict, with prepopulated mandatory fields. 
+    Container for business summary information. 
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
-    n/a
+    data                  dictionary
     
     FUNCTIONS:
     __str__               mildly pretty print
     set_path()            put together a standard summary path
+    to_portal()           return a primitive dict of instance data
     ====================  ======================================================
     """
     def __init__(self):
-        dict.__init__(self)
         Stage.__init__(self, "business summary")
-        self = dict.fromkeys(self, mandatory_summary_fields)
-##        self.set_path()
+        self.data = dict.fromkeys(mandatory_summary_fields)
+        self.set_path()
         
-    
     def __str__(self, tab = None):
         result = ""
         name_field_width = 25
@@ -96,11 +95,17 @@ class BusinessSummary(dict, Stage):
         self.path.extend(steps)
 
     def to_portal(self):
-        result = dict.copy(self)
-        #pull out a primitive dictionary copy of instance contents; can add
-        #more complex logic later
+        """
+
+
+        BusinessSummary.to_portal() -> dict
+
+
+        Method returns a dictionary with instance data.
+        """
+        result = dict.copy(self.data)
         #
-        return self.copy()
+        return result
 
         #ideas for better content storage:
         #1. a ``.contents`` attr that points to a financials object, with lines
