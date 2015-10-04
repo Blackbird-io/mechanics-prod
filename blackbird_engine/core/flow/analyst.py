@@ -65,8 +65,8 @@ end_session = Globals.status_endSession
 class Analyst:
     """
 
-    Class of objects that manage combine all functions necessary to go from one message
-    to another.
+    Class of objects that manage combine all functions necessary to go from one
+    message to another.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -96,7 +96,7 @@ class Analyst:
         Analyst.check_stage(message, stage) -> message
     
 
-        For ***end_session messages only**, method checks if ``stage`` is
+        For **end_session messages only**, method checks if ``stage`` is
         complete. If it is, returns message as-is. Otherwise, sets model.stage
         to the argument, gets an interviewer to pick out a focal point on that
         stgage, and then returns the resulting message so that other routines
