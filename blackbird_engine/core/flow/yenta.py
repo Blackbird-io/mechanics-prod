@@ -207,7 +207,10 @@ class Yenta():
         else:
             result = True
         #
-        return (result, work)    
+        return (result, work)
+        #
+        #would be more useful if you run it through find_eligible, then include a trace argument
+        #there that spits out missed topic reqs
     
     def find_eligible(self, target, model, pool = None, combined = True):
         """
