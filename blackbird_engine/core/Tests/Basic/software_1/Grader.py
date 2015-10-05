@@ -33,7 +33,7 @@ import sys
 import traceback
 
 from .__init__ import name as test_name
-from Tests.tools import walk_dict
+from tests.tools import walk_dict
 
 
 

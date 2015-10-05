@@ -36,9 +36,9 @@ n/a
 #imports
 import BBGlobalVariables as Globals
 import Shell as Engine
-import SimplePortal as Portal
+import simple_portal as Portal
 
-from Scripts import retail_4_no_new_stores as seed
+from scripts import retail_4_no_new_stores as seed
 
 
 
