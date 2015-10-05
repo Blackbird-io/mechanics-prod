@@ -46,6 +46,8 @@ LocalCatalog          subclass of Platform.Catalog that issues copies of entries
 
 
 #imports
+import inspect
+
 import BBExceptions
 
 from data_structures.portal.full_question import FullQuestion
@@ -182,10 +184,18 @@ def make_question(content_module, catalog = local_catalog):
     """
     new_question = FullQuestion()
     new_question.tags.setName(content_module.name)
+    #
+    #id
     new_question.id.setNID(id.namespace_id)
     new_question.id.assignBBID(new_question.tags.name)
+    #
+    #tags
     new_question.tags.tag(*content_module.requiredTags, field = "req")
     new_question.tags.tag(*content_module.optionalTags, field = "opt")
+    #
+    #source
+    location = inspect.getfile(content_module)
+    new_question.source = location    
     #
     new_question.set_type(content_module.input_type)
     if content_module.input_sub_type:
@@ -228,8 +238,8 @@ def make_question(content_module, catalog = local_catalog):
         ##FQ will try to configure and attach an element according to spec.
         ##also need to change to_portal
     #
-    reverse_keys = [new_question.tags.name]
-    catalog.register(new_question, *reverse_keys)
+    reverse_lookup_keys = [new_question.tags.name, location]
+    catalog.register(new_question, *reverse_lookup_keys)
     #
     return new_question    
     

@@ -108,6 +108,7 @@ class FullQuestion:
     prompt                main question
     progress              float; completion indicator for interview, 0< p <=1
     short                 string; 2-3 question summary for tracker panel
+    source                relative path of conent module that described obj
     tags                  obj; instance of Platform.Tags, for naming & feedback
     topic_name            string; appears in user-facing browser outline
     transcribe            bool; whether portal should show question to lenders
@@ -156,6 +157,7 @@ class FullQuestion:
         self.prompt = None
         self._progress = 0
         self.short = None
+        self.source = None
         self.topic_name = None
         self.transcribe = False
         #

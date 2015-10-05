@@ -36,8 +36,9 @@ n/a
 
 
 
-
 #imports
+import inspect
+
 import BBExceptions
 
 from data_structures.system.catalog import Catalog
@@ -81,6 +82,11 @@ def make_formula(content_module, catalog = local_catalog):
     formula.tags.setName(content_module.name)
     formula.id.setNID(id.namespace_id)
     formula.id.assignBBID(formula.tags.name)
+    #
+    #source
+    location = inspect.getfile(content_module)
+    formula.source = location
+    #
     formula.func = content_module.func
     if not formula.func:
         c = "Content module %s does not define a valid formula."
@@ -88,8 +94,8 @@ def make_formula(content_module, catalog = local_catalog):
         raise BBExceptions.CatalogError(c)
     #
     formula.required_data = content_module.required_data
-    reverse_keys = [formula.tags.name, formula]
-    catalog.register(formula, *reverse_keys)
+    reverse_lookup_keys = [formula.tags.name, formula, location]
+    catalog.register(formula, *reverse_lookup_keys)
     return formula
     
 def populate():

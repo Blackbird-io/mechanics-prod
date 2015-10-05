@@ -50,6 +50,7 @@ class Formula:
     DATA:
     func                  placeholder for formula function from content module
     id                    instance of Platform.ID.ID class
+    source                relative path of conent module that described obj
     tags                  instance of Platform.Tags.Tags class
 
     FUNCTIONS:
@@ -59,6 +60,7 @@ class Formula:
     def __init__(self):
         self.func = None
         self.id = ID()
+        self.source = None
         self.tags = Tags()
 
 
