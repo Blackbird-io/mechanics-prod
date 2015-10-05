@@ -256,6 +256,7 @@ class Topic:
         #sets MR.messageIn to message
         self.MR.unpack()
         #unpacks MR.messageIn into individual components
+        model = self.MR.activeModel
         #
         self.set_record_containers()
         active_scenario = self.choose_scenario()
