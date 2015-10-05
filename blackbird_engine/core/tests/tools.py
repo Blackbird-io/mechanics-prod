@@ -18,6 +18,7 @@ DATA:
 n/a
 
 FUNCTIONS:
+print_rubric()        pretty print for standard test rubric
 walk_dict()           convenience function for recursive dict comparisons
 
 CLASSES:
@@ -35,6 +36,33 @@ n/a
 
 
 #globals
+#n/a
+
+#functions
+def print_rubric(r, width = 60):
+    """
+
+
+    print_rubric(r[, width = 60]) -> tuple
+
+
+    Function prints the Grader rubric nicely and returns a tuple of results.
+    """
+    print("RUBRIC:\n")
+    ks = list(r.keys())
+    ks.sort()
+    stepks = []
+    confks = []
+    for k in ks:
+        if k.endswith("confirmed"):
+            confks.append(k)
+        else:
+            stepks.append(k)
+    for k in ks:
+        dots = "." * (width-len(k))
+        print(k, dots, r[k])
+    return (stepks, confks)
+
 def walk_dict(std, new, tab = 4):
     """
 
