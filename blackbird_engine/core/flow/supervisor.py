@@ -131,8 +131,8 @@ def process(message):
         grant_hill = OneTimeStarter()
         message = grant_hill.process(message)
     #
-    alice = Analyst()
-    message = alice.process(message)
+    seth_klarman = Analyst()
+    message = seth_klarman.process(message)
     #
     return message
     
@@ -173,8 +173,8 @@ def update_valuation(model):
     model.stage = model.valuation
     #
     message = (model, None, None)
-    bella = Analyst()
-    message = bella.process(message, run_summary = False)
+    warren_buffet = Analyst()
+    message = warren_buffet.process(message, run_summary = False)
     #
     updated_model = message[0]
     return updated_model
