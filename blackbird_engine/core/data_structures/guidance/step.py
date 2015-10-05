@@ -5,6 +5,7 @@
 
 
 #imports
+import parameters.guidance
 import tools.for_printing as printing_tools
 
 from data_structures.guidance.guide import Guide
@@ -19,7 +20,9 @@ from data_structures.system.tags import Tags
 
 #classes
 class Step(Tags, PrintAsLine):
-    def __init__(self, name = None, priority = None, quality = None):
+    def __init__(self, name = None,
+                 priority = parameters.guidance.PRIORITY_DEFAULT,
+                 quality = parameters.guidance.QUALITY_DEFAULT):
         Tags.__init__(self)
         PrintAsLine.__init__(self)
         self.guide = Guide(priority, quality)
