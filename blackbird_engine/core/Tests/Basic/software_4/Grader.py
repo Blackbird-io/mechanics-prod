@@ -32,8 +32,9 @@ n/a
 import sys
 import traceback
 
+from tests.tools import walk_dict
+
 from .__init__ import name as test_name
-from Tests.tools import walk_dict
 
 
 

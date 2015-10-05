@@ -24,6 +24,8 @@ do()                  runs through interview, populates output
 CLASSES:
 n/a
 ====================  ==========================================================
+
+#adding an extra comment line to make sure hg picks up changes
 """
 
 
@@ -32,9 +34,9 @@ n/a
 #imports
 import BBGlobalVariables as Globals
 import Shell as Engine
-import SimplePortal as Portal
+import simple_portal as Portal
 
-from Scripts import Retail2_Raw
+from scripts import Retail2_Raw
 
 
 

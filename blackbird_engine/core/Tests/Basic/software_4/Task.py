@@ -36,9 +36,9 @@ n/a
 #imports
 import BBGlobalVariables as Globals
 import Shell as Engine
-import SimplePortal as Portal
+import simple_portal as Portal
 
-from Scripts import software_4_by_seat_no_devs as seed
+from scripts import software_4_by_seat_no_devs as seed
 
 
 
