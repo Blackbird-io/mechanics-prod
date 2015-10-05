@@ -51,8 +51,10 @@ from .yenta import Yenta
 
 #globals
 check = Globals.checkMessageStatus
-interviewer_a = Interviewer()
-interviewer_b = Interviewer()
+#
+charlie_rose = Interviewer()
+larry_king = Interviewer()
+#
 summary_t_name = "basic model summary, annualized current with capex"
 yenta = Yenta()
 #
@@ -116,7 +118,7 @@ class Analyst:
                 model = message[0]
                 model.stage = stage
                 message = (model, None, None)
-                message = interviewer_b.process(message)
+                message = larry_king.process(message)
                 #make sure message comes out with a focal point
         #
         return message
@@ -208,7 +210,7 @@ class Analyst:
 ##    def choose_no_loop(self, message, *pargs, **kargs):
         status = check(message)
         if status == topic_needed:
-            message = interviewer_a.process(message)
+            message = charlie_rose.process(message)
             status = check(message)
         #
         if status == end_session:
