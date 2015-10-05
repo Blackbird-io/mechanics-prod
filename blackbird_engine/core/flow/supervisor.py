@@ -45,8 +45,8 @@ import BBExceptions
 
 from data_structures.system.messenger import Messenger
 
-from . import starter
 from .analyst import Analyst
+from .starter import OneTimeStarter
 
 
 
@@ -123,14 +123,13 @@ def process(message):
     #returns messages with user-facing questions and a final (M,_,END) with the
     #completed model.
     #
-    MR.clearMessageIn()
-    MR.clearMQR()
-    MR.receive(message)
+    MR.prep(message)
     #only purpose of MR here is to allow an admin to look inside the engine at
     #run time and see what went in/came out.
     #
     if not check_started(message):
-        message = starter.process(message)
+        grant_hill = OneTimeStarter()
+        message = grant_hill.process(message)
     #
     alice = Analyst()
     message = alice.process(message)

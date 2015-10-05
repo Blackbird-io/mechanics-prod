@@ -254,7 +254,7 @@ class Topic:
         self.MR.clearMQR()
         self.MR.receive(message_1)
         #sets MR.messageIn to message
-        self.MR.unpackMessage()
+        self.MR.unpack()
         #unpacks MR.messageIn into individual components
         #
         self.set_record_containers()

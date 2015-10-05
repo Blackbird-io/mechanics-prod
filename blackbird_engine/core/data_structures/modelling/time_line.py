@@ -142,7 +142,9 @@ class TimeLine(dict):
         period = self.configure_period(period)
         self[period.end] = period
 
-    def build(self, ref_date = None, fwd = 36, back = 36):
+    def build(self, ref_date = None,
+              fwd = Globals.default_periods_fwd,
+              back = Globals.default_periods_back):
         """
 
 
