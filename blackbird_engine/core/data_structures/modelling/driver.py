@@ -35,7 +35,7 @@ import BBGlobalVariables as Globals
 
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
-from Managers import FormulaManager
+from content import formula_manager as FormulaManager
 #import FormulaManager; will connect the module to the Driver class at the
 #bottom (after class definitions). Driver class will then be able to access the
 #formula catalog

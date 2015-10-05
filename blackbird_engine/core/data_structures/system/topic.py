@@ -34,7 +34,7 @@ import uuid
 import BBExceptions
 import BBGlobalVariables as Globals
 
-from Managers import ColorManager
+from content import color_manager as ColorManager
 
 from .bbid import ID
 from .messenger import Messenger
