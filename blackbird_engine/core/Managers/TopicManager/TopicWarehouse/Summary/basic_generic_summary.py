@@ -65,7 +65,7 @@ PrivateKnowledge = None
 #standard topic prep
 user_outline_label = "Model summary."
 requiredTags = []
-optionalTags = []
+optionalTags = ["annual financials"]
 #
 applied_drivers = dict()
 formula_names = []
@@ -94,10 +94,9 @@ work_plan["model summary"] = 1
     #scenarios that respond to a user stop - topic.wrap_to_stop()
 
 def scenario_1(topic):
-    M = topic.MR.activeModel
-    top_bu = M.currentPeriod.content
-    top_fins = top_bu.financials
-    summary = top_bu.summary
+    model = topic.MR.activeModel
+    company = model.time_line.current_period.content
+    top_fins = company.financials
     #
     names_to_add = ["revenue",
                     "cost",
@@ -122,18 +121,17 @@ def scenario_1(topic):
             line = top_fins[spot]
             #annualize line values and put them into summary; use original names
             #here to avoid system prefix in output
-            summary[name] = 12 * (line.value or 0)
+            model.summary.data[name] = 12 * (line.value or 0)
         except ValueError:
             #line is missing completely
             continue
     #
     #manually add credit capacity
-    landscape_summary = M.analytics.credit.combined.get_summary()
+    landscape_summary = model.valuation.credit.combined.get_summary()
     print(landscape_summary)
     cc_raw = landscape_summary["size"]["hi"]
     cc_adj = cc_raw * (1 - Globals.cc_haircut)
-    summary["credit_capacity"] = cc_adj
-    M.summary = summary
+    model.summary.data["credit_capacity"] = cc_adj
     #
     #finish work, wrap topic()
     topic.wrap_topic()
