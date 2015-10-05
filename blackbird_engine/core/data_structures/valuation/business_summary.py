@@ -63,20 +63,6 @@ class BusinessSummary(Stage):
         Stage.__init__(self, "business summary")
         self.data = dict.fromkeys(mandatory_summary_fields)
         self.set_path()
-        
-    def __str__(self, tab = None):
-        result = ""
-        name_field_width = 25
-        dots = 8
-        attrs_to_print = sorted(self.keys())
-        for attr_name in attrs_to_print:
-            attr_val = self[attr_name]
-            #may need to add rounding here
-            line = "\t" + str(attr_name) + ":"
-            line += ((name_field_width - len(attr_name)) + dots) * "."
-            line += str(attr_val) + "\n"
-            result = result + line
-        return result
 
     def set_path(self):
         """
