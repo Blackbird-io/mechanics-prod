@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Diagnostics
-#Module: Tester
+#Module: tester
 """
 
 Module provides testing tools for Blackbird Engine.
@@ -239,6 +239,8 @@ def run_test_do(build_path,
         if not test_name:
             test_name = test.testName
             #support old and new test module formats
+        test_name = test_name[:20]
+        #trunkate long test names for storage
         #
         logFilePath = sFolderPath + "\\" + test_name + "_do"+".txt"
         logFilePath = os.path.normpath(logFilePath)
@@ -320,6 +322,8 @@ def run_test_check(build_path,
         test_name = getattr(test, "name", None)
         if not test_name:
             test_name = test.testName
+        test_name = test_name[:20]
+        #trunkate long test names for storage
         #
         logFilePath = sFolderPath + "\\" + test_name + "_check"+".txt"
         logFilePath = os.path.normpath(logFilePath)
