@@ -35,6 +35,8 @@ LocalCatalog          subclass of Catalog that cleans questions on every call
 
 
 #imports
+import inspect
+
 import BBExceptions
 import BBGlobalVariables as Globals
 
@@ -298,6 +300,10 @@ def make_topic(content_module, catalog = local_catalog):
     new_topic.id.setNID(id.namespace_id)
     new_topic.id.assignBBID(new_topic.tags.name)
     #
+    #source (uses relative path for cwd)
+    location = inspect.getfile(content_module)
+    new_topic.source = location
+    #
     #load moving pieces (logic for run-time)
     load_formulas(new_topic, content_module)
     #always load formulas first; the topic's drivers expect to see objects
@@ -311,8 +317,8 @@ def make_topic(content_module, catalog = local_catalog):
         new_topic = content_module.prepare(new_topic)
     #
     #wrap
-    reverse_keys = [new_topic.tags.name,content_module]
-    catalog.register(new_topic,*reverse_keys)
+    reverse_lookup_keys = [new_topic.tags.name, content_module, location]
+    catalog.register(new_topic, *reverse_lookup_keys)
     return new_topic
 
 def populate():

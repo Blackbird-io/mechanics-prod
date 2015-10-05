@@ -79,7 +79,7 @@ class Catalog:
         result = self.by_id[bbid]
         return result
 
-    def register(self,obj,*reverse_keys, overwrite = False):
+    def register(self, obj, *reverse_keys, overwrite = False):
         """
 
 

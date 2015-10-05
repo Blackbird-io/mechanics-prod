@@ -95,6 +95,7 @@ class Topic:
     record_strings        list of string attribute paths w respect to M
     record_on_exit        bool, whether record work should run on sign off
     scenarios             dictionary of scenarios used by topic, by q bbid
+    source                relative path of conent module that described obj
     tags                  instance of Tags class
     work_plan             dict; keys are line names, values are improvements in
                           quality
@@ -133,6 +134,7 @@ class Topic:
         self.record_strings = ["M.interview.path"]
         self.record_on_exit = True
         self.scenarios = None
+        self.source = None
         self.work_plan = {}
 
     def add_work_item(self, line_name, contribution):
