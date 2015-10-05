@@ -67,7 +67,7 @@ class InterviewTracker(Stage):
     ==========================  ================================================
     """
     def __init__(self):
-        Stage.__init__(self)
+        Stage.__init__(self, "interview")
         self.completion_rule = quality_rule
         self.focal_point = intro_line.copy()
         self.progress = 0

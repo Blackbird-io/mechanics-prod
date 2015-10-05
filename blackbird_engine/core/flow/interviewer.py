@@ -435,6 +435,7 @@ class Interviewer:
         r = stop
         #
         model.stage.guide.complete = True
+        print(model.stage)
         #
         self.MR.generateMessage(m, q, r)
         new_mqr = self.MR.messageOut
