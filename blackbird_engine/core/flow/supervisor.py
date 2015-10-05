@@ -46,7 +46,7 @@ import BBExceptions
 from data_structures.system.messenger import Messenger
 
 from .analyst import Analyst
-from .starter import OneTimeStarter
+from .starter import Starter
 
 
 
@@ -128,7 +128,7 @@ def process(message):
     #run time and see what went in/came out.
     #
     if not check_started(message):
-        grant_hill = OneTimeStarter()
+        grant_hill = Starter()
         message = grant_hill.process(message)
     #
     seth_klarman = Analyst()
