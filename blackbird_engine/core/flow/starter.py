@@ -41,7 +41,7 @@ from data_structures.system.messenger import Messenger
 #n/a
     
 #classes
-class OneTimeStarter:
+class Starter:
     """
 
     Object prepares a (M, None, None) message at the beginning of an interview
