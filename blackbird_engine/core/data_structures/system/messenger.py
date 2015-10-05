@@ -82,6 +82,11 @@ class Messenger:
         self.receivedMessages = []
         self.sentMessages = []
 
+    def clear(self):
+        self.clearMessageIn()
+        self.clearMessageOut()
+        self.clearMQR()
+
     def clearMessageIn(self):
         """
 
@@ -132,51 +137,53 @@ class Messenger:
         """
         self.messageIn = message
 
-    def send(self, message = None):
+    def prep(self, message):
+        self.clear()
+        self.receive(message)
+        self.unpack()
+
+##    def send(self, message = None):
+##        """
+##
+##        MR.sent([message]) -> None
+##
+##        Method delivers message to instance's activeReceiver via
+##        activeReceiver's ``receive`` method. MR.send() then appends a tuple
+##        of the message and the current UMT time to the instance's
+##        ``sentMessages``. Finally, method runs clearMessageOut() on instance.
+##
+##        Method uses self.messageOut if ``message`` as default message.        
+##        """
+##        if not message:
+##            message = self.messageOut
+##        self.activeReceiver.receive(message)
+##        self.sentMessages.append((message,time.time))
+##        self.clearMessageOut()
+##
+##    def setReceiver(self,rec):
+##        """
+##
+##        MR.setReceiver(rec) -> None
+##
+##        Method checks whether rec has a ``receive`` attribute; if so, sets
+##        instance's ``activeReceiver`` to rec. Raises AttributeError otherwise.
+##        """
+##        if getattr(rec,"receive",False):
+##            self.activeReceiver = rec
+##        else:
+##            raise AttributeError("Receiver object missing receive() method")
+
+    def unpack(self):
         """
 
-        MR.sent([message]) -> None
 
-        Method delivers message to instance's activeReceiver via
-        activeReceiver's ``receive`` method. MR.send() then appends a tuple
-        of the message and the current UMT time to the instance's
-        ``sentMessages``. Finally, method runs clearMessageOut() on instance.
+        MR.unpack() -> None
 
-        Method uses self.messageOut if ``message`` as default message.        
-        """
-        if not message:
-            message = self.messageOut
-        self.activeReceiver.receive(message)
-        self.sentMessages.append((message,time.time))
-        self.clearMessageOut()
-
-    def setReceiver(self,rec):
-        """
-
-        MR.setReceiver(rec) -> None
-
-        Method checks whether rec has a ``receive`` attribute; if so, sets
-        instance's ``activeReceiver`` to rec. Raises AttributeError otherwise.
-        """
-        if getattr(rec,"receive",False):
-            self.activeReceiver = rec
-        else:
-            raise AttributeError("Receiver object missing receive() method")
-
-    def unpackMessage(self, msg = None):
-        """
-
-        MR.unpackMessage([msg]) -> None
         
         Method sets instance's activeModel, activeQuestion, and activeResponse
-        attributes to the first, second, and third element in msg, respectively.
-
-        If ``msg`` not specified, method unpacks self.messageIn.
-        
+        attributes to the first, second, and third element in msg, respectively.        
         """
-        #by default, prcoess the current live message
-        if not msg:
-            msg = self.messageIn
+        msg = self.messageIn
         self.activeModel = msg[0]
         self.activeQuestion = msg[1]
         self.activeResponse = msg[2]

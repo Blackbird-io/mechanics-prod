@@ -96,7 +96,6 @@ class Interviewer:
 
     FUNCTIONS:
     focus()               pick highest priority focal point
-    prep()                clear state, unpack message
     prioritize_multi()    return dict of items grouped into levels by priority
     prioritize_single()   reutnr dict of items in one, highest-priority level
     process()             in MQR message, sets model focal point
@@ -179,22 +178,6 @@ class Interviewer:
                     continue
         #
         return fp
-
-    def prep(self, new_message):
-        """
-
-
-        Interviewer.prep(new_message) -> None
-
-
-        Method preps cleans out instance state and unpacks the new message for
-        storage in instance.MR.
-        """
-        self.MR.clearMessageIn()
-        self.MR.clearMessageOut()
-        self.MR.clearMQR()
-        self.MR.receive(new_message)
-        self.MR.unpackMessage()
         
     def prioritize_multi(self, container):
         """
@@ -277,7 +260,7 @@ class Interviewer:
         """
         #
         fp = None
-        self.prep(message)
+        self.MR.prep(message)
         #
         model = self.MR.activeModel
         #
