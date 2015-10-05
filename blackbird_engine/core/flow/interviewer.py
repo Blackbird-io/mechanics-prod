@@ -8,13 +8,14 @@
 
 """
 
-Module defines the InterviewController class. IC objects process mqr messages to
-identify the item where Blackbird should focus its analysis at a givne point in
-time (the interview focal point). To do so, IC objects organize containers by
-priority. IC objects then select items within priority levels based on whether
-or not those items need additional work. IC objects can use several different
-criteria (``protocols``) for organizing and selecting the focal point. See the
-class docstring for more info on the difference between protocols. 
+Module defines the Interviewer class. Interviewer objects select a focal point
+for further processing. Yenta and other objects then look to that focal point
+as a criterion for selecting the next operation.
+
+Interviewer selects a focal point from the path on the current model stage.
+Interviewer can use one of several algorithms (``protocols``) to make the
+selection. The protocols optimize for different qualities: speed, depth, etc.
+See the class docstring for more info.
 
 ====================  ==========================================================
 Attribute             Description
@@ -27,7 +28,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-InterviewController   selects focal point for Blackbird analysis
+Interviewer           selects focal point for Blackbird analysis
 ====================  ==========================================================
 """
 
@@ -39,10 +40,11 @@ import BBExceptions
 import BBGlobalVariables as Globals
 import parameters.guidance
 
+from data_structures.system.messenger import Messenger
+
 from . import completion_rules
 from . import selection_rules
 
-from .controller import GenericController as Controller
 from .level import Level
 
 
@@ -70,7 +72,7 @@ from .level import Level
 
 
 #classes
-class Interviewer(Controller):
+class Interviewer:
     """
 
     Interviewer objects steer Blackbird interviews by selecting focal points
@@ -90,16 +92,18 @@ class Interviewer(Controller):
     _default_protocol     int; local state for protocol selection; 1 is default
     _protocol_routines    dict; CLASS attr, protocol : routine
     default_protocol      int; P, get _protocol, set iff in routine keys
+    MR                    instance of Messenger class
 
     FUNCTIONS:
     focus()               pick highest priority focal point
+    prep()                clear state, unpack message
     prioritize_multi()    return dict of items grouped into levels by priority
     prioritize_single()   reutnr dict of items in one, highest-priority level
     process()             in MQR message, sets model focal point
-    r_basic()
-    r_prioritized()
-    r_attentive_simple()
-    r_attentive_budget()
+    r_basic()             complete every item in order 
+    r_prioritized()       complete highest priority items first
+    r_attentive_simple()  complete highest priority items until out of attn
+    r_attentive_budget()  complete highest priority items with attn budget
     set_progress()        update progress to relative position of focal point
     wrap_interview()      return mqr msg with active question, end sentinel
     wrap_point()          return mqr msg with active question, active response
@@ -110,7 +114,7 @@ class Interviewer(Controller):
     """
     #class vars    
     def __init__(self):
-        Controller.__init__(self)
+        self.MR = Messenger()
         self._default_protocol = 1
 
     @property
@@ -176,6 +180,22 @@ class Interviewer(Controller):
         #
         return fp
 
+    def prep(self, new_message):
+        """
+
+
+        Interviewer.prep(new_message) -> None
+
+
+        Method preps cleans out instance state and unpacks the new message for
+        storage in instance.MR.
+        """
+        self.MR.clearMessageIn()
+        self.MR.clearMessageOut()
+        self.MR.clearMQR()
+        self.MR.receive(new_message)
+        self.MR.unpackMessage()
+        
     def prioritize_multi(self, container):
         """
 
@@ -257,7 +277,7 @@ class Interviewer(Controller):
         """
         #
         fp = None
-        Controller.process(self, message)
+        self.prep(message)
         #
         model = self.MR.activeModel
         #
