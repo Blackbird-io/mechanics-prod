@@ -46,7 +46,7 @@ from data_structures.system.bbid import ID
 from data_structures.modelling.formula import Formula
 from tools.for_managers import walk_package
 
-from . import FormulaWarehouse as Warehouse
+from . import formula_warehouse as Warehouse
 
 
 
