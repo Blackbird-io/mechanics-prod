@@ -66,7 +66,7 @@ class AttentionTracker(Counter):
     ====================  ======================================================
     """
     def __init__(self):
-        Counter.__init__(self, cutOff = parameters.guidance.ATTENTION_MAX)
+        Counter.__init__(self, cut_off = parameters.guidance.ATTENTION_MAX)
         self.allowance = None
         self.asked = 0
         

@@ -64,13 +64,13 @@ class Guide:
     def __init__(self, priority = None, quality = None):
         self.attention = AttentionTracker()
         self.complete = False
-        self.priority = Counter(cutOff = parameters.guidance.PRIORITY_MAX)
+        self.priority = Counter(cut_off = parameters.guidance.PRIORITY_MAX)
         self.quality = QualityTracker()
         self.selection = SelectionTracker()
         if priority:
             self.priority.current = priority
         if quality:
-            self.quality.setStandards(quality)
+            self.quality.set_standard(quality)
 
     def reset(self):
         """

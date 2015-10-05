@@ -251,7 +251,7 @@ def apply_data(topic, datapoint):
         pass
     else:
         subscriber_count = LineItem(sbr_count_label)
-        subscriber_count.guide.quality.setStandards(1,5)
+        subscriber_count.guide.quality.set_standard(1) #max used to be 5
         subscriber_count.guide.priority.increment(3)
         path.add_line_to(subscriber_count, "structure")
     #

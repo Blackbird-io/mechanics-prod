@@ -172,12 +172,12 @@ def apply_data(topic, datapoint):
     price_structure = LineItem("pricing element")
     price_structure.guide.priority.reset()
     price_structure.guide.priority.increment(3)
-    price_structure.guide.quality.setStandards(1,5)
+    price_structure.guide.quality.set_standard(1) #max used to be 5
     #
     sbr_count = LineItem("subscriber count")
     sbr_count.guide.priority.reset()
     sbr_count.guide.priority.increment(3)
-    sbr_count.guide.quality.setStandards(1,5)
+    sbr_count.guide.quality.set_standard(1) #max used to be 5
 
     #2 apply
     if saas:

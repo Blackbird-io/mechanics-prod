@@ -199,7 +199,7 @@ def apply_data(topic, datapoint):
     #
     path = model.interview.path
     subscriber_life = LineItem(name = "subscriber life")
-    subscriber_life.guide.quality.setStandards(2,5)
+    subscriber_life.guide.quality.set_standard(2) #max used to be 5
     path.add_line_to(subscriber_life, "structure")
     model.interview.clear_cache()
     #

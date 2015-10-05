@@ -39,7 +39,7 @@ from .stage import Stage
 intro_line = LineItem("introduction")
 intro_line.tag("start",
                "configuration")
-intro_line.guide.quality.setStandards(2,5)
+intro_line.guide.quality.set_standard(2)
 quality_rule = completion_rules.check_quality_only
 
 #classes

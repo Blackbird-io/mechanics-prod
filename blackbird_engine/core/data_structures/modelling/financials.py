@@ -138,7 +138,7 @@ class Financials(list, Tags, Equalities):
         ovw = LineItem(name = "Overview")
         ovw.tag(builtInTag)
         ovw.guide.priority.increment(1)
-        ovw.guide.quality.setStandards(2,5)
+        ovw.guide.quality.set_standard(2)
         sIntro = BookMark("start Introduction","Introduction")
         eIntro = BookMark("end Introduction","Introduction")
         sIS = BookMark("start Income Statement","IS")

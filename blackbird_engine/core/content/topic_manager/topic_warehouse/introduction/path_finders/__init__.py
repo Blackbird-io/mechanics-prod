@@ -31,7 +31,7 @@ n/a
 #imports
 from . import pf_generic
 from . import pf_software
-from . import SharedKnowledge
+from . import shared_knowledge
 #Warehouse packages have to import their contents. Catalog managers walk the
 #directory by looking at the top-level names of the package object. Without
 #imports through __init__, the walker function will not see any of the

@@ -195,7 +195,7 @@ def apply_data(topic, datapoint):
         seat_count = LineItem("seat count")
         seat_count.guide.priority.reset()
         seat_count.guide.priority.increment(3)
-        seat_count.guide.quality.setStandards(1,5)
+        seat_count.guide.quality.set_standard(1) #max used to be 5
 
     #2 apply
     if seat_pricing:
