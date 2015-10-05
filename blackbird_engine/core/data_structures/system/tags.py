@@ -35,7 +35,7 @@ Tags                  mix-in class that provides tagging, naming, and belonging
 #imports
 import copy
 
-from Managers.tag_manager import loaded_tagManager as tag_manager
+from content.tag_manager import loaded_tagManager as tag_manager
 from tools.parsing import deCase
 
 

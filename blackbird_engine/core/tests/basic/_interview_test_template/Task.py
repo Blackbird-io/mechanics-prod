@@ -45,9 +45,9 @@ n/a
 #imports
 import BBGlobalVariables as Globals
 import Shell as Engine
-import SimplePortal as Portal
+import simple_portal as Portal
 
-from Scripts import template_module as seed #<<<<<<<<<REPLACE WITH ACTUAL TO USE
+from scripts import template_module as seed #<<<<<<<<<REPLACE WITH ACTUAL TO USE
 #<------------------------------------------------------------------------------
 
 

@@ -62,12 +62,12 @@ if sub_folder not in sys.path:
 import simple_portal as Portal
 import BBGlobalVariables as Globals
 
-from flow import supervisor
+from content import question_manager as QuestionManager
 from data_structures.modelling.model import Model as EngineModel
 from data_structures.portal.portal_model import PortalModel
 from data_structures.system.messenger import Messenger
 from data_structures.valuation.cr_reference import CR_Reference
-from Managers import QuestionManager
+from flow import supervisor
 
 
 
