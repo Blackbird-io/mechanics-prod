@@ -8,32 +8,20 @@
 
 """
 
-[This module gets a message and processes it until it gets a new message suitable
-for return to upper level components. Only two types of messages are suitable
-for upward return:
-    1) MQ_: those with an open question for the user
-    2) xxEND: those signaling that the interview is complete
-
-The process() function provides the primary interface for module use.
-
-On a process(message) call, Analyzer checks if additional user input is
-necessary to build out the model (M in MQR). If user input is necessary,
-Analyzer generates a message suitable for such input. If the model is complete,
-Analyzer generates a message carrying the completed model and the END_INTERVIEW
-sentinel in R position.
-
-SessionManager provides Analyzer with its connector for resource access. The
-connector primarily comes into play when Analyzer locates a new topic and
-prepares it for use. ]
+Module defines Analyt class. Analysts receive messages and work on a response
+until they come up with something that's suitable for delivery to Portal
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
 
 DATA:
-
+n/a
 
 FUNCTIONS:
+n/a
 
+CLASSES:
+Analyst               worker object, can run independently
 ====================  ==========================================================
 """
 
@@ -67,8 +55,8 @@ end_session = Globals.status_endSession
 class Analyst:
     """
 
-    Class of objects that manage combine all functions necessary to go from one
-    message to another.
+    An Analyst uses other objects (topics and flow modules) to improve a model
+    until it is either complete or requires external input.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
