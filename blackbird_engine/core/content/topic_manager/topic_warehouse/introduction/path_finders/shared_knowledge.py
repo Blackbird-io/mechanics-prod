@@ -63,7 +63,7 @@ structure = LineItem("Structure")
 #
 structure.tag("Deterministic", field = "req")
 structure.guide.priority.increment(3)
-structure.guide.quality.setStandards(2,5)
+structure.guide.quality.set_standard(2)
 structure.setPartOf(standard_open)
 #
 standard_open.append(structure)
@@ -93,7 +93,7 @@ income_lines = [revenue,
 for L in income_lines:
     L.setPartOf(standard_core)
     L.guide.priority.increment(3)
-    L.guide.quality.setStandards(1,5)
+    L.guide.quality.set_standard(1)
 #
 standard_core.extend(income_lines)
 
@@ -115,6 +115,6 @@ closing_lines = [growth,
 for line in closing_lines:
     line.setPartOf(standard_close)
     line.guide.priority.increment(2)
-    line.guide.quality.setStandards(1,5)
+    line.guide.quality.set_standard(1)
 #
 standard_close.extend(closing_lines)

@@ -39,39 +39,38 @@ from .counter import Counter
 #classes
 class QualityTracker(Counter):
     """
+
     Specialized Counter for tracking analysis QUALITY for a particular object.
     Relies on Counter attributes to track primary dimension. That is,
     ``self.current`` shows current quality.
 
-    NOTE: Use global variables to scale quality standards.
     A unit of "quality" is supposed to be roughly proportional to a unit of
-    "attention."
-    
+    "attention."    
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
-    minStandard           quality where item is minimally informative
-    maxStandard           quality where item is fully fleshed out and should be
-                          left alone in favor of others
 
-    setStandards()        sets minStandard and maxStandard
+    DATA:
+    standard              quality score where item is considered ``done``
+
+    FUNCTIONS:
+    set_standard()        sets standard
     ====================  ======================================================
     """
-    def __init__(self,
-                 p_min = parameters.guidance.QUALITY_DEFAULT_MIN_STANDARD,
-                 p_max = parameters.guidance.QUALITY_DEFAULT_MAX_STANDARD):
+    def __init__(self, standard = parameters.guidance.QUALITY_DEFAULT):
         #
-        Counter.__init__(self,
-                         cutOff = parameters.guidance.QUALITY_CUT_OFF)
-        self.setStandards(p_min, p_max)
+        Counter.__init__(self, cut_off = parameters.guidance.QUALITY_MAX)
+        self.set_standard(standard)
 
-    def setStandards(self,minStandard=None,maxStandard=None):
+    def set_standard(self, standard):
         """
 
-        QTr.setStandards([minStandard],[maxStandard]) -> None
+
+        QTr.set_standard(standard) -> None
+
 
         Method sets minStandard, maxStandard for the instance to user-specified
         values or None. 
         """
-        self.standard = minStandard
+        self.standard = standard
 

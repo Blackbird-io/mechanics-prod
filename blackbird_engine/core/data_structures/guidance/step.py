@@ -1,5 +1,29 @@
-#module provides shared core for valuation objects. valuation objects generally
-#are data containers with a fixed structure. 
+#PROPRIETARY AND CONFIDENTIAL
+#Property of Blackbird Logical Applications, LLC
+#Copyright Blackbird Logical Applications, LLC 2014
+#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+
+#Blackbird Environment
+#Module: data_structures.guidance.step
+"""
+
+Module provides a representation of a discrete logical step that's compatible
+with selection algorithms while remaining lightweight and flexible. You can use
+the class by itself or as a mix-in to create stages and paths (ordered
+containers of steps). 
+====================  ==========================================================
+Object                Description
+====================  ==========================================================
+DATA:
+n/a
+
+FUNCTIONS:
+n/a
+
+CLASSES:
+Step                  single logical step, compatible with selection algos
+====================  ==========================================================
+"""
 
 
 
@@ -20,11 +44,28 @@ from data_structures.system.tags import Tags
 
 #classes
 class Step(Tags, PrintAsLine):
+    """
+
+    Class for tracking logical steps. Has the tags and guide interface of
+    LineItem but doesn't commit to a numeric value. Pretty lightweight and
+    flexible. 
+    ====================  ======================================================
+    Attribute             Description
+    ====================  ======================================================
+
+    DATA:
+    guide                 instance of Guide
+
+    FUNCTIONS:
+    pre_format()          sets instance.formatted to a line with a checkbox
+    ====================  ======================================================
+    """
     def __init__(self, name = None,
                  priority = parameters.guidance.PRIORITY_DEFAULT,
                  quality = parameters.guidance.QUALITY_DEFAULT):
         Tags.__init__(self)
         PrintAsLine.__init__(self)
+        #
         self.guide = Guide(priority, quality)
         self.setName(name)
         

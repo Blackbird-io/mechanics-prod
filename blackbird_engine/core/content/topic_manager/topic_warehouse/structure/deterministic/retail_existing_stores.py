@@ -505,7 +505,7 @@ def scenario_6(topic):
         #this tag functions like a homing beacon.
         i_structure = M.interview.path.indexByName("structure")
         step_structure = M.interview.path[i_structure]
-        step_structure.guide.quality.setStandards(3, 5)
+        step_structure.guide.quality.set_standard(3) #max used to be 5
         #
         step_structure.guide.selection.eligible.clear()
         #since we modified the criteria on the focal point, now have to clear

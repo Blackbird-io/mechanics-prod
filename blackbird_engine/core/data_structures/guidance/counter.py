@@ -37,22 +37,22 @@ Counter               simple gauge objects
 #classes
 class Counter:
     """
+
     Simple gauge class. Allows for two-way incrementation (up or down),
     depending on step specified in self.increment().
-
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
     current               tracks current value
-    cutOff                max value (optional)
+    cut_off               max value (optional)
 
     increment()           increases current value by step, up to cutOff
     reset()               sets current value to 0
     ====================  ======================================================
     """
-    def __init__(self,start = 0, cutOff = None):
+    def __init__(self, start = 0, cut_off = None):
         self.current = start
-        self.cutOff = cutOff
+        self.cut_off = cut_off
 
     def increment(self, step = 1):
         """
@@ -67,14 +67,14 @@ class Counter:
         
         By default ``step`` equals 1.
         """
-        newVal = self.current + step
-        if self.cutOff:
-            if newVal < self.cutOff:
-                self.current = newVal
+        new_val = self.current + step
+        if self.cut_off:
+            if new_val < self.cut_off:
+                self.current = new_val
             else:
-                self.current = cutOff
+                self.current = cut_off
         else:
-            self.current = newVal
+            self.current = new_val
 
     def reset(self):
         """

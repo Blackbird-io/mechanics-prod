@@ -60,7 +60,7 @@ import BBGlobalVariables as Globals
 from data_structures.modelling.financials import Financials
 from data_structures.modelling.line_item import LineItem
 
-from . import SharedKnowledge as SK
+from . import shared_knowledge as SK
 
 
 
@@ -112,7 +112,7 @@ standard_path.extend(SK.standard_close.copy())
 #0. increase the quality requirements for structure
 st_i = standard_path.indexByName("structure")
 structure = standard_path[st_i]
-structure.guide.quality.setStandards(3,5)
+structure.guide.quality.set_standard(3) #max used to be 5
 #
 #1. reduce the significance of product cost
 cost_i = standard_path.indexByName("cost")
@@ -195,14 +195,14 @@ opex_details = [head_count,
 for line in opex_details:
     line.guide.priority.reset()
     line.guide.priority.increment(3)
-    line.guide.quality.setStandards(3,5)
+    line.guide.quality.set_standard(3) #max used to be 5
     standard_path.add_line_to(line.copy(), "operating expense")
 
 #3. increase quality requirements for sg&a
 #(can also place it under opex here)
 sga_i = standard_path.indexByName("sg&a")
 sga = standard_path[sga_i]
-sga.guide.quality.setStandards(4,6)
+sga.guide.quality.set_standard(4) #max used to be 6
 sga.setPartOf(opex)
 
 #4. add an AEBITDA line
@@ -236,7 +236,7 @@ def apply_data(topic):
     model.unTag("ready for path")
     #
     intro_line = model.interview.focal_point
-    intro_line.guide.quality.setStandards(4,6)
+    intro_line.guide.quality.set_standard(4) #max used to be 6
     intro_line.guide.priority.reset()
     intro_line.guide.priority.increment(3)
     #
