@@ -4,12 +4,12 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: ColorWarehouse.YYYY_2015.__init__
+#Module: ColorWarehouse.__init__
 """
 
-Package that contains market color content modules for the 2015 calendar year.
-We use ugly folder names to make sure we can view each package as an attribute.
-Python requires attribute names to start with a non-numeric character.
+Package that contains market color content modules. We use ugly folder names to
+make sure we can view each package as an attribute. Python requires attribute
+names to start with a non-numeric character.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -29,6 +29,5 @@ n/a
 
 
 #imports
-from . import MM_06
-from . import MM_08
+from . import yyyy_2015_WOAH
 #relative imports only, everything else should be blank

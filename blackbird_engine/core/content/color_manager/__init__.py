@@ -59,7 +59,7 @@ from data_structures.system.bbid import ID
 from tools.for_calendar import find_most_recent
 from tools.for_managers import walk_package
 
-from . import ColorWarehouse as Warehouse
+from . import color_warehouse as Warehouse
 
 
 
