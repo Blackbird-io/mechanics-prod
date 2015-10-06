@@ -157,6 +157,7 @@ def continuous(first_message = None, cycles = 200, portal_format = False):
     #now start looping
     n = 0
     while n < cycles:
+        #to make sure portal sees MQEND, break only when checking message out
         if MR.messageOut:
             message_for_engine = to_engine(MR.messageOut)
             status = Globals.checkMessageStatus(message_for_engine)
@@ -172,7 +173,7 @@ def continuous(first_message = None, cycles = 200, portal_format = False):
             status = Globals.checkMessageStatus(MR.messageIn)
             message_for_portal = to_portal(MR.messageIn)
             MR.messageOut = Portal.process(message_for_portal,
-                                             display = show_responses)
+                                           display = show_responses)
             MR.messageIn = None
         n = n + 1
     #
