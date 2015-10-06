@@ -60,7 +60,7 @@ class CreditCapacity(Step):
     lev_loans             leveraged loan price landscape
         
     FUNCTIONS:    
-    n/a
+    combine()             combine individual pricing landscapes
     ====================  ======================================================
     
     """
@@ -78,6 +78,15 @@ class CreditCapacity(Step):
             obj.setPartOf(self)
 
     def combine(self):
+        """
+
+
+        CreditCapacity.combine() -> None
+
+
+        Method combines multiple pricing landscapes into one. Starts with a
+        blank landscape on every call. 
+        """
         self.combined = Landscape()
         sources = [self.asset_backed, self.bonds, self.converts, self.lev_loans]
         market_segments = []
@@ -87,12 +96,20 @@ class CreditCapacity(Step):
         if len(market_segments) == 1:
             self.combined["size"] = copy.deepcopy(market_segments[0])
         else:
-            by_size = self.combined.combine(market_segments, x_axis = "size", y_axis = "price")
-            by_size = self.label(by_size, x_axis = "size", y_axis = "price")
+            by_size = self.combined.combine(market_segments,
+                                            x_axis = "size",
+                                            y_axis = "price")
+            by_size = self.combined.label(by_size,
+                                          x_axis = "size",
+                                          y_axis = "price")
             self.combined["size"] = by_size
             #
-            by_price = self.combined.pivot([by_size], x_axis = "price", y_axis = "size")
-            by_price = self.combined.label(by_price, x_axis = "price", y_axis = "size")
+            by_price = self.combined.pivot([by_size],
+                                           x_axis = "price",
+                                           y_axis = "size")
+            by_price = self.combined.label(by_price,
+                                           x_axis = "price",
+                                           y_axis = "size")
             self.combined["price"] = by_price
         
                     

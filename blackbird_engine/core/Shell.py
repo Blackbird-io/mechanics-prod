@@ -170,16 +170,10 @@ def continuous(first_message = None, cycles = 200, portal_format = False):
                 MR.messageOut = None
         elif MR.messageIn:
             status = Globals.checkMessageStatus(MR.messageIn)
-            if status == Globals.status_endSession:
-                last_message = MR.messageIn
-                if portal_format:
-                    last_message = to_portal(last_message)
-                break
-            else:
-                message_for_portal = to_portal(MR.messageIn)
-                MR.messageOut = Portal.process(message_for_portal,
-                                                 display = show_responses)
-                MR.messageIn = None
+            message_for_portal = to_portal(MR.messageIn)
+            MR.messageOut = Portal.process(message_for_portal,
+                                             display = show_responses)
+            MR.messageIn = None
         n = n + 1
     #
     return last_message
