@@ -105,13 +105,10 @@ standard_core.extend(income_lines)
 #
 growth = LineItem("growth")
 uses = LineItem("uses")
-analytics = LineItem("analytics")
-summarization = LineItem("summarization")
+##analytics = LineItem("analytics")
+##summarization = LineItem("summarization")
 #
-closing_lines = [growth,
-               uses,
-               analytics,
-               summarization]
+closing_lines = [growth, uses]
 for line in closing_lines:
     line.setPartOf(standard_close)
     line.guide.priority.increment(2)
