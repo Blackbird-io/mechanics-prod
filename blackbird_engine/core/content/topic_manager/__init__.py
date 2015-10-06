@@ -317,7 +317,7 @@ def make_topic(content_module, catalog = local_catalog):
         new_topic = content_module.prepare(new_topic)
     #
     #wrap
-    reverse_lookup_keys = [new_topic.tags.name, content_module, location]
+    reverse_lookup_keys = [new_topic.tags.name, location]
     catalog.register(new_topic, *reverse_lookup_keys)
     return new_topic
 

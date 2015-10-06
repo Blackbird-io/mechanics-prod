@@ -68,10 +68,12 @@ class Yenta():
     DATA:
     scores                dict; topic id k, [raw_score, rel_score] value
     TM                    CLASS; pointer to TopicManager w populated catalog
+    work                  instance storage for selection work; used for trace
 
     FUNCTION:
     build_basic_profile() return a set of target tags, used as simple criteria
     build_combo_profile() return a set of tags from target and model
+    check_topic_name()    check if topic matches target
     disconnect()          CLASS; set TM to None
     find_eligible()       return a list of 0+ ids for topics w all required tags
     pick_best()           return a list of 1+ ids for topics w most tags matched
@@ -114,7 +116,7 @@ class Yenta():
         
     def __init__(self):
         self.scores = dict()
-
+        self.work = None
 
     def build_basic_profile(self, target):
         """
@@ -164,60 +166,94 @@ class Yenta():
         #
         return criteria    
 
-    def build_target_requirements(self, target):
-        reqs = set(target.requiredTags) - {None} - {target.partOf}
-        #
-        return reqs
-
-    def build_topic_requirements(self, topic):
-        #excludes name, returns set
-        reqs = set(topic.tags.requiredTags[2:]) - {None}
-        #
-        return reqs
-    
     def check_topic_name(self, target, model, topic_name, combined = True):
-        #
-        work = dict()
-        result = False
-        #
-        topic_bbid = self.TM.local_catalog.by_name[topic_name]
-        topic = self.TM.local_catalog.issue(topic_bbid)
-        #
-        targ_criterion = self.build_target_requirements(target)
-        if combined:
-            targ_profile = self.build_combo_profile(target, model)
-        else:
-            targ_profile = self.build_basic_profile(target)
-        #
-        topic_criterion = self.build_topic_requirements(topic)
-        topic_profile = self.build_basic_profile(topic)
-        #
-        missed_target_reqs = targ_criterion - topic_profile
-        missed_topic_reqs = topic_criterion - targ_profile
-        #
-        work["missed target reqs"] = missed_target_reqs
-        work["missed topic reqs"] = missed_topic_reqs
-        work["target criterion"] = targ_criterion
-        work["target profile"] = targ_profile
-        work["topic criterion"] = topic_criterion
-        work["topic profile"] = topic_profile        
-        #
-        if any([missed_target_reqs, missed_topic_reqs]):
-            result = False
-        else:
-            result = True
-        #
-        return (result, work)
-        #
-        #would be more useful if you run it through find_eligible, then include a trace argument
-        #there that spits out missed topic reqs
-    
-    def find_eligible(self, target, model, pool = None, combined = True):
         """
 
 
-        Yenta.find_eligible(target, model
-            [, pool = None[, combined = True]]) -> list
+        Yenta.check_topic_name(target, model, topic_name
+          [, combined = True]) -> (result, work)
+
+
+        Method returns a bool result and a dictionary tracing the selection
+        process. Method finds partial matches.
+        
+        """
+        #
+        result = False
+        #allow search by partial name
+        try:
+            topic_bbid = self.TM.local_catalog.by_name[topic_name]
+        except KeyError:
+            for known_key in sorted(self.TM.local_catalog.by_name):
+                #sort to always 
+                match = known_key.find(topic_name)
+                if match == -1:
+                    continue
+                else:
+                    topic_bbid = self.TM.local_catalog.by_name[known_key]
+                    break
+            else:
+                c = "No topic matches specified name."
+                raise KeyError(c)
+        #
+        pool_of_one = {topic_bbid}
+        eligibles = self.find_eligible(target, model, pool_of_one,
+                                       combined = combined, trace = True)
+        #
+        if topic_bbid in eligibles:
+            result = True
+        work = self.trace
+        missing_on_topic = work["scoring"][topic_bbid]["missing on topic"]
+        missing_on_target = work["scoring"][topic_bbid]["missing on target"]
+        #
+        #printing logic follows
+        #
+##      Topic:  "name"
+##      Target:  <obj>
+##
+##       A. Tags missing from topic"
+##             1. blah
+##             2. blah
+##             3. #should enumerate here
+#
+#        B. Tags missing from target"
+#              1. blah
+#              2. blah
+        line_1 = '\n\nTopic:    "%s"\n' % topic_name
+        line_2 = 'Target:   %s\n' % target
+        line_3 = "Eligible: %s\n\n" % str(result).upper()
+        topic_header = "\nA. Tags missing from topic:\n"
+        target_header = "\nB. Tags missing from target:\n"
+        target_header += "(only exist when the topic specifies required tags)"
+        #
+        print(line_1)
+        print(line_2)
+        print(line_3)
+        #
+        #print details only if result is false
+        if not result:
+            print(topic_header)
+            for (n, tag) in enumerate(sorted(missing_on_topic)):
+                line = "\t%s. %s\n" % (n, tag)
+                print(line)
+        #
+        if not result:
+            print(target_header)
+            for (n, tag) in enumerate(sorted(missing_on_target)):
+                line = "\t%s. %s\n" % (n, tag)
+                print(line)
+            print("\n")        
+        #
+        return (result, work)       
+        
+    
+    def find_eligible(self, target, model, pool = None, combined = True,
+                      trace = False):
+        """
+
+
+        Yenta.find_eligible(target, model [, pool = None
+          [, combined = True[, trace = False]]]) -> list
 
 
         Method returns a list of bbids for topics that are eligible for use on
@@ -242,7 +278,10 @@ class Yenta():
         combined profile. In other words, if ``combined`` is True, method will
         check whether a given topic fits the whole model.         
         
-        NOTE: Method skips topics whose bbids appear in model's used set. 
+        NOTE: Method skips topics whose bbids appear in model's used set.
+
+        If ``trace`` is True, method saves work (criteria and missing pieces for
+        each topic) to instance.trace.
         """
         eligibles = []
         targ_criterion = set(target.requiredTags) - {target.partOf}
@@ -265,18 +304,34 @@ class Yenta():
         pool = sorted(pool)
         #sort pool into list to maintain stable evaluation order and results
         #
+        if trace:
+            work = dict()
+            work["target criterion"] = targ_criterion.copy()
+            work["target profile"] = targ_profile.copy()
+            work["revised pool"] = pool.copy()
+            work["scoring"] = dict()
+        #
         for bbid in pool:
             topic = self.TM.local_catalog.issue(bbid)
             topic_criterion = set(topic.tags.requiredTags[2:]) - {None}
+            topic_profile = self.build_basic_profile(topic)
             #
-            missed_target_reqs = (targ_criterion -
-                                  self.build_basic_profile(topic))
-            missed_topic_reqs = topic_criterion - targ_profile
-            if any([missed_target_reqs, missed_topic_reqs]):
+            missing_on_topic = targ_criterion - topic_profile
+            missing_on_target = topic_criterion - targ_profile
+            if trace:
+                work["scoring"][bbid] = dict()
+                work["scoring"][bbid]["topic profile"] = topic_profile
+                work["scoring"][bbid]["topic criterion"] = topic_criterion
+                work["scoring"][bbid]["missing on topic"] = missing_on_topic
+                work["scoring"][bbid]["missing on target"] = missing_on_target
+            #
+            if any([missing_on_topic, missing_on_target]):   
                 continue
             else:
                 #all requirements satisfied, topic eligible
                 eligibles.append(bbid)
+        if trace:
+            self.trace = work
         #
         return eligibles
 
