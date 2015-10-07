@@ -1,6 +1,6 @@
 #Answer Script: software_seat_no_devs
 
-#Defines very profitable software company that charges subscribers by seat and
+#Defines unprofitable software company that charges subscribers by seat and
 #has no developers. 
 
 answers = dict()
