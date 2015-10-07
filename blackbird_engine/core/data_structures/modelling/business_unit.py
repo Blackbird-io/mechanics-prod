@@ -37,6 +37,7 @@ from data_structures.guidance.guide import Guide
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
 from data_structures.valuation.business_summary import BusinessSummary
+from data_structures.valuation.company_value import CompanyValue
 
 from .components import Components
 from .driver import Driver
@@ -136,7 +137,7 @@ class BusinessUnit(Tags,Equalities):
         self.sig_consolidate =  gl_sig_con % self.name
         self.size = 1
         self.summary = BusinessSummary()
-        self.valuation = None
+        self.valuation = CompanyValue()
         
     @property
     def type(self):
@@ -225,6 +226,8 @@ class BusinessUnit(Tags,Equalities):
         If all id verification steps go smoothly, method delegates insertion
         down to Components.addItem().       
         """
+        bu.summary = None
+        bu.valuation = None
         bu.fitToPeriod(self.period, recur = True, updateID = updateID)
         if not updateID:
             if not bu.verifyID(recur = True):
@@ -585,8 +588,8 @@ class BusinessUnit(Tags,Equalities):
         result.id = copy.copy(self.id)
         #header.profile should be the only object pointing to others on header
         result.life = self.life.copy()
-        result.summary = None
-        result.valuation = None
+        result.summary = BusinessSummary()
+        result.valuation = CompanyValue()
         #
         return result
 

@@ -97,8 +97,8 @@ answers[q21] = [{"response" : "subscription"}]
 answers[q22] = [{"response" : "Yes (charge by seat)"}]
 answers[q23] = [{"response" : "1255"}]
                 #1255 paying seats (across all subscribers)
-answers[q24] = [{"response" : "2000"}]
-                #$2k/month per seat
+answers[q24] = [{"response" : "20"}]
+                #$20 (twenty dollars) /month per seat
 answers[q25] = [{"response" : "3500"}]
                 #$3500 per month for hosting
     
