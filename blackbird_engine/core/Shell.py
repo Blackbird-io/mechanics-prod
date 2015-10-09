@@ -59,7 +59,7 @@ sub_folder = os.path.normpath(sub_folder)
 if sub_folder not in sys.path:
     sys.path.append(sub_folder)
 
-import simple_portal as Portal
+import simple_portal as portal
 import BBGlobalVariables as Globals
 
 from content import question_manager as QuestionManager
@@ -122,7 +122,7 @@ def continuous(first_message = None, cycles = 200, portal_format = False):
     if not first_message:
         #launch the Portal and get the first message from the Engine before
         #moving to loop
-        MR.messageOut = Portal.launch("iop start")
+        MR.messageOut = portal.launch("iop start")
         message_for_engine = to_engine(MR.messageOut)
         MR.messageIn = supervisor.process(message_for_engine)
         MR.messageOut = None
@@ -172,7 +172,7 @@ def continuous(first_message = None, cycles = 200, portal_format = False):
         elif MR.messageIn:
             status = Globals.checkMessageStatus(MR.messageIn)
             message_for_portal = to_portal(MR.messageIn)
-            MR.messageOut = Portal.process(message_for_portal,
+            MR.messageOut = portal.process(message_for_portal,
                                            display = show_responses)
             MR.messageIn = None
         n = n + 1
@@ -214,7 +214,7 @@ def disable_web_mode():
     """
     global web_mode
     web_mode = False
-    Portal.disable_web_mode()
+    portal.disable_web_mode()
 
 def enable_web_mode():
     """
@@ -240,7 +240,7 @@ def enable_web_mode():
     """
     global web_mode
     web_mode = True
-    Portal.enable_web_mode()
+    portal.enable_web_mode()
 
 def get_forecast(portal_model, fixed, ask, ref_date = None):
     """
@@ -316,6 +316,14 @@ def next_question():
         step()
         step()
 
+def rewind(steps_back = 1):
+    #always returns mq_ messages (reruns the question)
+    target_step = current_step - steps_back
+    result = cache[target_step]
+    #
+    return result
+    
+
 def process_interview(msg):
     """
 
@@ -355,7 +363,7 @@ def step():
        (upstream) for display and user input. 
     """
     if not launched:
-        MR.messageOut = Portal.launch()
+        MR.messageOut = portal.launch()
         global launched
         launched = True
         return
@@ -365,9 +373,9 @@ def step():
         MR.messageOut = None
         return
     elif MR.messageIn:
-        message_for_portal = to_portal(MR.messageIn)
-        MR.messageOut=Portal.process(message_for_portal,
-                                         display = show_responses)
+        message_for_portal = to_portal(MR.messageIn) 
+        MR.messageOut = portal.process(message_for_portal,
+                                       display = show_responses)
         MR.messageIn = None
         return
         
@@ -438,6 +446,6 @@ def use_script(new_script, display=True, trace=False):
     global show_responses
     script = new_script
     show_responses = display
-    Portal.set_script(script)
+    portal.set_script(script)
 
 

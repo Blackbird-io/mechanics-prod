@@ -64,11 +64,17 @@ from data_structures.system.messenger import Messenger
 
 
 #globals
-MR = Messenger()
-script = None
+#
+cache = []
+cache_limit = 100
+offset = 0
+#
 blank_model = PortalModel().to_portal()
-starting_message = {"M" : blank_model, "Q" : None, "R" : None}
+DEBUG = False
+MR = Messenger()
 screen_width = Globals.screen_width - 20
+script = None
+starting_message = {"M" : blank_model, "Q" : None, "R" : None}
 user_attempt_limit = 5
 web_mode = True
 
@@ -141,7 +147,7 @@ def enable_web_mode():
     """
     global web_mode
     web_mode = True
-    
+
 def launch(credentials = ""):
     """
 
@@ -199,7 +205,56 @@ def launch(credentials = ""):
                 break
     return starting_message
 
-def process(msg, display=True):
+def debug():
+    global DEBUG
+    DEBUG = True
+
+def process(message, display):
+    if DEBUG:
+        store(message)
+    result = get_response(message, display)
+    #
+    return result
+
+def store(msg):
+    global cache
+    if len(cache) == CACHE_LIMIT:
+        cache = cache[1:]
+        #discard the oldest message
+        global offset
+        offset += 1
+        #e.g., cache is maxed 10, you are at question 15 and want to go back to #8
+        #question 15 is top of stack, meaning stack starts at 5
+        #so you have to go i == question_number - offset
+        #and if i is negative, raise an error
+        #
+        #
+    cache.append(msg)
+    
+def rewind(steps_back = 1):
+    current_step = len(cache) - 1
+    prior_step = current_step - steps_back
+    result = go_to(prior_step)
+    #
+    return result
+
+def go_to(question_number):
+    """
+
+    truncate cache up to i
+    discard after
+    
+    """
+    #
+    global cache
+    #
+    cache = cache[:(i+1)]
+    prior_message = cache.pop()
+    result = get_response(prior_message)
+    #
+    return result
+
+def get_response(message, display = True):
     """
 
 
@@ -210,7 +265,7 @@ def process(msg, display=True):
     returns a new PortalMessage. Function will get response from user input by
     default, or script when module global ``script`` points to a True object.
 
-    Function expects ``msg`` to comply with the PortalMessage schema from
+    Function expects ``message`` to comply with the PortalMessage schema from
     the Engine-Wrapper API.
 
     If global ``web_mode`` is False, function will process messages that include
@@ -218,16 +273,16 @@ def process(msg, display=True):
     """
     #
     MR.clearMessageOut()
-    MR.receive(msg)
+    MR.receive(message)
     M = MR.messageIn["M"]
     Q = MR.messageIn["Q"]
     R = MR.messageIn["R"]
     #
     newR = R
     engine_message_in = (M,Q,R)
-    cStatus = Globals.checkMessageStatus(engine_message_in)
+    status = Globals.checkMessageStatus(engine_message_in)
     #
-    if cStatus != Globals.status_endSession:
+    if status != Globals.status_endSession:
         if Q:
             #
             #first check that question fits the Engine-Wrapper API format, then
@@ -311,7 +366,6 @@ def process(msg, display=True):
                         rich_element.__dict__.update(input_element)
                         input_element = rich_element
                     #
-                    
                     filled_response = dict()
                     #filled_response = ResponseElement()
                     #
