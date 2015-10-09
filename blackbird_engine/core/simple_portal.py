@@ -66,11 +66,12 @@ from data_structures.system.messenger import Messenger
 #globals
 #
 cache = []
-cache_limit = 100
+CACHE_LIMIT = 100
+CACHING_ALLOWED = False
 offset = 0
 #
 blank_model = PortalModel().to_portal()
-DEBUG = False
+
 MR = Messenger()
 screen_width = Globals.screen_width - 20
 script = None
@@ -205,12 +206,9 @@ def launch(credentials = ""):
                 break
     return starting_message
 
-def debug():
-    global DEBUG
-    DEBUG = True
-
-def process(message, display):
-    if DEBUG:
+def process(message, display = True):
+    global CACHING_ALLOWED
+    if CACHING_ALLOWED:
         store(message)
     result = get_response(message, display)
     #
@@ -230,9 +228,24 @@ def store(msg):
         #
         #
     cache.append(msg)
+
+def enable_caching():
+    #
+    c = "THIS IS A WARNING THAT PORTAL WILL NOW HAVE WEIRD STATE PROPERTIES"
+    c += "Portal cache not guaranteed to work the same way as WebPortal."
+    global CACHING_ALLOWED
+    CACHING_ALLOWED = True
+
+def disable_caching():
+    global CACHING_ALLOWED
+    CACHING_ALLOWED = False    
     
 def rewind(steps_back = 1):
-    current_step = len(cache) - 1
+    #should only run if DEBUG is on
+    if not CACHING_ALLOWED:
+        c = "Rewind permitted only in DEBUG MODE"
+        raise SomeSortOfError(c)
+    current_step = len(cache)
     prior_step = current_step - steps_back
     result = go_to(prior_step)
     #
@@ -248,9 +261,16 @@ def go_to(question_number):
     #
     global cache
     #
+    i = (question_number - 1) - offset
+    if not 0 <= i <= len(cache):
+        c = "Requested question outside cache range. Cache currently storing"
+        c += "questions %s to %y. "
+        c = c % (offset, len(cache) + offset)
+        raise IndexError(c)
+    #
     cache = cache[:(i+1)]
     prior_message = cache.pop()
-    result = get_response(prior_message)
+    result = process(prior_message)
     #
     return result
 
@@ -295,6 +315,7 @@ def get_response(message, display = True):
             progress = Q["progress"]
             question_name = Q["name"]
             input_array = Q["input_array"]
+            short = Q["short"]
             number_of_elements = len(input_array)
             multi_element = False
             complex_types = {"date",
@@ -315,6 +336,18 @@ def get_response(message, display = True):
                 multi_element = True
             #
             print("\n\n")
+            #
+            #print "Q #34: Vendor Concentration"
+            if CACHING_ALLOWED:
+                count = len(cache) + offset
+                counter_line = " (Q" + ("#" + str(count)).rjust(4) +") " + short
+                counter_line += "\n" + "\n"
+                print(counter_line)
+                #want to make sure we have the same model id?
+                #alternatively, just leave it alone, creates STATE in simple_portal <------------------------------------------------------
+                #
+            #
+            #print question prompt
             q_prompt = bb + q_prompt
             q_prompt = lead_wrapper.fill(q_prompt)
             #wrap long prompts at screen width
@@ -456,6 +489,7 @@ def get_response(message, display = True):
     result = {"M": M, "Q": Q, "R": newR}
     MR.messageOut = result
     MR.clearMessageIn()
+    #
     return result
     
 def set_script(new_script):

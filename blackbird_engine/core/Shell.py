@@ -78,6 +78,7 @@ launched = False
 low_error = False
 MR = Messenger()
 pm_converter = PortalModel()
+PERMIT_CACHING = False
 script = None
 show_responses = False
 trace = False
@@ -316,13 +317,23 @@ def next_question():
         step()
         step()
 
+def enable_caching():
+    c = "THIS IS A WARNING THAT PORTAL WILL NOW HAVE WEIRD STATE PROPERTIES"
+    c += "Portal cache not guaranteed to work the same way as WebPortal."
+    print(c)
+    global PERMIT_CACHING
+    PERMIT_CACHING = True
+    portal.enable_caching()
+
+def disable_caching():
+    global PERMIT_CACHING
+    PERMIT_CACHING = False
+
 def rewind(steps_back = 1):
-    #always returns mq_ messages (reruns the question)
-    target_step = current_step - steps_back
-    result = cache[target_step]
-    #
-    return result
-    
+    if not PERMIT_CACHING:
+        raise SomeSortOfError
+    MR.clear()
+    MR.messageOut = portal.rewind(steps_back)    
 
 def process_interview(msg):
     """
