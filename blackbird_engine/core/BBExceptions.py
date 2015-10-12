@@ -95,21 +95,10 @@ class CatalogError(BBAnalyticalError):
     """
     pass
 
-
 class TagRegistrationError(CatalogError):
     """
     """
     content = "Tag already registered"
-    
-class StartupError(IOPMechanicalError):
-    """
-    """
-    content = "Developer error in Start module"
-
-class ConnectionError(IOPMechanicalError):
-    """
-    """
-    content = "Connector is False, cannot connect."
     
 class ProcessError(IOPMechanicalError):
     content = "Improper process flow w/in BB environment."
