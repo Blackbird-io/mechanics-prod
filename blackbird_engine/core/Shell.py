@@ -12,7 +12,12 @@ schemas and acts as a type adapter between the inside and outside of the Engine.
 Shell generally avoids looking ``inside`` the Engine model. Instead, it prefers
 to delegate all such substantive work to lower-level components.
 
-SimplePortal to provide a command-line user interface.
+Module uses simple_portal to provide a command-line interface.
+
+NOTE: Module support rewind() operations for **debugging purposes only**.
+
+These functions create Engine state and are not safe to deploy to a live
+environment. You must manually turn on caching to use them.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -20,6 +25,7 @@ Attribute             Description
 DATA:
 launched              bool; True if Shell has served up a message, else False
 MR                    obj; instance of Messenger
+PERMIT_CACHING        bool; False by default, controls rewind() support
 script                obj; dictionary of pre-set responses
 show_responses        bool; whether WebPortal should display scripted responses
 trace                 bool; whether Engine should trace analysis
@@ -27,12 +33,15 @@ web_mode              bool; if True, Shell returns fully flattened objects
 
 FUNCTIONS:
 continuous()          function runs analysis continuously until completion
+disable_caching()     turns caching off, clears Portal cache
 disable_script()      removes script reference
 disable_web_mode()    turns off web mode, permits rich InputElement objects
+enable_caching()      turns caching on
 enable_web_mode()     turns on web mode, requires API-compliant delivery
 get_forecast()        computes terms for a transaction on the model
 get_landscape_summary describes the opportunity landscape for all transactions 
 next_question()       uses SimplePortal to ask for the next user input
+rewind()              goes back one or more steps
 step()                performs one analytical step, from User to Engine to User
 to_portal()           converts MQR message to Engine-Wrapper API dict format
 to_engine()           converts API message to MQR
@@ -59,8 +68,12 @@ sub_folder = os.path.normpath(sub_folder)
 if sub_folder not in sys.path:
     sys.path.append(sub_folder)
 
-import simple_portal as portal
+
+
+
+import BBExceptions
 import BBGlobalVariables as Globals
+import simple_portal as portal
 
 from content import question_manager as QuestionManager
 from data_structures.modelling.model import Model as EngineModel
@@ -75,7 +88,6 @@ from flow import supervisor
 #globals
 blank_credit_reference = CR_Reference()
 launched = False
-low_error = False
 MR = Messenger()
 pm_converter = PortalModel()
 PERMIT_CACHING = False
@@ -180,6 +192,19 @@ def continuous(first_message = None, cycles = 200, portal_format = False):
     #
     return last_message
 
+def disable_caching():
+    """
+
+
+    disable_caching() -> None
+
+
+    Function sets PERMIT_CACHING to False on Shell and portal.
+    """
+    global PERMIT_CACHING
+    PERMIT_CACHING = False
+    portal.disable_caching()
+
 def disable_script():
     """
 
@@ -216,6 +241,26 @@ def disable_web_mode():
     global web_mode
     web_mode = False
     portal.disable_web_mode()
+
+def enable_caching():
+    """
+
+
+    enable_caching() -> None
+
+    
+    Function sets PERMIT_CACHING to True on both Shell and portal.
+    """
+    c =  """
+    WARNING: Caching operations **create Engine state** and may cause
+    unexpected side effects. Use with caution and only when debugging.
+
+         simple_portal cache behavior may differ from web_portal.
+    """
+    print(c)
+    global PERMIT_CACHING
+    PERMIT_CACHING = True
+    portal.enable_caching()
 
 def enable_web_mode():
     """
@@ -317,24 +362,6 @@ def next_question():
         step()
         step()
 
-def enable_caching():
-    c = "THIS IS A WARNING THAT PORTAL WILL NOW HAVE WEIRD STATE PROPERTIES"
-    c += "Portal cache not guaranteed to work the same way as WebPortal."
-    print(c)
-    global PERMIT_CACHING
-    PERMIT_CACHING = True
-    portal.enable_caching()
-
-def disable_caching():
-    global PERMIT_CACHING
-    PERMIT_CACHING = False
-
-def rewind(steps_back = 1):
-    if not PERMIT_CACHING:
-        raise SomeSortOfError
-    MR.clear()
-    MR.messageOut = portal.rewind(steps_back)    
-
 def process_interview(msg):
     """
 
@@ -356,6 +383,25 @@ def process_interview(msg):
     engine_response = supervisor.process(message_for_engine)
     message_for_portal = to_portal(engine_response)
     return message_for_portal
+
+def rewind(steps_back = 1):
+    """
+
+
+    rewind(steps_back = 1) -> None
+
+
+    Function sets Shell to a prior state.
+
+    If Shell just returned a message ("message 1"), running
+    Shell.next_question() would advance to message 2. Running Shell.rewind()
+    immediately after would return to message 1.
+    """
+    if not PERMIT_CACHING:
+        c = "Rewind() operations require caching to be enabled."
+        raise BBExceptions.ProcessError(c)
+    MR.clear()
+    MR.messageOut = portal.rewind(steps_back)
 
 def step():
     """
