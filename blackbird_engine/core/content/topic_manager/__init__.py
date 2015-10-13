@@ -206,7 +206,10 @@ def load_questions(topic, content_module):
     try:
         q_names = content_module.question_names
     except AttributeError:
-        q_names = [content_module.my_question]
+        q_names = []
+        if content_module.my_question:
+            q_names.append(content_module.my_question)
+            #keep q_names empty if topic does its work without questions
     q_label = getattr(content_module, "user_outline_label", None)
     clean_questions(topic, q_names, q_label)
 
