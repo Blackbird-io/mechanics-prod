@@ -29,7 +29,7 @@ Step                  single logical step, compatible with selection algos
 
 
 #imports
-import parameters.guidance
+import settings.guidance
 import tools.for_printing as printing_tools
 
 from data_structures.guidance.guide import Guide
@@ -61,8 +61,8 @@ class Step(Tags, PrintAsLine):
     ====================  ======================================================
     """
     def __init__(self, name = None,
-                 priority = parameters.guidance.PRIORITY_DEFAULT,
-                 quality = parameters.guidance.QUALITY_DEFAULT):
+                 priority = settings.guidance.PRIORITY_DEFAULT,
+                 quality = settings.guidance.QUALITY_DEFAULT):
         Tags.__init__(self)
         PrintAsLine.__init__(self)
         #

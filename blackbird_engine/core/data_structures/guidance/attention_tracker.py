@@ -25,7 +25,7 @@ AttentionTracker      specialized gauge to track attention, includes allowance
 
 
 #imports
-import parameters.guidance
+import settings.guidance
 
 from .counter import Counter
 
@@ -66,7 +66,7 @@ class AttentionTracker(Counter):
     ====================  ======================================================
     """
     def __init__(self):
-        Counter.__init__(self, cut_off = parameters.guidance.ATTENTION_MAX)
+        Counter.__init__(self, cut_off = settings.guidance.ATTENTION_MAX)
         self.allowance = None
         self.asked = 0
         
