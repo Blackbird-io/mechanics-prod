@@ -99,15 +99,14 @@ def scenario_2(topic):
 
 def scenario_3(topic):
     known_industries = []
-    R = topic.get_first_answer()
-    #pull out substantive response
+    user_industry = topic.get_first_answer()
     M = topic.MR.activeModel
-    if R in known_industries:
+    if user_industry in known_industries:
         M.tag("known industry")
     else:
         M.tag("unknown industry")
-    M.tag(R)
-    M.header.profile["industry"] = R
+    M.tag(user_industry)
+    M.header.profile["industry"] = user_industry
     #
     new_question = topic.questions["user name?"]
     topic.wrap_scenario(new_question)

@@ -31,7 +31,7 @@ BusinessSummary       dictionary with pre-populated fields
 
 
 #imports
-from ..guidance.stage import Stage
+from ..guidance.outline import Outline
 from ..guidance.step import Step
 from ..modelling.book_mark import BookMark
 
@@ -42,7 +42,7 @@ from ..modelling.book_mark import BookMark
 mandatory_summary_fields = ["credit_capacity"]
 
 #classes
-class BusinessSummary(Stage):
+class BusinessSummary(Outline):
     """
 
     Container for business summary information. 
@@ -60,7 +60,7 @@ class BusinessSummary(Stage):
     ====================  ======================================================
     """
     def __init__(self):
-        Stage.__init__(self, "business summary")
+        Outline.__init__(self, "business summary")
         self.data = dict.fromkeys(mandatory_summary_fields)
         self.set_path()
 
@@ -73,7 +73,7 @@ class BusinessSummary(Stage):
 
         Method creates a standard summary roadmap.
         """
-        Stage.set_path(self)
+        Outline.set_path(self)
         steps = [BookMark("start Summary", "Summary"),
                  Step("annual financials"),
                  Step("credit capacity"),

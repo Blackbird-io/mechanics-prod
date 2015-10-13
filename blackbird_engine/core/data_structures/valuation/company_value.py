@@ -28,7 +28,7 @@ CompanyValue          standard form for storing data about company value
 
 
 #imports
-from data_structures.guidance.stage import Stage
+from data_structures.guidance.outline import Outline
 from data_structures.modelling.book_mark import BookMark
 from data_structures.modelling.financials import Financials
 
@@ -43,7 +43,7 @@ from .enterprise_value import EnterpriseValue
 #n/a
 
 #classes
-class CompanyValue(Stage):
+class CompanyValue(Outline):
     """
 
     This class manages protocols that provide a focal point for MatchMaker
@@ -62,7 +62,7 @@ class CompanyValue(Stage):
     ====================  ======================================================
     """
     def __init__(self, name = "valuation"):
-        Stage.__init__(self, name)
+        Outline.__init__(self, name)
         self.credit = CreditCapacity()
         self.ev = EnterpriseValue()
         #
@@ -79,7 +79,7 @@ class CompanyValue(Stage):
         Method appends a standard valuation roadmap, built out of the instance's own
         attributes, to instance.path.
         """
-        Stage.set_path(self)
+        Outline.set_path(self)
         steps = [BookMark("start Valuation", "Valuation"),
                  self.ev,
                  self.credit,

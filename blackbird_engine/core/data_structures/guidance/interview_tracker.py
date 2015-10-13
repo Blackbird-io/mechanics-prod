@@ -7,8 +7,8 @@
 #Module: data_structures.guidance.interview_tracker
 
 """
-This module defines the InterviewTracker class, a custom stage for managing the
-interview between Blackbird and a user. 
+This module defines the InterviewTracker class, a custom Outline for managing
+the interview between Blackbird and a user. 
 ====================  ==========================================================
 Object                Description
 ====================  ==========================================================
@@ -30,7 +30,7 @@ InterviewTracker      plan and monitor machine-user interview
 from data_structures.modelling.line_item import LineItem
 from flow import completion_rules
 
-from .stage import Stage
+from .outline import Outline
 
 
 
@@ -43,7 +43,7 @@ intro_line.guide.quality.set_standard(2)
 quality_rule = completion_rules.check_quality_only
 
 #classes
-class InterviewTracker(Stage):
+class InterviewTracker(Outline):
     """
 
     This class provides a ready-to-go container for managing how Blackbird
@@ -67,7 +67,7 @@ class InterviewTracker(Stage):
     ==========================  ================================================
     """
     def __init__(self):
-        Stage.__init__(self, "interview")
+        Outline.__init__(self, "interview")
         self.completion_rule = quality_rule
         self.focal_point = intro_line.copy()
         self.progress = 0

@@ -4,12 +4,12 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: data_structures.guidance.stage
+#Module: data_structures.guidance.outline
 
 """
-This module defines the Stage class, which organizes content, usually in the
-form of Step or LineItem objects, into an ordered container (``path``) that
-provides the Engine a roadmap for analysis. 
+This module defines the Outline class, which organizes content, usually in the
+form of Step or LineItem objects, into an ordered container that provides the
+Engine a roadmap for analysis. 
 ====================  ==========================================================
 Object                Description
 ====================  ==========================================================
@@ -20,7 +20,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-Stage                 container for organizing steps into a path
+Outline               container for organizing steps into a path
 ====================  ==========================================================
 """
 
@@ -41,15 +41,15 @@ from ..modelling.financials import Financials
 #n/a
 
 #classes
-class Stage(Step):
+class Outline(Step):
     """
 
     This class provides a foundation for processing roadmaps. Instances start
     out empty, but usually come to include a path of one or more Step objects.
 
-    Instance.protocol_key controls how the interviewer will approach the stage.
-    The key must match one of the protocols that the interviewer knows. By
-    default, the value is 0, which requires maximum quality analysis for each
+    Instance.protocol_key controls how the interviewer will approach the
+    outline. The key must match one of the protocols that the interviewer knows.
+    By default, the value is 0, which requires maximum quality analysis for each
     logical step.     
     ==========================  ================================================
     Attribute                   Description
@@ -61,7 +61,7 @@ class Stage(Step):
     focal_point                 criterion for MatchMaker's selection
     levels                      dict or None; priority groups of items in path
     protocol_key                num; which interview protocol should apply 
-    track_progress              bool; whether stage supports progress tracking
+    track_progress              bool; whether inst supports progress tracking
     work_space                  unmanaged scrap paper for Topic or other state
     
     FUNCTIONS:
@@ -88,7 +88,7 @@ class Stage(Step):
         """
 
 
-        ITr.clear_cache() -> None
+        Outline.clear_cache() -> None
 
 
         Method clears instance ``completion_rule``, ``focal_point``, and
@@ -102,9 +102,10 @@ class Stage(Step):
         """
 
 
-        ITr.set_attention_budget(aB) -> None
+        Outline.set_attention_budget(aB) -> None
 
 
+        Method sets instance attention budget.
         """
         self.attention_budget = aB
         
@@ -113,7 +114,7 @@ class Stage(Step):
         """
 
 
-        ITr.set_completion_rule(rule) -> None
+        Outline.set_completion_rule(rule) -> None
 
 
         Method sets instance.completion_rule to argument. Rule should be a
@@ -127,9 +128,10 @@ class Stage(Step):
         """
 
 
-        ITr.set_focal_point(fP) -> None
+        Outline.set_focal_point(fP) -> None
 
 
+        Method sets instance.focal_point.
         """
         self.focal_point = fP
 
@@ -137,7 +139,7 @@ class Stage(Step):
         """
 
 
-        WorkStage.build_path() -> None
+        Outline.build_path() -> None
 
 
         Method sets instance.path to new_path or an empty Financials object.
