@@ -35,7 +35,7 @@ n/a
 ====================  ==========================================================
 """
 question_content = True
-name = "does revenue come from sale of goods or services?"
+name = "fundamental sources of revenue?"
 question_author = "Ilya Podolyako"
 
 #Engine parameters
