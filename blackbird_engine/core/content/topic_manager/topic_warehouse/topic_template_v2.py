@@ -68,14 +68,13 @@ optionalTags = []
 #
 applied_drivers = dict()
 formula_names = []
-question_names = []
 scenarios = dict()
 work_plan = dict()
 
 formula_names = ["formula 1",
                  "formula 2",
                  "indy 500"]
-question_names = ["is this a template question?"]
+my_question = "yo, what's up?"
 work_plan["big sky line item"] = 1
 
 GK = GeneralKnowledge
@@ -130,6 +129,9 @@ def scenario_1(topic):
     """
     #opening scenario, begins topic analysis, may ask q1. can configure
     #question based on model data.
+##    model = topic.MR.activeModel
+##    new_question = topic.questions[my_question]
+##    topic.wrap_scenario(new_question)
     pass
 
 def scenario_2(topic):
@@ -177,7 +179,7 @@ def apply_data(topic, datapoint):
     #function performs substantive work on model in light of new data
 
 scenarios[None] = scenario_1
-scenarios["is this a real question?"] = scenario_2
+scenarios[my_question] = scenario_2
 scenarios[Globals.user_stop] = end_scenario
 #
 
