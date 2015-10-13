@@ -27,7 +27,7 @@ Guide                 gauge cluster that guides analysis
 
 
 #imports
-import parameters.guidance
+import settings.guidance
 
 from .attention_tracker import AttentionTracker
 from .counter import Counter
@@ -64,7 +64,7 @@ class Guide:
     def __init__(self, priority = None, quality = None):
         self.attention = AttentionTracker()
         self.complete = False
-        self.priority = Counter(cut_off = parameters.guidance.PRIORITY_MAX)
+        self.priority = Counter(cut_off = settings.guidance.PRIORITY_MAX)
         self.quality = QualityTracker()
         self.selection = SelectionTracker()
         if priority:
