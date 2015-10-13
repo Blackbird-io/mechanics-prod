@@ -199,10 +199,14 @@ def load_questions(topic, content_module):
     load_questions(topic, content_module) -> None
 
 
-    Function populatesf topic with questions named in content module. Function
-    delegates work to clean_questions().
+    If the content module would like to ask the user a question, function adds
+    the corresponding question object to the topic. Function delegates work to
+    clean_questions().
     """
-    q_names = content_module.question_names
+    try:
+        q_names = content_module.question_names
+    except AttributeError:
+        q_names = [content_module.my_question]
     q_label = getattr(content_module, "user_outline_label", None)
     clean_questions(topic, q_names, q_label)
 
