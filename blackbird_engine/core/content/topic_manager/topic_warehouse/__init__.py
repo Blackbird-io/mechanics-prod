@@ -29,7 +29,7 @@ n/a
 
 
 #imports
-from . import financials_WOAH
+from . import financials
 from . import growth
 from . import introduction
 from . import management
