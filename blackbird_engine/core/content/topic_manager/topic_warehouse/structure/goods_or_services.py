@@ -73,11 +73,10 @@ optionalTags = [tg_rev_product,
 #
 applied_drivers = dict()
 formula_names = []
-question_names = []
 scenarios = dict()
 work_plan = dict()
 
-question_names = ["is this a template question?"]
+my_question = "fundamental sources of revenue?"
 work_plan["structure"] = 1
 work_plan["revenue"] = 1
 
@@ -103,7 +102,7 @@ def scenario_1(topic):
     Function asks question. 
     """
     model = topic.MR.activeModel
-    new_question = topic.questions["subscriber life range?"]
+    new_question = topic.questions[my_question]
     topic.wrap_scenario(new_question)
 
 def scenario_2(topic):
@@ -194,7 +193,7 @@ def apply_data(topic, datapoint):
     
 
 scenarios[None] = scenario_1
-scenarios["is this a real question?"] = scenario_2
+scenarios[my_question] = scenario_2
 scenarios[Globals.user_stop] = end_scenario
 
 
