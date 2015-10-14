@@ -454,6 +454,10 @@ def to_portal(engine_msg):
     global web_mode
     #
     if Q:
+        if M:
+            Q.context.update(M.stage.work_space)
+            #enrich question context with work_space data, so prompts can
+            #piggy-back on information assembled during previous steps
         portal_q = QuestionManager.make_portal(Q, web = web_mode)
     else:
         portal_q = Q
