@@ -20,7 +20,6 @@ n/a
 
 CLASSES:
 LifeStage             objects that provide descriptions of a stage of life
-
 ====================  ==========================================================
 """
 

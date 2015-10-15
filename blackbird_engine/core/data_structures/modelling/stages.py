@@ -49,7 +49,7 @@ class Stages:
     ====================  ======================================================
     DATA:
     by_name               dict; all stage objects, keyed by name, SSOT
-    by_start              dict; all stage objected, by start, from by_name data
+    by_start              dict; all stage objects, by start, from by_name data
     end_points            list; ordered start and end points. stage spans [s,e)
     
 
@@ -74,7 +74,8 @@ class Stages:
 
         Method records a **shallow copy** of stage in instance.by_name under the
         stage's ``name`` value and in by_start under the stage's start value.
-        Method then organizes the instance. 
+
+        Method organizes the instance at every call.
 
         Method expects a dict-type object for ``stage``. Method rasies error
         if stage start value is outside [0,100). To maintain deterministic
@@ -98,8 +99,6 @@ class Stages:
             raise BBExceptions.LifeCycleError(c)
         #
         self.organize()
-        #
-
 
     def copy(self):
         """
@@ -117,7 +116,6 @@ class Stages:
         result.end_points = self.end_points[:]
         #
         return result
-        
         
     def find_stage(self, percent):
         """

@@ -91,10 +91,12 @@ def scenario_1(topic):
     topic.wrap_scenario(new_question)
 
 def scenario_2(topic):
-    R = topic.get_first_answer()
-    M = topic.MR.activeModel
-    M.setName(R)
+    response = topic.get_first_answer()
+    model = topic.MR.activeModel
+    model.setName(response)
+    model.stage.work_space["company_name"] = response
     new_question = topic.questions["company industry?"]
+    #
     topic.wrap_scenario(new_question)
 
 def scenario_3(topic):
