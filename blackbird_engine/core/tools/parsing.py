@@ -53,118 +53,26 @@ def secondsToMonths(seconds):
     months = seconds / secondsPerMonth
     return months    
 
-##def monthStartTime(currentTime):
+##def locateByName(container,startingMark,endingMark):
 ##    """
-##    Returns the UTC time for the first day of the month that the currentTime occurs in.
-##    Specifically, returns the time in seconds for the second after midnight on Day 1 of the month.
+##    iterates through container, returns tuple of locations
 ##    """
-##    #gives you a time.struct_time object that's iterable
-##    currentTimeTuple = time.localtime(currentTime)
-##    #gives you a list of items in the current time tuple, so you can change them
-##    currentTimeList = [x for x in currentTimeTuple]
-##    #gives you a copy of the currentTimeList to work on
-##    currentMonthStartList = copy.deepcopy(currentTimeList)
-##    #month starts when the date is equal to 1
-##    currentMonthStartList[2] = 1
-##    #set hour, min, and seconds to 0
-##    #by zeroing out currentMonthStartList[3:6]
-##    for i in range(len(currentMonthStartList)):
-##        if i>=3 and i<6:
-##            currentMonthStartList[i] = 0
-##    #now currentMonthStartList should look like: [yy, mm, 1, 0, 0, 0, ?, ?]
-##    #last two items in the list are the day in the year and DST variables
-##    #let library conform those as necessary
-##    currentMonthStartTuple = time.struct_time(currentMonthStartList)
-##    #turn the struct into a seconds to make incrementation easier
-##    currentMonthStartSeconds = time.mktime(currentMonthStartTuple)
-##    return currentMonthStartSeconds
-##
-##  DELETE WHEN TESTED <--------------------------------------------------------
-
-##def missingAttributeCatcher(obj,attr,plug):
-##    """
-##    A function for returning default values in event that an attribute is missing.
-##    The function attempts to run getattr(obj,attr).
-##    If an AttributeError arises, returns plug.
-##
-##    NOTE: getattr requires that the desired attribute name be specified as a string.
-##    """
-##    try:
-##        return getattr(obj,attr)
-##    except AttributeError:
-##        return plug
-##
-##  DELETE WHEN TESTED <--------------------------------------------------------
-
-##def valueReplacer(test,plug,*badValues):
-##    result = test
-##    if result in badValues:
-##        result = plug
-##    return result
-##
-##  DELETE WHEN TESTED <--------------------------------------------------------
-
-##
-##def checkNameIntegrity(containerObject, nameDictionary = None, returnAll = False):
-##    """
-##    A function for checking whether items in a container share names.
-##    Returns a tuple of (bool, {1}, {2}), where:
-##        -- bool is True if no items share a name other than None, and False otherwise
-##        -- {1} is a dictionary of items with duplicative names in the format of [item.name]:[item1,...]
-##        -- {2} is a dictionary of all item names for the container in the format of [item.name]:[item1,...]
-##    Function uses the missingAttributeCatcher exception handler to classify items without a .name as having name = None.
-##    Function returns True even if more than one item in the container has a None name.
-##    
-##    User can provide a pre-built name dictionary for the container to increase speed.
-##
-##    Setting returnAll to True ensures return of the three-item tuple above.
-##    Setting returnAll to False returns a two item tuple (bool, {1})
-##    """
-##    allNames = {}
-##    if nameDictionary:
-##        allNames = nameDictionary
-##    status = True
-##    duplicateNames = {}
-##    f1 = missingAttributeCatcher
-##    for item in containerObject:
-##        nameOrNone = f1(item,"name",None)
-##        if nameOrNone in allNames.keys():
-##            allNames[nameOrNone].append(item)
-##            if nameOrNone != None and len(allNames[nameOrNone]) >= 2:
-##                status = False
-##                duplicateNames[item.name] = allNames[item.name]
-##                #ok to call item.name above because block only trigerred if nameOrNone is not None
-##                #that is, item.name did not generate an attribute error
+##    options = iter(container)
+##    startMarkIndex = None
+##    endMarkIndex = None
+##    while startMarkIndex == None or endMarkIndex == None:
+##        item = options.__next__()
+##        #may raise an error if the bookmarks are not found before container is exhausted
+##        #will raise error if iterating through list where items dont have a name attr
+##        if item.name == BLACKBIRDSTAMP + startingMark:
+##            startMarkIndex = container.index(item)
+##        elif item.name == BLACKBIRDSTAMP + endingMark:
+##            endMarkIndex = container.index(item)
 ##        else:
-##            allNames[nameOrNone] = [item]
-##    if returnAll:
-##        return (status, duplicateNames, allNames)
-##    else:
-##        return (status, duplicateNames)
-##
-##  DELETE WHEN TESTED <--------------------------------------------------------
-
-
-def locateByName(container,startingMark,endingMark):
-    """
-    iterates through container, returns tuple of locations
-    """
-    options = iter(container)
-    startMarkIndex = None
-    endMarkIndex = None
-    while startMarkIndex == None or endMarkIndex == None:
-        item = options.__next__()
-        #may raise an error if the bookmarks are not found before container is exhausted
-        #will raise error if iterating through list where items dont have a name attr
-        if item.name == BLACKBIRDSTAMP + startingMark:
-            startMarkIndex = container.index(item)
-        elif item.name == BLACKBIRDSTAMP + endingMark:
-            endMarkIndex = container.index(item)
-        else:
-            continue
-    return (startMarkIndex, endMarkIndex)
-#NOTE: ABOVE FUNCTION IS NOT FLEXIBLE AND SHOULD BE REVISITED
-##  DELETE WHEN TESTED <--------------------------------------------------------
+##            continue
+##    return (startMarkIndex, endMarkIndex)
+###NOTE: ABOVE FUNCTION IS NOT FLEXIBLE AND SHOULD BE REVISITED
+####  DELETE WHEN TESTED <--------------------------------------------------------
 
 def locateByTag(container, *targetTags):
     """
@@ -235,12 +143,12 @@ def includeByTag(container, *goodTags):
             continue
     return WIP
 
-def provideListOfNames(container, missing = "ATTRIBUTE ERROR!"):
-    result = []
-    for item in container:
-        result.append(missingAttributeCatcher(item,"name",missing))
-    return result
-##  DELETE WHEN TESTED <--------------------------------------------------------
+##def provideListOfNames(container, missing = "ATTRIBUTE ERROR!"):
+##    result = []
+##    for item in container:
+##        result.append(missingAttributeCatcher(item,"name",missing))
+##    return result
+####  DELETE WHEN TESTED <--------------------------------------------------------
     
 def padAndZip(*thingsToZip, padding = None, trace = False):
     """
@@ -293,19 +201,19 @@ def padAndZip(*thingsToZip, padding = None, trace = False):
     else:
         return paddedZip
 
-def listAttributes(obj):
-    """
-    Function identifies the object's non-system attributes.
-    Returns a list of strings, each of which is an attribute name. 
-    """
-    allAttributes = dir(obj)
-    result = []
-    for attr in allAttributes:
-        if attr.startswith("__"):
-            continue
-        else:
-            result.append(attr)
-    return result
+##def listAttributes(obj):
+##    """
+##    Function identifies the object's non-system attributes.
+##    Returns a list of strings, each of which is an attribute name. 
+##    """
+##    allAttributes = dir(obj)
+##    result = []
+##    for attr in allAttributes:
+##        if attr.startswith("__"):
+##            continue
+##        else:
+##            result.append(attr)
+##    return result
 
 def stripCase(obj,attr = "allTags"):
     """

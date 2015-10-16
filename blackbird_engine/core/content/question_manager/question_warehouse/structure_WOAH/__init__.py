@@ -35,15 +35,15 @@ n/a
 #must import any modules contained here at init for manager to see and add to
 #catalog
 #
-from . import FirstStoreOpen
-from . import LatestStoreOpen
-from . import MonthsToUnitMaturity
-from . import NumberOfUnits
-from . import UnitLifeSpan
-from . import MonthsToLeaseStore
-from . import MonthsToOpenStore
+from . import first_store_open
+from . import latest_store_open
+from . import months_to_unit_maturity
+from . import number_of_units
+from . import unit_life_span
+from . import months_to_lease_store
+from . import months_to_open_store
 ##from . import Any_or_Number_SignedStoreLeases
-from . import Number_SignedStoreLeases
+from . import number_signed_store_leases
 
 #
 from . import subscriber_life_range
