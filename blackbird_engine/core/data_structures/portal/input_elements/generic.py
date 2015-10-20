@@ -250,6 +250,7 @@ class GenericInput(ReadyForPortal):
                 target["response"] = clean_response
                 target["input_type"] = self.input_type
                 target["input_sub_type"] = self.input_sub_type
+                target["main_caption"] = self.main_caption
                 #                
 ##                object.__setattr__(target,
 ##                                   "response",

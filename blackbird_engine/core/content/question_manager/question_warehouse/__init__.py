@@ -39,7 +39,7 @@ n/a
 #
 from . import Financials
 from . import Introduction
-from . import structure_WOAH
+from . import structure
 from . import operations
 
 
