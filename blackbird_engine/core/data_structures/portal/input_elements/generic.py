@@ -74,6 +74,7 @@ class GenericInput(ReadyForPortal):
     multi                 bool; can user select multiple options
     r_max                 decimal; upper bound on user input
     r_min                 decimal; lower bound on user input
+    r_steps               int; required increments for response
     response              obj; placeholder, reponse appears on PortalResponse
     shadow                obj; light value displayed in field before response
     shadow_2              obj; for range-type elements, shadow for second box
@@ -103,6 +104,7 @@ class GenericInput(ReadyForPortal):
                          "multi",
                          "r_max",
                          "r_min",
+                         "r_step",
                          "response",
                          "shadow",
                          "shadow_2",
@@ -128,6 +130,7 @@ class GenericInput(ReadyForPortal):
         self.__dict__["multi"]= False
         self.__dict__["r_max"] = None
         self.__dict__["r_min"] = None
+        self.__dict__["r_steps"] = None
         self.__dict__["response"] = None
         self.__dict__["shadow"] = None
         self.__dict__["shadow_2"] = None

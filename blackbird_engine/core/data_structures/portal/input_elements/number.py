@@ -52,6 +52,7 @@ class NumberInput(GenericInput):
      -- main_caption
      -- r_max
      -- r_min
+     -- r_steps
      -- shadow
      -- user_can_add
 
@@ -65,16 +66,19 @@ class NumberInput(GenericInput):
     input_type            "number"
     r_max                 1,000,000,000 (one billion)
     r_min                 0 (zero)
+    r_steps               None
 
     FUNCTIONS:
-    check_response        check length and fit in min-max range
+    check_response()      check length and fit in min-max range
     format_response()     split by comma, turn into decimals, return list
+    round_to_step()       round to nearest step if ``r_steps`` is specified
     ====================  ======================================================
     """
     def __init__(self):
         var_attrs = ("main_caption",
                      "r_max",
                      "r_min",
+                     "r_steps",
                      "shadow",
                      "user_can_add")
         GenericInput.__init__(self,var_attrs)
@@ -83,6 +87,7 @@ class NumberInput(GenericInput):
         #one billion
         self.r_min = 0
         #zero
+        self.r_steps = None
 
     def check_response(self,proposed_response):
         """
@@ -126,8 +131,42 @@ class NumberInput(GenericInput):
         Method returns a list of the decimal.Decimal objects that corresponds to
         the comma-separated values in the raw_response. 
         """
+        
         result = [decimal.Decimal(n) for n in raw_response.split(",")]
+        result = [self.round_to_step(n) for n in result]
+        #
         return result
     
+    def round_to_step(self, value):
+        """
 
+
+        NumberInput.round_to_step(value) -> number
+
+
+        Method returns the value rounded to the nearest step.
+
+        NOTE: Logic matches WebPortal roundToStep function
+        (see Portal/blackbird_web/static/js/angular_slider.js)
+        """
+        rounded_value = None
+        #
+        if not self.r_steps:
+            rounded_value = value
+        else:
+            lo = self.r_min
+            hi = self.r_max
+            #
+            step = (hi - lo) / self.r_steps
+            remainder = value % remainder
+            #
+            if remainder > (step / 2):
+                rounded_value = value + step - remainder
+            else:
+                rounded_value = value - remainder
+        #
+        return rounded_value
+        
+        
+        
 
