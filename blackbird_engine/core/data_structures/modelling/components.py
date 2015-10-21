@@ -29,8 +29,10 @@ Components            Tags-type container that stores business units
 #imports
 import copy
 import time
+
 import BBExceptions
 import BBGlobalVariables as Globals
+import tools.for_tag_operations
 
 from data_structures.system.tags import Tags
 
@@ -68,9 +70,10 @@ class Components(dict, Tags, Equalities):
     ex_to_default()       delegates to Tags.ex_to_default, which runs on copy()
     ex_to_special()       makes a shell, fills with items from seed & target
     find_bbid()           return bbid that contains a known string
+    get_living()          returns a bbid:bu dict of all bus that are alive
     getOrdered()          legacy interface for get_ordered() 
     get_ordered()         returns a list of values, ordered by key
-    get_living()          returns a bbid:bu dict of all bus that are alive
+    get_tagged()          return a dict of units with tags
     inheritTags()         runs default routine, then inherits from all comps
     pretty_print()        returns a list of strings showing units one by one
     refresh_names()       clear and rebuild name-to-bbid dictionary
@@ -287,7 +290,6 @@ class Components(dict, Tags, Equalities):
         #
         #return result
         return result
-        
 
     def find_bbid(self, snippet):
         """
@@ -309,7 +311,26 @@ class Components(dict, Tags, Equalities):
                 continue
         #
         return result
-        
+
+    def get_living(self):
+        """
+
+
+        Components.get_living() -> dict
+
+
+        Method returns a dictionary by bbid of every object in instance that
+        has life.alive == True.
+        """
+        result = dict()
+        for (bbid, bu) in self.items():
+            if bu.life.alive:
+                result[bbid] = bu
+            else:
+                continue
+        #
+        return result
+    
     def getOrdered(self):
         """
 
@@ -336,24 +357,23 @@ class Components(dict, Tags, Equalities):
             result.append(bu)
         return result
 
-    def get_living(self):
+    def get_tagged(self, *tags, pool = None):
         """
 
 
-        Components.get_living() -> dict
+        Components.get_tagged(*tags[, pool = None]) -> dict
 
 
-        Method returns a dictionary by bbid of every object in instance that
-        has life.alive == True.
+        Return a dictionary of units (by bbid) that carry the specified tags. 
+        If ``pool`` is None, uses instance.values(). Delegates all selection
+        work to tools.for_tag_operations.get_tagged()
         """
-        result = dict()
-        for (bbid, bu) in self.items():
-            if bu.life.alive:
-                result[bbid] = bu
-            else:
-                continue
+        if not pool:
+            pool = self.values()
+        result = tools.for_tag_operations.get_tagged(pool, *tags)
+        #
         return result
-
+    
     def inheritTags(self, recur = True):
         """
 

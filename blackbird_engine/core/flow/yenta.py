@@ -31,6 +31,8 @@ Yenta                 selects best fitting topic to analyze an object
 #imports
 import content.topic_manager as TopicManager
 
+from tools.for_tag_operations import build_basic_profile, build_combo_profile
+
 
 
 
@@ -71,8 +73,6 @@ class Yenta():
     work                  instance storage for selection work; used for trace
 
     FUNCTION:
-    build_basic_profile() return a set of target tags, used as simple criteria
-    build_combo_profile() return a set of tags from target and model
     check_topic_name()    check if topic matches target
     disconnect()          CLASS; set TM to None
     find_eligible()       return a list of 0+ ids for topics w all required tags
@@ -116,55 +116,7 @@ class Yenta():
         
     def __init__(self):
         self.scores = dict()
-        self.work = None
-
-    def build_basic_profile(self, target):
-        """
-
-
-        Yenta.build_basic_profile(target) -> set()
-
-
-        Method returns set of all tags on target, with None stripped out. 
-        """
-        try:
-            criteria = set(target.allTags)
-        except AttributeError:
-            criteria = set(target.tags.allTags)
-        criteria = criteria - {None}
-        #
-        return criteria
-    
-    def build_combo_profile(self, target, model):
-        """
-
-
-        Yenta.build_combo_criteria(target, model) -> set()
-
-
-        Method returns the set of all tags found on target, target's parent,
-        target's grandparent, and the model.
-
-        When target is a LineItem, target's parent will usually be a line or a
-        Financials object and its grandparent will usually be a line, Financials
-        object, or a BusinessUnit. 
-        """
-        #
-        parent = getattr(target, "parentObject", None)
-        grandpa = getattr(parent, "parentObject", None)
-        #
-        tags_up_one = getattr(parent, "allTags", [])
-        tags_up_two = getattr(grandpa, "allTags", [])
-        #
-        try:
-            criteria = set(target.allTags)
-        except AttributeError:
-            criteria = set(target.tags.allTags)
-        criteria = criteria | set(tags_up_one) | set(tags_up_two)
-        criteria = criteria | set(model.allTags)
-        criteria = criteria - {None}
-        #
-        return criteria    
+        self.work = None  
 
     def check_topic_name(self, target, model, topic_name, combined = True):
         """
@@ -293,9 +245,9 @@ class Yenta():
         #selection to a more functional match.
         #
         if combined:
-            targ_profile = self.build_combo_profile(target, model)
+            targ_profile = build_combo_profile(target, model)
         else:
-            targ_profile = self.build_basic_profile(target)
+            targ_profile = build_basic_profile(target)
         #
         if not pool:
             pool = self.TM.local_catalog.by_id.keys()
@@ -314,7 +266,7 @@ class Yenta():
         for bbid in pool:
             topic = self.TM.local_catalog.issue(bbid)
             topic_criterion = set(topic.tags.requiredTags[2:]) - {None}
-            topic_profile = self.build_basic_profile(topic)
+            topic_profile = build_basic_profile(topic)
             #
             missing_on_topic = targ_criterion - topic_profile
             missing_on_target = topic_criterion - targ_profile
@@ -395,16 +347,16 @@ class Yenta():
         best_candidates = []
         #
         if combined:
-            criteria = self.build_combo_profile(target, model)
+            criteria = build_combo_profile(target, model)
         else:
-            criteria = self.build_basic_profile(target)
+            criteria = build_basic_profile(target)
         #
         best_raw_score = 0
         for bbid in candidates:
             #
             topic = self.TM.local_catalog.issue(bbid)
             #
-            match = criteria & self.build_basic_profile(topic)
+            match = criteria & build_basic_profile(topic)
             raw_score = len(match)
             rel_score = raw_score/len(topic.tags.allTags)
             #

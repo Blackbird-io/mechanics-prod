@@ -84,6 +84,7 @@ class DrContainer(Components):
     ex_to_special()       returns a new DrContainer that combines seed & target
     getDrivers()          returns a list of drivers associated with a tag
     getOrdered()          returns a list of all drivers sorted by bbid
+    get_tagged()          returns a dict of drivers with tags
     inheritTags()         inherits tags from a list of all drivers in instance
     setPartOf()           sets parentObject for instance **and** drivers
     ====================  ======================================================
@@ -353,6 +354,23 @@ class DrContainer(Components):
             result.append(dr)
         return result
     
+    def get_tagged(self, *tags, pool = None):
+        """
+
+
+        DrContainer.get_tagged(*tags[, pool = None]) -> dict
+
+
+        Return a dictionary of objs (by bbid) that carry the specified tags. 
+        If ``pool`` is None, uses values from instance.dr_directory. Delegates
+        all work to Components.get_tagged().
+        """
+        if not pool:
+            pool = self.dr_directory.values()
+        result = Components.get_tagged(self, *tags, pool = pool)
+        #
+        return result
+
     def inheritTags(self, recur = True):
         """
 
