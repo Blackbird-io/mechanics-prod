@@ -158,7 +158,8 @@ class NumberInput(GenericInput):
             hi = self.r_max
             #
             step = (hi - lo) / self.r_steps
-            remainder = value % remainder
+            step = decimal.Decimal(step)
+            remainder = value % step
             #
             if remainder > (step / 2):
                 rounded_value = value + step - remainder

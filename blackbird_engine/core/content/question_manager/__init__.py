@@ -237,6 +237,52 @@ def make_question(content_module, catalog = local_catalog):
         ##show_if_spec is a dictionary w parameters for a binary input_element
         ##FQ will try to configure and attach an element according to spec.
         ##also need to change to_portal
+        #
+        #binary_element = BinaryElement()
+        #binary_element.update(show_if_spec)
+        #FullQuestion should have a rule attr, set to None by default
+        #set_rule() should take a rule in binary format
+            #put the input on FQ.rule
+            #create a new Binary element, update with the rule
+            #insert the element in first position [ move the others over by one]
+            #
+            #make sure to_portal conversion is correct
+            #
+        #if ``conditional``, CPortal should
+            #first get the first resposne
+            #if that's false, break the for loop
+            #else continue through other active elements
+            #so on portal:
+                #if full_question.rule:
+                    #get element response
+                    #if full_question.show_if:
+                        #
+                    #if response check_truthy:
+                        #continue
+                        #is_truthy(response, input_element)
+                    #else:
+                        #break
+
+    
+    #problems:
+        #in current API implementation, show_if questions have an input_array
+        #that differs from response_array in length by one. that means Engine modules
+        #need to know to expect the difference.
+                        
+        #
+        #perhaps the revised version should look like FullQuestion.rule = None or True
+        #if rule, then expects the binary element in the input_array
+        #
+        #also relates to mixed type questions:
+        #if rule, mixed = True
+        #mixed can also be True in other ways
+    #so, the new pattern will be:
+        #FullQuestion.type allows ``mixed``.
+        #If the FQ.conditional == True, then its conditional
+        #otherwise, get all at once
+    #
+    #
+        #
     #
     reverse_lookup_keys = [new_question.tags.name, location]
     catalog.register(new_question, *reverse_lookup_keys)
