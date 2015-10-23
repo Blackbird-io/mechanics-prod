@@ -227,7 +227,7 @@ class FullQuestion:
         else:
             self.prompt = self.basic_prompt
 
-    def set_sub_type(self,sub_type):
+    def set_sub_type(self, sub_type):
         """
 
 
@@ -248,7 +248,7 @@ class FullQuestion:
         if sub_type in self._types[self.input_type]["sub_types"]:
             self.input_sub_type = sub_type
             for e in self.input_array:
-                object.__setattr__(e,"input_sub_type", sub_type)
+                object.__setattr__(e, "input_sub_type", sub_type)
                 #input_sub_type always restricted, must set manually
         else:
             c = "" 
@@ -256,6 +256,19 @@ class FullQuestion:
             c += "%s."
             c = c % (sub_type,self.input_type)
             raise BBExceptions.QuestionFormatError(c)
+        #
+        #<-------------- should change this to work on a single element? or a pool of elements?
+        #or should just do this on the element?
+        #element.set_sub_type()
+        #
+        #
+        
+    def set_condition(self, show_if_rule):
+        #<---------------------------------------------------------------------------------
+        self.condition = True
+        rule_element = BinaryInput()
+        rule_element.update(show_if_rule)
+        self.input_array.insert(0, rule_element)
         
     def set_type(self,input_type):
         """
@@ -278,6 +291,24 @@ class FullQuestion:
             for i in range(self._max_elements):
                 new_element = self._types[input_type]["klass"]()
                 self.input_array.append(new_element)
+
+        #if this is ``mixed``, should create a blank array
+        #content modules should only specify "mixed" in advanced config
+        #should still start with a base type.
+        #then, if mixed, QM can pick out elements based type from the FQ._types thing
+        #
+
+    def to_engine(self, portal_question):
+        """
+        -> FullQuestion
+        take an API PortalQuestion schema and create an instance that fits
+        """
+        if mixed:
+            #delegate to specialized function
+        else:
+            
+            
+        
 
     def update(self,mini_q):
         """

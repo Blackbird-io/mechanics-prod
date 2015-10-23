@@ -43,8 +43,8 @@ get_landscape_summary describes the opportunity landscape for all transactions
 next_question()       uses SimplePortal to ask for the next user input
 rewind()              goes back one or more steps
 step()                performs one analytical step, from User to Engine to User
-to_portal()           converts MQR message to Engine-Wrapper API dict format
 to_engine()           converts API message to MQR
+to_portal()           converts MQR message to Engine-Wrapper API dict format
 use_script()          commits SimplePortal to get user responses from a script
 
 CLASSES:

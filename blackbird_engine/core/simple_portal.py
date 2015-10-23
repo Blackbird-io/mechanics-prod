@@ -296,11 +296,20 @@ def get_response(message, display = True):
             if web_mode:
                 full_q = FullQuestion()
                 full_q.set_type(Q["input_type"])
+                #
+                #<------------------------------------------ yo?
+                #
                 q_sub_type = Q["input_sub_type"]
                 if q_sub_type: 
                     full_q.set_sub_type(q_sub_type)
                 #full_q ready, should include an array of type-matched input
-                #elements.                
+                #elements.
+                #
+                #could just have a FullQuestion.to_engine() that delivers a fully configured
+                #Engine object
+                #
+                #or could walk through input_array and fill out elements
+                
             #
             #walk through each question element, get a user / script response
             try:
@@ -311,6 +320,8 @@ def get_response(message, display = True):
                         rich_element = full_q.input_array[i]
                         rich_element.__dict__.update(input_element)
                         input_element = rich_element
+                        #
+                        #<--------------------------------------------------- i dont know what kind of element this is
                     #
                     filled_response = dict()
                     #filled_response = ResponseElement()
@@ -404,6 +415,8 @@ def get_response(message, display = True):
     MR.clearMessageIn()
     #
     return result
+
+def get_element(
 
 def go_to(question_number):
     """
