@@ -197,9 +197,30 @@ def make_question(content_module, catalog = local_catalog):
     location = inspect.getfile(content_module)
     new_question.source = location    
     #
-    new_question.set_type(content_module.input_type)
-    if content_module.input_sub_type:
-        new_question.set_sub_type(content_module.input_sub_type)
+    #array
+    if content_module.input_type == "mixed" or content_module.full_spec:
+        #complicated question, use dedicated logic. requires full array spec.
+        new_question.input_type = content_module.input_type
+        #manually set type. build_custom_array requires this for verification 
+        new_question.build_custom_array(content_module.full_spec)            
+    else:
+        new_question.build_basic_array(content_module.input_type,
+                                       content_module.input_sub_type,
+                                       content_module.active_elements)
+        #add element details if specified; option available only on "regular"
+        #questions (those without a full_spec)
+        if getattr(content_module, "element_details", False):
+            for i in range(content_module.active_elements):
+                element = new_question.input_array[i]
+                spec = content_module.element_details[i]
+                element.update(spec)
+    #
+    #condition
+    ##need a getattr here to make sure we jive with old questions that wont have the attr
+    if content_module.condition:
+        new_question.set_condition(rule)
+    #
+    #other attributes
     simple_attrs = ["array_caption",
                     "comment",
                     "basic_prompt",
@@ -212,23 +233,16 @@ def make_question(content_module, catalog = local_catalog):
             setattr(new_question, attr, attr_val)
         else:
             continue
-    for i in range(len(new_question.input_array)):
-        if i <= (content_module.active_elements - 1):
-            new_question.input_array[i]._active = True
-        else:
-            new_question.input_array[i]._active = False
-        #FullQuestion objects automatically carry their maximum number of typed
-        #input elements, so that Topic authors never have to add any manually.
-        #The input elements are turned off (._active = False) by default. Logic
-        #steps through the list and turns on the number specified by the content
-        #module.
+    #
+    #check that everything looks right before sending question out
+    if not new_question.check():
+        c = "Something went wrong in the following module:\n%s\n"
+        c = c % location
+        raise BBExceptions.QuestionFormatError(c)
     #
     #advanced configuration: input element details
-    if getattr(content_module, "element_details", False):
-        for i in range(content_module.active_elements):
-            element = new_question.input_array[i]
-            spec = content_module.element_details[i]
-            element.update(spec)
+    ##this goes only in the regular thing, not for full_spec
+    
     #
     #advanced configuration: show_if rule
     #[blank for now]
