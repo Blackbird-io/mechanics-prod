@@ -58,20 +58,6 @@ from ..system.tags import Tags
 #globals
 decimal.getcontext().prec = 6
 
-q_types = ["binary",
-           "bool",
-           "choice",
-           "date",
-           "date-range",
-           "number",
-           "number-range",
-           "time",
-           "time-range",
-           "text"]
-
-q_entry = ["klass",
-           "sub_types"]
-
 #classes
 class FullQuestion:
     """
@@ -128,23 +114,19 @@ class FullQuestion:
     ====================  ======================================================
     """
     #class attributes
-    _types = {k:dict.fromkeys(q_entry) for k in q_types}
-    _types["binary"]["klass"] = BinaryInput
-    _types["bool"]["klass"] = BoolInput
-    _types["choice"]["klass"] = ChoiceInput
-    _types["date"]["klass"] = DateInput
-    _types["date-range"]["klass"] = DateRangeInput
-    _types["number"]["klass"] = NumberInput
-    _types["number-range"]["klass"] = NumberRangeInput
-    _types["time"]["klass"] = TimeInput
-    _types["time-range"]["klass"]= TimeRangeInput
-    _types["text"]["klass"] = TextInput
-    _types["number"]["sub_types"] = {"percent",
-                                     "currency",
-                                     "days",
-                                     "weeks",
-                                     "months",
-                                     "years"}
+    _klasses["binary"] = BinaryInput
+    _klasses["bool"] = BoolInput
+    _klasses["choice"] = ChoiceInput
+    _klasses["date"] = DateInput
+    _klasses["date-range"] = DateRangeInput
+    _klasses["number"] = NumberInput
+    _klasses["number-range"] = NumberRangeInput
+    _klasses["time"] = TimeInput
+    _klasses["time-range"]= TimeRangeInput
+    _klasses["text"] = TextInput
+
+    #
+    _klasses["number"]["sub_types"] = 
     _types["number-range"]["sub_types"] = _types["number"]["sub_types"]
     _types["text"]["sub_types"] = {"email"}
     #
@@ -210,102 +192,13 @@ class FullQuestion:
         result.input_array = copy.deepcopy(self.input_array)
         result.tags = self.tags.copy(enforce_rules = False)
         return result
-
-    def set_prompt(self):
-        """
-
-
-        FullQuestion.set_prompt() -> None
-
-
-        Method sets instance prompt to a Portal- / browser-ready string.
-
-        If instance specifies a custom_prompt, method attempts to format the
-        custom_prompt with the context. Uses basic_prompt if context doesn't fit
-        (raises KeyError) or if custom_prompt is blank.
-        """
-        if self.custom_prompt:
-            try:
-                self.prompt = self.custom_prompt.format(**self.context)
-            except KeyError:
-                self.prompt = self.basic_prompt
-        else:
-            self.prompt = self.basic_prompt
-
-    def set_sub_type(self, sub_type):
-        """
-
-
-        FullQuestion.set_sub_type(sub_type) -> None
-
-
-        Method sets instance.input_sub_type to argument. ``sub_type`` is
-        usually a string. Instances must have type before they can have
-        sub_type, so method raises error if instance.input_type != True.
-
-        Method also raises error if the sub_type doesn't fit the instance type
-        per the API (ie, sub_type is not in
-        FullQuestion._types[instance type]["sub_types"]).
-        """
-        if not self.input_type:
-            c = "Must specify type before sub_type."
-            raise BBExceptions.QuestionFormatError(c)
-        if sub_type in self._types[self.input_type]["sub_types"]:
-            self.input_sub_type = sub_type
-            for e in self.input_array:
-                object.__setattr__(e, "input_sub_type", sub_type)
-                #input_sub_type always restricted, must set manually
-        else:
-            c = "" 
-            c += "Portal does not recognize %s as valid input_sub_type for\n"
-            c += "%s."
-            c = c % (sub_type,self.input_type)
-            raise BBExceptions.QuestionFormatError(c)
-        #
-        #<-------------- should change this to work on a single element? or a pool of elements?
-        #or should just do this on the element?
-        #element.set_sub_type()
-            #so this would...
-            #for element in input_array:
-                #e.set_sub_type(x)
-            #and only run if not mixed?
-        #
-        #should also change update() so only updates if in schema
-        #otherwise raise error
-        
-    def set_type(self,input_type):
-        """
-
-
-        FullQuestion.set_type(input_type) -> None
-
-
-        Method sets instance type to argument. ``input_type`` is usually a
-        string. Method raises error if the type is not recognized by the Portal
-        per Engine-Wrapper API (argument is not in FullQuestion._types). 
-        """
-        if input_type not in self._types.keys():
-            c = "Portal does not recognize %s as valid input_type."
-            c = c % input_type
-            raise BBExceptions.QuestionFormatError(c)
-        else:
-            self.input_type = input_type
-            self.input_array = []
-            for i in range(self._max_elements):
-                new_element = self._types[input_type]["klass"]()
-                self.input_array.append(new_element)
-
-        #if this is ``mixed``, should create a blank array
-        #content modules should only specify "mixed" in advanced config
-        #should still start with a base type.
-        #then, if mixed, QM can pick out elements based type from the FQ._types thing
-        #
         
     def build_basic_array(self, input_type,
                           input_sub_type = None, active_elements = 1):
         """
         -> None
-        clears existing array
+        clears existing array, then adds the maximum number of elements of requested
+        type and sub_type.
         """
         self.input_array.clear()
         base_klass = new_question._klasses[input_type]
@@ -340,20 +233,49 @@ class FullQuestion:
             element.update(e_spec)           
             self.input_array.append(element)
 
-    def set_condition(self, rule):
-        """
-        rule must follow api spec for binary elements
-        """
-        gating_element = self._klasses["binary"]()
-        gating_element.update(rule)
-        self.input_array.insert(0, gating_element)
-        self.conditional = True
-
     def check(self):
+        """
+
+
+        FullQuestion.check() -> bool
+
+
+        Return True if both check_types() and check_length() are True, False
+        otherwise. 
+        """
         result = all(self.check_types(), self.check_length())
         return result
-    
+
+    def check_length(self):
+        """
+
+
+        FullQuestion.check_length() -> bool
+
+        
+        Return True if the number of elements in instance's input_array is less
+        than or equal to the maximum permitted, False otherwise. 
+        """
+        result = False
+        if len(self.input_array) <= self._max_elements:
+            result = True
+        #
+        return result            
+
     def check_types(self):
+        """
+
+
+        FullQuestion.check_types() -> bool
+
+
+        Return True if the instance type matches the profile of each of the
+        elements in instance's input_array, False otherwise.
+
+        NOTE: Method will return False if elements are homogenous but instance
+        type is set to ``mixed``. We do this to encourage disciplined question
+        crafting. Otherwise, we may start to always label questions ``mixed``. 
+        """
         result = False
         #
         types_in_array = set()
@@ -376,14 +298,43 @@ class FullQuestion:
                 result = True
         #
         return result
+    
+    def set_condition(self, binary_spec):
+        """
 
-    def check_length(self):
-        result = False
-        if len(self.input_array) <= settings.questions.max_elements:
-            result = True
-        #
-        return result            
 
+        FullQuestion.set_condition(binary_spec) -> None
+
+
+        Create a binary gating element that matches the spec, insert at the
+        beginning of the instance input array.
+        """
+        gating_element = self._klasses["binary"]()
+        gating_element.update(binary_spec)
+        self.input_array.insert(0, gating_element)
+        self.conditional = True
+
+    def set_prompt(self):
+        """
+
+
+        FullQuestion.set_prompt() -> None
+
+
+        Method sets instance prompt to a Portal- / browser-ready string.
+
+        If instance specifies a custom_prompt, method attempts to format the
+        custom_prompt with the context. Uses basic_prompt if context doesn't fit
+        (raises KeyError) or if custom_prompt is blank.
+        """
+        if self.custom_prompt:
+            try:
+                self.prompt = self.custom_prompt.format(**self.context)
+            except KeyError:
+                self.prompt = self.basic_prompt
+        else:
+            self.prompt = self.basic_prompt
+    
     def update(self,mini_q):
         """
 

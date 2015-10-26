@@ -63,8 +63,9 @@ class GenericInput(ReadyForPortal):
     ====================  ======================================================
 
     DATA:
-    _var_attrs            tuple; names of attributes that accept new values
     _active               bool; whether Portal should display this input element
+    _sub_types            set; subtypes permitted under the API
+    _var_attrs            tuple; names of attributes that accept new values
     allow_other           bool; can user provide free-form entry for choice type
     entries               list; response choices
     input_type            string; None for this class 
@@ -94,8 +95,8 @@ class GenericInput(ReadyForPortal):
     update()              update instance attributes to spec values
     ====================  ======================================================
     """
-    _sub_types = tuple(None)
-    #fill in at level of descendants
+    _sub_types = {None}
+    #can add sub-types at daughter level; must match API.
 
     @property
     def input_sub_type(self):
