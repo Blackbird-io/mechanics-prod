@@ -94,11 +94,30 @@ class GenericInput(ReadyForPortal):
     update()              update instance attributes to spec values
     ====================  ======================================================
     """
+    _sub_types = tuple(None)
+    #fill in at level of descendants
+
+    @property
+    def input_sub_type(self):
+        return self._input_sub_type
+
+    @input_sub_type.setter
+    def input_sub_type(self, value):
+        if value in self._sub_types:
+            self._input_sub_type = value
+        else:
+            raise BigError
+
+    @input_sub_type.deleter
+    def input_sub_type(self):
+        self._input_sub_type = None
+    
     def __init__(self, var_attrs = None):
         if var_attrs == None:
             var_attrs = ("_active",
                          "allow_other",
                          "entries",
+                         "input_sub_type",
                          "line_value",
                          "main_caption",
                          "multi",
@@ -272,6 +291,18 @@ class GenericInput(ReadyForPortal):
             c = "user response does not fit input element."
             raise BBExceptions.ResponseFormatError(c, E)
 
+    def to_portal(self):
+        """
+        return a flat dictionary in api format
+        """
+        result = self.__dict__.copy()
+        #
+        #modify managed attributes
+        sub_type = self.input_sub_type
+        result["input_sub_type"] = sub_type
+        #
+        return result
+        
     def update(self, spec):
         """
 
@@ -280,7 +311,11 @@ class GenericInput(ReadyForPortal):
 
 
         Method updates instance attributes to values in spec. Method expects
-        ``spec`` to be a dictionary with attribute name keys. 
+        ``spec`` to be a dictionary with attribute name keys.
+
+        Since GenericInput descends from Schema and Schema overloads
+        __setattr__ to permit regular setting only for attributes in _var_attrs,
+        method will encounter an exception on sets outside the API schemas. 
         """
         for attr_name in spec:
             spec_val = spec[attr_name]

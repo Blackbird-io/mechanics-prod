@@ -319,6 +319,15 @@ def get_response(message, display = True):
                         #input_element is a flat dictionary
                         rich_element = full_q.input_array[i]
                         rich_element.__dict__.update(input_element)
+                        #
+                        #<--------------------------------------------------- this should run through rich_element.update()
+                        #but will break on type and sub_type
+                        #can have GenericInput.pop("type"), GenericInput.pop("sub_type")
+                        #but actually just want to ignore those attrs that are not in schema, instead of breaking?
+                        #no, should probably break, that way you know you are putting info in the wrong place
+                        #its a good way to spot mistakes before they happen
+                        #
+                        #
                         input_element = rich_element
                         #
                         #<--------------------------------------------------- i dont know what kind of element this is
@@ -416,7 +425,19 @@ def get_response(message, display = True):
     #
     return result
 
-def get_element(
+def get_element():
+    pass
+
+#revised logic:
+    #get the question
+    #make the rich elements associated with the input array
+    #if conditional:
+        #ask the first one, check response
+        #if response == caption_true:
+            #continue
+        #else:
+            #break
+
 
 def go_to(question_number):
     """

@@ -10,7 +10,7 @@
 Module defines FullQuestion class. FullQuestion objects provide all details
 necessary for Portal to display the question properly to a user. FullQuestion
 objects also provide identification and charactertization attributes that allow
-Engine to learn pattenrs from manual question selection.
+Engine to learn patterns from manual question selection.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -85,6 +85,11 @@ class FullQuestion:
     Generally, a warehouse module will set some question attributes permanently
     (such as the prompt, where careful, simple wording matters a lot) and leave
     others for customization at run-time (context, individual array elements).
+
+    #FullQuestion objects automatically carry their maximum number of typed
+    #input elements, so that Topic authors never have to add any manually. By
+    default, the first element is turned on (element._active == True) and the
+    others are turned off. Topics can modify these settings when they wish.
 
     See the Engine-Wrapper API for more details on how the Portal responds to
     various FullQuestion attributes. 
@@ -260,15 +265,13 @@ class FullQuestion:
         #<-------------- should change this to work on a single element? or a pool of elements?
         #or should just do this on the element?
         #element.set_sub_type()
+            #so this would...
+            #for element in input_array:
+                #e.set_sub_type(x)
+            #and only run if not mixed?
         #
-        #
-        
-    def set_condition(self, show_if_rule):
-        #<---------------------------------------------------------------------------------
-        self.condition = True
-        rule_element = BinaryInput()
-        rule_element.update(show_if_rule)
-        self.input_array.insert(0, rule_element)
+        #should also change update() so only updates if in schema
+        #otherwise raise error
         
     def set_type(self,input_type):
         """
@@ -297,18 +300,89 @@ class FullQuestion:
         #should still start with a base type.
         #then, if mixed, QM can pick out elements based type from the FQ._types thing
         #
-
-    def to_engine(self, portal_question):
-        """
-        -> FullQuestion
-        take an API PortalQuestion schema and create an instance that fits
-        """
-        if mixed:
-            #delegate to specialized function
-        else:
-            
-            
         
+    def build_basic_array(self, input_type,
+                          input_sub_type = None, active_elements = 1):
+        """
+        -> None
+        clears existing array
+        """
+        self.input_array.clear()
+        base_klass = new_question._klasses[input_type]
+        for i in range(new_question._max_elements):
+            element = base_klass()
+            if i < active_elements:
+                element._active = True
+            if input_sub_type:
+                element.input_sub_type = input_sub_type
+            self.input_array.append(element)
+
+    def build_custom_array(self, array_spec, active_elements = 1):
+        """
+
+        clears instance input_array and rebuilds from spec
+        raises error if multiple types of questions or type doesnt match
+
+        method sets ``active_count`` elements to _active == True, though
+        spec can override that. 
+        """
+        self.input_array.clear()
+        array_spec = array_spec.copy()
+        #make a copy so we can remove data
+        #
+        for i in range(len(array_spec)):
+            e_spec = array_spec[i]
+            e_type = e_spec.pop("input_type")
+            element = self._klasses[e_type]()
+            if i < active_elements:
+                element._active = True
+            #set default active status first; e_spec can override
+            element.update(e_spec)           
+            self.input_array.append(element)
+
+    def set_condition(self, rule):
+        """
+        rule must follow api spec for binary elements
+        """
+        gating_element = self._klasses["binary"]()
+        gating_element.update(rule)
+        self.input_array.insert(0, gating_element)
+        self.conditional = True
+
+    def check(self):
+        result = all(self.check_types(), self.check_length())
+        return result
+    
+    def check_types(self):
+        result = False
+        #
+        types_in_array = set()
+        for element in self.input_array:
+            e_type = element["input_type"]
+            types_in_array.add(e_type)
+        #
+        if self.conditional:
+            if self.input_array["input_type"] == "binary":
+                types_in_array.remove("binary")
+        #
+        types_in_array = sorted(types_in_array)
+        if len(types_in_array) > 1:
+            if self.input_type == "mixed":
+                result = True
+                #enfore discipline; only use "mixed" if actually mixing types,
+                #don't use it as a catch-all
+        else:
+            if self.input_type == types_in_array[0]:
+                result = True
+        #
+        return result
+
+    def check_length(self):
+        result = False
+        if len(self.input_array) <= settings.questions.max_elements:
+            result = True
+        #
+        return result            
 
     def update(self,mini_q):
         """
@@ -330,6 +404,4 @@ class FullQuestion:
             else:
                 if attr_val:
                     setattr(self, attr_name, attr_val)
-    
-        
 
