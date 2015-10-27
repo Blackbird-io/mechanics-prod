@@ -451,8 +451,6 @@ def to_portal(engine_msg):
     Q = engine_msg[1]
     R = engine_msg[2]
     #
-    global web_mode
-    #
     if Q:
         if M:
             Q.context.update(M.stage.work_space)

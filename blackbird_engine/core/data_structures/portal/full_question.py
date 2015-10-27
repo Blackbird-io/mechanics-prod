@@ -72,10 +72,11 @@ class FullQuestion:
     (such as the prompt, where careful, simple wording matters a lot) and leave
     others for customization at run-time (context, individual array elements).
 
-    #FullQuestion objects automatically carry their maximum number of typed
-    #input elements, so that Topic authors never have to add any manually. By
-    default, the first element is turned on (element._active == True) and the
-    others are turned off. Topics can modify these settings when they wish.
+    FullQuestion objects with a single (vs mixed) type automatically carry the
+    maximum permitted number of elements in their input array. By default, the
+    first element is turned on (element._active == True) and the others are
+    turned off. For such regular-way questions, our topics never have to add
+    elements manually; they can just toggle the ``_active`` setting.
 
     See the Engine-Wrapper API for more details on how the Portal responds to
     various FullQuestion attributes. 
@@ -85,8 +86,8 @@ class FullQuestion:
 
     DATA:
     _max_elements         int; max length  ofinput_array, fixed per API
+    _klasses              dict; maps known type names to matching classes
     _progress             Decimal; instance-level state for progress 
-    _types                dict; CLASS, maps strings Portal knows to classes
     array_caption         string that appears above arrays of input_elements
     basic_prompt          default prompt for question
     comment               explanation string that appears below the prompt
@@ -105,15 +106,22 @@ class FullQuestion:
     transcribe            bool; whether portal should show question to lenders
     
     FUNCTIONS:
+    _check_length()       check if array fits max length
+    _check_types()        check if elements match the instance type
+    build_basic_array()   build an array for single-type elements
+    build_custom_array()  build an array of elements from spec; can be mixed
+    check()               check if elements match instance type and length
     copy()                returns new obj with deep id, tags, array, and context
     ProgressDescriptor()  manages class and instance progress attributes
+    set_condition()
     set_prompt()          sets prompt to formatted custom if possible, or basic
-    set_type()            sets question type, populates input_array
-    set_sub_type()        sets question sub_type, if fits input_type
     update()              updates instance attributes from MiniQuestion
     ====================  ======================================================
     """
     #class attributes
+    _max_elements = 5
+
+    _klasses = dict()
     _klasses["binary"] = BinaryInput
     _klasses["bool"] = BoolInput
     _klasses["choice"] = ChoiceInput
@@ -123,14 +131,7 @@ class FullQuestion:
     _klasses["number-range"] = NumberRangeInput
     _klasses["time"] = TimeInput
     _klasses["time-range"]= TimeRangeInput
-    _klasses["text"] = TextInput
-
-    #
-    _klasses["number"]["sub_types"] = 
-    _types["number-range"]["sub_types"] = _types["number"]["sub_types"]
-    _types["text"]["sub_types"] = {"email"}
-    #
-    _max_elements = 5
+    _klasses["text"] = TextInput    
     
     def __init__(self):
         self.id = ID()
@@ -170,87 +171,12 @@ class FullQuestion:
                 raise BBExceptions.ManagedAttributeError(c)
 
     progress = ProgressDescriptor()
-
-    def copy(self):
-        """
-
-
-        FullQuestion.copy() -> FullQuestion
-
-
-        Method returns a new instance of FullQuestion with equivalent attribute
-        values.
-
-        Method first creates a shallow copy and then creates deep copies of
-        values for ``context``, ``id`` and ``input_array``. Method also sets
-        result.tags to a class-specific, rules-off copy of the instance tags
-        object.
-        """
-        result = copy.copy(self)
-        result.context = copy.deepcopy(self.context)
-        result.id = copy.deepcopy(self.id)
-        result.input_array = copy.deepcopy(self.input_array)
-        result.tags = self.tags.copy(enforce_rules = False)
-        return result
         
-    def build_basic_array(self, input_type,
-                          input_sub_type = None, active_elements = 1):
-        """
-        -> None
-        clears existing array, then adds the maximum number of elements of requested
-        type and sub_type.
-        """
-        self.input_array.clear()
-        base_klass = new_question._klasses[input_type]
-        for i in range(new_question._max_elements):
-            element = base_klass()
-            if i < active_elements:
-                element._active = True
-            if input_sub_type:
-                element.input_sub_type = input_sub_type
-            self.input_array.append(element)
-
-    def build_custom_array(self, array_spec, active_elements = 1):
-        """
-
-        clears instance input_array and rebuilds from spec
-        raises error if multiple types of questions or type doesnt match
-
-        method sets ``active_count`` elements to _active == True, though
-        spec can override that. 
-        """
-        self.input_array.clear()
-        array_spec = array_spec.copy()
-        #make a copy so we can remove data
-        #
-        for i in range(len(array_spec)):
-            e_spec = array_spec[i]
-            e_type = e_spec.pop("input_type")
-            element = self._klasses[e_type]()
-            if i < active_elements:
-                element._active = True
-            #set default active status first; e_spec can override
-            element.update(e_spec)           
-            self.input_array.append(element)
-
-    def check(self):
+    def _check_length(self):
         """
 
 
-        FullQuestion.check() -> bool
-
-
-        Return True if both check_types() and check_length() are True, False
-        otherwise. 
-        """
-        result = all(self.check_types(), self.check_length())
-        return result
-
-    def check_length(self):
-        """
-
-
-        FullQuestion.check_length() -> bool
+        FullQuestion._check_length() -> bool
 
         
         Return True if the number of elements in instance's input_array is less
@@ -262,11 +188,11 @@ class FullQuestion:
         #
         return result            
 
-    def check_types(self):
+    def _check_types(self):
         """
 
 
-        FullQuestion.check_types() -> bool
+        FullQuestion._check_types() -> bool
 
 
         Return True if the instance type matches the profile of each of the
@@ -299,6 +225,95 @@ class FullQuestion:
         #
         return result
     
+    def build_basic_array(self, input_type,
+                          input_sub_type = None, active_count = 1):
+        """
+
+
+        FullQuestion.build_basic_array(input_type
+                                      [, input_sub_type = None]
+                                      [, active_elements = 1]]) -> None
+
+
+        Clear existing contents, then add the maximum permitted number of
+        type-specific elements. 
+        
+        Method sets _active == True for the first ``active_count`` elements. 
+        """
+        self.input_array.clear()
+        base_klass = new_question._klasses[input_type]
+        for i in range(new_question._max_elements):
+            element = base_klass()
+            if i < active_count:
+                element._active = True
+            if input_sub_type:
+                element.input_sub_type = input_sub_type
+            self.input_array.append(element)
+
+    def build_custom_array(self, array_spec, active_elements = 1):
+        """
+
+
+        FullQuestion.build_custom_array(array_spec
+                                       [, active_elements = 1]) -> None
+
+                                       
+        Clear existing contents, then add elements as specified in spec. 
+
+        Method expects spec to follow API InputElement schema. Method sets
+        _active == True for the first ``active_count`` elements. Spec can
+        override that setting by specifying its own _active values for each
+        element.
+        """
+        self.input_array.clear()
+        array_spec = array_spec.copy()
+        #make a copy so we can remove data
+        #
+        for i in range(len(array_spec)):
+            e_spec = array_spec[i]
+            e_type = e_spec.pop("input_type")
+            element = self._klasses[e_type]()
+            if i < active_elements:
+                element._active = True
+            #set default active status first; e_spec can override
+            element.update(e_spec)           
+            self.input_array.append(element)
+
+    def check(self):
+        """
+
+
+        FullQuestion.check() -> bool
+
+
+        Return True if both check_types() and check_length() are True, False
+        otherwise. 
+        """
+        result = all(self.check_types(), self.check_length())
+        return result
+    
+    def copy(self):
+        """
+
+
+        FullQuestion.copy() -> FullQuestion
+
+
+        Method returns a new instance of FullQuestion with equivalent attribute
+        values.
+
+        Method first creates a shallow copy and then creates deep copies of
+        values for ``context``, ``id`` and ``input_array``. Method also sets
+        result.tags to a class-specific, rules-off copy of the instance tags
+        object.
+        """
+        result = copy.copy(self)
+        result.context = copy.deepcopy(self.context)
+        result.id = copy.deepcopy(self.id)
+        result.input_array = copy.deepcopy(self.input_array)
+        result.tags = self.tags.copy(enforce_rules = False)
+        return result
+
     def set_condition(self, binary_spec):
         """
 

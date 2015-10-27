@@ -132,13 +132,10 @@ class PortalQuestion(ReadyForPortal):
         for input_element in prelim["input_array"]:
             if input_element._active:
                 clean_element = input_element
-                #
+                #weed out inactive elements
                 if web:
                     clean_element = input_element.to_portal()
                     #flatten input_element to a dictionary for web output
-                    #
-                    #if to_portal doesnt work here, can just copy element
-                    #dictionary and call it a day
                 #
                 result["input_array"].append(clean_element)
         result["progress"] = int(prelim["progress"])

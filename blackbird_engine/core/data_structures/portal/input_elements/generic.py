@@ -64,12 +64,13 @@ class GenericInput(ReadyForPortal):
 
     DATA:
     _active               bool; whether Portal should display this input element
-    _sub_types            set; subtypes permitted under the API
+    _sub_types            set; permissible instance subtypes, per API
+    _input_sub_type       string or None; instance state for property
     _var_attrs            tuple; names of attributes that accept new values
     allow_other           bool; can user provide free-form entry for choice type
     entries               list; response choices
     input_type            string; None for this class 
-    input_sub_type        string or None; contextual hint for Web Portal
+    input_sub_type        string or None; P; contextual hint for Web Portal
     line_value            decimal; value of line user should verify
     main_caption          string; browser displays main_caption above the input
     multi                 bool; can user select multiple options
@@ -92,33 +93,19 @@ class GenericInput(ReadyForPortal):
     copy()                returns a shallow copy, w deep copy of other_element
     format_response()     take string, return object formatted per type and API
     set_response()        take string, format, set as target response
+    to_portal()           return schema-compliant dict
     update()              update instance attributes to spec values
     ====================  ======================================================
     """
     _sub_types = {None}
     #can add sub-types at daughter level; must match API.
-
-    @property
-    def input_sub_type(self):
-        return self._input_sub_type
-
-    @input_sub_type.setter
-    def input_sub_type(self, value):
-        if value in self._sub_types:
-            self._input_sub_type = value
-        else:
-            raise BigError
-
-    @input_sub_type.deleter
-    def input_sub_type(self):
-        self._input_sub_type = None
     
     def __init__(self, var_attrs = None):
         if var_attrs == None:
             var_attrs = ("_active",
+                         "_input_sub_type",
                          "allow_other",
                          "entries",
-                         "input_sub_type",
                          "line_value",
                          "main_caption",
                          "multi",
@@ -144,7 +131,6 @@ class GenericInput(ReadyForPortal):
         self.__dict__["allow_other"] = False
         self.__dict__["entries"] = None
         self.__dict__["input_type"] = None
-        self.__dict__["input_sub_type"] = None
         self.__dict__["line_value"] = None
         self.__dict__["main_caption"] = None
         self.__dict__["multi"]= False
@@ -162,6 +148,7 @@ class GenericInput(ReadyForPortal):
         #set default values manually through dict to make sure they do not
         #bounce when a subclass passes in a smaller attribute whitelist
 
+    
     def __str__(self, tab = None):
         result = ""
         name_field_width = 25
@@ -175,6 +162,37 @@ class GenericInput(ReadyForPortal):
             line += str(attr_val) + "\n"
             result = result + line
         return result                       
+
+    @property
+    def input_sub_type(self):
+        """
+
+
+        **property**
+
+
+        Property returns instance _input_sub_type.
+
+        Property setter accepts values in class._sub_types. Setter raises
+        QuestionFormatError otherwise.
+
+        Deleter sets value to None
+        """
+        return self._input_sub_type
+
+    @input_sub_type.setter
+    def input_sub_type(self, value):
+        if value in self._sub_types:
+            self._input_sub_type = value
+        else:
+            c = "Cannot set sub type to ``%s``.\n"
+            c += "Permitted subtypes for instance:\n\t%s\n"
+            c = c % (value, self._sub_types)
+            raise BBExceptions.QuestionFormatError(c)
+
+    @input_sub_type.deleter
+    def input_sub_type(self):
+        self._input_sub_type = None
 
     def check_response(self, proposed_response):
         """
@@ -294,11 +312,16 @@ class GenericInput(ReadyForPortal):
 
     def to_portal(self):
         """
-        return a flat dictionary in api format
+
+
+        GenericInput.to_portal() -> dict
+
+
+        Return a flat dictionary that describes instance according to the API
+        InputElement schema.
         """
         result = self.__dict__.copy()
-        #
-        #modify managed attributes
+        #add an API-spec key for managed attributes
         sub_type = self.input_sub_type
         result["input_sub_type"] = sub_type
         #
