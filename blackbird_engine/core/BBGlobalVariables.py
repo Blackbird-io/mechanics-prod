@@ -78,11 +78,11 @@ class BlackbirdError(Exception): pass
 class BBAnalyticalError(BlackbirdError): pass
 
 #Other:
-screen_width = 80
+##screen_width = 80
 min_progress_per_question = 2
 misfitLabel = "MISFIT"  #<---------------------------------------------------------eliminate
 END_INTERVIEW = "END_interview"
-user_stop = "STOP INTERVIEW"
+##user_stop = "STOP INTERVIEW"
 
 #Message Status Tools:
 messagePatterns = {}
