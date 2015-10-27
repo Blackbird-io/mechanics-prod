@@ -18,36 +18,22 @@ Attribute             Description
 ====================  ==========================================================
 
 DATA: 
-BB                    str; screen caption for question prompts
-CACHE                 list; processed messages
 CACHE_LIMIT           int; maximum number of messages to store
-CACHE_OFFSET          int; starting message number
-INDENT                int; left margin size
-INSTRUCTIONS          str; instructions for entering structured responses
-MR                    obj; instance of Messenger object
-WRAPPER_DETAILS       obj; instance of TextWrapper object for question details
-WRAPPER_INSTRUCTIONS  obj; instance of TextWrapper object for input instructions
-WRAPPER_LEAD          obj; instance of TextWrapper object for question prompts
-
-
-PERMIT_CACHING        bool; wheter module supports cache and rewind operations
-pr                    str; screen caption for progress indicator
 SCREEN_WIDTH          int; width of user output in chars
-SCRIPT                dict; object that contains pre-baked responses 
-
-UX                    str; screen caption for user or script responses
 USER_ATTEMPT_LIMIT    int; max number of responses w bad format for same q
+USER_STOP             str; hard break sequence
+BB                    str; screen caption for question prompts
+PR                    str; screen caption for progress indicator
+UX                    str; screen caption for user or script responses
 
 FUNCTIONS:
 disable_caching()     turn message storage off, discard cache
 enable_caching()      turn message storage on
-get_response()        get response to question, either from user or script
 go_to()               reprocess specific message from cache, discard others
 launch()              run launch routine
 process()             get a user response, store input if necessary
 rewind()              reprocess message from specified steps back
-set_script()          sets SCRIPT
-store()               add message to cache
+set_script()          sets script
 
 CLASSES:
 n/a
@@ -74,85 +60,60 @@ from textwrap import TextWrapper
 
 
 
-#globals
-PERMIT_CACHING = False
+#constants
+CACHE_LIMIT = 100
 SCREEN_WIDTH = 60
 USER_ATTEMPT_LIMIT = 5
 USER_STOP = "STOP INTERVIEW"
-
-#cache controls
-CACHE = []
-CACHE_LIMIT = 100
-CACHE_OFFSET = 0
-
-#other state
-MR = Messenger()
-SCRIPT = None
-
-#strings and formatting
+#
 BB = " Blackbird:  "
 UX = " User:       "
 PR = " Progress:   "
+
+#cache controls
+cache = []
+cache_offset = 0
+permit_caching = False
+
+#other state
+MR = Messenger()
+script = None
+
+#formatting
+border = " " + "-" * (SCREEN_WIDTH - 1)
+indent = len(BB)
+left_margin = " " * indent
 #
-BORDER = " " + "-" * (SCREEN_WIDTH - 1)
-INDENT = len(BB)
-LEFT_MARGIN = " " * INDENT
+wrapper_lead = TextWrapper(subsequent_indent=left_margin,
+                           width=SCREEN_WIDTH)
+wrapper_detail = TextWrapper(initial_indent=left_margin,
+                             subsequent_indent=left_margin,
+                             width=SCREEN_WIDTH)
+wrapper_instructions = TextWrapper(initial_indent=" ",
+                                   subsequent_indent=" ",
+                                   width=SCREEN_WIDTH)
 #
-WRAPPER_LEAD = TextWrapper(subsequent_indent = LEFT_MARGIN, width = SCREEN_WIDTH)
-WRAPPER_DETAIL = TextWrapper(initial_indent = LEFT_MARGIN,
-                             subsequent_indent = LEFT_MARGIN,
-                             width = SCREEN_WIDTH)
-WRAPPER_INSTRUCTIONS = TextWrapper(initial_indent = " ",
-                                   subsequent_indent = " ",
-                                   width = SCREEN_WIDTH)
-#
-INSTRUCTIONS = """
+instructions = """
 Portal expects dates in YYYY-MM-DD format, time in hh:mm:ss
+
 format, and ranges in brackets: [a ,b]. To enter multiples values, 
 separate values with commas.
 """
-INSTRUCTIONS = WRAPPER_INSTRUCTIONS.fill(i)
-##INSTRUCTIONS += "\nExample:\n"
-##INSTRUCTIONS += "``[1984-11-11, 1996-08-20], [2006-09-01, 2009-06-01]``\n"
+instructions = wrapper_instructions.fill(instructions)
+##instructions += "\nExample:\n"
+##instructions += "``[1984-11-11, 1996-08-20], [2006-09-01, 2009-06-01]``\n"
 
 #functions
-def disable_caching():
+def _get_response(message):
     """
 
 
-    disable_caching() -> None
-
-
-    Function turns off message storage and deletes all old messages.     
-    """
-    global CACHE, PERMIT_CACHING
-    PERMIT_CACHING = False
-    CACHE.clear()
-    
-def enable_caching():
-    """
-
-
-    enable_caching() -> None
-
-
-    Function turns on local storage for processed messages.
-
-    NOTE: simple_portal cache behaviors may differ from web portal.    
-    """
-    global PERMIT_CACHING
-    PERMIT_CACHING = True
-    
-def get_response(message):
-    """
-
-
-    get_response(message) -> PortalMessage
+    _get_response(message) -> PortalMessage
 
 
     Function solicits a response to the message it receives as an argument and
     returns a new PortalMessage. Function will get response from user input by
-    default, or script when module global ``SCRIPT`` points to a True object.
+    default, or script when module global ``script`` points to a True object.
 
     Function expects ``message`` to comply with the PortalMessage schema from
     the Engine-Wrapper API.
@@ -180,32 +141,33 @@ def get_response(message):
             conditional = Q["conditional"]
             input_array = Q["input_array"]
             name = Q["name"]
+            progress = Q["progress"]
             prompt = Q["prompt"]
             short = Q["short"]
             #
             number_of_elements = len(input_array)
             multi_element = False
-            element_indent = INDENT
+            element_indent = indent
             if number_of_elements > 1:
                 multi_element = True
-                element_indent = INDENT + 4
+                element_indent = indent + 4
             #
             print("\n\n")
-            if PERMIT_CACHING:
-                count = len(CACHE) + CACHE_OFFSET
+            if permit_caching:
+                count = len(cache) + cache_offset
                 counter_line = " (Q" + ("#" + str(count)).rjust(4) +") " + short
                 counter_line += "\n" + "\n"
                 print(counter_line)
                 #prints "Q #34: Vendor Concentration"
             #
             prompt = BB + prompt
-            prompt = WRAPPER_LEAD.fill(prompt)
+            prompt = wrapper_lead.fill(prompt)
             print(prompt, "\n")
             #
             if comment:
-                print(WRAPPER_DETAIL.fill(comment), "\n")
+                print(wrapper_detail.fill(comment), "\n")
             if array_caption:
-                print(WRAPPER_DETAIL.fill(array_caption), "\n")
+                print(wrapper_detail.fill(array_caption), "\n")
             #
             full_q = FullQuestion()
             full_q.build_custom_array(input_array)
@@ -217,10 +179,10 @@ def get_response(message):
                     #
                     if multi_element:
                         element_header = "\t(Input Element #%s)" % i
-                        print(element_header.expandtabs(INDENT))
+                        print(element_header.expandtabs(indent))
                     print(rich_element.__str__().expandtabs(element_indent))
                     #
-                    element_response = respond_to_element(rich_element, name)
+                    element_response = _respond_to_element(rich_element, name)
                     newR.append(element_response)
                     #
                     if conditional:
@@ -229,7 +191,7 @@ def get_response(message):
                         else:
                             break
                 #filled out the response, print progress bar
-                print_progress_bar(Q["progress"])
+                _print_progress_bar(progress)
             except BBExceptions.UserInterrupt:
                 newR = USER_STOP
             finally:
@@ -248,10 +210,40 @@ def get_response(message):
     #
     return result
 
-def respond_to_element(element, question_name):
+def _print_progress_bar(progress):
     """
-    -> dict()
 
+
+    _print_progress_bar(progress) -> None
+
+
+    Print progress bar. Expects ``progress`` to be int in [0,100].
+    """
+    pr_max_length = SCREEN_WIDTH - len(PR + "||")
+    #include both progress bookends when computing length
+    pr_bar_length = int(progress / 100 * pr_max_length)
+    pr_bar_length = max(1, pr_bar_length)
+    #always show some progress
+    marks = "B" * pr_bar_length
+    spaces  = " " * (pr_max_length - pr_bar_length)
+    pr_indicator = PR + "|" + marks + spaces + "|"
+    #
+    print("\n\n")
+    print(border)
+    print(pr_indicator)
+    print(border)
+
+def _respond_to_element(element, question_name):
+    """
+
+
+    _respond_to_element(element, question_name) -> ResponseElement
+
+    
+    Return ResponseElement dictionary with either user or script input.
+
+    If input doesn't match element requirements, repeat up to
+    USER_ATTEMPT_LIMIT, then raise ResponseFormatError
     """
     result = dict()
     #
@@ -264,13 +256,13 @@ def respond_to_element(element, question_name):
     while loop:
         try:
             #first, get the raw response string
-            if SCRIPT:
-                user_answer = SCRIPT[question_name][i]["response"]
+            if script:
+                user_answer = script[question_name][i]["response"]
                 ux_w_answer = UX + user_answer
                 print(ux_w_answer)
             else:
                 if element.input_type in complex_types:
-                    print(INSTRUCTIONS)
+                    print(instructions)
                     print("\n")
                 user_answer = input(UX)
             #
@@ -296,29 +288,57 @@ def respond_to_element(element, question_name):
     #
     return result
 
-def print_progress_bar(progress):
+def _store(message):
     """
 
 
-    print_progress_bar(progress) -> None
+    store(message) -> None
 
-
-    Print progress bar. Expects ``progress`` to be int in [0,100].
-    """
-    pr_max_length = SCREEN_WIDTH - len(PR + "||")
-    #include both progress bookends when computing length
-    pr_bar_length = int(progress / 100 * pr_max_length)
-    pr_bar_length = max(1, pr_bar_length)
-    #always show some progress
-    marks = "B" * pr_bar_length
-    spaces  = " " * (pr_max_length - pr_bar_length)
-    pr_indicator = PR + "|" + marks + spaces + "|"
-    #
-    print("\n\n")
-    print(border)
-    print(pr_indicator)
-    print(border)
     
+    Function appends message to cache. If cache exceeds size limit, function
+    drops the oldest message and increments cache_offset. 
+    """
+    global cache
+    if len(cache) == CACHE_LIMIT:
+        cache = cache[1:]
+        #discard the oldest message
+        global cache_offset
+        cache_offset += 1
+        # Offset the question count that appears in first position in the cache.
+        # For example, suppose the cache is limited to 10 entries.  You are at
+        # q15 and want to go back to q8. we know that q15 is at the top of the
+        # cache (last position) because it's the one we saw last.  Therefore, we
+        # know the cache starts at q5, ie q15 - len(cache). cache_offset tracks
+        # this information.
+    cache.append(message)
+    
+def disable_caching():
+    """
+
+
+    disable_caching() -> None
+
+
+    Function turns off message storage and deletes all old messages.     
+    """
+    global cache, permit_caching
+    permit_caching = False
+    cache.clear()
+    
+def enable_caching():
+    """
+
+
+    enable_caching() -> None
+
+
+    Function turns on local storage for processed messages.
+
+    NOTE: simple_portal cache behaviors may differ from web portal.    
+    """
+    global permit_caching
+    permit_caching = True
+        
 def go_to(question_number):
     """
 
@@ -334,26 +354,26 @@ def go_to(question_number):
     ``short_name``. Function will raise error if question falls outside the
     cache range.
     """
-    global CACHE
+    global cache
     #
-    i = (question_number - 1) - CACHE_OFFSET
-    if not 0 <= i <= len(CACHE):
-        c = "Requested question falls outside CACHE range. Cache currently"
+    i = (question_number - 1) - cache_offset
+    if not 0 <= i <= len(cache):
+        c = "Requested question falls outside cache range. Cache currently"
         c += "stores messages %s to %y."
-        c = c % (CACHE_OFFSET, len(CACHE) + CACHE_OFFSET)
+        c = c % (cache_offset, len(cache) + cache_offset)
         raise IndexError(c)
     #
-    CACHE = CACHE[:(i+1)]
-    prior_message = CACHE.pop()
+    cache = cache[:(i+1)]
+    prior_message = cache.pop()
     result = process(prior_message)
     #
     return result
 
-def launch(credentials = ""):
+def launch(credentials=""):
     """
 
 
-    launch([credentials = ""]) -> PortalMessage
+    launch([credentials=""]) -> PortalMessage
 
 
     Function checks if credentials match authorized and returns a blank
@@ -403,7 +423,7 @@ def launch(credentials = ""):
             else:
                 locked_out = "You have exceeded the number of permitted attempts. "
                 locked_out += "Good bye."
-                locked_out = WRAPPER_INSTRUCTIONS.fill(locked_out)
+                locked_out = wrapper_instructions.fill(locked_out)
                 locked_out = "\n" + locked_out
                 print(locked_out)
                 #can exit process here
@@ -411,7 +431,7 @@ def launch(credentials = ""):
     #
     return starting_message
 
-def process(message, display = True):
+def process(message, display=True):
     """
 
 
@@ -421,25 +441,25 @@ def process(message, display = True):
     Function gets user response and returns updated message. If caching is on,
     function stores the input message before returning output. 
     """
-    if PERMIT_CACHING:
-        store(message)
-    result = get_response(message)
+    if permit_caching:
+        _store(message)
+    result = _get_response(message)
     #
     return result
 
-def rewind(steps_back = 1):
+def rewind(steps_back=1):
     """
 
 
-    rewind(steps_back = 1) -> message
+    rewind(steps_back=1) -> message
 
 
     Function runs get_response() on the message that's ``steps_back`` away.
     """
-    if not PERMIT_CACHING:
+    if not permit_caching:
         c = "Portal supports rewind operations only when caching enabled."
         raise BBExceptions.ProcessError(c)
-    current_step = len(CACHE)
+    current_step = len(cache)
     prior_step = current_step - steps_back
     result = go_to(prior_step)
     #
@@ -452,32 +472,9 @@ def set_script(new_script):
     set_script(new_script) -> None
 
 
-    Function sets module global ``SCRIPT`` to new_script argument. 
+    Function sets module global ``script`` to new_script argument. 
     """
-    global SCRIPT
-    SCRIPT = new_script
+    global script
+    script = new_script
 
-def store(msg):
-    """
-
-
-    store(msg) -> None
-
-    
-    Function appends message to CACHE. If CACHE exceeds size limit, function
-    drops the oldest message and increments CACHE_OFFSET. 
-    """
-    global CACHE
-    if len(CACHE) == CACHE_LIMIT:
-        CACHE = CACHE[1:]
-        #discard the oldest message
-        global CACHE_OFFSET
-        CACHE_OFFSET += 1
-        #CACHE_OFFSET the question count that appears in first position in the CACHE.
-        #for example, suppose the CACHE is limited to 10 entries. you are at q15
-        #and want to go back to q8. we know that q15 is at the top of the CACHE
-        #(last poition) because it's the one we saw last. therefore, we know the
-        #CACHE starts at q5, ie q15 - len(CACHE). CACHE_OFFSET tracks this
-        #information.
-    CACHE.append(msg)
     
