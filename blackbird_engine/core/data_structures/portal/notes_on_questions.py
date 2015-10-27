@@ -32,15 +32,33 @@ Notes on creating questions:
     have basic question types. though none currently include a condition. 
     
     discourage from using conditional questions    
-    
+
+API changes (ask):
+   
+   PQ.conditional = bool (False by default)
+   if conditional, expect 
 
 
 To do:
 
-doc strings on FullQuestion
-change PortalQuestion.to_portal to go through each input element
-
+PortalQuestion currently ignores the ``conditional`` attribute
 refactor SimplePortal to work 
+
+
+   #if ``conditional``, CPortal should
+            #first get the first resposne
+            #if that's false, break the for loop
+            #else continue through other active elements
+            #so on portal:
+                #if full_question.rule:
+                    #get element response
+                    #if full_question.show_if:
+                        #
+                    #if response check_truthy:
+                        #continue
+                        #is_truthy(response, input_element)
+                    #else:
+                        #break
 
 
 """

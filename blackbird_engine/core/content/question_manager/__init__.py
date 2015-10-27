@@ -198,27 +198,28 @@ def make_question(content_module, catalog = local_catalog):
     new_question.source = location    
     #
     #array
-    if content_module.input_type == "mixed" or content_module.full_spec:
-        #complicated question, use dedicated logic. requires full array spec.
+    fancy = (content_module.input_type == "mixed" or
+             getattr(content_module, "full_spec", False))
+    if fancy:
+        #question requires manual build logic. set type manually too. 
         new_question.input_type = content_module.input_type
-        #manually set type. build_custom_array requires this for verification 
         new_question.build_custom_array(content_module.full_spec)            
     else:
         new_question.build_basic_array(content_module.input_type,
                                        content_module.input_sub_type,
                                        content_module.active_elements)
-        #add element details if specified; option available only on "regular"
-        #questions (those without a full_spec)
+        #add element details if specified. full_spec trumps this feature, so
+        #it's available only for regular questions. 
         if getattr(content_module, "element_details", False):
             for i in range(content_module.active_elements):
                 element = new_question.input_array[i]
                 spec = content_module.element_details[i]
                 element.update(spec)
     #
-    #condition
-    ##need a getattr here to make sure we jive with old questions that wont have the attr
-    if content_module.condition:
-        new_question.set_condition(rule)
+    #condition 
+    gating_element = getattr(content_module, "gating_element", False)
+    if gating_element: 
+        new_question.set_condition(gating_element)
     #
     #other attributes
     simple_attrs = ["array_caption",
@@ -240,64 +241,7 @@ def make_question(content_module, catalog = local_catalog):
         c = c % location
         raise BBExceptions.QuestionFormatError(c)
     #
-    #advanced configuration: input element details
-    ##this goes only in the regular thing, not for full_spec
-    
-    #
-    #advanced configuration: show_if rule
-    #[blank for now]
-    #if content_module.show_if:
-        #new_question.set_rule(content_module.show_if_spec)
-        ##show_if_spec is a dictionary w parameters for a binary input_element
-        ##FQ will try to configure and attach an element according to spec.
-        ##also need to change to_portal
-        #
-        #binary_element = BinaryElement()
-        #binary_element.update(show_if_spec)
-        #FullQuestion should have a rule attr, set to None by default
-        #set_rule() should take a rule in binary format
-            #put the input on FQ.rule
-            #create a new Binary element, update with the rule
-            #insert the element in first position [ move the others over by one]
-            #
-            #make sure to_portal conversion is correct
-            #
-        #if ``conditional``, CPortal should
-            #first get the first resposne
-            #if that's false, break the for loop
-            #else continue through other active elements
-            #so on portal:
-                #if full_question.rule:
-                    #get element response
-                    #if full_question.show_if:
-                        #
-                    #if response check_truthy:
-                        #continue
-                        #is_truthy(response, input_element)
-                    #else:
-                        #break
-
-    
-    #problems:
-        #in current API implementation, show_if questions have an input_array
-        #that differs from response_array in length by one. that means Engine modules
-        #need to know to expect the difference.
-                        
-        #
-        #perhaps the revised version should look like FullQuestion.rule = None or True
-        #if rule, then expects the binary element in the input_array
-        #
-        #also relates to mixed type questions:
-        #if rule, mixed = True
-        #mixed can also be True in other ways
-    #so, the new pattern will be:
-        #FullQuestion.type allows ``mixed``.
-        #If the FQ.conditional == True, then its conditional
-        #otherwise, get all at once
-    #
-    #
-        #
-    #
+    #register the question in the catalog
     reverse_lookup_keys = [new_question.tags.name, location]
     catalog.register(new_question, *reverse_lookup_keys)
     #
