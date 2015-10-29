@@ -359,7 +359,7 @@ class GenericInput(ReadyForPortal):
         #
         return result
         
-    def update(self, spec):
+    def update(self, spec, ignore_fixed=False):
         """
 
 
@@ -367,17 +367,27 @@ class GenericInput(ReadyForPortal):
 
 
         Method updates instance attributes to values in spec. Method expects
-        ``spec`` to be a dictionary with attribute name keys.
+        ``spec`` to be a dictionary with attribute name keys. If
+        ``ignore_fixed`` is False, method will ignore attributes outside of
+        instance._var_attrs.
 
         Since GenericInput descends from Schema and Schema overloads
         __setattr__ to permit regular setting only for attributes in _var_attrs,
         method will encounter an exception on sets outside the API schemas. 
         """
-        for attr_name, attr_val in spec.items():
-            if attr_name == "input_sub_type":
-                self.set_sub_type(attr_val)
-            else:
-                setattr(self, attr_name, attr_val)
+        spec = spec.copy()
+        if "input_sub_type" in spec:
+            self.set_sub_type(spec["input_sub_type"])
+        #
+        attrs_to_set = set(spec.keys())
+        if ignore_fixed:
+            #filter out stuff we are going to ignore
+            attrs_to_set = attrs_to_set & set(self._var_attrs)
+        #
+        for attr_name in attrs_to_set:
+            attr_val = spec[attr_name]
+            setattr(self, attr_name, attr_val)
+    
             
                 
             

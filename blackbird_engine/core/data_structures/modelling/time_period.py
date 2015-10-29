@@ -33,7 +33,7 @@ import datetime
 import time
 
 import BBExceptions
-import BBGlobalVariables as Globals
+import BBGlobalVariables as settings
 
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
@@ -111,7 +111,7 @@ class TimePeriod(Tags):
         #the unit whose bbid they reference is no longer in their domain. 
 
     def __str__(self):
-        dots = "*"*Globals.screen_width
+        dots = "*" * settings.SCREEN_WIDTH
         s = "\t starts:  \t%s\n" % self.start.isoformat()
         e = "\t ends:    \t%s\n" % self.end.isoformat()
         c = "\t content: \t%s\n" % self.content

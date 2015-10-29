@@ -73,7 +73,7 @@ if sub_folder not in sys.path:
 
 import BBExceptions
 import BBGlobalVariables as Globals
-import revised_portal as portal
+import simple_portal as portal
 
 from content import question_manager as QuestionManager
 from data_structures.modelling.model import Model as EngineModel
