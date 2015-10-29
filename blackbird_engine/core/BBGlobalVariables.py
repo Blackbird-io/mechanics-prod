@@ -82,7 +82,7 @@ class BBAnalyticalError(BlackbirdError): pass
 min_progress_per_question = 2
 misfitLabel = "MISFIT"  #<---------------------------------------------------------eliminate
 END_INTERVIEW = "END_interview"
-##user_stop = "STOP INTERVIEW"
+user_stop = "STOP INTERVIEW"
 
 #Message Status Tools:
 messagePatterns = {}

@@ -198,23 +198,16 @@ def make_question(content_module, catalog = local_catalog):
     new_question.source = location    
     #
     #array
-    fancy = (content_module.input_type == "mixed" or
-             getattr(content_module, "full_spec", False))
+    fancy = (content_module.input_type == "mixed" or 
+             getattr(content_module, "element_details", False))
     if fancy:
-        #question requires manual build logic. set type manually too. 
-        new_question.input_type = content_module.input_type
-        new_question.build_custom_array(content_module.full_spec)            
+        new_question.build_custom_array(content_module.element_details,
+                                        content_module.input_type,
+                                        content_module.input_sub_type)            
     else:
         new_question.build_basic_array(content_module.input_type,
                                        content_module.input_sub_type,
                                        content_module.active_elements)
-        #add element details if specified. full_spec trumps this feature, so
-        #it's available only for regular questions. 
-        if getattr(content_module, "element_details", False):
-            for i in range(content_module.active_elements):
-                element = new_question.input_array[i]
-                spec = content_module.element_details[i]
-                element.update(spec)
     #
     #condition 
     gating_element = getattr(content_module, "gating_element", False)

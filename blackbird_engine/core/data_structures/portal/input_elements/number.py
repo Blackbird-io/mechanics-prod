@@ -75,7 +75,8 @@ class NumberInput(GenericInput):
     round_to_step()       round to nearest step if ``r_steps`` is specified
     ====================  ======================================================
     """
-    _sub_types = {"percent",
+    _sub_types = {None,
+                  "percent",
                   "currency",
                   "days",
                   "weeks",

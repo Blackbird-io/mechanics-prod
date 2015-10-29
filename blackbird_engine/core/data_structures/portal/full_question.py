@@ -35,7 +35,7 @@ FullQuestion          Object that defines question for both Engine and Portal
 import copy
 import decimal
 
-import BBExceptions
+import BBExceptions as bb_exceptions
 import BBGlobalVariables as Globals
 
 from .input_elements.binary import BinaryInput
@@ -85,9 +85,6 @@ class FullQuestion:
     ====================  ======================================================
 
     DATA:
-    _max_elements         int; max length  ofinput_array, fixed per API
-    _klasses              dict; maps known type names to matching classes
-    _progress             Decimal; instance-level state for progress 
     array_caption         string that appears above arrays of input_elements
     basic_prompt          default prompt for question
     comment               explanation string that appears below the prompt
@@ -119,7 +116,7 @@ class FullQuestion:
     ====================  ======================================================
     """
     #class attributes
-    _max_elements = 5
+    _MAX_ELEMENTS = 5
 
     _klasses = dict()
     _klasses["binary"] = BinaryInput
@@ -139,6 +136,7 @@ class FullQuestion:
         #
         self.array_caption = None
         self.comment = None
+        self.conditional = False
         self.input_array = []
         self.input_type = None
         self.input_sub_type = None
@@ -168,7 +166,7 @@ class FullQuestion:
                 instance._progress = int(value)
             else:
                 c = "Attribute requires value between 0 and 100, inclusive."
-                raise BBExceptions.ManagedAttributeError(c)
+                raise bb_exceptions.ManagedAttributeError(c)
 
     progress = ProgressDescriptor()
         
@@ -183,20 +181,20 @@ class FullQuestion:
         than or equal to the maximum permitted, False otherwise. 
         """
         result = False
-        if len(self.input_array) <= self._max_elements:
+        if len(self.input_array) <= self._MAX_ELEMENTS:
             result = True
         #
         return result            
 
-    def _check_types(self):
+    def _check_type(self):
         """
 
 
         FullQuestion._check_types() -> bool
 
 
-        Return True if the instance type matches the profile of each of the
-        elements in instance's input_array, False otherwise.
+        Return True if the instance type and sub_type matches the profile of
+        each of the elements in instance's input_array, False otherwise.
 
         NOTE: Method will return False if elements are homogenous but instance
         type is set to ``mixed``. We do this to encourage disciplined question
@@ -205,28 +203,57 @@ class FullQuestion:
         result = False
         #
         types_in_array = set()
+        sub_types_in_array = set()
         for element in self.input_array:
-            e_type = element["input_type"]
-            types_in_array.add(e_type)
+            types_in_array.add(element.input_type)
+            sub_types_in_array.add(element.input_sub_type)
         #
         if self.conditional:
-            if self.input_array["input_type"] == "binary":
+            if self.input_type != "binary":
                 types_in_array.remove("binary")
         #
         types_in_array = sorted(types_in_array)
+        sub_types_in_array = sorted(sub_types_in_array)
+        #
         if len(types_in_array) > 1:
             if self.input_type == "mixed":
                 result = True
-                #enfore discipline; only use "mixed" if actually mixing types,
+                #enforce discipline; only use "mixed" if actually mixing types,
                 #don't use it as a catch-all
         else:
             if self.input_type == types_in_array[0]:
-                result = True
+                if self.input_sub_type == sub_types_in_array[0]:
+                    result = True
         #
         return result
     
-    def build_basic_array(self, input_type,
-                          input_sub_type = None, active_count = 1):
+    def _set_type(self, input_type, input_sub_type=None):
+        """
+
+
+        FullQuestion._set_type(input_type[, input_sub_type=None])-> None
+
+
+        Set instance attributes to arguments, raise QuestionFormatError if they
+        don't fit.
+        """
+        if input_type == "mixed":
+            if input_sub_type:
+                c = "``mixed`` questions do not support subtypes."
+                raise bb_exceptions.QuestionFormatError(c)
+        else:
+            if input_type in self._klasses:
+                self.input_type = input_type
+                permitted_subs = self._klasses[input_type]._sub_types
+                if input_sub_type in permitted_subs:
+                    self.input_sub_type = input_sub_type
+                else:
+                    c = "``%s`` is not a valid %s subtype."
+                    c = c % (input_sub_type, input_type)
+                    raise bb_exceptions.QuestionFormatError(c)
+                
+    def build_basic_array(self, input_type, input_sub_type=None,
+                          active_count=1):
         """
 
 
@@ -236,29 +263,37 @@ class FullQuestion:
 
 
         Clear existing contents, then add the maximum permitted number of
-        type-specific elements. 
+        type-specific elements and set the instance type accordingly. 
         
         Method sets _active == True for the first ``active_count`` elements. 
         """
         self.input_array.clear()
-        base_klass = new_question._klasses[input_type]
-        for i in range(new_question._max_elements):
+        base_klass = self._klasses[input_type]
+        for i in range(self._MAX_ELEMENTS):
             element = base_klass()
             if i < active_count:
                 element._active = True
             if input_sub_type:
-                element.input_sub_type = input_sub_type
+                element.set_sub_type(input_sub_type)
             self.input_array.append(element)
+        #
+        self._set_type(input_type, input_sub_type)
 
-    def build_custom_array(self, array_spec, active_elements = 1):
+    def build_custom_array(self, array_spec, input_type, input_sub_type=None,
+                           active_count=1):
         """
 
 
-        FullQuestion.build_custom_array(array_spec
-                                       [, active_elements = 1]) -> None
+        FullQuestion.build_custom_array(array_spec,
+                                       [, input_type
+                                       [, input_sub_type=None
+                                       [, active_elements=1]]]) -> None
 
                                        
-        Clear existing contents, then add elements as specified in spec. 
+        Clear existing contents, then add elements as specified in spec.
+
+        Spec may be partial or complete. Method uses question-level type and
+        sub_type to try and build out the array for partial specs. 
 
         Method expects spec to follow API InputElement schema. Method sets
         _active == True for the first ``active_count`` elements. Spec can
@@ -271,14 +306,28 @@ class FullQuestion:
         #
         for i in range(len(array_spec)):
             e_spec = array_spec[i]
-            e_type = e_spec.pop("input_type")
+            try:
+                e_type = e_spec.pop("input_type")
+            except KeyError:
+                e_type = input_type            
             element = self._klasses[e_type]()
-            if i < active_elements:
+            if i < active_count:
                 element._active = True
             #set default active status first; e_spec can override
+            #
+            try:
+                e_sub_type = e_spec.pop("input_sub_type")
+                #details may not 
+            except KeyError:
+                e_sub_type = input_sub_type
+            element.set_sub_type(e_sub_type)
+            #sub_types are write-protected; use dedicated setting interface
+            #
             element.update(e_spec)           
             self.input_array.append(element)
-
+        #
+        self._set_type(input_type, input_sub_type)
+                
     def check(self):
         """
 
@@ -289,7 +338,7 @@ class FullQuestion:
         Return True if both check_types() and check_length() are True, False
         otherwise. 
         """
-        result = all(self.check_types(), self.check_length())
+        result = all([self._check_type(), self._check_length()])
         return result
     
     def copy(self):
@@ -350,7 +399,7 @@ class FullQuestion:
         else:
             self.prompt = self.basic_prompt
     
-    def update(self,mini_q):
+    def update(self, mini_q):
         """
 
 

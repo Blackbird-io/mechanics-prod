@@ -60,7 +60,7 @@ class Schema:
     def __init__(self,var_attrs):
         self.__dict__["_var_attrs"] = var_attrs
         
-    def __setattr__(self,attr,value):
+    def __setattr__(self, attr, value):
         """
 
 
@@ -72,7 +72,9 @@ class Schema:
         others. 
         """
         if attr in self._var_attrs:
-            object.__setattr__(self,attr,value)
+            object.__setattr__(self, attr, value)
         else:
-            c = "Schema objects do not allow new attributes."
+            c = "\nCannot set attribute ``%s`` on %s.\n"
+            c += "Schema objects do not allow new attributes."
+            c = c % (attr, self)
             raise BBExceptions.ManagedAttributeError(c)

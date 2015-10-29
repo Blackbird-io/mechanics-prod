@@ -71,8 +71,8 @@ class TextInput(GenericInput):
     class SizeDescriptor  accepts "long", None as values; otherwise error
     ====================  ======================================================
     """
-    _sub_types = {"text"
-                  }
+    _sub_types = {None,
+                  "email"}
     
     def __init__(self):
         var_attrs = ("main_caption",

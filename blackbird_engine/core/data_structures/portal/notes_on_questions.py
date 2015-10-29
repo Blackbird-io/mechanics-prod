@@ -42,23 +42,8 @@ API changes (ask):
 To do:
 
 PortalQuestion currently ignores the ``conditional`` attribute
-refactor SimplePortal to work 
-
-
-   #if ``conditional``, CPortal should
-            #first get the first resposne
-            #if that's false, break the for loop
-            #else continue through other active elements
-            #so on portal:
-                #if full_question.rule:
-                    #get element response
-                    #if full_question.show_if:
-                        #
-                    #if response check_truthy:
-                        #continue
-                        #is_truthy(response, input_element)
-                    #else:
-                        #break
+have to update PortalQuestion schema, template files
+update the API
 
 
 """
