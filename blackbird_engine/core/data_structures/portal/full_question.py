@@ -280,14 +280,13 @@ class FullQuestion:
         self._set_type(input_type, input_sub_type)
 
     def build_custom_array(self, array_spec, input_type, input_sub_type=None,
-                           active_count=1, ignore_fixed=False):
+                           ignore_fixed=False):
         """
 
 
         FullQuestion.build_custom_array(array_spec,
                                        [, input_type
                                        [, input_sub_type=None
-                                       [, active_elements=1
                                        [, ignore_fixed=False]]]]) -> None
 
                                        
@@ -297,9 +296,8 @@ class FullQuestion:
         sub_type to try and build out the array for partial specs. 
 
         Method expects spec to follow API InputElement schema. Method sets
-        _active == True for the first ``active_count`` elements. Spec can
-        override that setting by specifying its own _active values for each
-        element.
+        all elements to _active == True by default. Spec can override that
+        setting.
 
         Method passes ``ignore_fixed`` value to element.update(): if True,
         update will only update attributes in element._var_attrs. 

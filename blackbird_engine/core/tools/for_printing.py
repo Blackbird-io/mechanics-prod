@@ -29,13 +29,13 @@ n/a
 
 
 #imports
-#n/a
+import BBGlobalVariables as settings
 
 
 
 
 #globals
-DEFAULT_LINE_WIDTH = 80
+DEFAULT_LINE_WIDTH = settings.SCREEN_WIDTH
 
 #functions
 def format_as_line(obj,
