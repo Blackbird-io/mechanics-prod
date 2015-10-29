@@ -611,7 +611,7 @@ class Components(dict, Tags, Equalities):
         in instance. 
         """   
         self.by_name.clear()
-        for bu in self.values:
+        for bu in self.values():
             if bu.name:
                 self.by_name[bu.name] = bu.id.bbid
             else:
