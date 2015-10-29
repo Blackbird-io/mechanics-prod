@@ -280,14 +280,15 @@ class FullQuestion:
         self._set_type(input_type, input_sub_type)
 
     def build_custom_array(self, array_spec, input_type, input_sub_type=None,
-                           active_count=1):
+                           active_count=1, ignore_fixed=False):
         """
 
 
         FullQuestion.build_custom_array(array_spec,
                                        [, input_type
                                        [, input_sub_type=None
-                                       [, active_elements=1]]]) -> None
+                                       [, active_elements=1
+                                       [, ignore_fixed=False]]]]) -> None
 
                                        
         Clear existing contents, then add elements as specified in spec.
@@ -299,6 +300,9 @@ class FullQuestion:
         _active == True for the first ``active_count`` elements. Spec can
         override that setting by specifying its own _active values for each
         element.
+
+        Method passes ``ignore_fixed`` value to element.update(): if True,
+        update will only update attributes in element._var_attrs. 
         """
         self.input_array.clear()
         array_spec = array_spec.copy()
@@ -311,9 +315,6 @@ class FullQuestion:
             except KeyError:
                 e_type = input_type            
             element = self._klasses[e_type]()
-            if i < active_count:
-                element._active = True
-            #set default active status first; e_spec can override
             #
             try:
                 e_sub_type = e_spec.pop("input_sub_type")
@@ -323,7 +324,10 @@ class FullQuestion:
             element.set_sub_type(e_sub_type)
             #sub_types are write-protected; use dedicated setting interface
             #
-            element.update(e_spec)           
+            element._active = True
+            #assume that all elements are active by default; spec can
+            #override if necessary
+            element.update(e_spec, ignore_fixed)
             self.input_array.append(element)
         #
         self._set_type(input_type, input_sub_type)
