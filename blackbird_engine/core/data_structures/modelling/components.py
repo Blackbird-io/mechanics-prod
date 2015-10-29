@@ -357,20 +357,30 @@ class Components(dict, Tags, Equalities):
             result.append(bu)
         return result
 
-    def get_tagged(self, *tags, pool = None):
+    def get_tagged(self, *tags, pool=None, recur=False):
         """
 
 
-        Components.get_tagged(*tags[, pool = None]) -> dict
+        Components.get_tagged(*tags[, pool=None[, recur=False]]) -> dict
 
 
-        Return a dictionary of units (by bbid) that carry the specified tags. 
+        Return a dictionary of units (by bbid) that carry the specified tags.
+        
         If ``pool`` is None, uses instance.values(). Delegates all selection
         work to tools.for_tag_operations.get_tagged()
+
+        If ``recur`` is True, method runs recursively through all values in
+        pool first, then adds in results from this level. 
         """
+        result = {}
         if not pool:
             pool = self.values()
-        result = tools.for_tag_operations.get_tagged(pool, *tags)
+        if recur:
+            for bu in pool:
+                one_down = bu.components.get_tagged(*tags, recur=recur)
+                result.update(one_down)
+        this_level = tools.for_tag_operations.get_tagged(pool, *tags)
+        result.update(this_level)
         #
         return result
     
