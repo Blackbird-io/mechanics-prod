@@ -62,7 +62,7 @@ from textwrap import TextWrapper
 
 #constants
 CACHE_LIMIT = 100
-SCREEN_WIDTH = Globals.SCREEN_WIDTH
+SCREEN_WIDTH = Globals.SCREEN_WIDTH - 20
 USER_ATTEMPT_LIMIT = 5
 USER_STOP = "STOP INTERVIEW"
 #
