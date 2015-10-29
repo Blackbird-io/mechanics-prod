@@ -29,13 +29,13 @@ n/a
 
 
 #imports
-import BBGlobalVariables as Globals
+import BBGlobalVariables as settings
 
 
 
 
 #globals
-#n/a
+DEFAULT_LINE_WIDTH = settings.SCREEN_WIDTH
 
 #functions
 def format_as_line(obj,
@@ -43,7 +43,7 @@ def format_as_line(obj,
                    value = None,
                    prefix = "",
                    header = False,
-                   width = Globals.screen_width,
+                   width = DEFAULT_LINE_WIDTH,
                    left_tab = 4,
                    right_tab = 4):
     """

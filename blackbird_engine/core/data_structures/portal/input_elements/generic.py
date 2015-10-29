@@ -57,18 +57,24 @@ class GenericInput(ReadyForPortal):
     those attributes listed in the ``_var_attrs`` whitelist.
 
     For GenericInput objects, the whitelist includes most class-specific
-    attributes. Other, specialized descendants restrict the parameters further.     
+    attributes. Other, specialized descendants restrict the parameters further.
+
+    To make sure instances only carry sub_types that fit their parent API type,
+    class provides a dedicated sub_type-setting interface (set_sub_type()) and
+    locks regular attribute writes by excluding ``input_sub_type`` from
+    _var_attrs. 
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
-    _var_attrs            tuple; names of attributes that accept new values
     _active               bool; whether Portal should display this input element
+    _sub_types            set; permissible instance subtypes, per API
+    _var_attrs            tuple; names of attributes that accept new values
     allow_other           bool; can user provide free-form entry for choice type
     entries               list; response choices
     input_type            string; None for this class 
-    input_sub_type        string or None; contextual hint for Web Portal
+    input_sub_type        string or None; P; contextual hint for Web Portal
     line_value            decimal; value of line user should verify
     main_caption          string; browser displays main_caption above the input
     multi                 bool; can user select multiple options
@@ -91,10 +97,15 @@ class GenericInput(ReadyForPortal):
     copy()                returns a shallow copy, w deep copy of other_element
     format_response()     take string, return object formatted per type and API
     set_response()        take string, format, set as target response
+    set_sub_type()        set to permitted sub_type or raise error
+    to_portal()           return schema-compliant dict
     update()              update instance attributes to spec values
     ====================  ======================================================
     """
-    def __init__(self, var_attrs = None):
+    _sub_types = {None}
+    #can add sub-types at daughter level; must match API.
+    
+    def __init__(self, var_attrs=None):
         if var_attrs == None:
             var_attrs = ("_active",
                          "allow_other",
@@ -115,7 +126,8 @@ class GenericInput(ReadyForPortal):
                          "user_can_add")
             #tuple for immutability
         else:
-            var_attrs = set(var_attrs) | {"_active", "response"}
+            var_attrs = set(var_attrs) | {"_active",
+                                          "response"}
             var_attrs = tuple(sorted(var_attrs))
         #
         ReadyForPortal.__init__(self, var_attrs)
@@ -142,7 +154,8 @@ class GenericInput(ReadyForPortal):
         #set default values manually through dict to make sure they do not
         #bounce when a subclass passes in a smaller attribute whitelist
 
-    def __str__(self, tab = None):
+    
+    def __str__(self, tab=None):
         result = ""
         name_field_width = 25
         dots = 8
@@ -154,7 +167,41 @@ class GenericInput(ReadyForPortal):
             line += ((name_field_width - len(attr_name)) + dots) * "."
             line += str(attr_val) + "\n"
             result = result + line
-        return result                       
+        return result
+
+##    # Property doesnt work because an ancestor (Schema) overloads __setattr__
+##    # and __setattr__ trumps virtual attribute setting.
+##
+##    @property
+##    def input_sub_type(self):
+##        """
+##
+##
+##        **property**
+##
+##
+##        Property returns instance _input_sub_type.
+##
+##        Property setter accepts values in class._sub_types. Setter raises
+##        QuestionFormatError otherwise.
+##
+##        Deleter sets value to None
+##        """
+##        return self._input_sub_type
+##
+##    @input_sub_type.setter
+##    def input_sub_type(self, value):
+##        if value in self._sub_types:
+##            self.__dict__["_input_sub_type"] = value
+##        else:
+##            c = "Cannot set sub type to ``%s``.\n"
+##            c += "Permitted subtypes for instance:\n\t%s\n"
+##            c = c % (value, self._sub_types)
+##            raise BBExceptions.QuestionFormatError(c)
+##
+##    @input_sub_type.deleter
+##    def input_sub_type(self):
+##        self._input_sub_type = None
 
     def check_response(self, proposed_response):
         """
@@ -272,7 +319,47 @@ class GenericInput(ReadyForPortal):
             c = "user response does not fit input element."
             raise BBExceptions.ResponseFormatError(c, E)
 
-    def update(self, spec):
+    def set_sub_type(self, value):
+        """
+
+
+        GenericInput.set_sub_type(value) -> None
+        
+
+        For values in instance's _sub_types, set instance.input_sub_type to
+        value. Raise error otherwise.
+
+        Method writes directly to instance __dict__ to bypass Schema __setattr__
+        restrictions.
+        """
+        if value in self._sub_types:
+            self.__dict__["input_sub_type"] = value
+            #write to instance dictionary. trying to set attribute outside
+            #method will still raise error. 
+        else:
+            c = "\nCannot set sub type to ``%s``.\n\n"
+            c += "Permitted subtypes for instance:\n\t%s\n"
+            c = c % (value, self._sub_types)
+            raise BBExceptions.QuestionFormatError(c)
+
+    def to_portal(self):
+        """
+
+
+        GenericInput.to_portal() -> dict
+
+
+        Return a flat dictionary that describes instance according to the API
+        InputElement schema.
+        """
+        result = self.__dict__.copy()
+        #add an API-spec key for managed attributes
+        sub_type = self.input_sub_type
+        result["input_sub_type"] = sub_type
+        #
+        return result
+        
+    def update(self, spec, ignore_fixed=False):
         """
 
 
@@ -280,11 +367,27 @@ class GenericInput(ReadyForPortal):
 
 
         Method updates instance attributes to values in spec. Method expects
-        ``spec`` to be a dictionary with attribute name keys. 
+        ``spec`` to be a dictionary with attribute name keys. If
+        ``ignore_fixed`` is False, method will ignore attributes outside of
+        instance._var_attrs.
+
+        Since GenericInput descends from Schema and Schema overloads
+        __setattr__ to permit regular setting only for attributes in _var_attrs,
+        method will encounter an exception on sets outside the API schemas. 
         """
-        for attr_name in spec:
-            spec_val = spec[attr_name]
-            setattr(self, attr_name, spec_val)
+        spec = spec.copy()
+        if "input_sub_type" in spec:
+            self.set_sub_type(spec["input_sub_type"])
+        #
+        attrs_to_set = set(spec.keys())
+        if ignore_fixed:
+            #filter out stuff we are going to ignore
+            attrs_to_set = attrs_to_set & set(self._var_attrs)
+        #
+        for attr_name in attrs_to_set:
+            attr_val = spec[attr_name]
+            setattr(self, attr_name, attr_val)
+    
             
                 
             

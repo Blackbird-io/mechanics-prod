@@ -197,9 +197,24 @@ def make_question(content_module, catalog = local_catalog):
     location = inspect.getfile(content_module)
     new_question.source = location    
     #
-    new_question.set_type(content_module.input_type)
-    if content_module.input_sub_type:
-        new_question.set_sub_type(content_module.input_sub_type)
+    #array
+    fancy = (content_module.input_type == "mixed" or 
+             getattr(content_module, "element_details", False))
+    if fancy:
+        new_question.build_custom_array(content_module.element_details,
+                                        content_module.input_type,
+                                        content_module.input_sub_type)            
+    else:
+        new_question.build_basic_array(content_module.input_type,
+                                       content_module.input_sub_type,
+                                       content_module.active_elements)
+    #
+    #condition 
+    gating_element = getattr(content_module, "gating_element", False)
+    if gating_element: 
+        new_question.set_condition(gating_element)
+    #
+    #other attributes
     simple_attrs = ["array_caption",
                     "comment",
                     "basic_prompt",
@@ -212,32 +227,14 @@ def make_question(content_module, catalog = local_catalog):
             setattr(new_question, attr, attr_val)
         else:
             continue
-    for i in range(len(new_question.input_array)):
-        if i <= (content_module.active_elements - 1):
-            new_question.input_array[i]._active = True
-        else:
-            new_question.input_array[i]._active = False
-        #FullQuestion objects automatically carry their maximum number of typed
-        #input elements, so that Topic authors never have to add any manually.
-        #The input elements are turned off (._active = False) by default. Logic
-        #steps through the list and turns on the number specified by the content
-        #module.
     #
-    #advanced configuration: input element details
-    if getattr(content_module, "element_details", False):
-        for i in range(content_module.active_elements):
-            element = new_question.input_array[i]
-            spec = content_module.element_details[i]
-            element.update(spec)
+    #check that everything looks right before sending question out
+    if not new_question.check():
+        c = "Something went wrong in the following module:\n%s\n"
+        c = c % location
+        raise BBExceptions.QuestionFormatError(c)
     #
-    #advanced configuration: show_if rule
-    #[blank for now]
-    #if content_module.show_if:
-        #new_question.set_rule(content_module.show_if_spec)
-        ##show_if_spec is a dictionary w parameters for a binary input_element
-        ##FQ will try to configure and attach an element according to spec.
-        ##also need to change to_portal
-    #
+    #register the question in the catalog
     reverse_lookup_keys = [new_question.tags.name, location]
     catalog.register(new_question, *reverse_lookup_keys)
     #

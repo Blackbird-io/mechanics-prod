@@ -10,7 +10,7 @@
 Module defines FullQuestion class. FullQuestion objects provide all details
 necessary for Portal to display the question properly to a user. FullQuestion
 objects also provide identification and charactertization attributes that allow
-Engine to learn pattenrs from manual question selection.
+Engine to learn patterns from manual question selection.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -35,7 +35,7 @@ FullQuestion          Object that defines question for both Engine and Portal
 import copy
 import decimal
 
-import BBExceptions
+import BBExceptions as bb_exceptions
 import BBGlobalVariables as Globals
 
 from .input_elements.binary import BinaryInput
@@ -58,20 +58,6 @@ from ..system.tags import Tags
 #globals
 decimal.getcontext().prec = 6
 
-q_types = ["binary",
-           "bool",
-           "choice",
-           "date",
-           "date-range",
-           "number",
-           "number-range",
-           "time",
-           "time-range",
-           "text"]
-
-q_entry = ["klass",
-           "sub_types"]
-
 #classes
 class FullQuestion:
     """
@@ -86,6 +72,12 @@ class FullQuestion:
     (such as the prompt, where careful, simple wording matters a lot) and leave
     others for customization at run-time (context, individual array elements).
 
+    FullQuestion objects with a single (vs mixed) type automatically carry the
+    maximum permitted number of elements in their input array. By default, the
+    first element is turned on (element._active == True) and the others are
+    turned off. For such regular-way questions, our topics never have to add
+    elements manually; they can just toggle the ``_active`` setting.
+
     See the Engine-Wrapper API for more details on how the Portal responds to
     various FullQuestion attributes. 
     ====================  ======================================================
@@ -93,9 +85,6 @@ class FullQuestion:
     ====================  ======================================================
 
     DATA:
-    _max_elements         int; max length  ofinput_array, fixed per API
-    _progress             Decimal; instance-level state for progress 
-    _types                dict; CLASS, maps strings Portal knows to classes
     array_caption         string that appears above arrays of input_elements
     basic_prompt          default prompt for question
     comment               explanation string that appears below the prompt
@@ -114,36 +103,32 @@ class FullQuestion:
     transcribe            bool; whether portal should show question to lenders
     
     FUNCTIONS:
+    _check_length()       check if array fits max length
+    _check_types()        check if elements match the instance type
+    build_basic_array()   build an array for single-type elements
+    build_custom_array()  build an array of elements from spec; can be mixed
+    check()               check if elements match instance type and length
     copy()                returns new obj with deep id, tags, array, and context
     ProgressDescriptor()  manages class and instance progress attributes
+    set_condition()
     set_prompt()          sets prompt to formatted custom if possible, or basic
-    set_type()            sets question type, populates input_array
-    set_sub_type()        sets question sub_type, if fits input_type
     update()              updates instance attributes from MiniQuestion
     ====================  ======================================================
     """
     #class attributes
-    _types = {k:dict.fromkeys(q_entry) for k in q_types}
-    _types["binary"]["klass"] = BinaryInput
-    _types["bool"]["klass"] = BoolInput
-    _types["choice"]["klass"] = ChoiceInput
-    _types["date"]["klass"] = DateInput
-    _types["date-range"]["klass"] = DateRangeInput
-    _types["number"]["klass"] = NumberInput
-    _types["number-range"]["klass"] = NumberRangeInput
-    _types["time"]["klass"] = TimeInput
-    _types["time-range"]["klass"]= TimeRangeInput
-    _types["text"]["klass"] = TextInput
-    _types["number"]["sub_types"] = {"percent",
-                                     "currency",
-                                     "days",
-                                     "weeks",
-                                     "months",
-                                     "years"}
-    _types["number-range"]["sub_types"] = _types["number"]["sub_types"]
-    _types["text"]["sub_types"] = {"email"}
-    #
-    _max_elements = 5
+    _MAX_ELEMENTS = 5
+
+    _klasses = dict()
+    _klasses["binary"] = BinaryInput
+    _klasses["bool"] = BoolInput
+    _klasses["choice"] = ChoiceInput
+    _klasses["date"] = DateInput
+    _klasses["date-range"] = DateRangeInput
+    _klasses["number"] = NumberInput
+    _klasses["number-range"] = NumberRangeInput
+    _klasses["time"] = TimeInput
+    _klasses["time-range"]= TimeRangeInput
+    _klasses["text"] = TextInput    
     
     def __init__(self):
         self.id = ID()
@@ -151,6 +136,7 @@ class FullQuestion:
         #
         self.array_caption = None
         self.comment = None
+        self.conditional = False
         self.input_array = []
         self.input_type = None
         self.input_sub_type = None
@@ -180,10 +166,183 @@ class FullQuestion:
                 instance._progress = int(value)
             else:
                 c = "Attribute requires value between 0 and 100, inclusive."
-                raise BBExceptions.ManagedAttributeError(c)
+                raise bb_exceptions.ManagedAttributeError(c)
 
     progress = ProgressDescriptor()
+        
+    def _check_length(self):
+        """
 
+
+        FullQuestion._check_length() -> bool
+
+        
+        Return True if the number of elements in instance's input_array is less
+        than or equal to the maximum permitted, False otherwise. 
+        """
+        result = False
+        if len(self.input_array) <= self._MAX_ELEMENTS:
+            result = True
+        #
+        return result            
+
+    def _check_type(self):
+        """
+
+
+        FullQuestion._check_types() -> bool
+
+
+        Return True if the instance type and sub_type matches the profile of
+        each of the elements in instance's input_array, False otherwise.
+
+        NOTE: Method will return False if elements are homogenous but instance
+        type is set to ``mixed``. We do this to encourage disciplined question
+        crafting. Otherwise, we may start to always label questions ``mixed``. 
+        """
+        result = False
+        #
+        types_in_array = set()
+        sub_types_in_array = set()
+        for element in self.input_array:
+            types_in_array.add(element.input_type)
+            sub_types_in_array.add(element.input_sub_type)
+        #
+        if self.conditional:
+            if self.input_type != "binary":
+                types_in_array.remove("binary")
+        #
+        types_in_array = sorted(types_in_array)
+        sub_types_in_array = sorted(sub_types_in_array)
+        #
+        if len(types_in_array) > 1:
+            if self.input_type == "mixed":
+                result = True
+                #enforce discipline; only use "mixed" if actually mixing types,
+                #don't use it as a catch-all
+        else:
+            if self.input_type == types_in_array[0]:
+                if self.input_sub_type == sub_types_in_array[0]:
+                    result = True
+        #
+        return result
+    
+    def _set_type(self, input_type, input_sub_type=None):
+        """
+
+
+        FullQuestion._set_type(input_type[, input_sub_type=None])-> None
+
+
+        Set instance attributes to arguments, raise QuestionFormatError if they
+        don't fit.
+        """
+        if input_type == "mixed":
+            if input_sub_type:
+                c = "``mixed`` questions do not support subtypes."
+                raise bb_exceptions.QuestionFormatError(c)
+        else:
+            if input_type in self._klasses:
+                self.input_type = input_type
+                permitted_subs = self._klasses[input_type]._sub_types
+                if input_sub_type in permitted_subs:
+                    self.input_sub_type = input_sub_type
+                else:
+                    c = "``%s`` is not a valid %s subtype."
+                    c = c % (input_sub_type, input_type)
+                    raise bb_exceptions.QuestionFormatError(c)
+                
+    def build_basic_array(self, input_type, input_sub_type=None,
+                          active_count=1):
+        """
+
+
+        FullQuestion.build_basic_array(input_type
+                                      [, input_sub_type = None]
+                                      [, active_elements = 1]]) -> None
+
+
+        Clear existing contents, then add the maximum permitted number of
+        type-specific elements and set the instance type accordingly. 
+        
+        Method sets _active == True for the first ``active_count`` elements. 
+        """
+        self.input_array.clear()
+        base_klass = self._klasses[input_type]
+        for i in range(self._MAX_ELEMENTS):
+            element = base_klass()
+            if i < active_count:
+                element._active = True
+            if input_sub_type:
+                element.set_sub_type(input_sub_type)
+            self.input_array.append(element)
+        #
+        self._set_type(input_type, input_sub_type)
+
+    def build_custom_array(self, array_spec, input_type, input_sub_type=None,
+                           ignore_fixed=False):
+        """
+
+
+        FullQuestion.build_custom_array(array_spec,
+                                       [, input_type
+                                       [, input_sub_type=None
+                                       [, ignore_fixed=False]]]]) -> None
+
+                                       
+        Clear existing contents, then add elements as specified in spec.
+
+        Spec may be partial or complete. Method uses question-level type and
+        sub_type to try and build out the array for partial specs. 
+
+        Method expects spec to follow API InputElement schema. Method sets
+        all elements to _active == True by default. Spec can override that
+        setting.
+
+        Method passes ``ignore_fixed`` value to element.update(): if True,
+        update will only update attributes in element._var_attrs. 
+        """
+        self.input_array.clear()
+        array_spec = array_spec.copy()
+        #make a copy so we can remove data
+        #
+        for i in range(len(array_spec)):
+            e_spec = array_spec[i]
+            try:
+                e_type = e_spec.pop("input_type")
+            except KeyError:
+                e_type = input_type            
+            element = self._klasses[e_type]()
+            #
+            try:
+                e_sub_type = e_spec.pop("input_sub_type")
+                #details may not 
+            except KeyError:
+                e_sub_type = input_sub_type
+            element.set_sub_type(e_sub_type)
+            #sub_types are write-protected; use dedicated setting interface
+            #
+            element._active = True
+            #assume that all elements are active by default; spec can
+            #override if necessary
+            element.update(e_spec, ignore_fixed)
+            self.input_array.append(element)
+        #
+        self._set_type(input_type, input_sub_type)
+                
+    def check(self):
+        """
+
+
+        FullQuestion.check() -> bool
+
+
+        Return True if both check_types() and check_length() are True, False
+        otherwise. 
+        """
+        result = all([self._check_type(), self._check_length()])
+        return result
+    
     def copy(self):
         """
 
@@ -206,6 +365,21 @@ class FullQuestion:
         result.tags = self.tags.copy(enforce_rules = False)
         return result
 
+    def set_condition(self, binary_spec):
+        """
+
+
+        FullQuestion.set_condition(binary_spec) -> None
+
+
+        Create a binary gating element that matches the spec, insert at the
+        beginning of the instance input array.
+        """
+        gating_element = self._klasses["binary"]()
+        gating_element.update(binary_spec)
+        self.input_array.insert(0, gating_element)
+        self.conditional = True
+
     def set_prompt(self):
         """
 
@@ -226,60 +400,8 @@ class FullQuestion:
                 self.prompt = self.basic_prompt
         else:
             self.prompt = self.basic_prompt
-
-    def set_sub_type(self,sub_type):
-        """
-
-
-        FullQuestion.set_sub_type(sub_type) -> None
-
-
-        Method sets instance.input_sub_type to argument. ``sub_type`` is
-        usually a string. Instances must have type before they can have
-        sub_type, so method raises error if instance.input_type != True.
-
-        Method also raises error if the sub_type doesn't fit the instance type
-        per the API (ie, sub_type is not in
-        FullQuestion._types[instance type]["sub_types"]).
-        """
-        if not self.input_type:
-            c = "Must specify type before sub_type."
-            raise BBExceptions.QuestionFormatError(c)
-        if sub_type in self._types[self.input_type]["sub_types"]:
-            self.input_sub_type = sub_type
-            for e in self.input_array:
-                object.__setattr__(e,"input_sub_type", sub_type)
-                #input_sub_type always restricted, must set manually
-        else:
-            c = "" 
-            c += "Portal does not recognize %s as valid input_sub_type for\n"
-            c += "%s."
-            c = c % (sub_type,self.input_type)
-            raise BBExceptions.QuestionFormatError(c)
-        
-    def set_type(self,input_type):
-        """
-
-
-        FullQuestion.set_type(input_type) -> None
-
-
-        Method sets instance type to argument. ``input_type`` is usually a
-        string. Method raises error if the type is not recognized by the Portal
-        per Engine-Wrapper API (argument is not in FullQuestion._types). 
-        """
-        if input_type not in self._types.keys():
-            c = "Portal does not recognize %s as valid input_type."
-            c = c % input_type
-            raise BBExceptions.QuestionFormatError(c)
-        else:
-            self.input_type = input_type
-            self.input_array = []
-            for i in range(self._max_elements):
-                new_element = self._types[input_type]["klass"]()
-                self.input_array.append(new_element)
-
-    def update(self,mini_q):
+    
+    def update(self, mini_q):
         """
 
 
@@ -299,6 +421,4 @@ class FullQuestion:
             else:
                 if attr_val:
                     setattr(self, attr_name, attr_val)
-    
-        
 
