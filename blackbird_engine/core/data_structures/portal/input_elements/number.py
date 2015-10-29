@@ -63,6 +63,7 @@ class NumberInput(GenericInput):
     ====================  ======================================================
 
     DATA:
+    _sub_types            subtypes permitted under the API
     input_type            "number"
     r_max                 1,000,000,000 (one billion)
     r_min                 0 (zero)
@@ -74,6 +75,14 @@ class NumberInput(GenericInput):
     round_to_step()       round to nearest step if ``r_steps`` is specified
     ====================  ======================================================
     """
+    _sub_types = {None,
+                  "percent",
+                  "currency",
+                  "days",
+                  "weeks",
+                  "months",
+                  "years"}
+    
     def __init__(self):
         var_attrs = ("main_caption",
                      "r_max",
@@ -158,7 +167,8 @@ class NumberInput(GenericInput):
             hi = self.r_max
             #
             step = (hi - lo) / self.r_steps
-            remainder = value % remainder
+            step = decimal.Decimal(step)
+            remainder = value % step
             #
             if remainder > (step / 2):
                 rounded_value = value + step - remainder

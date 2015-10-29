@@ -33,6 +33,7 @@ import decimal
 import re
 
 from .generic import GenericInput
+from .number import NumberInput
 
 
 
@@ -67,6 +68,7 @@ class NumberRangeInput(GenericInput):
     ====================  ======================================================
 
     DATA:
+    _sub_types            same as Number-type inputs
     input_type            "date-range"
     r_max                 1,000,000,000 (one billion)
     r_min                 0 (zero)
@@ -76,6 +78,8 @@ class NumberRangeInput(GenericInput):
     format_response()     method uses regular expressions to select range lists
     ====================  ======================================================
     """
+    _sub_types = NumberInput._sub_types
+    
     def __init__(self):
         var_attrs = ("main_caption",
                      "r_max",

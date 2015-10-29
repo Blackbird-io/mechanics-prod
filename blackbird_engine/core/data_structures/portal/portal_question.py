@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: Analysis.PortalQuestion
+#Module: data_structures.portal.portal_question
 """
 
 Module defines class that follows the Engine-Wrapper API PortalQuestion schema
@@ -71,20 +71,22 @@ class PortalQuestion(ReadyForPortal):
     """
     def __init__(self):
         pq_attrs = ["array_caption",
-                     "comment",
-                     "input_array",
-                     "input_type",
-                     "input_sub_type",
-                     "prompt",
-                     "progress",
-                     "short",
-                     "topic_name",
-                     "transcribe"]
+                    "comment",
+                    "conditional",
+                    "input_array",
+                    "input_type",
+                    "input_sub_type",
+                    "prompt",
+                    "progress",
+                    "short",
+                    "topic_name",
+                    "transcribe"]
         #
         ReadyForPortal.__init__(self, pq_attrs)
         #
         self.array_caption = None
         self.comment = None
+        self.conditional = False
         self.input_array = []
         self.input_type = "text"
         self.input_sub_type = None
@@ -94,11 +96,11 @@ class PortalQuestion(ReadyForPortal):
         self.topic_name = None
         self.transcribe = False
 
-    def to_portal(self, seed, web = False):
+    def to_portal(self, seed, web=False):
         """
 
 
-        PortalQuestion.to_portal(seed[, web= False]) -> dict()
+        PortalQuestion.to_portal(seed[, web=False]) -> dict()
 
         
         Method returns a dictionary object, keyed by attribute name for a
@@ -132,13 +134,10 @@ class PortalQuestion(ReadyForPortal):
         for input_element in prelim["input_array"]:
             if input_element._active:
                 clean_element = input_element
-                #
+                #weed out inactive elements
                 if web:
                     clean_element = input_element.to_portal()
                     #flatten input_element to a dictionary for web output
-                    #
-                    #if to_portal doesnt work here, can just copy element
-                    #dictionary and call it a day
                 #
                 result["input_array"].append(clean_element)
         result["progress"] = int(prelim["progress"])
