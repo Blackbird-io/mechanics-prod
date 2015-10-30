@@ -184,6 +184,13 @@ class FullQuestion:
         if len(self.input_array) <= self._MAX_ELEMENTS:
             result = True
         #
+        if not result:
+            c = "\nError in question ``%s``:\n"
+            c += "(source: %s)\n\n"
+            c += "Array length exceeds maximum.\n"
+            c = c % (self.tags.name, self.source)
+            raise bb_exceptions.QuestionFormatError(c)
+        #
         return result            
 
     def _check_type(self):
@@ -225,6 +232,17 @@ class FullQuestion:
                 if self.input_sub_type == sub_types_in_array[0]:
                     result = True
         #
+        if not result:
+            c = "\nError in question ``%s``:\n"
+            c += "(source: %s)\n\n"
+            c += "Element types don't match question type.\n"
+            c = c % (self.tags.name, self.source)
+            c += "\tquestion type: \t\n%s\n"
+            c = c % self.input_type
+            c += "\telement type(s): \t\n%s\n"
+            c = c % sorted(types_in_array)            
+            raise bb_exceptions.QuestionFormatError(c)
+        #
         return result
     
     def _set_type(self, input_type, input_sub_type=None):
@@ -241,6 +259,7 @@ class FullQuestion:
             if input_sub_type:
                 c = "``mixed`` questions do not support subtypes."
                 raise bb_exceptions.QuestionFormatError(c)
+            self.input_type = input_type
         else:
             if input_type in self._klasses:
                 self.input_type = input_type

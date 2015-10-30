@@ -228,11 +228,9 @@ def make_question(content_module, catalog = local_catalog):
         else:
             continue
     #
-    #check that everything looks right before sending question out
-    if not new_question.check():
-        c = "Something went wrong in the following module:\n%s\n"
-        c = c % location
-        raise BBExceptions.QuestionFormatError(c)
+    # Check that the question configuration makes sense. Call will raise error
+    # if routine encounters a problem.
+    new_question.check()
     #
     #register the question in the catalog
     reverse_lookup_keys = [new_question.tags.name, location]
