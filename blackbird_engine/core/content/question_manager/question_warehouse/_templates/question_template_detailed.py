@@ -55,21 +55,34 @@ short = "Details Matter"
 transcribe = True
 active_elements = 3
 
-#Advanced Configuration: show_if
-#See Blackbird Engine API for a description of show_if functionality. 
+# Advanced Config I: gating element for conditional questions
 #
-show_if_rule = {"main_caption" : "Do you care about details?",
-                "toggle_caption_true" : "Yes",
-                "toggle_caption_false" : "No"}
-
-#Advanced Configuration: input element details.
-#See Blackbird Engine API for parameters available with each question type. 
+# **Gating element must be binary.**
 #
-element_0 = {"main_caption" : "First Detail"}
-element_1 = {"main_caption" : "Second Detail"}
-element_2 = {"main_caption" : "Third Detail"}
+# User will see the gating element first. If they provide a truthy answer,
+# Portal will collect their responses to the remaining elements. Otherwise,
+# Portal will send back a length==1 PortalResponse. See API for more details.
+#
+# Gating element will be active by default.
+#
+##gating_element = {"main_caption" : "Do you care about details?",
+##                "toggle_caption_true" : "Yes",
+##                "toggle_caption_false" : "No"}
 
-element_details = [element_0,
-                   element_1,
-                   element_2]
+
+# Advanced Config II: input element details.
+#
+# Details are always optional, unless you want to ask a ``mixed``-type question.
+# For ``mixed``-type questions, make sure to include the input_type and subtype
+# for each element.
+#
+# Elements will be active by default.
+#
+##element_0 = {"main_caption" : "First Detail"}
+##element_1 = {"main_caption" : "Second Detail"}
+##element_2 = {"main_caption" : "Third Detail"}
+##
+##element_details = [element_0,
+##                   element_1,
+##                   element_2]
         

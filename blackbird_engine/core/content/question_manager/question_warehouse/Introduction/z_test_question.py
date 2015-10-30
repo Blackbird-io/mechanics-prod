@@ -46,7 +46,7 @@ optionalTags = []
 #
 array_caption = "Let's check this out."
 comment = None
-input_type = "number"
+input_type = "mixed"
 input_sub_type = None
 bp = "Does new conditional functionality work?"
 basic_prompt = bp
@@ -68,9 +68,17 @@ gating_element = {"main_caption" : "Does this work?",
 element_0 = {"main_caption" : "How well?",
              "r_min" : 0,
              "r_max" : 100,
-             "r_steps" : 10} 
-element_1 = {"main_caption" : "How much do you like it?"}
+             "r_steps" : 10,
+             "input_type" : "number"} 
+element_1 = {"main_caption" : "How much do you like it?",
+             "input_type" : "number"}
+element_2 = {"main_caption" : "Is this awesome?",
+             "input_type": "binary"}
+element_3 = {"main_caption" : "When we eat cake",
+             "input_type" : "date"}
 
 element_details = [element_0,
-                   element_1]
+                   element_1,
+                   element_2,
+                   element_3]
         
