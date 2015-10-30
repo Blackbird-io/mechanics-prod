@@ -128,8 +128,7 @@ def scenario_2(topic):
     for element in response:
         print(element)
         print()
-    
-    
+    topic.wrap_topic()    
 
 def end_scenario(topic):
     """
