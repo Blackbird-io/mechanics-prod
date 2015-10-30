@@ -303,8 +303,8 @@ class FullQuestion:
         update will only update attributes in element._var_attrs. 
         """
         self.input_array.clear()
-        array_spec = array_spec.copy()
-        #make a copy so we can remove data
+        array_spec = copy.deepcopy(array_spec)
+        #make a deep copy so can modify array itself or element dictionaries
         #
         for i in range(len(array_spec)):
             e_spec = array_spec[i]
@@ -376,6 +376,7 @@ class FullQuestion:
         beginning of the instance input array.
         """
         gating_element = self._klasses["binary"]()
+        gating_element._active = True
         gating_element.update(binary_spec)
         self.input_array.insert(0, gating_element)
         self.conditional = True

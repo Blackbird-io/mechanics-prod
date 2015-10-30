@@ -191,10 +191,15 @@ def _get_response(message):
                     newR.append(element_response)
                     #
                     if conditional:
-                        if element_response == rich_element.toggle_caption_true:
-                            continue
-                        else:
-                            break
+                        # Check if user should see the other elements. Gating
+                        # element always goes first in the array, so only do the
+                        # check for index 0.
+                        if i == 0:
+                            words = element_response["response"][0]
+                            if words == rich_element.toggle_caption_true:
+                                continue
+                            else:
+                                break
                 #filled out the response, print progress bar
                 _print_progress_bar(progress)
             except BBExceptions.UserInterrupt:
@@ -259,6 +264,7 @@ def _respond_to_element(element, question_name, element_index):
                      "time",
                      "time-range"}
     loop = True
+    count = 0
     while loop:
         try:
             #first, get the raw response string
@@ -286,8 +292,8 @@ def _respond_to_element(element, question_name, element_index):
         except BBExceptions.ResponseFormatError as E:
             #catch only format-related exceptions
             print(E)
+            count +=1
             if count < USER_ATTEMPT_LIMIT:
-                count += 1
                 continue
             else:
                 raise E
