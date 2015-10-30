@@ -50,7 +50,7 @@ input_type = "number"
 input_sub_type = None
 bp = "Does new conditional functionality work?"
 basic_prompt = bp
-custom_prompt = None #<---------------------------------------------------------------add auto context for company name
+custom_prompt = "Does new conditional functionality work for {company_name}?"
 short = "Condo"
 transcribe = True
 active_elements = 2
@@ -65,7 +65,10 @@ gating_element = {"main_caption" : "Does this work?",
 #Advanced Configuration: input element details.
 #See Blackbird Engine API for parameters available with each question type. 
 #
-element_0 = {"main_caption" : "How well?"} #<------------------------------------------add r step
+element_0 = {"main_caption" : "How well?",
+             "r_min" : 0,
+             "r_max" : 100,
+             "r_steps" : 10} 
 element_1 = {"main_caption" : "How much do you like it?"}
 
 element_details = [element_0,
