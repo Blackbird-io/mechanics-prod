@@ -326,7 +326,7 @@ def scenario_6(topic):
     else:
         top_name = (M.name or Globals.default_unit_name)
         top_bu = BusinessUnit(top_name)
-        M.time_line.current_period.setContent(top_bu)  
+        M.time_line.current_period.set_content(top_bu)  
     #
     standard_fins = standard_financials.basic_fins.copy()
     M.defaultFinancials = standard_fins.copy()
@@ -414,7 +414,7 @@ def scenario_6(topic):
         clone = bu_template.copy(enforce_rules = False)
         c_name = "Existing %s" % n
         clone.setName(c_name)
-        clone.id.assignBBID(clone.name)
+        clone.id.assign(clone.name)
         batch[clone.id.bbid] = clone
     ordered_batch = []
     for bbid in sorted(batch.keys()):
@@ -433,13 +433,13 @@ def scenario_6(topic):
     first_bu.life.date_of_conception = first_dob_date - avg_gestation
     if not first_bu.life.alive:
         extend_life(first_bu, ref_date)
-    top_bu.addComponent(first_bu)
+    top_bu.add_component(first_bu)
     #
     last_bu = ordered_batch.pop()
     last_bu.life.date_of_conception = latest_dob_date - avg_gestation
     if not last_bu.life.alive:
         extend_life(last_bu, ref_date)
-    top_bu.addComponent(last_bu)
+    top_bu.add_component(last_bu)
     #ordered_batch now 2 units shorter than unit_count. apply distribution to
     #all remaining units.
     next_conception_date = first_bu.life.date_of_birth
@@ -470,7 +470,7 @@ def scenario_6(topic):
             #
         #
         if bu.life.alive:
-            top_bu.addComponent(bu)
+            top_bu.add_component(bu)
         else:
             #
             c = "Topic detected non-living unit: \n%s\nTopic expected to"

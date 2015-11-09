@@ -255,7 +255,7 @@ def apply_data(topic, datapoint):
         product.setName("Product A")
         product.tag("assumed name")
         #
-        company.addComponent(product)
+        company.add_component(product)
     #
     subscriber_template = model.taxonomy["subscriber"]["standard"]
     #
@@ -340,9 +340,9 @@ def apply_data(topic, datapoint):
         sbr.tag(*sbr_tags)
         #
         if sbr.life.alive:
-            product.addComponent(sbr)
+            product.add_component(sbr)
         else:
-            product.addComponent(sbr)
+            product.add_component(sbr)
             c = "Method should only generate living units. Unit %s not alive."
             c = c % sbr.id.bbid
             raise BBExceptions.AnalyticalError(c)
@@ -359,7 +359,7 @@ def apply_data(topic, datapoint):
                       tg_median_age,
                       *sbr_tags)
         #
-        product.addComponent(rump_unit)
+        product.add_component(rump_unit)
     #    
     product.tag(tg_populated)
     #

@@ -86,7 +86,7 @@ class TimePeriod(Tags):
     ex_to_special()       starts w target copy, new content is seed.ex(target)
     get_units()           return list of units from bbid pool
     get_lowest_units()    return list of units w/o components from bbid pool
-    selectBottomUnits()   OBS; legacy intefface for get_lowest_units()
+    set_content()         attach company to period
     ====================  ======================================================
     """
     def __init__(self, start_date, end_date, content = None):
@@ -141,7 +141,7 @@ class TimePeriod(Tags):
         result.end = copy.copy(self.end)
         if self.content:
             new_content = self.content.copy(enforce_rules)
-            result._set_content(new_content, updateID = False)
+            result.set_content(new_content, updateID = False)
         #same id namespace (old model)
         #
         return result
@@ -167,7 +167,7 @@ class TimePeriod(Tags):
             units.append(u)
         return units
 
-    def get_lowest_units(self, pool = None, run_on_empty = False):
+    def get_lowest_units(self, pool=None, run_on_empty=False):
         """
 
 
@@ -194,9 +194,7 @@ class TimePeriod(Tags):
         #make sure to sort pool for stable output order
         #
         if any([pool, run_on_empty]):
-            #
             foundation = []
-            #
             for bbid in pool:
                 bu = self.bu_directory[bbid]
                 if bu.components:
@@ -273,7 +271,7 @@ class TimePeriod(Tags):
         result.end = copy.copy(target.end)
         if seed.content:
             new_content = seed.content.copy(enforce_rules = True)
-            result._set_content(new_content, updateID = False)
+            result.set_content(new_content, updateID = False)
         result._set_prior(seed)
         #
         #return container
@@ -323,7 +321,7 @@ class TimePeriod(Tags):
         bu_seed = seed.content 
         bu_target = target.content
         bu_new = bu_seed.extrapolate_to(bu_target)
-        result._set_content(bu_new, updateID = False)
+        result.set_content(bu_new, updateID = False)
         result._set_prior(seed)
         #
         #return container
@@ -360,7 +358,7 @@ class TimePeriod(Tags):
 ##        result = self.get_lowest_units(run_on_empty = True)
 ##        return result
                 
-    def _set_content(self, bu, updateID=True):
+    def set_content(self, bu, updateID=True):
         """
 
 

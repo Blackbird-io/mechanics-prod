@@ -132,7 +132,7 @@ def scenario_2(topic):
     data["annual_rev_per_mature_unit"] = annual_unit_rev
     D1.setData(data)
     D1.setFormula(rev_formula)
-    for sub_bu in M.time_line.current_period.selectBottomUnits():
+    for sub_bu in M.time_line.current_period.get_lowest_units():
         sub_d1 = D1.copy()
         sub_bu.addDriver(sub_d1)
     topic.wrap_topic()

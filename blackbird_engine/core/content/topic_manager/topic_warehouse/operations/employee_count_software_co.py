@@ -225,7 +225,7 @@ def apply_data(topic, datapoint):
             office_taxonomy["standard"] = office_template
         hq = office_template.copy()
         hq.setName("headquarters")
-        company.addComponent(hq)
+        company.add_component(hq)
     #
     staff_unit = basic_template.copy()
     staff_unit.setName("Staff Template")
@@ -242,14 +242,14 @@ def apply_data(topic, datapoint):
     #
     teams = basic_template.copy()
     teams.setName("personnel")
-    hq.addComponent(teams)
+    hq.add_component(teams)
     #
     for (role, head_count) in datapoint.items():
         if head_count:
             team = staff_unit.copy()
             team.setName(role)
             team.size = head_count
-            teams.addComponent(team)
+            teams.add_component(team)
     #    
     model.tag("known team composition")
     

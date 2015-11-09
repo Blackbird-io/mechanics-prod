@@ -90,6 +90,7 @@ class ID:
         self._id_type = id_type
         self._prior_namespace = None
         self._namespace = None
+        self._seed = None
 
     @property
     def namespace(self):
@@ -137,8 +138,15 @@ class ID:
         NOTE: users should **NOT** choose seeds that are ip/memory addresses,
         time, random numbers or hardware identifiers, among others. 
         """
+##        if seed is None:
+##            seed = self._seed
+##            # Use existing seed
+##        if seed is None:
+##            raise IDError
+        
         encoder_name = "uuid" + str(self._id_type)
         # Pick up either uuid.uuid3, uuid.uuid4, or uuid.uuid5. 
+
         encoder = getattr(uuid, encoder_name)
         self.bbid = encoder(self.namespace, seed)
 
