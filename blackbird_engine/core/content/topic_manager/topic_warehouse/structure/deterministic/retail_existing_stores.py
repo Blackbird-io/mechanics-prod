@@ -110,8 +110,8 @@ def scenario_1(topic):
     """
     M = topic.MR.activeModel
     new_Q = topic.questions["number of business units?"]
-    model_industry = M.header.profile.get("industry")
-    #use dict.get() because header might not specify industry
+    model_industry = M.interview.work_space.get("industry")
+    # Use dict.get() because work_space might not specify industry
     unit_label = None
     if model_industry:
         model_industry = model_industry.casefold()
