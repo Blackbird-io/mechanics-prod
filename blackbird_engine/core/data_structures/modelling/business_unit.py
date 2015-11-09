@@ -44,7 +44,6 @@ from .driver import Driver
 from .dr_container import DrContainer
 from .equalities import Equalities
 from .financials import Financials
-from .header import Header
 from .life_cycle import LifeCycle
 from .queue import Queue
 
@@ -75,9 +74,9 @@ class BusinessUnit(Tags,Equalities):
     filled                bool; True if instance.fillOut() has run to completion
     financials            instance of Financials object
     guide                 instance of Guide object
-    header                instance of Header object
     id                    instance of ID object
     life                  instance of LifeCycle object
+    location              placeholder for location functionality
     sig_consolidate       global signature updated for unit name
     size                  int; number of real-life equivalents obj represents
     tagSources            list; CLASS attribute, sources for tag inheritance
@@ -122,10 +121,10 @@ class BusinessUnit(Tags,Equalities):
         self.setFinancials(fins)
         #
         self.guide = Guide()
-##        self.header = Header()
         self.id = ID()
         #get the id functionality but do NOT assign a bbid yet
         self.life = LifeCycle()
+        self.location = None
         self.period = None
         #may want to consider changing period to a property, so that changes
         #in period value will always cause the unit to rerun registration. 
@@ -735,17 +734,13 @@ class BusinessUnit(Tags,Equalities):
         """
 
 
-        BU.fitToPeriod() -> None
+        BU._fit_to_period() -> None
 
         
-        Method syncs instance.header.startDate and endDate with time period.
-
-        If ``recur`` == True, repeats for each component.
+        Set pointer to timeperiod and synchronize ref date to period end date.
+        If ``recur`` == True, repeat for all components.
         """
         self.period = time_period
-##        self.header.startDate = time_period.start
-##        self.header.endDate = time_period.end
-        #<-------------------------------------------------------------------------------------------comment these out and see what happens
         self.life.set_ref_date(time_period.end)
         if recur:
             for unit in self.components.values():

@@ -102,13 +102,13 @@ def scenario_2(topic):
 def scenario_3(topic):
     known_industries = []
     user_industry = topic.get_first_answer()
-    M = topic.MR.activeModel
+    model = topic.MR.activeModel
     if user_industry in known_industries:
-        M.tag("known industry")
+        model.tag("known industry")
     else:
-        M.tag("unknown industry")
-    M.tag(user_industry)
-    M.header.profile["industry"] = user_industry
+        model.tag("unknown industry")
+    model.tag(user_industry)
+    model.interview.work_space["industry"] = user_industry
     #
     new_question = topic.questions["user name?"]
     topic.wrap_scenario(new_question)
@@ -117,7 +117,7 @@ def scenario_4(topic):
     common_names = []
     R = topic.get_first_answer()
     M = topic.MR.activeModel
-    M.header.profile["author name"] = R
+    M.interview.work_space["author name"] = R
     new_question = topic.questions["user position?"]
     if M.name:
         new_question.context["company_name"] = str(M.name)
@@ -145,7 +145,7 @@ def scenario_5(topic):
                   "investment"]
     big_roles = set(decision_people + fin_people)
     R = R.casefold()
-    M.header.profile["author role"] = R
+    M.interview.work_space["author role"] = R
     if R in decision_people:
         M.tag("author role: decision")
     if R in fin_people:

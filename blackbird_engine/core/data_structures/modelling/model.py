@@ -34,12 +34,10 @@ import dill
 import BBExceptions
 import BBGlobalVariables as Globals
 
-from data_structures.guidance.guide import Guide
 from data_structures.guidance.interview_tracker import InterviewTracker
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
 
-from .header import Header
 ##from .taxonomy import Taxonomy
 from .time_line import TimeLine
 
@@ -90,11 +88,6 @@ class Model(Tags):
     ====================  ======================================================
 
     DATA:
-    _stage                obj; instance-level state for ``stage``
-    _started              bool; instance-level state for ``started`` property
-    currentPeriod         pointer to timeline period that covers reference date
-    guide                 instance of Guide object
-    header                instance of Header object
     id                    instance of ID object, carries bbid for model 
     interview             instance of an InterviewTracker object 
     portal_data           dict; stores data from Portal related to the instance
@@ -121,11 +114,10 @@ class Model(Tags):
         Tags.__init__(self,name)
         self._stage = None
         self._started = False
-        self.guide = Guide()
-        self.header = Header()
+        #
         self.id = ID()
         self.id.assign(name)
-        #Model uuids exist in the origin namespace
+        # Models carry uuids in the origin namespace.
         self.interview = InterviewTracker()
         self.portal_data = dict()
         self.taxonomy = dict()

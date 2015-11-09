@@ -114,7 +114,7 @@ class PortalModel(ReadyForPortal):
             flattened = dill.dumps(seed)
             result["e_model"] = flattened
             #
-            result["industry"] = seed.header.profile.get("industry")
+            result["industry"] = seed.interview.work_space.get("industry")
             if seed.summary:
                 summary = seed.summary.to_portal()
             else:
