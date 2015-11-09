@@ -60,44 +60,41 @@ class ID:
 
     Class provides an ID interface for Blackbird objects. All ids in the
     environment descend from the origin ID via uuid.uuid3() methodology.
-
-    Client objects may set their own namespace_id. The default namespace_id is
-    the origin UUID. It is stored on the class as namespace_id 
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
     bbid                  uuid; instance-specific uuid
-    id_type               int; class supports uuid-3,uuid-4, or uuid-5
-    last_namespace_id     uuid; last specified namespace_id  
-    namespace_id          uuid; instance or class state
+    namespace             uuid; returns either instance-specific or origin 
     origin_id             uuid; BB_UUID_NAMESPACE
     short                 string w prefix and last 4 symbols of bbid, or None
     
     FUNCTIONS:
-    assignBBID()          assigns the object a new uuid of instance.id_type       
-    class dynamicShort    descriptor for short generation
-    revertNID()           undoes last change to instance.namespace_id
-    setNID()              sets an external uuid as the instance's namespace
+    assign()              assigns the object a new uuid of instance.id_type       
+    revert_namespace()    undoes last change to instance.namespace_id
+    set_namespace()       sets an external uuid as the instance's namespace
+    verify()              see if bbid matches seed encoded in current namespace
     ====================  ======================================================
     """
     origin_id = BB_UUID_NAMESPACE
     
     def __init__(self, id_type=3):
         self.bbid = None
-        
+        #
         self._id_type = id_type
         self._prior_namespace = None
         self._namespace = None
-        self._seed = None
 
     @property
     def namespace(self):
         """
-        read-only
 
-        set only through setNID()
+
+        **read-only property**
+
+
+        Return instance namespace or, if None, origin_id. Set through method.
         """
         result = self._namespace or self.origin_id
         return result
@@ -124,7 +121,7 @@ class ID:
         """
 
 
-        ID.assignBBID() -> None
+        ID.assign() -> None
 
 
         Method assigns instance a UUID within the instance's namespace. Default
@@ -138,39 +135,10 @@ class ID:
         NOTE: users should **NOT** choose seeds that are ip/memory addresses,
         time, random numbers or hardware identifiers, among others. 
         """
-##        if seed is None:
-##            seed = self._seed
-##            # Use existing seed
-##        if seed is None:
-##            raise IDError
-        
         encoder_name = "uuid" + str(self._id_type)
         # Pick up either uuid.uuid3, uuid.uuid4, or uuid.uuid5. 
-
         encoder = getattr(uuid, encoder_name)
         self.bbid = encoder(self.namespace, seed)
-
-    def verify(self, name):
-        """
-
-
-        ID.verify() -> bool
-
-
-        False if instance.bbid not what you get from uuid of the current type.
-        True if it is. 
-        """
-        result = False
-        vid = None
-        if self._id_type == 3:
-            vid = uuid.uuid3(self.namespace, name)
-        elif self.id_type == 4:
-            vid = uuid.uuid4()
-        elif self.id_type == 5:
-            vid = uuid.uuid5(self.namespace, name)
-        if vid == self.bbid:
-            result = True
-        return result
 
     def revert_namespace(self):
         """
@@ -203,6 +171,27 @@ class ID:
             self._prior_namespace = self.namespace
         self._namespace = new_namespace
         
+    def verify(self, seed):
+        """
+
+
+        ID.verify() -> bool
+
+
+        False if instance.bbid not what you get from uuid of the current type.
+        True if it is. 
+        """
+        result = False
+        
+        encoder_name = "uuid" + str(self._id_type)
+        # Pick up either uuid.uuid3, uuid.uuid4, or uuid.uuid5. 
+        encoder = getattr(uuid, encoder_name)
+        
+        correct_id = encoder(self.namespace, seed)
+        if self.bbid == correct_id:
+            result = True
+
+        return result
     
     
     
