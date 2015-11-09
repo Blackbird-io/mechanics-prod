@@ -45,7 +45,6 @@ from .dr_container import DrContainer
 from .equalities import Equalities
 from .financials import Financials
 from .life_cycle import LifeCycle
-from .queue import Queue
 
 
 
@@ -230,10 +229,10 @@ class BusinessUnit(Tags,Equalities):
         # Step 2: optionally update ids.
         bu._register_in_period(recur=True, overwrite=False)
         # Step 3: Register the the units. Will raise erros on collisions. 
-        self.components.addItem(bu)
+        self.components.add_item(bu)
     
 
-    def addDriver(self,newDriver,*otherKeys):
+    def addDriver(self, newDriver, *otherKeys):
         """
 
 
@@ -243,7 +242,7 @@ class BusinessUnit(Tags,Equalities):
         Method registers a driver to names and tags of lines it supports.
         Method delegates all work to DrContainer.addItem().
         """
-        self.drivers.addItem(newDriver,*otherKeys)
+        self.drivers.add_item(newDriver, *otherKeys)
                   
     def clear(self):
         """
@@ -605,17 +604,21 @@ class BusinessUnit(Tags,Equalities):
         
         NOTE: ALWAYS RUN BusinessUnit.consolidate() BEFORE BusinessUnit.Derive()
         """
-        tagsToOmit = set(tagsToOmit)
-        blockingTags = {tConsolidated,tHardCoded}
-        tagsToOmit = tagsToOmit.union(blockingTags)
+        tags_to_omit = set(tagsToOmit) | {tConsolidated, tHardCoded}
         #need to change tagging rules above to make sure BU.consolidate() tags
         #lines appropriately. also need to make sure that inheritTagsFrom() does----------------------------------------------------------
         #not pick up blockingTags
+        
         for line in self.financials:
-            if tagsToOmit & set(line.allTags) != set():
+            if tags_to_omit & set(line.allTags):
                 continue
             line.clear()
-            applicableDrivers = Queue()
+            key = line.name.casefold()
+            matching_drivers = self.drivers.get_drivers(key)
+            for driver in matching_drivers:
+                driver.workOnThis(line)
+            
+            applicable_drivers = Queue()
             dKey = line.name
             if dKey in self.drivers.keys():
                 dKey = dKey
@@ -625,15 +628,16 @@ class BusinessUnit(Tags,Equalities):
                 #drivers is a dictionary of tags to sets of bbids; to get actual
                 #driver objects, have to call drivers.getDrivers()
                 matching_drs = self.drivers.getDrivers(dKey)
+                #getDrivers should return sorted by position; or keyed by position?
+                #would return sorted(self.blah.items(), key = lambda item: item[0])
+                ##sort by dict key. 
+                # in a dict.
+                #
+                #drivers should be a bbids:{pos:bbid}
+                #raise error if one already exists
                 applicableDrivers.extend(matching_drs)
                 applicableDrivers.alignItems()
-            else:
-                miscDrivers = self.drivers.getDrivers(None)
-                for driver in miscDrivers:
-                    if driver.canWorkOnThis(line):
-                        if applicableDrivers.checkFit(driver):
-                            applicableDrivers.append(driver)
-                            applicableDrivers.alignItems()
+            #
             for driver in applicableDrivers:
                 driver.workOnThis(line)
         

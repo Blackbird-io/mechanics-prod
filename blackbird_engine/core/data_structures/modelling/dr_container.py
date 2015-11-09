@@ -29,7 +29,6 @@ DriversContainer      subclass of Components
 
 #imports
 import copy
-from operator import attrgetter
 
 import BBExceptions
 import BBGlobalVariables as Globals
@@ -53,13 +52,16 @@ class DrContainer(Components):
     work on a particular business unit.
 
     Each instance is a Components-type dictionary with supplemental attributes,
-    including a second dictionary called dr_directory. The main dictionary
-    stores sets of driver bbids associated with a particular lineItem name or
-    tag, keyed by the tag.
+    including a second dictionary called dr_directory.
+
+    The main dictionary stores records of known drivers for each key. The keys
+    are usually tags or line names. The records are a dictionary of position to
+    driver bbid. 
 
     The directory stores driver objects keyed by bbid. When a client needs to
-    access the actual drivers for a given line, she calls the getDrivers()
-    method for the line name.
+    access the actual drivers for a given line, she calls the get_drivers()
+    method for the line name. This container then delivers a list of drivers
+    in order of increasing position.
 
     The class configures drivers to point to the DrContainer's parent business
     unit as the driver's own parent. This hook makes it easier for drivers to
@@ -68,7 +70,6 @@ class DrContainer(Components):
     NOTE: Equivalence (``==``) operations on DrContainers run through
     dict.__eq__ and compare only the main content (keys and sets of bbids), not
     the actual driver objects associated with those bbids. 
-
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -78,13 +79,12 @@ class DrContainer(Components):
     dr_directory          dictionary of bbid:driver objects
     
     FUNCTIONS:
-    addItem()             adds bbid for applicable tags, object to directory
+    add_item()             adds bbid for applicable tags, object to directory
     clearInheritedTags()  clears own tags and optionally those of all drivers
     copy()                returns a deep copy of self and all keys and drivers
     ex_to_special()       returns a new DrContainer that combines seed & target
-    getDrivers()          returns a list of drivers associated with a tag
-    getOrdered()          returns a list of all drivers sorted by bbid
-    get_tagged()          returns a dict of drivers with tags
+    get_drivers()         returns a list of drivers associated with a tag
+    get_ordered()         returns a list of all drivers sorted by bbid
     inheritTags()         inherits tags from a list of all drivers in instance
     setPartOf()           sets parentObject for instance **and** drivers
     ====================  ======================================================
@@ -96,11 +96,11 @@ class DrContainer(Components):
         self.dr_blank = Driver()
         self.dr_directory = {}        
 
-    def addItem(self,newDriver,*otherKeys):
+    def add_item(self, new_driver, *other_keys):
         """
 
 
-        DrContainer.addItem(newDriver,*otherKeys) -> None
+        DrContainer.addItem(newDriver, *otherKeys) -> None
 
 
         Method creates sets of bbids for drivers associated with a specific tag.
@@ -120,46 +120,43 @@ class DrContainer(Components):
 
         NOTE: Method will overwrite old versions of a driver with new versions.
         """
-        #
         if not self.parentObject:
             c = "Cannot add driver. DrContainer does not have a parent object."
             raise BBExceptions.IOPMechanicalError(c)
+        
         if not newDriver.id.bbid:
             c = "Cannot add driver that does not have a valid bbid."
             raise BBExceptions.IDError(c)
-        #Could prohibit implicit overwrites, but cumbersome: would have to check
-        #whether a bbid is already in a given key's set.
-        #
-        newDriver.setPartOf(self.parentObject)
-        #Drivers point to the business unit as parent object
-        self.dr_directory[newDriver.id.bbid] = newDriver
-        #
+
+        # Could prohibit implicit overwrites, but would be cumbersome. Would
+        # have to check whether a bbid is already in a given key's set.
+
+        new_driver.setPartOf(self.parentObject)
+        # Drivers point to business unit as a parent object.
+        self.dr_directory[newDriver.id.bbid] = new_driver
+
+        # Build the set of keys where we are going to register the driver
         keys = set()
-        l_blank = [None]
-        dr_wcName = newDriver.workConditions["name"]
-        default_wcName = self.dr_blank.workConditions["name"]
-        dr_wcTags = newDriver.workConditions["allTags"]
-        default_wcTags = self.dr_blank.workConditions["allTags"]
-        #incrementally build up keys relevant to this driver
-        #``|`` is the set.union() operation
-        if dr_wcName != l_blank and dr_wcName != default_wcName:
-            keys = keys | set(dr_wcName)
-        if dr_wcTags != l_blank and dr_wcName != default_wcTags:
-            keys = keys | set(dr_wcTags)
-        if otherKeys != tuple():
-            keys = keys | set(otherKeys)
-        for k in keys.copy():
-            #iterate through copy because going to change the set
-            if k:
-                keys.add(k.casefold())
-        keys_existing = keys & set(self.keys())
-        keys_new = keys - keys_existing
-        for k in keys_existing:
-            self[k].add(newDriver.id.bbid)
-        for k in keys_new:
-            self[k] = {newDriver.id.bbid}
+        for trigger_tag in new_driver.workConditions.values():
+            keys.add(set(trigger_tags))
+        keys = keys | set(other_keys)
+        # Stip out muck
+        keys = keys - {None}
+        keys = keys - set(self.dr_blank.workConditions["name"])
+        #  driver.workConditions[x] == "FAIL" by default
+
+        for key in keys:
+            decased_key = key.casefold()
+            record = self.setdefault(decased_key, dict())
+            if driver.position in record:
+                c = "Can only have one driver with a given position."
+                c += "\n position %s already exists for key ``%s``"
+                c = c % (position, key)
+                raise Exception(c)
+            else:
+                record[driver.position] = drier.id.bbid        
    
-    def clearInheritedTags(self,recur = False):
+    def clearInheritedTags(self, recur=False):
         """
 
 
@@ -170,10 +167,10 @@ class DrContainer(Components):
         instance , then clears inherited tags 
         """
         Tags.clearInheritedTags(self,recur)
-        for dr in self.getOrdered():
+        for dr in self.dr_directory.items():
             dr.clearInheritedTags(recur)
             
-    def copy(self, enforce_rules = True):
+    def copy(self, enforce_rules=True):
         """
 
 
@@ -189,21 +186,23 @@ class DrContainer(Components):
         comply with any applicable tag rules. 
         """
         #
-        #make container
-        result = Tags.copy(self,enforce_rules)
+        # Make container
+        result = Tags.copy(self, enforce_rules)
         result.clear()
         result.dr_directory = {}
-        #make a clean empty dictionary for new directory
+        # Make a clean empty dictionary for new directory
         #
-        #configure and fill the container
-        result.dr_blank = self.dr_blank.copy(enforce_rules = False)
-        for (k, bbid_set) in self.items():
-            result[k] = bbid_set.copy()
-            #set-specific copy; new set of same bbids
+        # Configure and fill the container
+        result.dr_blank = self.dr_blank.copy(enforce_rules=False)
+        
+        for (k, position_dict) in self.items():
+            result[k] = position_dict.copy()
+            # Set-specific copy; new set of same bbids
+
         for (bbid,dr) in self.dr_directory.items():
             result.dr_directory[bbid] = dr.copy(enforce_rules)
         #
-        #return 
+        # Return 
         return result
         
     def ex_to_special(self,target):
@@ -235,7 +234,7 @@ class DrContainer(Components):
         adding a key:value entry, with those bbids in target that point toward
         special drivers. 
         """
-        #
+        
         #step 1: make container
         seed = self
         alt_seed = copy.copy(seed)
@@ -248,7 +247,7 @@ class DrContainer(Components):
         #updates result with those target tags it doesnt have already. "at" mode
         #picks up all tags from target. other attributes stay identical because
         #Tags uses a shallow copy.
-        #
+        
         #step 2: fill container
         #2a: start with dr_directory
         seed_ids = set(seed.dr_directory.keys())
@@ -283,23 +282,27 @@ class DrContainer(Components):
                 result.dr_directory[bbid] = new_dr
         #dr_directory filled out
         #2b: now work on main storage
-        #in main storage, ks are tags or names; values are sets of bbids
+        #in main storage, ks are tags or names; values are dicts of position
         seed_ks = set(seed.keys())
         target_ks = set(target.keys())
+        #
         shared_ks = seed_ks & target_ks
         seed_only_ks = seed_ks - shared_ks
         target_only_ks = target_ks - shared_ks
-        for k in seed_only_ks:
-            result[k] = seed[k].copy()
-        for k in shared_ks:
-            result[k] = seed[k].copy()
-            target_additions = target[k] - seed[k]
-            if target_additions:
-                for bbid in target_additions:
-                    if bbid in result.dr_directory:
-                        result[k].add(bbid)
-                    else:
-                        continue
+        #        
+        for line_name in seed_only_ks:
+            result[line_name] = seed[line_name].copy()
+            # Copy the {position:bbid} record wholesale.
+        #
+        for line_name in shared_ks:
+            result[line_name] = dict()
+            for position, bbid in target[line_name].items():
+                if bbid in result.dr_directory:
+                    result[line_name][position] = bbid
+                else:
+                    continue
+            result[line_name].update(seed[line_name])
+            
             #to the extent the target set for a given tag includes any bbids
             #that are not in the seed, those bbids should only go in if they
             #are associated with a special driver. the directory integration in
@@ -307,42 +310,52 @@ class DrContainer(Components):
             #whether a target-only driver is special by checking whether that
             #driver's id is in result.dr_directory. no need to get the driver
             #itself - if it was ordinary and located only in the target, it
-            #would not have made it in to the directory. 
-        for k in target_only_ks:
-            for bbid in target[k]:
+            #would not have made it in to the directory.
+
+        # Upgrade-S: Can get the intersection of the bbid values in each line
+        # record and the drivers we carry over. Then only add those. Requires
+        # flipping the dict to val:k. Unclear if you can do that quickly. 
+
+        for line_name in target_only_ks:
+            for position, bbid in target.items():
                 if bbid in result.dr_directory:
-                    if k in result:
-                        result[k].add(bbid)
-                    else:
-                        result[k] = {bbid}
+                    record = result.setdefault(line_name, dict())
+                    record[position] = bbid
                 else:
                     continue
-        #
-        #step 3: return container
+        # For ids that appear only in the target, discard those we didn't
+        # include in the directory, keep others.
+    
+        # Step 3: return container
         return result               
     
-    def getDrivers(self,tag):
+    def get_drivers(self, tag):
         """
 
 
-        DrContainer.getDrivers(tag) -> list
+        DrContainer.get_drivers() -> list
 
 
         Method returns a list of drivers associated with the tag, ordered by
         driver bbid.
         """
         result = []
-        dr_ids = self[tag]
-        for bbid in sorted(dr_ids):
-            dr = self.dr_directory[bbid]
-            result.append(dr)
+        available = self[tag]
+        # ``available`` is a int:bbid dictionary
+        
+        for position, bbid in sorted(available):
+            # Lambda may be faster here, not using for clarity
+            bbid = available[position]
+            driver = self.dr_directory[bbid]
+            result.append(driver)
+
         return result
 
-    def getOrdered(self):
+    def get_ordered(self):
         """
 
 
-        DrContainer.getOrdered() -> set()
+        DrContainer.get_ordered() -> set()
 
 
         Method returns a list of all drivers contained in instance sorted by
@@ -353,25 +366,8 @@ class DrContainer(Components):
             dr = self.dr_directory[bbid]
             result.append(dr)
         return result
-    
-    def get_tagged(self, *tags, pool = None):
-        """
 
-
-        DrContainer.get_tagged(*tags[, pool = None]) -> dict
-
-
-        Return a dictionary of objs (by bbid) that carry the specified tags. 
-        If ``pool`` is None, uses values from instance.dr_directory. Delegates
-        all work to Components.get_tagged().
-        """
-        if not pool:
-            pool = self.dr_directory.values()
-        result = Components.get_tagged(self, *tags, pool = pool)
-        #
-        return result
-
-    def inheritTags(self, recur = True):
+    def inheritTags(self, recur=True):
         """
 
 
@@ -381,11 +377,13 @@ class DrContainer(Components):
         Method runs Tags.inheritTags() on the instance, then has the instance
         inherit tags directly from every driver it contains (via .getOrdered()).
         """
-        Tags.inheritTags(self,recur)
-        for dr in self.getOrdered():
-            self.inheritTagsFrom(dr,recur)
+        Tags.inheritTags(self, recur)
+        for dr in self.get_ordered():
+            self.inheritTagsFrom(dr, recur)
+        # In tag inheritance, order is significant. Want to inherit tags in the
+        # same order every time. 
 
-    def setPartOf(self,parentObj,recur = True):
+    def setPartOf(self, parentObj, recur=True):
         """
 
 
@@ -397,5 +395,5 @@ class DrContainer(Components):
         """
         Tags.setPartOf(self,parentObj)
         if recur:
-            for dr in self.getOrdered():
+            for dr in self.dr_directory.values():
                 dr.setPartOf(parentObj)
