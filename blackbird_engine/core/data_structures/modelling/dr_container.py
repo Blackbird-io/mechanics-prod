@@ -124,7 +124,7 @@ class DrContainer(Components):
             c = "Cannot add driver. DrContainer does not have a parent object."
             raise BBExceptions.IOPMechanicalError(c)
         
-        if not newDriver.id.bbid:
+        if not new_driver.id.bbid:
             c = "Cannot add driver that does not have a valid bbid."
             raise BBExceptions.IDError(c)
 
@@ -133,28 +133,36 @@ class DrContainer(Components):
 
         new_driver.setPartOf(self.parentObject)
         # Drivers point to business unit as a parent object.
-        self.dr_directory[newDriver.id.bbid] = new_driver
+        self.dr_directory[new_driver.id.bbid] = new_driver
 
         # Build the set of keys where we are going to register the driver
         keys = set()
-        for trigger_tag in new_driver.workConditions.values():
-            keys.add(set(trigger_tags))
+        for trigger_tags in new_driver.workConditions.values():
+            keys = keys | set(trigger_tags)
         keys = keys | set(other_keys)
         # Stip out muck
         keys = keys - {None}
         keys = keys - set(self.dr_blank.workConditions["name"])
         #  driver.workConditions[x] == "FAIL" by default
 
-        for key in keys:
-            decased_key = key.casefold()
+        applied_keys = {key.casefold() for key in keys}
+        
+        for decased_key in applied_keys:
             record = self.setdefault(decased_key, dict())
-            if driver.position in record:
-                c = "Can only have one driver with a given position."
+            if new_driver.position in record:
+                c = "A single record can only have one driver with a given position."
                 c += "\n position %s already exists for key ``%s``"
-                c = c % (position, key)
+                c = c % (new_driver.position, decased_key)
+                c += "\n unable to insert driver ``%s``"
+                c = c % new_driver.name
+                #
+                for num, item in enumerate(self.items()):
+                    print(num, " ", item, "\n")
+                print()
+                print(self[decased_key])
                 raise Exception(c)
             else:
-                record[driver.position] = drier.id.bbid        
+                record[new_driver.position] = new_driver.id.bbid        
    
     def clearInheritedTags(self, recur=False):
         """
