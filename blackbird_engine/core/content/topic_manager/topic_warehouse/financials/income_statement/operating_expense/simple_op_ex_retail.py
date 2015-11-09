@@ -304,11 +304,11 @@ def scenario_3(topic):
     #caller; preserve here for legacy comparability.
     #
     local_drivers = dict()
-    local_drivers["Employee Expense"] = local_drivers["employee expense"] = driver_ee
-    local_drivers["Rent"] = local_drivers["rent"] = driver_rent
-    local_drivers["Utilities"] = local_drivers["utilities"] = driver_util
-    local_drivers["Security"] = local_drivers["security"] = driver_security
-    local_drivers["IT"] = local_drivers["it"] = driver_it
+    local_drivers["Employee Expense"] = driver_ee
+    local_drivers["Rent"] = driver_rent
+    local_drivers["Utilities"] = driver_util
+    local_drivers["Security"] = driver_security
+    local_drivers["IT"] = driver_it
     
     #
     #
