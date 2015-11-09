@@ -59,8 +59,8 @@ ColorManager.populate()
 FormulaManager.populate()
 QuestionManager.populate()
 
-id = ID()
-id.assignBBID("TopicManager")
+my_id = ID()
+my_id.assign("TopicManager")
 #globals continued at the end of module
 
 #classes
@@ -157,8 +157,8 @@ def load_drivers(topic, content_module):
         raise BBExceptions.IDAssignmentError(c)
     else:
         for (driver_name, driver_obj) in content_module.applied_drivers.items():
-            driver_obj.id.setNID(topic.id.bbid)
-            driver_obj.id.assignBBID(driver_name)
+            driver_obj.id.set_namespace(topic.id.bbid)
+            driver_obj.id.assign(seed=driver_name)
             new_sig = ("Driver: ..." + str(topic.id.bbid)[-6:]
                        + " " + str(driver_name))
             driver_obj.setSignature(new_sig)
@@ -304,8 +304,8 @@ def make_topic(content_module, catalog = local_catalog):
         new_topic.add_work_item(line, contribution)
     #
     #id
-    new_topic.id.setNID(id.namespace_id)
-    new_topic.id.assignBBID(new_topic.tags.name)
+    new_topic.id.set_namespace(my_id.namespace_id)
+    new_topic.id.assign(seed=new_topic.tags.name)
     #
     #source (uses relative path for cwd)
     location = inspect.getfile(content_module)

@@ -295,4 +295,9 @@ def seconds_from_years(yrs):
     """
     result = yrs * 365 * 24 * 60 * 60
     return result
+
+def walk(d):
+    for k in sorted(d.keys()):
+        yield d[k]
+
     

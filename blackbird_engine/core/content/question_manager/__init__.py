@@ -63,8 +63,8 @@ from . import question_warehouse as Warehouse
 
 
 #globals
-id = ID()
-id.assignBBID("QuestionManager")
+my_id = ID()
+my_id.assign("QuestionManager")
 local_catalog = ProtectedCatalog()
 
 #functions
@@ -186,8 +186,9 @@ def make_question(content_module, catalog = local_catalog):
     new_question.tags.setName(content_module.name)
     #
     #id
-    new_question.id.setNID(id.namespace_id)
-    new_question.id.assignBBID(new_question.tags.name)
+    new_question.id.set_namespace(my_id.bbid)
+    new_question.id.assign(seed=new_question.tags.name)
+    # Questions get an id within the QuestionManager namespace.
     #
     #tags
     new_question.tags.tag(*content_module.requiredTags, field = "req")

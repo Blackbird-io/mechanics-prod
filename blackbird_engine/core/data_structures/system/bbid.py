@@ -83,14 +83,25 @@ class ID:
     ====================  ======================================================
     """
     origin_id = BB_UUID_NAMESPACE
-    namespace_id = origin_id
     
-    def __init__(self,id_type = 3):
+    def __init__(self, id_type=3):
         self.bbid = None
-        self.id_type = id_type
-        self.last_namespace_id = None
+        
+        self._id_type = id_type
+        self._prior_namespace = None
+        self._namespace = None
 
-    class dynamicShort:
+    @property
+    def namespace(self):
+        """
+        read-only
+
+        set only through setNID()
+        """
+        result = self._namespace or self.origin_id
+        return result
+
+    class _TailDescriptor:
         def __init__(self):
             self.chars = 4
             self.prefix = "xx"
@@ -106,38 +117,36 @@ class ID:
         def __set__(self,instance,value):
             pass
 
-    short = dynamicShort()
+    short = _TailDescriptor()
 
-    def assignBBID(self,name):
+    def assign(self, seed):
         """
 
 
-        ID.assignBBID(name) -> None
+        ID.assignBBID() -> None
 
 
         Method assigns instance a UUID within the instance's namespace. Default
         namespace is the origin.
 
-        ``name`` should be a fixed external alphanumeric sequence (string or
+        ``seed`` should be a fixed external alphanumeric sequence (string or
         float) that describes the object in a way that humans can understand.
-        To ensure that the ID is the same across runtimes, ``name`` should be
+        To ensure that the ID is the same across runtimes, ``seed`` should be
         a constant fixed outside the method call.
 
-        NOTE: users should **NOT** choose names that are ip/memory addresses,
+        NOTE: users should **NOT** choose seeds that are ip/memory addresses,
         time, random numbers or hardware identifiers, among others. 
         """
-        if self.id_type == 3:
-            self.bbid = uuid.uuid3(self.namespace_id,name)
-        if self.id_type == 4:
-            self.bbid = uuid.uuid4()
-        if self.id_type == 5:
-            self.bbid = uuid.uuid5(self.namespace_id,name)
+        encoder_name = "uuid" + str(self._id_type)
+        # Pick up either uuid.uuid3, uuid.uuid4, or uuid.uuid5. 
+        encoder = getattr(uuid, encoder_name)
+        self.bbid = encoder(self.namespace, seed)
 
-    def verify(self,name):
+    def verify(self, name):
         """
 
 
-        ID.verify(name) -> bool
+        ID.verify() -> bool
 
 
         False if instance.bbid not what you get from uuid of the current type.
@@ -145,21 +154,21 @@ class ID:
         """
         result = False
         vid = None
-        if self.id_type == 3:
-            vid = uuid.uuid3(self.namespace_id,name)
-        if self.id_type == 4:
+        if self._id_type == 3:
+            vid = uuid.uuid3(self.namespace, name)
+        elif self.id_type == 4:
             vid = uuid.uuid4()
-        if self.id_type == 5:
-            vid = uuid.uuid5(self.namespace_id,name)
+        elif self.id_type == 5:
+            vid = uuid.uuid5(self.namespace, name)
         if vid == self.bbid:
             result = True
         return result
 
-    def revertNID(self):
+    def revert_namespace(self):
         """
 
 
-        ID.revertNID() -> None
+        ID.revert_namespace() -> None
 
 
         Undo-style method that sets instance.namespace_id to the value stored in
@@ -168,25 +177,23 @@ class ID:
 
         No-op if last_namespace_id is empty. 
         """
-        if self.last_namespace_id:
-            self.namespace_id = self.last_namespace_id
-            self.last_namespace_id = None
-        
+        if self._prior_namespace:
+            self._namespace = self._prior_namespace
+            self._prior_namespace = None
 
-    def setNID(self,ns_uuid):
+    def set_namespace(self, new_namespace):
         """
 
 
-        ID.setNID(ns_uuid) -> None
+        ID.set_namespace() -> None
 
 
         Method sets the instance's namespace_id to the argument. Preserves last
         namespace_id value, if specified, as last_namespace_id.
         """
-        if getattr(self,"namespace_id",None):
-            self.last_namespace_id = self.namespace_id
-        self.namespace_id = ns_uuid
-        
+        if self.namespace:
+            self._prior_namespace = self.namespace
+        self._namespace = new_namespace
         
     
     

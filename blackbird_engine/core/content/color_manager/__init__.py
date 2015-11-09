@@ -65,8 +65,8 @@ from . import color_warehouse as Warehouse
 
 
 #globals
-id = ID()
-id.assignBBID("ColorManager")
+my_id = ID()
+my_id.assign(seed="ColorManager")
 local_catalog = ProtectedCatalog()
 
 #functions
@@ -117,8 +117,9 @@ def make_color(content_module, catalog = local_catalog, fill_gaps = False):
         new_color = filled_color
     #
     if new_color:
-        new_color.id.setNID(id.namespace_id)
-        new_color.id.assignBBID(new_color.ref_date.isoformat())
+        new_color.id.set_namespace(my_id.bbid)
+        # Color modules get ids within the ColorManager namespace.
+        new_color.id.assign(seed=new_color.ref_date.isoformat())
     else:
         raise BBExceptions.CatalogError
         #somehow failed to create a color object
