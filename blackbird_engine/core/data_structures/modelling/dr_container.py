@@ -351,7 +351,7 @@ class DrContainer(Components):
         available = self[tag]
         # ``available`` is a int:bbid dictionary
         
-        for position, bbid in sorted(available):
+        for position, bbid in sorted(available.items()):
             # Lambda may be faster here, not using for clarity
             bbid = available[position]
             driver = self.dr_directory[bbid]

@@ -612,35 +612,15 @@ class BusinessUnit(Tags,Equalities):
         for line in self.financials:
             if tags_to_omit & set(line.allTags):
                 continue
-            line.clear()
             key = line.name.casefold()
-            matching_drivers = self.drivers.get_drivers(key)
-            for driver in matching_drivers:
-                driver.workOnThis(line)
-            
-            applicable_drivers = Queue()
-            dKey = line.name
-            if dKey in self.drivers.keys():
-                dKey = dKey
+            if key not in self.drivers:
+                continue
             else:
-                dKey = dKey.casefold()
-            if dKey in self.drivers.keys():
-                #drivers is a dictionary of tags to sets of bbids; to get actual
-                #driver objects, have to call drivers.getDrivers()
-                matching_drs = self.drivers.getDrivers(dKey)
-                #getDrivers should return sorted by position; or keyed by position?
-                #would return sorted(self.blah.items(), key = lambda item: item[0])
-                ##sort by dict key. 
-                # in a dict.
-                #
-                #drivers should be a bbids:{pos:bbid}
-                #raise error if one already exists
-                applicableDrivers.extend(matching_drs)
-                applicableDrivers.alignItems()
-            #
-            for driver in applicableDrivers:
-                driver.workOnThis(line)
-        
+                line.clear()
+                matching_drivers = self.drivers.get_drivers(key)
+                for driver in matching_drivers:
+                    driver.workOnThis(line)
+                    
     def extrapolate_to(self,target):
         """
 

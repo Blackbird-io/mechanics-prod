@@ -210,8 +210,8 @@ def scenario_3(topic):
     #caller; preserve here for legacy comparability.
     #
     local_drivers = dict()
-    local_drivers["Marketing"] = local_drivers["marketing"] = driver_marketing
-    local_drivers["G&A"] = local_drivers["g&a"] = driver_ga
+    local_drivers["Marketing"] = driver_marketing
+    local_drivers["G&A"] = driver_ga
     
     #insert lines and drivers into model
     #a) template fins: lines only
