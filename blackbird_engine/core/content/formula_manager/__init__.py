@@ -54,8 +54,8 @@ from . import formula_warehouse as Warehouse
 
 #globals
 local_catalog = Catalog()
-id = ID()
-id.assignBBID("FormulaManager")
+my_id = ID()
+my_id.assign("FormulaManager")
 
 #functions
 def make_formula(content_module, catalog = local_catalog):
@@ -80,8 +80,8 @@ def make_formula(content_module, catalog = local_catalog):
         c = "Cannot add nameless formulas to catalog."
         raise BBExceptions.CatalogError(c)
     formula.tags.setName(content_module.name)
-    formula.id.setNID(id.namespace_id)
-    formula.id.assignBBID(formula.tags.name)
+    formula.id.set_namespace(my_id.namespace_id)
+    formula.id.assign(seed=formula.tags.name)
     #
     #source
     location = inspect.getfile(content_module)

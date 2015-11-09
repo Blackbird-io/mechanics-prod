@@ -79,7 +79,6 @@ class TimePeriod(Tags):
     
     FUNCTIONS:
     __str__               basic print, shows starts, ends, and content
-    class dyn_cal_manager  descriptor for length, start_date, end_date
     clear()               clears content, resets bu_directory
     copy()                returns new TimePeriod with a copy of content
     extrapolate_to()      updates inheritance then delegates to Tags
@@ -87,10 +86,7 @@ class TimePeriod(Tags):
     ex_to_special()       starts w target copy, new content is seed.ex(target)
     get_units()           return list of units from bbid pool
     get_lowest_units()    return list of units w/o components from bbid pool
-    resetDirectory()      sets bu_directory to blank dictionary
     selectBottomUnits()   OBS; legacy intefface for get_lowest_units()
-    setContent()          sets instance content to argument
-    setPrior()            sets pointer to preceding time period    
     ====================  ======================================================
     """
     def __init__(self, start_date, end_date, content = None):
@@ -125,10 +121,10 @@ class TimePeriod(Tags):
         TimePeriod.clear() -> None
 
 
-        Method sets content to None and runs resetDirectory().
+        Method sets content to None and resets instance directories.
         """
         self.content = None
-        self.resetDirectory()
+        self._reset_directories()
         
     def copy(self, enforce_rules = True):
         """
@@ -145,7 +141,7 @@ class TimePeriod(Tags):
         result.end = copy.copy(self.end)
         if self.content:
             new_content = self.content.copy(enforce_rules)
-            result.setContent(new_content, updateID = False)
+            result._set_content(new_content, updateID = False)
         #same id namespace (old model)
         #
         return result
@@ -277,8 +273,8 @@ class TimePeriod(Tags):
         result.end = copy.copy(target.end)
         if seed.content:
             new_content = seed.content.copy(enforce_rules = True)
-            result.setContent(new_content, updateID = False)
-        result.setPrior(seed)
+            result._set_content(new_content, updateID = False)
+        result._set_prior(seed)
         #
         #return container
         return result        
@@ -327,17 +323,17 @@ class TimePeriod(Tags):
         bu_seed = seed.content 
         bu_target = target.content
         bu_new = bu_seed.extrapolate_to(bu_target)
-        result.setContent(bu_new, updateID = False)
-        result.setPrior(seed)
+        result._set_content(bu_new, updateID = False)
+        result._set_prior(seed)
         #
         #return container
         return result
 
-    def resetDirectory(self):
+    def _reset_directories(self):
         """
 
 
-        TimePeriod.resetDirectory() -> None
+        TimePeriod.reset_directories() -> None
 
 
         Method sets instance.bu_directory and instance.ty_directory to blank
@@ -346,29 +342,29 @@ class TimePeriod(Tags):
         self.bu_directory = {}
         self.ty_directory = {}
 
-    def selectBottomUnits(self):
-        """
-
-
-        TimePeriod.selectBottomUnits() -> list
-
-
-        **OBSOLETE**
-
-        Legacy interface. Delegates all work to get_lowest_units().
-
-        During delegration, method permits runs on empty pool to ensure
-        that new results stay consistent with old ones for calls on instances
-        with no registered units in the directory. 
-        """
-        result = self.get_lowest_units(run_on_empty = True)
-        return result
+##    def selectBottomUnits(self):
+##        """
+##
+##
+##        TimePeriod.selectBottomUnits() -> list
+##
+##
+##        **OBSOLETE**
+##
+##        Legacy interface. Delegates all work to get_lowest_units().
+##
+##        During delegration, method permits runs on empty pool to ensure
+##        that new results stay consistent with old ones for calls on instances
+##        with no registered units in the directory. 
+##        """
+##        result = self.get_lowest_units(run_on_empty = True)
+##        return result
                 
-    def setContent(self,bu,updateID = True):
+    def _set_content(self, bu, updateID=True):
         """
 
 
-        TimePeriod.setContent(bu) -> None
+        TimePeriod.set_content() -> None
 
 
         Method connects the bu to the instance and sets the bu as instance
@@ -383,30 +379,31 @@ class TimePeriod(Tags):
         BusinessUnit can elect to get a different bbid if it's name changes, but
         in such an event, the Model will treat it as a new unit altogether.
         """
-        bu.fitToPeriod(self, recur = True, updateID = updateID)
+        bu._fit_to_period(self, recur=True)
         #must fit bu to period before proceeding with analysis in case the bu
         #is a raw shell that has never been assigned a bbid (ie at model start)
         #bu.fitToPEriod(updateID= True) assigns the bu a valid bbid within the
         #model namespace. this method can then proceed instead of rejecting
         #perfectly reasonable content.
-        if bu.id.bbid:
-            self.resetDirectory()
-            bu.updateDirectory(recur = True, overwrite = False)
-            #.updateDirectory() will raise an exception if it detects uuid
-            #collisions among any components.
-            self.content = bu
-        else:
+        if updateID:
+            bu._update_id(self.id.namespace, recur=True)
+        if not bu.id.bbid:
             c = "Cannot add content without a valid bbid."
             raise BBExceptions.IDError(c)
+        
+        self._reset_directories()
+        bu._register_in_period(overwrite=False)
+        #
+        self.content = bu
     
-    def setPrior(self,prior_period):
+    def _set_prior(self, prior_period):
         """
 
 
-        TimePeriod.setPrior(prior_period) -> None
+        TimePeriod._set_prior() -> None
 
 
-        Method sets instance.prior to argument. 
+        For consecutive periods, set instance.prior to argument.
         """
         self.prior = prior_period
 

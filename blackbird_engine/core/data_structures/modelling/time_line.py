@@ -216,8 +216,8 @@ class TimeLine(dict):
         """
         tl_nid = self.id.namespace_id
         period.id.setNID(tl_nid)
-        #Period has only a pointer to the Model.namespace_id; periods dont have
-        #their bbids.
+        # Period has only a pointer to the Model.namespace_id; periods dont have
+        # their own bbids.
         return period
         
     def extrapolate_all(self, seed = None):

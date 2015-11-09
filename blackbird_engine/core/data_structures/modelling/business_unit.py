@@ -103,8 +103,6 @@ class BusinessUnit(Tags,Equalities):
     setDefaultFinancials()  CLASS, sets template financials
     setDrivers()          attaches a DrContainer object, sets partOf
     setFinancials()       attaches a Financials object from the right template
-    updateDirectory()     enters all components into period's bu_directory
-    verifyID()            checks that bbid is in period namespace
     ====================  ======================================================
     """
 
@@ -202,11 +200,11 @@ class BusinessUnit(Tags,Equalities):
         box = "\n".join(lines)
         return box
 
-    def add_component(self, bu, updateID = True):
+    def add_component(self, bu, update_id):
         """
 
 
-        BU.addComponent(bu[,updateID = True]) -> None
+        BU.addComponent() -> None
 
 
         Method prepares a bu and adds it to instance components.
@@ -228,21 +226,27 @@ class BusinessUnit(Tags,Equalities):
         """
         bu.summary = None
         bu.valuation = None
-        bu.fitToPeriod(self.period, recur = True, updateID = updateID)
-        if not updateID:
-            if not bu.verifyID(recur = True):
-                raise BBExceptions.IDNamespaceError
-        #verifyID duplicative if method just reset all ids anyways
-        bu.updateDirectory(recur = True, overwrite = False)
-        self.components.addItem(bu)
-
-    def addComponent(self, *kargs, **pargs):
-        """
-
-        Legacy interface, delegates all work to add_component
+        bu._fit_to_period(self.period, recur=True)
+        # Step 1: update lifecylce with the right dates for unit and components
         
-        """
-        self.add_component(*kargs, **pargs)
+        if update_id:
+            bu._update_id(recur=True)
+        # Step 2: optionally update ids.
+
+        bu._register_in_directory(recur=True, overwrite=False)
+        # Step 3: Register the the units. Will raise erros on collisions. 
+
+        self.components.addItem(bu)
+        # I'm going to change the updateID default, so need to make sure all calls specify update_id= True #<---------------------------------
+        
+
+##    def addComponent(self, *kargs, **pargs):
+##        """
+##
+##        Legacy interface, delegates all work to add_component
+##        
+##        """
+##        self.add_component(*kargs, **pargs)
 
     def addDriver(self,newDriver,*otherKeys):
         """
@@ -694,21 +698,21 @@ class BusinessUnit(Tags,Equalities):
         alt_seed.clear()
         #zero out the recursive attributes; a different part of the method works
         #on those
-        result = alt_seed.copy(enforce_rules = True)
+        result = alt_seed.copy(enforce_rules=True)
         #class-specific copy that picks up any class-specific data
-        result = Tags.ex_to_special(result,target,mode = "at")
+        result = Tags.ex_to_special(result, target, mode="at")
         #updates result with those target tags it doesnt have already. "at" mode
         #picks up all tags from target. other attributes stay identical because
         #Tags uses a shallow copy.
         #
         #step 2: fill container
         for attr in self.tagSources:
-            o_seed = getattr(self,attr)
-            o_targ = getattr(target,attr)
+            o_seed = getattr(self, attr)
+            o_targ = getattr(target, attr)
             if self.checkTouch(o_targ):
                 o_res = o_seed.extrapolate_to(o_targ)
             else:
-                o_res = o_targ.copy(enforce_rules = False)
+                o_res = o_targ.copy(enforce_rules=False)
                 #if can't touch an attribute, copy the target wholesale
             setattr(result,attr,o_res)
         #
@@ -741,32 +745,25 @@ class BusinessUnit(Tags,Equalities):
             self.financials.summarize()
             self.filled = True
 
-    def fitToPeriod(self, timePeriod, recur = True, updateID = True):
+    def _fit_to_period(self, time_period, recur=True):
         """
 
 
-        BU.fitToPeriod(timePeriod[, recur = True]) -> None
+        BU.fitToPeriod() -> None
 
         
         Method syncs instance.header.startDate and endDate with time period.
-        Method then sets the namespace id for the instance to that of the period
-        and the life.ref_date to the period endpoint. 
 
         If ``recur`` == True, repeats for each component.
-        If ``updateID`` == True, method updates the instance id for the new
-        namespace.
         """
-        self.period = timePeriod
-        self.header.startDate = timePeriod.start
-        self.header.endDate = timePeriod.end
-        self.id.setNID(timePeriod.id.namespace_id)
-        if updateID:
-            self.id.assignBBID(self.name)
-        self.life.set_ref_date(timePeriod.end)
+        self.period = time_period
+        self.header.startDate = time_period.start
+        self.header.endDate = time_period.end
+        #<-------------------------------------------------------------------------------------------comment these out and see what happens
+        self.life.set_ref_date(time_period.end)
         if recur:
-            #repeat all the way down to the ground floor
-            for sub in self.components.getOrdered():
-                sub.fitToPeriod(timePeriod, recur)
+            for unit in self.components.values():
+                unit._fit_to_period(time_period, recur)
 
     def pretty_print(self,
                      top_element = "=",
@@ -779,6 +776,7 @@ class BusinessUnit(Tags,Equalities):
 
         BusinessUnit.pretty_print([top_element = "=" [,
                                   side_element = "|" [,
+
                                   box_width = 23 [,
                                   field_width = 5]]]]) -> list
 
@@ -1043,11 +1041,11 @@ class BusinessUnit(Tags,Equalities):
         else:            
             self.financials = Financials()
 
-    def updateDirectory(self, recur = True, overwrite = True):
+    def _register_in_period(self, recur=True, overwrite=True):
         """
 
 
-        BU.updateDirectory([recur = True[, overwrite = True]]) -> None
+        BU.updateDirectory([recur=True[, overwrite=True]]) -> None
 
 
         Method updates the bu_directory on the instance period with the contents
@@ -1065,6 +1063,12 @@ class BusinessUnit(Tags,Equalities):
         occurs, some higher-level or sibling components may have already updated
         the period's directory.        
         """
+        # UPGRADE-S: Can fix the partial-overwrite problem by refactoring this
+        # routine into 2 pieces. build_dir(recur=True) would walk the tree and
+        # return a clean dict. update_dir(overwrite=bool) would compare that
+        # dict with the existing directory and raise an error if there is
+        # an overlap. Also carries a speed benefit, cause only compare once.
+        
         if not overwrite:
             if self.id.bbid in self.period.bu_directory:
                 c1 = "TimePeriod.bu_directory already contains an object with "
@@ -1076,23 +1080,21 @@ class BusinessUnit(Tags,Equalities):
                 print(self.period.bu_directory)
                 c = c1+c2+c3+c4+c5
                 raise BBExceptions.IDCollisionError(c)
-            else:
-                self.period.bu_directory[self.id.bbid] = self
-                #
-                brethren = self.period.ty_directory.setdefault(self.type, set())
-                brethren.add(self.id.bbid)
-                #
-        else:
-            self.period.bu_directory[self.id.bbid] = self
-        if recur:
-            for C in self.components.getOrdered():
-                C.updateDirectory(recur,overwrite)
+            
+        # Check for collisions first, then resgiter if none arise.
+        self.period.bu_directory[self.id.bbid] = self
+        brethren = self.period.ty_directory.setdefault(self.type, set())
+        brethren.add(self.id.bbid)
 
-    def verifyID(self, recur = True):
+        if recur:
+            for unit in self.components.values():
+                unit._register_in_period(recur, overwrite)
+
+    def verifyID(self, recur=True):
         """
 
 
-        BU.verifyID([recur = True]) -> bool
+        BU.verifyID([recur=True]) -> bool
 
 
         Method checks whether:
@@ -1109,15 +1111,65 @@ class BusinessUnit(Tags,Equalities):
         if self.period:
             if self.id.namespace_id != self.period.id.namespace_id:
                 result = False
+            # if self.id.period_id != self.period.id.namespace_id
         if result:
             result = self.id.verify(self.name)
         if result and recur:
             for C in self.components.getOrdered():
+                # can walk components unordered
                 if not C.verifyID(recur=True):
                     result = False
                     break
                 else:
                     continue
         return result
+
+    def _build_directory(self, recur=True, overwrite=True):
+        """
+        register yourself and optionally your components, by type and by id
+        return id_directory, ty_directory
+        """
+        #return a dict of bbid:unit
+        id_directory = dict()
+        ty_directory = dict()
+        if recur:
+            for unit in self.components.values():
+                lower_level = unit._build_directory(recur=True, overwrite=overwrite)
+                lower_ids = lower_level[0]
+                lower_ty = lower_level[1]
+                id_directory.update(lower_ids)
+                ty_directory.update(lower_ty)
+                
+            #update the directory for each unit in self
+            pass
+        if self.id.bbid in directory:
+            if not overwrite:
+                raise Error
+            
+        id_directory[self.id.bbid] = self
+        this_type = ty_directory.setdefault(self.type, set())
+        this_type.add(self.id.bbid)
+      
+        return id_directory, ty_directory
+    
+    def _update_id(self, namespace, recur=True):
+        """
+
+        _update_id() -> None
+        """
+        self.id.set_namespace(namespace)
+        self.id.assign()
+        # This unit now has an id in the namespace. Now pass our bbid down as
+        # the namespace for all downstream components. 
+        if recur:
+            for unit in self.components.values():
+                    unit.update_id(namespace=self.id.bbid, recur=True)
+    
+        
+                    
+
+    
+        
+        
 
     
