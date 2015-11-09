@@ -80,7 +80,7 @@ def make_formula(content_module, catalog = local_catalog):
         c = "Cannot add nameless formulas to catalog."
         raise BBExceptions.CatalogError(c)
     formula.tags.setName(content_module.name)
-    formula.id.set_namespace(my_id.namespace_id)
+    formula.id.set_namespace(my_id.bbid)
     formula.id.assign(seed=formula.tags.name)
     #
     #source

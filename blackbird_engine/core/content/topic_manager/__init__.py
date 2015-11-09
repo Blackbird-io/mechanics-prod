@@ -304,7 +304,7 @@ def make_topic(content_module, catalog = local_catalog):
         new_topic.add_work_item(line, contribution)
     #
     #id
-    new_topic.id.set_namespace(my_id.namespace_id)
+    new_topic.id.set_namespace(my_id.bbid)
     new_topic.id.assign(seed=new_topic.tags.name)
     #
     #source (uses relative path for cwd)
