@@ -88,14 +88,12 @@ class BusinessUnit(Tags,Equalities):
     
     FUNCTIONS:
     add_component()       adds bus with verified ids to components
-    addComponent()        legacy interface for add_component()
     addDriver()           registers a driver under every name that appears in
                           its workConditions["name"] (including None)
     consolidate()         consolidates financials from every component
     consolidate_unit()    consolidates financials from one business unit
     derive()              uses drivers to determine values for financials
     fillOut()             integrates consolidate() and derive()
-    fitToPeriod()         set refDate for bu and all components to period.end
     pretty_print()        show graphical summary of instance
     resetFinancials()     resets instance and (optionally) component financials
     setAnalytics()        attaches an object to instance.analytics
@@ -124,7 +122,7 @@ class BusinessUnit(Tags,Equalities):
         self.setFinancials(fins)
         #
         self.guide = Guide()
-        self.header = Header()
+##        self.header = Header()
         self.id = ID()
         #get the id functionality but do NOT assign a bbid yet
         self.life = LifeCycle()
@@ -228,16 +226,13 @@ class BusinessUnit(Tags,Equalities):
         bu.valuation = None
         bu._fit_to_period(self.period, recur=True)
         # Step 1: update lifecylce with the right dates for unit and components
-        
         if update_id:
             bu._update_id(namespace=self.id.bbid, recur=True)
         # Step 2: optionally update ids.
-
         bu._register_in_period(recur=True, overwrite=False)
         # Step 3: Register the the units. Will raise erros on collisions. 
-
         self.components.addItem(bu)
-        # I'm going to change the updateID default, so need to make sure all calls specify update_id= True #<---------------------------------
+    
 
     def addDriver(self,newDriver,*otherKeys):
         """
@@ -579,7 +574,7 @@ class BusinessUnit(Tags,Equalities):
         #have to make a deep copy of guide because it is composed of counter
         #objects. Guide shouldn't point to a business unit or model
         #
-        result.header.profile = copy.deepcopy(self.header.profile)
+##        result.header.profile = copy.deepcopy(self.header.profile) #<----------------------------------------remove here
         result.id = copy.copy(self.id)
         #header.profile should be the only object pointing to others on header
         result.life = self.life.copy()
@@ -748,8 +743,8 @@ class BusinessUnit(Tags,Equalities):
         If ``recur`` == True, repeats for each component.
         """
         self.period = time_period
-        self.header.startDate = time_period.start
-        self.header.endDate = time_period.end
+##        self.header.startDate = time_period.start
+##        self.header.endDate = time_period.end
         #<-------------------------------------------------------------------------------------------comment these out and see what happens
         self.life.set_ref_date(time_period.end)
         if recur:
@@ -1036,7 +1031,7 @@ class BusinessUnit(Tags,Equalities):
         """
 
 
-        BU.updateDirectory([recur=True[, overwrite=True]]) -> None
+        BU._register_in_period() -> None
 
 
         Method updates the bu_directory on the instance period with the contents
@@ -1081,39 +1076,41 @@ class BusinessUnit(Tags,Equalities):
             for unit in self.components.values():
                 unit._register_in_period(recur, overwrite)
 
-    def verifyID(self, recur=True):
-        """
-
-
-        BU.verifyID([recur=True]) -> bool
-
-
-        Method checks whether:
-        
-        (1) instance is in the same namespace id as its time period,
-        (2) instance bbid is the correct uuid for an object with its name in the
-            time period's name space, and
-        (3) optionally, if ``recur`` == True, all business units in
-            instance.components satisfy tests (1) and (2).
-
-        Method returns True when all three prongs are True, False otherwise. 
-        """
-        result = True
-        if self.period:
-            if self.id.namespace_id != self.period.id.namespace_id:
-                result = False
-            # if self.id.period_id != self.period.id.namespace_id
-        if result:
-            result = self.id.verify(self.name)
-        if result and recur:
-            for C in self.components.getOrdered():
-                # can walk components unordered
-                if not C.verifyID(recur=True):
-                    result = False
-                    break
-                else:
-                    continue
-        return result
+##    def verifyID(self, recur=True):
+##        """
+##
+##
+##        BU.verifyID([recur=True]) -> bool
+##
+##
+##        Method checks whether:
+##        
+##        (1) instance is in the same namespace id as its time period,
+##        (2) instance bbid is the correct uuid for an object with its name in the
+##            time period's name space, and
+##        (3) optionally, if ``recur`` == True, all business units in
+##            instance.components satisfy tests (1) and (2).
+##
+##        Method returns True when all three prongs are True, False otherwise. 
+##        """
+##        result = True
+##        if self.period:
+##            if self.id.namespace_id != self.period.id.namespace_id:
+##                result = False
+##            # if self.id.period_id != self.period.id.namespace_id
+##        if result:
+##            result = self.id.verify(self.name)
+##        if result and recur:
+##            for C in self.components.getOrdered():
+##                # can walk components unordered
+##                if not C.verifyID(recur=True):
+##                    result = False
+##                    break
+##                else:
+##                    continue
+##        return result
+###
+###OBSOLETE
 
     def _build_directory(self, recur=True, overwrite=True):
         """
@@ -1146,10 +1143,16 @@ class BusinessUnit(Tags,Equalities):
     def _update_id(self, namespace, recur=True):
         """
 
+
         _update_id() -> None
+
+
+        Assigns instance a new id in the namespace, based on the instance name.
+        If ``recur`` == True, updates ids for all components in the parent
+        instance bbid namespace.
         """
         self.id.set_namespace(namespace)
-        self.id.assign(self.name) #<------------------------------------------------------but name could have changed? would create a new id
+        self.id.assign(self.name)
         # This unit now has an id in the namespace. Now pass our bbid down as
         # the namespace for all downstream components. 
         if recur:
