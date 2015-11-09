@@ -36,21 +36,15 @@ import BBGlobalVariables as Globals
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
 from content import formula_manager as FormulaManager
-#import FormulaManager; will connect the module to the Driver class at the
-#bottom (after class definitions). Driver class will then be able to access the
-#formula catalog
-
-from .auto_align import AutoAlign
-from .equalities import Equalities
 
 
 
 
-#globals
+#constants
 #n/a
 
 #classes
-class Driver(Tags, AutoAlign):
+class Driver(Tags):
     """
 
     Drivers apply formulas to business units.
@@ -85,12 +79,11 @@ class Driver(Tags, AutoAlign):
     3) A BusinessUnit may contain several different Drivers applicable to a
     given line. In such an event, a BusinessUnit will construct a queue of
     Drivers for the lineItem prior to running them. Drivers signal where they
-    should appear in queue through AutoAlign attributes.
-    
-    Queues should generally be limited to 5 drivers per line. 
-    
-    For more information, see the doc string for AutoAlign and Queue classes, as
-    well as BusinessUnit.derive().
+    should appear in queue through their position attribute. A driver with a
+    position of 10 will run before one with position == 20.
+
+    Drivers do not need to have consecutive positions to run. Queues should
+    generally be limited to 5 drivers per line. 
 
     4) A Topic should provide the Driver with a signature prior to injecting the
     Driver into a BusinessUnit. The driver signature should contain the Topic's
@@ -116,6 +109,7 @@ class Driver(Tags, AutoAlign):
     id                    instance of ID
     FM                    class; pointer to formula manager 
     formula_bbid          bbid for formula that Driver applies
+    position              int; from 0 to 100
     signature             string; how the driver signs lines it modifies
     workConditions        dict; criteria for objects driver will process
 
@@ -136,6 +130,9 @@ class Driver(Tags, AutoAlign):
     ====================  ======================================================
     """
     FM = None
+    # We will connect the class to the FormulaManager at the bottom of the
+    # module. Driver objects will then be able to pull formulas directly
+    # from catalog. 
 
     @classmethod
     def disconnect(cls):
@@ -147,15 +144,21 @@ class Driver(Tags, AutoAlign):
         
     def __init__(self, signature = None):
         Tags.__init__(self)
-        AutoAlign.__init__(self)
         #
+        
         self.active = True
         self.data = {}
         self.formula_bbid = None
         self.id = ID()
         #specific uuid assigned when TopicManager configures topic catalog,
         #based on driver's name in topic's namespace id
+        
+        self.position = 10
+        # ``position`` must be an integer value between 0 and 100. used to sort
+        # order in which drivers apply to a line.
+
         self.signature = signature
+
         self.workConditions = {}
         self.workConditions["name"] = ["FAIL"]
         self.workConditions["partOf"] = ["FAIL"]

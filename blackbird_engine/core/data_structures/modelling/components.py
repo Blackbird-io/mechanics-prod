@@ -63,7 +63,7 @@ class Components(dict, Tags, Equalities):
     keyAttributes         list; CLASS; keep empty to follow standard dict logic
 
     FUNCTIONS:
-    addItem()             adds an object to self, keyed under obj's bbid
+    add_item()             adds an object to self, keyed under obj's bbid
     clearInheritedTags()  runs Tags method and then repeats for each component
     copy()                returns deep copy of instance and contents
     extrapolate_to()      delegates Tags.extrapolate_to()
@@ -138,11 +138,11 @@ class Components(dict, Tags, Equalities):
         result = line_end.join(lines)
         return result        
         
-    def addItem(self, bu):
+    def add_item(self, bu):
         """
 
 
-        Components.addItem(bu) -> None
+        Components.add_item(bu) -> None
 
 
         Method adds bu to the instance, keyed as bu.id.bbid. If bu does not
@@ -194,7 +194,7 @@ class Components(dict, Tags, Equalities):
         #fill container (automatically add names)
         for C in self.getOrdered():
             rC = C.copy(enforce_rules)
-            result.addItem(rC)
+            result.add_item(rC)
         return result
 
     def extrapolate_to(self,target):
@@ -267,7 +267,7 @@ class Components(dict, Tags, Equalities):
         for k in k_only_seed:
             c_seed = seed[k]
             c_new = c_seed.copy(enforce_rules = True)
-            result.addItem(c_new)
+            result.add_item(c_new)
         for k in k_only_target:
             c_target = target[k]
             if self.checkOrdinary(c_target):
@@ -275,7 +275,7 @@ class Components(dict, Tags, Equalities):
             else:
                 #only add special items from target.
                 c_new = c_target.copy(enforce_rules = False)
-                result.addItem(c_new)
+                result.add_item(c_new)
         for k in k_common:
             c_seed = seed[k]
             c_target = target[k]
@@ -286,7 +286,7 @@ class Components(dict, Tags, Equalities):
                 c_new = c_target.copy(enforce_rules = False)
                 #no "conceptual" movement, original and copy stay in the same
                 #level in the same time period. 
-            result.addItem(c_new)
+            result.add_item(c_new)
         #
         #return result
         return result
