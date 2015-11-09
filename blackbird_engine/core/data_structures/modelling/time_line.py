@@ -214,8 +214,8 @@ class TimeLine(dict):
         Method sets period's namespace id to that of the TimeLine, then returns
         period. 
         """
-        tl_nid = self.id.namespace_id
-        period.id.setNID(tl_nid)
+        model_namespace = self.id.namespace
+        period.id.set_namespace(model_namespace)
         # Period has only a pointer to the Model.namespace_id; periods dont have
         # their own bbids.
         return period

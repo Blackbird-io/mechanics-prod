@@ -200,7 +200,7 @@ class BusinessUnit(Tags,Equalities):
         box = "\n".join(lines)
         return box
 
-    def add_component(self, bu, update_id):
+    def add_component(self, bu, update_id=True):
         """
 
 
@@ -230,23 +230,14 @@ class BusinessUnit(Tags,Equalities):
         # Step 1: update lifecylce with the right dates for unit and components
         
         if update_id:
-            bu._update_id(recur=True)
+            bu._update_id(namespace=self.id.bbid, recur=True)
         # Step 2: optionally update ids.
 
-        bu._register_in_directory(recur=True, overwrite=False)
+        bu._register_in_period(recur=True, overwrite=False)
         # Step 3: Register the the units. Will raise erros on collisions. 
 
         self.components.addItem(bu)
         # I'm going to change the updateID default, so need to make sure all calls specify update_id= True #<---------------------------------
-        
-
-##    def addComponent(self, *kargs, **pargs):
-##        """
-##
-##        Legacy interface, delegates all work to add_component
-##        
-##        """
-##        self.add_component(*kargs, **pargs)
 
     def addDriver(self,newDriver,*otherKeys):
         """
@@ -1158,7 +1149,7 @@ class BusinessUnit(Tags,Equalities):
         _update_id() -> None
         """
         self.id.set_namespace(namespace)
-        self.id.assign()
+        self.id.assign(self.name) #<------------------------------------------------------but name could have changed? would create a new id
         # This unit now has an id in the namespace. Now pass our bbid down as
         # the namespace for all downstream components. 
         if recur:

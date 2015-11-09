@@ -160,7 +160,7 @@ def apply_data(topic, datapoint):
                       "leased not opened")
         label = "New Store (%s) #%s" % (new_store.life.date_of_birth.year, i)
         new_store.setName(label)
-        top_bu.addComponent(new_store)
+        top_bu.add_component(new_store)
     top_bu.life.brood = datapoint
     #
     #add to milestones? not specific enough for store-level verification. can

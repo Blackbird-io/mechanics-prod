@@ -124,7 +124,7 @@ class Model(Tags):
         self.guide = Guide()
         self.header = Header()
         self.id = ID()
-        self.id.assignBBID(name)
+        self.id.assign(name)
         #Model uuids exist in the origin namespace
         self.interview = InterviewTracker()
         self.portal_data = dict()
@@ -133,7 +133,7 @@ class Model(Tags):
         self.time_line = TimeLine()
         self.used = set()
         #
-        self.time_line.id.setNID(self.id.namespace_id)
+        self.time_line.id.set_namespace(self.id.bbid)
 
     #DYNAMIC ATTRIBUTES
     @property

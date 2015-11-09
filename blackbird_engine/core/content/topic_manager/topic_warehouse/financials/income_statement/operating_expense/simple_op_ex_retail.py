@@ -325,7 +325,7 @@ def scenario_3(topic):
             local_line.setPartOf(line_opex)
     #b) bottom units: lines and drivers
     top_bu = M.time_line.current_period.content
-    bottom_bus = M.time_line.current_period.selectBottomUnits()
+    bottom_bus = M.time_line.current_period.get_lowest_units()
     for bu in bottom_bus:
         fins = bu.financials
         i_opex = fins.indexByName("Operating Expense")

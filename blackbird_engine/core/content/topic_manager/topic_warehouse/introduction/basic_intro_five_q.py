@@ -180,7 +180,7 @@ def scenario_6(topic):
     #have a type
     #
     company.type = "company"
-    model.time_line.current_period.setContent(company)
+    model.time_line.current_period.set_content(company)
     model.taxonomy["standard"] = basic_unit
     #
     fp = model.interview.focal_point

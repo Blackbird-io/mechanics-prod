@@ -160,7 +160,7 @@ def sub_scenario_1a(topic):
     data["active_gross_margin"] = M.interview.work_space["active_gross_margin"]
     D1.setData(data)
     D1.setFormula(cost_formula)
-    for sub_bu in M.time_line.current_period.selectBottomUnits():
+    for sub_bu in M.time_line.current_period.get_lowest_units():
         sub_d1 = D1.copy()
         sub_bu.addDriver(sub_d1, "Cost", "COGS")
         fins = sub_bu.financials
@@ -227,7 +227,7 @@ def scenario_2(topic):
     data["active_gross_margin"] = adjR
     D1.setData(data)
     D1.setFormula(cost_formula)
-    for sub_bu in M.time_line.current_period.selectBottomUnits():
+    for sub_bu in M.time_line.current_period.get_lowest_units():
         sub_d1 = D1.copy()
         sub_bu.addDriver(sub_d1,"Cost")
     topic.wrap_topic()
