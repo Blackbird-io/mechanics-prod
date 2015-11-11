@@ -65,7 +65,8 @@ def func(line, business_unit, data, driver_signature):
     
     """
     bu = business_unit
-    
+
+    # New (v.1.6.0) Life version analysis
     KEY_MATURITY = bu.life.KEY_MATURITY
     KEY_OLD_AGE = bu.life.KEY_OLD_AGE
     
@@ -93,17 +94,14 @@ def func(line, business_unit, data, driver_signature):
             stage = "decline"
             stage_start = stage_end
             stage_end = 100            
-            
-    if stage is None:
+
+    # Old (pre v.1.6.0) application
+    if stage_name is None:
         pass
     else:
-        stage_name = stage["name"]
-        stage_start = stage["start"]
-        stage_end = stage["end"]
-        #
         annual_revenue = data["annual_rev_per_mature_unit"]
         monthly_revenue = annual_revenue / 12
-        #
+        
         if stage_name == "maturity":
             line.setValue(monthly_revenue, driver_signature)
             #
@@ -118,6 +116,6 @@ def func(line, business_unit, data, driver_signature):
                                   (stage_end - stage_start))
             adj_decline_revenue = decline_adjustment * monthly_revenue
             line.setValue(adj_decline_revenue, driver_signature)
-            #
+            
     #always return None
     return None

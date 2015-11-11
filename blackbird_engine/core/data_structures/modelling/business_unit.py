@@ -44,7 +44,6 @@ from .driver import Driver
 from .dr_container import DrContainer
 from .equalities import Equalities
 from .financials import Financials
-##from .life_cycle import LifeCycle
 from .new_life import Life as LifeCycle
 
 
@@ -827,35 +826,37 @@ class BusinessUnit(Tags,Equalities):
                     initials = initials + initial
                 unit_name = initials + last_part
         data["NAME"] = unit_name[:data_width]
-        #
+
         id_dots = "..."
         tail_width = data_width - len(id_dots)
         id_tail  = str(self.id.bbid)[(tail_width * -1):]
         data["ID"] = id_dots + id_tail
-        #
-        if self.life.date_of_birth:
-            dob = self.life.date_of_birth.isoformat()
+
+        date_of_birth = self.life.events.get(self.life.KEY_BIRTH)
+        if date_of_birth:
+            dob = date_of_birth.isoformat()
         else:
             dob = "n/a"
         data["DOB"] = dob
-        #
+        
         if self.life.percent is not None:
             life = int(self.life.percent)
             life = str(life) + r"%"
         else:
             life = "n/a"
         data["LIFE"] = life
-        #
-        stage = str(self.life.stage)[:data_width]
-        data["STAGE"] = stage.upper()
-        #
+        
+##        stage = str(self.life.stage)[:data_width]
+        data["STAGE"] = "n/a"
+        # can replace with a last event or something
+        
         unit_type = str(self.type)[:data_width]
         data["TYPE"] = unit_type.upper()
-        #
+        
         data["FILL"] = str(self.filled)
-        #
+        
         data["COMPS"] = str(len(self.components.get_living()))
-        #
+        
         data["SIZE"] = str(self.size)[:data_width]
         #
         ##assemble the real thing
@@ -877,8 +878,8 @@ class BusinessUnit(Tags,Equalities):
         #
         #post-processing (dashed lines for units scheduled to open in the
         #future, x's for units that have already closed)
-        #
-        if self.life.ref_date < self.life.date_of_birth:
+        
+        if self.life.ref_date < date_of_birth:
             #
             alt_width = int(box_width / 2) + 1
             alt_border = (top_element + alt_element) * alt_width
@@ -894,7 +895,8 @@ class BusinessUnit(Tags,Equalities):
             #
             lines = [alt_border] + core_lines + [alt_border]
         #
-        if self.life.dead:
+        date_of_death = self.life.events.get(self.life.KEY_DEATH)
+        if self.life.ref_date > date_of_death:
             #
             alt_lines = []
             line_count = len(lines)
