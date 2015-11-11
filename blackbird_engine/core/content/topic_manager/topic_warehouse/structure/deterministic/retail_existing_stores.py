@@ -339,6 +339,10 @@ def scenario_6(topic):
     life_in_years = M.interview.work_space["unit_life_years"]
     life_in_days = life_in_years * Globals.days_in_year
     bu_template.life.LIFE_SPAN = timedelta(life_in_days)
+
+    KEY_BIRTH = bu_template.life.KEY_BIRTH
+    # Doesn't really matter where we take the key from, it's the same for our
+    # whole batch.
     
     ref_date = M.time_line.current_period.end
     bu_template.life.set_ref_date(ref_date)
@@ -356,7 +360,7 @@ def scenario_6(topic):
     # Adjust gestation to max of average time to open a store and time to open
     # first store. average time can be skewed materially if company prepared
     # stores in batches (eg, 5 openings at a time).
-    first_gestation = first_dob_date - top_bu.life.date_of_birth
+    first_gestation = first_dob_date - top_bu.life.events[KEY_BIRTH]
     step_up = SK.gestation_rate_boost
     avg_gestation = max(avg_gestation,
                         (first_gestation * (1 - step_up)))
@@ -369,17 +373,14 @@ def scenario_6(topic):
     # Figure out life stage pattern
     months_to_mature = M.interview.work_space["months_to_mature"]
     period_to_mature = timedelta(months_to_mature * Globals.days_in_month)
-    youth_ends_percent = int(period_to_mature/bu_template.life.span * 100)
+    youth_ends_percent = int(period_to_mature/bu_template.life.LIFE_SPAN * 100)
     
     if youth_ends_percent < 50:
         # Maturation less than 50% of lifespan. Take as given. 
-        maturity = bu_template.life._stages.by_name["maturity"]
-        decline = bu_template.life._stages.by_name["decline"]
-        #
         bu_template.life.MATURITY_PERCENT = youth_ends_percent + 1
         bu_template.life.DECLINE_PERCENT = youth_ends_percent + 30 + 1
-        # We should really limit DECLINE_PERCENT to 100, but we don't here.
-        #
+        # We should really limit DECLINE_PERCENT to 100, but we don't here. #<---------------
+        
         tag1 = "long adolescence"
         tag2 = "rapid decline"
         tag3 = "unusual LifeCycle"
@@ -453,10 +454,6 @@ def scenario_6(topic):
 
     # Ordered_batch now 2 units shorter than unit_count. apply distribution to
     # all remaining units.
-
-    KEY_BIRTH = first_bu.life.KEY_BIRTH
-    # Doesn't really matter where we take the key from, it's the same for our
-    # whole batch.
     
     next_conception_date = first_bu.life.events[KEY_BIRTH]
     # Assume that company is creating units at a uniform rate over time. Can
