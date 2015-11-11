@@ -38,6 +38,12 @@ import datetime
 
 import BBExceptions as bb_exceptions
 
+
+
+
+#constants
+#n/a
+
 #classes
 class Life:
     """
@@ -53,7 +59,7 @@ class Life:
     6. Can modify instance _birth and _death event names for advanced functionality (e.g., to treat renovation like a new start to life)
     7. class provides automatic logic for basic life trajectory. you can add your
     own events with external logic for richer life trajectories.
-    8. no longer patrols that your maturity and decline percentage kick offs make sense
+    8. no longer patrols that your maturity and old age percentage kick offs make sense
     (ie, dont cross, are less than 100).
 
     #common use case 0: configurign template units
@@ -76,8 +82,8 @@ class Life:
 
     GESTATION             timedelta, 365 days by default
     LIFE_SPAN             timedelta, 50 years by default
-    MATURITY_PERCENT      float; point where maturity begins, should be <100
-    DECLINE_PERCENT       float; point where decline begins, should be <100
+    MATURITY_PERCENT      int; where maturity begins, < OLD_AGE_PERCENT
+    OLD_AGE_PERCENT       int; point where old age begins, should be < 100
     
     age                   timedelta; ref_date minus birth
     alive                 bool; True if ref_date in [birth, death)
@@ -87,6 +93,7 @@ class Life:
 
     FUNCTIONS:
     configure_events()    add standard events to instance
+    copy()                returns a deep copy
     set_age()             OBSOLETE (legacy interface for configure_events)
     set_ref_date()        set instance ref date
     ====================  ======================================================
@@ -107,10 +114,10 @@ class Life:
     LIFE_SPAN = datetime.timedelta(18250)
     # Default life span is ~50 years: 365 * 50 = 18250 days
     
-    MATURITY_PERCENT = 0.31
-    # Assume maturity begins at 31 (first 30% of life spent on growth).
-    DECLINE_PERCENT = 0.71
-    # Assume decline begins at 71.
+    MATURITY_PERCENT = 30
+    # Assume maturity begins at 30 (first 30% of life spent on growth).
+    OLD_AGE_PERCENT = 70
+    # Assume old age begins at 70.
     
     def __init__(self):
         self._birth_event_names = {self.KEY_BIRTH}
@@ -219,7 +226,7 @@ class Life:
         
 
         Time between birth and death. Setter will change death, maturity, and
-        old age, using MATURITY_PERCENT and DECLINE_PERCENT. You can specify
+        old age, using MATURITY_PERCENT and OLD_AGE_PERCENT. You can specify
         your own percent thresholds for these events, or enter new dates
         directly into instance.events.
         """
@@ -238,11 +245,11 @@ class Life:
         self.events[self.KEY_DEATH] = death
         
         self.events[self.KEY_MATURITY] = (
-            birth + (value * self.MATURITY_PERCENT)
+            birth + (value * self.MATURITY_PERCENT / 100)
             )
 
         self.events[self.KEY_OLD_AGE] = (
-            birth + (value * self.DECLINE_PERCENT)
+            birth + (value * self.OLD_AGE_PERCENT / 100)
             )
 
     def set_ref_date(self, value):
