@@ -39,7 +39,7 @@ checkStatus()         compare message to known patterns, returns fit
 
 #imports
 #built-in modules only
-from datetime import date, timedelta
+##from datetime import date, timedelta
 
 
 
@@ -169,24 +169,24 @@ days_in_year = 365
 #Object Life Cycle
 #all dates as datetime.date objects;
 #all time periods as datetime.timedelta objects
-conception_date_min = date(1974, 1, 1)
-conception_date_max = date(2100, 1, 1)
+##conception_date_min = date(1974, 1, 1)
+##conception_date_max = date(2100, 1, 1)
 #
-gestation_period_def = timedelta(365 * 1)
-gestation_period_max = timedelta(365 * 15)
-gestation_period_min = timedelta(0)
+##gestation_period_def = timedelta(365 * 1)
+##gestation_period_max = timedelta(365 * 15)
+##gestation_period_min = timedelta(0)
 #
-life_span_def = timedelta(365 * 50)
-#50 years
-life_span_max = timedelta(365 * 300)
-life_span_min = timedelta(0)
+##life_span_def = timedelta(365 * 50)
+###50 years
+##life_span_max = timedelta(365 * 300)
+##life_span_min = timedelta(0)
 #
-ref_date_max = date(2100, 1, 1)
-ref_date_min = date(1970, 1, 1)
-#
-default_life_stages = [("youth", 0),
-                       ("maturity", 30),
-                       ("decline", 70)]
+##ref_date_max = date(2100, 1, 1)
+##ref_date_min = date(1970, 1, 1)
+###
+##default_life_stages = [("youth", 0),
+##                       ("maturity", 30),
+##                       ("decline", 70)]
 
 
 
