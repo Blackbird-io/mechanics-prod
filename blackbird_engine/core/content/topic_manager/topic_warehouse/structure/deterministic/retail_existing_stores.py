@@ -378,8 +378,7 @@ def scenario_6(topic):
     if youth_ends_percent < 50:
         # Maturation less than 50% of lifespan. Take as given. 
         bu_template.life.MATURITY_PERCENT = youth_ends_percent + 1
-        bu_template.life.DECLINE_PERCENT = youth_ends_percent + 30 + 1
-        # We should really limit DECLINE_PERCENT to 100, but we don't here. #<---------------
+        bu_template.life.OLD_AGE_PERCENT = youth_ends_percent + 30 + 1
         
         tag1 = "long adolescence"
         tag2 = "rapid decline"

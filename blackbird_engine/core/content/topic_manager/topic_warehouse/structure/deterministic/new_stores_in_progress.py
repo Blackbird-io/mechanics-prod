@@ -150,18 +150,26 @@ def apply_data(topic, datapoint):
     model = topic.MR.activeModel
     top_bu = model.time_line.current_period.content
     bu_template = model.taxonomy["operating"]["standard"]
-    #use dict-style taxonomy interface. 
-    age_increment = bu_template.life.gestation / datapoint
+    # Use dict-style taxonomy interface. 
+
+    gestation = bu_template.life.GESTATION
+    age_increment = gestation / datapoint
+    
     for i in range(datapoint):
         new_store = bu_template.copy()
         est_conception = top_bu.life.ref_date - (age_increment * (i + 1))
-        new_store.life.date_of_conception = est_conception
+        
+        dob = est_conception + gestation
+        # Date of birth will be in the future, w/r/to ref_date
+        new_store.life.configure_events(dob)
+
         new_store.tag("in-progress",
                       "leased not opened")
-        label = "New Store (%s) #%s" % (new_store.life.date_of_birth.year, i)
+        label = "New Store (%s) #%s" % (dob.year, i)
         new_store.setName(label)
         top_bu.add_component(new_store)
-    top_bu.life.brood = datapoint
+
+##    top_bu.life.brood = datapoint
     #
     #add to milestones? not specific enough for store-level verification. can
     #add a milestone at final dob + 10% re new stores opened (or total store
