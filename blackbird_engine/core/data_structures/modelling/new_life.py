@@ -33,6 +33,7 @@
 #adj life
 
 #imports
+import copy
 import datetime
 
 import BBExceptions as bb_exceptions
@@ -49,7 +50,16 @@ class Life:
     3. you can adjust life span and class will move death for you
     4. all event values should be datetime.date
     5. all period values should be datetime.timedelta
+    6. Can modify instance _birth and _death event names for advanced functionality (e.g., to treat renovation like a new start to life)
+    7. class provides automatic logic for basic life trajectory. you can add your
+    own events with external logic for richer life trajectories.
+    8. no longer patrols that your maturity and decline percentage kick offs make sense
+    (ie, dont cross, are less than 100).
 
+    #common use case 0: configurign template units
+         set instance.LIFE_SPAN and GESTATION first
+         then when you know date of birth, add that
+         can easily override on 
     #common use case 1: renovation extends expected lifespan
         #manually enter a renovation event in self.events
         #then increase span by desired outcome.
@@ -64,10 +74,10 @@ class Life:
     KEY_MATURITY          str; recommended key for onset of maturity
     KEY_OLD_AGE           str; recommended key for onset of old age 
 
-    DEFAULT_GESTATION     timedelta, 365 days
-    DEFAULT_LIFE_SPAN     timedelta, 50 years
-    DEFAULT_GROWTH_PERCENT    number, 30 percent
-    DEFAULT_DECLINE_PERCENT   number, 30 percent 
+    GESTATION             timedelta, 365 days by default
+    LIFE_SPAN             timedelta, 50 years by default
+    MATURITY_PERCENT      float; point where maturity begins, should be <100
+    DECLINE_PERCENT       float; point where decline begins, should be <100
     
     age                   timedelta; ref_date minus birth
     alive                 bool; True if ref_date in [birth, death)
@@ -76,7 +86,8 @@ class Life:
     span                  timedelta; time between birth and death
 
     FUNCTIONS:
-    set_age()             creates appropriate birth event and optionally others
+    configure_events()    add standard events to instance
+    set_age()             OBSOLETE (legacy interface for configure_events)
     set_ref_date()        set instance ref date
     ====================  ======================================================
     """
@@ -92,18 +103,18 @@ class Life:
     # These keys should stay constant (can also add kill, renovation)
     
     # Specify default values as days for timedelta.
-    DEFAULT_GESTATION = datetime.timedelta(365)
-    DEFAULT_LIFE_SPAN = datetime.timedelta(18250)
+    GESTATION = datetime.timedelta(365)
+    LIFE_SPAN = datetime.timedelta(18250)
     # Default life span is ~50 years: 365 * 50 = 18250 days
     
-    DEFAULT_GROWTH_PERCENT = 0.30
-    # Assume first 30% of life is spent on growth
-    DEFAULT_DECLINE_PERCENT = 0.30
-    # Assume last 30% of life is spent in decline
+    MATURITY_PERCENT = 0.31
+    # Assume maturity begins at 31 (first 30% of life spent on growth).
+    DECLINE_PERCENT = 0.71
+    # Assume decline begins at 71.
     
     def __init__(self):
-        self._birth_event_names = {KEY_BIRTH}
-        self._death_event_names = {KEY_DEATH}
+        self._birth_event_names = {self.KEY_BIRTH}
+        self._death_event_names = {self.KEY_DEATH}
         self._ref_date = None
         
         self.events = dict()
@@ -126,7 +137,7 @@ class Life:
         stop_date = None
         defined_names = self._death_event_names & self.events.keys()
 
-        options = {self.events[k] for k in self._death_events}
+        options = {self.events[k] for k in defined_names}
         if options:
             stop_date = min(options)
 
@@ -207,18 +218,32 @@ class Life:
         **property**
         
 
-        Time between birth and death. Setter will change death date.
+        Time between birth and death. Setter will change death, maturity, and
+        old age, using MATURITY_PERCENT and DECLINE_PERCENT. You can specify
+        your own percent thresholds for these events, or enter new dates
+        directly into instance.events.
         """
         result = None
         expected_death = self._clock_stops
         birth = self._clock_starts
         if expected_death:
-            result = death - birth
+            result = expected_death - birth
+        return result
 
-    @span.setter(self):
+    @span.setter
     def span(self, value): 
-        birth = self._clock_start
-        self.events[self.KEY_DEATH] = birth + value
+        birth = self._clock_starts
+        death = birth + value
+        
+        self.events[self.KEY_DEATH] = death
+        
+        self.events[self.KEY_MATURITY] = (
+            birth + (value * self.MATURITY_PERCENT)
+            )
+
+        self.events[self.KEY_OLD_AGE] = (
+            birth + (value * self.DECLINE_PERCENT)
+            )
 
     def set_ref_date(self, value):
         """
@@ -235,34 +260,51 @@ class Life:
             c = "Method expects datetime.date value."
             raise bb_exceptions.LifeError(c)
 
-    def set_age(self, time_alive, as_of_date, set_all=True):
+    def set_age(self, age, ref_date):
         """
 
 
         Life.set_age() -> None
 
 
-        Set birth so instance has age == time_alive when ref_date == as_of_date.
-        If set_all==True, set other standard events as well. 
-        """
-        self.set_ref_date(as_of_date)
-
-        date_of_birth = self.ref_date - time_alive
-        self.events[self.KEY_BIRTH] = date_of_birth
+        **OBSOLETE**
         
-        if set_all:
-            if not self.span:
-                self.span = self.DEFAULT_LIFE_SPAN
-                # Span will automatically set the date of death
-                
-            self.events[self.KEY_CONCEPTION] = (
-                date_of_birth - self.DEFAULT_GESTATION)
+        Legacy interface for configuring events. 
+        """
+        self.set_ref_date(ref_date)
+        birth = ref_date - age
+        self.configure_events(birth)
+        
+    def configure_events(self, date_of_birth, life_span=None, gestation=None):
+        """
 
-            self.events[self.KEY_MATURITY] = (
-                date_of_birth + (self.span * self.DEFAULT_GROWTH_PERIOD))
 
-            self.events[self.KEY_OLD_AGE] = (
-                self.events[self.KEY_DEATH] - (self.span * self.DEFAULT_DECLINE_PERIOD))
+        Life.configure_standard_events() -> None
+
+
+        Method sets standard events based on specified or default values.
+        """
+        self.events[self.KEY_BIRTH] = date_of_birth
+
+        self.span = life_span or self.LIFE_SPAN
+        # Span will automatically set the date of death, maturity, and old age.
+
+        gestation = gestation or self.GESTATION
+        self.events[self.KEY_CONCEPTION] = date_of_birth - gestation
+
+    def copy(self):
+        """
+
+
+        Life.copy() -> Life
+
+
+        Return deep copy. 
+        """
+        result = copy.copy(self)
+        result.events = self.events.copy()
+        return result
+        
 
     
         

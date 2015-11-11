@@ -231,7 +231,7 @@ def scenario_4(topic):
     M.interview.work_space["months_to_mature"] = months_to_mature
     #
     top_bu = M.time_line.current_period.content
-    dob_company_date = top_bu.life.date_of_birth
+    dob_company_date = top_bu.life.events[top_bu.life.KEY_BIRTH]
     dob_company_string = dob_company_date.isoformat()
     #put in work_space to save work in later scenarios
     M.interview.work_space["earliest_store_open"] = dob_company_string
@@ -309,18 +309,18 @@ def scenario_6(topic):
     #
     M = topic.MR.activeModel
     #
-    #Step 1:
-    #Retrieve and format user response
+    # Step 1:
+    # Retrieve and format user response.
     R = topic.get_first_answer()
     adj_R = tools.parsing.date_from_iso(R)
     M.interview.work_space["latest_store_open"] = R
+    
+    # Step 2:
+    # Now, make a business unit that represents the company's standard.
+    # Topic will create and insert actual working units into the model by
+    # copying and customizing this template.
     #
-    #Step 2:
-    #Now, make a business unit that represents the company's standard.
-    #Topic will create and insert actual working units into the model by
-    #copying and customizing this template.
-    #
-    #2.1 - configure model (logic used to be in starter)
+    # 2.1 - configure model (logic used to be in starter)
     if M.time_line.current_period.content:
         top_bu = M.time_line.current_period.content
     else:
@@ -335,81 +335,86 @@ def scenario_6(topic):
     top_bu.setAnalytics(atx)
     #
     bu_template = BusinessUnit("Standard Store Unit", standard_fins)
-    #figure out unit lifespan, set accordingly
+    # Figure out unit lifespan, set accordingly
     life_in_years = M.interview.work_space["unit_life_years"]
     life_in_days = life_in_years * Globals.days_in_year
-    bu_template.life.span = timedelta(life_in_days)
+    bu_template.life.LIFE_SPAN = timedelta(life_in_days)
+    
     ref_date = M.time_line.current_period.end
     bu_template.life.set_ref_date(ref_date)
-    #figure out unit gestation
+
+    # Figure out unit gestation
     first_dob_date = M.interview.work_space["first_dob_date"]
     latest_dob_date = adj_R
     unit_count = M.interview.work_space["unit_count"]
-    #to estimate unit gestation (time from moment of conception/decision to
-    #doors opening), calculate how much time per unit it took the company to
-    #open all existing units after the first one.
+    # To estimate unit gestation (time from moment of conception/decision to
+    # doors opening), calculate how much time per unit it took the company to
+    # open all existing units after the first one.
     avg_gestation = ((latest_dob_date - first_dob_date)/
                               (unit_count - 1))
-    #adjust gestation to max of average time to open a store and time to open
-    #first store. average time can be skewed materially if company prepared
-    #stores in batches (eg, 5 openings at a time).
+    
+    # Adjust gestation to max of average time to open a store and time to open
+    # first store. average time can be skewed materially if company prepared
+    # stores in batches (eg, 5 openings at a time).
     first_gestation = first_dob_date - top_bu.life.date_of_birth
     step_up = SK.gestation_rate_boost
     avg_gestation = max(avg_gestation,
                         (first_gestation * (1 - step_up)))
-    #assume company gets 20% faster at opening units; more advanced topics
-    #ask questions first.
-    bu_template.life.gestation = avg_gestation
+
+    # Assume company gets 20% faster at opening units; more advanced topics
+    # should ask questions to actually pin this down.
+    bu_template.life.GESTATION = avg_gestation
     M.interview.work_space["average_gestation_days"] = avg_gestation
-    #
-    #figure out life stage pattern
+    
+    # Figure out life stage pattern
     months_to_mature = M.interview.work_space["months_to_mature"]
     period_to_mature = timedelta(months_to_mature * Globals.days_in_month)
     youth_ends_percent = int(period_to_mature/bu_template.life.span * 100)
+    
     if youth_ends_percent < 50:
-        #maturation less than 50% of lifespan; create custom life stage pattern
+        # Maturation less than 50% of lifespan. Take as given. 
         maturity = bu_template.life._stages.by_name["maturity"]
         decline = bu_template.life._stages.by_name["decline"]
         #
-        maturity["start"] = youth_ends_percent + 1
-        decline["start"] = youth_ends_percent + 30 + 1
-        #make sure stages reorganized data now that we've changed start points
-        bu_template.life._stages.organize()
+        bu_template.life.MATURITY_PERCENT = youth_ends_percent + 1
+        bu_template.life.DECLINE_PERCENT = youth_ends_percent + 30 + 1
+        # We should really limit DECLINE_PERCENT to 100, but we don't here.
         #
         tag1 = "long adolescence"
         tag2 = "rapid decline"
         tag3 = "unusual LifeCycle"
         bu_template.tag(tag1, tag2, tag3)
     else:
-        #compared to common sense expectations for how long a company will wait
-        #for a unit to mature, known maturation takes too long. scenario assumes
-        #the error occurs because the user underestimated the life span of their
-        #units. adjust the life span to 3x maturity.
-        bu_template.life.span = period_to_mature * 3
+        # Compared to common sense expectations for how long a company will wait
+        # for a unit to mature, known maturation takes too long. Scenario
+        # assumes the error occurs because the user underestimated the life span
+        # of their units. Adjust the life span to 3x maturity.
+        bu_template.life.LIFE_SPAN = period_to_mature * 3
         tag4 = "standard LifeCycle"
         tag5 = "pro forma lifeSpan"
         tag6 = "response difficulty"
         bu_template.tag(tag4, tag5, tag6)
-    #template configuation complete
+        
+    # Template configuation complete
     M.tag("defined standard operating unit")
-    #
-    #Step 3:
-    #Add template to model taxonomy
+    
+    # Step 3:
+    # Add template to model taxonomy.
     M.taxonomy["standard"] = bu_template
     M.taxonomy["operating"] = dict()
     M.taxonomy["operating"]["standard"] = bu_template
-    #
-    #later topics can sub-type "operating" into "small", "large", etc. since the
-    #custom Taxonomy class doesnt unpickle correctly, ``taxonomy`` is a simple
-    #dictionary where the "standard" key always points to a business unit object
-    #and all other keys point to other dictionaries with a similar
-    #configuration.
-    #
-    #Step 4:
-    #Use the template operating unit to create a batch of clones. The clones
-    #will go in to the model as actual working components. 
+    # Later topics can sub-type "operating" into "small", "large", etc. Since
+    # the custom Taxonomy class doesnt unpickle correctly, ``taxonomy`` is a
+    # primitive dictionary where the "standard" key always points to a business
+    # unit object and all other keys point to other dictionaries with a similar
+    # configuration.
+    
+    # Step 4:
+    # Use the template operating unit to create a batch of clones. The clones
+    # will go in to the model as actual working components. 
     batch = {}
-    #clone bU0 x #of units
+
+    # Clone bU0 x #of units
     for n in range(unit_count):
         clone = bu_template.copy(enforce_rules = False)
         c_name = "Existing %s" % n
@@ -420,55 +425,64 @@ def scenario_6(topic):
     for bbid in sorted(batch.keys()):
         unit = batch[bbid]
         ordered_batch.append(unit)
-    #
-    #Step 5:
-    #Customize the batch units and insert them into the top_unit. This scenario
-    #assumes that clones are identical except for their age. The scenario also
-    #assumes that the first and last store are still open and adjusts their life
-    #spans accordingly. Since user has specified an existing store count,
-    #allowing some of the early stores to close by virtue of age would require
-    #the company to have opened new stores. The topic does not make this
-    #assumption on its own. <------------------------------------------------------------------------
+    
+    # Step 5:
+    # Customize the batch units and insert them into the top_unit. This scenario
+    # assumes that clones are identical except for their age. The scenario also
+    # assumes that the first and last store are still open and adjusts their life
+    # spans accordingly. Since user has specified an existing store count,
+    # allowing some of the early stores to close by virtue of age would require
+    # the company to have opened new stores. The topic does not make this
+    # assumption on its own. <------------------------------------------------------------------------
+    
     first_bu = ordered_batch.pop(0)
-    first_bu.life.date_of_conception = first_dob_date - avg_gestation
+    first_bu.life.configure_events(first_dob_date)
+
     if not first_bu.life.alive:
         extend_life(first_bu, ref_date)
+
     top_bu.add_component(first_bu)
-    #
+
     last_bu = ordered_batch.pop()
-    last_bu.life.date_of_conception = latest_dob_date - avg_gestation
+    last_bu.life.configure_events(latest_dob_date)
+    
     if not last_bu.life.alive:
         extend_life(last_bu, ref_date)
+
     top_bu.add_component(last_bu)
-    #ordered_batch now 2 units shorter than unit_count. apply distribution to
-    #all remaining units.
-    next_conception_date = first_bu.life.date_of_birth
-    #assume that company is creating units at a uniform rate over time. can
-    #eventually modify this to look like a curve that's fast early and slow
-    #later (log curve).
+
+    # Ordered_batch now 2 units shorter than unit_count. apply distribution to
+    # all remaining units.
+
+    KEY_BIRTH = first_bu.life.KEY_BIRTH
+    # Doesn't really matter where we take the key from, it's the same for our
+    # whole batch.
+    
+    next_conception_date = first_bu.life.events[KEY_BIRTH]
+    # Assume that company is creating units at a uniform rate over time. Can
+    # eventually modify this to look like a curve that's fast early and slow
+    # later (log curve).
+    
     latest_conception_date = latest_dob_date - avg_gestation
     for bu in ordered_batch:
-        bu.life.date_of_conception = next_conception_date
-        #
-        #the user told blackbird how many units they have operating
-        #**right now**. blackbird translates right now into ref_date and the
-        #count into units that are alive as of the ref date. since units must
-        #have compelted gestation to count as alive, blackbird can also
-        #determine the latest possible date the user could have conceived a
-        #unit (based on blackbird's current assumptions about unit life cycle).
-        #
-        next_conception_date = next_conception_date + avg_gestation
+        
+        dob = next_conception_date + avg_gestation
+        bu.life.configure_events(dob)
+
+        next_conception_date = dob
         next_conception_date = min(next_conception_date,
                                    latest_conception_date)
+        # The user told Blackbird how many units they have operating
+        # **right now**. Blackbird translates right now into ref_date and the
+        # count into units that are alive as of the ref date.
+        
         if not bu.life.alive:
             extend_life(bu, ref_date)
-            #
-            #assume that an existing store can be no more than 90% of the way
-            #through their life as of the ref date. adjust unit life
-            #accordingly. in other words, assume that some of the earlier
-            #stores can live longer than the cookie cutter new ones.
-            #
-        #
+            # Assume that an existing store can be no more than 90% of the way
+            # through their life as of the ref date. Adjust unit life
+            # accordingly. In other words, assume that some of the earlier
+            # stores can live longer than the cookie cutter new ones.
+
         if bu.life.alive:
             top_bu.add_component(bu)
         else:
@@ -477,8 +491,8 @@ def scenario_6(topic):
             c += " generate living units only."
             c = c % bu
             raise BBExceptions.BBAnalyticalError(c)
-    #
-    ##provide guidance for additional processing
+    
+    # Provide guidance for additional processing
     small_num = 10
     med_num = 50
     more_structure_processing = False
@@ -515,7 +529,7 @@ def scenario_6(topic):
     #                 
     topic.wrap_topic()
 
-def extend_life(bu, ref_date, max_current_age = 0.90):
+def extend_life(bu, ref_date, max_current_age=0.90):
     """
 
 
@@ -526,13 +540,14 @@ def extend_life(bu, ref_date, max_current_age = 0.90):
     Function only updates unit lifespan if the new value is longer than the
     existing one. 
     """
-    known_period = ref_date - bu.life.date_of_birth
-    adj_lifespan = known_period * (1/ max_current_age)
+    known_period = ref_date - bu.life.events[bu.life.KEY_BIRTH]
+    
+    adj_lifespan = known_period * (1 / max_current_age)
     adj_lifespan = max(timedelta(0), adj_lifespan)
-    #life span must be positive
+
+    # Life span must be positive
     if adj_lifespan > bu.life.span:
         bu.life.span = adj_lifespan
-        bu.life._date_of_death = None
         
 def end_scenario(topic):
     #user pressed stop interview

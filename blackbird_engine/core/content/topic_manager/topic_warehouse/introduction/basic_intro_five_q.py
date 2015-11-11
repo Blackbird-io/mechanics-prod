@@ -171,8 +171,7 @@ def scenario_6(topic):
     date_of_birth = datetime.date(*adj_r)
     #
     company = BusinessUnit(model.name, fins = basic_fins.copy())
-    estimated_conception = date_of_birth - company.life.gestation
-    company.life.date_of_conception = estimated_conception
+    company.life.configure_events(date_of_birth)
     #
     basic_unit = company.copy()
     basic_unit.setName("Basic Unit Template")
