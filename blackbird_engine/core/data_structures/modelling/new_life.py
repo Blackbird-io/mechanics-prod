@@ -1,7 +1,81 @@
-#re_birth
-#
-#renovation
-#renewal
+#PROPRIETARY AND CONFIDENTIAL
+#Property of Blackbird Logical Applications, LLC
+#Copyright Blackbird Logical Applications, LLC 2015
+#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+
+#Blackbird Environment
+#Module: data_structures.modelling.new_life
+"""
+
+Module defines Life class, a significantly streamlined tool for tracking
+business evolution over time. Life events are largely compatible with legacy
+topics.
+====================  ==========================================================
+Attribute             Description
+====================  ==========================================================
+
+DATA:
+n/a
+
+FUNCTIONS:
+n/a
+
+CLASSES:
+Life                  object that tracks how attributes evolve over time
+====================  ==========================================================
+"""
+
+
+
+
+#imports
+import copy
+import datetime
+
+import BBExceptions as bb_exceptions
+
+
+
+
+#constants
+#n/a
+
+#classes
+class Life:
+    """
+
+    To paraphrase Yogi Berra, life is just one thing after another.
+
+    This class aimed to significantly simplify the old LifeCycle concept.
+    Accordingly, it strips out most value management and leaves its data
+    largerly exposed. Topics can thus record events freely and drivers /
+    formulas can run their own evaluations of those events. 
+
+    rules:
+    1. keep keys consistent ("renovation", "merger") #<----------- we should probably add them to this class every time we add one; or to shared knowledge
+    2. life span will change to reflect actual death
+    3. you can adjust life span and class will move death for you
+    4. all event values should be datetime.date
+    5. all period values should be datetime.timedelta
+    6. Can modify instance _birth and _death event names for advanced functionality (e.g., to treat renovation like a new start to life)
+    7. class provides automatic logic for basic life trajectory. you can add your
+    own events with external logic for richer life trajectories.
+    8. no longer patrols that your maturity and old age percentage kick offs make sense
+    (ie, dont cross, are less than 100).
+
+    #common use case 0: configuring template units
+         set bu_template.LIFE_SPAN and GESTATION first
+         then when you know date of birth for a given unit, run configure_events() 
+         can easily override on
+         
+    #common use case 1: renovation extends expected lifespan
+        #manually enter a renovation event in self.events
+        #then increase renovated_store.life.span by desired outcome.
+        #can adjust
+
+    #common use case 2: renewal with churn
+        #complex problem, generally manage through topics (external logic)
+        
 ##renewal has a certain probabiliy (1- churn)
 ##how do you build in that logic?
 ##could have drivers?
@@ -22,53 +96,6 @@
 ##
 ##or you have a lottery for who renews and who doesn't. 
 ##can then think about the difference between expected and observed
-
-#can add kill events
-#or can create a little class called LifeEvent: date, kill = True, notes
-#or life_starts, life_ends
-#
-
-#
-
-#adj life
-
-#imports
-import copy
-import datetime
-
-import BBExceptions as bb_exceptions
-
-
-
-
-#constants
-#n/a
-
-#classes
-class Life:
-    """
-
-    To paraphrase Yogi Berra, life is just one thing after another.
-
-    rules:
-    1. keep keys consistent ("renovation", "merger") #<----------- we should probably add them to this class every time we add one; or to shared knowledge
-    2. life span will change to reflect actual death
-    3. you can adjust life span and class will move death for you
-    4. all event values should be datetime.date
-    5. all period values should be datetime.timedelta
-    6. Can modify instance _birth and _death event names for advanced functionality (e.g., to treat renovation like a new start to life)
-    7. class provides automatic logic for basic life trajectory. you can add your
-    own events with external logic for richer life trajectories.
-    8. no longer patrols that your maturity and old age percentage kick offs make sense
-    (ie, dont cross, are less than 100).
-
-    #common use case 0: configurign template units
-         set instance.LIFE_SPAN and GESTATION first
-         then when you know date of birth, add that
-         can easily override on 
-    #common use case 1: renovation extends expected lifespan
-        #manually enter a renovation event in self.events
-        #then increase span by desired outcome.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
