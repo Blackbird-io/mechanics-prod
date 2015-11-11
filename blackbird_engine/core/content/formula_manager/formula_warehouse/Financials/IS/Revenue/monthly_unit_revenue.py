@@ -91,7 +91,7 @@ def func(line, business_unit, data, driver_signature):
         if bu.life.events[KEY_OLD_AGE] <= ref_date:
             # Upgrade further to decline. Use old label so we can keep next
             # block of old logic intact.
-            stage = "decline"
+            stage_name = "decline"
             stage_start = stage_end
             stage_end = 100            
 
