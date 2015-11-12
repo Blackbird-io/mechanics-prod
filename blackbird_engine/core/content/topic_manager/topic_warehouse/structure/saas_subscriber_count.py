@@ -287,12 +287,12 @@ def apply_data(topic, datapoint):
     percent_in_range = 0.95
     #assume normal distribution, where 95% w/in 2 sigma of mean
     #
-    gestation = subscriber_template.life.gestation
+    gestation = subscriber_template.life.GESTATION
     ref_date = model.time_line.current_period.start
     sigma = subscriber_template.life.sigma
-    assumed_median_age = 0.50 * subscriber_template.life.span
-    #assume median age is 50 percent of lifespan
-    #
+    assumed_median_age = 0.50 * subscriber_template.life.LIFE_SPAN
+    # Assume median age is 50 percent of lifespan.
+    
     assumed_youngest_age = assumed_median_age - (assumed_range * sigma)
     assumed_oldest_age = assumed_median_age + (assumed_range * sigma)
     earliest_conception_in_range = ref_date - assumed_oldest_age - gestation
@@ -302,43 +302,42 @@ def apply_data(topic, datapoint):
     earliest_permitted_conception = (ref_date -
                                      gestation -
                                      (subscriber_template.life.span - timedelta(1)))
-    #
+    
     increment = ((latest_conception_in_range - earliest_conception_in_range) /
                  (batch_count * percent_in_range))
-    #increment represents the amount of time between client acquisitions if the
-    #company acquired clients at a uniform rate over time. 
-    #
+    # Increment represents the amount of time between client acquisitions if the
+    # company acquired clients at a uniform rate over time. 
+    
     first_applied_conception = (earliest_conception_in_range -
                                 ((1 - percent_in_range) / 2) * batch_count 
                                  * increment)
-    #if percent_in_range percent of batches are in the range, then 1-pir percent
-    #of batches should be outside the range. the actual number of batches
-    #outside the range is that percentage times the batch count. for batches
-    #outside the range, half fall on one side and half of the other.
-    #
-    #here, the function moves the earliest conception date back by the
-    #increment for every batch that falls on the older (left-hand) side of the
-    #expected 2-sigma age distribution. 
-    #
+    # If percent_in_range percent of batches are in the range, then 1-pir
+    # percent of batches should be outside the range. The actual number of
+    # batches outside the range is that percentage times the batch count. For
+    # batches outside the range, half fall on one side and half of the other.
+    
+    # Here, the function moves the earliest conception date back by the
+    # increment for every batch that falls on the older (left-hand) side of the
+    # expected 2-sigma age distribution. 
     conception = first_applied_conception
+    
     for i in range(batch_count):
-        #
         sbr = subscriber_template.copy()
-        #
+        
         label = sbr_label_template % i
-        #
         sbr.setName(label)
-        #
+        
         sbr.size = batch_size
         conception = conception + increment
         conception = max(conception, earliest_permitted_conception)
         conception = min(conception, latest_permitted_conception)
-        #
-        sbr.life.date_of_conception = conception
+        birth = conception + gestation
+        
         sbr.life.set_ref_date(ref_date)
-        #
+        sbr.life.configure_events(birth)
+        
         sbr.tag(*sbr_tags)
-        #
+        
         if sbr.life.alive:
             product.add_component(sbr)
         else:
@@ -346,19 +345,17 @@ def apply_data(topic, datapoint):
             c = "Method should only generate living units. Unit %s not alive."
             c = c % sbr.id.bbid
             raise BBExceptions.AnalyticalError(c)
-    #
+    
     if rump_size:
-        #
         rump_unit = subscriber_template.copy()
         rump_unit.size = rump_size
         label = sbr_label_template % (batch_count + 1)
-        #
+        
         rump_unit.life.set_age(assumed_median_age, ref_date)
-        #
         rump_unit.tag(tg_rump,
                       tg_median_age,
                       *sbr_tags)
-        #
+        
         product.add_component(rump_unit)
     #    
     product.tag(tg_populated)
