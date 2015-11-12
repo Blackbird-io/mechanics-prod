@@ -39,16 +39,16 @@ import time
 
 
 
-#globals
+#constants
 FOLDER_NAME = r"diagnostics_log"
-#where do logs go
+# Address for log folder with respect to cwd.
 
 #functions
-def generate_standard(build_path, *tests, overwrite = False):
+def generate_standard(build_path, *tests, overwrite=False):
     """
 
 
-    generate_standard(build_path, *tests[, overwrite = False]) -> None
+    generate_standard() -> None
 
 
     For each test in tests, function stores the result as the standard in
@@ -92,11 +92,11 @@ def generate_standard(build_path, *tests, overwrite = False):
         file.close()
     #the end
 
-def print_result(result,truncate = True):
+def print_result(result, truncate=True):
     """
 
 
-    print_result(result) -> None
+    print_result() -> None
 
     
     Pretty print function for standard ``result`` dictionary.
@@ -122,11 +122,11 @@ def print_result(result,truncate = True):
             continue
     print("")
 
-def run_battery(build_path, *battery, force_finish = False):
+def run_battery(build_path, *battery, force_finish=False):
     """
 
 
-    run_test(build_path, *battery [, finish = False]) -> dict()
+    run_test() -> dict()
 
     -- ``build_path`` must be a string path for an existing directory;
     -- ``battery`` should be one or more test modules.
@@ -150,11 +150,11 @@ def run_battery(build_path, *battery, force_finish = False):
             break
     return tracker
         
-def run_test(build_path, test, log = False, timer = False):
+def run_test(build_path, test, log=False, timer=False):
     """
 
 
-    run_test(build_path, test, log = False, timer = False) -> bool
+    run_test() -> bool
 
 
     Function gets build output for Task through run_test_do, then grades it
@@ -170,17 +170,11 @@ def run_test(build_path, test, log = False, timer = False):
     #
     return s
     
-def run_test_do(build_path,
-                test,
-                log = False,
-                timer = False,
-                retain_state = False,):
+def run_test_do(build_path, test, log=False, timer=False, retain_state=False,):
     """
 
 
-    run_test_do(build_path, test [, log = False
-                                 [, timer = False
-                                 [, retain_state = False]]]) -> dict
+    run_test_do() -> dict
 
 
     Function runs the task portion of the specified test module for the build in
@@ -269,19 +263,11 @@ def run_test_do(build_path,
     #
     return result
 
-def run_test_check(build_path,
-                   test,
-                   result,
-                   log = False,
-                   timer = False):
+def run_test_check(build_path, test, result, log=False, timer=False):
     """
 
 
-    run_test_check(bLocation,
-                   test,
-                   result
-                   [, log = False
-                   [, timer = False]]) -> bool
+    run_test_check() -> bool
                    
 
     Function returns True if Grader is satisfied with result, False otherwise.

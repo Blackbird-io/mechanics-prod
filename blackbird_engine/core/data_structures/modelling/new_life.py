@@ -121,6 +121,7 @@ class Life:
     FUNCTIONS:
     configure_events()    add standard events to instance
     copy()                returns a deep copy
+    get_latest()          get name of most recent event
     set_age()             OBSOLETE (legacy interface for configure_events)
     set_ref_date()        set instance ref date
     ====================  ======================================================
@@ -338,7 +339,29 @@ class Life:
         result = copy.copy(self)
         result.events = self.events.copy()
         return result
+
+    def get_latest(self, ref_date=None):
+        """
+
+
+        Life.get_latest() -> string
+
+
+        Return name of most recent event. Uses instance ref_date by default.
+        """
+        result = None
+        if ref_date is None:
+            ref_date = self.ref_date
         
+        last_to_first = sorted(self.events.items(), key=lambda i: i[1], reverse=True)
+
+        for event_name, event_date in last_to_first:
+            if event_date <= ref_date:
+                result = event_name
+                break
+            else:
+                continue
+        return result
 
     
         
