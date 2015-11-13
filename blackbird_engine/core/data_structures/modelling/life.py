@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Environment
-#Module: data_structures.modelling.new_life
+#Module: data_structures.modelling.life
 """
 
 Module defines Life class, a significantly streamlined tool for tracking
@@ -70,8 +70,8 @@ class Life(Equalities):
       GOAL: Configure a template unit for model taxonomy
       >>>...
       >>>store_template.LIFE_SPAN = datetime.timedelta(20*365)
-      >>>store_template.GESTATION = datetime.timedelta(1.5*365)
-      >>>store_template.PERCENT_MATURITY = 0.15
+      >>>store_template.set_gestation(datetime.timedelta(1.5*365))
+      >>>store_template.set_percent_maturity(0.15)
 
       Now, when you want to represent a specific unit:
       >>>uws = store_template.copy()
@@ -131,8 +131,10 @@ class Life(Equalities):
     configure_events()    add standard events to instance
     copy()                returns a deep copy
     get_latest()          get name of most recent event
-    set_age()             OBSOLETE (legacy interface for configure_events)
     set_ref_date()        set instance ref date
+    set_gestation()       sets custom gestation period
+    set_percent_maturity()  sets custom maturity trigger
+    set_percent_old_age()   sets custom old age trigger
     ====================  ======================================================
     """
     keyAttributes = ["_ref_date", "events"]
@@ -380,6 +382,41 @@ class Life(Equalities):
             else:
                 continue
         return result
+
+    def set_gestation(self, value):
+        """
+
+
+        Life.set_gestation() -> None
+
+
+        Set custom gestation period. Expects timedelta.
+        """
+        self.GESTATION = value
+        
+    def set_percent_maturity(self, value):
+        """
+
+
+        Life.set_percent_maturity() -> None
+
+
+        Set custom maturity trigger as percent of life. Expects float in [0,1].
+        """
+        self.PERCENT_MATURITY = value
+
+    def set_percent_old_age(self, value):
+        """
+
+
+        Life.set_percent_old_age() -> None
+
+
+        Set custom old age trigger as percent of life. Expects float in [0,1].
+        """
+        self.PERCENT_OLD_AGE = value
+
+    
 
     
         

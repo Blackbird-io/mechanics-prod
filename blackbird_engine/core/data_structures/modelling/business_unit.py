@@ -44,7 +44,7 @@ from .driver import Driver
 from .dr_container import DrContainer
 from .equalities import Equalities
 from .financials import Financials
-from .new_life import Life as LifeCycle
+from .life import Life as LifeCycle
 
 
 

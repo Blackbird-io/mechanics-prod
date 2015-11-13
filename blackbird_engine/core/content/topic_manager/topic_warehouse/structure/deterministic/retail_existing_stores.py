@@ -366,7 +366,7 @@ def scenario_6(topic):
 
     # Assume company gets 20% faster at opening units; more advanced topics
     # should ask questions to actually pin this down.
-    bu_template.life.GESTATION = avg_gestation
+    bu_template.life.set_gestation(avg_gestation)
     M.interview.work_space["average_gestation_days"] = avg_gestation
     
     # Figure out life stage pattern
@@ -376,8 +376,8 @@ def scenario_6(topic):
     
     if youth_ends_percent < 50:
         # Maturation less than 50% of lifespan. Take as given. 
-        bu_template.life.MATURITY_PERCENT = youth_ends_percent + 1
-        bu_template.life.OLD_AGE_PERCENT = youth_ends_percent + 30 + 1
+        bu_template.life.set_percent_maturity(youth_ends_percent + 1)
+        bu_template.life.set_percent_old_age(youth_ends_percent + 30 + 1)
         
         tag1 = "long adolescence"
         tag2 = "rapid decline"
