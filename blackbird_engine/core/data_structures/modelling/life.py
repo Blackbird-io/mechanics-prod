@@ -34,6 +34,7 @@ import datetime
 
 import BBExceptions as bb_exceptions
 
+from . import common_events
 from .equalities import Equalities
 
 
@@ -140,12 +141,12 @@ class Life(Equalities):
     keyAttributes = ["_ref_date", "events"]
     # On calls to __eq__ and __ne__, Equalities will check only these attributes
     
-    KEY_CONCEPTION = "conception"
-    KEY_BIRTH = "birth"
-    KEY_DEATH = "death"
+    KEY_CONCEPTION = common_events.KEY_CONCEPTION
+    KEY_BIRTH = common_events.KEY_BIRTH
+    KEY_DEATH = common_events.KEY_DEATH
 
-    KEY_MATURITY = "maturity"
-    KEY_OLD_AGE = "old age"
+    KEY_MATURITY = common_events.KEY_MATURITY
+    KEY_OLD_AGE = common_events.KEY_OLD_AGE
     # These keys should stay constant (can also add kill, renovation)
     
     # Specify default values as days for timedelta.
