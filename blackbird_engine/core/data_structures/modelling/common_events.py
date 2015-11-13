@@ -15,9 +15,18 @@ Attribute             Description
 ====================  ==========================================================
 
 DATA:
+
+#basic events
+KEY_CONCEPTION        str; recommended key for conception event
+KEY_BIRTH             str; recommended key for birth event
+KEY_DEATH             str; recommended key for death event
+KEY_MATURITY          str; recommended key for onset of maturity
+KEY_OLD_AGE           str; recommended key for onset of old age
+
+#advanced events    
 KEY_KILLED            shutting a unit down ahead of schedule
 KEY_RENOVATION        investing in a unit to extend its life
-KEY_TERM_RENEWAL           a relationship begins another term
+KEY_TERM_RENEWAL      a relationship begins another term
 
 FUNCTIONS:
 n/a
@@ -36,6 +45,13 @@ n/a
 
 
 # Constants
+KEY_CONCEPTION = "conception"
+KEY_BIRTH = "birth"
+KEY_DEATH = "death"
+
+KEY_MATURITY = "maturity"
+KEY_OLD_AGE = "old age"
+
 KEY_KILLED = "killed"
 KEY_RENOVATION = "renovation"
 KEY_TERM_RENEWAL = "term renewal"
