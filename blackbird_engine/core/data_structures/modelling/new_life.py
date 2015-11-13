@@ -34,6 +34,8 @@ import datetime
 
 import BBExceptions as bb_exceptions
 
+from .equalities import Equalities
+
 
 
 
@@ -41,7 +43,7 @@ import BBExceptions as bb_exceptions
 #n/a
 
 #classes
-class Life:
+class Life(Equalities):
     """
 
     To paraphrase Yogi Berra, life is just one thing after another.
@@ -49,53 +51,60 @@ class Life:
     This class aimed to significantly simplify the old LifeCycle concept.
     Accordingly, it strips out most value management and leaves its data
     largerly exposed. Topics can thus record events freely and drivers /
-    formulas can run their own evaluations of those events. 
+    formulas can run their own evaluations of those events.
 
-    rules:
-    1. keep keys consistent ("renovation", "merger") #<----------- we should probably add them to this class every time we add one; or to shared knowledge
-    2. life span will change to reflect actual death
-    3. you can adjust life span and class will move death for you
-    4. all event values should be datetime.date
-    5. all period values should be datetime.timedelta
-    6. Can modify instance _birth and _death event names for advanced functionality (e.g., to treat renovation like a new start to life)
-    7. class provides automatic logic for basic life trajectory. you can add your
-    own events with external logic for richer life trajectories.
-    8. no longer patrols that your maturity and old age percentage kick offs make sense
-    (ie, dont cross, are less than 100).
+    All event values should be in datetime.date. All duration inputs should
+    be timedelta objects. 
 
-    #common use case 0: configuring template units
-         set bu_template.LIFE_SPAN and GESTATION first
-         then when you know date of birth for a given unit, run configure_events() 
-         can easily override on
-         
-    #common use case 1: renovation extends expected lifespan
-        #manually enter a renovation event in self.events
-        #then increase renovated_store.life.span by desired outcome.
-        #can adjust
+    Rules for a good life:
+    
+    1. Keep your keys consistent; use those on class or in common_events
+    2. Your life span will change if you die suddenly
+    3. You can use configure_events() to quickly build a common trajectory
+    4. You can manually change or add events to customize the object
+    5. Life won't catch your mistakes if, for example, you reach old age before
+       maturity. That's just going to mean your object fits in poorly elsewhere
+       in the ecosystem.
 
-    #common use case 2: renewal with churn
-        #complex problem, generally manage through topics (external logic)
-        
-##renewal has a certain probabiliy (1- churn)
-##how do you build in that logic?
-##could have drivers?
+    Sample use case 1:
+      GOAL: Configure a template unit for model taxonomy
+      >>>...
+      >>>store_template.LIFE_SPAN = datetime.timedelta(20*365)
+      >>>store_template.GESTATION = datetime.timedelta(1.5*365)
+      >>>store_template.PERCENT_MATURITY = 0.15
 
-##basically, probabilistic events are challenging
-##challenging because its probabilistic?
-##or challenging because its logic?
-##may be i should have drivers for this too
-##
-##the other challenge is that you should ideally adjust this
-##externally
-##
-##but to do that, you may need to reach across time periods
-##so may be you go to next:
-##
-##or may be you just do it in topics, where you configure life
-##in discrete increments.
-##
-##or you have a lottery for who renews and who doesn't. 
-##can then think about the difference between expected and observed
+      Now, when you want to represent a specific unit:
+      >>>uws = store_template.copy()
+      >>>uws.configure_events(date_of_birth=datetime.date(1920,04,01)
+
+    Sample use case 2:
+      GOAL: Renovate a store to extend its lifespan
+      >>>...
+      >>>today = datetime.date(2020, 6, 1)
+      >>>chelsea.life.events[common_events.KEY_RENOVATION] = today
+      >>>chelsea.life.events[chelsea.life.KEY_DEATH] = datetime.date(2040, 6, 1)
+
+      Store will now die later but its other events won't change. You can change
+      chelsea.span if you want to move all of the events along at the same time.
+
+    Sample use case 3:
+      GOAL: To simulate probabilistic churn in a population of subscribers
+
+      This is a complex task. Each customer has a known life that matches their
+      subscription. At the end of each subscription period, the customer may
+      renew or not. The customer's expected life may therefore be larger than
+      their known life. Each renewal period will extend the known life.
+
+      Since we designed Life to be a simple, lightweight object, complex logic
+      like this use case should generally reside in Topics. Those topics can
+      implement their decisions by running:
+      >>>...
+      >>>long_time_subscriber.life.events[common_events.KEY_RENEWAL] = today
+      >>>k_death = long_time_subscriber.life.KEY_DEATH
+      >>>expected_termination = long_time_subscriber.life.events[k_death]
+      >>>contract_length = datetime.timedelta(5*365)
+      >>>long_time_subscriber.life.events[k_death] = expected_termination + contract_length
+
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -109,8 +118,8 @@ class Life:
 
     GESTATION             timedelta, 365 days by default
     LIFE_SPAN             timedelta, 50 years by default
-    MATURITY_PERCENT      int; where maturity begins, < OLD_AGE_PERCENT
-    OLD_AGE_PERCENT       int; point where old age begins, should be < 100
+    PERCENT_MATURITY      int; where maturity begins, < OLD_AGE_PERCENT
+    PERCENT_OLD_AGE       int; point where old age begins, should be < 100
     
     age                   timedelta; ref_date minus birth
     alive                 bool; True if ref_date in [birth, death)
@@ -126,8 +135,8 @@ class Life:
     set_ref_date()        set instance ref date
     ====================  ======================================================
     """
-    #<-------------------------------------------------------------------------------------------figure out situation with equality; can mix in for now, and go from there
-    # Alternative equality solution: compare only age and ref_date. Or can compare percent too. 
+    keyAttributes = ["_ref_date", "events"]
+    # On calls to __eq__ and __ne__, Equalities will check only these attributes
     
     KEY_CONCEPTION = "conception"
     KEY_BIRTH = "birth"
@@ -142,21 +151,23 @@ class Life:
     LIFE_SPAN = datetime.timedelta(18250)
     # Default life span is ~50 years: 365 * 50 = 18250 days
     
-    MATURITY_PERCENT = 30
+    PERCENT_MATURITY = 30
     # Assume maturity begins at 30 (first 30% of life spent on growth).
-    OLD_AGE_PERCENT = 70
+    PERCENT_OLD_AGE = 70
     # Assume old age begins at 70.
     
     def __init__(self):
         self._birth_event_names = {self.KEY_BIRTH}
         self._death_event_names = {self.KEY_DEATH}
+        # Can modify these for advanced functionality. For example, if you
+        # want your unit to be born again on a "rebranding" event.
         self._ref_date = None
         
         self.events = dict()
     
     @property
     def _clock_starts(self):
-        # Return **latest** defined birth event
+        # Return **latest** defined birth event.
         start_date = None
         defined_names = self._birth_event_names & self.events.keys()
 
@@ -177,7 +188,7 @@ class Life:
             stop_date = min(options)
 
         return stop_date
-
+        
     @property
     def age(self):
         """
@@ -254,7 +265,7 @@ class Life:
         
 
         Time between birth and death. Setter will change death, maturity, and
-        old age, using MATURITY_PERCENT and OLD_AGE_PERCENT. You can specify
+        old age, using PERCENT_MATURITY and PERCENT_OLD_AGE. You can specify
         your own percent thresholds for these events, or enter new dates
         directly into instance.events.
         """
@@ -273,11 +284,11 @@ class Life:
         self.events[self.KEY_DEATH] = death
         
         self.events[self.KEY_MATURITY] = (
-            birth + (value * self.MATURITY_PERCENT / 100)
+            birth + (value * self.PERCENT_MATURITY / 100)
             )
 
         self.events[self.KEY_OLD_AGE] = (
-            birth + (value * self.OLD_AGE_PERCENT / 100)
+            birth + (value * self.PERCENT_OLD_AGE / 100)
             )
 
     def set_ref_date(self, value):

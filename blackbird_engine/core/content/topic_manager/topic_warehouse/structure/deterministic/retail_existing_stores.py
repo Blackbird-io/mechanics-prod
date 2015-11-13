@@ -329,9 +329,9 @@ def scenario_6(topic):
     #
     standard_fins = standard_financials.basic_fins.copy()
     M.defaultFinancials = standard_fins.copy()
-    top_bu.setFinancials(standard_fins.copy())
+    top_bu.set_financials(standard_fins.copy())
     atx = CompanyValue()
-    top_bu.setAnalytics(atx)
+    top_bu.set_analytics(atx)
     #
     bu_template = BusinessUnit("Standard Store Unit", standard_fins)
     # Figure out unit lifespan, set accordingly
