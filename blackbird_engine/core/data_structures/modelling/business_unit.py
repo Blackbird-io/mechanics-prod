@@ -100,9 +100,14 @@ class BusinessUnit(Tags,Equalities):
     ====================  ======================================================
     """
 
-    irrelevantAttributes = ["allTags","filled","guide","id","parentObject",
+    irrelevantAttributes = ["allTags",
+                            "filled",
+                            "guide",
+                            "id",
+                            "parentObject",
                             "partOf"]
-    tagSources = ["components","drivers","financials"]
+    
+    tagSources = ["components", "drivers", "financials"]
         
     def __init__(self, name, fins=None):
         Tags.__init__(self,name) 

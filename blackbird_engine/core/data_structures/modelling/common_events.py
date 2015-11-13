@@ -17,6 +17,7 @@ Attribute             Description
 DATA:
 KEY_KILLED            shutting a unit down ahead of schedule
 KEY_RENOVATION        investing in a unit to extend its life
+KEY_TERM_RENEWAL           a relationship begins another term
 
 FUNCTIONS:
 n/a
@@ -37,6 +38,7 @@ n/a
 # Constants
 KEY_KILLED = "killed"
 KEY_RENOVATION = "renovation"
+KEY_TERM_RENEWAL = "term renewal"
 
 # Classes
 # n/a
