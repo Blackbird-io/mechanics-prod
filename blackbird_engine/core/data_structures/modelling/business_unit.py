@@ -1054,42 +1054,6 @@ class BusinessUnit(Tags,Equalities):
             for unit in self.components.values():
                 unit._register_in_period(recur, overwrite)
 
-##    def verifyID(self, recur=True):
-##        """
-##
-##
-##        BU.verifyID([recur=True]) -> bool
-##
-##
-##        Method checks whether:
-##        
-##        (1) instance is in the same namespace id as its time period,
-##        (2) instance bbid is the correct uuid for an object with its name in the
-##            time period's name space, and
-##        (3) optionally, if ``recur`` == True, all business units in
-##            instance.components satisfy tests (1) and (2).
-##
-##        Method returns True when all three prongs are True, False otherwise. 
-##        """
-##        result = True
-##        if self.period:
-##            if self.id.namespace_id != self.period.id.namespace_id:
-##                result = False
-##            # if self.id.period_id != self.period.id.namespace_id
-##        if result:
-##            result = self.id.verify(self.name)
-##        if result and recur:
-##            for C in self.components.getOrdered():
-##                # can walk components unordered
-##                if not C.verifyID(recur=True):
-##                    result = False
-##                    break
-##                else:
-##                    continue
-##        return result
-###
-###OBSOLETE
-
     def _build_directory(self, recur=True, overwrite=True):
         """
 
