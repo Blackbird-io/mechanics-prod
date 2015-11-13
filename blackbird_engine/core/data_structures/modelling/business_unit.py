@@ -13,10 +13,8 @@ Attribute             Description
 ====================  ==========================================================
 
 DATA:
-templateFinancials    standard financials pattern
 
 FUNCTIONS:
-setDefaultFinancials() tracks ModelComponents interface. 
 
 CLASSES:
 BusinessUnit          structured snapshot of a business at a given point in time
@@ -45,6 +43,7 @@ from .dr_container import DrContainer
 from .equalities import Equalities
 from .financials import Financials
 from .new_life import Life as LifeCycle
+
 
 
 
@@ -91,12 +90,8 @@ class BusinessUnit(Tags,Equalities):
     consolidate_unit()    consolidates financials from one business unit
     derive()              uses drivers to determine values for financials
     fillOut()             integrates consolidate() and derive()
-    pretty_print()        show graphical summary of instance
     resetFinancials()     resets instance and (optionally) component financials
     setAnalytics()        attaches an object to instance.analytics
-    setComponents()       attaches a Components object, sets partOf
-    setDefaultFinancials()  CLASS, sets template financials
-    setDrivers()          attaches a DrContainer object, sets partOf
     setFinancials()       attaches a Financials object from the right template
     ====================  ======================================================
     """
@@ -105,27 +100,30 @@ class BusinessUnit(Tags,Equalities):
                             "partOf"]
     tagSources = ["components","drivers","financials"]
         
-    def __init__(self, name, fins = None):
+    def __init__(self, name, fins=None):
         Tags.__init__(self,name) 
         self._type = None
-        #
+        
         self.components = None
-        self.setComponents()
-        #
+        self._set_components()
+        
         self.drivers = None
-        self.setDrivers()
+        self._set_drivers()
+
         self.filled = False
-        #
+        
         self.setFinancials(fins)
-        #
+        
         self.guide = Guide()
         self.id = ID()
-        #get the id functionality but do NOT assign a bbid yet
+        # Get the id functionality but do NOT assign a bbid yet
+        
         self.life = LifeCycle()
         self.location = None
         self.period = None
-        #may want to consider changing period to a property, so that changes
-        #in period value will always cause the unit to rerun registration. 
+        # May want to change period to a property, so that a set to new value
+        # will always cause the unit to rerun registration. 
+
         gl_sig_con = Globals.signatures["BusinessUnit.consolidate"]
         self.sig_consolidate =  gl_sig_con % self.name
         self.size = 1
@@ -180,15 +178,13 @@ class BusinessUnit(Tags,Equalities):
 
         Method concatenates each line in ``lines``, adds a new-line character at
         the end, and returns a string ready for printing. If ``lines`` is None,
-        method calls pretty_print() on instance. 
+        method calls _get_pretty_lines() on instance. 
         """
-        #
-        #get string list from pretty_print, slap a new-line at the end of every
-        #line and return a string with all the lines joined together.
-        #
+        # Get string list, slap a new-line at the end of every line and return
+        # a string with all the lines joined together.
         if not lines:
-            lines = self.pretty_print()
-        #add empty strings for header and footer padding
+            lines = self._get_pretty_lines()
+        # Add empty strings for header and footer padding
         lines.insert(0, "")
         lines.append("")
         #
@@ -265,7 +261,7 @@ class BusinessUnit(Tags,Equalities):
         """
 
 
-        BU.consolidate(*tagsToOmit) -> None
+        BU.consolidate() -> None
 
 
         Method iterates through instance components in order and consolidates
@@ -273,8 +269,10 @@ class BusinessUnit(Tags,Equalities):
         """
         if tagsToOmit == tuple():
             tagsToOmit = [bookMarkTag.casefold(), summaryTag]
+            
         self.financials.buildDictionaries()
         ordered_components = self.components.getOrdered()
+        
         for i in range(len(ordered_components)):
             component_on_deck = ordered_components[i]
             if not component_on_deck:
@@ -300,11 +298,7 @@ class BusinessUnit(Tags,Equalities):
         """
 
 
-        BU.consolidate_unit()(sub,
-                              sub_position,
-                              [*tagsToOmit[,
-                              [refresh_dictionaries = True[,
-                              trace = False]]]) -> None
+        BU.consolidate_unit() -> None
         
 
         -- ``sub`` should be a BusinessUnit object
@@ -534,11 +528,11 @@ class BusinessUnit(Tags,Equalities):
         #consolidate() will copy data from unit2 into a lineitem named
         #"Unit2: XYZ"
     
-    def copy(self, enforce_rules = True):
+    def copy(self, enforce_rules=True):
         """
 
 
-        BU.copy([enforce_rules = True]) -> BU
+        BU.copy() -> BU
 
 
         Method returns a new business unit that is a deep-ish copy of the
@@ -562,18 +556,15 @@ class BusinessUnit(Tags,Equalities):
         result = Tags.copy(self, enforce_rules)
         #
         r_comps = self.components.copy(enforce_rules)
-        result.setComponents(r_comps)
+        result._set_components(r_comps)
         r_drivers = self.drivers.copy(enforce_rules)
-        result.setDrivers(r_drivers)
+        result._set_drivers(r_drivers)
         r_fins = self.financials.copy(enforce_rules)
         result.setFinancials(r_fins)
         result.guide = copy.deepcopy(self.guide)
-        #have to make a deep copy of guide because it is composed of counter
-        #objects. Guide shouldn't point to a business unit or model
-        #
-##        result.header.profile = copy.deepcopy(self.header.profile) #<----------------------------------------remove here
+        # Have to make a deep copy of guide because it is composed of Counter
+        # objects. Guide shouldn't point to a business unit or model
         result.id = copy.copy(self.id)
-        #header.profile should be the only object pointing to others on header
         result.life = self.life.copy()
         result.summary = BusinessSummary()
         result.valuation = CompanyValue()
@@ -713,6 +704,97 @@ class BusinessUnit(Tags,Equalities):
             self.financials.summarize()
             self.filled = True
 
+    def kill(self, date=None, recur=True):
+        """
+
+
+        BusinessUnit.kill() -> None
+
+
+        Enters a death event on the specified date. Also enters a ``killed``
+        event.
+
+        If ``date`` is None, uses own ref_date. If ``recur`` is True, repeats
+        for all components.
+        """
+        if date is None:
+            date = self.life.ref_date
+        self.life.events[self.life.KEY_DEATH] = date
+        self.life.events[common_events.KEY_KILLED] = date
+        if recur:
+            for unit in self.components.values():
+                unit.kill(self, date, recur)
+
+    def synchronize(self, recur=True):
+        """
+
+
+        BusinessUnit.synchronize() -> None
+
+
+        Set life on all components to copy of caller. If ``recur`` is True,
+        repeat all the way down.
+        """
+        for unit in self.components.values():
+            unit.life = self.life.copy()
+            if recur:
+                unit.synchronize()
+
+    def resetFinancials(self, recur=True):
+        """
+
+
+        BU.resetFinancials() -> None
+
+
+        Method resets financials for instance and, if ``recur`` is True, for
+        each of the components. Method sets instance.filled to False.
+        """
+        self.filled = False
+        print("set ``filled`` to False for bbid\n%s\n" % self.id.bbid)
+        self.financials.reset()
+        if recur:
+            for bu in self.components.getOrdered():
+                bu.resetFinancials(recur)
+                
+    def setAnalytics(self, atx):
+        """
+
+
+        BU.addAnalytics(atx) -> None
+
+
+        Method sets instance.analytics to passed-in argument, sets analytics
+        object to point to instance as its parent. 
+        """
+        atx.setPartOf(self)
+        self.valuation = atx
+
+    def setFinancials(self, fins=None):
+        """
+
+
+        BU.setFinancials([fins = None]) -> None
+
+
+        Method for initializing instance.financials with a properly configured
+        Financials object.
+
+        Method will set instance financials to ``fins``, if caller specifies
+        ``fins``. Otherwise, method will set financials to a new Financials
+        instance. 
+        """
+        if fins:
+            self.financials = fins
+        else:            
+            self.financials = Financials()
+
+
+    #*************************************************************************#
+    #                          NON-PUBLIC METHODS                             #
+    #*************************************************************************#
+
+
     def _fit_to_period(self, time_period, recur=True):
         """
 
@@ -729,20 +811,16 @@ class BusinessUnit(Tags,Equalities):
             for unit in self.components.values():
                 unit._fit_to_period(time_period, recur)
 
-    def pretty_print(self,
-                     top_element = "=",
-                     side_element = "|",
-                     box_width = 23,
-                     field_width = 5):
+    def _get_pretty_lines(self,
+                          top_element="=",
+                          side_element="|",
+                          box_width=23,
+                          field_width=5):
 
         """
 
 
-        BusinessUnit.pretty_print([top_element = "=" [,
-                                  side_element = "|" [,
-
-                                  box_width = 23 [,
-                                  field_width = 5]]]]) -> list
+        BusinessUnit._get_pretty_lines() -> list
 
 
         Method returns a list of strings that displays a box if printed in
@@ -927,87 +1005,6 @@ class BusinessUnit(Tags,Equalities):
         #
         return lines    
 
-    def resetFinancials(self,recur = True):
-        """
-
-
-        BU.resetFinancials([recur = True]) -> None
-
-
-        Method resets financials for instance and, if ``recur`` is True, for
-        each of the components. Method sets instance.filled to False.
-        """
-        self.filled = False
-        print("set ``filled`` to False for bbid\n%s\n" % self.id.bbid)
-        self.financials.reset()
-        if recur:
-            for bu in self.components.getOrdered():
-                bu.resetFinancials(recur)
-                
-    def setAnalytics(self,atx):
-        """
-
-
-        BU.addAnalytics(atx) -> None
-
-
-        Method sets instance.analytics to passed-in argument, sets analytics
-        object to point to instance as its parent. 
-        """
-        atx.setPartOf(self)
-        self.valuation = atx
-
-    def setComponents(self,comps = None):
-        """
-
-
-        BU.setComponents([comps = None]) -> None
-
-
-        Method sets instance.components to the specified object, sets object to
-        point to instance as its parent. If ``comps`` is None, method generates
-        a clean instance of Components().
-        """
-        if not comps:
-            comps = Components()
-        comps.setPartOf(self)
-        self.components = comps
-
-    def setDrivers(self,dr_c = None):
-        """
-
-
-        BU.setDrivers([dr_c = None]) -> None
-
-
-        Method for initializing instance.drivers with a properly configured
-        DrContainer object. Method sets instance as the parentObject for
-        DrContainer and any drivers in DrContainer.
-        """
-        if not dr_c:
-            dr_c = DrContainer()
-        dr_c.setPartOf(self, recur = True)
-        self.drivers = dr_c
-
-    def setFinancials(self, fins = None):
-        """
-
-
-        BU.setFinancials([fins = None]) -> None
-
-
-        Method for initializing instance.financials with a properly configured
-        Financials object.
-
-        Method will set instance financials to ``fins``, if caller specifies
-        ``fins``. Otherwise, method will set financials to a new Financials
-        instance. 
-        """
-        if fins:
-            self.financials = fins
-        else:            
-            self.financials = Financials()
-
     def _register_in_period(self, recur=True, overwrite=True):
         """
 
@@ -1095,7 +1092,12 @@ class BusinessUnit(Tags,Equalities):
 
     def _build_directory(self, recur=True, overwrite=True):
         """
-        register yourself and optionally your components, by type and by id
+
+
+        BusinessUnit._build_directory() -> (id_directory, ty_directory)
+        
+
+        Register instanceyourself and optionally your components, by type and by id
         return id_directory, ty_directory
         """
         #return a dict of bbid:unit
@@ -1120,12 +1122,46 @@ class BusinessUnit(Tags,Equalities):
         this_type.add(self.id.bbid)
       
         return id_directory, ty_directory
+        # unfinished <--------------------------------------------------------------------------------------------
+
+    def _set_components(self, comps=None):
+        """
+
+
+        BU._set_components([comps = None]) -> None
+
+
+        Method sets instance.components to the specified object, sets object to
+        point to instance as its parent. If ``comps`` is None, method generates
+        a clean instance of Components().
+        """
+        if not comps:
+            comps = Components()
+        comps.setPartOf(self)
+        self.components = comps
+        
+    def _set_drivers(self, dr_c=None):
+        """
+
+
+        BU.setDrivers([dr_c = None]) -> None
+
+
+        Method for initializing instance.drivers with a properly configured
+        DrContainer object. Method sets instance as the parentObject for
+        DrContainer and any drivers in DrContainer.
+        """
+        if not dr_c:
+            dr_c = DrContainer()
+        dr_c.setPartOf(self, recur = True)
+        self.drivers = dr_c
+
     
     def _update_id(self, namespace, recur=True):
         """
 
 
-        _update_id() -> None
+        BusinessUnit._update_id() -> None
 
 
         Assigns instance a new id in the namespace, based on the instance name.
@@ -1139,7 +1175,11 @@ class BusinessUnit(Tags,Equalities):
         if recur:
             for unit in self.components.values():
                     unit.update_id(namespace=self.id.bbid, recur=True)
-    
+
+
+        
+        
+        
         
                     
 

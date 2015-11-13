@@ -336,8 +336,12 @@ class Life:
 
         Return deep copy. 
         """
+        # Use shallow copy to start, manually copy mutable objects (for speed).
         result = copy.copy(self)
+        result._birth_event_names = self._birth_event_names.copy()
+        result._death_event_names = self._death_event_names.copy()
         result.events = self.events.copy()
+        
         return result
 
     def get_latest(self, ref_date=None):
