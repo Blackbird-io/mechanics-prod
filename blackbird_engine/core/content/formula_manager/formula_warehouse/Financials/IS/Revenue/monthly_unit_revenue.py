@@ -79,14 +79,14 @@ def func(line, business_unit, data, driver_signature):
     if bu.life.alive:
         stage_name = "youth"
         stage_start = 0
-        stage_end = bu.life.MATURITY_PERCENT
+        stage_end = bu.life.PERCENT_MATURITY
         # Assume youth until we know otherwise
 
         if bu.life.events[KEY_MATURITY] <= ref_date:
             # Upgrade to maturity if appropriate.
             stage_name = "maturity"
             stage_start = stage_end
-            stage_end = bu.life.OLD_AGE_PERCENT
+            stage_end = bu.life.PERCENT_OLD_AGE
 
         if bu.life.events[KEY_OLD_AGE] <= ref_date:
             # Upgrade further to decline. Use old label so we can keep next
