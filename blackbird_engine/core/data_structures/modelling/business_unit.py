@@ -24,7 +24,7 @@ BusinessUnit          structured snapshot of a business at a given point in time
 
 
 
-#imports
+# Imports
 import copy
 import datetime
 import time
@@ -37,6 +37,8 @@ from data_structures.system.tags import Tags
 from data_structures.valuation.business_summary import BusinessSummary
 from data_structures.valuation.company_value import CompanyValue
 
+from . import common_events
+
 from .components import Components
 from .driver import Driver
 from .dr_container import DrContainer
@@ -47,7 +49,7 @@ from .new_life import Life as LifeCycle
 
 
 
-#globals
+# Constants
 #Tags class carries a pointer to the tag manager; access individual tags
 #through that pointer
 bookMarkTag = Tags.tagManager.catalog["bookmark"]
@@ -55,12 +57,13 @@ summaryTag = Tags.tagManager.catalog["summary"]
 tConsolidated = Tags.tagManager.catalog["consolidated"]
 tHardCoded = Tags.tagManager.catalog["hard"]
 
-#classes   
+# Classes   
 class BusinessUnit(Tags,Equalities):
     """
-
-    
-    
+   
+    Object describes a group of business activity. A business unit can be a
+    store, a region, a product, a team, a relationship (or many relationships),
+    etcetera.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -68,31 +71,32 @@ class BusinessUnit(Tags,Equalities):
     DATA:
     components            instance of Components class, stores business units
     drivers               dict; tag/line name : set of driver bbids
-    filled                bool; True if instance.fillOut() has run to completion
+    filled                bool; True if fill_out() has run to completion
     financials            instance of Financials object
     guide                 instance of Guide object
     id                    instance of ID object
-    life                  instance of LifeCycle object
+    life                  instance of Life object
     location              placeholder for location functionality
     sig_consolidate       global signature updated for unit name
     size                  int; number of real-life equivalents obj represents
     tagSources            list; CLASS attribute, sources for tag inheritance
-    type                  str or None; describes the unit's in-model type (e.g.,
-                          "product" or "team").
-    summary               None or BusinessSummary, provides investment summary
-    valuation             None or CompanyValue, describes how unit fares on market
+    type                  str or None; unit's in-model type (e.g., "team")
+    summary               None or BusinessSummary; investment summary
+    valuation             None or CompanyValue; market view on unit
     
     FUNCTIONS:
     add_component()       adds bus with verified ids to components
-    addDriver()           registers a driver under every name that appears in
-                          its workConditions["name"] (including None)
+    add_driver()          registers a driver 
+    clear()               restore default attribute values
     consolidate()         consolidates financials from every component
     consolidate_unit()    consolidates financials from one business unit
     derive()              uses drivers to determine values for financials
-    fillOut()             integrates consolidate() and derive()
-    resetFinancials()     resets instance and (optionally) component financials
-    setAnalytics()        attaches an object to instance.analytics
-    setFinancials()       attaches a Financials object from the right template
+    fill_out()            integrates consolidate() and derive()
+    kill()                make dead, optionally recursive
+    reset_financials()    resets instance and (optionally) component financials
+    set_analytics()       attaches an object to instance.analytics 
+    set_financials()      attaches a Financials object from the right template
+    synchronize()         set components to same life, optionally recursive
     ====================  ======================================================
     """
 
@@ -112,7 +116,7 @@ class BusinessUnit(Tags,Equalities):
 
         self.filled = False
         
-        self.setFinancials(fins)
+        self.set_financials(fins)
         
         self.guide = Guide()
         self.id = ID()
@@ -195,7 +199,7 @@ class BusinessUnit(Tags,Equalities):
         """
 
 
-        BU.addComponent() -> None
+        BusinessUnit.add_component() -> None
 
 
         Method prepares a bu and adds it to instance components.
@@ -226,12 +230,20 @@ class BusinessUnit(Tags,Equalities):
         # Step 3: Register the the units. Will raise erros on collisions. 
         self.components.add_item(bu)
     
-
     def addDriver(self, newDriver, *otherKeys):
         """
 
+        **OBSOLETE**
 
-        BusinessUnit.addDriver(newDriver,*otherKeys) -> None
+        Legacy interface for add_driver().
+        """
+        return self.add_driver(newDriver, *otherKeys)
+        
+    def add_driver(self, newDriver, *otherKeys):
+        """
+
+
+        BusinessUnit.add_driver(newDriver,*otherKeys) -> None
 
 
         Method registers a driver to names and tags of lines it supports.
@@ -243,7 +255,7 @@ class BusinessUnit(Tags,Equalities):
         """
 
 
-        BU.clear() -> None
+        BusinessUnit.clear() -> None
 
 
         Method sets attributes in instance.tagSources to their default
@@ -261,7 +273,7 @@ class BusinessUnit(Tags,Equalities):
         """
 
 
-        BU.consolidate() -> None
+        BusinessUnit.consolidate() -> None
 
 
         Method iterates through instance components in order and consolidates
@@ -281,8 +293,8 @@ class BusinessUnit(Tags,Equalities):
                 self.consolidate_unit(component_on_deck,
                                       i,
                                       *tagsToOmit,
-                                      refresh_dictionaries = False,
-                                      trace = trace)
+                                      refresh_dictionaries=False,
+                                      trace=trace)
                 #dont refresh dictionaries at beginning of consolidate unit;
                 #main method already did so at the beginning, so they should
                 #be fresh for component 1. after that, consolidate_unit will
@@ -293,8 +305,8 @@ class BusinessUnit(Tags,Equalities):
                          sub,
                          sub_position,
                          *tagsToOmit,
-                         refresh_dictionaries = True,
-                         trace = False):
+                         refresh_dictionaries=True,
+                         trace=False):
         """
 
 
@@ -445,14 +457,17 @@ class BusinessUnit(Tags,Equalities):
         if tagsToOmit == tuple():
             tagsToOmit = [bookMarkTag.casefold(), summaryTag]
         tagsToOmit = set(tagsToOmit)
+        
         parent = self
+
         if refresh_dictionaries:
             parent.financials.buildDictionaries()
-        #stage 1: check that sub is alive
+
+        # Stage 1: check that sub is alive
         if not sub.life.alive:
             pass
         else:
-            sub.fillOut()
+            sub.fill_out()
             for sLi in range(len(sub.financials)):
                 #stage 2: check that lineItem is informative:
                 subLine = sub.financials[sLi]
@@ -560,7 +575,7 @@ class BusinessUnit(Tags,Equalities):
         r_drivers = self.drivers.copy(enforce_rules)
         result._set_drivers(r_drivers)
         r_fins = self.financials.copy(enforce_rules)
-        result.setFinancials(r_fins)
+        result.set_financials(r_fins)
         result.guide = copy.deepcopy(self.guide)
         # Have to make a deep copy of guide because it is composed of Counter
         # objects. Guide shouldn't point to a business unit or model
@@ -631,14 +646,14 @@ class BusinessUnit(Tags,Equalities):
         BusinessUnit or other objects from specialized subclasses of Tags, can
         fix by removing express delegation and relying on built-in Python MRO. 
         """
-        result = Tags.extrapolate_to(self,target)
+        result = Tags.extrapolate_to(self, target)
         return result
     
-    def ex_to_special(self,target):
+    def ex_to_special(self, target):
         """
 
        
-        BU.ex_to_special(target) -> BU
+        BU.ex_to_special() -> BU
 
 
         Method returns a new business unit that contains a blend of seed
@@ -678,11 +693,20 @@ class BusinessUnit(Tags,Equalities):
         #step 3: return container
         return result
 
-    def fillOut(self,*tagsToOmit):
+    def fillOut(self, *tagsToOmit):
+        """
+
+        **OBSOLETE**
+
+        Legacy interface for fill_out().
+        """
+        return self.fill_out(*tagsToOmit)
+    
+    def fill_out(self,*tagsToOmit):
         """
 
 
-        BusinessUnit.fillOut([*tagsToOmit]) -> None
+        BusinessUnit.fill_out() -> None
 
 
         Will no-op if instance.filled is True. Otherwise, will first sync
@@ -740,11 +764,11 @@ class BusinessUnit(Tags,Equalities):
             if recur:
                 unit.synchronize()
 
-    def resetFinancials(self, recur=True):
+    def reset_financials(self, recur=True):
         """
 
 
-        BU.resetFinancials() -> None
+        BU.reset_financials() -> None
 
 
         Method resets financials for instance and, if ``recur`` is True, for
@@ -755,13 +779,13 @@ class BusinessUnit(Tags,Equalities):
         self.financials.reset()
         if recur:
             for bu in self.components.getOrdered():
-                bu.resetFinancials(recur)
+                bu.reset_financials(recur)
                 
-    def setAnalytics(self, atx):
+    def set_analytics(self, atx):
         """
 
 
-        BU.addAnalytics(atx) -> None
+        BusinessUnit.set_analytics() -> None
 
 
         Method sets instance.analytics to passed-in argument, sets analytics
@@ -770,11 +794,11 @@ class BusinessUnit(Tags,Equalities):
         atx.setPartOf(self)
         self.valuation = atx
 
-    def setFinancials(self, fins=None):
+    def set_financials(self, fins=None):
         """
 
 
-        BU.setFinancials([fins = None]) -> None
+        BusinessUnit.set_financials() -> None
 
 
         Method for initializing instance.financials with a properly configured
@@ -799,7 +823,7 @@ class BusinessUnit(Tags,Equalities):
         """
 
 
-        BU._fit_to_period() -> None
+        BusinessUnit._fit_to_period() -> None
 
         
         Set pointer to timeperiod and synchronize ref date to period end date.
@@ -885,7 +909,7 @@ class BusinessUnit(Tags,Equalities):
                   "ID",
                   "DOB",
                   "LIFE",
-                  "STAGE",
+                  "EVENT",
                   "TYPE",
                   "FILL",
                   "SIZE",
@@ -924,9 +948,7 @@ class BusinessUnit(Tags,Equalities):
             life = "n/a"
         data["LIFE"] = life
         
-##        stage = str(self.life.stage)[:data_width]
-        data["STAGE"] = "n/a"
-        # can replace with a last event or something
+        data["EVENT"] = self.life.get_latest()[:data_width]
         
         unit_type = str(self.type)[:data_width]
         data["TYPE"] = unit_type.upper()
@@ -1009,7 +1031,7 @@ class BusinessUnit(Tags,Equalities):
         """
 
 
-        BU._register_in_period() -> None
+        BusinessUnit._register_in_period() -> None
 
 
         Method updates the bu_directory on the instance period with the contents
@@ -1092,7 +1114,7 @@ class BusinessUnit(Tags,Equalities):
         """
 
 
-        BU._set_components([comps = None]) -> None
+        BusinessUnit._set_components() -> None
 
 
         Method sets instance.components to the specified object, sets object to
@@ -1108,7 +1130,7 @@ class BusinessUnit(Tags,Equalities):
         """
 
 
-        BU.setDrivers([dr_c = None]) -> None
+        BusinessUnit._set_drivers() -> None
 
 
         Method for initializing instance.drivers with a properly configured
@@ -1143,7 +1165,7 @@ class BusinessUnit(Tags,Equalities):
 
         
         
-        
+
         
                     
 

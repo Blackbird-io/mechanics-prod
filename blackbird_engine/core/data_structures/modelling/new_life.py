@@ -156,7 +156,7 @@ class Life:
     
     @property
     def _clock_starts(self):
-        # Return **latest** defined death event
+        # Return **latest** defined birth event
         start_date = None
         defined_names = self._birth_event_names & self.events.keys()
 
@@ -321,10 +321,13 @@ class Life:
         """
         self.events[self.KEY_BIRTH] = date_of_birth
 
-        self.span = life_span or self.LIFE_SPAN
+        if life_span is None:
+            life_span = self.LIFE_SPAN
+        self.span = life_span
         # Span will automatically set the date of death, maturity, and old age.
 
-        gestation = gestation or self.GESTATION
+        if gestation is None:
+            gestation = self.GESTATION
         self.events[self.KEY_CONCEPTION] = date_of_birth - gestation
 
     def copy(self):
