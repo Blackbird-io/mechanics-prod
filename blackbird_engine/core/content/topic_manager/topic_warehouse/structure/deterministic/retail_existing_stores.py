@@ -46,7 +46,6 @@ import BBGlobalVariables as Globals
 import tools
 
 from data_structures.modelling.business_unit import BusinessUnit
-from data_structures.modelling.life_stage import LifeStage
 from data_structures.valuation.company_value import CompanyValue
 
 from .. import shared_knowledge as SubjectKnowledge
