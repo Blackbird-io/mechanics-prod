@@ -93,7 +93,7 @@ class Model(Tags):
     stage                 P; pointer to either interview or defined _stage
     started               bool; property, tracks whether engine has begun work
     summary               P; pointer to current period summary
-    taxonomy              TimePeriod; pointer to the master time period
+    taxonomy              dict with tree of unit templates
     time_line             list of TimePeriod objects
     transcript            list of entries that tracks Engine processing
     used                  set of bbids for used topics
@@ -118,6 +118,7 @@ class Model(Tags):
         # Models carry uuids in the origin namespace.
         self.interview = InterviewTracker()
         self.portal_data = dict()
+        self.taxonomy = dict()
         self.transcript = []
         self.time_line = TimeLine()
         self.used = set()
@@ -219,18 +220,6 @@ class Model(Tags):
         c = "Assignment prohibited. ``model.valuation`` serves only as a pointer"
         c += " to the current period company valuation."
         raise BBExceptions.ManagedAttributeError(c)
-
-    @property
-    def taxonomy(self):
-        """
-
-
-        **read-only property**
-
-
-        Pointer to master time period on time line.
-        """
-        return self.time_line.master
 
     #METHODS
     @classmethod

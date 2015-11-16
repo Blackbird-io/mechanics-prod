@@ -149,16 +149,9 @@ def apply_data(topic, datapoint):
     """
     model = topic.MR.activeModel
     top_bu = model.time_line.current_period.content
-    standard_unit = model.taxonomy.content
-    options = standard_unit.components.get_tagged("operating")
+    bu_template = model.taxonomy["operating"]["standard"]
+    # Use dict-style taxonomy interface.
     
-    bu_template = None
-    if len(options) == 1:
-        key = sorted(options)[0]
-        bu_template = options[key]
-    else:
-        raise Exception("too many templates")
-
     gestation = bu_template.life.GESTATION
     age_increment = gestation / datapoint
     
