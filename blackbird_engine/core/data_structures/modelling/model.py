@@ -27,27 +27,25 @@ Model                 structured snapshots of a company across time periods
 
 
 
-#imports
+# imports
 import time
 import dill
 
 import BBExceptions
-import BBGlobalVariables as Globals
 
 from data_structures.guidance.interview_tracker import InterviewTracker
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
 
-##from .taxonomy import Taxonomy
 from .time_line import TimeLine
 
 
 
 
-#globals
-#n/a
+# constants
+# n/a
 
-#classes
+# classes
 class Model(Tags):
     """
 
@@ -94,7 +92,7 @@ class Model(Tags):
     stage                 P; pointer to either interview or defined _stage
     started               bool; property, tracks whether engine has begun work
     summary               P; pointer to current period summary
-    taxonomy              Taxonomy; collection of prototypical business units
+    taxonomy              TimePeriod; pointer to the master time period
     time_line             list of TimePeriod objects
     transcript            list of entries that tracks Engine processing
     used                  set of bbids for used topics
@@ -108,8 +106,10 @@ class Model(Tags):
     
     ``P`` indicates attributes decorated as properties. See attribute-level doc
     string for more information.
-    
     """
+    
+    DEFAULT_MODEL_NAME = "Blank Blackbird Model"
+    
     def __init__(self, name):
         Tags.__init__(self,name)
         self._stage = None
@@ -120,7 +120,6 @@ class Model(Tags):
         # Models carry uuids in the origin namespace.
         self.interview = InterviewTracker()
         self.portal_data = dict()
-        self.taxonomy = dict()
         self.transcript = []
         self.time_line = TimeLine()
         self.used = set()
@@ -223,6 +222,18 @@ class Model(Tags):
         c += " to the current period company valuation."
         raise BBExceptions.ManagedAttributeError(c)
 
+    @property
+    def taxonomy(self):
+        """
+
+
+        **read-only property**
+
+
+        Pointer to master time period on time line.
+        """
+        return self.time_line.master
+
     #METHODS
     @classmethod
     def from_portal(cls, portal_model):
@@ -251,7 +262,7 @@ class Model(Tags):
         else:
             business_name = portal_model["business_name"]
             if not business_name:
-                business_name = Globals.default_model_name
+                business_name = self.DEFAULT_MODEL_NAME
             M = cls(business_name)
         M.portal_data.update(portal_model)
         del M.portal_data["e_model"]

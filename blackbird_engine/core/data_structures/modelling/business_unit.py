@@ -469,7 +469,8 @@ class BusinessUnit(Tags,Equalities):
             parent.financials.buildDictionaries()
 
         # Stage 1: check that sub is alive
-        if not sub.life.alive:
+        if not True:
+            #consolidate all
             pass
         else:
             sub.fill_out()
