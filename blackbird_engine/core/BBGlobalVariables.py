@@ -71,8 +71,6 @@ signatures["LineItem.ex_to_default"] = "LineItem.ex_to_default"
 signatures["LineItem.ex_to_special"] = "LineItem.ex_to_special"
 
 #Exceptions:
-#(may be redundant w LTDEX_0_ObjectLibraries.Exceptions because the Globals
-#module CANNOT import anything other than built-in libraries).
 class BlackbirdError(Exception): pass
 #parent class for all custom errors
 class BBAnalyticalError(BlackbirdError): pass
@@ -133,10 +131,10 @@ def checkMessageStatus(mqrMessage):
     return status
 
 #Modelling:
-default_model_name = "Blank Blackbird Model"
-default_unit_name = "Blank Unit"
-default_periods_back = 36
-default_periods_fwd = 36
+##default_model_name = "Blank Blackbird Model" #<------------------------------------------eliminate
+##default_unit_name = "Blank Unit" #<------------------------------------------eliminate
+##default_periods_back = 36 #<------------------------------------------eliminate
+##default_periods_fwd = 36 #<------------------------------------------eliminate
 max_unit_count = 200
 mid_unit_count = 20
 high_unit_count = 50
@@ -160,7 +158,7 @@ default_inflation = 0.03
 user_correction = 0.10
 
 #Calendar
-t0 = date(2015,6,16)
+t0 = date(2015, 6, 16)
 fix_ref_date = True
 #whether models always start on the same date; keep True for testing
 days_in_month = 30

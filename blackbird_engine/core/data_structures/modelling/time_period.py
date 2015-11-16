@@ -126,7 +126,7 @@ class TimePeriod(Tags):
         self.content = None
         self._reset_directories()
         
-    def copy(self, enforce_rules = True):
+    def copy(self, enforce_rules=True):
         """
 
 
@@ -141,7 +141,7 @@ class TimePeriod(Tags):
         result.end = copy.copy(self.end)
         if self.content:
             new_content = self.content.copy(enforce_rules)
-            result.set_content(new_content, updateID = False)
+            result.set_content(new_content, updateID=False)
         #same id namespace (old model)
         #
         return result
