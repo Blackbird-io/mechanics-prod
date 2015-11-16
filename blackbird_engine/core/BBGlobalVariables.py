@@ -80,7 +80,7 @@ class BBAnalyticalError(BlackbirdError): pass
 #Other:
 SCREEN_WIDTH = 80
 min_progress_per_question = 2
-misfitLabel = "MISFIT"  #<---------------------------------------------------------eliminate
+##misfitLabel = "MISFIT"  #<---------------------------------------------------------eliminate
 END_INTERVIEW = "END_interview"
 user_stop = "STOP INTERVIEW"
 
