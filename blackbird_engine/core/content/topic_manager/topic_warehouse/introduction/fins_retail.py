@@ -37,18 +37,17 @@ n/a
 
 
 
-#imports
+# Imports
 import copy
 
 import BBGlobalVariables as Globals
 
-from data_structures.modelling.financials import Financials
 from data_structures.modelling.line_item import LineItem
 
 
 
 
-#globals
+# Constants
 name = "financials configuration for retail models"
 author = "IOP"
 date = "03/26/2015"
