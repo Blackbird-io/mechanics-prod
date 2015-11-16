@@ -180,7 +180,8 @@ def scenario_6(topic):
     #
     company.type = "company"
     model.time_line.current_period.set_content(company)
-    model.taxonomy["standard"] = basic_unit
+    model.taxonomy.set_content(basic_unit)
+    # Standard unit is the top node in the taxonomy tree. 
     #
     fp = model.interview.focal_point
     fp.guide.quality.increment(1)

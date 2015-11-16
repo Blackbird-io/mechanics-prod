@@ -47,7 +47,7 @@ import BBGlobalVariables as Globals
 
 
 
-#globals
+# Constants
 name = "new stores in progress (under lease)"
 topic_author = "IOP"
 date_created = "2015-06-02"
@@ -149,8 +149,15 @@ def apply_data(topic, datapoint):
     """
     model = topic.MR.activeModel
     top_bu = model.time_line.current_period.content
-    bu_template = model.taxonomy["operating"]["standard"]
-    # Use dict-style taxonomy interface. 
+    standard_unit = model.taxonomy.content
+    options = standard_unit.components.get_tagged("operating")
+    
+    bu_template = None
+    if len(options) == 1:
+        key = sorted(options)[0]
+        bu_template = options[key]
+    else:
+        raise Exception("too many templates")
 
     gestation = bu_template.life.GESTATION
     age_increment = gestation / datapoint

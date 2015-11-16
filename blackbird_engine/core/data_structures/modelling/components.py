@@ -178,14 +178,14 @@ class Components(dict, Tags, Equalities):
         """
 
 
-        Components.copy([enforce_rules = True]) -> Components
+        Components.copy() -> Components
 
 
         Method returns a deep copy of components. Uses Tags.copy() to create a
         shell. Method then sets result.by_name to a blank dictionary and adds a
         copy of each unit in the instance to the result. 
         """
-        result = Tags.copy(self, enforce_rules = True)
+        result = Tags.copy(self, enforce_rules=True)
         #
         #customize container
         result.clear()
@@ -361,7 +361,7 @@ class Components(dict, Tags, Equalities):
         """
 
 
-        Components.get_tagged(*tags[, pool=None[, recur=False]]) -> dict
+        Components.get_tagged() -> dict
 
 
         Return a dictionary of units (by bbid) that carry the specified tags.

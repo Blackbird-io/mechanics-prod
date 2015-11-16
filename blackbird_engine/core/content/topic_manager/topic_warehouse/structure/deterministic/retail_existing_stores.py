@@ -399,14 +399,11 @@ def scenario_6(topic):
     
     # Step 3:
     # Add template to model taxonomy.
-    M.taxonomy["standard"] = bu_template
-    M.taxonomy["operating"] = dict()
-    M.taxonomy["operating"]["standard"] = bu_template
-    # Later topics can sub-type "operating" into "small", "large", etc. Since
-    # the custom Taxonomy class doesnt unpickle correctly, ``taxonomy`` is a
-    # primitive dictionary where the "standard" key always points to a business
-    # unit object and all other keys point to other dictionaries with a similar
-    # configuration.
+    M.taxonomy.set_content(bu_template)
+    operating_unit = bu_template.copy()
+    operating_unit.tag("operating")
+    M.taxonomy.content.add_component(operating_unit)
+    # Free-form of unit varieties. Future topics can expand tree further.
     
     # Step 4:
     # Use the template operating unit to create a batch of clones. The clones

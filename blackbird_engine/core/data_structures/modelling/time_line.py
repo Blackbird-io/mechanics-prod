@@ -141,8 +141,8 @@ class TimeLine(dict):
 
     def build(self,
               ref_date,
-              fwd=self.DEFAULT_PERIODS_FORWARD,
-              back=self.DEFAULT_PERIODS_BACK):
+              fwd=DEFAULT_PERIODS_FORWARD,
+              back=DEFAULT_PERIODS_BACK):
         """
 
 
