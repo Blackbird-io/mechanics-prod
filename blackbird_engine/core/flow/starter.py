@@ -87,12 +87,12 @@ class Starter:
         if model:
             model_name = model.portal_data["business_name"]
             if not model_name:
-                model_name = Globals.default_model_name
+                model_name = Globals.DEFAULT_MODEL_NAME
             model.setName(model_name)
             #starter can also do configuration from other parts of
             #user_context
         else:
-            model = Model(Globals.default_model_name)
+            model = Model(Globals.DEFAULT_MODEL_NAME)
         model.start()
         #officially ``start`` the model so that it never comes back here;
         #otherwise, starter.process() will destroy all existing model data.

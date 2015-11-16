@@ -1166,7 +1166,7 @@ class BusinessUnit(Tags,Equalities):
         # the namespace for all downstream components. 
         if recur:
             for unit in self.components.values():
-                    unit.update_id(namespace=self.id.bbid, recur=True)
+                    unit._update_id(namespace=self.id.bbid, recur=True)
 
 
         

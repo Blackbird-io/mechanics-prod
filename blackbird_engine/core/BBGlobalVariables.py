@@ -131,7 +131,8 @@ def checkMessageStatus(mqrMessage):
     return status
 
 #Modelling:
-##default_model_name = "Blank Blackbird Model" #<------------------------------------------eliminate
+DEFAULT_MODEL_NAME = "Blank Blackbird Model"
+
 ##default_unit_name = "Blank Unit" #<------------------------------------------eliminate
 ##default_periods_back = 36 #<------------------------------------------eliminate
 ##default_periods_fwd = 36 #<------------------------------------------eliminate

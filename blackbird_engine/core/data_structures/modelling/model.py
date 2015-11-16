@@ -32,6 +32,7 @@ import time
 import dill
 
 import BBExceptions
+import BBGlobalVariables as settings
 
 from data_structures.guidance.interview_tracker import InterviewTracker
 from data_structures.system.bbid import ID
@@ -106,10 +107,7 @@ class Model(Tags):
     
     ``P`` indicates attributes decorated as properties. See attribute-level doc
     string for more information.
-    """
-    
-    DEFAULT_MODEL_NAME = "Blank Blackbird Model"
-    
+    """    
     def __init__(self, name):
         Tags.__init__(self,name)
         self._stage = None
@@ -262,7 +260,7 @@ class Model(Tags):
         else:
             business_name = portal_model["business_name"]
             if not business_name:
-                business_name = self.DEFAULT_MODEL_NAME
+                business_name = settings.DEFAULT_MODEL_NAME
             M = cls(business_name)
         M.portal_data.update(portal_model)
         del M.portal_data["e_model"]
