@@ -75,7 +75,6 @@ class Components(dict, Tags, Equalities):
     get_ordered()         returns a list of values, ordered by key
     get_tagged()          return a dict of units with tags
     inheritTags()         runs default routine, then inherits from all comps
-    pretty_print()        returns a list of strings showing units one by one
     refresh_names()       clear and rebuild name-to-bbid dictionary
     ====================  ======================================================
     """
@@ -130,10 +129,10 @@ class Components(dict, Tags, Equalities):
 
         Method concatenates each line in ``lines``, adds a new-line character at
         the end, and returns a string ready for printing. If ``lines`` is None,
-        method calls pretty_print() on instance. 
+        method calls _get_pretty_lines() on instance. 
         """
         if not lines:
-            lines = self.pretty_print()
+            lines = self._get_pretty_lines()
         line_end = "\n"
         result = line_end.join(lines)
         return result        
@@ -411,20 +410,18 @@ class Components(dict, Tags, Equalities):
                     bu.inheritTags()
                 self.inheritTagsFrom(bu)
 
-    def pretty_print(self):
+    def _get_pretty_lines(self):
         """
 
 
-        Components.pretty_print() -> list
+        Components._get_pretty_lines() -> list
 
 
         Method returns a list of strings that show each component in rows of
         three.        
         """
-        #
-        #get string list from pretty_print, slap a new-line at the end of every
-        #line and return a string with all the lines joined together.
-        #
+        # Get string list for every unit, slap a new-line at the end of every
+        # line and return a string with all the lines joined together.
         main_lines = []
         #
         units = self.getOrdered()
@@ -476,7 +473,7 @@ class Components(dict, Tags, Equalities):
                 #
                 boxes = []
                 for unit in bunch:
-                    unit_box = unit.pretty_print()
+                    unit_box = unit._get_pretty_lines()
                     boxes.append(unit_box)
                 if i == 0:
                     box_width = len(boxes[0][0])
@@ -539,7 +536,7 @@ class Components(dict, Tags, Equalities):
                 #
                 boxes = []
                 for unit in bunch:
-                    unit_box = unit.pretty_print()
+                    unit_box = unit._get_pretty_lines()
                     boxes.append(unit_box)
                 if not box_width:
                     box_width = len(boxes[0][0])
@@ -579,7 +576,7 @@ class Components(dict, Tags, Equalities):
             bunch = units[(stub_count * -1):]
             boxes = []
             for unit in bunch:
-                unit_box = unit.pretty_print()
+                unit_box = unit._get_pretty_lines()
                 boxes.append(unit_box)
             #
             if not box_width:

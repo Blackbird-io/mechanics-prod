@@ -399,11 +399,10 @@ def scenario_6(topic):
     
     # Step 3:
     # Add template to model taxonomy.
-    M.taxonomy.set_content(bu_template)
-    operating_unit = bu_template.copy()
-    operating_unit.tag("operating")
-    M.taxonomy.content.add_component(operating_unit)
-    # Free-form of unit varieties. Future topics can expand tree further.
+    M.taxonomy["standard"] = bu_template
+    M.taxonomy["operating"] = dict()
+    M.taxonomy["operating"]["standard"] = bu_template
+    # Future topics can expand tree further.
     
     # Step 4:
     # Use the template operating unit to create a batch of clones. The clones
