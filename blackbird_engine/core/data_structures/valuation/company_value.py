@@ -27,11 +27,9 @@ CompanyValue          standard form for storing data about company value
 
 
 
-#imports
+# Imports
 from data_structures.guidance.outline import Outline
 from data_structures.modelling.book_mark import BookMark
-from data_structures.modelling.financials import Financials
-
 
 from .credit_capacity import CreditCapacity
 from .enterprise_value import EnterpriseValue
@@ -39,10 +37,10 @@ from .enterprise_value import EnterpriseValue
 
 
 
-#globals
-#n/a
+# Constants
+# n/a
 
-#classes
+# Classes
 class CompanyValue(Outline):
     """
 

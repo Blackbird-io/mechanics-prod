@@ -32,7 +32,7 @@ import time
 
 from .step import Step
 
-from ..modelling.financials import Financials
+from ..modelling.statement import Statement as Financials
 
 
 
