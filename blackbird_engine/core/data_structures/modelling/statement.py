@@ -1664,3 +1664,56 @@ class Statement(list, Tags, Equalities):
         if refresh:
             self.dSummaries = existingSummaries
 
+    def update(self, lines, unit_index, tags_to_omit, refresh=False):
+        """
+
+        should really be on statement
+        
+        drops nameless lines? or can be control
+
+        ``tags_to_omit`` should be a set of tags for speed
+        """
+        if refresh:
+            self._build_index()
+        
+        for i in range(len(lines)):
+            line = source[i]
+            
+            if not line.name:
+                continue
+            if line.value is None:
+                continue
+            if tags_to_omit & set(line.allTags):
+                # line has tags we want to omit
+                continue
+
+            if line.name in self.dNames:
+                # Increment
+                j = max(self.dNames[line.name])
+                existing_line = statement[j]
+                
+                starting_value = existing_line.value or 0
+                # Replace ``None`` with 0 for starting value to make sure
+                # addition works
+                new_value = starting_value + line.value
+
+                signature = self.sig_consolidate + suffix
+                existing_line.set_value(new_value, signature)
+                
+                existing_line.inheritTagsFrom(line)
+                if tConsolidated not in existing_line.allTags:
+                    existing_line.tag(tConsolidated)
+                    
+            else:
+                # Insert
+                new_line = line.replicate(compIndex=unit_index)
+                
+                if tConsolidated not in new_line.allTags:
+                    new_line.tag(tConsolidated)
+
+                i = self._spot_generally(new_line, lines, i)
+                self._update_part(new_line)
+                self.insert(i, new_line)
+                self._build_index()
+                # Always build index after inserting something
+

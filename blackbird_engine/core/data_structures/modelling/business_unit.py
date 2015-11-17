@@ -461,18 +461,33 @@ class BusinessUnit(Tags,Equalities):
         """
         if tagsToOmit == tuple():
             tagsToOmit = [bookMarkTag.casefold(), summaryTag]
-        tagsToOmit = set(tagsToOmit)
+        tagsToOmit = set(tagsToOmit) #<----------------------------------should be on statement?
         
-        parent = self
-
-        if refresh_dictionaries:
-            parent.financials.buildDictionaries()
-
         # Stage 1: check that sub is alive
         if not sub.life.alive:
             pass
         else:
             sub.fill_out()
+
+            for attr_name in sub.financials.path:
+                child_statement = getattr(sub.financials, attr_name)
+                
+                if child_statement:
+                    parent_statement = getattr(self.financials, attr_name)
+                    parent_statement.update(child_statement, tags_to_omit, refresh=refresh) #<-------- do i need a refresh here?
+                    # don't really need a refresh, haven't done anything yet
+                    
+    ###################
+                
+                if not statement:
+                    continue
+
+                else:
+                    #go through line by line
+                    if refresh_dictionaries:
+                        parent_statement.build_dictionaries()
+                        self._consolidate_statement(child_statement, parent_statement)
+                    
             for sLi in range(len(sub.financials)):
                 #stage 2: check that lineItem is informative:
                 subLine = sub.financials[sLi]
@@ -485,8 +500,10 @@ class BusinessUnit(Tags,Equalities):
                 #
                 if not (sName or sValue):
                     continue
+                
                 if not tagsToOmit & set(subLine.allTags) == set():
                     continue
+                
                 if sName:
                     if sName in parent.financials.dNames.keys():
                         if not sValue:
@@ -507,6 +524,7 @@ class BusinessUnit(Tags,Equalities):
                             print("incremented %s by %s" % (parentLine.name, sValue))
                         if tConsolidated not in parentLine.allTags:
                             parentLine.tag(tConsolidated)
+                            
                     else:
                         replica = subLine.replicate(compIndex = sub_position)
                         if sValue:
@@ -526,8 +544,8 @@ class BusinessUnit(Tags,Equalities):
                     replica = subLine.replicate(compIndex = sub_position)
                     if tConsolidated not in replica.allTags:
                         replica.tag(tConsolidated)
-                    #know that sValue must be true to get here, so tag
-                    #consolidated and block derive
+                    # know that sValue must be true to get here, so tag
+                    # consolidated and block derive
                     subFins = sub.financials
                     L = parent.financials.spotGenerally(replica,subFins,sLi)
                     parent.financials.updatePart(replica)
@@ -536,17 +554,6 @@ class BusinessUnit(Tags,Equalities):
                     parent.financials.insert(L,replica)
                     parent.financials.buildDictionaries()
                     #Upgrade-S: move UpdatePart into spotGenerally
-        #
-        #right now, consolidate() only allows incrementation for perfect
-        #name symmetry: if unit1 has an unnamed informative lineitem with
-        #tags x,y, &z, that informative lineitem will be replicated with a
-        #constructed name. if unit2 then has an identically tagged unnamed
-        #lineitem (also with x,y, & z tags), the unit2 lineitem will **not**
-        #increment the lineitem created for unit1. the parent replica
-        #lineitem for unit1 will be named "Unit1: X,Y,Z". that name will not
-        #match the unnamed unit2 lineitem w identical tags. instead,
-        #consolidate() will copy data from unit2 into a lineitem named
-        #"Unit2: XYZ"
     
     def copy(self, enforce_rules=True):
         """
@@ -595,7 +602,7 @@ class BusinessUnit(Tags,Equalities):
         """
 
 
-        BusinessUnit.derive([*tagsToOmit]) -> None
+        BusinessUnit.derive() -> None
 
 
         Method for calculating the value of certain financials lineitems by
@@ -619,17 +626,19 @@ class BusinessUnit(Tags,Equalities):
         #lines appropriately. also need to make sure that inheritTagsFrom() does----------------------------------------------------------
         #not pick up blockingTags
         
-        for line in self.financials:
-            if tags_to_omit & set(line.allTags):
-                continue
-            key = line.name.casefold()
-            if key not in self.drivers:
-                continue
-            else:
-                line.clear()
-                matching_drivers = self.drivers.get_drivers(key)
-                for driver in matching_drivers:
-                    driver.workOnThis(line)
+        for statement in self.financials.path:
+            
+            for line in statement:
+                if tags_to_omit & set(line.allTags):
+                    continue
+                key = line.name.casefold()
+                if key not in self.drivers:
+                    continue
+                else:
+                    line.clear()
+                    matching_drivers = self.drivers.get_drivers(key)
+                    for driver in matching_drivers:
+                        driver.workOnThis(line)
                     
     def extrapolate_to(self,target):
         """
@@ -707,7 +716,7 @@ class BusinessUnit(Tags,Equalities):
         """
         return self.fill_out(*tagsToOmit)
     
-    def fill_out(self,*tagsToOmit):
+    def fill_out(self, *tagsToOmit):
         """
 
 
