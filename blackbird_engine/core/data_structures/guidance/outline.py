@@ -32,7 +32,7 @@ import time
 
 from .step import Step
 
-from ..modelling.statement import Statement as Financials
+from ..modelling.statement import Statement
 
 
 
@@ -70,7 +70,7 @@ class Outline(Step):
     set_attention_budget()      set attentionBudget to new value
     set_completion_rule()       attach a new completion rule to instance
     set_focal_point()           attach a pointer to the current focal point
-    set_path()                  set path to argument or empty Financials 
+    set_path()                  set path to argument or empty Statement 
     ==========================  ================================================
     """
     def __init__(self, name = None):
@@ -124,7 +124,7 @@ class Outline(Step):
         self.completion_rule = rule
 
         
-    def set_focal_point(self,fP):
+    def set_focal_point(self, fP):
         """
 
 
@@ -135,21 +135,20 @@ class Outline(Step):
         """
         self.focal_point = fP
 
-    def set_path(self, new_path = None):
+    def set_path(self, new_path=None):
         """
 
 
         Outline.build_path() -> None
 
 
-        Method sets instance.path to new_path or an empty Financials object.
+        Method sets instance.path to new_path or an empty Statement.
         Method always sets autoSummarize to False. 
         """
         if new_path:
             self.path = new_path
         else:
-            self.path = Financials(populate = False)
-        if self.path.autoSummarize:
-            self.path.autoSummarize = False
+            self.path = Statement()
+        self.path.autoSummarize = False
         
 
