@@ -328,7 +328,7 @@ class TimePeriod(Tags):
         #return container
         return result
                 
-    def register(bu, updateID=True, reset_directories=False):
+    def register(self, bu, updateID=True, reset_directories=False):
         """
 
 
