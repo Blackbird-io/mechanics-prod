@@ -86,6 +86,7 @@ class TimePeriod(Tags):
     ex_to_special()       starts w target copy, new content is seed.ex(target)
     get_units()           return list of units from bbid pool
     get_lowest_units()    return list of units w/o components from bbid pool
+    register()            conform and register unit
     set_content()         attach company to period
     ====================  ======================================================
     """
@@ -100,11 +101,11 @@ class TimePeriod(Tags):
         self.content = content
         self.id = ID()
         self.prior = None
-        #
-        #the current approach to indexing units within a period assumes that
-        #Blackbird will rarely remove existing units from a model. both
-        #the ``bu`` and ``ty`` directories are static: they do not know if
-        #the unit whose bbid they reference is no longer in their domain. 
+
+        # The current approach to indexing units within a period assumes that
+        # Blackbird will rarely remove existing units from a model. both
+        # The ``bu`` and ``ty`` directories are static: they do not know if
+        # the unit whose bbid they reference is no longer in their domain. 
 
     def __str__(self):
         dots = "*" * settings.SCREEN_WIDTH
@@ -326,7 +327,66 @@ class TimePeriod(Tags):
         #
         #return container
         return result
+                
+    def register(bu, updateID=True, reset_directories=False):
+        """
 
+
+        TimePeriod.register() -> None
+
+
+        Conform unit to period and add to directories.
+
+        If ``updateID`` is True, method will assign unit a new id in the
+        period's namespace. Parameter should be False when moving units
+        between scenarios.
+        
+        If ``reset_directories`` is True, method will clear existing type
+        and id directories. Parameter should be True when registering the
+        top (company) node of a structure. 
+        """
+        
+        bu._fit_to_period(self, recur=True)
+        # Update unit life.
+
+        if updateID:
+            bu._update_id(self.id.namespace, recur=True)
+        if not bu.id.bbid:
+            c = "Cannot add content without a valid bbid."
+            raise BBExceptions.IDError(c)
+        # Make sure unit has an id in the right namespace. 
+        
+        if reset_directories:
+            self._reset_directories()
+        bu._register_in_period(recur=True, overwrite=False)
+        # Register the unit.
+        
+    def set_content(self, bu, updateID=True):
+        """
+
+
+        TimePeriod.set_content() -> None
+
+
+        Register bu and set instance.content to point to it. 
+
+        NOTE: ``updateID`` should only be True when adding external content to
+        a model for the first time (as opposed to moving content from period to
+        period or level to level within a model).
+
+        TimePeriods in a Model all share the model's namespace_id. Accordingly,
+        a BusinessUnit will have the same bbid in all time periods. The
+        BusinessUnit can elect to get a different bbid if it's name changes, but
+        in such an event, the Model will treat it as a new unit altogether.
+        """
+        self.register(bu, updateID=updateID, reset_directories=True)
+        # Reset directories when setting the top node in the period.
+        self.content = bu
+
+    #*************************************************************************#
+    #                          NON-PUBLIC METHODS                             #
+    #*************************************************************************#
+    
     def _reset_directories(self):
         """
 
@@ -339,61 +399,7 @@ class TimePeriod(Tags):
         """
         self.bu_directory = {}
         self.ty_directory = {}
-
-##    def selectBottomUnits(self):
-##        """
-##
-##
-##        TimePeriod.selectBottomUnits() -> list
-##
-##
-##        **OBSOLETE**
-##
-##        Legacy interface. Delegates all work to get_lowest_units().
-##
-##        During delegration, method permits runs on empty pool to ensure
-##        that new results stay consistent with old ones for calls on instances
-##        with no registered units in the directory. 
-##        """
-##        result = self.get_lowest_units(run_on_empty = True)
-##        return result
-                
-    def set_content(self, bu, updateID=True):
-        """
-
-
-        TimePeriod.set_content() -> None
-
-
-        Method connects the bu to the instance and sets the bu as instance
-        content.
-
-        NOTE: ``updateID`` should only be True when adding external content to
-        a model for the first time (as opposed to moving content from period to
-        period or level to level within a model).
-
-        TimePeriods in a Model all share the model's namespace_id. Accordingly,
-        a BusinessUnit will have the same bbid in all time periods. The
-        BusinessUnit can elect to get a different bbid if it's name changes, but
-        in such an event, the Model will treat it as a new unit altogether.
-        """
-        bu._fit_to_period(self, recur=True)
-        #must fit bu to period before proceeding with analysis in case the bu
-        #is a raw shell that has never been assigned a bbid (ie at model start)
-        #bu.fitToPEriod(updateID= True) assigns the bu a valid bbid within the
-        #model namespace. this method can then proceed instead of rejecting
-        #perfectly reasonable content.
-        if updateID:
-            bu._update_id(self.id.namespace, recur=True)
-        if not bu.id.bbid:
-            c = "Cannot add content without a valid bbid."
-            raise BBExceptions.IDError(c)
         
-        self._reset_directories()
-        bu._register_in_period(overwrite=False)
-        #
-        self.content = bu
-    
     def _set_prior(self, prior_period):
         """
 
