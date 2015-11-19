@@ -562,11 +562,11 @@ class Statement(list, Tags, Equalities):
         #step 3: return the result container
         return result
 
-    def indexByName(self,name):
+    def indexByName(self, name):
         """
 
 
-        Financials.indexByName(name) -> int
+        Statement.indexByName() -> int
 
 
         Method returns index where first item with matching name is located in
@@ -588,11 +588,11 @@ class Statement(list, Tags, Equalities):
         i = spots[0]
         return i        
 
-    def inheritTags(self, recur = True):
+    def inheritTags(self, recur=True):
         """
 
 
-        Financials.inheritTags([recur = True]) -> None
+        Statement.inheritTags() -> None
 
 
         Method runs standard Tags routine and then inherits tags from every
@@ -612,258 +612,6 @@ class Statement(list, Tags, Equalities):
                 continue
             else:
                 self.inheritTagsFrom(line)
-
-    def _manage_summaries(self, *tagsToOmit):
-        """
-
-        Fins._manage_summaries(*tagsToOmit) -> None
-
-        This method maintains summary lines.
-        
-        The method evaluates whether a given detail-level lineitem has a summary
-        to increment. The method does not evaluate specific summary needs of
-        topLevel items. manageSummaries() also skips lineitems that carry
-        tagsToOmit.
-        
-        Algorithm:
-          1)  Iterate through a list that includes all items in the instance
-              except those with tagsToOmit.
-
-          2)  If the item is topLevel (its .partOf is in toplevelnames), no need
-              for summary, go on to next one. 
-
-          3)  If the item is detail, proceed to check whether it has a proper
-              summary to increment.
-
-          4)  To do so, aggregate lineitems in self that have the summaryTag.
-              Method refreshes this list of existing summaries every time it
-              encounters a detail line item to make sure that the summaries
-              include those inserted by manageSummaries() since last call. 
-        
-          5)  Check if any of the existing summaries is the proper summary for
-              the detail item. A proper summary is one whose name ends with
-              the .partOf value of the detail.
-
-          6)  If the detail does not match any existing summaries, create a
-              proper summary for it. Method creates an instance of lineitem,
-              tags it w a summaryTag, gives it a proper summary name.
-
-          7)  Place the new summary immediately prior to the next peer in
-              the hierarchy.
-
-        The summary precedes the first lineitem that is at the same level of the
-        hierarchy as its lineitem. That is, the summary follows all details of
-        the lineitem it summarizes, as well as their details. The method uses
-        instance.hierarchyMap to locate the proper insertion position. 
-        """
-        tagsToOmit = set(tagsToOmit)
-        tagsToOmit.add(summaryTag)
-        existingSummaries = self.build_custom_table([summaryTag])
-        for i in existingSummaries[summaryTag]:
-            summaryLine = self[i]
-            summaryLine.setValue(0,"update reset")
-        startingSelf = self[:]
-        #step through a slice because will do insertions
-        for L in startingSelf:
-            if L.partOf in self.topLevelNames:
-                continue
-            if set(L.allTags) & tagsToOmit != set():
-                continue
-            summaryName = self.SUMMARY_PREFIX + " " + L.partOf
-            summaryName = summaryName.casefold()
-            if summaryName in existingSummaries.keys():
-                continue
-            else:
-                #make and insert the summary lineitem
-                newSummary = LineItem(name = summaryName)
-                newSummary.tag(summaryTag,skipTag,field = "req")
-                self.build_tables()
-                tPlaces = list(self.dNames[L.partOf])
-                tPlaces.sort()
-                top = self[tPlaces[0]]
-                if top.parentObject:
-                    newSummary.setPartOf(top.parentObject)
-                else:
-                    newSummary.partOf = top.partOf
-                newSummary.inheritTagsFrom(L, *uninheritableTags)
-                self._map_hierarchy()
-                #insertion logic follows
-                #
-                #summary should go in before the first line with an H value that
-                #is lower than that of L; this line may be a peer or senior of
-                #L's parentObject
-                #
-                #for example, in situations where the parent object is the last
-                #detail of its own parent, the different between H values for L
-                #and the next superior line is 2 or more.
-                #
-                #find L in self (**not** startingSelf - location could be
-                #arbitrarily different due to prior insertions)
-                spots_L = list(self.dNames[L.name])
-                spots_L.sort()
-                iL = spots_L[0]
-                hL = self.hierarchyMap[iL]
-                j = None
-                rightMap = self.hierarchyMap[(iL+1):]
-                for spot in range(len(rightMap)):
-                    newH = rightMap[spot]
-                    if newH < hL:
-                        j = spot+(iL+1)
-                        break
-                    else:
-                        continue
-                else:
-                    j = len(self.hierarchyMap)
-                #if this doesnt work, can try finding all senior Hs and running
-                # a min on the list, though that seems like overkill
-                self.insert(j, newSummary)
-                existingSummaries = self.build_custom_table([summaryTag])
-                continue
-        self.dSummaries = existingSummaries
-        #Upgrade: summarize unlabelled line items from subs
-                         
-    def manageDropDownReplicas(self,
-                               *tagsToOmit,
-                               signature = Globals.signatures["Financials.manageDropDownReplicas"],
-                               trace = False):
-        """
-        This method inserts and updates dropDownReplicas for items that do not have any tagsToOmit.
-        
-        dropDownReplicas are necessary for lineitems that have both
-            i)  a specified (non-None) value and
-            ii) detail lineitems. 
-
-        dropDownReplicas start out as deep copies of the top they represent.
-        dropDownReplicas then become partOf the top and store the top's value.
-        Once the replica inherits the top's original value, the method resets the top's value to zero.
-        Following the insertion of a replica, each call to this method increments the replica by the new value in the top.
-        The method also causes the replica to inherit any new tags from the top.
-        To maintain tag symmetry between top and replica, the method copies all non-individual tags (including doNotExtrapolate).
-        The method then resets the top to zero again.
-
-        Replicas are the first detail of their top.
-        As such, replicas follow directly to the right of the top.
-
-        Replicas are tagged with the dropDownReplicaTag.
-
-        A replica is the first detail of its top.
-        A replica therefore triggers the creation of a summary by other methods. 
-        That said, replicas only exist where other details already do.
-        Therefore, the presence of a replica makes the insertion of a summary occur earlier than it would otherwise.
-        The presence of a replica never causes the insertion of a summary where it wouldn't otherwise exist.
-
-        NOTE: The above logic and this method assumes that any existing replica is the only replica for its top.
-        This method does NOT check for the existence of duplicate replicas.
-        If more than one replica exists for a top, the method may generate errors during updates by only working with the first.
-
-        ASSUMPTION: SELF IS WELL-ORDERED
-        By default (fullReview = False), the method assumes that self is well-ordered.
-        Specifically, this assumption means:
-            i)  if an item does not have a detail immediately to its right, it has no details, and
-            ii) if an item does not have a replica as its first detail (immediately to its right), it has no replica.
-
-        Setting the fullReview parameter to True causes the method to operate without this assumption.
-
-        In fullReview mode, the method searches the entire self for any details and replicas of a given lineitem.
-        If the method finds any details away from the right-hand spot, it determines that the assumption is incorrect.
-        The method then checks whether any of the details is in fact a replica.
-        The method increments the first detail that turns out to be a replica by the value of the top.
-        
-        fullReview mode does not check for the presence of duplicate replicas. 
-
-        If a replica does not exist for a detailed, value-specified top, the method creates and inserts one.
-
-        If trace is set to True, the method returns a tuple of (bool, [l1], [l2]):
-            -- bool is False if the method locates details that do not border their top; it is True otherwise
-            -- l1 is a list of new replicas the method inserted
-            -- l2 is a list of existing replicas the method incremented
-        NOTE: trace is most informative when fullReview is enabled. Otherwise, bool will always be True. 
-
-        PROTOCOL:
-        i)   iterate through self by index
-
-        ii)  if an index has tagsToOmit, skip to next lineitem
-
-        iii) for all other lineitems, check if lineitem at i+1 is a detail of i
-        Check if lineitem's name is the same as its right-hand neighbor's partOf
-        If fullReview is enabled, build a list of any other details of the lineitem in self
-
-        iv)  check if first detail is a replica
-        Check if detail.name is the same as item.name.
-        If it is not and fullReview is enabled, check if any other details are replicas.
-
-        v)   if a replica exists, increment it by the value of the top and absorb top's tags.
-        The method then sets the top's value to zero.
-
-        vi)  if a replica does not exist and the current method has a value != None, method creates a replica.
-        The method creates a deep copy of the top.
-        The method sets the copy's partOf to the top and then tags the copy with the dropDownReplicaTag.
-        The method sets the value of the top to zero.
-        The method inserts the replica immediately to the right of the current top.
-        """
-        #this method inserts objects into a list, so walk through a fixed copy
-        # of this list. if a line is eligible, check if it has a replica. if it
-        #does, increment the replica by the line's value, then zero the line.
-        #if the line doesn't have a replica, insert one.
-        fixed_order = self[:]
-        fixed_count = len(fixed_order)
-        off_set = 0
-        for position in range(0, (fixed_count-1)):
-            line = fixed_order[position]
-            neighbor = fixed_order[position+1]
-            existing_replica = None
-            first_detail = None
-            #0) kick out lines that dont have a value
-            if line.value is None:
-                continue
-            #1) kick out lines that dont have details
-            if neighbor.partOf == line.name:
-                first_detail = neighbor
-            else:
-                continue
-            #2) kick out lines that we have to explicitly omit
-            if set(tagsToOmit) & set(line.allTags) != set():
-                continue
-            #3) kick out replicas themselves
-            if (line.name == line.partOf 
-                or dropDownReplicaTag in line.allTags):
-                continue
-            #
-            if first_detail.name == line.name:
-                existing_replica = first_detail
-                #detail has the same name as line, detail is a replica
-            if existing_replica:
-                #if replica exists, increment it by line value. 
-                f3 = ParsingTools.valueReplacer
-                new_value = f3(existing_replica.value, 0, None) + line.value
-                #update replica signature block to exactly match the top
-                existing_replica.modifiedBy = copy.copy(line.modifiedBy)
-                existing_replica.setValue(new_value, signature)
-                existing_replica.inheritTagsFrom(line, None)
-                #when calling inherit on a replica, override defaults and
-                #copy as much as possible. passing in None results in
-                #doNotInherit = (None,)
-                if not dropDownReplicaTag in existing_replica.allTags:
-                    existing_replica.tag(dropDownReplicaTag)
-                line.setValue(0,signature)
-                continue
-            else: 
-                #line needs a replica. create and insert one. 
-                new_replica = LineItem.copy(line, enforce_rules = False)
-                #call LineItem.copy() method through class for clarity
-                #keep enforce_rules False so that both drop down replica and
-                #the original lineItem retain all tags (including those not
-                #inheritable ``out``, like specialTag).
-                new_replica.tag(dropDownReplicaTag)
-                new_replica.setPartOf(line)
-                if new_replica.value == line.value:
-                    #check that replica picked up value before zeroing original 
-                    line.setValue(0,signature)
-                else:
-                    c = "replica value does not equal line."
-                    raise BBExceptions.IOPMechanicalError(c, line, new_replica)
-                self.insert(position + off_set + 1, new_replica)
-                off_set = off_set + 1
     
     def matchBookMark(self,refBookMark,doubleCheck = True):
         """
@@ -1169,7 +917,7 @@ class Statement(list, Tags, Equalities):
         if tagsToOmit == tuple():
             tagsToOmit = [bookMarkTag.casefold()]
         #pass in elements of tagsToOmit individually
-        self.manageDropDownReplicas(*tagsToOmit)
+        self._manage_replicas(*tagsToOmit)
         self._manage_summaries(*tagsToOmit)
         self._update_summaries(*tagsToOmit)
 
@@ -1183,26 +931,6 @@ class Statement(list, Tags, Equalities):
         Method switches self.contextualFormatting to its boolean opposite.
         """
         self.contextualFormatting = not self.contextualFormatting
-
-    def _update_part(self, refLine):
-        """
-
-
-        Statement._update_part() -> None
-
-
-        Method sets refLine's partOf to a suitable parent (matching by name)
-        in the instance. If no suitable parent exists, sets refLine to be a top
-        level item.
-        """
-        refPart = copy.copy(refLine.partOf)
-        if refPart in self.dNames.keys():
-            places = list(self.dNames[refPart])
-            places.sort()
-            top = self[places[-1]]
-            refLine.setPartOf(top)
-        else:
-            refLine.setPartOf(self)
 
     def increment(self, lines, *tagsToOmit, refresh=False, signature=None):
         """
@@ -1512,6 +1240,264 @@ class Statement(list, Tags, Equalities):
             self.hierarchyGroups = secondHierarchy
         return result
 
+    def _manage_replicas(self, *tagsToOmit,
+                         signature=Globals.signatures["Financials.manageDropDownReplicas"],
+                         trace=False):
+        """
+
+
+        Statement._manage_replicas() -> None
+
+        
+        This method inserts and updates dropDownReplicas for items that do not have any tagsToOmit.
+        
+        dropDownReplicas are necessary for lineitems that have both
+            i)  a specified (non-None) value and
+            ii) detail lineitems. 
+
+        dropDownReplicas start out as deep copies of the top they represent.
+        dropDownReplicas then become partOf the top and store the top's value.
+        Once the replica inherits the top's original value, the method resets the top's value to zero.
+        Following the insertion of a replica, each call to this method increments the replica by the new value in the top.
+        The method also causes the replica to inherit any new tags from the top.
+        To maintain tag symmetry between top and replica, the method copies all non-individual tags (including doNotExtrapolate).
+        The method then resets the top to zero again.
+
+        Replicas are the first detail of their top.
+        As such, replicas follow directly to the right of the top.
+
+        Replicas are tagged with the dropDownReplicaTag.
+
+        A replica is the first detail of its top.
+        A replica therefore triggers the creation of a summary by other methods. 
+        That said, replicas only exist where other details already do.
+        Therefore, the presence of a replica makes the insertion of a summary occur earlier than it would otherwise.
+        The presence of a replica never causes the insertion of a summary where it wouldn't otherwise exist.
+
+        NOTE: The above logic and this method assumes that any existing replica is the only replica for its top.
+        This method does NOT check for the existence of duplicate replicas.
+        If more than one replica exists for a top, the method may generate errors during updates by only working with the first.
+
+        ASSUMPTION: SELF IS WELL-ORDERED
+        By default (fullReview = False), the method assumes that self is well-ordered.
+        Specifically, this assumption means:
+            i)  if an item does not have a detail immediately to its right, it has no details, and
+            ii) if an item does not have a replica as its first detail (immediately to its right), it has no replica.
+
+        Setting the fullReview parameter to True causes the method to operate without this assumption.
+
+        In fullReview mode, the method searches the entire self for any details and replicas of a given lineitem.
+        If the method finds any details away from the right-hand spot, it determines that the assumption is incorrect.
+        The method then checks whether any of the details is in fact a replica.
+        The method increments the first detail that turns out to be a replica by the value of the top.
+        
+        fullReview mode does not check for the presence of duplicate replicas. 
+
+        If a replica does not exist for a detailed, value-specified top, the method creates and inserts one.
+
+        If trace is set to True, the method returns a tuple of (bool, [l1], [l2]):
+            -- bool is False if the method locates details that do not border their top; it is True otherwise
+            -- l1 is a list of new replicas the method inserted
+            -- l2 is a list of existing replicas the method incremented
+        NOTE: trace is most informative when fullReview is enabled. Otherwise, bool will always be True. 
+
+        PROTOCOL:
+        i)   iterate through self by index
+
+        ii)  if an index has tagsToOmit, skip to next lineitem
+
+        iii) for all other lineitems, check if lineitem at i+1 is a detail of i
+        Check if lineitem's name is the same as its right-hand neighbor's partOf
+        If fullReview is enabled, build a list of any other details of the lineitem in self
+
+        iv)  check if first detail is a replica
+        Check if detail.name is the same as item.name.
+        If it is not and fullReview is enabled, check if any other details are replicas.
+
+        v)   if a replica exists, increment it by the value of the top and absorb top's tags.
+        The method then sets the top's value to zero.
+
+        vi)  if a replica does not exist and the current method has a value != None, method creates a replica.
+        The method creates a deep copy of the top.
+        The method sets the copy's partOf to the top and then tags the copy with the dropDownReplicaTag.
+        The method sets the value of the top to zero.
+        The method inserts the replica immediately to the right of the current top.
+        """
+        #this method inserts objects into a list, so walk through a fixed copy
+        # of this list. if a line is eligible, check if it has a replica. if it
+        #does, increment the replica by the line's value, then zero the line.
+        #if the line doesn't have a replica, insert one.
+        fixed_order = self[:]
+        fixed_count = len(fixed_order)
+        off_set = 0
+        for position in range(0, (fixed_count-1)):
+            line = fixed_order[position]
+            neighbor = fixed_order[position+1]
+            existing_replica = None
+            first_detail = None
+            #0) kick out lines that dont have a value
+            if line.value is None:
+                continue
+            #1) kick out lines that dont have details
+            if neighbor.partOf == line.name:
+                first_detail = neighbor
+            else:
+                continue
+            #2) kick out lines that we have to explicitly omit
+            if set(tagsToOmit) & set(line.allTags) != set():
+                continue
+            #3) kick out replicas themselves
+            if (line.name == line.partOf 
+                or dropDownReplicaTag in line.allTags):
+                continue
+            #
+            if first_detail.name == line.name:
+                existing_replica = first_detail
+                #detail has the same name as line, detail is a replica
+            if existing_replica:
+                #if replica exists, increment it by line value. 
+                f3 = ParsingTools.valueReplacer
+                new_value = f3(existing_replica.value, 0, None) + line.value
+                #update replica signature block to exactly match the top
+                existing_replica.modifiedBy = copy.copy(line.modifiedBy)
+                existing_replica.setValue(new_value, signature)
+                existing_replica.inheritTagsFrom(line, None)
+                #when calling inherit on a replica, override defaults and
+                #copy as much as possible. passing in None results in
+                #doNotInherit = (None,)
+                if not dropDownReplicaTag in existing_replica.allTags:
+                    existing_replica.tag(dropDownReplicaTag)
+                line.setValue(0,signature)
+                continue
+            else: 
+                #line needs a replica. create and insert one. 
+                new_replica = LineItem.copy(line, enforce_rules = False)
+                #call LineItem.copy() method through class for clarity
+                #keep enforce_rules False so that both drop down replica and
+                #the original lineItem retain all tags (including those not
+                #inheritable ``out``, like specialTag).
+                new_replica.tag(dropDownReplicaTag)
+                new_replica.setPartOf(line)
+                if new_replica.value == line.value:
+                    #check that replica picked up value before zeroing original 
+                    line.setValue(0,signature)
+                else:
+                    c = "replica value does not equal line."
+                    raise BBExceptions.IOPMechanicalError(c, line, new_replica)
+                self.insert(position + off_set + 1, new_replica)
+                off_set = off_set + 1
+                
+    def _manage_summaries(self, *tagsToOmit):
+        """
+
+
+        Statement._manage_summaries() -> None
+
+
+        This method maintains summary lines.
+        
+        The method evaluates whether a given detail-level lineitem has a summary
+        to increment. The method does not evaluate specific summary needs of
+        topLevel items. manageSummaries() also skips lineitems that carry
+        tagsToOmit.
+        
+        Algorithm:
+          1)  Iterate through a list that includes all items in the instance
+              except those with tagsToOmit.
+
+          2)  If the item is topLevel (its .partOf is in toplevelnames), no need
+              for summary, go on to next one. 
+
+          3)  If the item is detail, proceed to check whether it has a proper
+              summary to increment.
+
+          4)  To do so, aggregate lineitems in self that have the summaryTag.
+              Method refreshes this list of existing summaries every time it
+              encounters a detail line item to make sure that the summaries
+              include those inserted by manageSummaries() since last call. 
+        
+          5)  Check if any of the existing summaries is the proper summary for
+              the detail item. A proper summary is one whose name ends with
+              the .partOf value of the detail.
+
+          6)  If the detail does not match any existing summaries, create a
+              proper summary for it. Method creates an instance of lineitem,
+              tags it w a summaryTag, gives it a proper summary name.
+
+          7)  Place the new summary immediately prior to the next peer in
+              the hierarchy.
+
+        The summary precedes the first lineitem that is at the same level of the
+        hierarchy as its lineitem. That is, the summary follows all details of
+        the lineitem it summarizes, as well as their details. The method uses
+        instance.hierarchyMap to locate the proper insertion position. 
+        """
+        tagsToOmit = set(tagsToOmit)
+        tagsToOmit.add(summaryTag)
+        existingSummaries = self.build_custom_table([summaryTag])
+        for i in existingSummaries[summaryTag]:
+            summaryLine = self[i]
+            summaryLine.setValue(0,"update reset")
+        startingSelf = self[:]
+        #step through a slice because will do insertions
+        for L in startingSelf:
+            if L.partOf in self.topLevelNames:
+                continue
+            if set(L.allTags) & tagsToOmit != set():
+                continue
+            summaryName = self.SUMMARY_PREFIX + " " + L.partOf
+            summaryName = summaryName.casefold()
+            if summaryName in existingSummaries.keys():
+                continue
+            else:
+                #make and insert the summary lineitem
+                newSummary = LineItem(name = summaryName)
+                newSummary.tag(summaryTag,skipTag,field = "req")
+                self.build_tables()
+                tPlaces = list(self.dNames[L.partOf])
+                tPlaces.sort()
+                top = self[tPlaces[0]]
+                if top.parentObject:
+                    newSummary.setPartOf(top.parentObject)
+                else:
+                    newSummary.partOf = top.partOf
+                newSummary.inheritTagsFrom(L, *uninheritableTags)
+                self._map_hierarchy()
+                #insertion logic follows
+                #
+                #summary should go in before the first line with an H value that
+                #is lower than that of L; this line may be a peer or senior of
+                #L's parentObject
+                #
+                #for example, in situations where the parent object is the last
+                #detail of its own parent, the different between H values for L
+                #and the next superior line is 2 or more.
+                #
+                #find L in self (**not** startingSelf - location could be
+                #arbitrarily different due to prior insertions)
+                spots_L = list(self.dNames[L.name])
+                spots_L.sort()
+                iL = spots_L[0]
+                hL = self.hierarchyMap[iL]
+                j = None
+                rightMap = self.hierarchyMap[(iL+1):]
+                for spot in range(len(rightMap)):
+                    newH = rightMap[spot]
+                    if newH < hL:
+                        j = spot+(iL+1)
+                        break
+                    else:
+                        continue
+                else:
+                    j = len(self.hierarchyMap)
+                #if this doesnt work, can try finding all senior Hs and running
+                # a min on the list, though that seems like overkill
+                self.insert(j, newSummary)
+                existingSummaries = self.build_custom_table([summaryTag])
+                continue
+        self.dSummaries = existingSummaries
+        #Upgrade: summarize unlabelled line items from subs
+        
     def _map_hierarchy(self):
         """
 
@@ -1549,11 +1535,32 @@ class Statement(list, Tags, Equalities):
             c = "map does not properly reflect hierarchy"
             raise BBExceptions.IOPMechanicalError()
 
+    def _update_part(self, refLine):
+        """
+
+
+        Statement._update_part() -> None
+
+
+        Method sets refLine's partOf to a suitable parent (matching by name)
+        in the instance. If no suitable parent exists, sets refLine to be a top
+        level item.
+        """
+        refPart = copy.copy(refLine.partOf)
+        if refPart in self.dNames.keys():
+            places = list(self.dNames[refPart])
+            places.sort()
+            top = self[places[-1]]
+            refLine.setPartOf(top)
+        else:
+            refLine.setPartOf(self)
+
+
     def _update_summaries(self, *tagsToOmit, refresh=False):
         """
 
 
-        Fins._update_summaries() -> None
+        Statement._update_summaries() -> None
 
 
         For each line without a bad tag, method increments the name-appropriate
@@ -1606,4 +1613,5 @@ class Statement(list, Tags, Equalities):
                 raise BBExceptions.HierarchyError(c)
         if refresh:
             self.dSummaries = existingSummaries
+        
 
