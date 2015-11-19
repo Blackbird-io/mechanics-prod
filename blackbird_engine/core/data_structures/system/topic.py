@@ -290,12 +290,12 @@ class Topic:
         increments. Checks containers for both cased and casefolded versions of
         the line name.
 
-        Method expects each record container to support build_index(). 
+        Method expects each record container to support build_tables(). 
         """
         if self.work_plan != {}:
             for C in self.record_containers:
                 if C:
-                    C.build_index()
+                    C.build_tables()
                     for (lineName,contribution) in self.work_plan.items():
                         if lineName in C.dNames.keys():
                             spots_name = C.dNames[lineName]

@@ -168,7 +168,7 @@ def sub_scenario_1a(topic):
         # For backwards compatibility, point ``fins`` directly to income
         # statement.
         
-        fins.build_index()
+        fins.build_tables()
         cost = "cost"
         cogs = "cogs"
         if cost in fins.dNames.keys():

@@ -70,7 +70,7 @@ def func(line, business_unit, data, driver_signature):
     fins = bu.financials.income
     # Update pointer, keep legacy naming.
     fins.summarize()
-    fins.build_index()
+    fins.build_tables()
     summaryPrefix = fins.SUMMARY_PREFIX
     rev = "revenue"
     cogs = "cogs"
