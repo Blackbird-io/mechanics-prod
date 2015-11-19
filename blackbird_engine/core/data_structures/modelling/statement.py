@@ -1696,10 +1696,8 @@ class Statement(list, Tags, Equalities):
             # later. 
             line = lines[i]
 
-            # Skip uninformative lines
+            # Skip uninformative or bad lines
             if not line.name:
-                continue
-            if line.value is None:
                 continue
             if set(tagsToOmit) & set(line.allTags):
                 # Line has tags we want to omit
@@ -1713,6 +1711,10 @@ class Statement(list, Tags, Equalities):
             
             if line.name in self.dNames:
                 # Option A: increment an existing line
+
+                if line.value is None:
+                    continue
+                
                 j = max(self.dNames[line.name])
                 existing_line = self[j]
                 
@@ -1729,8 +1731,11 @@ class Statement(list, Tags, Equalities):
                 # Option B: copy the line into instance
                 new_line = line.replicate()
                 
-                if tConsolidated not in new_line.allTags:
-                    new_line.tag(tConsolidated)
+                if line.value is not None:
+                    if tConsolidated not in new_line.allTags:
+                        new_line.tag(tConsolidated)
+                    # Pick up lines with None values, but don't tag them. We
+                    # want to allow derive to write to these if necessary.
 
                 i = self._spot_generally(new_line, lines, i)
                 self._update_part(new_line)

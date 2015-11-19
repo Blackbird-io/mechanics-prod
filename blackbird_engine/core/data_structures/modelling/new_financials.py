@@ -72,10 +72,17 @@ class Financials:
             if statement:
                 statement.build_index(*tagsToOmit)
 
+    def reset(self):
+        for statement in self.ordered:
+            if statement:
+                statement.reset()
+
     def summarize(self, *tagsToOmit):
         for statement in self.ordered:
             if statement:
                 statement.summarize(*tagsToOmit)
+
+    ### can probably just delegate unspecified methods generically
             
     def __str__(self):
         """
