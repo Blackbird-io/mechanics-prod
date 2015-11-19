@@ -67,10 +67,11 @@ def func(line, business_unit, data, driver_signature):
     [no external data necessary]    
     """
     bu = business_unit
-    fins = bu.financials
+    fins = bu.financials.income
+    # Update pointer, keep legacy naming.
     fins.summarize()
-    fins.buildDictionaries()
-    summaryPrefix = fins.summaryPrefix
+    fins.build_index()
+    summaryPrefix = fins.SUMMARY_PREFIX
     rev = "revenue"
     cogs = "cogs"
     cost = "cost"

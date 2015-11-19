@@ -106,16 +106,6 @@ class Statement(list, Tags, Equalities):
     copy()                returns deep copy
     indexByName()         builds dictionaries, searches for name
     resetDictionaries()   
-    
-    find_peer_or_senior() returns index of first line w eq or greater hierarchy
-    findNextBookMark()
-    findNextPeer()
-    
-    setBookMarks()        
-    
-    spotByBookMark()
-    spotGenerally()
-    spot_in_tree()        locates insertion index in tree of parent names
     toggleContextualFormatting()
     ====================  ======================================================
     """
@@ -124,11 +114,11 @@ class Statement(list, Tags, Equalities):
     # support tracing.
 
     _LABEL_MISFIT = "MISFIT"
-    _SUMMARY_PREFIX = "TOTAL"
 
     _INDENT = 2
 
     SIGNATURE_FOR_INCREMENTATION = "Incremented "
+    SUMMARY_PREFIX = "TOTAL"
     
     def __init__(self, name=None):
         list.__init__(self)
@@ -626,9 +616,9 @@ class Statement(list, Tags, Equalities):
         detail lines, however, the method does not try to set line.parentObject
         to anything other than the default value for that line.copy().
 
-        To remedy, run updatePart() on every line in the result. Make sure to
-        update dictionaries every time, or manually enter the new part in
-        instance.dParts
+        Can remedy by running updatePart() on every line in the result. Make
+        sure to update dictionaries every time, or manually enter the new part
+        in instance.dParts.
         """
         result = Tags.copy(self,enforce_rules)
         #Tags.copy returns a shallow copy of the instance w deep copies
@@ -771,7 +761,7 @@ class Statement(list, Tags, Equalities):
                 continue
             else:
                 #insert lines that are special, hardcoded, or do_not_touch
-                i_result = result.spotGenerally(line,alt_target,i_target)
+                i_result = result._spot_generally(line,alt_target,i_target)
                 r_line = line.copy(enforce_rules = False)
                 result.insert(i,r_line)
         #
@@ -1094,7 +1084,7 @@ class Statement(list, Tags, Equalities):
                 continue
             if set(L.allTags) & tagsToOmit != set():
                 continue
-            summaryName = self._SUMMARY_PREFIX + " " + L.partOf
+            summaryName = self.SUMMARY_PREFIX + " " + L.partOf
             summaryName = summaryName.casefold()
             if summaryName in existingSummaries.keys():
                 continue
@@ -1389,11 +1379,11 @@ class Statement(list, Tags, Equalities):
                 L = self.spotByBookMark(refFins,refBMi)
         return L
 
-    def spotGenerally(self,refLine,refFins,refIndex):
+    def _spot_generally(self, refLine, refFins, refIndex):
         """
 
 
-        F.spotGenerally(refLine,refFins,refIndex) -> int
+        Statement._spot_generally() -> int
 
 
         Method returns the positive integer index (``L``) prior to which the
@@ -1609,6 +1599,26 @@ class Statement(list, Tags, Equalities):
         """
         self.contextualFormatting = not self.contextualFormatting
 
+    def _update_part(self, refLine):
+        """
+
+
+        Statement._update_part() -> None
+
+
+        Method sets refLine's partOf to a suitable parent (matching by name)
+        in the instance. If no suitable parent exists, sets refLine to be a top
+        level item.
+        """
+        refPart = copy.copy(refLine.partOf)
+        if refPart in self.dNames.keys():
+            places = list(self.dNames[refPart])
+            places.sort()
+            top = self[places[-1]]
+            refLine.setPartOf(top)
+        else:
+            refLine.setPartOf(self)
+
     def _update_summaries(self, *tagsToOmit, refresh=False):
         """
 
@@ -1645,7 +1655,7 @@ class Statement(list, Tags, Equalities):
                 continue
             if set(L.allTags) & tagsToOmit != set():
                 continue
-            summaryName = self._SUMMARY_PREFIX + " " + L.partOf
+            summaryName = self.SUMMARY_PREFIX + " " + L.partOf
             summaryName = summaryName.casefold(
                 )
             try:
@@ -1667,7 +1677,7 @@ class Statement(list, Tags, Equalities):
         if refresh:
             self.dSummaries = existingSummaries
 
-    def increment(self, lines, tags_to_omit, refresh=False, signature=None):
+    def increment(self, lines, *tagsToOmit, refresh=False, signature=None):
         """
 
         may be call this guy "increment"?
@@ -1675,9 +1685,8 @@ class Statement(list, Tags, Equalities):
         drops nameless lines? or can be control
         ``tags_to_omit`` should be a set of tags for speed
         """
-        suffix = "for Unit %s" % unit.name
         if refresh:
-            self._build_index()
+            self.build_index()
 
         if signature is None:
             signature = self.SIGNATURE_FOR_INCREMENTATION
@@ -1685,14 +1694,14 @@ class Statement(list, Tags, Equalities):
         for i in range(len(lines)):
             # Walk through indeces because we may need them for positioning
             # later. 
-            line = source[i]
+            line = lines[i]
 
             # Skip uninformative lines
             if not line.name:
                 continue
             if line.value is None:
                 continue
-            if tags_to_omit & set(line.allTags):
+            if set(tagsToOmit) & set(line.allTags):
                 # Line has tags we want to omit
                 continue
 
@@ -1710,7 +1719,7 @@ class Statement(list, Tags, Equalities):
                 starting_value = existing_line.value or 0
                 # Replace ``None`` with 0
                 new_value = starting_value + line.value
-                existing_line.set_value(new_value, signature)
+                existing_line.setValue(new_value, signature)
                 
                 existing_line.inheritTagsFrom(line)
                 if tConsolidated not in existing_line.allTags:
@@ -1718,7 +1727,7 @@ class Statement(list, Tags, Equalities):
                     
             else:
                 # Option B: copy the line into instance
-                new_line = line.replicate(compIndex=unit_index)
+                new_line = line.replicate()
                 
                 if tConsolidated not in new_line.allTags:
                     new_line.tag(tConsolidated)
@@ -1726,6 +1735,6 @@ class Statement(list, Tags, Equalities):
                 i = self._spot_generally(new_line, lines, i)
                 self._update_part(new_line)
                 self.insert(i, new_line)
-                self._build_index()
+                self.build_index()
                 # Always build index after inserting something
 
