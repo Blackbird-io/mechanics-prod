@@ -745,11 +745,9 @@ class BusinessUnit(Tags,Equalities):
         else:            
             self.financials = Financials()
 
-
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
-
 
     def _fit_to_period(self, time_period, recur=True):
         """
