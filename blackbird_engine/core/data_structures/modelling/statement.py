@@ -207,7 +207,7 @@ class Statement(list, Tags, Equalities):
         In the event an instance contains two sets of lines whose names match
         the ancestor tree, method will add line to the first such structure. 
 
-        Method delegates recursive location work to Financials.spot_in_tree().
+        Method delegates recursive location work to Financials._spot_in_tree().
 
         Method will raise KeyError if instance does not contain the
         ancestor_tree structure in full.
@@ -244,7 +244,7 @@ class Statement(list, Tags, Equalities):
             if line.name in self.dNames:
                 raise BBExceptions.BBAnalyticalError()
         
-        i, j, parent = self.spot_in_tree(*ancestor_tree)
+        i, j, parent = self._spot_in_tree(*ancestor_tree)
         line.setPartOf(parent)
         self.insert(j, line)
         #
@@ -636,111 +636,6 @@ class Statement(list, Tags, Equalities):
         self._clear_tables()
         self.hierarchyMap = None
         self.hierarchyGroups = None
-                
-    def spotByBookMark(self,refFins,refIndex):
-        """
-
-
-        Fins.spotByBookMark(refFins,refIndex) -> int
-
-
-        Method returns an integer index (``L``) of the location where an object
-        should be inserted based into self based on the bookMarks that
-        surround it in refFins.
-
-        L is always suitable for list.insert(L,obj). 
-
-        Method returns the index of the first bookMark that is both in refFins
-        and in self. If no such bookMark is found, L == -1.
-        """
-        L = None
-        refBMi = self._find_next_book_mark(refFins, refIndex)
-        if refBMi == -1:
-            L = len(self)
-            #no more bookmarks in refFins, spot is end of self
-        else:
-            refMark = refFins[refBMi]
-            try:
-                L = self._match_book_mark(refMark)
-            except BookMarkError:
-                #self missing the first bookmark found in refFins after
-                #refIndex; find next bookMark, try that
-                L = self.spotByBookMark(refFins,refBMi)
-        return L
-
-    def _spot_generally(self, refLine, refFins, refIndex):
-        """
-
-
-        Statement._spot_generally() -> int
-
-
-        Method returns the positive integer index (``L``) prior to which the
-        line at refFins[refIndex] should be inserted into self.
-        """
-        refPart = refLine.partOf
-        if refPart in self.topLevelNames:
-            L = self.spotByBookMark(refFins,refIndex)
-            return L
-        else:
-            try:
-                #check if line is partOf something in self
-                places = self.dNames[refPart]
-                #places is a set of positions; to get last position, find
-                #largest value in set
-                ref_spot = max(places)
-                self._map_hierarchy()
-                L = self._find_peer_or_senior(ref_spot)
-            except KeyError:
-                #line.partOf not in self.fins.dNames;
-                #place based on bookmarks
-                L = self.spotByBookMark(refFins,refIndex)
-            finally:
-                return L
-
-    def spot_in_tree(self, *ancestor_tree, start = None, end = None):
-        """
-
-
-        Financials.spot_in_tree(*ancestor_tree
-           [, l_bound = None[, r_bound = None]]) -> (i, j, parent)
-
-
-        Method locates a position in index ``j`` that represents the last line
-        in the most junior member of the ancestor_tree. The ``parent`` is that
-        most junior member. ``i`` is the parent's location.
-
-        Inserting an object into instance at j will append it to the most junior
-        member of the ancestor_tree.
-
-        Method expects:
-
-        -- ``ancestor tree`` to be a tuple of 1+ strings that match the names of
-           lines in instance,
-        -- ``start`` to be the starting index for a search, and
-        -- ``end`` to be the ending index for a search.
-
-        Method will raise a KeyError if instance[start, end] does not contain
-        the ancestor_tree structure.
-
-        Method will raise an error if ancestor_tree is blank on the first call.
-        """
-        i = start
-        j = end
-        parent = self
-        if not ancestor_tree:
-            raise ErrorOfSomeSort #? #return (l_bound, r_bound, self)?
-        if ancestor_tree:
-            parent_name = ancestor_tree[0]
-        i = self.indexByName(parent_name)
-        parent = self[i]
-        j = self._find_peer_or_senior(i)
-        descendants = ancestor_tree[1:]
-        if descendants:
-            i, j, parent = self.spot_in_tree(*descendants,
-                                             start = i,
-                                             end = j)
-        return (i, j, parent)
     
     def summarize(self, *tagsToOmit):
         """
@@ -1531,6 +1426,109 @@ class Statement(list, Tags, Equalities):
             else:
                 raise BBExceptions.BookMarkError
 
+    def _spot_by_book_mark(self, container, index):
+        """
+
+
+        Statement._spot_by_book_mark() -> int
+        
+
+        L is always suitable for list.insert(L,obj). 
+
+        Method returns the index of the first bookMark that is both in container
+        and in self. If no such bookMark is found, L == -1.
+        """
+        L = None
+        i = self._find_next_book_mark(container, index)
+        if i == -1:
+            L = len(self)
+            # No more bookmarks in refFins, spot is end of instance.
+        else:
+            ref_mark = container[i]
+            try:
+                L = self._match_book_mark(ref_mark)
+            except BookMarkError:
+                #self missing the first bookmark found in refFins after
+                #refIndex; find next bookMark, try that
+                L = self._spot_by_book_mark(container, ref_mark)
+        return L
+
+    def _spot_generally(self, line, container, index):
+        """
+
+
+        Statement._spot_generally() -> int
+
+
+        Method returns the positive integer index (``L``) prior to which the
+        line at container[index] should be inserted into this instance.
+
+        NOTE: Method requires index parameter to expedite analysis.
+        """
+        refPart = line.partOf
+        if refPart in self.topLevelNames:
+            L = self._spot_by_book_mark(container, index)
+            return L
+        else:
+            try:
+                #check if line is partOf something in self
+                places = self.dNames[refPart]
+                #places is a set of positions; to get last position, find
+                #largest value in set
+                ref_spot = max(places)
+                self._map_hierarchy()
+                L = self._find_peer_or_senior(ref_spot)
+                
+            except KeyError:
+                #line.partOf not in self.fins.dNames;
+                #place based on bookmarks
+                L = self._spot_by_book_mark(container, index)
+            finally:
+                return L
+
+    def _spot_in_tree(self, *ancestor_tree, start=None, end=None):
+        """
+
+
+        Statement._spot_in_tree() -> (i, j, parent)
+
+
+        Method locates a position in index ``j`` that represents the last line
+        in the most junior member of the ancestor_tree. The ``parent`` is that
+        most junior member. ``i`` is the parent's location.
+
+        Inserting an object into instance at j will append it to the most junior
+        member of the ancestor_tree.
+
+        Method expects:
+
+        -- ``ancestor tree`` to be a tuple of 1+ strings that match the names of
+           lines in instance,
+        -- ``start`` to be the starting index for a search, and
+        -- ``end`` to be the ending index for a search.
+
+        Method will raise a KeyError if instance[start, end] does not contain
+        the ancestor_tree structure.
+
+        Method will raise an error if ancestor_tree is blank on the first call.
+        """
+        i = start
+        j = end
+        parent = self
+        if not ancestor_tree:
+            raise ErrorOfSomeSort #? #return (l_bound, r_bound, self)?
+        if ancestor_tree:
+            parent_name = ancestor_tree[0]
+        i = self.indexByName(parent_name)
+        parent = self[i]
+        j = self._find_peer_or_senior(i)
+        descendants = ancestor_tree[1:]
+        if descendants:
+            i, j, parent = self._spot_in_tree(*descendants,
+                                             start = i,
+                                             end = j)
+        return (i, j, parent)
+    
     def _update_part(self, refLine):
         """
 
@@ -1550,7 +1548,6 @@ class Statement(list, Tags, Equalities):
             refLine.setPartOf(top)
         else:
             refLine.setPartOf(self)
-
 
     def _update_summaries(self, *tagsToOmit, refresh=False):
         """
