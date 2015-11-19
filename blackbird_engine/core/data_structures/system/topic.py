@@ -290,12 +290,12 @@ class Topic:
         increments. Checks containers for both cased and casefolded versions of
         the line name.
 
-        Method expects each record container to support buildDictionaries(). 
+        Method expects each record container to support build_index(). 
         """
         if self.work_plan != {}:
             for C in self.record_containers:
                 if C:
-                    C.buildDictionaries()
+                    C.build_index()
                     for (lineName,contribution) in self.work_plan.items():
                         if lineName in C.dNames.keys():
                             spots_name = C.dNames[lineName]
@@ -347,8 +347,8 @@ class Topic:
             strings = self.record_strings
         items = []
         M = self.MR.activeModel
-        #all attribute paths specified with respect to M as Model, so need to
-        #unpack that into function namespace
+        # All attribute paths specified with respect to M as Model, so need to
+        # unpack that into function namespace.
         for attrpath in strings:
             obj = eval(attrpath)
             if not obj in items:
