@@ -11,23 +11,23 @@
 
 Module includes convenience functions that return a population of objects
 All objects must have a Life attribute
-====================  ==========================================================
-Attribute             Description
-====================  ==========================================================
+====================         ===================================================
+Attribute                    Description
+====================         ===================================================
 
 DATA:
 n/a
 
 FUNCTIONS:
-add_bu_linear()       create an exact number of BUs linearly over time
-add_bu_growth_num()   create an exact number of BUs with geometric growth
-add_bu_growth_rate()  create BUs with geometric growth given a growth rate
-add_prev_closings()   create BUs that have opened and closed in the past
-close_bu_linear()     close an exact number existing BUs linearly over time
+make_units_linear()          create an exact number of units linearly over time
+make_units_growth_numbered() create an exact number of units w/ geometric growth
+make_units_growth_rate()     create units w/ geometric growth, given a rate
+make_units_closed_linear()   create units that have opened and closed uniformly
+get_units_linear()           get exact num of existing units uniformly over time
 
 CLASSES:
 n/a
-====================  ==========================================================
+====================         ===================================================
 """
 
 
@@ -43,11 +43,11 @@ from datetime import timedelta
 
 
 #functions
-def make_linear_pop(start_dt, end_dt, number, template):
+def make_units_linear(start_dt, end_dt, number, template):
     """
 
 
-    add_bu_linear() -> List
+    make_units_linear() -> List
 
 
     Returns a list of objects with uniform birth dates
@@ -74,11 +74,11 @@ def make_linear_pop(start_dt, end_dt, number, template):
     return population
 
 
-def make_growing_pop_fixed_num(start_dt, end_dt, number, template, start_num):
+def make_units_growth_numbered(start_dt, end_dt, number, template, start_num):
     """
 
 
-    add_bu_growth_num() -> None
+    make_units_growth_numbered() -> None
 
 
     Returns list of a fixed number of objects with constant geometric growth
@@ -128,18 +128,18 @@ def make_growing_pop_fixed_num(start_dt, end_dt, number, template, start_num):
     # units in the beginning.
     if number + start_num > count:
         extras = number + start_num - count
-        pop_extra = make_linear_pop(start_dt, first_open, extras, template)
+        pop_extra = make_units_linear(start_dt, first_open, extras, template)
         # Insert pop_extra at the beginning of population
         population = pop_extra + population
 
     return population
 
 
-def make_growing_pop_fixed_rate(start_dt, end_dt, rate, template, start_num):
+def make_units_growth_rate(start_dt, end_dt, rate, template, start_num):
     """
 
 
-    make_growing_pop_fixed_rate() -> list()
+    make_units_growth_rate() -> list()
 
 
     Makes units over time with constant geometric growth given a fixed rate.
@@ -212,11 +212,11 @@ def make_growing_pop_fixed_rate(start_dt, end_dt, rate, template, start_num):
     print("Total Units Created",count - start_num)
 
 
-def make_closed_pop_linear(start_dt, end_dt, number, template, birth_dt=None):
+def make_units_closed_linear(start_dt, end_dt, number, template, birth_dt=None):
     """
 
 
-    make_closed_pop_linear() -> List
+    make_units_closed_linear() -> List
 
 
     Creates a fixed number of units and then closes them linearly over the
@@ -255,11 +255,11 @@ def make_closed_pop_linear(start_dt, end_dt, number, template, birth_dt=None):
     return population
 
 
-def get_pop_linear(number, container):
+def get_units_linear(number, container):
     """
 
 
-    get_pop_linear() -> list
+    get_units_linear() -> list
 
 
     Returns a list with a fixed number of existing units, which are evenly
