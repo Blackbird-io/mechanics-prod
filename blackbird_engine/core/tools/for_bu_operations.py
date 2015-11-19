@@ -37,13 +37,8 @@ import math
 from datetime import date
 from datetime import timedelta
 
-#n/a
 
 
-
-
-#globals
-#n/a
 
 #functions
 def add_bu_linear(start_date, end_date, number, bu_copy, parent, start_num):
@@ -251,7 +246,7 @@ def close_bu_linear(start_date, end_date, number, bu_copy, parent):
         print("Kill Index" ,kill_index)
         kill_id = ordered_bu[kill_index].id.bbid
         target_bu = living_bu_dict[kill_id]
-        target_bu.tag('killed')
+        target_bu.tag('closed')
         target_bu.kill(time_interval * i + date_index)
         remaining = bu_count - kill_index - 1
         kill_index += round(interval)
