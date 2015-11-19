@@ -166,7 +166,7 @@ class Statement(list, Tags, Equalities):
         indentPerLevel = self._INDENT
         replicaPrefix = "Unspecified"
         misfitPrefix = self._LABEL_MISFIT + "! "
-        self.buildHierarchyMap()
+        self._map_hierarchy()
         for n in range(len(self)):
             lineItem = self[n]
             if self.hierarchyMap[n] != self._LABEL_MISFIT:
@@ -239,7 +239,7 @@ class Statement(list, Tags, Equalities):
         
         #ancestors is a list of names of ancestors
         self.build_tables()
-        self.buildHierarchyMap()
+        self._map_hierarchy()
         if not allow_duplicates:
             if line.name in self.dNames:
                 raise BBExceptions.BBAnalyticalError()
@@ -272,7 +272,7 @@ class Statement(list, Tags, Equalities):
                 raise ErrorOfSomeSort #bad duplicates!
         #
         #do all the real work
-        self.buildHierarchyMap()
+        self._map_hierarchy()
         line.setPartOf(self)
         j = None
         if not after:
@@ -338,12 +338,12 @@ class Statement(list, Tags, Equalities):
                 except KeyError:
                     self.dParts[lPartCaseless] = {i}
 
-    def buildCustomDict(self, tagsToInclude, tagsToExclude=[],
+    def build_custom_table(self, tagsToInclude, tagsToExclude=[],
                         container=None, keyTags=True):
         """
 
 
-        F.buildCustomDict() -> dict
+        Statement.build_custom_table() -> dict
 
 
         Method builds a dictionary (``D``) of items in container. D includes
@@ -364,7 +364,6 @@ class Statement(list, Tags, Equalities):
         values for such items are a set of indexes for lines that include the
         tag.
         """
-        #<----------------------------------------------------------------------------------should be a private method?
         if not container:
             container = self
         tagsToInclude = set(tagsToInclude)
@@ -388,191 +387,7 @@ class Statement(list, Tags, Equalities):
             if keyTags:
                 for tag in tagsIn:
                     D[tag].add(i)
-        return D
-    
-    def buildHierarchyGroups(self, reprocessMisordered=True, reprocessAttempts=50):
-        """
-
-        Method builds a list of lineItem groups.
-
-        Each group represents a step down in the partOf hierarchy of the
-        Financials object. The first group, index and level 0, contains
-        lineitems whose ``partOf`` attribute matches an item in
-        ``topLevelNames``. The seconds group, index and level 1, contains
-        lineitems that are partOf level 0 lineItems. And so on.
-
-        A lineItem is a ``misfit`` if it is not toplevel and not part of any other
-        items in self. Misfits do not have a level in the partOf hierarchy.
-
-        The method uses an internal function (categorizer()) to catch misfits
-        and construct hierarchy lists.
-        
-        Categorizer() accepts two arguments:
-          -- a container, and
-          -- a pre-built or blank hierarchy (in the form of a list of lists).
-        Categorizer() returns the resulting hierarchy and the list of misfits.
-
-        Categorizer scans the container right to left. For each item,
-        categorizer() checks whether the hierarchy it received contains an
-        appropriate group. Appropriate groups are those that contain objects
-        that are partOf a prior group or the **instance's** (as opposed to the
-        hierarchy argument's)``topLevelNames`` list. Categorizer appends a new
-        level (list) whenever it encounters an item that's part of the lowest
-        existing level.
-
-        When Categorizer() encounters an item that has no top in the
-        then-existing hierarchy object, Categorizer() classifies such item as a
-        misfit. As a result, the function applies the ``misfit`` label to
-        detail objects whose top follows them in the container. Because
-        ``misfits`` are strictly defined as lineitems that do not have a proper
-        top in the container at all, this classification is an error when
-        applied to misordered items. 
-
-        If reprocessMisordered = True, the method attempts to control for the
-        scenario described above by running Categorizer() repeatedly. The method
-        starts by running Categorizer twice: first on the instance's own list
-        items, and then on the misfits produced by the first run. The method
-        provides the hierarchy procuded by the first run as a starting point to
-        the second. At that time, the hierarchy includes the parents of
-        misordered details, unless the parents are also misordered.
-        
-        If misfits exist after the second pass, the method keeps runs
-        categorizer() up to the number of times that the ``reprocessAttempts``
-        argument specifies.
-
-        If the misfit list stops changing prior to the last reprocessing attempt,
-        the method stops running categorizer(). A stable misfit list means that
-        no items in the list are partOf an existing lineItem. In other words,
-        the misfits cannot properly fit into the existing hierarchy regardless
-        of the order of review (though they may form a coherent hierarchy of
-        their own).
-        
-        If items in a container are ordered in reverse [4,3,2,1], each
-        categorizer() pass will place the top-most item in a hierarchy. The
-        remaining items will appear as misfits until the next pass places one.
-        Accordingly, 50 iterations should clean up any ordering errors in
-        hierarchies with less than 50 levels.
-
-        NOTE: The hierarchy produced by this method contains pointers to the
-        **actual** objects in the instance list. This allows other methods to
-        check lineitem membership in the groups. 
-        
-        """
-        level0 = []
-        level1 = []
-        allLevels = [level0,level1]
-        class PlacementSuccess(Exception): pass
-        #Upgrade-S: move function out to parsing tools so dont incur def cost
-        #on every call; function would need to take topLevelNAmes as a
-        #constructor in that event (right now, categorizer piggy-backs on list
-        #of TLNs in financials instance)
-        def categorizer(items, hierarchy):
-            misfits = []
-            for unknownLineItem in items:
-                if unknownLineItem.partOf in self.topLevelNames:
-                    hierarchy[0].append(unknownLineItem)
-                    #Upgrade-S: if function moved out to ParsingTools,
-                    #will need direct call to financials.topLevelNames
-                    #add financials as categorizer() argument
-                else:
-                    currentDepth = len(hierarchy)
-                    for n in range(currentDepth):
-                        try: 
-                            for placedLineItem in hierarchy[n]:
-                                if unknownLineItem.partOf == placedLineItem.name:
-                                    #current lineitem is part of an nth-level lineitem
-                                    #check if there is an n+1 level
-                                    if not n == currentDepth - 1:
-                                        #there is a deeper level
-                                        #append current lineitem to the next level
-                                        hierarchy[n+1].append(unknownLineItem)
-                                        raise PlacementSuccess
-                                    else:
-                                        #there is not a deeper level, so make one
-                                        newLevel = []
-                                        newLevel.append(unknownLineItem)
-                                        hierarchy.append(newLevel)
-                                        raise PlacementSuccess
-                                else:
-                                    #no partOf match, check next lineitem at
-                                    #this level
-                                    continue
-                        except PlacementSuccess:
-                            break
-                    else:
-                        #finished going through hierarchy, didnt find the right
-                        #top at any level. could be because proper top follows
-                        #after unknownLineItem or because proper top is missing
-                        #completely. in either event, the current line item is
-                        #a misfit
-                        misfits.append(unknownLineItem)
-            return (hierarchy, misfits)
-        firstHierarchy,firstMisfits=categorizer(items=self,hierarchy=allLevels)
-        result=(firstHierarchy,firstMisfits)
-        secondHierarchy,secondMisfits=categorizer(items=firstMisfits,
-                                                  hierarchy=firstHierarchy)
-        #runs through 
-        if reprocessMisordered == False:
-            self.hierarchyGroups = firstHierarchy
-        elif (reprocessMisordered and secondMisfits != []):
-            misfitDelta = []
-            counter = 0
-            while counter < reprocessAttempts:
-                for L in firstMisfits:
-                    if L not in secondMisfits:
-                        misfitDelta.append(L)
-                    else:
-                        continue
-                if misfitDelta == []:
-                    break
-                firstHierarchy = secondHierarchy
-                firstMisfits = secondMisfits
-                secondHierarchy,secondMisfits=categorizer(items=firstMisfits,
-                                                          hierarchy=firstHierarchy)
-                counter +=1    
-            #while loop is done
-            result = (secondHierarchy, secondMisfits)
-            self.hierarchyGroups = secondHierarchy
-        else:
-            self.hierarchyGroups = secondHierarchy
-        return result
-
-    def buildHierarchyMap(self): #<-----------------------------------------------------------------------------should be a non-public method, called map_hierarchy()
-        """
-
-
-        Fins.buildHierarchyMap() -> None
-
-        
-        Builds a list representing depth in hierarchy of each item in self.
-        
-        For each item in self, the method locates the appropriate group in
-        hierarchyGroups. The method then records the index of the group in the
-        same position as self.
-        
-        The method places self.LABEL_MISFIT as the value of the map index for any
-        items without a group.
-        
-        Conceptually, the map represents how many steps deep in the hierarchy a
-        given item in self is.
-
-        The method stores its result in self.hierarchyMap.
-        """
-        self.buildHierarchyGroups(reprocessMisordered = True)
-        #build map from scratch on every call
-        self.hierarchyMap = []
-        for lineItem in self:
-            for n in range(len(self.hierarchyGroups)):
-                if lineItem in self.hierarchyGroups[n]:
-                    self.hierarchyMap.append(n)
-                    break
-                else:
-                    continue
-            else:
-                self.hierarchyMap.append(self.LABEL_MISFIT)
-        if not len(self.hierarchyMap) == len(self):
-            c = "map does not properly reflect hierarchy"
-            raise BBExceptions.IOPMechanicalError()             
+        return D           
 
     def clearInheritedTags(self,recur = True):
         """
@@ -1073,7 +888,7 @@ class Statement(list, Tags, Equalities):
         """
         tagsToOmit = set(tagsToOmit)
         tagsToOmit.add(summaryTag)
-        existingSummaries = self.buildCustomDict([summaryTag])
+        existingSummaries = self.build_custom_table([summaryTag])
         for i in existingSummaries[summaryTag]:
             summaryLine = self[i]
             summaryLine.setValue(0,"update reset")
@@ -1101,7 +916,7 @@ class Statement(list, Tags, Equalities):
                 else:
                     newSummary.partOf = top.partOf
                 newSummary.inheritTagsFrom(L, *uninheritableTags)
-                self.buildHierarchyMap()
+                self._map_hierarchy()
                 #insertion logic follows
                 #
                 #summary should go in before the first line with an H value that
@@ -1132,7 +947,7 @@ class Statement(list, Tags, Equalities):
                 #if this doesnt work, can try finding all senior Hs and running
                 # a min on the list, though that seems like overkill
                 self.insert(j, newSummary)
-                existingSummaries = self.buildCustomDict([summaryTag])
+                existingSummaries = self.build_custom_table([summaryTag])
                 continue
         self.dSummaries = existingSummaries
         #Upgrade: summarize unlabelled line items from subs
@@ -1400,7 +1215,7 @@ class Statement(list, Tags, Equalities):
                 #places is a set of positions; to get last position, find
                 #largest value in set
                 ref_spot = max(places)
-                self.buildHierarchyMap()
+                self._map_hierarchy()
                 L = self.find_peer_or_senior(ref_spot)
             except KeyError:
                 #line.partOf not in self.fins.dNames;
@@ -1642,7 +1457,7 @@ class Statement(list, Tags, Equalities):
         tagsToOmit = set(tagsToOmit)
         existingSummaries = self.dSummaries
         if refresh:
-            existingSummaries = self.buildCustomDict([summaryTag])
+            existingSummaries = self.build_custom_table([summaryTag])
         for i in existingSummaries[summaryTag]:
             summaryLine = self[i]
             if summaryLine.value:
@@ -1742,4 +1557,195 @@ class Statement(list, Tags, Equalities):
                 self.insert(i, new_line)
                 self.build_tables()
                 # Always build index after inserting something
+
+    #*************************************************************************#
+    #                          NON-PUBLIC METHODS                             #
+    #*************************************************************************#
+
+    def _group_by_hierarchy(self, reprocess=True, attempts=50):
+        """
+
+
+        Statement._group_by_hierarchy() -> (groups, misfits)
+
+
+        Method builds a list of lineItem groups.
+
+        Each group represents a step down in the partOf hierarchy of the
+        Financials object. The first group, index and level 0, contains
+        lineitems whose ``partOf`` attribute matches an item in
+        ``topLevelNames``. The seconds group, index and level 1, contains
+        lineitems that are partOf level 0 lineItems. And so on.
+
+        A lineItem is a ``misfit`` if it is not toplevel and not part of any other
+        items in self. Misfits do not have a level in the partOf hierarchy.
+
+        The method uses an internal function (categorizer()) to catch misfits
+        and construct hierarchy lists.
+        
+        Categorizer() accepts two arguments:
+          -- a container, and
+          -- a pre-built or blank hierarchy (in the form of a list of lists).
+        Categorizer() returns the resulting hierarchy and the list of misfits.
+
+        Categorizer scans the container right to left. For each item,
+        categorizer() checks whether the hierarchy it received contains an
+        appropriate group. Appropriate groups are those that contain objects
+        that are partOf a prior group or the **instance's** (as opposed to the
+        hierarchy argument's)``topLevelNames`` list. Categorizer appends a new
+        level (list) whenever it encounters an item that's part of the lowest
+        existing level.
+
+        When Categorizer() encounters an item that has no top in the
+        then-existing hierarchy object, Categorizer() classifies such item as a
+        misfit. As a result, the function applies the ``misfit`` label to
+        detail objects whose top follows them in the container. Because
+        ``misfits`` are strictly defined as lineitems that do not have a proper
+        top in the container at all, this classification is an error when
+        applied to misordered items. 
+
+        If reprocess == True, the method attempts to control for the
+        scenario described above by running Categorizer() repeatedly. The method
+        starts by running Categorizer twice: first on the instance's own list
+        items, and then on the misfits produced by the first run. The method
+        provides the hierarchy procuded by the first run as a starting point to
+        the second. At that time, the hierarchy includes the parents of
+        misordered details, unless the parents are also misordered.
+        
+        If misfits exist after the second pass, the method keeps runs
+        categorizer() up to ``attempts`` times.
+
+        If the misfit list stops changing prior to the last reprocessing attempt,
+        the method stops running categorizer(). A stable misfit list means that
+        no items in the list are partOf an existing lineItem. In other words,
+        the misfits cannot properly fit into the existing hierarchy regardless
+        of the order of review (though they may form a coherent hierarchy of
+        their own).
+        
+        If items in a container are ordered in reverse [4,3,2,1], each
+        categorizer() pass will place the top-most item in a hierarchy. The
+        remaining items will appear as misfits until the next pass places one.
+        Accordingly, 50 iterations should clean up any ordering errors in
+        hierarchies with less than 50 levels.
+
+        NOTE: The hierarchy produced by this method contains pointers to the
+        **actual** objects in the instance list. This allows other methods to
+        check lineitem membership in the groups. 
+        
+        """
+        level0 = []
+        level1 = []
+        allLevels = [level0,level1]
+        class PlacementSuccess(Exception): pass
+        #Upgrade-S: move function out to parsing tools so dont incur def cost
+        #on every call; function would need to take topLevelNAmes as a
+        #constructor in that event (right now, categorizer piggy-backs on list
+        #of TLNs in financials instance)
+        def categorizer(items, hierarchy):
+            misfits = []
+            for unknownLineItem in items:
+                if unknownLineItem.partOf in self.topLevelNames:
+                    hierarchy[0].append(unknownLineItem)
+                    #Upgrade-S: if function moved out to ParsingTools,
+                    #will need direct call to financials.topLevelNames
+                    #add financials as categorizer() argument
+                else:
+                    currentDepth = len(hierarchy)
+                    for n in range(currentDepth):
+                        try: 
+                            for placedLineItem in hierarchy[n]:
+                                if unknownLineItem.partOf == placedLineItem.name:
+                                    #current lineitem is part of an nth-level lineitem
+                                    #check if there is an n+1 level
+                                    if not n == currentDepth - 1:
+                                        #there is a deeper level
+                                        #append current lineitem to the next level
+                                        hierarchy[n+1].append(unknownLineItem)
+                                        raise PlacementSuccess
+                                    else:
+                                        #there is not a deeper level, so make one
+                                        newLevel = []
+                                        newLevel.append(unknownLineItem)
+                                        hierarchy.append(newLevel)
+                                        raise PlacementSuccess
+                                else:
+                                    #no partOf match, check next lineitem at
+                                    #this level
+                                    continue
+                        except PlacementSuccess:
+                            break
+                    else:
+                        #finished going through hierarchy, didnt find the right
+                        #top at any level. could be because proper top follows
+                        #after unknownLineItem or because proper top is missing
+                        #completely. in either event, the current line item is
+                        #a misfit
+                        misfits.append(unknownLineItem)
+            return (hierarchy, misfits)
+        firstHierarchy,firstMisfits=categorizer(items=self,hierarchy=allLevels)
+        result=(firstHierarchy,firstMisfits)
+        secondHierarchy,secondMisfits=categorizer(items=firstMisfits,
+                                                  hierarchy=firstHierarchy)
+        #runs through 
+        if reprocess == False:
+            self.hierarchyGroups = firstHierarchy
+        elif (reprocess and secondMisfits != []):
+            misfitDelta = []
+            counter = 0
+            while counter < attempts:
+                for L in firstMisfits:
+                    if L not in secondMisfits:
+                        misfitDelta.append(L)
+                    else:
+                        continue
+                if misfitDelta == []:
+                    break
+                firstHierarchy = secondHierarchy
+                firstMisfits = secondMisfits
+                secondHierarchy,secondMisfits=categorizer(items=firstMisfits,
+                                                          hierarchy=firstHierarchy)
+                counter +=1    
+            #while loop is done
+            result = (secondHierarchy, secondMisfits)
+            self.hierarchyGroups = secondHierarchy
+        else:
+            self.hierarchyGroups = secondHierarchy
+        return result
+
+    def _map_hierarchy(self):
+        """
+
+
+        Statement._map_hierarchy() -> None
+
+        
+        Builds a list representing depth in hierarchy of each item in self.
+        
+        For each item in self, the method locates the appropriate group in
+        hierarchyGroups. The method then records the index of the group in the
+        same position as self.
+        
+        The method places self.LABEL_MISFIT as the value of the map index for any
+        items without a group.
+        
+        Conceptually, the map represents how many steps deep in the hierarchy a
+        given item in self is.
+
+        The method stores its result in self.hierarchyMap.
+        """
+        self._group_by_hierarchy(reprocess=True)
+        #build map from scratch on every call
+        self.hierarchyMap = []
+        for lineItem in self:
+            for n in range(len(self.hierarchyGroups)):
+                if lineItem in self.hierarchyGroups[n]:
+                    self.hierarchyMap.append(n)
+                    break
+                else:
+                    continue
+            else:
+                self.hierarchyMap.append(self.LABEL_MISFIT)
+        if not len(self.hierarchyMap) == len(self):
+            c = "map does not properly reflect hierarchy"
+            raise BBExceptions.IOPMechanicalError()  
 
