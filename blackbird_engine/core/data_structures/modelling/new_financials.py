@@ -13,4 +13,21 @@ class Financials:
     def copy(self):
         pass
 
+    def refresh(self):
+        for statement in self.path:
+            statement.build_index()
+
+    def view(self):
+        """
+        
+        """
+
+    def __str__(self):
+        """
+        Return concatenated string of all other statements
+        """
+        pass
+
+    #need to inherit tags?
+    
     

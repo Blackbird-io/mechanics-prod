@@ -56,6 +56,7 @@ dropDownReplicaTag = Tags.tagManager.catalog["ddr"]
 ddr_tag = dropDownReplicaTag
 skipTag = Tags.tagManager.catalog["skip"]
 summaryTag = Tags.tagManager.catalog["summary"]
+tConsolidated = Tags.tagManager.catalog["consolidated"]
 uninheritableTags = [doNotTouchTag, dropDownReplicaTag]
 
 # Classes
@@ -100,7 +101,7 @@ class Statement(list, Tags, Equalities):
     FUNCTIONS:
     add_line_to()         add line as bottom detail in tree
     add_top_line()        add line to top of instance, optionally after another
-    buildDictionaries()   make name:{i} and partOf:{i} dicts for contents
+    build_index()         make name:{i} and partOf:{i} dicts for contents
     clearDictionaries()   sets dNames and dParts to a blank dictionary
     copy()
     find_peer_or_senior() returns index of first line w eq or greater hierarchy
@@ -115,16 +116,16 @@ class Statement(list, Tags, Equalities):
     toggleContextualFormatting()
     ====================  ======================================================
     """
-
-    #
     keyAttributes = []
-    #retain as explicit empty list to force Equalities to use list.__eq__ but
-    #support tracing.
+    # Retain as explicit empty list to force Equalities to use list.__eq__ but
+    # support tracing.
 
     _LABEL_MISFIT = "MISFIT"
     _SUMMARY_PREFIX = "TOTAL"
 
     _INDENT = 2
+
+    SIGNATURE_FOR_INCREMENTATION = "Incremented "
     
     def __init__(self, name=None):
         list.__init__(self)
@@ -134,19 +135,16 @@ class Statement(list, Tags, Equalities):
         self.dParts = {}
         self.hierarchyGroups = None
         self.hierarchyMap = None
+        self.topLevelNames = [None, self.name, "financials", "Financials"]
         #
-        self.topLevelNames = [None, self.name, "financials", "Financials"] #<---- move to class vars
-                        #<--------------------------------------------------------make this a set
-                        # Instances will be faster, the whole thing will be smaller. 
         self.contextualFormatting = True
         self.autoSummarize = True
-        #autoSummary and contextualFormatting should both probably be class vars, or something <-------
 
     def __eq__(self, comparator, trace=False, tab_width=4):
         """
 
 
-        Fins.__eq__() -> bool
+        Statement.__eq__() -> bool
 
 
         Method explicitly delegates work to Equalities.__eq__(). The Financials
@@ -160,7 +158,7 @@ class Statement(list, Tags, Equalities):
         """
 
 
-        Fins.__ne__() -> bool
+        Statement.__ne__() -> bool
 
 
         Method explicitly delegates all work to Equalities. 
@@ -205,8 +203,7 @@ class Statement(list, Tags, Equalities):
         """
 
 
-        Financials.add_line_to(line, *ancestor_tree
-          [, allow_duplicates = False]) -> None
+        Statement.add_line_to() -> None
 
 
         Method adds line to instance. ``ancestor_tree`` is a list of 1+ strings.
@@ -248,22 +245,23 @@ class Statement(list, Tags, Equalities):
         """
         
         #ancestors is a list of names of ancestors
-        self.buildDictionaries()
+        self.build_index()
         self.buildHierarchyMap()
         if not allow_duplicates:
             if line.name in self.dNames:
-                raise SomeSortOfError #<---------------------------------------------put in the right kind of error
+                raise BBExceptions.BBAnalyticalError()
+        
         i, j, parent = self.spot_in_tree(*ancestor_tree)
         line.setPartOf(parent)
         self.insert(j, line)
         #
         return (i, j, parent)
 
-    def add_top_line(self, line, after = None, allow_duplicates = False):
+    def add_top_line(self, line, after=None, allow_duplicates=False):
         """
 
 
-        Financials.add_top_line(line, after = None) -> int()
+        Statement.add_top_line() -> None
 
 
         Insert line at the top level of instance. Method expects ``after`` to
@@ -274,7 +272,7 @@ class Statement(list, Tags, Equalities):
         with a line that has a symmetrical name to one that's already in the
         instance. 
         """
-        self.buildDictionaries()
+        self.build_index()
         insert = True
         if not allow_duplicates:
             if line.name in self.dNames:
@@ -299,11 +297,11 @@ class Statement(list, Tags, Equalities):
                 #are considering only top level items. 
         self.insert(j, line)
         
-    def buildDictionaries(self,*tagsToOmit):
+    def build_index(self, *tagsToOmit):
         """
 
 
-        F.buildDictionaries([*tagsToOmit]) -> None
+        Statements.build_index() -> None
 
 
         Method goes through each line item in the instance and records its name
@@ -311,10 +309,9 @@ class Statement(list, Tags, Equalities):
         separate entries for cased and caseless versions of each name and partOf
         (but only to the extent they are different). 
         """
-        #<----------------------------------------------------------------------------------should be a private method?
-        #<-------------------------------------------------------------------------------should rename index() or smtg
         tagsToOmit = set(tagsToOmit)
-        #by default, scans everything
+        # By default, scans everything
+        
         self.resetDictionaries()
         for i in range(len(self)):
             line = self[i]
@@ -353,8 +350,7 @@ class Statement(list, Tags, Equalities):
         """
 
 
-        F.buildCustomDict(tagsToInclude,tagsToExclude[,container=None
-          [,keyTags = True]]) -> dict
+        F.buildCustomDict() -> dict
 
 
         Method builds a dictionary (``D``) of items in container. D includes
@@ -401,7 +397,7 @@ class Statement(list, Tags, Equalities):
                     D[tag].add(i)
         return D
     
-    def buildHierarchyGroups(self, reprocessMisordered = True, reprocessAttempts = 50):
+    def buildHierarchyGroups(self, reprocessMisordered=True, reprocessAttempts=50):
         """
 
         Method builds a list of lineItem groups.
@@ -548,7 +544,7 @@ class Statement(list, Tags, Equalities):
             self.hierarchyGroups = secondHierarchy
         return result
 
-    def buildHierarchyMap(self):
+    def buildHierarchyMap(self): #<-----------------------------------------------------------------------------should be a non-public method, called map_hierarchy()
         """
 
 
@@ -663,7 +659,9 @@ class Statement(list, Tags, Equalities):
     def _erase_managed_lines(self):
         """
 
+
         Fins.eraseManagedLineItems() -> None
+
         
         Method erases all lineitems with the dropDownReplicaTag and summaryTag.
         Uses ParsingTools.excludeByTag() to filter the managed lineitems.
@@ -739,7 +737,7 @@ class Statement(list, Tags, Equalities):
         #
         #step 2: fill the result container
         #go line by line
-        alt_target.buildDictionaries(*tags_to_omit)
+        alt_target.build_index(*tags_to_omit)
         #exclude summaries and replicas from the target
         tags_to_omit = set(tags_to_omit)
         for sL in self:
@@ -759,7 +757,7 @@ class Statement(list, Tags, Equalities):
                 newL.setPartOf(result)
                 #to catch any new top-level seed lines
             result.append(newL)
-        result.buildDictionaries()
+        result.build_index()
         target_only = set(alt_target.dNames.keys()) - set(result.dNames.keys())
         target_only = sorted(target_only)
         #enforce stable order to maintain consistency across runtimes
@@ -854,11 +852,12 @@ class Statement(list, Tags, Equalities):
         the instance. Checks for name matches on a caseless (casefolded) basis.
         If no such item exists, returns ValueError.
 
-        NOTE: This method runs buildDictionaries() on every call. It is
-        expensive. 
+        NOTE: This method runs build_index() on every call. It is expensive.
+        You should manually retrieve results from the dictionaries for better
+        performance.
         """
         name = name.casefold()
-        self.buildDictionaries()
+        self.build_index()
         try:
             spots = self.dNames[name]
         except KeyError:
@@ -934,7 +933,7 @@ class Statement(list, Tags, Equalities):
         #prep area
         sig = Globals.signatures["Financials.manageDropDownReplicas"]
         header_tag = ddr_tag
-        self.buildDictionaries()
+        self.build_index()
         #
         #go through instance and add headers for every line with a value and
         #details
@@ -1024,7 +1023,7 @@ class Statement(list, Tags, Equalities):
                     #this_line is at i+1. to start for loop at the next untested
                     #line, shift position counter 2 spots forward.
                     #
-                    self.buildDictionaries()
+                    self.build_index()
                     #have to build dictionaries because use dParts to check
                     #whether the position of potential details falls between
                     #start and end
@@ -1100,7 +1099,7 @@ class Statement(list, Tags, Equalities):
                 #make and insert the summary lineitem
                 newSummary = LineItem(name = summaryName)
                 newSummary.tag(summaryTag,skipTag,field = "req")
-                self.buildDictionaries()
+                self.build_index()
                 tPlaces = list(self.dNames[L.partOf])
                 tPlaces.sort()
                 top = self[tPlaces[0]]
@@ -1312,7 +1311,7 @@ class Statement(list, Tags, Equalities):
             return B
         except KeyError:
             if doubleCheck:
-                self.buildDictionaries()
+                self.build_index()
                 B = self.matchBookMark(refBookMark,doubleCheck=False)
                 #must specify doubleCheck is false, otherwise loops forever on
                 #missing keys
@@ -1634,7 +1633,7 @@ class Statement(list, Tags, Equalities):
         for i in existingSummaries[summaryTag]:
             summaryLine = self[i]
             if summaryLine.value:
-                summaryLine.setValue(0,"update reset")
+                summaryLine.setValue(0, "update reset")
         #no insertions so ok to use self:
         for L in self:
             if not L.value:
@@ -1644,7 +1643,8 @@ class Statement(list, Tags, Equalities):
             if set(L.allTags) & tagsToOmit != set():
                 continue
             summaryName = self._SUMMARY_PREFIX + " " + L.partOf
-            summaryName = summaryName.casefold()
+            summaryName = summaryName.casefold(
+                )
             try:
                 places = existingSummaries[summaryName]
                 spot = min(places)
@@ -1664,40 +1664,49 @@ class Statement(list, Tags, Equalities):
         if refresh:
             self.dSummaries = existingSummaries
 
-    def update(self, lines, unit_index, tags_to_omit, refresh=False):
+    def increment(self, lines, tags_to_omit, refresh=False, signature=None):
         """
 
-        should really be on statement
-        
-        drops nameless lines? or can be control
+        may be call this guy "increment"?
 
+        drops nameless lines? or can be control
         ``tags_to_omit`` should be a set of tags for speed
         """
+        suffix = "for Unit %s" % unit.name
         if refresh:
             self._build_index()
+
+        if signature is None:
+            signature = self.SIGNATURE_FOR_INCREMENTATION
         
         for i in range(len(lines)):
+            # Walk through indeces because we may need them for positioning
+            # later. 
             line = source[i]
-            
+
+            # Skip uninformative lines
             if not line.name:
                 continue
             if line.value is None:
                 continue
             if tags_to_omit & set(line.allTags):
-                # line has tags we want to omit
+                # Line has tags we want to omit
                 continue
 
+            # If we get here, the line has survived screening. We now have two
+            # ways to add its information to the instance. Option A, is to
+            # increment the value on a matching line. Option B is to copy the
+            # line into the instance. We apply Option B only when we can't do
+            # Option A.
+            
             if line.name in self.dNames:
-                # Increment
+                # Option A: increment an existing line
                 j = max(self.dNames[line.name])
-                existing_line = statement[j]
+                existing_line = self[j]
                 
                 starting_value = existing_line.value or 0
-                # Replace ``None`` with 0 for starting value to make sure
-                # addition works
+                # Replace ``None`` with 0
                 new_value = starting_value + line.value
-
-                signature = self.sig_consolidate + suffix
                 existing_line.set_value(new_value, signature)
                 
                 existing_line.inheritTagsFrom(line)
@@ -1705,7 +1714,7 @@ class Statement(list, Tags, Equalities):
                     existing_line.tag(tConsolidated)
                     
             else:
-                # Insert
+                # Option B: copy the line into instance
                 new_line = line.replicate(compIndex=unit_index)
                 
                 if tConsolidated not in new_line.allTags:
