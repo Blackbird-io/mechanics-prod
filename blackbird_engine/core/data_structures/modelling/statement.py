@@ -126,8 +126,8 @@ class Statement(list, Tags, Equalities):
         #
         self.dNames = {}
         self.dParts = {}
-        self.hierarchyGroups = None
-        self.hierarchyMap = None
+        self._hierarchy_groups = None
+        self._hierarchy_map = None
         self.topLevelNames = [None, self.name, "financials", "Financials"]
         #
         self.contextualFormatting = True
@@ -169,20 +169,20 @@ class Statement(list, Tags, Equalities):
         self._map_hierarchy()
         for n in range(len(self)):
             lineItem = self[n]
-            if self.hierarchyMap[n] != self._LABEL_MISFIT:
+            if self._hierarchy_map[n] != self._LABEL_MISFIT:
                 if (self.contextualFormatting and
                     dropDownReplicaTag in lineItem.allTags):
                     lineItem.pre_format(prefix = replicaPrefix,
-                                       left_tab = indentPerLevel*(1+self.hierarchyMap[n]),
+                                       left_tab = indentPerLevel * (1 + self._hierarchy_map[n]),
                                        right_tab = indentPerLevel)
                 elif (self.contextualFormatting and
                       not n == (len(self)-1) and 
                       dropDownReplicaTag in self[n+1].allTags):
                     lineItem.pre_format(header = True,
-                                       left_tab = indentPerLevel*(1+self.hierarchyMap[n]),
+                                       left_tab = indentPerLevel * (1 + self._hierarchy_map[n]),
                                        right_tab = indentPerLevel)
                 else:
-                    lineItem.pre_format(left_tab = indentPerLevel*(1+self.hierarchyMap[n]),
+                    lineItem.pre_format(left_tab = indentPerLevel * (1 + self._hierarchy_map[n]),
                                        right_tab = indentPerLevel)
                 result = result + str(lineItem) + "\n"
             else:
@@ -279,7 +279,7 @@ class Statement(list, Tags, Equalities):
             j = len(self)
         else:
             i = self.indexByName(after)
-            j = self.hierarchyMap.index(0, i)
+            j = self._hierarchy_map.index(0, i)
                 #find the first top-level item after position ``i``. command
                 #completely escapes any tree that contains ``after``
             j_line = self[j]
@@ -445,8 +445,8 @@ class Statement(list, Tags, Equalities):
         result._clear_tables()
         #create independent objects for any attributes that point to something
         #mutable or structured
-        result.hierarchyGroups = None
-        result.hierarchyMap = None
+        result._hierarchy_groups = None
+        result._hierarchy_map = None
         result.topLevelNames = copy.copy(self.topLevelNames)
         tags_to_omit = []
 ##        tags_to_omit = [summaryTag,
@@ -562,6 +562,76 @@ class Statement(list, Tags, Equalities):
         #step 3: return the result container
         return result
 
+    def increment(self, lines, *tagsToOmit, refresh=False, signature=None):
+        """
+
+
+        Statement.increment() -> None
+        
+
+        Increment matching lines, add new ones to instance. 
+
+        drops nameless lines? or can be control
+        ``tags_to_omit`` should be a set of tags for speed
+        """
+        if refresh:
+            self.build_tables()
+
+        if signature is None:
+            signature = self.SIGNATURE_FOR_INCREMENTATION
+        
+        for i in range(len(lines)):
+            # Walk through indeces because we may need them for positioning
+            # later. 
+            line = lines[i]
+
+            # Skip uninformative or bad lines
+            if not line.name:
+                continue
+            if set(tagsToOmit) & set(line.allTags):
+                # Line has tags we want to omit
+                continue
+
+            # If we get here, the line has survived screening. We now have two
+            # ways to add its information to the instance. Option A, is to
+            # increment the value on a matching line. Option B is to copy the
+            # line into the instance. We apply Option B only when we can't do
+            # Option A.
+            
+            if line.name in self.dNames:
+                # Option A: increment an existing line
+
+                if line.value is None:
+                    continue
+                
+                j = max(self.dNames[line.name])
+                existing_line = self[j]
+                
+                starting_value = existing_line.value or 0
+                # Replace ``None`` with 0
+                new_value = starting_value + line.value
+                existing_line.setValue(new_value, signature)
+                
+                existing_line.inheritTagsFrom(line)
+                if tConsolidated not in existing_line.allTags:
+                    existing_line.tag(tConsolidated)
+                    
+            else:
+                # Option B: copy the line into instance
+                new_line = line.replicate()
+                
+                if line.value is not None:
+                    if tConsolidated not in new_line.allTags:
+                        new_line.tag(tConsolidated)
+                    # Pick up lines with None values, but don't tag them. We
+                    # want to allow derive to write to these if necessary.
+
+                i = self._spot_generally(new_line, lines, i)
+                self._update_part(new_line)
+                self.insert(i, new_line)
+                self.build_tables()
+                # Always build index after inserting something
+                
     def indexByName(self, name):
         """
 
@@ -586,8 +656,8 @@ class Statement(list, Tags, Equalities):
         spots = list(spots)
         spots.sort()
         i = spots[0]
-        return i        
-
+        return i
+    
     def inheritTags(self, recur=True):
         """
 
@@ -634,8 +704,8 @@ class Statement(list, Tags, Equalities):
         for line in self:
             line.clear()
         self._clear_tables()
-        self.hierarchyMap = None
-        self.hierarchyGroups = None
+        self._hierarchy_map = None
+        self._hierarchy_groups = None
     
     def summarize(self, *tagsToOmit):
         """
@@ -772,82 +842,16 @@ class Statement(list, Tags, Equalities):
         self._manage_summaries(*tagsToOmit)
         self._update_summaries(*tagsToOmit)
 
-    def toggleContextualFormatting(self):
-        """
-
-
-        Fins.toggleContextualFormatting() -> None
-
-        
-        Method switches self.contextualFormatting to its boolean opposite.
-        """
-        self.contextualFormatting = not self.contextualFormatting
-
-    def increment(self, lines, *tagsToOmit, refresh=False, signature=None):
-        """
-
-        may be call this guy "increment"?
-
-        drops nameless lines? or can be control
-        ``tags_to_omit`` should be a set of tags for speed
-        """
-        if refresh:
-            self.build_tables()
-
-        if signature is None:
-            signature = self.SIGNATURE_FOR_INCREMENTATION
-        
-        for i in range(len(lines)):
-            # Walk through indeces because we may need them for positioning
-            # later. 
-            line = lines[i]
-
-            # Skip uninformative or bad lines
-            if not line.name:
-                continue
-            if set(tagsToOmit) & set(line.allTags):
-                # Line has tags we want to omit
-                continue
-
-            # If we get here, the line has survived screening. We now have two
-            # ways to add its information to the instance. Option A, is to
-            # increment the value on a matching line. Option B is to copy the
-            # line into the instance. We apply Option B only when we can't do
-            # Option A.
-            
-            if line.name in self.dNames:
-                # Option A: increment an existing line
-
-                if line.value is None:
-                    continue
-                
-                j = max(self.dNames[line.name])
-                existing_line = self[j]
-                
-                starting_value = existing_line.value or 0
-                # Replace ``None`` with 0
-                new_value = starting_value + line.value
-                existing_line.setValue(new_value, signature)
-                
-                existing_line.inheritTagsFrom(line)
-                if tConsolidated not in existing_line.allTags:
-                    existing_line.tag(tConsolidated)
-                    
-            else:
-                # Option B: copy the line into instance
-                new_line = line.replicate()
-                
-                if line.value is not None:
-                    if tConsolidated not in new_line.allTags:
-                        new_line.tag(tConsolidated)
-                    # Pick up lines with None values, but don't tag them. We
-                    # want to allow derive to write to these if necessary.
-
-                i = self._spot_generally(new_line, lines, i)
-                self._update_part(new_line)
-                self.insert(i, new_line)
-                self.build_tables()
-                # Always build index after inserting something
+##    def toggleContextualFormatting(self):
+##        """
+##
+##
+##        Fins.toggleContextualFormatting() -> None
+##
+##        
+##        Method switches self.contextualFormatting to its boolean opposite.
+##        """
+##        self.contextualFormatting = not self.contextualFormatting
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
@@ -934,16 +938,16 @@ class Statement(list, Tags, Equalities):
         or peer. 
         """
         spot = None
-        peer_level = self.hierarchyMap[ref_index]
+        peer_level = self._hierarchy_map[ref_index]
         start = ref_index + 1
         #
         if end_index:
             end = end_index
         else:
-            end = len(self.hierarchyMap)
+            end = len(self._hierarchy_map)
         #
         for i in range(start, end):
-            if self.hierarchyMap[i] <= peer_level:
+            if self._hierarchy_map[i] <= peer_level:
                 #line in position is equal or greater in senior to ref
                 spot = i
                 break
@@ -1079,7 +1083,7 @@ class Statement(list, Tags, Equalities):
                                                   hierarchy=firstHierarchy)
         #runs through 
         if reprocess == False:
-            self.hierarchyGroups = firstHierarchy
+            self._hierarchy_groups = firstHierarchy
         elif (reprocess and secondMisfits != []):
             misfitDelta = []
             counter = 0
@@ -1098,9 +1102,9 @@ class Statement(list, Tags, Equalities):
                 counter +=1    
             #while loop is done
             result = (secondHierarchy, secondMisfits)
-            self.hierarchyGroups = secondHierarchy
+            self._hierarchy_groups = secondHierarchy
         else:
-            self.hierarchyGroups = secondHierarchy
+            self._hierarchy_groups = secondHierarchy
         return result
 
     def _manage_replicas(self, *tagsToOmit,
@@ -1293,7 +1297,7 @@ class Statement(list, Tags, Equalities):
         The summary precedes the first lineitem that is at the same level of the
         hierarchy as its lineitem. That is, the summary follows all details of
         the lineitem it summarizes, as well as their details. The method uses
-        instance.hierarchyMap to locate the proper insertion position. 
+        instance._hierarchy_map to locate the proper insertion position. 
         """
         tagsToOmit = set(tagsToOmit)
         tagsToOmit.add(summaryTag)
@@ -1341,9 +1345,9 @@ class Statement(list, Tags, Equalities):
                 spots_L = list(self.dNames[L.name])
                 spots_L.sort()
                 iL = spots_L[0]
-                hL = self.hierarchyMap[iL]
+                hL = self._hierarchy_map[iL]
                 j = None
-                rightMap = self.hierarchyMap[(iL+1):]
+                rightMap = self._hierarchy_map[(iL+1):]
                 for spot in range(len(rightMap)):
                     newH = rightMap[spot]
                     if newH < hL:
@@ -1352,7 +1356,7 @@ class Statement(list, Tags, Equalities):
                     else:
                         continue
                 else:
-                    j = len(self.hierarchyMap)
+                    j = len(self._hierarchy_map)
                 #if this doesnt work, can try finding all senior Hs and running
                 # a min on the list, though that seems like overkill
                 self.insert(j, newSummary)
@@ -1380,21 +1384,21 @@ class Statement(list, Tags, Equalities):
         Conceptually, the map represents how many steps deep in the hierarchy a
         given item in self is.
 
-        The method stores its result in self.hierarchyMap.
+        The method stores its result in self._hierarchy_map.
         """
         self._group_by_hierarchy(reprocess=True)
         #build map from scratch on every call
-        self.hierarchyMap = []
+        self._hierarchy_map = []
         for lineItem in self:
-            for n in range(len(self.hierarchyGroups)):
-                if lineItem in self.hierarchyGroups[n]:
-                    self.hierarchyMap.append(n)
+            for n in range(len(self._hierarchy_groups)):
+                if lineItem in self._hierarchy_groups[n]:
+                    self._hierarchy_map.append(n)
                     break
                 else:
                     continue
             else:
-                self.hierarchyMap.append(self.LABEL_MISFIT)
-        if not len(self.hierarchyMap) == len(self):
+                self._hierarchy_map.append(self.LABEL_MISFIT)
+        if not len(self._hierarchy_map) == len(self):
             c = "map does not properly reflect hierarchy"
             raise BBExceptions.IOPMechanicalError()
 
