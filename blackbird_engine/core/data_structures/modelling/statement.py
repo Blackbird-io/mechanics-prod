@@ -102,14 +102,17 @@ class Statement(list, Tags, Equalities):
     add_line_to()         add line as bottom detail in tree
     add_top_line()        add line to top of instance, optionally after another
     build_index()         make name:{i} and partOf:{i} dicts for contents
-    clearDictionaries()   sets dNames and dParts to a blank dictionary
-    copy()
+    
+    copy()                returns deep copy
+    indexByName()         builds dictionaries, searches for name
+    resetDictionaries()   
+    
     find_peer_or_senior() returns index of first line w eq or greater hierarchy
     findNextBookMark()
     findNextPeer()
-    indexByName()         builds dictionaries, searches for name
+    
     setBookMarks()        
-    setSummaryPrefix()    [obs?]
+    
     spotByBookMark()
     spotGenerally()
     spot_in_tree()        locates insertion index in tree of parent names
@@ -596,11 +599,11 @@ class Statement(list, Tags, Equalities):
             for L in self:
                 L.clearInheritedTags(recur)
 
-    def copy(self, enforce_rules = True):
+    def copy(self, enforce_rules=True):
         """
 
 
-        Fins.copy([enforce_rules = True]) -> Fins
+        Statement.copy() -> Fins
 
 
         Method returns a deep copy of the instance. If ``enforce_rules`` is

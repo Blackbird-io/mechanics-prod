@@ -310,20 +310,7 @@ def scenario_3(topic):
     local_drivers["Security"] = driver_security
     local_drivers["IT"] = driver_it
     
-    #
-    #
-    #a) template fins: lines only
-    template_fins = M.defaultFinancials
-    i_opex = template_fins.indexByName("Operating Expense")
-    line_opex = template_fins[i_opex]
-    for line in lines[::-1]:
-        if line.name in template_fins.dNames.keys():
-            continue
-        local_line = copy.deepcopy(line)
-        template_fins.insert(i_opex+1,local_line)
-        if not local_line.partOf:
-            local_line.setPartOf(line_opex)
-    #b) bottom units: lines and drivers
+    # Bottom units: lines and drivers
     top_bu = M.time_line.current_period.content
     bottom_bus = M.time_line.current_period.get_lowest_units()
     for bu in bottom_bus:

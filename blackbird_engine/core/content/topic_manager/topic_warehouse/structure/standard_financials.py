@@ -25,6 +25,7 @@ n/a
 
 #imports
 from data_structures.modelling.statement import Statement
+from data_structures.modelling.new_financials import Financials
 from data_structures.modelling.line_item import LineItem
 
 
@@ -34,8 +35,8 @@ from data_structures.modelling.line_item import LineItem
 knowledge_content = True
 
 #standard financials
-standard_financials = Statement()
-standard_financials.buildDictionaries()
+standard_financials = Financials()
+
 revenue = LineItem("Revenue")
 revenue.tag("GAAP","Operations")
 cogs = LineItem("Cost")
@@ -48,12 +49,12 @@ ebitda = LineItem("EBITDA")
 ebitda.tag("Operations")
 income_lines = [revenue,cogs,opex,sga,ebitda]
 for L in income_lines:
-    L.setPartOf(standard_financials)
-    standard_financials.append(L)
+    L.setPartOf(standard_financials.income)
+    standard_financials.income.append(L)
     
 basic_fins = standard_financials.copy()
-b_sga_i = basic_fins.indexByName("sg&a")
-b_opex_i = basic_fins.indexByName("operating expense")
-b_sga = basic_fins[b_sga_i]
-b_opex = basic_fins[b_opex_i]
+b_sga_i = basic_fins.income.indexByName("sg&a")
+b_opex_i = basic_fins.income.indexByName("operating expense")
+b_sga = basic_fins.income[b_sga_i]
+b_opex = basic_fins.income[b_opex_i]
 b_sga.setPartOf(b_opex)

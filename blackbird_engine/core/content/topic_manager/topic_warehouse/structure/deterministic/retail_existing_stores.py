@@ -328,7 +328,6 @@ def scenario_6(topic):
         M.time_line.current_period.set_content(top_bu)  
     #
     standard_fins = standard_financials.basic_fins.copy()
-    M.defaultFinancials = standard_fins.copy()
     top_bu.set_financials(standard_fins.copy())
     atx = CompanyValue()
     top_bu.set_analytics(atx)

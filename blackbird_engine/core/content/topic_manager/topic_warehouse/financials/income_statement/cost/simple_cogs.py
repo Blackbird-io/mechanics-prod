@@ -163,8 +163,12 @@ def sub_scenario_1a(topic):
     for sub_bu in M.time_line.current_period.get_lowest_units():
         sub_d1 = D1.copy()
         sub_bu.addDriver(sub_d1, "Cost", "COGS")
-        fins = sub_bu.financials
-        fins.buildDictionaries()
+
+        fins = sub_bu.financials.income
+        # For backwards compatibility, point ``fins`` directly to income
+        # statement.
+        
+        fins.build_index()
         cost = "cost"
         cogs = "cogs"
         if cost in fins.dNames.keys():
