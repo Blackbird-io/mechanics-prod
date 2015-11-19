@@ -102,6 +102,7 @@ class Statement(list, Tags, Equalities):
     add_line_to()         add line as bottom detail in tree
     add_top_line()        add line to top of instance, optionally after another
     build_tables()         make name:{i} and partOf:{i} dicts for contents
+    build_custom_table()
     
     copy()                returns deep copy
     indexByName()         builds dictionaries, searches for name
@@ -464,28 +465,6 @@ class Statement(list, Tags, Equalities):
                 result.append(rL)
         return result
 
-    def _erase_managed_lines(self):
-        """
-
-
-        Fins.eraseManagedLineItems() -> None
-
-        
-        Method erases all lineitems with the dropDownReplicaTag and summaryTag.
-        Uses ParsingTools.excludeByTag() to filter the managed lineitems.
-        quickly.
-        """
-        ddrtag = dropDownReplicaTag
-        stag = summaryTag
-        mTags = [ddrtag,
-                 ddrtag.casefold(),
-                 stag,
-                 stag.casefold()]
-        newFin = self[:]
-        newFin = ParsingTools.excludeByTag(newFin,*mTags)
-        self.clear()
-        self.extend(newFin)
-
 ##    def extrapolate_to(self,target):
 ##        """
 ##
@@ -502,7 +481,7 @@ class Statement(list, Tags, Equalities):
         """
 
 
-        Fins.ex_to_special(target) -> Fins
+        Statement.ex_to_special() -> Fins
 
 
         Method returns new Financials object, runs custom logic.
@@ -583,72 +562,6 @@ class Statement(list, Tags, Equalities):
         #step 3: return the result container
         return result
 
-    def findNextBookMark(self,refFins,refIndex=0):
-        """
-
-    
-        F.findNextBookMark(refFins[,refIndex=0]) -> int
-
-
-        Method returns index (``B``) of first bookmark in refFins located to the
-        right of the refIndex.
-
-        If not bookMark is found, B == -1.
-        """
-        for i in range(len(refFins))[refIndex:]:
-            line = refFins[i]
-            if bookMarkTag.casefold() in line.optionalTags:
-                B = i
-                break            
-            else:
-                continue
-        else:
-            #finished iterating through refFins, no bookmarks right of refIndex
-            B = -1
-        return B
-
-    def find_peer_or_senior(self, ref_index, end_index = None):
-        """
-
-
-        Financials.find_peer_or_senior(ref_index[, end_index = None]) -> int
-
-
-        Method locates the first peer or senior item to the right of ref_index
-        and left of end_index. Method returns the index of that peer/senior
-        relative to instance as a whole. 
-
-        If end_index == None, method uses instance length as the end index.
-        
-        If no peer or senior exists in instance[ref_index, end_index), method
-        returns end_index. When end_index is None, method returns instance
-        length, so callers can insert an object into last position.
-
-        Items A and B are peers if A's hierarchy value equals that of B. A is
-        senior to B if A's hierarchy value is **lower** than B. Method builds
-        hierarchy map on instance and walks it until it finds the first senior
-        or peer. 
-        """
-        spot = None
-        peer_level = self.hierarchyMap[ref_index]
-        start = ref_index + 1
-        #
-        if end_index:
-            end = end_index
-        else:
-            end = len(self.hierarchyMap)
-        #
-        for i in range(start, end):
-            if self.hierarchyMap[i] <= peer_level:
-                #line in position is equal or greater in senior to ref
-                spot = i
-                break
-            else:
-                continue
-        else:
-            spot = end
-        return spot
-
     def indexByName(self,name):
         """
 
@@ -699,149 +612,6 @@ class Statement(list, Tags, Equalities):
                 continue
             else:
                 self.inheritTagsFrom(line)
-
-    def manage_headers(self,
-                       *tagsToOmit,
-                       start_position = 0,
-                       end_position = None,
-                       catch_values = True):
-        """
-
-
-        Financials.manage_headers(*tagsToOmit[,
-                                  start_position = 0[,
-                                  end_position = None[,
-                                  catch_values = True]]]) -> None
-
-
-        Method inserts header lines above any line that has a True value and
-        detail line items.
-
-        Detail lines say that they are partOf a particular line. So if
-        line_A.partOf == ``revenue``, line_A is a detail of ``revenue``.
-
-        Header lines have a name that other details are partOf and a None value. 
-
-        NOTE: Headers replace dropDownReplicas from older builds. 
-
-        Arguments:
-
-        -- ``start_position``: index in instance where method should begin
-           looking for lines that need a header
-        -- ``end_position`` : index in instance where method will stop looking
-           for lines that need a header
-        -- ``catch_values`` : if True, method will increment the line
-           triggering a header insertion by the header's value      
-        """
-        #things i should do:
-        #  make compatible with composition-style tags from the getgo
-        #    perhaps by putting together a dictionary?
-        #  toggle whether the copy goes on top (new style) or on the bottom (old style)
-        #
-        #prep area
-        sig = Globals.signatures["Financials.manageDropDownReplicas"]
-        header_tag = ddr_tag
-        self.build_tables()
-        #
-        #go through instance and add headers for every line with a value and
-        #details
-        finished = False
-        while not finished:
-            #
-            #track position to minimize number of iterations
-            shift = 0
-            start = max(0,
-                        (start_position + shift))
-            end = len(self) - 1
-            if end_position:
-                end = min(end,
-                          (end_position + shift))
-            #length of instance will change if this method inserts headers, so
-            #count it every time the while loop runs. method assumes that the
-            #item at instance[end] cannot have any details.
-            #
-            for i in range(start, end):
-                #
-                shift = i
-                #change start to avoid repeating work
-                #
-                this_line = self[i]
-                if not this_line.value:
-                    continue
-                #
-                bad_tags_here = set(tagsToOmit) & set(this_line.allTags)
-                if bad_tags_here:
-                    continue
-                #
-                #if still in this loop, line is eligible for a header if it has
-                #details btwn start and end position.
-                #
-                need_header = False
-                header_exists = False
-                potential_details = self.dParts.get(this_line.name, set())
-                details_in_range = potential_details & set(range(start, end))
-                #
-                if details_in_range:
-                    #
-                    #details exist. this_line probably needs a header, unless
-                    #it already has one. in a well-formed financials object,
-                    #this header would be this_line's left-hand neighbor
-                    #
-                    potential_header = self[(i-1)]
-                    if potential_header.name == this_line.name:
-                        header_exists = True
-                        #increment this_line by header value, move on
-                        header_val = potential_header.value
-                        if header_val:
-                            new_value = header_val + (this_line.value or 0)
-                            this_line.setValue(new_value, sig)
-                            potential_header.setValue(None,
-                                                      sig,
-                                                      overrideValueManagement = True)
-                            #no insertion, no need to break
-                    else:
-                        need_header = True
-                #
-                if need_header:
-                    header = this_line.replicate()
-                    #header inherits partOf from this_line
-                    #
-                    #catch ``orphaned`` lines (that used to have a header but
-                    #lost it for some reason); orphans produce headers with
-                    #equivalnet name and partOf. 
-                    if header.name == header.partOf:
-                        if i == 0:
-                            header.setPartOf(self.topLevelNames[0])
-                        else:
-                            header.setPartOf(self[(i-1)])
-                        #make header for orphans next level up in hiearchy
-                    #
-                    this_line.setPartOf(header)
-                    #update parentObject pointer on the line; partOf value
-                    #should stay the same
-                    #
-                    header.tag(ddr_tag)
-                    header.setValue(None,
-                                    sig,
-                                    overrideValueManagement = True)
-                    self.insert(i, header)
-                    #
-                    shift = i+2
-                    #after method inserts header, header is now at position i,
-                    #this_line is at i+1. to start for loop at the next untested
-                    #line, shift position counter 2 spots forward.
-                    #
-                    self.build_tables()
-                    #have to build dictionaries because use dParts to check
-                    #whether the position of potential details falls between
-                    #start and end
-                    #
-                    break
-                    #start for loop cycle over every time method inserts a new
-                    #line so while loop can update start and end position
-            else:
-                finished = True
-                #exit out of the while loop
 
     def _manage_summaries(self, *tagsToOmit):
         """
@@ -1180,7 +950,7 @@ class Statement(list, Tags, Equalities):
         and in self. If no such bookMark is found, L == -1.
         """
         L = None
-        refBMi = self.findNextBookMark(refFins,refIndex)
+        refBMi = self._find_next_book_mark(refFins, refIndex)
         if refBMi == -1:
             L = len(self)
             #no more bookmarks in refFins, spot is end of self
@@ -1216,7 +986,7 @@ class Statement(list, Tags, Equalities):
                 #largest value in set
                 ref_spot = max(places)
                 self._map_hierarchy()
-                L = self.find_peer_or_senior(ref_spot)
+                L = self._find_peer_or_senior(ref_spot)
             except KeyError:
                 #line.partOf not in self.fins.dNames;
                 #place based on bookmarks
@@ -1260,7 +1030,7 @@ class Statement(list, Tags, Equalities):
             parent_name = ancestor_tree[0]
         i = self.indexByName(parent_name)
         parent = self[i]
-        j = self.find_peer_or_senior(i)
+        j = self._find_peer_or_senior(i)
         descendants = ancestor_tree[1:]
         if descendants:
             i, j, parent = self.spot_in_tree(*descendants,
@@ -1434,64 +1204,6 @@ class Statement(list, Tags, Equalities):
         else:
             refLine.setPartOf(self)
 
-    def _update_summaries(self, *tagsToOmit, refresh=False):
-        """
-
-
-        Fins._update_summaries() -> None
-
-
-        For each line without a bad tag, method increments the name-appropriate
-        summary. Method assumes all necessary summaries exist and skips any
-        lines without one.
-
-        If ``refresh`` is False (default), method requires someone (usually
-        self.manageSums3) to update the self.dSummaries dictionary prior to
-        incrementation. The manul update allows for speed gains but **creates
-        potential for error**.
-
-        If ``refresh`` is True, method builds a new existingSummaries dict on
-        call and saves it to self.dSummaries. 
-        """
-        
-        tagsToOmit = set(tagsToOmit)
-        existingSummaries = self.dSummaries
-        if refresh:
-            existingSummaries = self.build_custom_table([summaryTag])
-        for i in existingSummaries[summaryTag]:
-            summaryLine = self[i]
-            if summaryLine.value:
-                summaryLine.setValue(0, "update reset")
-        #no insertions so ok to use self:
-        for L in self:
-            if not L.value:
-                continue
-            if L.partOf in self.topLevelNames:
-                continue
-            if set(L.allTags) & tagsToOmit != set():
-                continue
-            summaryName = self.SUMMARY_PREFIX + " " + L.partOf
-            summaryName = summaryName.casefold(
-                )
-            try:
-                places = existingSummaries[summaryName]
-                spot = min(places)
-                matchingSummary = self[spot]
-                sValue = matchingSummary.value
-                if not sValue:
-                    sValue = 0
-                newValue = sValue + L.value
-                usSig = Globals.signatures["Financials.updateSummaries"]
-                matchingSummary.setValue(newValue,usSig)
-                matchingSummary.inheritTagsFrom(L, *uninheritableTags)
-                continue
-            except KeyError as X:
-                c = "Summary line ``%s`` expected but does not exist"
-                c = c % summaryName
-                raise BBExceptions.HierarchyError(c)
-        if refresh:
-            self.dSummaries = existingSummaries
-
     def increment(self, lines, *tagsToOmit, refresh=False, signature=None):
         """
 
@@ -1562,6 +1274,94 @@ class Statement(list, Tags, Equalities):
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
 
+    def _erase_managed_lines(self):
+        """
+
+
+        Statement._erase_managed_lines() -> None
+
+        
+        Method erases all lineitems with the dropDownReplicaTag and summaryTag.
+        Uses ParsingTools.excludeByTag() to filter the managed lineitems.
+        quickly.
+        """
+        ddrtag = dropDownReplicaTag
+        stag = summaryTag
+        mTags = [ddrtag,
+                 ddrtag.casefold(),
+                 stag,
+                 stag.casefold()]
+        newFin = self[:]
+        newFin = ParsingTools.excludeByTag(newFin,*mTags)
+        self.clear()
+        self.extend(newFin)
+
+    def _find_next_book_mark(self, refFins, refIndex=0):
+        """
+
+    
+        Statement._find_next_book_mark() -> int
+
+
+        Method returns index (``B``) of first bookmark in refFins located to the
+        right of the refIndex.
+
+        If no bookMark is found, B == -1.
+        """
+        for i in range(len(refFins))[refIndex:]:
+            line = refFins[i]
+            if bookMarkTag.casefold() in line.optionalTags:
+                B = i
+                break            
+            else:
+                continue
+        else:
+            #finished iterating through refFins, no bookmarks right of refIndex
+            B = -1
+        return B
+
+    def _find_peer_or_senior(self, ref_index, end_index=None):
+        """
+
+
+        Statement._find_peer_or_senior() -> int
+
+
+        Method locates the first peer or senior item to the right of ref_index
+        and left of end_index. Method returns the index of that peer/senior
+        relative to instance as a whole. 
+
+        If end_index == None, method uses instance length as the end index.
+        
+        If no peer or senior exists in instance[ref_index, end_index), method
+        returns end_index. When end_index is None, method returns instance
+        length, so callers can insert an object into last position.
+
+        Items A and B are peers if A's hierarchy value equals that of B. A is
+        senior to B if A's hierarchy value is **lower** than B. Method builds
+        hierarchy map on instance and walks it until it finds the first senior
+        or peer. 
+        """
+        spot = None
+        peer_level = self.hierarchyMap[ref_index]
+        start = ref_index + 1
+        #
+        if end_index:
+            end = end_index
+        else:
+            end = len(self.hierarchyMap)
+        #
+        for i in range(start, end):
+            if self.hierarchyMap[i] <= peer_level:
+                #line in position is equal or greater in senior to ref
+                spot = i
+                break
+            else:
+                continue
+        else:
+            spot = end
+        return spot
+    
     def _group_by_hierarchy(self, reprocess=True, attempts=50):
         """
 
@@ -1747,5 +1547,63 @@ class Statement(list, Tags, Equalities):
                 self.hierarchyMap.append(self.LABEL_MISFIT)
         if not len(self.hierarchyMap) == len(self):
             c = "map does not properly reflect hierarchy"
-            raise BBExceptions.IOPMechanicalError()  
+            raise BBExceptions.IOPMechanicalError()
+
+    def _update_summaries(self, *tagsToOmit, refresh=False):
+        """
+
+
+        Fins._update_summaries() -> None
+
+
+        For each line without a bad tag, method increments the name-appropriate
+        summary. Method assumes all necessary summaries exist and skips any
+        lines without one.
+
+        If ``refresh`` is False (default), method requires someone (usually
+        self.manageSums3) to update the self.dSummaries dictionary prior to
+        incrementation. The manul update allows for speed gains but **creates
+        potential for error**.
+
+        If ``refresh`` is True, method builds a new existingSummaries dict on
+        call and saves it to self.dSummaries. 
+        """
+        
+        tagsToOmit = set(tagsToOmit)
+        existingSummaries = self.dSummaries
+        if refresh:
+            existingSummaries = self.build_custom_table([summaryTag])
+        for i in existingSummaries[summaryTag]:
+            summaryLine = self[i]
+            if summaryLine.value:
+                summaryLine.setValue(0, "update reset")
+        #no insertions so ok to use self:
+        for L in self:
+            if not L.value:
+                continue
+            if L.partOf in self.topLevelNames:
+                continue
+            if set(L.allTags) & tagsToOmit != set():
+                continue
+            summaryName = self.SUMMARY_PREFIX + " " + L.partOf
+            summaryName = summaryName.casefold(
+                )
+            try:
+                places = existingSummaries[summaryName]
+                spot = min(places)
+                matchingSummary = self[spot]
+                sValue = matchingSummary.value
+                if not sValue:
+                    sValue = 0
+                newValue = sValue + L.value
+                usSig = Globals.signatures["Financials.updateSummaries"]
+                matchingSummary.setValue(newValue,usSig)
+                matchingSummary.inheritTagsFrom(L, *uninheritableTags)
+                continue
+            except KeyError as X:
+                c = "Summary line ``%s`` expected but does not exist"
+                c = c % summaryName
+                raise BBExceptions.HierarchyError(c)
+        if refresh:
+            self.dSummaries = existingSummaries
 
