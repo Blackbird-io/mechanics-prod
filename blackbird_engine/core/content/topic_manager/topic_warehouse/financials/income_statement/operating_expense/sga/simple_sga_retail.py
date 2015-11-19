@@ -213,25 +213,15 @@ def scenario_3(topic):
     local_drivers["Marketing"] = driver_marketing
     local_drivers["G&A"] = driver_ga
     
-    #insert lines and drivers into model
-    #a) template fins: lines only
-##    templateFins = M.defaultFinancials
-##    if templateFins:
-##        i_sga = templateFins.indexByName("SG&A")
-##        line_sga = templateFins[i_sga]
-##        for L in lines[::-1]:
-##            if L.name in templateFins.dNames.keys():
-##                continue
-##            localL = copy.deepcopy(L)
-##            templateFins.insert(i_sga+1,localL)
-##            localL.setPartOf(line_sga)
+    # Insert lines and drivers into top unit only, because this is ``Selling,
+    # **General** and Administrative`` expense. Unit SGA can be a different
+    # topic.
     
-    #b) lines and drivers into top unit only (because this is SGA)
-    #Unit SGA can be a different topic
     topBU = M.time_line.current_period.content
     activeBUs = [topBU]
     for bu in activeBUs:
-        fins = bu.financials
+        fins = bu.financials.income
+        # Point directly to income statement to preserve legacy naming.
         i_sga = fins.indexByName("SG&A")
         line_sga = fins[i_sga]
         for L in lines[::-1]:

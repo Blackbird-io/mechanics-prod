@@ -175,11 +175,11 @@ class Statement(list, Tags, Equalities):
             self.summarize()
         indentPerLevel = self._INDENT
         replicaPrefix = "Unspecified"
-        misfitPrefix = self.LABEL_MISFIT + "! "
+        misfitPrefix = self._LABEL_MISFIT + "! "
         self.buildHierarchyMap()
         for n in range(len(self)):
             lineItem = self[n]
-            if self.hierarchyMap[n] != self.LABEL_MISFIT:
+            if self.hierarchyMap[n] != self._LABEL_MISFIT:
                 if (self.contextualFormatting and
                     dropDownReplicaTag in lineItem.allTags):
                     lineItem.pre_format(prefix = replicaPrefix,

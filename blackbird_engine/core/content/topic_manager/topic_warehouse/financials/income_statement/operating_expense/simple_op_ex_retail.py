@@ -314,7 +314,8 @@ def scenario_3(topic):
     top_bu = M.time_line.current_period.content
     bottom_bus = M.time_line.current_period.get_lowest_units()
     for bu in bottom_bus:
-        fins = bu.financials
+        fins = bu.financials.income
+        # Point directly to the income statement for legacy interface
         i_opex = fins.indexByName("Operating Expense")
         line_opex = fins[i_opex]
         for L in lines[::-1]:
