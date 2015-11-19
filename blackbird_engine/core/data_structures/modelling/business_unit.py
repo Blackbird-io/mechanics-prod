@@ -469,7 +469,7 @@ class BusinessUnit(Tags,Equalities):
                 
                 if child_statement:
                     parent_statement = getattr(self.financials, attr_name)
-                    parent_statement.increment(child_statement, tags_to_omit, refresh=refresh, signature=signature)
+                    parent_statement.increment(child_statement, *tagsToOmit, refresh=refresh, signature=signature)
     
     def copy(self, enforce_rules=True):
         """
@@ -543,18 +543,20 @@ class BusinessUnit(Tags,Equalities):
         #not pick up blockingTags
         
         for statement in self.financials.ordered:
-            
-            for line in statement:
-                if tags_to_omit & set(line.allTags):
-                    continue
-                key = line.name.casefold()
-                if key not in self.drivers:
-                    continue
-                else:
-                    line.clear()
-                    matching_drivers = self.drivers.get_drivers(key)
-                    for driver in matching_drivers:
-                        driver.workOnThis(line)
+
+            if statement is not None:
+                
+                for line in statement:
+                    if tags_to_omit & set(line.allTags):
+                        continue
+                    key = line.name.casefold()
+                    if key not in self.drivers:
+                        continue
+                    else:
+                        line.clear()
+                        matching_drivers = self.drivers.get_drivers(key)
+                        for driver in matching_drivers:
+                            driver.workOnThis(line)
                     
     def extrapolate_to(self,target):
         """

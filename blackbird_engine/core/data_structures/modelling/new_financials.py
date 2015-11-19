@@ -71,6 +71,11 @@ class Financials:
         for statement in self.ordered:
             if statement:
                 statement.build_index(*tagsToOmit)
+
+    def summarize(self, *tagsToOmit):
+        for statement in self.ordered:
+            if statement:
+                statement.summarize(*tagsToOmit)
             
     def __str__(self):
         """
