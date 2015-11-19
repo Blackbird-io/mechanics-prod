@@ -101,7 +101,7 @@ class Statement(list, Tags, Equalities):
     FUNCTIONS:
     add_line_to()         add line as bottom detail in tree
     add_top_line()        add line to top of instance, optionally after another
-    build_index()         make name:{i} and partOf:{i} dicts for contents
+    build_tables()         make name:{i} and partOf:{i} dicts for contents
     
     copy()                returns deep copy
     indexByName()         builds dictionaries, searches for name
@@ -238,7 +238,7 @@ class Statement(list, Tags, Equalities):
         """
         
         #ancestors is a list of names of ancestors
-        self.build_index()
+        self.build_tables()
         self.buildHierarchyMap()
         if not allow_duplicates:
             if line.name in self.dNames:
@@ -265,7 +265,7 @@ class Statement(list, Tags, Equalities):
         with a line that has a symmetrical name to one that's already in the
         instance. 
         """
-        self.build_index()
+        self.build_tables()
         insert = True
         if not allow_duplicates:
             if line.name in self.dNames:
@@ -290,11 +290,11 @@ class Statement(list, Tags, Equalities):
                 #are considering only top level items. 
         self.insert(j, line)
         
-    def build_index(self, *tagsToOmit):
+    def build_tables(self, *tagsToOmit):
         """
 
 
-        Statements.build_index() -> None
+        Statements.build_tables() -> None
 
 
         Method goes through each line item in the instance and records its name
@@ -730,7 +730,7 @@ class Statement(list, Tags, Equalities):
         #
         #step 2: fill the result container
         #go line by line
-        alt_target.build_index(*tags_to_omit)
+        alt_target.build_tables(*tags_to_omit)
         #exclude summaries and replicas from the target
         tags_to_omit = set(tags_to_omit)
         for sL in self:
@@ -750,7 +750,7 @@ class Statement(list, Tags, Equalities):
                 newL.setPartOf(result)
                 #to catch any new top-level seed lines
             result.append(newL)
-        result.build_index()
+        result.build_tables()
         target_only = set(alt_target.dNames.keys()) - set(result.dNames.keys())
         target_only = sorted(target_only)
         #enforce stable order to maintain consistency across runtimes
@@ -845,12 +845,12 @@ class Statement(list, Tags, Equalities):
         the instance. Checks for name matches on a caseless (casefolded) basis.
         If no such item exists, returns ValueError.
 
-        NOTE: This method runs build_index() on every call. It is expensive.
+        NOTE: This method runs build_tables() on every call. It is expensive.
         You should manually retrieve results from the dictionaries for better
         performance.
         """
         name = name.casefold()
-        self.build_index()
+        self.build_tables()
         try:
             spots = self.dNames[name]
         except KeyError:
@@ -926,7 +926,7 @@ class Statement(list, Tags, Equalities):
         #prep area
         sig = Globals.signatures["Financials.manageDropDownReplicas"]
         header_tag = ddr_tag
-        self.build_index()
+        self.build_tables()
         #
         #go through instance and add headers for every line with a value and
         #details
@@ -1016,7 +1016,7 @@ class Statement(list, Tags, Equalities):
                     #this_line is at i+1. to start for loop at the next untested
                     #line, shift position counter 2 spots forward.
                     #
-                    self.build_index()
+                    self.build_tables()
                     #have to build dictionaries because use dParts to check
                     #whether the position of potential details falls between
                     #start and end
@@ -1092,7 +1092,7 @@ class Statement(list, Tags, Equalities):
                 #make and insert the summary lineitem
                 newSummary = LineItem(name = summaryName)
                 newSummary.tag(summaryTag,skipTag,field = "req")
-                self.build_index()
+                self.build_tables()
                 tPlaces = list(self.dNames[L.partOf])
                 tPlaces.sort()
                 top = self[tPlaces[0]]
@@ -1304,7 +1304,7 @@ class Statement(list, Tags, Equalities):
             return B
         except KeyError:
             if doubleCheck:
-                self.build_index()
+                self.build_tables()
                 B = self.matchBookMark(refBookMark,doubleCheck=False)
                 #must specify doubleCheck is false, otherwise loops forever on
                 #missing keys
@@ -1686,7 +1686,7 @@ class Statement(list, Tags, Equalities):
         ``tags_to_omit`` should be a set of tags for speed
         """
         if refresh:
-            self.build_index()
+            self.build_tables()
 
         if signature is None:
             signature = self.SIGNATURE_FOR_INCREMENTATION
@@ -1740,6 +1740,6 @@ class Statement(list, Tags, Equalities):
                 i = self._spot_generally(new_line, lines, i)
                 self._update_part(new_line)
                 self.insert(i, new_line)
-                self.build_index()
+                self.build_tables()
                 # Always build index after inserting something
 

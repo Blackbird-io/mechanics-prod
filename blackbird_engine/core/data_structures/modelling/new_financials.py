@@ -70,7 +70,7 @@ class Financials:
     def refresh(self, *tagsToOmit):
         for statement in self.ordered:
             if statement:
-                statement.build_index(*tagsToOmit)
+                statement.build_tables(*tagsToOmit)
 
     def reset(self):
         for statement in self.ordered:
