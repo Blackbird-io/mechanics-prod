@@ -67,9 +67,10 @@ class Financials:
         return new_instance
     
 
-    def refresh(self):
+    def refresh(self, *tagsToOmit):
         for statement in self.ordered:
-            statement.build_index()
+            if statement:
+                statement.build_index(*tagsToOmit)
             
     def __str__(self):
         """

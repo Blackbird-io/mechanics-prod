@@ -107,6 +107,8 @@ class BusinessUnit(Tags,Equalities):
                             "partOf"]
     
     tagSources = ["components", "drivers", "financials"]
+    
+    _CONSOLIDATION_SIGNATURE = "Consolidated "
         
     def __init__(self, name, fins=None):
         Tags.__init__(self,name) 
@@ -453,7 +455,7 @@ class BusinessUnit(Tags,Equalities):
             tagsToOmit = [bookMarkTag.casefold(), summaryTag]
         tagsToOmit = set(tagsToOmit) #<---------------------------------------------------------------------------------------------------------should be on statement?
 
-        signature = self.SIGNATURE_FOR_CONSOLDATE + "for Unit " + str(unit.id.bbid)
+        signature = self._CONSOLIDATION_SIGNATURE + "for Unit " + str(sub.id.bbid)
         # Signature will be long
         
         # Stage 1: check that sub is alive
@@ -462,7 +464,7 @@ class BusinessUnit(Tags,Equalities):
         else:
             sub.fill_out()
 
-            for attr_name in sub.financials.path:
+            for attr_name in sub.financials.ORDER:
                 child_statement = getattr(sub.financials, attr_name)
                 
                 if child_statement:
@@ -540,7 +542,7 @@ class BusinessUnit(Tags,Equalities):
         #lines appropriately. also need to make sure that inheritTagsFrom() does----------------------------------------------------------
         #not pick up blockingTags
         
-        for statement in self.financials.path:
+        for statement in self.financials.ordered:
             
             for line in statement:
                 if tags_to_omit & set(line.allTags):
