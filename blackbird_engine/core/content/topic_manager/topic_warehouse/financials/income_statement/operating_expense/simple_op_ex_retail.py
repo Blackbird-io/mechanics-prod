@@ -199,7 +199,7 @@ def scenario_3(topic):
     l_security.setPartOf(l_misc)
     l_it = LineItem("IT")
     l_it.setPartOf(l_misc)
-    lines = [l_comp,l_rent,l_util,l_misc,l_security,l_it]
+    lines = [l_comp, l_rent, l_util, l_misc, l_security, l_it]
     for L in lines[::-1]:
         L.guide.priority.increment(1)
     l_misc.guide.priority.reset()
@@ -318,16 +318,19 @@ def scenario_3(topic):
         # Point directly to the income statement for legacy interface
         i_opex = fins.indexByName("Operating Expense")
         line_opex = fins[i_opex]
-        for L in lines[::-1]:
-            if L.name in fins.dNames.keys():
+        for line in lines[::-1]:
+            if line.name in fins.dNames.keys():
+                print()
+                print("Skipping line %s" % line.name)
+                print()
                 continue
-            localL = copy.deepcopy(L)
-            fins.insert(i_opex+1,localL)
-            if not localL.partOf:
-                localL.setPartOf(line_opex)
-        for (k,tDriver) in local_drivers.items():
+            local_line = line.copy()
+            fins.insert(i_opex+1, local_line)
+            if not local_line.partOf:
+                local_line.setPartOf(line_opex)
+        for (k, tDriver) in local_drivers.items():
             clean_dr = tDriver.copy()
-            bu.addDriver(clean_dr,k)
+            bu.add_driver(clean_dr, k)
     #
     topic.wrap_topic()
 
