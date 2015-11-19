@@ -28,6 +28,7 @@ BusinessUnit          structured snapshot of a business at a given point in time
 import copy
 import datetime
 import time
+
 import BBExceptions
 import BBGlobalVariables as Globals
 
@@ -77,15 +78,13 @@ class BusinessUnit(Tags,Equalities):
     id                    instance of ID object
     life                  instance of Life object
     location              placeholder for location functionality
-    sig_consolidate       global signature updated for unit name
     size                  int; number of real-life equivalents obj represents
-    tagSources            list; CLASS attribute, sources for tag inheritance
     type                  str or None; unit's in-model type (e.g., "team")
     summary               None or BusinessSummary; investment summary
     valuation             None or CompanyValue; market view on unit
     
     FUNCTIONS:
-    add_component()       adds bus with verified ids to components
+    add_component()       adds unit to instance components
     add_driver()          registers a driver 
     clear()               restore default attribute values
     consolidate()         consolidates financials from every component
@@ -133,8 +132,8 @@ class BusinessUnit(Tags,Equalities):
         # May want to change period to a property, so that a set to new value
         # will always cause the unit to rerun registration. 
 
-        gl_sig_con = Globals.signatures["BusinessUnit.consolidate"]
-        self.sig_consolidate =  gl_sig_con % self.name
+##        gl_sig_con = Globals.signatures["BusinessUnit.consolidate"]
+##        self.sig_consolidate =  gl_sig_con % self.name
         self.size = 1
         self.summary = BusinessSummary()
         self.valuation = CompanyValue()
@@ -274,7 +273,7 @@ class BusinessUnit(Tags,Equalities):
             blank_attr = getattr(blank_bu,attr)
             setattr(self,attr,blank_attr)
 
-    def consolidate(self, *tagsToOmit, trace = False):
+    def consolidate(self, *tagsToOmit, trace=False):
         """
 
 
@@ -287,31 +286,22 @@ class BusinessUnit(Tags,Equalities):
         if tagsToOmit == tuple():
             tagsToOmit = [bookMarkTag.casefold(), summaryTag]
             
-        self.financials.buildDictionaries()
+        self.financials.refresh()
+        # Refresh once at the parent level to avoid unnecessary work for each
+        # unit. 
+        
         ordered_components = self.components.getOrdered()
+        # To simplify debugging, consolidate in fixed order. Can move towards
+        # unordered for speed (UPGRADE-S).
         
         for i in range(len(ordered_components)):
             component_on_deck = ordered_components[i]
             if not component_on_deck:
                 continue
             else:
-                self.consolidate_unit(component_on_deck,
-                                      i,
-                                      *tagsToOmit,
-                                      refresh_dictionaries=False,
-                                      trace=trace)
-                #dont refresh dictionaries at beginning of consolidate unit;
-                #main method already did so at the beginning, so they should
-                #be fresh for component 1. after that, consolidate_unit will
-                #refresh them when its routine inserts a new line into parent
-                #financials.
+                self.consolidate_unit(component_on_deck, *tagsToOmit, refresh=False, trace=trace)        
         
-    def consolidate_unit(self,
-                         sub,
-                         sub_position,
-                         *tagsToOmit,
-                         refresh_dictionaries=True,
-                         trace=False):
+    def consolidate_unit(self, sub, *tagsToOmit, refresh=False, trace=False):
         """
 
 
@@ -461,7 +451,10 @@ class BusinessUnit(Tags,Equalities):
         """
         if tagsToOmit == tuple():
             tagsToOmit = [bookMarkTag.casefold(), summaryTag]
-        tagsToOmit = set(tagsToOmit) #<----------------------------------should be on statement?
+        tagsToOmit = set(tagsToOmit) #<---------------------------------------------------------------------------------------------------------should be on statement?
+
+        signature = self.SIGNATURE_FOR_CONSOLDATE + "for Unit " + str(unit.id.bbid)
+        # Signature will be long
         
         # Stage 1: check that sub is alive
         if not sub.life.alive:
@@ -474,86 +467,7 @@ class BusinessUnit(Tags,Equalities):
                 
                 if child_statement:
                     parent_statement = getattr(self.financials, attr_name)
-                    parent_statement.update(child_statement, tags_to_omit, refresh=refresh) #<-------- do i need a refresh here?
-                    # don't really need a refresh, haven't done anything yet
-                    
-    ###################
-                
-                if not statement:
-                    continue
-
-                else:
-                    #go through line by line
-                    if refresh_dictionaries:
-                        parent_statement.build_dictionaries()
-                        self._consolidate_statement(child_statement, parent_statement)
-                    
-            for sLi in range(len(sub.financials)):
-                #stage 2: check that lineItem is informative:
-                subLine = sub.financials[sLi]
-                sName = copy.copy(subLine.name)
-                sValue = copy.copy(subLine.value)
-                sPart = copy.copy(subLine.partOf)
-                locPair = (subLine, sLi)
-                #name, value, partOf all dynamic; for speed, get once to use
-                #throughout the method
-                #
-                if not (sName or sValue):
-                    continue
-                
-                if not tagsToOmit & set(subLine.allTags) == set():
-                    continue
-                
-                if sName:
-                    if sName in parent.financials.dNames.keys():
-                        if not sValue:
-                            continue
-                            #no-op on blank-value name-symmetric lineitems
-                            #leave open for drivers at parent
-                        pLoc = max(parent.financials.dNames[sName])
-                        parentLine = parent.financials[pLoc]
-                        pValue = parentLine.value
-                        if not pValue:
-                            pValue = 0
-                        newParentValue = pValue + sValue
-                        subSuffix = " for Unit %s" % sub_position
-                        sigWithUnit = parent.sig_consolidate + subSuffix
-                        parentLine.setValue(newParentValue, sigWithUnit)
-                        parentLine.inheritTagsFrom(subLine)
-                        if trace:
-                            print("incremented %s by %s" % (parentLine.name, sValue))
-                        if tConsolidated not in parentLine.allTags:
-                            parentLine.tag(tConsolidated)
-                            
-                    else:
-                        replica = subLine.replicate(compIndex = sub_position)
-                        if sValue:
-                            if tConsolidated not in replica.allTags:
-                                replica.tag(tConsolidated)
-                            #block derive for informative value lines; if value
-                            #is at None, no tag, so derive can still write to
-                            #line
-                        subFins = sub.financials
-                        L = parent.financials.spotGenerally(replica,subFins,sLi)
-                        parent.financials.updatePart(replica)
-                        parent.financials.insert(L,replica)
-                        if trace:
-                            print("replicated %s" % subLine.name)
-                        parent.financials.buildDictionaries()
-                else:
-                    replica = subLine.replicate(compIndex = sub_position)
-                    if tConsolidated not in replica.allTags:
-                        replica.tag(tConsolidated)
-                    # know that sValue must be true to get here, so tag
-                    # consolidated and block derive
-                    subFins = sub.financials
-                    L = parent.financials.spotGenerally(replica,subFins,sLi)
-                    parent.financials.updatePart(replica)
-                    if trace:
-                        print("replicated %s" % subLine)
-                    parent.financials.insert(L,replica)
-                    parent.financials.buildDictionaries()
-                    #Upgrade-S: move UpdatePart into spotGenerally
+                    parent_statement.increment(child_statement, tags_to_omit, refresh=refresh, signature=signature)
     
     def copy(self, enforce_rules=True):
         """
@@ -854,7 +768,6 @@ class BusinessUnit(Tags,Equalities):
                           side_element="|",
                           box_width=23,
                           field_width=5):
-
         """
 
 

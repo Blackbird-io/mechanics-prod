@@ -60,7 +60,7 @@ uninheritableTags = [doNotTouchTag, dropDownReplicaTag]
 
 #Method Signatures:
 signatures = {}
-signatures["BusinessUnit.consolidate"] = "consolidated by %s"
+##signatures["BusinessUnit.consolidate"] = "consolidated by %s"
 #
 signatures["Financials.manageDropDownReplicas"] = "manageDDR"
 signatures["Financials.updateSummaries"] = "updateSummaries"
