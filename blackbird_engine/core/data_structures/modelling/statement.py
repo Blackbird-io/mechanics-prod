@@ -106,7 +106,6 @@ class Statement(list, Tags, Equalities):
     
     copy()                returns deep copy
     indexByName()         builds dictionaries, searches for name
-    resetDictionaries()   
     toggleContextualFormatting()
     ====================  ======================================================
     """
@@ -306,7 +305,8 @@ class Statement(list, Tags, Equalities):
         tagsToOmit = set(tagsToOmit)
         # By default, scans everything
         
-        self.resetDictionaries()
+        self._clear_tables()
+        
         for i in range(len(self)):
             line = self[i]
             lName = copy.copy(line.name)
@@ -390,11 +390,11 @@ class Statement(list, Tags, Equalities):
                     D[tag].add(i)
         return D           
 
-    def clearInheritedTags(self,recur = True):
+    def clearInheritedTags(self, recur=True):
         """
 
 
-        Fins.clearInheritedTags([recur = True]) -> None
+        Statement.clearInheritedTags() -> None
 
 
         Method runs Tags.clearInheritedTags() on instance. If ``recur`` is True,
@@ -442,7 +442,7 @@ class Statement(list, Tags, Equalities):
         result.clear()
         #result is its own container; clearing it will not clear the seed
         #instance
-        result.resetDictionaries()
+        result._clear_tables()
         #create independent objects for any attributes that point to something
         #mutable or structured
         result.hierarchyGroups = None
@@ -612,44 +612,12 @@ class Statement(list, Tags, Equalities):
                 continue
             else:
                 self.inheritTagsFrom(line)
-    
-    def matchBookMark(self,refBookMark,doubleCheck = True):
-        """
-
-
-        F.matchBookMark(bookMark) -> int
-
-
-        Method returns index ("B") of first bookmark in self that is
-        name-symmetric to refBookMark.
-
-        Raises BookMarkError if self does not contain a bookMark with a name
-        symmetric to refBookMark.
-        """
-        #
-        #UPGRADE-S: could potentially run faster on bookmark/line __hashes__
-        #
-        B = -1
-        try:
-            places = list(self.dNames[refBookMark.name])
-            places.sort()
-            B = places[0]
-            return B
-        except KeyError:
-            if doubleCheck:
-                self.build_tables()
-                B = self.matchBookMark(refBookMark,doubleCheck=False)
-                #must specify doubleCheck is false, otherwise loops forever on
-                #missing keys
-                return B
-            else:
-                raise BBExceptions.BookMarkError
 
     def reset(self):
         """
 
 
-        Fins.reset() -> None
+        Statement.reset() -> None
 
 
         Method erases all replicas and summaries, clears line values for all
@@ -665,21 +633,9 @@ class Statement(list, Tags, Equalities):
         self._erase_managed_lines()
         for line in self:
             line.clear()
-        self.resetDictionaries()
+        self._clear_tables()
         self.hierarchyMap = None
         self.hierarchyGroups = None
-    
-    def resetDictionaries(self):
-        """
-
-
-        Fins.resetDictionaries() -> None
-
-
-        Resets ``dNames`` and ``dParts`` to blank dictionaries
-        """
-        self.dNames = {}
-        self.dParts = {}
                 
     def spotByBookMark(self,refFins,refIndex):
         """
@@ -705,7 +661,7 @@ class Statement(list, Tags, Equalities):
         else:
             refMark = refFins[refBMi]
             try:
-                L = self.matchBookMark(refMark)
+                L = self._match_book_mark(refMark)
             except BookMarkError:
                 #self missing the first bookmark found in refFins after
                 #refIndex; find next bookMark, try that
@@ -1002,6 +958,18 @@ class Statement(list, Tags, Equalities):
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
 
+    def _clear_tables(self):
+        """
+
+
+        Statement._clear_tables() -> None
+
+
+        Resets ``dNames`` and ``dParts`` to blank dictionaries
+        """
+        self.dNames = {}
+        self.dParts = {}
+        
     def _erase_managed_lines(self):
         """
 
@@ -1534,6 +1502,34 @@ class Statement(list, Tags, Equalities):
         if not len(self.hierarchyMap) == len(self):
             c = "map does not properly reflect hierarchy"
             raise BBExceptions.IOPMechanicalError()
+
+    def _match_book_mark(self, book_mark, double_check=True):
+        """
+
+
+        Statement._match_book_mark() -> int
+
+
+        Method returns index ("B") of first bookmark in self that is
+        name-symmetric to book_mark.
+
+        Raise BookMarkError if instance does not have the same mark. 
+        """
+        #UPGRADE-S: could potentially run faster on bookmark/line __hashes__
+        B = -1
+        try:
+            places = list(self.dNames[book_mark.name])
+            places.sort()
+            B = places[0]
+            return B
+        except KeyError:
+            if double_check:
+                self.build_tables()
+                B = self._match_book_mark(mark, double_check=False)
+                # Must specify double_check is false, otherwise loops forever.
+                return B
+            else:
+                raise BBExceptions.BookMarkError
 
     def _update_part(self, refLine):
         """
