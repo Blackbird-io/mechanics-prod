@@ -246,8 +246,8 @@ def apply_data(topic, datapoint):
     #always clear interview cache before modifying path, otherwise controller
     #may follow old plan
     #
-    path.buildDictionaries()
-    if sbr_count_label in path.dNames:
+    path.build_tables()
+    if sbr_count_label in path.table_by_name:
         pass
     else:
         subscriber_count = LineItem(sbr_count_label)

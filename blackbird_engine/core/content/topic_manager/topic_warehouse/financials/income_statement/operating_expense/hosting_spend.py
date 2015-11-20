@@ -238,7 +238,7 @@ def apply_data(topic, datapoint):
     dr_host.configure(data, f_monthly)
     
     #Step 2. Populate model with new information
-    company.financials.add_line_to(l_host, "operating expense")
+    company.financials.income.add_line_to(l_host, "operating expense")
     company.addDriver(dr_host)
     
     #Step 3. Prepare model for further processing

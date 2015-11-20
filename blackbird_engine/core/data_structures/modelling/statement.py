@@ -58,6 +58,9 @@ tConsolidated = Tags.tagManager.catalog["consolidated"]
 uninheritableTags = [doNotTouchTag, dropDownReplicaTag]
 
 # Classes
+class PlacementSuccess(Exception):
+    pass
+        
 class Statement(list, Tags, Equalities):
     """
 
@@ -71,27 +74,18 @@ class Statement(list, Tags, Equalities):
     parentObject. Generally, all LineItems included in Financials should
     either specify Financials or the name of an existing LineItem as their
     ``partOf``. 
-
-    NOTE: Default value for Financials.misfitLabel references the
-    ``misfitLabel`` GLOBAL VARIABLE.
-
-    NOTE2: lists have a build-in __eq__ by default
-    Accordingly, Equalities is not a parent class of Financials
-
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
     autoSummarize         bool, controls whether summarize runs on __str__
-    bookMarks             list of built-in bookMarks
     contextualFormatting  bool, 
     table_by_name                dict: k is line names, v is line index; v is static, k
                           is a pointer to the line attribute
     table_by_part                dict: k is line partOf, v is line index; v is static,k
                           is a pointer to the line attribute
     indent
-    _top_level_names         list of default top-level names
     
 
     FUNCTIONS:
@@ -102,7 +96,6 @@ class Statement(list, Tags, Equalities):
     
     copy()                returns deep copy
     indexByName()         builds dictionaries, searches for name
-    toggleContextualFormatting()
     ====================  ======================================================
     """
     keyAttributes = []
@@ -205,25 +198,26 @@ class Statement(list, Tags, Equalities):
         Method delegates recursive location work to Financials._spot_in_tree().
 
         Method will raise KeyError if instance does not contain the
-        ancestor_tree structure in full.
+        ancestor_tree structure in full. Method will throw BBAnalyticalError if
+        ancestor_tree is empty.
 
         If ``allow_duplicates`` == False, method will raise error when dealing
         with a line that has a symmetrical name to one that's already in the
         instance. 
 
-
         EXAMPLE:
-
-        >>> F = TemplateFinancials()
+        
+        >>> F = Statement()
+        >>> ...
         >>> print(F)
         
         revenue ............................None
           mens  ............................None
             footwear .......................None
             
-        >>> sandals = LineItem("Men's All-season Sandals")
+        >>> sandals = LineItem("sandals")
         >>> sandals.setValue(6, "example")
-        >>> F.add_line_to(sandals, "rev", "mens", "footwear")
+        >>> F.add_line_to(sandals, "revenue", "mens", "footwear")
         >>> print(F)
     
         revenue ............................None
@@ -1023,84 +1017,91 @@ class Statement(list, Tags, Equalities):
         check lineitem membership in the groups. 
         
         """
-        level0 = []
-        level1 = []
-        allLevels = [level0,level1]
-        class PlacementSuccess(Exception): pass
-        #Upgrade-S: move function out to parsing tools so dont incur def cost
-        #on every call; function would need to take _top_level_names as a
-        #constructor in that event (right now, categorizer piggy-backs on list
-        #of TLNs in financials instance)
-        def categorizer(items, hierarchy):
-            misfits = []
-            for unknownLineItem in items:
-                if unknownLineItem.partOf in self._top_level_names:
-                    hierarchy[0].append(unknownLineItem)
-                    #Upgrade-S: if function moved out to ParsingTools,
-                    #will need direct call to financials._top_level_names
-                    #add financials as categorizer() argument
-                else:
-                    currentDepth = len(hierarchy)
-                    for n in range(currentDepth):
-                        try: 
-                            for placedLineItem in hierarchy[n]:
-                                if unknownLineItem.partOf == placedLineItem.name:
-                                    #current lineitem is part of an nth-level lineitem
-                                    #check if there is an n+1 level
-                                    if not n == currentDepth - 1:
-                                        #there is a deeper level
-                                        #append current lineitem to the next level
-                                        hierarchy[n+1].append(unknownLineItem)
-                                        raise PlacementSuccess
-                                    else:
-                                        #there is not a deeper level, so make one
-                                        newLevel = []
-                                        newLevel.append(unknownLineItem)
-                                        hierarchy.append(newLevel)
-                                        raise PlacementSuccess
-                                else:
-                                    #no partOf match, check next lineitem at
-                                    #this level
-                                    continue
-                        except PlacementSuccess:
-                            break
-                    else:
-                        #finished going through hierarchy, didnt find the right
-                        #top at any level. could be because proper top follows
-                        #after unknownLineItem or because proper top is missing
-                        #completely. in either event, the current line item is
-                        #a misfit
-                        misfits.append(unknownLineItem)
-            return (hierarchy, misfits)
-        firstHierarchy,firstMisfits=categorizer(items=self,hierarchy=allLevels)
-        result=(firstHierarchy,firstMisfits)
-        secondHierarchy,secondMisfits=categorizer(items=firstMisfits,
-                                                  hierarchy=firstHierarchy)
-        #runs through 
+        two_level = [list(), list()]
+        # Create a starter lattice. 
+        
+        first_hierarchy, first_misfits = self._categorize(self, two_level)
+        result = (first_hierarchy, first_misfits)
+        
+        second_hierarchy, second_misfits=self._categorize(first_misfits, first_hierarchy)
+
         if reprocess == False:
-            self._hierarchy_groups = firstHierarchy
-        elif (reprocess and secondMisfits != []):
+            self._hierarchy_groups = first_hierarchy
+            
+        elif (reprocess and second_misfits != []):
             misfitDelta = []
             counter = 0
             while counter < attempts:
-                for L in firstMisfits:
-                    if L not in secondMisfits:
+                for L in first_misfits:
+                    if L not in second_misfits:
                         misfitDelta.append(L)
                     else:
                         continue
-                if misfitDelta == []:
+                if misfit_delta == []:
                     break
-                firstHierarchy = secondHierarchy
-                firstMisfits = secondMisfits
-                secondHierarchy,secondMisfits=categorizer(items=firstMisfits,
-                                                          hierarchy=firstHierarchy)
+                # Stop working as soon as you go through a cycle without
+                # placing an item in the hierarchy.
+                
+                first_hierarchy = second_hierarchy
+                first_misfits = second_misfits
+                second_hierarchy, second_misfits = self._categorize(first_misfits, first_hierarchy)
                 counter +=1    
-            #while loop is done
-            result = (secondHierarchy, secondMisfits)
-            self._hierarchy_groups = secondHierarchy
+
+            # Loop is over.
+            result = (second_hierarchy, second_misfits)
+            self._hierarchy_groups = second_hierarchy
         else:
-            self._hierarchy_groups = secondHierarchy
+            self._hierarchy_groups = second_hierarchy
+        
         return result
+    
+    def _categorize(self, items, hierarchy):
+        """
+
+        Utility function for _group_by_hierarchy().
+        """
+        misfits = []
+        
+        for unknownLineItem in items:
+
+            if unknownLineItem.partOf in self._top_level_names:
+                hierarchy[0].append(unknownLineItem)
+                
+            else:
+                currentDepth = len(hierarchy)
+                for n in range(currentDepth):
+                    try: 
+                        for placedLineItem in hierarchy[n]:
+                            if unknownLineItem.partOf == placedLineItem.name:
+                                #current lineitem is part of an nth-level lineitem
+                                #check if there is an n+1 level
+                                if not n == currentDepth - 1:
+                                    #there is a deeper level
+                                    #append current lineitem to the next level
+                                    hierarchy[n+1].append(unknownLineItem)
+                                    raise PlacementSuccess
+                                
+                                else:
+                                    #there is not a deeper level, so make one
+                                    newLevel = []
+                                    newLevel.append(unknownLineItem)
+                                    hierarchy.append(newLevel)
+                                    raise PlacementSuccess
+                            else:
+                                #no partOf match, check next lineitem at
+                                #this level
+                                continue
+                    except PlacementSuccess:
+                        break
+                else:
+                    #finished going through hierarchy, didnt find the right
+                    #top at any level. could be because proper top follows
+                    #after unknownLineItem or because proper top is missing
+                    #completely. in either event, the current line item is
+                    #a misfit
+                    misfits.append(unknownLineItem)
+                    
+        return (hierarchy, misfits)
 
     def _manage_replicas(self, *tagsToOmit,
                          signature=Globals.signatures["Financials.manageDropDownReplicas"],
@@ -1515,17 +1516,18 @@ class Statement(list, Tags, Equalities):
         j = end
         parent = self
         if not ancestor_tree:
-            raise ErrorOfSomeSort #? #return (l_bound, r_bound, self)?
+            c = "Method requires a tree of at least name."
+            raise BBExceptions.BBAnalyticalError(c)
         if ancestor_tree:
             parent_name = ancestor_tree[0]
         i = self.indexByName(parent_name)
         parent = self[i]
         j = self._find_peer_or_senior(i)
+        
         descendants = ancestor_tree[1:]
         if descendants:
-            i, j, parent = self._spot_in_tree(*descendants,
-                                             start = i,
-                                             end = j)
+            i, j, parent = self._spot_in_tree(*descendants, start=i, end=j)
+            
         return (i, j, parent)
     
     def _update_part(self, refLine):

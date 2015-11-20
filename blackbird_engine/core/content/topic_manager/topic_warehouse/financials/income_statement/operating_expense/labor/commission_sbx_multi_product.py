@@ -399,7 +399,7 @@ def unit_work(product,
     Function then inserts drivers that fill out the rate and product commission.
     """
     #
-    product.financials.buildDictionaries()
+    product.financials.build_tables()
     product_label = product_label_template % product.name
     #
     overview_data = dict()
