@@ -298,10 +298,10 @@ class Statement(list, Tags, Equalities):
         
         for i in range(len(self)):
             line = self[i]
-            lName = copy.copy(line.name)
+            lName = line.name
             if lName:
                 lNameCaseless = lName.casefold()
-            lPart = copy.copy(line.partOf)
+            lPart = line.partOf
             if lPart:
                 lPartCaseless = lPart.casefold()
             if tagsToOmit.intersection(set(line.allTags)) != set():
@@ -364,7 +364,7 @@ class Statement(list, Tags, Equalities):
                 D[tag] = set()
         for i in range(len(container)):
             line = container[i]
-            lName = copy.copy(line.name)
+            lName = line.name
             tagsIn = set(line.allTags) & tagsToInclude
             tagsOut = set(line.allTags) & tagsToExclude
             if tagsOut != set():
@@ -1541,7 +1541,7 @@ class Statement(list, Tags, Equalities):
         in the instance. If no suitable parent exists, sets refLine to be a top
         level item.
         """
-        refPart = copy.copy(refLine.partOf)
+        refPart = refLine.partOf
         if refPart in self.table_by_name.keys():
             places = list(self.table_by_name[refPart])
             places.sort()
