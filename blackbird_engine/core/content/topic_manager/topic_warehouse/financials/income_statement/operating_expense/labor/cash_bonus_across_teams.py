@@ -415,11 +415,11 @@ def unit_work(team,
     dr_own_bonus.configure(team_data, f_multiplier)
     #
     #add objects to team
-    team.financials.add_line_to(l_own_avg_bonus, "overview")
-    team.financials.add_line_to(l_bonus.copy(),
+    team.financials.overview.add_top_line(l_own_avg_bonus)
+    team.financials.income.add_line_to(l_bonus.copy(),
                                 "operating expense",
                                 "employee expense")
-    team.financials.add_line_to(l_own_bonus,
+    team.financials.income.add_line_to(l_own_bonus,
                                 "operating expense",
                                 "employee expense",
                                 l_bonus.name)

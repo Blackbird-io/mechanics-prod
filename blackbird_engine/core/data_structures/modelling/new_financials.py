@@ -67,7 +67,7 @@ class Financials:
         return new_instance
     
 
-    def refresh(self, *tagsToOmit):
+    def build_tables(self, *tagsToOmit):
         for statement in self.ordered:
             if statement:
                 statement.build_tables(*tagsToOmit)

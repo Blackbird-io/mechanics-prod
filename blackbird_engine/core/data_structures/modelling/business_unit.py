@@ -288,7 +288,7 @@ class BusinessUnit(Tags,Equalities):
         if tagsToOmit == tuple():
             tagsToOmit = [bookMarkTag.casefold(), summaryTag]
             
-        self.financials.refresh()
+        self.financials.build_tables()
         # Refresh once at the parent level to avoid unnecessary work for each
         # unit. 
         
