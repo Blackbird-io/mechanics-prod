@@ -97,40 +97,54 @@ def make_units_growth_numbered(start_dt, end_dt, number, template, start_num):
     """
     population = []
     time_diff = end_dt - start_dt  # timedelta object
-    # Figure out implied yearly growth rate
-    end_num = number + start_num
-    growth = math.log(end_num / start_num) / time_diff.days
-    count = start_num  # total number of bu of this type at any given time
+    time_diff_years = time_diff.days / 365
+    """
+    Let S = start_num
+    Let K = count or number of units added
+    Let r = rate
+    Let t = timedelta (from start_dt)
 
-    first_open = end_dt  # to be changed later in the loop to 1st opening date
-    adds = 0.5  # adds 1st bu in the middle of period, instead of at start date
+    S * e^(rt) - S = K
+    S *( (e^(rt) - 1) = K
+    e^(rt) = K/S + 1
 
-    # Following code increments adds by the growth in each period. Each time
-    # adds is greater than 1, we create a unit and append it to population
-    growth_multiplier = (math.exp(growth) - 1)
-    for t in range(time_diff.days):
-        base = count + adds - 0.5  # subtracting original 0.5 period adjustment
-        per_period_unit_change = base * growth_multiplier
-        adds += per_period_unit_change
-        # adds is number of units to add per day
-        while adds >= 1:
-            adds -= 1
-            count += 1
-            copy = template.copy()
-            copy.name += " " + str(count)
-            copy.life.configure_events(start_dt + timedelta(t))
-            # Sets events: conception, birth, death, maturity, old_age
-            first_open = min(end_dt, start_dt + timedelta(t))
-            population.append(copy)
+    t = (1/r) * ln( K/S + 1 )
 
-    # if starting num = 1 or 2, this approximation will under fill the number of
-    # units created because of rounding. To fix this we add the remainder of the
-    # units in the beginning.
-    if number + start_num > count:
-        extras = number + start_num - count
-        pop_extra = make_units_linear(start_dt, first_open, extras, template)
-        # Insert pop_extra at the beginning of population
-        population = pop_extra + population
+    So if we want to know the time that 1st unit opens, K = 1,
+    We can just solve for t by plugging in K:
+
+    t1 = (1/r) * ln( 1/S + 1 )      1st Unit Opens
+    t2 = (1/r) * ln( 2/S + 1 )      2nd Unit Opens
+    t3 = (1/r) * ln( 3/S + 1 )      3rd Unit Opens
+    ...
+
+    birth_dates = [t1 + start_dt, t2 + start_dt, t3 + start_dt, ...]
+
+    If we know t, S, and K, we can also derive an equation for rate as well
+
+    t = (1/r) * ln( K/S + 1 )    ***Equation (A)***
+
+    r = (1/t) * ln( K/S + 1 )    ***Equation (B)***
+
+    """
+    # 1st figure out annual continuous rate growth rate:
+    rate = (1/time_diff_years) * math.log(number/start_num + 1)  # Equation A
+    print("Rate:", rate)
+
+    birth_dates = []
+    for K in range(number):
+        t = (1/rate) * math.log((K+1)/start_num + 1)  # Equation B
+        t_timedelta = timedelta(t * 365)
+        birth_dates.append(t_timedelta + start_dt)
+
+    unit_count = 0
+    for birthday in birth_dates:
+        copy = template.copy()
+        unit_count += 1
+        copy.name += str(unit_count)
+        copy.life.configure_events(birthday)
+        # Sets events: conception, birth, death, maturity, old_age
+        population.append(copy)
 
     return population
 
@@ -159,57 +173,56 @@ def make_units_growth_rate(start_dt, end_dt, rate, template, start_num):
     """
     population = []
     time_diff = end_dt - start_dt  # timedelta object
-    # Figure out implied yearly growth rate
-    growth = math.log(1 + rate) / 365  # Convert to daily continuous growth rate
-    count = start_num  # total number of bu of this type at any given time
-
+    time_diff_years = time_diff.days / 365
     """
-    #####################################################
-    period_length = 30
-    periods = (end_dt - start_dt)/ period_length
-    ln_one_plus_rate = math.log(end_dt/start_dt) / periods
-    one_plus_rate = math.exp(ln_one_plus_rate)
+    Let S = start_num
+    Let K = count or number of units to be created
+    Let r = rate
+    Let t = timedelta (from start_dt)
 
-    remaining = ending - starting
+    S * e^(rt) - S = K
+    S *( (e^(rt) - 1) = K
+    e^(rt) = K/S + 1
 
-    for i in range(periods):
-        remaining = ending - starting
-        new = base * one_plus_rate
-        new = math.ceil(new)
-        # Always an integer, get there faster, we are
-        # approximating anyways
-        new = min(new, remaining)
-        for j in range(new):
-            # copy obj
-            # set life
-            # set name (may be seed + str(period) + j?)
-            population.append(new_obj)
-            starting += new
-            if starting == new:
-            break
-            # once we've rounded up, stop work
-    #####################################################
+    t = (1/r) * ln( K/S + 1 )
+
+    So if we want to know the time that 1st unit opens, K = 1,
+    We can just solve for t by plugging in K:
+
+    t1 = (1/r) * ln( 1/S + 1 )      1st Unit Opens
+    t2 = (1/r) * ln( 2/S + 1 )      2nd Unit Opens
+    t3 = (1/r) * ln( 3/S + 1 )      3rd Unit Opens
+    ...
+
+    birth_dates = [t1 + start_dt, t2 + start_dt, t3 + start_dt, ...]
+
+    If we know t, S, and K, we can also derive an equation for rate as well
+
+    t = (1/r) * ln( K/S + 1 )    ***Equation (A)***
+
+    r = (1/t) * ln( K/S + 1 )    ***Equation (B)***
     """
+    # 1st figure out total number of units to be created :
+    number = start_num * math.exp(rate * time_diff_years) - start_num
+    number = math.floor(number)
 
-    first_open = end_dt
-    adds = 0.5  # adds 1st bu in the middle of period, instead of at start date
-    growth_multiplier = (math.exp(growth) - 1)
-    # For each period, adds is incremented by the amount of growth
-    for t in range(time_diff.days):
-        base = count + adds - 0.5  # subtracting original 0.5 period adjustment
-        per_period_unit_change = base * growth_multiplier
-        adds += per_period_unit_change
-        # adds is number of units to add per day
-        while adds >= 1:
-            adds += -1
-            count += 1
-            copy = template.copy()
-            copy.name = str(template.type) + str(count)
-            copy.life.configure_events(start_dt + timedelta(t))
-            # Sets events: conception, birth, death, maturity, old_age
-            population.append(copy)
+    birth_dates = []
+    for K in range(number):
+        t = (1/rate) * math.log((K+1)/start_num + 1)  # Equation B
+        t_timedelta = timedelta(t * 365)
+        birth_dates.append(t_timedelta + start_dt)
 
-    print("Total Units Created",count - start_num)
+    unit_count = 0
+    for birthday in birth_dates:
+        copy = template.copy()
+        unit_count += 1
+        copy.name += str(unit_count)
+        copy.life.configure_events(birthday)
+        # Sets events: conception, birth, death, maturity, old_age
+        population.append(copy)
+
+    return population
+
 
 
 def make_units_closed_linear(start_dt, end_dt, number, template, birth_dt=None):
