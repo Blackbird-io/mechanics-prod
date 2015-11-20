@@ -127,7 +127,7 @@ def make_units_growth_numbered(start_dt, end_dt, number, template, start_num):
     r = (1/t) * ln( K/S + 1 )    ***Equation (B)***
 
     """
-    # 1st figure out annual continuous rate growth rate:
+    # 1st figure out continuous annual rate growth rate:
     rate = (1/time_diff_years) * math.log(number/start_num + 1)  # Equation A
     print("Rate:", rate)
 
@@ -172,6 +172,7 @@ def make_units_growth_rate(start_dt, end_dt, rate, template, start_num):
     units that will be created.
     """
     population = []
+    rate_c = math.log(1+rate)  # convert yearly compounded rate to continuous
     time_diff = end_dt - start_dt  # timedelta object
     time_diff_years = time_diff.days / 365
     """
@@ -203,12 +204,12 @@ def make_units_growth_rate(start_dt, end_dt, rate, template, start_num):
     r = (1/t) * ln( K/S + 1 )    ***Equation (B)***
     """
     # 1st figure out total number of units to be created :
-    number = start_num * math.exp(rate * time_diff_years) - start_num
+    number = start_num * math.exp(rate_c * time_diff_years) - start_num
     number = math.floor(number)
 
     birth_dates = []
     for K in range(number):
-        t = (1/rate) * math.log((K+1)/start_num + 1)  # Equation B
+        t = (1/rate_c) * math.log((K+1)/start_num + 1)  # Equation B
         t_timedelta = timedelta(t * 365)
         birth_dates.append(t_timedelta + start_dt)
 
