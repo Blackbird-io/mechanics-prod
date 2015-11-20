@@ -319,7 +319,7 @@ def scenario_3(topic):
         i_opex = fins.indexByName("Operating Expense")
         line_opex = fins[i_opex]
         for line in lines[::-1]:
-            if line.name in fins.dNames.keys():
+            if line.name in fins.table_by_name.keys():
                 print()
                 print("Skipping line %s" % line.name)
                 print()

@@ -7,21 +7,19 @@
 #Module: data_structures.modelling.statement
 """
 
-Module defines Financials class, a container that stores and organizes LineItems
+Module defines Statement, a container for lines.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
 
 DATA:
-bookMarkTag
-dropDownReplicaTag
-summaryTag
+n/a
 
 FUNCTIONS:
 n/a
 
 CLASSES:
-Financials            container that stores, updates, and organizes LineItems
+Statement             container that stores, updates, and organizes LineItems
 ====================  ==========================================================
 """
 
@@ -88,14 +86,12 @@ class Statement(list, Tags, Equalities):
     autoSummarize         bool, controls whether summarize runs on __str__
     bookMarks             list of built-in bookMarks
     contextualFormatting  bool, 
-    dNames                dict: k is line names, v is line index; v is static, k
+    table_by_name                dict: k is line names, v is line index; v is static, k
                           is a pointer to the line attribute
-    dParts                dict: k is line partOf, v is line index; v is static,k
+    table_by_part                dict: k is line partOf, v is line index; v is static,k
                           is a pointer to the line attribute
-    hierarchyGroups
-    hierarchyMap
     indent
-    topLevelNames         list of default top-level names
+    _top_level_names         list of default top-level names
     
 
     FUNCTIONS:
@@ -114,7 +110,6 @@ class Statement(list, Tags, Equalities):
     # support tracing.
 
     _LABEL_MISFIT = "MISFIT"
-
     _INDENT = 2
 
     SIGNATURE_FOR_INCREMENTATION = "Incremented "
@@ -123,15 +118,15 @@ class Statement(list, Tags, Equalities):
     def __init__(self, name=None):
         list.__init__(self)
         Tags.__init__(self, name=name)
-        #
-        self.dNames = {}
-        self.dParts = {}
+
+        self.autoSummarize = True
+        self.contextualFormatting = True
+        self.table_by_name = {}
+        self.table_by_part = {}
+        
         self._hierarchy_groups = None
         self._hierarchy_map = None
-        self.topLevelNames = [None, self.name, "financials", "Financials"]
-        #
-        self.contextualFormatting = True
-        self.autoSummarize = True
+        self._top_level_names = [None, self.name, "financials", "Financials"]
 
     def __eq__(self, comparator, trace=False, tab_width=4):
         """
@@ -241,7 +236,7 @@ class Statement(list, Tags, Equalities):
         self.build_tables()
         self._map_hierarchy()
         if not allow_duplicates:
-            if line.name in self.dNames:
+            if line.name in self._top_level_names:
                 raise BBExceptions.BBAnalyticalError()
         
         i, j, parent = self._spot_in_tree(*ancestor_tree)
@@ -268,7 +263,7 @@ class Statement(list, Tags, Equalities):
         self.build_tables()
         insert = True
         if not allow_duplicates:
-            if line.name in self.dNames:
+            if line.name in self.table_by_name:
                 raise ErrorOfSomeSort #bad duplicates!
         #
         #do all the real work
@@ -319,25 +314,25 @@ class Statement(list, Tags, Equalities):
                 continue
             if lName:
                 try:
-                    self.dNames[lName].add(i)
+                    self.table_by_name[lName].add(i)
                 except KeyError:
-                    self.dNames[lName] = {i}
+                    self.table_by_name[lName] = {i}
             if lNameCaseless != lName:
                 try:
-                    self.dNames[lNameCaseless].add(i)
+                    self.table_by_name[lNameCaseless].add(i)
                 except KeyError:
-                    self.dNames[lNameCaseless] = {i}
-            if lPart in self.topLevelNames:
+                    self.table_by_name[lNameCaseless] = {i}
+            if lPart in self._top_level_names:
                 continue
             else:
                 try:
-                    self.dParts[lPart].add(i)
+                    self.table_by_part[lPart].add(i)
                 except KeyError:
-                    self.dParts[lPart] = {i}
+                    self.table_by_part[lPart] = {i}
                 try:
-                    self.dParts[lPartCaseless].add(i)
+                    self.table_by_part[lPartCaseless].add(i)
                 except KeyError:
-                    self.dParts[lPartCaseless] = {i}
+                    self.table_by_part[lPartCaseless] = {i}
 
     def build_custom_table(self, tagsToInclude, tagsToExclude=[],
                         container=None, keyTags=True):
@@ -434,7 +429,7 @@ class Statement(list, Tags, Equalities):
 
         Can remedy by running updatePart() on every line in the result. Make
         sure to update dictionaries every time, or manually enter the new part
-        in instance.dParts.
+        in instance.table_by_part.
         """
         result = Tags.copy(self,enforce_rules)
         #Tags.copy returns a shallow copy of the instance w deep copies
@@ -447,7 +442,7 @@ class Statement(list, Tags, Equalities):
         #mutable or structured
         result._hierarchy_groups = None
         result._hierarchy_map = None
-        result.topLevelNames = copy.copy(self.topLevelNames)
+        result._top_level_names = copy.copy(self._top_level_names)
         tags_to_omit = []
 ##        tags_to_omit = [summaryTag,
 ##                        summaryTag.casefold(),
@@ -460,7 +455,7 @@ class Statement(list, Tags, Equalities):
                 continue
             else:                    
                 rL = line.copy(enforce_rules)
-                if rL.partOf in result.topLevelNames:
+                if rL.partOf in result._top_level_names:
                     rL.setPartOf(result)
                 result.append(rL)
         return result
@@ -531,8 +526,8 @@ class Statement(list, Tags, Equalities):
             if tags_to_omit & set(sL.allTags) != set():
                 continue
             #shared line items. extrapolate seed on to target. 
-            if sL.name in alt_target.dNames.keys():
-                itL = min(alt_target.dNames[sL.name])
+            if sL.name in alt_target.table_by_name.keys():
+                itL = min(alt_target.table_by_name[sL.name])
                 tL = alt_target[itL]
                 if tL.checkTouch():
                     newL = sL.extrapolate_to(tL)
@@ -540,16 +535,16 @@ class Statement(list, Tags, Equalities):
                     newL = tL.copy(enforce_rules = False)
             else:
                 newL = sL.copy(enforce_rules = True)
-            if newL.partOf in result.topLevelNames:
+            if newL.partOf in result._top_level_names:
                 newL.setPartOf(result)
                 #to catch any new top-level seed lines
             result.append(newL)
         result.build_tables()
-        target_only = set(alt_target.dNames.keys()) - set(result.dNames.keys())
+        target_only = set(alt_target.table_by_name.keys()) - set(result.table_by_name.keys())
         target_only = sorted(target_only)
         #enforce stable order to maintain consistency across runtimes
         for l_name in target_only:
-            i_target = min(alt_target.dNames[l_name])
+            i_target = min(alt_target.table_by_name[l_name])
             line = alt_target[i_target]
             if self.checkOrdinary(line):
                 continue
@@ -598,13 +593,13 @@ class Statement(list, Tags, Equalities):
             # line into the instance. We apply Option B only when we can't do
             # Option A.
             
-            if line.name in self.dNames:
+            if line.name in self.table_by_name:
                 # Option A: increment an existing line
 
                 if line.value is None:
                     continue
                 
-                j = max(self.dNames[line.name])
+                j = max(self.table_by_name[line.name])
                 existing_line = self[j]
                 
                 starting_value = existing_line.value or 0
@@ -650,7 +645,7 @@ class Statement(list, Tags, Equalities):
         name = name.casefold()
         self.build_tables()
         try:
-            spots = self.dNames[name]
+            spots = self.table_by_name[name]
         except KeyError:
             raise ValueError
         spots = list(spots)
@@ -753,7 +748,7 @@ class Statement(list, Tags, Equalities):
 
         Lineitems are toplevel if their ``partOf`` attribute is set to a
         topLevelName recognized by a Financials object. The default
-        topLevelNames are:
+        _top_level_names are:
             i)   None
             ii)  ``Financials``
             iii) ``financials``
@@ -864,10 +859,10 @@ class Statement(list, Tags, Equalities):
         Statement._clear_tables() -> None
 
 
-        Resets ``dNames`` and ``dParts`` to blank dictionaries
+        Resets ``table_by_name`` and ``table_by_part`` to blank dictionaries
         """
-        self.dNames = {}
-        self.dParts = {}
+        self.table_by_name = {}
+        self.table_by_part = {}
         
     def _erase_managed_lines(self):
         """
@@ -969,7 +964,7 @@ class Statement(list, Tags, Equalities):
         Each group represents a step down in the partOf hierarchy of the
         Financials object. The first group, index and level 0, contains
         lineitems whose ``partOf`` attribute matches an item in
-        ``topLevelNames``. The seconds group, index and level 1, contains
+        ``_top_level_names``. The seconds group, index and level 1, contains
         lineitems that are partOf level 0 lineItems. And so on.
 
         A lineItem is a ``misfit`` if it is not toplevel and not part of any other
@@ -987,7 +982,7 @@ class Statement(list, Tags, Equalities):
         categorizer() checks whether the hierarchy it received contains an
         appropriate group. Appropriate groups are those that contain objects
         that are partOf a prior group or the **instance's** (as opposed to the
-        hierarchy argument's)``topLevelNames`` list. Categorizer appends a new
+        hierarchy argument's)``_top_level_names`` list. Categorizer appends a new
         level (list) whenever it encounters an item that's part of the lowest
         existing level.
 
@@ -1033,16 +1028,16 @@ class Statement(list, Tags, Equalities):
         allLevels = [level0,level1]
         class PlacementSuccess(Exception): pass
         #Upgrade-S: move function out to parsing tools so dont incur def cost
-        #on every call; function would need to take topLevelNAmes as a
+        #on every call; function would need to take _top_level_names as a
         #constructor in that event (right now, categorizer piggy-backs on list
         #of TLNs in financials instance)
         def categorizer(items, hierarchy):
             misfits = []
             for unknownLineItem in items:
-                if unknownLineItem.partOf in self.topLevelNames:
+                if unknownLineItem.partOf in self._top_level_names:
                     hierarchy[0].append(unknownLineItem)
                     #Upgrade-S: if function moved out to ParsingTools,
-                    #will need direct call to financials.topLevelNames
+                    #will need direct call to financials._top_level_names
                     #add financials as categorizer() argument
                 else:
                     currentDepth = len(hierarchy)
@@ -1272,7 +1267,7 @@ class Statement(list, Tags, Equalities):
           1)  Iterate through a list that includes all items in the instance
               except those with tagsToOmit.
 
-          2)  If the item is topLevel (its .partOf is in toplevelnames), no need
+          2)  If the item is topLevel (its .partOf is in _top_level_names), no need
               for summary, go on to next one. 
 
           3)  If the item is detail, proceed to check whether it has a proper
@@ -1308,7 +1303,7 @@ class Statement(list, Tags, Equalities):
         startingSelf = self[:]
         #step through a slice because will do insertions
         for L in startingSelf:
-            if L.partOf in self.topLevelNames:
+            if L.partOf in self._top_level_names:
                 continue
             if set(L.allTags) & tagsToOmit != set():
                 continue
@@ -1321,7 +1316,7 @@ class Statement(list, Tags, Equalities):
                 newSummary = LineItem(name = summaryName)
                 newSummary.tag(summaryTag,skipTag,field = "req")
                 self.build_tables()
-                tPlaces = list(self.dNames[L.partOf])
+                tPlaces = list(self.table_by_name[L.partOf])
                 tPlaces.sort()
                 top = self[tPlaces[0]]
                 if top.parentObject:
@@ -1342,7 +1337,7 @@ class Statement(list, Tags, Equalities):
                 #
                 #find L in self (**not** startingSelf - location could be
                 #arbitrarily different due to prior insertions)
-                spots_L = list(self.dNames[L.name])
+                spots_L = list(self.table_by_name[L.name])
                 spots_L.sort()
                 iL = spots_L[0]
                 hL = self._hierarchy_map[iL]
@@ -1417,7 +1412,7 @@ class Statement(list, Tags, Equalities):
         #UPGRADE-S: could potentially run faster on bookmark/line __hashes__
         B = -1
         try:
-            places = list(self.dNames[book_mark.name])
+            places = list(self.table_by_name[book_mark.name])
             places.sort()
             B = places[0]
             return B
@@ -1470,13 +1465,13 @@ class Statement(list, Tags, Equalities):
         NOTE: Method requires index parameter to expedite analysis.
         """
         refPart = line.partOf
-        if refPart in self.topLevelNames:
+        if refPart in self._top_level_names:
             L = self._spot_by_book_mark(container, index)
             return L
         else:
             try:
                 #check if line is partOf something in self
-                places = self.dNames[refPart]
+                places = self.table_by_name[refPart]
                 #places is a set of positions; to get last position, find
                 #largest value in set
                 ref_spot = max(places)
@@ -1484,7 +1479,7 @@ class Statement(list, Tags, Equalities):
                 L = self._find_peer_or_senior(ref_spot)
                 
             except KeyError:
-                #line.partOf not in self.fins.dNames;
+                #line.partOf not in self.fins.table_by_name;
                 #place based on bookmarks
                 L = self._spot_by_book_mark(container, index)
             finally:
@@ -1545,8 +1540,8 @@ class Statement(list, Tags, Equalities):
         level item.
         """
         refPart = copy.copy(refLine.partOf)
-        if refPart in self.dNames.keys():
-            places = list(self.dNames[refPart])
+        if refPart in self.table_by_name.keys():
+            places = list(self.table_by_name[refPart])
             places.sort()
             top = self[places[-1]]
             refLine.setPartOf(top)
@@ -1585,13 +1580,12 @@ class Statement(list, Tags, Equalities):
         for L in self:
             if not L.value:
                 continue
-            if L.partOf in self.topLevelNames:
+            if L.partOf in self._top_level_names:
                 continue
             if set(L.allTags) & tagsToOmit != set():
                 continue
             summaryName = self.SUMMARY_PREFIX + " " + L.partOf
-            summaryName = summaryName.casefold(
-                )
+            summaryName = summaryName.casefold()
             try:
                 places = existingSummaries[summaryName]
                 spot = min(places)
