@@ -297,16 +297,16 @@ class Topic:
                 if C:
                     C.build_tables()
                     for (lineName,contribution) in self.work_plan.items():
-                        if lineName in C.dNames.keys():
-                            spots_name = C.dNames[lineName]
+                        if lineName in C.table_by_name.keys():
+                            spots_name = C.table_by_name[lineName]
                             spots_name = list(spots_name)
                             spots_name.sort()
                             i_name = spots_name[0]
                             L = C[i_name]
                             L.guide.quality.increment(contribution)
                         else:
-                            if lineName.casefold() in C.dNames.keys():
-                                spots_name = C.dNames[lineName.casefold()]
+                            if lineName.casefold() in C.table_by_name.keys():
+                                spots_name = C.table_by_name[lineName.casefold()]
                                 spots_name = list(spots_name)
                                 spots_name.sort()
                                 i_name = spots_name[0]

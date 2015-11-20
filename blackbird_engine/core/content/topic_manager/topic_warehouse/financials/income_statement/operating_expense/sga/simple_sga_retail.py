@@ -225,7 +225,7 @@ def scenario_3(topic):
         i_sga = fins.indexByName("SG&A")
         line_sga = fins[i_sga]
         for L in lines[::-1]:
-            if L.name in fins.dNames.keys():
+            if L.name in fins.table_by_name.keys():
                 continue
             localL = copy.deepcopy(L)
             fins.insert(i_sga+1,localL)
