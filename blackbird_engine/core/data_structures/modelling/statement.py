@@ -64,16 +64,82 @@ class PlacementSuccess(Exception):
 class Statement(list, Tags, Equalities):
     """
 
-    A list object that stores LineItems in a BusinessUnit.
-   
-    Using bookmarks, objects can construct and evaluate financials expressed
-    only with positive numbers. In other words, bookmarks separate assets
-    from liabilities, revenues from expenses, and receipts from disbursements.
+    Ordered container that supports hierarchies and fast(er) lookup.
+    
+    ITEM HIERARCHIES:
+    
+    A Statement object is generally a list of lines or line-like objects.
 
-    Default LineItems included in Financials show Financials as their
-    parentObject. Generally, all LineItems included in Financials should
-    either specify Financials or the name of an existing LineItem as their
-    ``partOf``. 
+    Lines vary by significance. Some show very basic information and would
+    appear in the least granular presentation of the statement. We call these
+    lines ``top-level``.  Other lines elaborate on the top-level lines. We call
+    these lines ``details``. 
+
+    The distinction here is one of financial custom: you could easily imagine a
+    ``flat`` statement that shows every piece of information in order. It can
+    be difficult for people to read a long, flat list, so finance professionals
+    generally add hierarchy to split the lines into logical chunks.
+
+    Our Statement objects track this pattern. Statements support multiple
+    levels of hierarchy: one line can have details, and those details can have
+    details too.
+
+    TOP OF THE PILE:
+    
+    Objects that say they are part of the Statement go at the top of our
+    hierarchy. In other words, if obj.partOf is in instance._top_level_names,
+    the Statement will treat the object as a top-level item. A blank (None)
+    .partOf attribute also classifies the object as top-level. 
+
+    DETAILS:
+    
+    Detail objects name another object in the container as their parent. 
+    
+    Example 1: financials2014 includes lineitem1 and lineitem5.
+    
+      lineitem1.name = "Insurance"
+      lineitem1.partOf = "SGA".
+      lineitem5.name = "SGA"
+      lineitem5.partOf = "Financials".
+
+    In such a scenario, lineitem1 is a detail of lineitem5.
+
+    Details should follow immediately after their parents in the Statement.
+    
+    SUMMARIES:
+    
+    Statement objects automatically sum values for lines that have details. The
+    Statement lists these total values on new lines called ``summaries.``
+
+    1.  Summaries appear after the last detail for a given item.        
+    2.  Summary line names are a concatenation of the parent and the
+        summary prefix. For example, a summary for lineitem5 above would have
+        .name ==``TOTAL SGA``
+    3.  Summaries are at the same level of the statement hierarchy as their
+        parent. In code, summary.partOf == parent.partOf.
+
+    REPLICAS:
+    
+    Statements create replicas of lines that have both details and a defined
+    value to help tabulate summaries.
+
+    Replicas are copies of a line that are also part of that same line. When a
+    Statement inserts a replica for a line, it moves the line's value to the
+    replica and zeroes out the parent. If the parent then picks up more value
+    in the future, Statement will increment the replica by that value and zero
+    out the parent. 
+
+    Visually, the outcome looks as follows:
+
+        SGA .......... 10                 SGA ..........0              
+          Employees... 6                    SGA.........10
+          Insurance... 8        ===>        Employees...6  
+          Security.... 2                    Insurance...8
+        *TOTAL SGA.... 16                   Security....2
+                                          TOTAL SGA.....26
+
+        *only lineitems that are partOf SGA increment the summary
+            
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -81,21 +147,19 @@ class Statement(list, Tags, Equalities):
     DATA:
     autoSummarize         bool, controls whether summarize runs on __str__
     contextualFormatting  bool, 
-    table_by_name                dict: k is line names, v is line index; v is static, k
-                          is a pointer to the line attribute
-    table_by_part                dict: k is line partOf, v is line index; v is static,k
-                          is a pointer to the line attribute
-    indent
-    
+    table_by_name         lookup table by object.name; values are index sets
+    table_by_part         lookup table by object.partOf; values are index sets
 
     FUNCTIONS:
-    add_line_to()         add line as bottom detail in tree
-    add_top_line()        add line to top of instance, optionally after another
-    build_tables()         make name:{i} and partOf:{i} dicts for contents
-    build_custom_table()
-    
-    copy()                returns deep copy
-    indexByName()         builds dictionaries, searches for name
+    add_line_to()         add a detail object to a parent 
+    add_top_line()        add top-level object, optionally after another
+    build_tables()        build standard lookup tables for instance contents
+    build_custom_table()  build custom lookup table
+    copy()                return deep copy
+    increment()           add data from a collection of objects
+    indexByName()         build lookup table, return item position
+    reset()               clear values and managed lines
+    summarize()           compute total values, manage hierarchy
     ====================  ======================================================
     """
     keyAttributes = []
@@ -298,10 +362,10 @@ class Statement(list, Tags, Equalities):
         
         for i in range(len(self)):
             line = self[i]
-            lName = line.name
+            lName = copy.copy(line.name)
             if lName:
                 lNameCaseless = lName.casefold()
-            lPart = line.partOf
+            lPart = copy.copy(line.partOf)
             if lPart:
                 lPartCaseless = lPart.casefold()
             if tagsToOmit.intersection(set(line.allTags)) != set():
@@ -364,7 +428,7 @@ class Statement(list, Tags, Equalities):
                 D[tag] = set()
         for i in range(len(container)):
             line = container[i]
-            lName = line.name
+            lName = copy.copy(line.name)
             tagsIn = set(line.allTags) & tagsToInclude
             tagsOut = set(line.allTags) & tagsToExclude
             if tagsOut != set():
@@ -491,8 +555,7 @@ class Statement(list, Tags, Equalities):
 
         Third, return result.
         """
-        #
-        #step 1: make a container
+        # Step 1: make a container
         tags_to_omit = [summaryTag,
                         summaryTag.casefold(),
                         dropDownReplicaTag,
@@ -510,11 +573,11 @@ class Statement(list, Tags, Equalities):
         #updates result with those target tags it doesnt have already. "at" mode
         #picks up all tags from target. other attributes stay identical because
         #Tags uses a shallow copy.
-        #
-        #step 2: fill the result container
-        #go line by line
+        
+        # Step 2: fill the result container
+        # go line by line
         alt_target.build_tables(*tags_to_omit)
-        #exclude summaries and replicas from the target
+        # Exclude summaries and replicas from the target
         tags_to_omit = set(tags_to_omit)
         for sL in self:
             if tags_to_omit & set(sL.allTags) != set():
@@ -533,7 +596,9 @@ class Statement(list, Tags, Equalities):
                 newL.setPartOf(result)
                 #to catch any new top-level seed lines
             result.append(newL)
+
         result.build_tables()
+
         target_only = set(alt_target.table_by_name.keys()) - set(result.table_by_name.keys())
         target_only = sorted(target_only)
         #enforce stable order to maintain consistency across runtimes
@@ -547,8 +612,8 @@ class Statement(list, Tags, Equalities):
                 i_result = result._spot_generally(line,alt_target,i_target)
                 r_line = line.copy(enforce_rules = False)
                 result.insert(i,r_line)
-        #
-        #step 3: return the result container
+        
+        # Step 3: return the container
         return result
 
     def increment(self, lines, *tagsToOmit, refresh=False, signature=None):
@@ -559,9 +624,7 @@ class Statement(list, Tags, Equalities):
         
 
         Increment matching lines, add new ones to instance. 
-
-        drops nameless lines? or can be control
-        ``tags_to_omit`` should be a set of tags for speed
+        ``tags_to_omit`` should be a set of tags for speed #<---------------------------------------------
         """
         if refresh:
             self.build_tables()
@@ -700,147 +763,17 @@ class Statement(list, Tags, Equalities):
         """
 
 
-        Fins.summarize(*tagsToOmit[,fullReview=False]) -> None
+        Statement.summarize() -> None
 
         
-        This method summarizes information contained in financials.
-
-        Summarize() calls dedicated methods to:
-            i) insert summary lineitems where necessary
-                METHOD: Financials.manageSummaries()
-            ii)insert and update drop-down replica lineitems where necessary
-                METHOD: Financials.manageDropDownReplicas
-            iii) update summaries
-                METHOD: Financials.updateSummaries()
-
-        Financials.summarize() and its components do not process lineitems that
-        carry any tags in tagsToOmit. That means such objects (e.g., bookmarks)
-        do not receive summaries or replicas. 
-
-        Financials objects should be summarized following each substantive
-        analytical step (consolidation, derivation, etc.).
-
-        The docstrings for the methods listed above provide detailed information
-        on their respective protocols. The remainder of this docstring describes
-        hierarchies and usage rules for summaries and drop-down replicas.
-        
-        OVERVIEW OF LINEITEM HIERARCHIES:
-        A Financials object is built around a list of LineItem objects. Some
-        lineitems are those that should appear in the simplest (least granular)
-        presentation of financials. Such lineitems are called ``topLevel`` or
-        ``top``.
-
-        Other lineitems are those that provide additional detail about the
-        composition of toplevel items. Such lineitems are called ``detailLevel``
-        or ``detail``.
-
-        The distinction between the two is driven by accounting rules and
-        financial custom. Any lineitem in the Blackbird environment can be
-        either top or detail. Additionally, the Blackbird environment allows for
-        multiple levels of hierarchy within financials. As a result, a lineitem
-        can be the detail of another and the top of a third. 
-
-        Lineitems are toplevel if their ``partOf`` attribute is set to a
-        topLevelName recognized by a Financials object. The default
-        _top_level_names are:
-            i)   None
-            ii)  ``Financials``
-            iii) ``financials``
-            iv)  self.name (name for that instance of Financials)
-        The absence of a .partOf attribute also classifies an object as
-        topLevel.
-
-        Lineitems are detail if their partOf attribute is set to the name of a
-        top object present in the container.
-        
-        EX1: financials2014 includes lineitem1 and lineitem5.
-          lineitem1.name = "Insurance"
-          lineitem1.partOf = "SGA".
-          lineitem5.name = "SGA"
-          lineitem5.partOf = "Financials".
-        In such a scenario, lineitem1 is a detail of lineitem5.
-
-        Details follow immediately after toplevel lineitems to which they
-        belong. 
-        
-        SUMMARIES GENERALLY:
-        Summaries are lineitems that tabulate all of the details for a given
-        toplevel lineitem.
-        
-        Only items with details include summaries. All items with details
-        include summaries. Each summary lineitem represents one and only one
-        toplevel item.
-
-        SUMMARY USAGE RULES: 
-        i)  Summaries appear after the last detail of a toplevel item.
-        
-        ii) Summaries have special names comprised of the summaryPrefix, a
-            space, and the name of their top.
-            
-            The summaryPrefix is set to ``TOTAL`` by default.
-            For example, a summary for lineitem5 above would have .name =
-            ``TOTAL SGA``
-
-        iii)A summary and its toplevel have identical .partOf attribute values. 
-            That is, summaries are at the same level of the financials
-            hierarchy as the toplevel item they represent.
-
-        A ``proper`` summary exists for a given detail if that summary's name
-        includes the detail's partOf. For example, a summary named ``TOTAL SGA``
-        would be a proper summary for lineitem1 above.
-
-        DROP-DOWN REPLICAS GENERALLY:
-
-        Drop-down replicas are deep copies of a lineitem that are "partOf" that
-        same item. Replicas allow summaries to quickly combine the value of the
-        top with the value of all the details.
-        
-        All items that have both detail lineitems and a value other than the
-        default None must have replicas.
-
-        Once a replica detail is added to a toplevel lineitem, the top-level
-        lineitem's value becomes 0. The replica continues to stores the top's
-        original value. If the value of the top is subsequently altered,
-        summarize() will increment the replica's value accordingly. Once
-        summarize() updates the replica, it will again set the value of the
-        top-level to 0.
-
-        The inclusion of a replica leads to the following result (indented
-        lineitems are ``partOf`` SGA):
-
-            SGA .......... 10                 SGA ..........0              
-              Employees... 6                    SGA.........10
-              Insurance... 8        ===>        Employees...6  
-              Security.... 2                    Insurance...8
-            *TOTAL SGA.... 16                   Security....2
-                                              TOTAL SGA.....26
-
-            *only lineitems that are partOf SGA increment the summary
-
-        Suppose a driver or BusinessUnit.consolidate() later changes top-level
-        SGA (because that lineitem is the first to match on name). Running
-        summarize() again would then increase the drop-down replica SGA's value
-        by the same amount and zero the top.
-
-        NOTE: Replicas violate name integrity as currently written. 
+        Add summaries and replicas. Ignore objects with tags to omit.
         """
         if tagsToOmit == tuple():
             tagsToOmit = [bookMarkTag.casefold()]
-        #pass in elements of tagsToOmit individually
+        
         self._manage_replicas(*tagsToOmit)
         self._manage_summaries(*tagsToOmit)
         self._update_summaries(*tagsToOmit)
-
-##    def toggleContextualFormatting(self):
-##        """
-##
-##
-##        Fins.toggleContextualFormatting() -> None
-##
-##        
-##        Method switches self.contextualFormatting to its boolean opposite.
-##        """
-##        self.contextualFormatting = not self.contextualFormatting
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
@@ -1111,93 +1044,40 @@ class Statement(list, Tags, Equalities):
 
         Statement._manage_replicas() -> None
 
+
+        Add replicas for lines with details and a filled-in value. Increment
+        existing replicas where the existing parent picks up new value. 
+
+        For example, suppose a line "Shoes" has a value of 10. Suppose "Shoes"
+        also includes a detail line called "Sandals", with a value of 5. To make
+        sure that total Shoes value is 15, this method will copy "Shoes", add
+        that copy as a detail (replica) to "Shoes", and then set the parent
+        line to zero.
+
+        As a result, "Shoes" will now have two details:
         
-        This method inserts and updates dropDownReplicas for items that do not have any tagsToOmit.
-        
-        dropDownReplicas are necessary for lineitems that have both
-            i)  a specified (non-None) value and
-            ii) detail lineitems. 
+        Shoes:
+         - Shoes: 10
+         - Sandals : 5
 
-        dropDownReplicas start out as deep copies of the top they represent.
-        dropDownReplicas then become partOf the top and store the top's value.
-        Once the replica inherits the top's original value, the method resets the top's value to zero.
-        Following the insertion of a replica, each call to this method increments the replica by the new value in the top.
-        The method also causes the replica to inherit any new tags from the top.
-        To maintain tag symmetry between top and replica, the method copies all non-individual tags (including doNotExtrapolate).
-        The method then resets the top to zero again.
-
-        Replicas are the first detail of their top.
-        As such, replicas follow directly to the right of the top.
-
-        Replicas are tagged with the dropDownReplicaTag.
-
-        A replica is the first detail of its top.
-        A replica therefore triggers the creation of a summary by other methods. 
-        That said, replicas only exist where other details already do.
-        Therefore, the presence of a replica makes the insertion of a summary occur earlier than it would otherwise.
-        The presence of a replica never causes the insertion of a summary where it wouldn't otherwise exist.
-
-        NOTE: The above logic and this method assumes that any existing replica is the only replica for its top.
-        This method does NOT check for the existence of duplicate replicas.
-        If more than one replica exists for a top, the method may generate errors during updates by only working with the first.
-
-        ASSUMPTION: SELF IS WELL-ORDERED
-        By default (fullReview = False), the method assumes that self is well-ordered.
-        Specifically, this assumption means:
-            i)  if an item does not have a detail immediately to its right, it has no details, and
-            ii) if an item does not have a replica as its first detail (immediately to its right), it has no replica.
-
-        Setting the fullReview parameter to True causes the method to operate without this assumption.
-
-        In fullReview mode, the method searches the entire self for any details and replicas of a given lineitem.
-        If the method finds any details away from the right-hand spot, it determines that the assumption is incorrect.
-        The method then checks whether any of the details is in fact a replica.
-        The method increments the first detail that turns out to be a replica by the value of the top.
-        
-        fullReview mode does not check for the presence of duplicate replicas. 
-
-        If a replica does not exist for a detailed, value-specified top, the method creates and inserts one.
-
-        If trace is set to True, the method returns a tuple of (bool, [l1], [l2]):
-            -- bool is False if the method locates details that do not border their top; it is True otherwise
-            -- l1 is a list of new replicas the method inserted
-            -- l2 is a list of existing replicas the method incremented
-        NOTE: trace is most informative when fullReview is enabled. Otherwise, bool will always be True. 
-
-        PROTOCOL:
-        i)   iterate through self by index
-
-        ii)  if an index has tagsToOmit, skip to next lineitem
-
-        iii) for all other lineitems, check if lineitem at i+1 is a detail of i
-        Check if lineitem's name is the same as its right-hand neighbor's partOf
-        If fullReview is enabled, build a list of any other details of the lineitem in self
-
-        iv)  check if first detail is a replica
-        Check if detail.name is the same as item.name.
-        If it is not and fullReview is enabled, check if any other details are replicas.
-
-        v)   if a replica exists, increment it by the value of the top and absorb top's tags.
-        The method then sets the top's value to zero.
-
-        vi)  if a replica does not exist and the current method has a value != None, method creates a replica.
-        The method creates a deep copy of the top.
-        The method sets the copy's partOf to the top and then tags the copy with the dropDownReplicaTag.
-        The method sets the value of the top to zero.
-        The method inserts the replica immediately to the right of the current top.
+        and will total 15. The top Shoes line will have a value of None.
         """
-        #this method inserts objects into a list, so walk through a fixed copy
-        # of this list. if a line is eligible, check if it has a replica. if it
-        #does, increment the replica by the line's value, then zero the line.
-        #if the line doesn't have a replica, insert one.
+        # This method inserts objects into a list, so walk through a fixed copy
+        # of this list. If a line is eligible, check if it has a replica. If it
+        # does, increment the replica by the line's value, then zero the line.
+        # if the line doesn't have a replica, insert one.
+        
         fixed_order = self[:]
         fixed_count = len(fixed_order)
         off_set = 0
+        
         for position in range(0, (fixed_count-1)):
+
             line = fixed_order[position]
             neighbor = fixed_order[position+1]
             existing_replica = None
             first_detail = None
+
             #0) kick out lines that dont have a value
             if line.value is None:
                 continue
@@ -1206,39 +1086,48 @@ class Statement(list, Tags, Equalities):
                 first_detail = neighbor
             else:
                 continue
+            
             #2) kick out lines that we have to explicitly omit
             if set(tagsToOmit) & set(line.allTags) != set():
                 continue
+
             #3) kick out replicas themselves
             if (line.name == line.partOf 
                 or dropDownReplicaTag in line.allTags):
                 continue
-            #
+            
             if first_detail.name == line.name:
                 existing_replica = first_detail
                 #detail has the same name as line, detail is a replica
+
             if existing_replica:
+
                 #if replica exists, increment it by line value. 
                 f3 = ParsingTools.valueReplacer
                 new_value = f3(existing_replica.value, 0, None) + line.value
                 #update replica signature block to exactly match the top
                 existing_replica.modifiedBy = copy.copy(line.modifiedBy)
                 existing_replica.setValue(new_value, signature)
+
                 existing_replica.inheritTagsFrom(line, None)
                 #when calling inherit on a replica, override defaults and
                 #copy as much as possible. passing in None results in
                 #doNotInherit = (None,)
+
                 if not dropDownReplicaTag in existing_replica.allTags:
                     existing_replica.tag(dropDownReplicaTag)
                 line.setValue(0,signature)
                 continue
+
             else: 
-                #line needs a replica. create and insert one. 
-                new_replica = LineItem.copy(line, enforce_rules = False)
-                #call LineItem.copy() method through class for clarity
-                #keep enforce_rules False so that both drop down replica and
-                #the original lineItem retain all tags (including those not
-                #inheritable ``out``, like specialTag).
+
+                # Line needs a replica. create and insert one. 
+
+                new_replica = LineItem.copy(line, enforce_rules=False)
+                # Keep enforce_rules False so that both drop down replica and
+                # the original lineItem retain all tags (including those not
+                # inheritable ``out``, like specialTag).
+                
                 new_replica.tag(dropDownReplicaTag)
                 new_replica.setPartOf(line)
                 if new_replica.value == line.value:
@@ -1368,19 +1257,8 @@ class Statement(list, Tags, Equalities):
         Statement._map_hierarchy() -> None
 
         
-        Builds a list representing depth in hierarchy of each item in self.
-        
-        For each item in self, the method locates the appropriate group in
-        hierarchyGroups. The method then records the index of the group in the
-        same position as self.
-        
-        The method places self.LABEL_MISFIT as the value of the map index for any
-        items without a group.
-        
-        Conceptually, the map represents how many steps deep in the hierarchy a
-        given item in self is.
-
-        The method stores its result in self._hierarchy_map.
+        Builds a list of position in hierarchy by item. Stores result on
+        instance._hierarchy_map.
         """
         self._group_by_hierarchy(reprocess=True)
         #build map from scratch on every call
@@ -1435,8 +1313,8 @@ class Statement(list, Tags, Equalities):
 
         L is always suitable for list.insert(L,obj). 
 
-        Method returns the index of the first bookMark that is both in container
-        and in self. If no such bookMark is found, L == -1.
+        Method returns the index of the first bookMark that is both in
+        container and in self. If no such bookMark is found, L == -1.
         """
         L = None
         i = self._find_next_book_mark(container, index)
@@ -1541,7 +1419,7 @@ class Statement(list, Tags, Equalities):
         in the instance. If no suitable parent exists, sets refLine to be a top
         level item.
         """
-        refPart = refLine.partOf
+        refPart = copy.copy(refLine.partOf)
         if refPart in self.table_by_name.keys():
             places = list(self.table_by_name[refPart])
             places.sort()
