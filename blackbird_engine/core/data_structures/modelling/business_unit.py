@@ -227,13 +227,13 @@ class BusinessUnit(Tags,Equalities):
         """
         bu.summary = None
         bu.valuation = None
-        bu._fit_to_period(self.period, recur=True)
         # Step 1: update lifecylce with the right dates for unit and components
+        bu._fit_to_period(self.period, recur=True)
+        # Step 2: optionally update ids.
         if update_id:
             bu._update_id(namespace=self.id.bbid, recur=True)
-        # Step 2: optionally update ids.
+        # Step 3: Register the the units. Will raise errors on collisions. 
         bu._register_in_period(recur=True, overwrite=False)
-        # Step 3: Register the the units. Will raise erros on collisions. 
         self.components.add_item(bu)
     
     def addDriver(self, newDriver, *otherKeys):
@@ -996,7 +996,7 @@ class BusinessUnit(Tags,Equalities):
                 c = c1+c2+c3+c4+c5
                 raise BBExceptions.IDCollisionError(c)
             
-        # Check for collisions first, then resgiter if none arise.
+        # Check for collisions first, then register if none arise.
         self.period.bu_directory[self.id.bbid] = self
         brethren = self.period.ty_directory.setdefault(self.type, set())
         brethren.add(self.id.bbid)
