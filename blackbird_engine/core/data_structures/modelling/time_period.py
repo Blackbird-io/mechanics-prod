@@ -335,7 +335,13 @@ class TimePeriod(Tags):
         TimePeriod.register() -> None
 
 
-        Conform unit to period and add to directories.
+        Manually add unit to period. Unit will conform to period and appear
+        in directories. Use sparingly: designed for master (taxonomy) period.
+
+        NOTE: Period content should generally have a tree structure, with a
+        single bu node on top. That node will manage all child relationships.
+        Accordingly, the best way to add units to a period is to run
+        bu.add_component(new_unit).
 
         If ``updateID`` is True, method will assign unit a new id in the
         period's namespace. Parameter should be False when moving units
