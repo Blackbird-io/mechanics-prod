@@ -95,6 +95,14 @@ class Financials:
     
     @property
     def ordered(self):
+        """
+
+
+        **read-only property**
+
+
+        Return list of attribute values for all names in instance.ORDERED.
+        """
         result = []
         for name in self.ORDER:
             statement = getattr(self, name)
