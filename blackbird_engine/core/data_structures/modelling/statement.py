@@ -721,7 +721,7 @@ class Statement(list, Tags, Equalities):
         line item in the instance. Method skips lines with bookmark, summary, or
         drop-down replica tags. 
         """
-        Tags.inheritTags(self,recur)
+        Tags.inheritTags(self, recur)
         tags_to_omit = [bookMarkTag,
                         bookMarkTag.casefold(),
                         dropDownReplicaTag,
