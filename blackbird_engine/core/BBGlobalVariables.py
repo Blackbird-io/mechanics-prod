@@ -134,8 +134,8 @@ def checkMessageStatus(mqrMessage):
 DEFAULT_MODEL_NAME = "Blank Blackbird Model"
 
 ##default_unit_name = "Blank Unit" #<------------------------------------------eliminate
-##default_periods_back = 36 #<------------------------------------------eliminate
-##default_periods_fwd = 36 #<------------------------------------------eliminate
+##default_periods_back = 36 #<-------------------------------------------------eliminate
+##default_periods_fwd = 36 #<--------------------------------------------------eliminate
 max_unit_count = 200
 mid_unit_count = 20
 high_unit_count = 50
