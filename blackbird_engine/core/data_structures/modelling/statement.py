@@ -530,7 +530,7 @@ class Statement(list, Tags, Equalities):
 ##        """
 ##        return Tags.extrapolate_to(self,target)
 
-    def ex_to_special(self,target):
+    def ex_to_special(self, target):
         """
 
 
