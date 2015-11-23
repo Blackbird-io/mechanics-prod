@@ -59,14 +59,13 @@ class Financials:
         new_instance = copy.copy(self)
         
         for name in self.ORDER:
-            own_statement = getattr(self, name)
-            if own_statement:
+            own_statement = getattr(self, name, None)
+            if own_statement is not None:
                 new_statement = own_statement.copy(enforce_rules)
                 setattr(new_instance, name, new_statement)
             
         return new_instance
     
-
     def build_tables(self, *tagsToOmit):
         for statement in self.ordered:
             if statement:
