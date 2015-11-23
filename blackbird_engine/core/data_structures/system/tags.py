@@ -598,28 +598,28 @@ class Tags:
         """
         #always returns a new object
         result = None
-        target.inheritTags(recur = True)
+        target.inheritTags(recur=True)
         if self.checkOrdinary(target):
             result = self.ex_to_default(target)
         else:
             result = self.ex_to_special(target)
         return result    
 
-    def ex_to_default(self,target):
+    def ex_to_default(self, target):
         """
 
 
         Tags.ex_to_default(target) -> object
 
 
-        Method provides most basic extrapolation method. Method returns a
+        Method provides most basic extrapolation routine. Method returns a
         self.copy(enforce_rules = True) of the target. Points to Tags.copy()
         or a lower-level .copy() definition. 
         """
-        result = self.copy(enforce_rules = True)
+        result = self.copy(enforce_rules=True)
         return result
         
-    def ex_to_special(self,target,mode = "at"):
+    def ex_to_special(self,target, mode = "at"):
         """
 
 
@@ -656,11 +656,11 @@ class Tags:
             result.tag(*new_tags,field = attr, mode = mode)
         return result
 
-    def inheritTags(self, recur = True):
+    def inheritTags(self, recur=True):
         """
 
 
-        T.inheritTags([recur = True]) -> None
+        T.inheritTags() -> None
 
 
         Method runs instance.inheritTagsFrom() every object whose attribute
@@ -678,14 +678,14 @@ class Tags:
             source = getattr(self,attr)
             if source:
                 if recur:
-                    source.inheritTags(recur = True)
+                    source.inheritTags(recur=True)
                 self.inheritTagsFrom(source)        
 
     def inheritTagsFrom(self,source,*doNotInherit, noDuplicates = True):
         """
 
 
-        Tags.inheritTagsFrom(source,*doNotInherit[,noDuplicates = True]) -> None
+        Tags.inheritTagsFrom() -> None
 
 
         Method adds tags found on the source to self as inherited tags. Method

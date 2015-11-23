@@ -25,7 +25,7 @@ n/a
 
 #imports
 from data_structures.modelling.statement import Statement
-from data_structures.modelling.new_financials import Financials
+from data_structures.modelling.financials import Financials
 from data_structures.modelling.line_item import LineItem
 
 
