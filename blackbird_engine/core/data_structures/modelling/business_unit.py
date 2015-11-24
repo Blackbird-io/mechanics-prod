@@ -134,8 +134,6 @@ class BusinessUnit(Tags,Equalities):
         # May want to change period to a property, so that a set to new value
         # will always cause the unit to rerun registration. 
 
-##        gl_sig_con = Globals.signatures["BusinessUnit.consolidate"]
-##        self.sig_consolidate =  gl_sig_con % self.name
         self.size = 1
         self.summary = BusinessSummary()
         self.valuation = CompanyValue()
@@ -291,17 +289,16 @@ class BusinessUnit(Tags,Equalities):
         self.financials.build_tables()
         # Refresh once at the parent level to avoid unnecessary work for each
         # unit. 
-        
-        ordered_components = self.components.getOrdered()
-        # To simplify debugging, consolidate in fixed order. Can move towards
-        # unordered for speed (UPGRADE-S).
-        
-        for i in range(len(ordered_components)):
-            component_on_deck = ordered_components[i]
-            if not component_on_deck:
-                continue
-            else:
-                self.consolidate_unit(component_on_deck, *tagsToOmit, refresh=False, trace=trace)        
+
+        pool = self.components.getOrdered()
+        # Need stable order to make sure we pick up peer lines from untis in
+        # the same order. Otherwise, their order might switch and financials
+        # would look different (even though the bottom line would be the same).
+            
+        for unit in pool:
+            
+            if unit.life.conceived:
+                self.consolidate_unit(unit, *tagsToOmit, refresh=False, trace=trace)
         
     def consolidate_unit(self, sub, *tagsToOmit, refresh=False, trace=False):
         """
@@ -451,6 +448,7 @@ class BusinessUnit(Tags,Equalities):
         Method uses Financials.spotGenerally() to locate the appropriate
         position for a replica. 
         """
+        # Step 1: Prep
         if tagsToOmit == tuple():
             tagsToOmit = [bookMarkTag.casefold(), summaryTag]
         tagsToOmit = set(tagsToOmit) #<---------------------------------------------------------------------------------------------------------should be on statement?
@@ -458,18 +456,15 @@ class BusinessUnit(Tags,Equalities):
         signature = self._CONSOLIDATION_SIGNATURE + "for Unit " + str(sub.id.bbid)
         # Signature will be long
         
-        # Stage 1: check that sub is alive
-        if not sub.life.alive:
-            pass
-        else:
-            sub.fill_out()
+        # Step 2: Actual consolidation
+        sub.fill_out()
 
-            for attr_name in sub.financials.ORDER:
-                child_statement = getattr(sub.financials, attr_name)
-                
-                if child_statement:
-                    parent_statement = getattr(self.financials, attr_name)
-                    parent_statement.increment(child_statement, *tagsToOmit, refresh=refresh, signature=signature)
+        for attr_name in sub.financials.ORDER:
+            child_statement = getattr(sub.financials, attr_name)
+            
+            if child_statement:
+                parent_statement = getattr(self.financials, attr_name)
+                parent_statement.increment(child_statement, *tagsToOmit, refresh=refresh, signature=signature)
     
     def copy(self, enforce_rules=True):
         """
@@ -710,7 +705,14 @@ class BusinessUnit(Tags,Equalities):
         print("set ``filled`` to False for bbid\n%s\n" % self.id.bbid)
         self.financials.reset()
         if recur:
-            for bu in self.components.getOrdered():
+
+            pool = self.components.values()
+            
+            if Globals.DEBUG_MODE:
+                pool = self.components.getOrdered()
+                # Use stable order to simplify debugging
+                
+            for bu in pool:
                 bu.reset_financials(recur)
                 
     def set_analytics(self, atx):
@@ -877,7 +879,8 @@ class BusinessUnit(Tags,Equalities):
             life = "n/a"
         data["LIFE"] = life
         
-        data["EVENT"] = self.life.get_latest()[:data_width]
+        data["EVENT"] = self.life.get_latest()[0][:data_width]
+        # Pick out the event name, trim to data width. 
         
         unit_type = str(self.type)[:data_width]
         data["TYPE"] = unit_type.upper()

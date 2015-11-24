@@ -124,6 +124,7 @@ class Life(Equalities):
     
     age                   timedelta; ref_date minus birth
     alive                 bool; True if ref_date in [birth, death)
+    conceived             bool; True if conception < ref_date
     percent               int; age divided by span
     ref_date              timedelta; reference time point for status
     span                  timedelta; time between birth and death
@@ -131,7 +132,7 @@ class Life(Equalities):
     FUNCTIONS:
     configure_events()    add standard events to instance
     copy()                returns a deep copy
-    get_latest()          get name of most recent event
+    get_latest()          get name and date for most recent event
     set_ref_date()        set instance ref date
     set_gestation()       sets custom gestation period
     set_percent_maturity()  sets custom maturity trigger
@@ -231,7 +232,25 @@ class Life(Equalities):
                 result = True
         #
         return result
-    
+
+    @property
+    def conceived(self):
+        """
+
+
+        **read-only property**
+
+
+        True if conception < ref_date, False otherwise. Generally represents
+        point when an object can start affecting its environment.
+        """
+        result = False
+        conception = self.events.get(self.KEY_CONCEPTION)
+        if conception:
+            if conception < self.ref_date:
+                result = True
+        return result
+        
     @property
     def percent(self):
         """
@@ -365,12 +384,15 @@ class Life(Equalities):
         """
 
 
-        Life.get_latest() -> string
+        Life.get_latest() -> (string, datetime.date)
 
 
-        Return name of most recent event. Uses instance ref_date by default.
+        Return name and date for most recent event. Uses instance ref_date by
+        default.
         """
-        result = None
+        event_name = None
+        event_date = None
+        
         if ref_date is None:
             ref_date = self.ref_date
         
@@ -378,11 +400,11 @@ class Life(Equalities):
 
         for event_name, event_date in last_to_first:
             if event_date <= ref_date:
-                result = event_name
                 break
             else:
                 continue
-        return result
+            
+        return (event_name, event_date) 
 
     def set_gestation(self, value):
         """

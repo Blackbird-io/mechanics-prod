@@ -4,10 +4,11 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Engine
-#Module: FW.Financials.IS.FixedValue
+#Module: FW.Financials.IS.MonthlyExpense_FromAnnual_Inflation
 """
 
-Content module for a formula that sets the line to a fixed value from data.
+Content module for a formula that computes monthly expense from an
+annual number and then adjusts it by inflation, indexed annually. 
 
 ====================  ==========================================================
 Attribute             Description
@@ -38,7 +39,7 @@ import datetime
 
 #globals
 formula_content = True
-name = "set line to fixed monthly value."
+name = "inflation-adjusted monthly expense from known annual start."
 
 #FORMULA NAMES SHOULD DESCRIBE THEIR ACTION IN SIMPLE LANGUAGE
 #simple names make it easier to reuse functions and avoid errors when creating
@@ -46,35 +47,41 @@ name = "set line to fixed monthly value."
 
 formula_author = "Ilya Podolyako"
 date_created = "2015-04-10"
-required_data = ["fixed_monthly_value"]
+required_data = ["base_annual_expense",
+                 "annual_inflation",
+                 "ref_year"]
 
 def func(line, business_unit, data, driver_signature):
     """
 
     func(line, business_unit, parameters, driver_signature) -> None
 
-    For a living unit, function sets line to the specified monthly expense.
-    Function then applies descriptive tags and any new tags optionally
-    included in data.
+    For living units, function computes monthly expense from base_annual_expense
+    and inflation provided in data. Function then sets line value to monthly
+    result and tags the line with descriptive tags.
 
-    No-op for units that are not alive.
+    If unit is not alive, function performs no-op.
 
     Data must include:
 
-    -- "fixed_monthly_value"  |   line value
-
-    Data can include:
-
-    -- "new_optional_tags"    |   list of tags to add to line after value
+    -- "base_annual_expense"
+    -- "annual_inflation"
+    -- "ref_year"    
     """
     #
     if business_unit.life.alive:
-        expense = data["fixed_monthly_value"]
-        line.setValue(expense, driver_signature)
-        line.tag("fixed value")
-        new_optional_tags = data.get("new_optional_tags")
-        if new_optional_tags:
-            line.tag(*new_optional_tags, field = "opt")
-    #
-    #always return None
+
+        calc_year = business_unit.life.ref_date.year
+        years_from_base = calc_year - data["ref_year"]
+        years_from_base = max(0, years_from_base)
+        inflation_multiplier = (1 + data["annual_inflation"])** years_from_base
+        
+        monthly_expense = data["base_annual_expense"]/12 * inflation_multiplier
+        
+        line.setValue(monthly_expense, driver_signature)
+        line.tag("inflation adjusted")
+        im_tag = "inflation multiplier: %s" % round(inflation_multiplier,4)
+        line.tag(im_tag)
+
+    # Always return None
     return None

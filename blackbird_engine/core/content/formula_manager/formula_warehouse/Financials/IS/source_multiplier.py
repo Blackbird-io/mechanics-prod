@@ -59,7 +59,9 @@ def func(line, business_unit, data, driver_signature):
     Function sets line value to product of source and multiplier. If min or max
     specified, function cuts off line.value to fit in the [min,max] range.
     Function then applies descriptive tags and any new tags optionally included in
-    data. 
+    data.
+
+    No-op if source line value is None
 
     Data must include:
 
@@ -74,21 +76,29 @@ def func(line, business_unit, data, driver_signature):
     """
     #
     fins = business_unit.financials.income
+    
     i = fins.indexByName(data["source_line_name"])
     source_line = fins[i]
-    new_val = source_line.value * data["source_multiplier"]
-    floor = data.get("min")
-    ceiling = data.get("max")
-    if floor:
-        new_val = max(new_val, floor)
-    if ceiling:
-        new_val = min(new_val, ceiling)
-    line.setValue(new_val, driver_signature)
-    line.tag("fixed expense")
-    line.tag("estimated")
-    new_optional_tags = data.get("new_optional_tags")
-    if new_optional_tags:
-        line.tag(*new_optional_tags, field = "opt")
+
+    if source_line.value is not None:
+        
+        new_val = source_line.value * data["source_multiplier"]
+
+        floor = data.get("min")
+        ceiling = data.get("max")
+        if floor:
+            new_val = max(new_val, floor)
+        if ceiling:
+            new_val = min(new_val, ceiling)
+
+        line.setValue(new_val, driver_signature)
+
+        line.tag("fixed expense")
+        line.tag("estimated")
+
+        new_optional_tags = data.get("new_optional_tags")
+        if new_optional_tags:
+            line.tag(*new_optional_tags, field = "opt")
     #
-    #always return None
+    # Always return None
     return None

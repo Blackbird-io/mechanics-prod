@@ -44,7 +44,7 @@ from datetime import date, timedelta
 
 
 
-#globals
+# Constants
 
 #Tags:
 dropDownReplicaTag = "dropdownreplica"
@@ -76,6 +76,7 @@ class BlackbirdError(Exception): pass
 class BBAnalyticalError(BlackbirdError): pass
 
 #Other:
+DEBUG_MODE = False
 SCREEN_WIDTH = 80
 min_progress_per_question = 2
 ##misfitLabel = "MISFIT"  #<---------------------------------------------------------eliminate
