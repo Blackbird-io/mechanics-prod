@@ -134,8 +134,6 @@ class BusinessUnit(Tags,Equalities):
         # May want to change period to a property, so that a set to new value
         # will always cause the unit to rerun registration. 
 
-##        gl_sig_con = Globals.signatures["BusinessUnit.consolidate"]
-##        self.sig_consolidate =  gl_sig_con % self.name
         self.size = 1
         self.summary = BusinessSummary()
         self.valuation = CompanyValue()
@@ -292,16 +290,20 @@ class BusinessUnit(Tags,Equalities):
         # Refresh once at the parent level to avoid unnecessary work for each
         # unit. 
         
-        ordered_components = self.components.getOrdered()
-        # To simplify debugging, consolidate in fixed order. Can move towards
-        # unordered for speed (UPGRADE-S).
-        
-        for i in range(len(ordered_components)):
-            component_on_deck = ordered_components[i]
-            if not component_on_deck:
+        pool = self.components.values()
+        if Globals.DEBUG_MODE:
+            pool = self.components.getOrdered()
+            # For consistent errors, consolidate in fixed order. For speed,
+            # go as-is.
+            
+        for unit in pool:
+            
+            conception = unit.life.events.get(common_events.KEY_CONCEPTION)
+            # Conception is the moment when unit starts affecting financials
+            if unit.life.ref_date < conception:
                 continue
-            else:
-                self.consolidate_unit(component_on_deck, *tagsToOmit, refresh=False, trace=trace)        
+
+            self.consolidate_unit(unit, *tagsToOmit, refresh=False, trace=trace)
         
     def consolidate_unit(self, sub, *tagsToOmit, refresh=False, trace=False):
         """
@@ -451,6 +453,7 @@ class BusinessUnit(Tags,Equalities):
         Method uses Financials.spotGenerally() to locate the appropriate
         position for a replica. 
         """
+        #
         if tagsToOmit == tuple():
             tagsToOmit = [bookMarkTag.casefold(), summaryTag]
         tagsToOmit = set(tagsToOmit) #<---------------------------------------------------------------------------------------------------------should be on statement?
@@ -461,6 +464,7 @@ class BusinessUnit(Tags,Equalities):
         # Stage 1: check that sub is alive
         if not sub.life.alive:
             pass
+        
         else:
             sub.fill_out()
 
