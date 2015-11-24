@@ -113,7 +113,8 @@ def scenario_1(topic):
     #
     topBU = M.time_line.current_period.content
     topBU.fillOut()
-    fins = topBU.financials
+    fins = topBU.financials.income
+    # New pointer, legacy naming.
     atx = topBU.valuation
     if not atx:
         clean_atx = CompanyValue()
@@ -128,10 +129,8 @@ def scenario_1(topic):
     #
     #2) Locate industry color
     #this topic theoretically runs for either retail or generic
-    i_ovw = fins.indexByName("Overview")
-    line_overview = fins[i_ovw]
     k = None
-    if "retail" in line_overview.allTags:
+    if "retail" in M.allTags:
         k = "retail"
     specColor = market_conditions[k]
     specCurve = specColor.price_curves["x_ebitda"]

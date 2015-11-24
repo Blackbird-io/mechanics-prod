@@ -57,7 +57,7 @@ n/a
 #imports
 import BBGlobalVariables as Globals
 
-from data_structures.modelling.financials import Financials
+from data_structures.modelling.statement import Statement
 
 from . import shared_knowledge as SK
 
@@ -95,7 +95,7 @@ work_plan["intro"] = 1
 #n/a
 
 #paths:
-standard_path = Financials(populate = False)
+standard_path = Statement()
 standard_path.extend(SK.standard_open.copy())
 standard_path.extend(SK.standard_core.copy())
 standard_path.extend(SK.standard_close.copy())
@@ -127,7 +127,7 @@ def apply_data(topic):
     while not model.interview.completion_rule(intro_line):
         intro_line.guide.quality.increment()
     #
-    private_path = Financials(populate = False)
+    private_path = Statement()
     private_path.append(intro_line)
     #
     new_steps = standard_path.copy()

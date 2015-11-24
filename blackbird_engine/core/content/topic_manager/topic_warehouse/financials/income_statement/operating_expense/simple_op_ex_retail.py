@@ -199,7 +199,7 @@ def scenario_3(topic):
     l_security.setPartOf(l_misc)
     l_it = LineItem("IT")
     l_it.setPartOf(l_misc)
-    lines = [l_comp,l_rent,l_util,l_misc,l_security,l_it]
+    lines = [l_comp, l_rent, l_util, l_misc, l_security, l_it]
     for L in lines[::-1]:
         L.guide.priority.increment(1)
     l_misc.guide.priority.reset()
@@ -310,36 +310,27 @@ def scenario_3(topic):
     local_drivers["Security"] = driver_security
     local_drivers["IT"] = driver_it
     
-    #
-    #
-    #a) template fins: lines only
-    template_fins = M.defaultFinancials
-    i_opex = template_fins.indexByName("Operating Expense")
-    line_opex = template_fins[i_opex]
-    for line in lines[::-1]:
-        if line.name in template_fins.dNames.keys():
-            continue
-        local_line = copy.deepcopy(line)
-        template_fins.insert(i_opex+1,local_line)
-        if not local_line.partOf:
-            local_line.setPartOf(line_opex)
-    #b) bottom units: lines and drivers
+    # Bottom units: lines and drivers
     top_bu = M.time_line.current_period.content
     bottom_bus = M.time_line.current_period.get_lowest_units()
     for bu in bottom_bus:
-        fins = bu.financials
+        fins = bu.financials.income
+        # Point directly to the income statement for legacy interface
         i_opex = fins.indexByName("Operating Expense")
         line_opex = fins[i_opex]
-        for L in lines[::-1]:
-            if L.name in fins.dNames.keys():
+        for line in lines[::-1]:
+            if line.name in fins.table_by_name.keys():
+                print()
+                print("Skipping line %s" % line.name)
+                print()
                 continue
-            localL = copy.deepcopy(L)
-            fins.insert(i_opex+1,localL)
-            if not localL.partOf:
-                localL.setPartOf(line_opex)
-        for (k,tDriver) in local_drivers.items():
+            local_line = line.copy()
+            fins.insert(i_opex+1, local_line)
+            if not local_line.partOf:
+                local_line.setPartOf(line_opex)
+        for (k, tDriver) in local_drivers.items():
             clean_dr = tDriver.copy()
-            bu.addDriver(clean_dr,k)
+            bu.add_driver(clean_dr, k)
     #
     topic.wrap_topic()
 

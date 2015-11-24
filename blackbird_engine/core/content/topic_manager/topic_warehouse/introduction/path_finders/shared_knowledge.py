@@ -46,16 +46,16 @@ n/a
 
 
 #imports
-from data_structures.modelling.financials import Financials
+from data_structures.modelling.statement import Statement
 from data_structures.modelling.line_item import LineItem
 
 
 
 
 #globals
-standard_open = Financials(populate = False)
-standard_core = Financials(populate = False)
-standard_close = Financials(populate = False)
+standard_open = Statement()
+standard_core = Statement()
+standard_close = Statement()
 
 #1. Build out standard interview opening.
 #

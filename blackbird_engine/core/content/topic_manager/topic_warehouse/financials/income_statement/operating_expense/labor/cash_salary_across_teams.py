@@ -396,14 +396,13 @@ def unit_work(team,
     dr_own_salaries.configure(team_data, f_monthly)    
     #
     #add objects to team
-    team.financials.add_line_to(l_own_average_salary,
-                                "overview")
-    team.financials.add_line_to(l_employee_expense.copy(),
+    team.financials.overview.add_top_line(l_own_average_salary)
+    team.financials.income.add_line_to(l_employee_expense.copy(),
                                 "operating expense")
-    team.financials.add_line_to(l_salaries.copy(),
+    team.financials.income.add_line_to(l_salaries.copy(),
                                 "operating expense",
                                 l_employee_expense.name)
-    team.financials.add_line_to(l_own_salaries,
+    team.financials.income.add_line_to(l_own_salaries,
                                 "operating expense",
                                 l_employee_expense.name,
                                 l_salaries.name) 

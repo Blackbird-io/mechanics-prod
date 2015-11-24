@@ -248,7 +248,7 @@ def apply_data(topic, datapoint):
     if office_template:
         all_offices.append(office_template)
     for office in all_offices:
-        office.financials.add_line_to(l_occupancy.copy(), "operating expense")
+        office.financials.income.add_line_to(l_occupancy.copy(), "operating expense")
         office.addDriver(dr_occupancy.copy())
         office.tag("size represents square footage",
                    "size represents relative area",

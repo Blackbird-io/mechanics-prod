@@ -73,7 +73,7 @@ def func(line, business_unit, data, driver_signature):
     -- "max"                  |   ceiling value for line
     """
     #
-    fins = business_unit.financials
+    fins = business_unit.financials.income
     i = fins.indexByName(data["source_line_name"])
     source_line = fins[i]
     new_val = source_line.value * data["source_multiplier"]
