@@ -289,12 +289,11 @@ class BusinessUnit(Tags,Equalities):
         self.financials.build_tables()
         # Refresh once at the parent level to avoid unnecessary work for each
         # unit. 
-        
-        pool = self.components.values()
-        if Globals.DEBUG_MODE:
-            pool = self.components.getOrdered()
-            # For consistent errors, consolidate in fixed order. For speed,
-            # go as-is.
+
+        pool = self.components.getOrdered()
+        # Need stable order to make sure we pick up peer lines from untis in
+        # the same order. Otherwise, their order might switch and financials
+        # would look different (even though the bottom line would be the same).
             
         for unit in pool:
             
@@ -453,7 +452,7 @@ class BusinessUnit(Tags,Equalities):
         Method uses Financials.spotGenerally() to locate the appropriate
         position for a replica. 
         """
-        #
+        # Step 1: Prep
         if tagsToOmit == tuple():
             tagsToOmit = [bookMarkTag.casefold(), summaryTag]
         tagsToOmit = set(tagsToOmit) #<---------------------------------------------------------------------------------------------------------should be on statement?
@@ -461,19 +460,15 @@ class BusinessUnit(Tags,Equalities):
         signature = self._CONSOLIDATION_SIGNATURE + "for Unit " + str(sub.id.bbid)
         # Signature will be long
         
-        # Stage 1: check that sub is alive
-        if not sub.life.alive:
-            pass
-        
-        else:
-            sub.fill_out()
+        # Step 2: Actual consolidation
+        sub.fill_out()
 
-            for attr_name in sub.financials.ORDER:
-                child_statement = getattr(sub.financials, attr_name)
-                
-                if child_statement:
-                    parent_statement = getattr(self.financials, attr_name)
-                    parent_statement.increment(child_statement, *tagsToOmit, refresh=refresh, signature=signature)
+        for attr_name in sub.financials.ORDER:
+            child_statement = getattr(sub.financials, attr_name)
+            
+            if child_statement:
+                parent_statement = getattr(self.financials, attr_name)
+                parent_statement.increment(child_statement, *tagsToOmit, refresh=refresh, signature=signature)
     
     def copy(self, enforce_rules=True):
         """
@@ -714,7 +709,14 @@ class BusinessUnit(Tags,Equalities):
         print("set ``filled`` to False for bbid\n%s\n" % self.id.bbid)
         self.financials.reset()
         if recur:
-            for bu in self.components.getOrdered():
+
+            pool = self.components.values()
+            
+            if Globals.DEBUG_MODE:
+                pool = self.components.getOrdered()
+                # Use stable order to simplify debugging
+                
+            for bu in pool:
                 bu.reset_financials(recur)
                 
     def set_analytics(self, atx):
