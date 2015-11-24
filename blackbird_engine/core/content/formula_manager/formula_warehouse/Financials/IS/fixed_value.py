@@ -68,7 +68,7 @@ def func(line, business_unit, data, driver_signature):
     -- "new_optional_tags"    |   list of tags to add to line after value
     """
     #
-    if unit.life.alive:
+    if business_unit.life.alive:
         expense = data["fixed_monthly_value"]
         line.setValue(expense, driver_signature)
         line.tag("fixed value")
