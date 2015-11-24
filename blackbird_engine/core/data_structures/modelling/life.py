@@ -124,6 +124,7 @@ class Life(Equalities):
     
     age                   timedelta; ref_date minus birth
     alive                 bool; True if ref_date in [birth, death)
+    conceived             bool; True if conception < ref_date
     percent               int; age divided by span
     ref_date              timedelta; reference time point for status
     span                  timedelta; time between birth and death
@@ -240,7 +241,8 @@ class Life(Equalities):
         **read-only property**
 
 
-        True if conception < ref_date, False otherwise
+        True if conception < ref_date, False otherwise. Generally represents
+        point when an object can start affecting its environment.
         """
         result = False
         conception = self.events.get(self.KEY_CONCEPTION)

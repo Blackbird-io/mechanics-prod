@@ -297,12 +297,8 @@ class BusinessUnit(Tags,Equalities):
             
         for unit in pool:
             
-            conception = unit.life.events.get(common_events.KEY_CONCEPTION)
-            # Conception is the moment when unit starts affecting financials
-            if unit.life.ref_date < conception:
-                continue
-
-            self.consolidate_unit(unit, *tagsToOmit, refresh=False, trace=trace)
+            if unit.life.conceived:
+                self.consolidate_unit(unit, *tagsToOmit, refresh=False, trace=trace)
         
     def consolidate_unit(self, sub, *tagsToOmit, refresh=False, trace=False):
         """
