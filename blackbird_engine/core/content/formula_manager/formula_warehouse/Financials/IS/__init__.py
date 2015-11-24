@@ -47,7 +47,10 @@ from . import monthly_sized_value_fixed
 from . import monthly_sized_value_with_inflation
 from . import monthly_value_with_inflation
 
-from . import MonthlyExpense_FromAnnual
-from . import MonthlyExpense_FromAnnual_Inflation
-from . import SourceMultiplier
+from . import monthly_from_annual
+from . import monthly_from_annual_inflation
+from . import source_multiplier
+
+from . import perpetual_monthly_from_annual
+from . import perpetual_monthly_from_annual_inflation
 
