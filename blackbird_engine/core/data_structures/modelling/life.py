@@ -231,7 +231,24 @@ class Life(Equalities):
                 result = True
         #
         return result
-    
+
+    @property
+    def conceived(self):
+        """
+
+
+        **read-only property**
+
+
+        True if conception < ref_date, False otherwise
+        """
+        result = False
+        conception = self.events.get(self.KEY_CONCEPTION)
+        if conception:
+            if conception < self.ref_date:
+                result = True
+        return result
+        
     @property
     def percent(self):
         """
