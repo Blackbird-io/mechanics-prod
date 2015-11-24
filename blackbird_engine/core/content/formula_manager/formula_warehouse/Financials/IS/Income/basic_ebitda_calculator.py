@@ -67,10 +67,11 @@ def func(line, business_unit, data, driver_signature):
     [no external data necessary]    
     """
     bu = business_unit
-    fins = bu.financials
+    fins = bu.financials.income
+    # Update pointer, keep legacy naming.
     fins.summarize()
-    fins.buildDictionaries()
-    summaryPrefix = fins.summaryPrefix
+    fins.build_tables()
+    summaryPrefix = fins.SUMMARY_PREFIX
     rev = "revenue"
     cogs = "cogs"
     cost = "cost"
@@ -85,37 +86,37 @@ def func(line, business_unit, data, driver_signature):
     def sN(name):
         result = summaryPrefix.casefold()+" "+name
         return result
-    keys_dNames = list(fins.dNames.keys())
+    keys_table_by_name = list(fins.table_by_name.keys())
     #get keys once and freeze so dont compute on every check
-    if sN(rev) in keys_dNames:
-        spots_rev = fins.dNames[sN(rev)]
+    if sN(rev) in keys_table_by_name:
+        spots_rev = fins.table_by_name[sN(rev)]
     else:
-        spots_rev = fins.dNames[rev]
-    if cogs in keys_dNames:
-        if sN(cogs) in keys_dNames:
-            spots_cogs = fins.dNames[sN(cogs)]
+        spots_rev = fins.table_by_name[rev]
+    if cogs in keys_table_by_name:
+        if sN(cogs) in keys_table_by_name:
+            spots_cogs = fins.table_by_name[sN(cogs)]
         else:
-            spots_cogs = fins.dNames[cogs]
+            spots_cogs = fins.table_by_name[cogs]
     else:
-        if sN(cost) in keys_dNames:
-            spots_cogs = fins.dNames[sN(cost)]
+        if sN(cost) in keys_table_by_name:
+            spots_cogs = fins.table_by_name[sN(cost)]
         else:
-            spots_cogs = fins.dNames[cost]
+            spots_cogs = fins.table_by_name[cost]
     #if COGS not a line, use ``cost`` instead
     #can improve to run on tags and stuff
-    if sN(opex) in keys_dNames:
-        spots_opex = fins.dNames[sN(opex)]
+    if sN(opex) in keys_table_by_name:
+        spots_opex = fins.table_by_name[sN(opex)]
     else:
-        spots_opex = fins.dNames[opex]
-    if sN(sga) in keys_dNames:
-        spots_sga = fins.dNames[sN(sga)]
+        spots_opex = fins.table_by_name[opex]
+    if sN(sga) in keys_table_by_name:
+        spots_sga = fins.table_by_name[sN(sga)]
     else:
-        spots_sga = fins.dNames[sga]
-    if da in keys_dNames:
-        if sN(da) in keys_dNames:
-            spots_da = fins.dNames[sN(da)]
+        spots_sga = fins.table_by_name[sga]
+    if da in keys_table_by_name:
+        if sN(da) in keys_table_by_name:
+            spots_da = fins.table_by_name[sN(da)]
         else:
-            spots_da = fins.dNames[da]
+            spots_da = fins.table_by_name[da]
     spots_rev = list(spots_rev)
     spots_rev.sort()
     i_rev = spots_rev[0]

@@ -28,4 +28,4 @@ n/a
 
 
 #imports
-from . import BasicEBITDACalculator
+from . import basic_ebitda_calculator

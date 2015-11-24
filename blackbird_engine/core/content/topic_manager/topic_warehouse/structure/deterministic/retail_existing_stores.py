@@ -1,4 +1,4 @@
- #PROPRIETARY AND CONFIDENTIAL
+#PROPRIETARY AND CONFIDENTIAL
 #Property of Blackbird Logical Applications, LLC
 #Copyright Blackbird Logical Applications, LLC 2015
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
@@ -328,7 +328,6 @@ def scenario_6(topic):
         M.time_line.current_period.set_content(top_bu)  
     #
     standard_fins = standard_financials.basic_fins.copy()
-    M.defaultFinancials = standard_fins.copy()
     top_bu.set_financials(standard_fins.copy())
     atx = CompanyValue()
     top_bu.set_analytics(atx)

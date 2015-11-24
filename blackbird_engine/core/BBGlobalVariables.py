@@ -60,7 +60,7 @@ uninheritableTags = [doNotTouchTag, dropDownReplicaTag]
 
 #Method Signatures:
 signatures = {}
-signatures["BusinessUnit.consolidate"] = "consolidated by %s"
+##signatures["BusinessUnit.consolidate"] = "consolidated by %s"
 #
 signatures["Financials.manageDropDownReplicas"] = "manageDDR"
 signatures["Financials.updateSummaries"] = "updateSummaries"
@@ -78,7 +78,7 @@ class BBAnalyticalError(BlackbirdError): pass
 #Other:
 SCREEN_WIDTH = 80
 min_progress_per_question = 2
-misfitLabel = "MISFIT"  #<---------------------------------------------------------eliminate
+##misfitLabel = "MISFIT"  #<---------------------------------------------------------eliminate
 END_INTERVIEW = "END_interview"
 user_stop = "STOP INTERVIEW"
 
@@ -134,8 +134,8 @@ def checkMessageStatus(mqrMessage):
 DEFAULT_MODEL_NAME = "Blank Blackbird Model"
 
 ##default_unit_name = "Blank Unit" #<------------------------------------------eliminate
-##default_periods_back = 36 #<------------------------------------------eliminate
-##default_periods_fwd = 36 #<------------------------------------------eliminate
+##default_periods_back = 36 #<-------------------------------------------------eliminate
+##default_periods_fwd = 36 #<--------------------------------------------------eliminate
 max_unit_count = 200
 mid_unit_count = 20
 high_unit_count = 50

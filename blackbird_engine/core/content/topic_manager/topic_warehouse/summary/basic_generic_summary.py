@@ -96,7 +96,8 @@ work_plan["model summary"] = 1
 def scenario_1(topic):
     model = topic.MR.activeModel
     company = model.time_line.current_period.content
-    top_fins = company.financials
+    top_fins = company.financials.income
+    # New pointer, old name
     #
     names_to_add = ["revenue",
                     "cost",
@@ -113,7 +114,7 @@ def scenario_1(topic):
         try:
             try:
                 #try to find a summary first
-                summary_name = top_fins.summaryPrefix.casefold() + " " + name
+                summary_name = top_fins.SUMMARY_PREFIX.casefold() + " " + name
                 spot = top_fins.indexByName(summary_name)
             except ValueError:
                 #if no summary, look at the original

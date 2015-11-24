@@ -57,7 +57,7 @@ n/a
 #imports
 import BBGlobalVariables as Globals
 
-from data_structures.modelling.financials import Financials
+from data_structures.modelling.statement import Statement
 from data_structures.modelling.line_item import LineItem
 
 from . import shared_knowledge as SK
@@ -103,7 +103,7 @@ work_plan["path"] = 1
 #n/a
 
 #paths:
-standard_path = Financials(populate = False)
+standard_path = Statement()
 standard_path.extend(SK.standard_open.copy())
 standard_path.extend(SK.standard_core.copy())
 standard_path.extend(SK.standard_close.copy())
@@ -240,7 +240,7 @@ def apply_data(topic):
     intro_line.guide.priority.reset()
     intro_line.guide.priority.increment(3)
     #
-    private_path = Financials(populate = False)
+    private_path = Statement()
     private_path.append(intro_line)
     #if elaborating on intro, should do so here<<<<<<
     #

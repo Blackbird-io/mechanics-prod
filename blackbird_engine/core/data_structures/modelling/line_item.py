@@ -243,7 +243,7 @@ class LineItem(PrintAsLine, Tags, Equalities):
         """
 
 
-        LineItem.ex_to_special(target) -> LineItem
+        LineItem.ex_to_special() -> LineItem
 
 
         Method delegates all work to Tags.ex_to_special.
@@ -259,11 +259,11 @@ class LineItem(PrintAsLine, Tags, Equalities):
             result.setValue(r_val,ex_s_sig)
         return result        
 
-    def replicate(self,compIndex = None, fixName = True):
+    def replicate(self, compIndex=None, fixName=True):
         """
 
 
-        LineItem.replicate([compIndex=None,[fixName=True]]) -> LineItem
+        LineItem.replicate() -> LineItem
 
         
         Method returns a copy of line instance.
@@ -284,7 +284,7 @@ class LineItem(PrintAsLine, Tags, Equalities):
         #move. Then, if the original value was to somehow get reset to None,
         #the lineitem could get behind and the entire financials unit could lose
         #a special processing trigger.
-        if fixName and replica.name == None:
+        if fixName and replica.name is None:
             newName = "Unnamed Line (C%s): " % compIndex
             sep = "; "
             optTags = sep.join(line.optionalTags[:3])
