@@ -877,7 +877,8 @@ class BusinessUnit(Tags,Equalities):
             life = "n/a"
         data["LIFE"] = life
         
-        data["EVENT"] = self.life.get_latest()[:data_width]
+        data["EVENT"] = self.life.get_latest()[0][:data_width]
+        # Pick out the event name, trim to data width. 
         
         unit_type = str(self.type)[:data_width]
         data["TYPE"] = unit_type.upper()
