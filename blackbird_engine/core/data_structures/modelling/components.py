@@ -30,8 +30,7 @@ Components            Tags-type container that stores business units
 import copy
 import time
 
-import BBExceptions
-import BBGlobalVariables as Globals
+import bb_exceptions
 import tools.for_tag_operations
 
 from data_structures.system.tags import Tags
@@ -152,7 +151,7 @@ class Components(dict, Tags, Equalities):
         """
         if not bu.id.bbid:
             c = "Cannot add a component that does not have a valid bbid."
-            raise BBExceptions.IDError(c)
+            raise bb_exceptions.IDError(c)
         bu.setPartOf(self)
         self[bu.id.bbid] = bu
         if bu.name:

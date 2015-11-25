@@ -31,8 +31,8 @@ Topic                 an object that asks questions and processes responses
 import time
 import uuid
 
-import BBExceptions
-import BBGlobalVariables as Globals
+import bb_exceptions
+import bb_settings
 
 from content import color_manager as ColorManager
 from tools import for_messages as message_tools
@@ -186,7 +186,7 @@ class Topic:
             active_scenario = self.scenarios[scenario_key]
         else:
             c = ""
-            raise BBExceptions.TopicDefinitionError()
+            raise bb_exceptions.TopicDefinitionError()
         return active_scenario
         
     def get_first_answer(self):
@@ -275,7 +275,7 @@ class Topic:
         #
         if not message_2:
             c = "No message at message out. Scenario did not wrap properly."
-            raise BBExceptions.TopicDefinitionError(c)
+            raise bb_exceptions.TopicDefinitionError(c)
         self.transcribe(message_1, message_2, active_scenario)
         return message_2
 
@@ -408,7 +408,7 @@ class Topic:
         """
         if not Q:
             c = "Topic.wrap_scenario() requires a valid question object to run."
-            raise BBExceptions.TopicOperationError(c)
+            raise bb_exceptions.TopicOperationError(c)
         self.MR.liveQ = Q
         M = self.MR.activeModel
         R = None
@@ -416,7 +416,7 @@ class Topic:
         #set progress status on Q; always increment progress by 1 for every new
         #question the user sees to show that they are moving along
         #
-        new_progress = M.interview.progress + Globals.min_progress_per_question
+        new_progress = M.interview.progress + bb_settings.MINIMUM_PROGRESS_PER_QUESTION
         M.interview.set_progress(new_progress)
         Q.progress = new_progress
         #

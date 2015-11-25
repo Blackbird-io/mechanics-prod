@@ -41,8 +41,8 @@ n/a
 #imports
 from datetime import date, timedelta
 
-import BBExceptions
-import BBGlobalVariables as Globals
+import bb_exceptions
+import bb_settings
 import tools
 
 from data_structures.modelling.business_unit import BusinessUnit
@@ -238,7 +238,7 @@ def scenario_4(topic):
     M.interview.work_space["earliest_store_open"] = dob_company_string
     #
     industry_standard = SK.months_to_first_unit["retail"]
-    shift = timedelta(industry_standard * Globals.days_in_month)
+    shift = timedelta(industry_standard * bb_settings.days_in_month)
     anchor_date = dob_company_date + shift
     #
     new_Q = topic.questions["first store open date?"]
@@ -325,7 +325,7 @@ def scenario_6(topic):
     if M.time_line.current_period.content:
         top_bu = M.time_line.current_period.content
     else:
-        top_name = (M.name or Globals.default_unit_name)
+        top_name = (M.name or bb_settings.default_unit_name)
         top_bu = BusinessUnit(top_name)
         M.time_line.current_period.set_content(top_bu)  
     #
@@ -337,7 +337,7 @@ def scenario_6(topic):
     bu_template = BusinessUnit("Standard Store Unit", standard_fins)
     # Figure out unit lifespan, set accordingly
     life_in_years = M.interview.work_space["unit_life_years"]
-    life_in_days = life_in_years * Globals.days_in_year
+    life_in_days = life_in_years * bb_settings.days_in_year
     bu_template.life.LIFE_SPAN = timedelta(life_in_days)
 
     KEY_BIRTH = bu_template.life.KEY_BIRTH
@@ -372,7 +372,7 @@ def scenario_6(topic):
     
     # Figure out life stage pattern
     months_to_mature = M.interview.work_space["months_to_mature"]
-    period_to_mature = timedelta(months_to_mature * Globals.days_in_month)
+    period_to_mature = timedelta(months_to_mature * bb_settings.days_in_month)
     youth_ends_percent = int(period_to_mature/bu_template.life.LIFE_SPAN * 100)
     
     if youth_ends_percent < 50:
@@ -482,7 +482,7 @@ def scenario_6(topic):
             c = "Topic detected non-living unit: \n%s\nTopic expected to"
             c += " generate living units only."
             c = c % bu
-            raise BBExceptions.BBAnalyticalError(c)
+            raise bb_exceptions.BBAnalyticalError(c)
     
     # Provide guidance for additional processing
     small_num = 10

@@ -43,7 +43,7 @@ n/a
 import copy
 import datetime
 
-import BBGlobalVariables as Globals
+import bb_settings
 
 from data_structures.modelling.driver import Driver
 from data_structures.modelling.line_item import LineItem
@@ -171,8 +171,8 @@ def scenario_3(topic):
     marketing_formula = topic.formulas[marketing_fn]
     #
     m_ref_date = M.time_line.current_period.end
-    if Globals.fix_ref_date:
-        m_ref_date = Globals.t0
+    if bb_settings.fix_ref_date:
+        m_ref_date = bb_settings.t0
     m_ref_year = m_ref_date.year
     #
     marketing_data["ref_year"] = m_ref_year

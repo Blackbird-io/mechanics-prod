@@ -35,8 +35,7 @@ FullQuestion          Object that defines question for both Engine and Portal
 import copy
 import decimal
 
-import BBExceptions as bb_exceptions
-import BBGlobalVariables as Globals
+import bb_exceptions
 
 from .input_elements.binary import BinaryInput
 from .input_elements.bool import BoolInput

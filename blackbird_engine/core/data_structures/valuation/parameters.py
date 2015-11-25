@@ -38,6 +38,7 @@ n/a
 
 
 
+
 #globals
 fields_CR_Details = []
 fields_CR_Scenario = ["size","price","term","structure","bb_value"]

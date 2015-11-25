@@ -37,8 +37,6 @@ LocalCatalog          subclass of Catalog that cleans questions on every call
 #imports
 import inspect
 
-import BBExceptions
-
 import content.color_manager as ColorManager
 import content.formula_manager as FormulaManager
 import content.question_manager as QuestionManager

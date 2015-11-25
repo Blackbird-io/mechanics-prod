@@ -31,8 +31,7 @@ Pattern               general architecture for ordered dict-style objects
 import time
 import copy
 
-import BBExceptions
-import BBGlobalVariables as Globals
+import bb_exceptions
 
 from data_structures.modelling.line_item import LineItem
 
@@ -196,8 +195,8 @@ class Pattern(dict, LineItem):
 
         FUNCTIONS:
         __get__               calls every o_func in order, returns a list of results               
-        __set__               raises BBExceptions.ManagedAttributeError
-        __del__               raises BBExceptions.ManagedAttributeError
+        __set__               raises bb_exceptions.ManagedAttributeError
+        __del__               raises bb_exceptions.ManagedAttributeError
         ====================  ======================================================
         """
         def __init__(self,attr):
@@ -216,11 +215,11 @@ class Pattern(dict, LineItem):
         
         def __set__(self,instance,value):
             label = "Managed attribute, direct write prohibited"
-            raise BBExceptions.ManagedAttributeError(label)
+            raise bb_exceptions.ManagedAttributeError(label)
 
         def __del__(self,instance):
             label = "Managed attribute, deletion prohibited"
-            raise BBExceptions.ManagedAttributeError(label)
+            raise bb_exceptions.ManagedAttributeError(label)
 
     ordered = dynamicOrdered("ordered")
 

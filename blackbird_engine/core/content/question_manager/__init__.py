@@ -48,8 +48,6 @@ LocalCatalog          subclass of Platform.Catalog that issues copies of entries
 #imports
 import inspect
 
-import BBExceptions
-
 from data_structures.portal.full_question import FullQuestion
 from data_structures.portal.mini_question import MiniQuestion
 from data_structures.portal.portal_question import PortalQuestion

@@ -1,5 +1,22 @@
+#PROPRIETARY AND CONFIDENTIAL
+#Property of Blackbird Logical Applications, LLC
+#Copyright Blackbird Logical Applications, LLC 2015
+#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+
+#Blackbird Environment
+#Module: tools.for_messages
+
+"""
+Module provides toolkit for processing Engine messages. 
+"""
+
+
+
 # Imports
-import BBExceptions
+import bb_exceptions
+
+
+
 
 # Constants
 END_INTERVIEW = "END_interview"
@@ -49,6 +66,6 @@ def checkMessageStatus(mqrMessage):
             status = messagePatterns[pattern]
         except KeyError:
             label = "Unusual message format"
-            raise BBExceptions.BBAnalyticalError(label)
+            raise bb_exceptions.BBAnalyticalError(label)
             #something odd happening here
     return status

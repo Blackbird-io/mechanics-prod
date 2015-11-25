@@ -28,7 +28,7 @@ n/a
 
 
 #imports
-import BBExceptions
+import bb_exceptions
 
 from datetime import date
 
@@ -76,7 +76,7 @@ def find_most_recent(query_date, date_pool):
         i_query = w_query.index(query_date)
         if i_query == 0:
             c = "Query is earliest date in pool."
-            raise BBExceptions.BBAnalyticalError(c, query_date)
+            raise bb_exceptions.BBAnalyticalError(c, query_date)
         else:
             i_prior = i_query - 1
             last_known = w_query[i_prior]

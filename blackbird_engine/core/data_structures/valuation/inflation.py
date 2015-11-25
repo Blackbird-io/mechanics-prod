@@ -27,8 +27,8 @@ Inflation
 
 
 #imports
-import BBExceptions
-import BBGlobalVariables as Globals
+import bb_exceptions
+import bb_settings
 
 
 
@@ -59,7 +59,7 @@ class Inflation:
     string for more information.
     """
     def __init__(self):
-        self._annual = Globals.default_inflation
+        self._annual = bb_settings.ASSUMED_ANNUAL_INFLATION
 
     @property
     def annual(self):
@@ -71,4 +71,4 @@ class Inflation:
             self._annual = value
         else:
             c = "Annual inflation requires value in [-1,1] interval."
-            raise BBExceptions.ManagedAttributeError(c)
+            raise bb_exceptions.ManagedAttributeError(c)

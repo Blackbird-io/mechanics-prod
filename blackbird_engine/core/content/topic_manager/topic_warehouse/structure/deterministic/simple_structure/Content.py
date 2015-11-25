@@ -41,7 +41,7 @@ n/a
 #imports
 import datetime
 
-import BBGlobalVariables as Globals
+import bb_settings
 import tools
 
 from data_structures.modelling.business_unit import BusinessUnit
@@ -232,8 +232,8 @@ def scenario_4(topic):
     #
     bu_0 = BusinessUnit("BU0: Template", stnd_fins)
     bu_0.life.span = datetime.timedelta(0, life_in_seconds)
-    if Globals.fix_ref_date:
-        ref_date = Globals.t0
+    if bb_settings.fix_ref_date:
+        ref_date = bb_settings.t0
     else:
         ref_date = datetime.date.today()
     bu_0.life.set_ref_date(ref_date)

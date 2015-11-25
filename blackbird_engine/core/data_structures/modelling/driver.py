@@ -30,8 +30,7 @@ Driver                objects that modify lineitems from inside business units
 import copy
 import time
 
-import BBExceptions
-import BBGlobalVariables as Globals
+import bb_exceptions
 
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
@@ -205,7 +204,7 @@ class Driver(Tags):
             c1 = "Driver.id.bbid blank. Driver expected to have filled bbid at"
             c2 = "runtime."
             c = c1 + c2
-            raise BBExceptions.IDAssignmentError(c)
+            raise bb_exceptions.IDAssignmentError(c)
         return hash(self.id.bbid)
     
     def canWorkOnThis(self,targetLineItem):
@@ -331,14 +330,14 @@ class Driver(Tags):
                 c = ""
                 c += "Instance data does not include required parameter ``%s``."
                 c = c % (parameter)
-                raise BBExceptions.DefinitionError(c)
+                raise bb_exceptions.DefinitionError(c)
         if F.id.bbid:
             self.formula_bbid = F.id.bbid
         else:
             c = ""
             c += "Formula does not have valid bbid; bbid required for use in\n"
             c += "Driver."
-            raise BBExceptions.DefinitionError(c)
+            raise bb_exceptions.DefinitionError(c)
 
     def setSignature(self,newSig):
         """
@@ -438,7 +437,7 @@ class Driver(Tags):
                 del formula
             else:
                 c = "Driver cannot work on the specified LineItem."
-                raise BBExceptions.BBAnalyticalError(c)
+                raise bb_exceptions.BBAnalyticalError(c)
         else:
             pass
 

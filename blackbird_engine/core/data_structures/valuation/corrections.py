@@ -28,8 +28,8 @@ Corrections
 
 
 #imports
-import BBExceptions
-import BBGlobalVariables as Globals
+import bb_exceptions
+import bb_settings
 
 
 
@@ -69,8 +69,8 @@ class Corrections:
     string for more information.
     """
     def __init__(self):        
-        self._overstatement = Globals.user_correction
-        self._understatement = Globals.user_correction
+        self._overstatement = bb_settings.user_correction
+        self._understatement = bb_settings.user_correction
 
     @property
     def overstatement(self):
@@ -93,7 +93,7 @@ class Corrections:
             self._overstatement = value
         else:
             c = "Adjustment must be a value in [0, 1)."
-            raise BBExceptions.ManagedAttributeError(c)
+            raise bb_exceptions.ManagedAttributeError(c)
 
     @property
     def understatement(self):
@@ -116,5 +116,5 @@ class Corrections:
             self._understatement = value
         else:
             c = "Adjustment must be a value in [0, 1)."
-            raise BBExceptions.ManagedAttributeError(c)
+            raise bb_exceptions.ManagedAttributeError(c)
         

@@ -32,8 +32,8 @@ import copy
 import datetime
 import time
 
-import BBExceptions
-import BBGlobalVariables as settings
+import bb_exceptions
+import bb_settings
 
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
@@ -108,7 +108,7 @@ class TimePeriod(Tags):
         # the unit whose bbid they reference is no longer in their domain. 
 
     def __str__(self):
-        dots = "*" * settings.SCREEN_WIDTH
+        dots = "*" * bb_settings.SCREEN_WIDTH
         s = "\t starts:  \t%s\n" % self.start.isoformat()
         e = "\t ends:    \t%s\n" % self.end.isoformat()
         c = "\t content: \t%s\n" % self.content
@@ -207,7 +207,7 @@ class TimePeriod(Tags):
             #
         else:
             c = "``pool`` is empty, method requires explicit permission to run."
-            raise BBExceptions.ProcessError(c) 
+            raise bb_exceptions.ProcessError(c) 
         
     def extrapolate_to(self,target):
         """
@@ -359,7 +359,7 @@ class TimePeriod(Tags):
             bu._update_id(self.id.namespace, recur=True)
         if not bu.id.bbid:
             c = "Cannot add content without a valid bbid."
-            raise BBExceptions.IDError(c)
+            raise bb_exceptions.IDError(c)
         # Make sure unit has an id in the right namespace. 
         
         if reset_directories:

@@ -31,7 +31,7 @@ GenericInput          Describes on-screen field where user can input a response
 #imports
 import copy
 
-import BBExceptions
+import bb_exceptions
 
 from ..ready_for_portal import ReadyForPortal
 
@@ -197,7 +197,7 @@ class GenericInput(ReadyForPortal):
 ##            c = "Cannot set sub type to ``%s``.\n"
 ##            c += "Permitted subtypes for instance:\n\t%s\n"
 ##            c = c % (value, self._sub_types)
-##            raise BBExceptions.QuestionFormatError(c)
+##            raise bb_exceptions.QuestionFormatError(c)
 ##
 ##    @input_sub_type.deleter
 ##    def input_sub_type(self):
@@ -314,10 +314,10 @@ class GenericInput(ReadyForPortal):
                 #
             else:
                 c = "Response does not satisfy element parameters."
-                raise BBExceptions.ResponseFormatError(c)
+                raise bb_exceptions.ResponseFormatError(c)
         except Exception as E:
             c = "user response does not fit input element."
-            raise BBExceptions.ResponseFormatError(c, E)
+            raise bb_exceptions.ResponseFormatError(c, E)
 
     def set_sub_type(self, value):
         """
@@ -340,7 +340,7 @@ class GenericInput(ReadyForPortal):
             c = "\nCannot set sub type to ``%s``.\n\n"
             c += "Permitted subtypes for instance:\n\t%s\n"
             c = c % (value, self._sub_types)
-            raise BBExceptions.QuestionFormatError(c)
+            raise bb_exceptions.QuestionFormatError(c)
 
     def to_portal(self):
         """

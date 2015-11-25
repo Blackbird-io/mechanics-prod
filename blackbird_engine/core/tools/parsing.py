@@ -33,8 +33,8 @@ import copy
 import datetime
 import time
 
-import BBExceptions
-from BBGlobalVariables import *
+import bb_exceptions
+from bb_settings import *
 
 
 
@@ -107,7 +107,7 @@ def findByTag(container, *targetTags):
         else:
             continue
     else:
-        raise BBExceptions.StructureError("no matching object found")
+        raise bb_exceptions.StructureError("no matching object found")
     return result
 
 def excludeByTag(container, *badTags):

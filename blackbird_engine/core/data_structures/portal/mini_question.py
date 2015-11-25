@@ -28,8 +28,7 @@ MiniQuestion          A compact template for customizing questions in a Topic
 
 
 #imports
-import BBExceptions
-import BBGlobalVariables as Globals
+import bb_exceptions
 
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
@@ -85,7 +84,7 @@ class MiniQuestion:
             object.__setattr__(self,attr,value)
         else:
             c = "MiniQuestion class acts as template, restricts new attributes."
-            raise BBExceptions.ManagedAttributeError(c)
+            raise bb_exceptions.ManagedAttributeError(c)
 
     
     

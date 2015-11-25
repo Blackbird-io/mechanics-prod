@@ -42,7 +42,7 @@ n/a
 #imports
 from datetime import timedelta
 
-import BBGlobalVariables as Globals
+import bb_settings
 
 from data_structures.modelling.line_item import LineItem
 from tools import for_messages as message_tools
@@ -123,7 +123,7 @@ def scenario_1(topic):
     model = topic.MR.activeModel
     subscriber_unit_template = model.taxonomy["subscriber"]["standard"]
     segment_in_months = int((subscriber_unit_template.life.segment.days /
-                             Globals.days_in_month))
+                             bb_settings.days_in_month))
     #
     new_question = topic.questions["subscriber life range?"]
     main_element = new_question.input_array[0]
@@ -175,7 +175,7 @@ def end_scenario(topic):
     model = topic.MR.activeModel
     subscriber_unit_template = model.taxonomy["subscriber"]["standard"]
     segment_months = (subscriber_unit_template.life.segment.days /
-                      Globals.days_in_month)
+                      bb_settings.days_in_month)
     assumed_range = [1 * segment_months,
                      5 * segment_months] 
     apply_data(topic, assumed_range)
@@ -210,8 +210,8 @@ def apply_data(topic, datapoint):
     subscriber_unit_template = model.taxonomy["subscriber"]["standard"]
     sbr_count_label = "subscriber count"
     #
-    lo = timedelta(datapoint[0] * Globals.days_in_month)
-    hi = timedelta(datapoint[1] * Globals.days_in_month)
+    lo = timedelta(datapoint[0] * bb_settings.days_in_month)
+    hi = timedelta(datapoint[1] * bb_settings.days_in_month)
     mean = (lo + hi)/2
     sigma = (hi - lo)/4
     #assume normal distribution that's symmetric around a mean. 95% (``most``)
