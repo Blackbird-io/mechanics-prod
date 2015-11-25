@@ -674,7 +674,7 @@ class BusinessUnit(Tags,Equalities):
         self.life.events[common_events.KEY_KILLED] = date
         if recur:
             for unit in self.components.values():
-                unit.kill(self, date, recur)
+                unit.kill(date, recur)
 
     def synchronize(self, recur=True):
         """
