@@ -8,13 +8,42 @@
 """
 
 A template for topic content modules. Includes all parameters available for
-customization.
+customization. 
+
+====================  ==========================================================
+Attribute             Description
+====================  ==========================================================
+
+DATA:
+
+name
+topic_content
+extra_prep
+requiredTags
+optionalTags
+applied_drivers
+formula_names
+question_names
+scenarios
+
+FUNCTIONS:
+prepare
+scenario_1
+scenario_2
+
+CLASSES:
+n/a
+====================  ==========================================================
 """
 
 
 
 
-# Imports
+#imports
+from tools import for_messages as message_tools
+
+##from Managers.TopicManager import SharedKnowledge as GeneralKnowledge
+##from TopicWarehouse.ParentDirectory import SharedKnowledge as SubjectKnowledge
 ##from data_structures.modelling.business_unit import BusinessUnit
 ##from data_structures.modelling.driver import Driver
 ##from data_structures.modelling.model import Model
@@ -22,7 +51,7 @@ customization.
 
 
 
-# A. Mark module as a topic definition
+#globals
 topic_content = True
 name = "Template topic content module"
 topic_author = "Karen Von Neumann"
@@ -30,36 +59,43 @@ date_created = "2015-04-02"
 extra_prep = False
 #if extra_prep = True, TopicManager will run this module's prep() function
 #after completing standard prep
+PrivateKnowledge = None
 
-# B. Standard topic prep
+#standard topic prep
 user_outline_label = "Label that summarizes topic for user."
 requiredTags = []
 optionalTags = []
-
+#
 applied_drivers = dict()
 formula_names = []
+scenarios = dict()
 work_plan = dict()
 
 formula_names = ["formula 1",
                  "formula 2",
                  "indy 500"]
 my_question = "yo, what's up?"
-
 work_plan["big sky line item"] = 1
 
+GK = GeneralKnowledge
+SK = SubjectKnowledge
+PK = PrivateKnowledge
 
-# C. Drivers:
+#custom prep
+def prepare(new_topic):
+    #always return the topic
+    return new_topic
+
+#drivers:
 #
-# You **must** define driver instances here to make sure they receive proper ids
-# and signatures for run-time. 
+#define driver shells to make sure they receive bbids and signatures!
 #
-# You should create each driver instance you want to use. Place completed
-# instances in ``applied_drivers`` to make sure they receive proper signatures
-# and ids. You can then fill in the driver data and connect formulas within your
-# scenarios at run-time. By then, the topic will carry dictionaries with all of
-# the objects you need. 
+#create each driver object used in Topic and place in applied_drivers to make
+#sure they receive proper signatures and ids. Provide data and formulas
+#during runtime through scenarios. At that point, topic will carry dictionaries
+#that point to all relevant objects. 
 #
-# Ex. 1: Driver for Car Expense:
+#Driver for Car Expense:
 driver_car = Driver()
 driver_car.setName("Jeeves, the fancy car driver")
 driver_car.setWorkConditions(None,None,"Rolls-Royce Phantom")
@@ -67,15 +103,16 @@ driver_car.canBeFirst = True
 driver_car.canBeLast = False
 applied_driver["Car Driver"] = driver_car
 #
-# Ex. 2: Driver for Boat
+#Driver for Boat
 #...
 
-# D. Define your processing scenarios
+#scenarios
 #
-# Remember, scenarios must prep their work for delivery before returning.
-#  -- to pause topic for a question, call ``topic.wrap_scenario(Q)``
-#  -- to conlude work, call ``topic.wrap_topic()``
-#  -- to continue a limp-home chain after a user stop, call ``topic.wrap_to_stop()``
+#define each scenario, then fill out scenarios dictionary at the bottom
+#each scenario must conclude with either:
+    #scenarios that ask a question - topic.wrap_scenario(Q)
+    #scenarios that complete processing - topic.wrap_topic()
+    #scenarios that respond to a user stop - topic.wrap_to_stop()
 
 def scenario_1(topic):
     """
@@ -140,8 +177,11 @@ def apply_data(topic, datapoint):
     [describe substantive work that topic does to model based on data]
     """
     #function performs substantive work on model in light of new data
-    pass
 
+scenarios[None] = scenario_1
+scenarios[my_question] = scenario_2
+scenarios[message_tools.USER_STOP] = end_scenario
+#
 
 #Conventions and general notes:
 #-- Each Topic should ask at most one question. 
