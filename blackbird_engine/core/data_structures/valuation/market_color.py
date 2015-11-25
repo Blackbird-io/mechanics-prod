@@ -30,7 +30,7 @@ MarketColor           dictionary of industry color, with supplemental attributes
 #imports
 import copy
 
-import BBExceptions
+import bb_exceptions
 
 from data_structures.system.bbid import ID
 from tools import parsing as parsing_tools
@@ -95,7 +95,7 @@ class MarketColor(dict):
             if not overwrite:
                 c = "Instance already contains a record for ``%s``"
                 c = c % industry_name
-                raise BBExceptions.CatalogError(c)
+                raise bb_exceptions.CatalogError(c)
         self[industry_name] = IndustryData(industry_name)
 
     def copy(self):

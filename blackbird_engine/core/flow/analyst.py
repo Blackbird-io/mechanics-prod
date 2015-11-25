@@ -28,7 +28,6 @@ Analyst               worker object, can run independently
 
 
 # Imports
-##import BBGlobalVariables as Globals
 from tools import for_messages as Globals
 
 from .interviewer import Interviewer

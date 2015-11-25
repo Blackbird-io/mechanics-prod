@@ -31,8 +31,7 @@ TimeLine              collection of TimePeriod objects indexed by end date
 from datetime import date, timedelta
 import time
 
-import BBExceptions
-import BBGlobalVariables as Globals
+import bb_settings
 
 from data_structures.system.bbid import ID
 
@@ -456,7 +455,7 @@ class TimeLine(dict):
         bu_height = len(bu_lines)
         sep_width = len(sep)
         column_width = bu_width + cushion * 2 + sep_width
-        column_count = Globals.screen_width // column_width
+        column_count = bb_settings.SCREEN_WIDTH // column_width
 ##        column_count = 3
         #
         #the first column stays constant from row to row: it's just the lead,

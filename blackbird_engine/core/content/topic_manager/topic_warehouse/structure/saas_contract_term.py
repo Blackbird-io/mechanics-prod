@@ -41,7 +41,7 @@ n/a
 #imports
 from datetime import timedelta
 
-import BBGlobalVariables as Globals
+import bb_settings
 
 from data_structures.modelling.business_unit import BusinessUnit
 from data_structures.modelling.line_item import LineItem
@@ -193,7 +193,7 @@ def apply_data(topic, datapoint):
     model.taxonomy["subscriber"]["standard"] = subscriber_unit_template
     #
     term_in_months = datapoint
-    term_in_days = datapoint * Globals.days_in_month
+    term_in_days = datapoint * bb_settings.days_in_month
     subscriber_unit_template.life.segment = timedelta(term_in_days)
     #life segement is the smallest increment of time over which descriptive life
     #attributes can change status. 

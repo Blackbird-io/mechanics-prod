@@ -27,13 +27,18 @@ TagManager            dictionary of ModeRules keyed by event code
 
 
 
-import BBExceptions
+# Imports
+import bb_exceptions
+
 from .TagRule import TagRule
 
 
 
 
+# Constants
+# n/a
 
+# Classes
 class TagManager(dict):
     def __init__(self):
         self.catalog = {}
@@ -54,7 +59,7 @@ class TagManager(dict):
         for known_k in known:
             if self.catalog[known_k] != tag:
                 c = "Key %s points to a different tag." % known_k
-                raise BBExceptions.TagRegistrationError(c)
+                raise bb_exceptions.TagRegistrationError(c)
             else:
                 pass
                 #this tag already registered to this key

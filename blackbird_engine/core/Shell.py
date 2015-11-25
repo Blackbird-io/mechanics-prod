@@ -71,7 +71,7 @@ if sub_folder not in sys.path:
 
 
 
-import BBExceptions
+import bb_exceptions
 import simple_portal as portal
 
 from content import question_manager as QuestionManager
@@ -400,7 +400,7 @@ def rewind(steps_back = 1):
     """
     if not PERMIT_CACHING:
         c = "Rewind() operations require caching to be enabled."
-        raise BBExceptions.ProcessError(c)
+        raise bb_exceptions.ProcessError(c)
     MR.clear()
     MR.messageOut = portal.rewind(steps_back)
 

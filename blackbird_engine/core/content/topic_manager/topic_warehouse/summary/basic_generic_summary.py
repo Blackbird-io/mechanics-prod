@@ -15,7 +15,6 @@ Description:
   -- take out revenue, cost, opex, sga, ebitda, capex, ebitda
   -- package that into a BusinessSummary dictionary
   -- also include credit_capacity, which is 80% times max atx landscape
-     [Globals.cc_haircut]
 
 ====================  ==========================================================
 Attribute             Description
@@ -47,7 +46,7 @@ n/a
 
 
 #imports
-import BBGlobalVariables as Globals
+import bb_settings
 
 from tools import for_messages as message_tools
 
@@ -133,7 +132,7 @@ def scenario_1(topic):
     landscape_summary = model.valuation.credit.combined.get_summary()
     print(landscape_summary)
     cc_raw = landscape_summary["size"]["hi"]
-    cc_adj = cc_raw * (1 - Globals.cc_haircut)
+    cc_adj = cc_raw * (1 - bb_settings.HAIRCUT_TO_EXPECTED_VALUE)
     model.summary.data["credit_capacity"] = cc_adj
     #
     #finish work, wrap topic()

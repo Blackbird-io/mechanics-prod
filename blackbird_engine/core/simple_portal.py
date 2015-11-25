@@ -46,8 +46,8 @@ n/a
 # Imports
 import time
 
-import BBExceptions
-import BBGlobalVariables as Globals
+import bb_exceptions
+import bb_settings as Globals
 
 from data_structures.portal.full_question import FullQuestion
 from data_structures.portal.portal_model import PortalModel
@@ -205,7 +205,7 @@ def _get_response(message):
                                 break
                 #filled out the response, print progress bar
                 _print_progress_bar(progress)
-            except BBExceptions.UserInterrupt:
+            except bb_exceptions.UserInterrupt:
                 newR = USER_STOP
             finally:
                 del full_q 
@@ -283,7 +283,7 @@ def _respond_to_element(element, question_name, element_index):
             #
             #second, check that response satisfies element
             if user_answer == USER_STOP:
-                raise BBExceptions.UserInterrupt
+                raise bb_exceptions.UserInterrupt
             else:
                 element.set_response(user_answer, target = result)
                 #set_response() runs formats the response, verifies that it fits
@@ -292,7 +292,7 @@ def _respond_to_element(element, question_name, element_index):
                 #
                 loop = False
                 #
-        except BBExceptions.ResponseFormatError as E:
+        except bb_exceptions.ResponseFormatError as E:
             #catch only format-related exceptions
             print(E)
             count +=1
@@ -470,7 +470,7 @@ def rewind(steps_back=1):
     """
     if not permit_caching:
         c = "Portal supports rewind operations only when caching enabled."
-        raise BBExceptions.ProcessError(c)
+        raise bb_exceptions.ProcessError(c)
     current_step = len(cache)
     prior_step = current_step - steps_back
     result = go_to(prior_step)

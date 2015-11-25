@@ -32,9 +32,6 @@ BookMark              specialized lineitems that serve as position markers
 import copy
 import time
 
-import BBExceptions
-import BBGlobalVariables as Globals
-
 from data_structures.system.tags import Tags
 
 from .line_item import LineItem

@@ -1,12 +1,11 @@
 # PROPRIETARY AND CONFIDENTIAL
 # Property of Blackbird Logical Applications, LLC
 # Copyright Blackbird Logical Applications, LLC 2015
-# NOT TO BE CIRCULATED OR REPRODUCED
-# WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA
+# PODOLYAKO
 
 # Blackbird Engine
 # Module: tools.for_populations
-
 """
 
 Module includes convenience functions that return a population of objects
@@ -35,11 +34,13 @@ n/a
 
 
 # imports
-import BBExceptions
 import math
+
+import bb_exceptions
+
+from datetime import date, timedelta
+
 from data_structures.modelling import common_events
-from datetime import date
-from datetime import timedelta
 
 
 
@@ -73,7 +74,7 @@ def get_units_linearly(number, container):
     # Error Checking
     if number > len(container):
         c = 'Error: Number > Container Length %s' % len(container)
-        raise BBExceptions.BBAnalyticalError(c)
+        raise bb_exceptions.BBAnalyticalError(c)
 
     # Populate master_list, a sorted list of container objects by birth date
     master_list = list()
@@ -347,7 +348,7 @@ def make_closed_units(start_dt, end_dt, template, number, birth_dt=None):
         birth_dt = start_dt
     elif birth_dt > start_dt:
         c = "Warning Birth Date > Start Date!"
-        raise BBExceptions.BBAnalyticalError(c)
+        raise bb_exceptions.BBAnalyticalError(c)
 
     time_diff = end_dt - start_dt  # timedelta object
     time_interval = time_diff / number

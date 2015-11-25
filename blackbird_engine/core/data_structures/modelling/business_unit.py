@@ -29,8 +29,8 @@ import copy
 import datetime
 import time
 
-import BBExceptions
-import BBGlobalVariables as Globals
+import bb_exceptions
+import bb_settings
 
 from data_structures.guidance.guide import Guide
 from data_structures.system.bbid import ID
@@ -172,7 +172,7 @@ class BusinessUnit(Tags,Equalities):
     def type(self):
         c = "``type`` is a property; delete prohibited. to represent generic "
         c += "unit, set to None instead."
-        raise BBExceptions.ManagedAttributeError(c)
+        raise bb_exceptions.ManagedAttributeError(c)
         
     def __hash__(self):
         return self.id.__hash__()
@@ -708,7 +708,7 @@ class BusinessUnit(Tags,Equalities):
 
             pool = self.components.values()
             
-            if Globals.DEBUG_MODE:
+            if bb_settings.DEBUG_MODE:
                 pool = self.components.getOrdered()
                 # Use stable order to simplify debugging
                 
@@ -997,7 +997,7 @@ class BusinessUnit(Tags,Equalities):
                 c5 = "new unit name:   %s\n\n" % self.name
                 print(self.period.bu_directory)
                 c = c1+c2+c3+c4+c5
-                raise BBExceptions.IDCollisionError(c)
+                raise bb_exceptions.IDCollisionError(c)
             
         # Check for collisions first, then register if none arise.
         self.period.bu_directory[self.id.bbid] = self

@@ -27,7 +27,7 @@ Catalog
 
 
 #imports:
-import BBExceptions
+import bb_exceptions
 
 
 
@@ -92,11 +92,11 @@ class Catalog:
         if not overwrite:
             if obj.id.bbid in self.by_id:
                 c = "id collision in catalog\n"
-                raise BBExceptions.CatalogError(c, obj.id.bbid)
+                raise bb_exceptions.CatalogError(c, obj.id.bbid)
             overlap = set(reverse_keys) & set(self.by_name.keys())
             if overlap != set():
                 c = "name key collision in catalog"
-                raise BBExceptions.CatalogError(c, overlap)
+                raise bb_exceptions.CatalogError(c, overlap)
         self.by_id[obj.id.bbid] = obj
         for k in reverse_keys:
             if k:
@@ -106,4 +106,4 @@ class Catalog:
                 c = ""
                 c += "Catalog prohibits registration under None or other \n"
                 c += "objects with False values."
-                raise BBExceptions.CatalogError(c)
+                raise bb_exceptions.CatalogError(c)

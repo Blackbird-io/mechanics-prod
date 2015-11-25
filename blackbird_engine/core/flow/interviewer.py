@@ -36,12 +36,11 @@ Interviewer           selects focal point for Blackbird analysis
 
 
 # Imports
-import BBExceptions
-##import BBGlobalVariables as Globals
-from tools import for_messages as Globals
+import bb_exceptions
 import settings.guidance
 
 from data_structures.system.messenger import Messenger
+from tools import for_messages as message_tools
 
 from . import completion_rules
 from . import selection_rules
@@ -139,7 +138,7 @@ class Interviewer:
         else:
             c = "Unknown protocol. Attribute only accepts keys for known"
             c += "protocol routines."
-            raise BBExceptions.ManagedAttributeError(c)
+            raise bb_exceptions.ManagedAttributeError(c)
     
     def focus(self, model, selector):
         """
@@ -430,7 +429,7 @@ class Interviewer:
         Method marks current stage complete on model, returns a (M,Q,END)
         message.
         """
-        stop = Globals.END_INTERVIEW
+        stop = message_tools.END_INTERVIEW
         m = model
         q = self.MR.activeQuestion
         r = stop

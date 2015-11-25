@@ -29,7 +29,7 @@ Starter               class for starting Engine analysis
 #imports
 import datetime
 
-import BBGlobalVariables as Globals
+import bb_settings
 
 from data_structures.modelling.model import Model
 from data_structures.system.messenger import Messenger
@@ -76,8 +76,8 @@ class Starter:
         new model. Method then starts the model and builds out a time line
         around either the current or globally fixed reference date.
         """
-        if Globals.fix_ref_date == True:
-            ref_date = Globals.t0
+        if bb_settings.fix_ref_date == True:
+            ref_date = bb_settings.t0
         else:
             ref_date = datetime.date.today()
         #
@@ -87,12 +87,12 @@ class Starter:
         if model:
             model_name = model.portal_data["business_name"]
             if not model_name:
-                model_name = Globals.DEFAULT_MODEL_NAME
+                model_name = bb_settings.DEFAULT_MODEL_NAME
             model.setName(model_name)
             #starter can also do configuration from other parts of
             #user_context
         else:
-            model = Model(Globals.DEFAULT_MODEL_NAME)
+            model = Model(bb_settings.DEFAULT_MODEL_NAME)
         model.start()
         #officially ``start`` the model so that it never comes back here;
         #otherwise, starter.process() will destroy all existing model data.

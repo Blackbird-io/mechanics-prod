@@ -30,8 +30,7 @@ Equalities
 #imports
 import inspect
 
-import BBExceptions
-import BBGlobalVariables as Globals
+import bb_settings
 
 
 
@@ -139,7 +138,7 @@ class Equalities:
         skipNames = self.skipPrefixes + self.irrelevantAttributes + ["__"]
         skipNames = tuple(skipNames)
         if trace:
-          dashes = "\t"+ "-"*(Globals.screen_width-tab_width*2)+"\n" 
+          dashes = "\t"+ "-"*(bb_settings.SCREEN_WIDTH - tab_width*2)+"\n" 
           t_header = ""
           t_header += dashes
           t_header += "\tBegin tracing equality evaluation...\n"

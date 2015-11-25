@@ -30,8 +30,6 @@ ReadyForPortal        Schema subclass, makes instances from seeds, returns dict
 #imports
 import copy
 
-import BBExceptions
-
 from .schema import Schema
 
 

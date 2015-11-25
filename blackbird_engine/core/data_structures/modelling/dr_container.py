@@ -30,8 +30,7 @@ DriversContainer      subclass of Components
 #imports
 import copy
 
-import BBExceptions
-import BBGlobalVariables as Globals
+import bb_exceptions
 
 from data_structures.system.tags import Tags
 
@@ -122,11 +121,11 @@ class DrContainer(Components):
         """
         if not self.parentObject:
             c = "Cannot add driver. DrContainer does not have a parent object."
-            raise BBExceptions.IOPMechanicalError(c)
+            raise bb_exceptions.IOPMechanicalError(c)
         
         if not new_driver.id.bbid:
             c = "Cannot add driver that does not have a valid bbid."
-            raise BBExceptions.IDError(c)
+            raise bb_exceptions.IDError(c)
 
         # Could prohibit implicit overwrites, but would be cumbersome. Would
         # have to check whether a bbid is already in a given key's set.

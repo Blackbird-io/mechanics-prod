@@ -31,7 +31,7 @@ Schema                Describes on-screen field where user can input a response
 #imports
 import copy
 
-import BBExceptions
+import bb_exceptions
 
 
 
@@ -77,4 +77,4 @@ class Schema:
             c = "\nCannot set attribute ``%s`` on %s.\n"
             c += "Schema objects do not allow new attributes."
             c = c % (attr, self)
-            raise BBExceptions.ManagedAttributeError(c)
+            raise bb_exceptions.ManagedAttributeError(c)

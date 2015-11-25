@@ -42,8 +42,8 @@ n/a
 #imports
 from datetime import timedelta
 
-import BBGlobalVariables as Globals
-import BBExceptions
+import bb_exceptions
+import bb_settings
 
 from data_structures.modelling.business_unit import BusinessUnit
 from tools import for_messages as message_tools
@@ -262,14 +262,14 @@ def apply_data(topic, datapoint):
     batch_size = 1
     rump_size = 0
     #
-    if unit_count > Globals.max_unit_count:
-        batch_size = round(unit_count / Globals.batch_count)
+    if unit_count > bb_settings.max_unit_count:
+        batch_size = round(unit_count / bb_settings.batch_count)
         batch_count = unit_count // batch_size
         rump_size = unit_count % batch_size
     #
     tg_quality = tg_basic_depth
-    if Globals.mid_unit_count <= batch_count:
-        if batch_count < Globals.high_unit_count:
+    if bb_settings.mid_unit_count <= batch_count:
+        if batch_count < bb_settings.high_unit_count:
             tg_quality = tg_medium_depth
         else:
             tg_quality = tg_high_depth        
@@ -342,7 +342,7 @@ def apply_data(topic, datapoint):
             product.add_component(sbr)
             c = "Method should only generate living units. Unit %s not alive."
             c = c % sbr.id.bbid
-            raise BBExceptions.AnalyticalError(c)
+            raise bb_exceptions.AnalyticalError(c)
     
     if rump_size:
         rump_unit = subscriber_template.copy()

@@ -31,8 +31,8 @@ Model                 structured snapshots of a company across time periods
 import time
 import dill
 
-import BBExceptions
-import BBGlobalVariables as settings
+import bb_exceptions
+import bb_settings
 
 from data_structures.guidance.interview_tracker import InterviewTracker
 from data_structures.system.bbid import ID
@@ -193,7 +193,7 @@ class Model(Tags):
     def summary(self, value):
         c = "Assignment prohibited. ``model.summary`` serves only as a pointer"
         c += " to the current period company summary."
-        raise BBExceptions.ManagedAttributeError(c)
+        raise bb_exceptions.ManagedAttributeError(c)
 
     @property
     def valuation(self):
@@ -219,7 +219,7 @@ class Model(Tags):
     def valuation(self, value):
         c = "Assignment prohibited. ``model.valuation`` serves only as a pointer"
         c += " to the current period company valuation."
-        raise BBExceptions.ManagedAttributeError(c)
+        raise bb_exceptions.ManagedAttributeError(c)
 
     #METHODS
     @classmethod
@@ -249,7 +249,7 @@ class Model(Tags):
         else:
             business_name = portal_model["business_name"]
             if not business_name:
-                business_name = settings.DEFAULT_MODEL_NAME
+                business_name = bb_settings.DEFAULT_MODEL_NAME
             M = cls(business_name)
         M.portal_data.update(portal_model)
         del M.portal_data["e_model"]

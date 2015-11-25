@@ -30,7 +30,7 @@ LineItem              storage for numerical values and tags
 import copy
 import time
 
-import BBExceptions
+import bb_exceptions
 
 from data_structures.guidance.guide import Guide
 from data_structures.system.tags import Tags
@@ -144,7 +144,7 @@ class LineItem(PrintAsLine, Tags, Equalities):
             c1 = "Direct write prohibited. ``value`` is a managed attribute."
             c2 = "Use setValue() to change."
             c = c1 + c2
-            raise BBExceptions.ManagedAttributeError(c)
+            raise bb_exceptions.ManagedAttributeError(c)
 
     #value is a managed class attribute    
     value = dyn_ValManager()
@@ -163,7 +163,7 @@ class LineItem(PrintAsLine, Tags, Equalities):
             c1 = "Direct write prohibited. ``sign`` is a managed attribute."
             c2 = "Use toggleSign() method to change."
             c = c1 + c2
-            raise BBExceptions.ManagedAttributeError(c)
+            raise bb_exceptions.ManagedAttributeError(c)
 
     #sign is a managed class attribute    
     sign = dyn_SignManager()
@@ -334,7 +334,7 @@ class LineItem(PrintAsLine, Tags, Equalities):
                                             newValue))
             else:
                 label = "LineItem value must be numeric"
-                raise BBExceptions.ValueFormatError(label)
+                raise bb_exceptions.ValueFormatError(label)
             
     
     def toggleSign(self,newSign = None):
@@ -353,6 +353,6 @@ class LineItem(PrintAsLine, Tags, Equalities):
             self._sign = newSign
         else:
             c = "sign must be -1 or 1"
-            raise BBExceptions.ValueFormatError(c)
+            raise bb_exceptions.ValueFormatError(c)
 
 

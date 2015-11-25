@@ -42,8 +42,6 @@ n/a
 #imports
 from datetime import timedelta
 
-import BBExceptions
-
 from data_structures.modelling.business_unit import BusinessUnit
 from data_structures.modelling.driver import Driver
 from data_structures.modelling.line_item import LineItem

@@ -32,7 +32,7 @@ Life                  object that tracks how attributes evolve over time
 import copy
 import datetime
 
-import BBExceptions as bb_exceptions
+import bb_exceptions
 
 from . import common_events
 from .equalities import Equalities

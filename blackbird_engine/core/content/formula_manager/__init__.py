@@ -39,7 +39,7 @@ n/a
 #imports
 import inspect
 
-import BBExceptions
+import bb_exceptions
 
 from data_structures.system.catalog import Catalog
 from data_structures.system.bbid import ID
@@ -78,7 +78,7 @@ def make_formula(content_module, catalog = local_catalog):
     #
     if not content_module.name:
         c = "Cannot add nameless formulas to catalog."
-        raise BBExceptions.CatalogError(c)
+        raise bb_exceptions.CatalogError(c)
     formula.tags.setName(content_module.name)
     formula.id.set_namespace(my_id.bbid)
     formula.id.assign(seed=formula.tags.name)
@@ -91,7 +91,7 @@ def make_formula(content_module, catalog = local_catalog):
     if not formula.func:
         c = "Content module %s does not define a valid formula."
         c = c % formula.tags.name
-        raise BBExceptions.CatalogError(c)
+        raise bb_exceptions.CatalogError(c)
     #
     formula.required_data = content_module.required_data
     reverse_lookup_keys = [formula.tags.name, formula, location]

@@ -30,7 +30,7 @@ Statement             container that stores, updates, and organizes LineItems
 import copy
 import time
 
-import BBExceptions
+import bb_exceptions
 
 from data_structures.system.tags import Tags
 from tools import parsing as ParsingTools
@@ -297,7 +297,7 @@ class Statement(list, Tags, Equalities):
         self._map_hierarchy()
         if not allow_duplicates:
             if line.name in self._top_level_names:
-                raise BBExceptions.BBAnalyticalError()
+                raise bb_exceptions.BBAnalyticalError()
         
         i, j, parent = self._spot_in_tree(*ancestor_tree)
         line.setPartOf(parent)
@@ -1153,7 +1153,7 @@ class Statement(list, Tags, Equalities):
                     line.setValue(0, signature)
                 else:
                     c = "replica value does not equal line."
-                    raise BBExceptions.IOPMechanicalError(c, line, new_replica)
+                    raise bb_exceptions.IOPMechanicalError(c, line, new_replica)
                 self.insert(position + off_set + 1, new_replica)
                 off_set = off_set + 1
                 
@@ -1292,7 +1292,7 @@ class Statement(list, Tags, Equalities):
                 self._hierarchy_map.append(self.LABEL_MISFIT)
         if not len(self._hierarchy_map) == len(self):
             c = "map does not properly reflect hierarchy"
-            raise BBExceptions.IOPMechanicalError()
+            raise bb_exceptions.IOPMechanicalError()
 
     def _match_book_mark(self, book_mark, double_check=True):
         """
@@ -1320,7 +1320,7 @@ class Statement(list, Tags, Equalities):
                 # Must specify double_check is false, otherwise loops forever.
                 return B
             else:
-                raise BBExceptions.BookMarkError
+                raise bb_exceptions.BookMarkError
 
     def _spot_by_book_mark(self, container, index):
         """
@@ -1413,7 +1413,7 @@ class Statement(list, Tags, Equalities):
         parent = self
         if not ancestor_tree:
             c = "Method requires a tree of at least name."
-            raise BBExceptions.BBAnalyticalError(c)
+            raise bb_exceptions.BBAnalyticalError(c)
         if ancestor_tree:
             parent_name = ancestor_tree[0]
         i = self.indexByName(parent_name)
@@ -1505,7 +1505,7 @@ class Statement(list, Tags, Equalities):
             except KeyError as X:
                 c = "Summary line ``%s`` expected but does not exist"
                 c = c % summaryName
-                raise BBExceptions.HierarchyError(c)
+                raise bb_exceptions.HierarchyError(c)
 
         if refresh:
             self.dSummaries = existingSummaries

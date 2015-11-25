@@ -52,7 +52,7 @@ n/a
 
 
 #imports
-import BBExceptions
+import bb_exceptions
 
 from data_structures.system.protected_catalog import ProtectedCatalog
 from data_structures.system.bbid import ID
@@ -121,7 +121,7 @@ def make_color(content_module, catalog = local_catalog, fill_gaps = False):
         # Color modules get ids within the ColorManager namespace.
         new_color.id.assign(seed=new_color.ref_date.isoformat())
     else:
-        raise BBExceptions.CatalogError
+        raise bb_exceptions.CatalogError
         #somehow failed to create a color object
     #
     catalog.register(new_color, new_color.ref_date)

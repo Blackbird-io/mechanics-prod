@@ -41,8 +41,6 @@ n/a
 
 
 # Imports
-import BBExceptions
-
 from data_structures.system.messenger import Messenger
 
 from .analyst import Analyst
