@@ -27,8 +27,6 @@ Guide                 gauge cluster that guides analysis
 
 
 #imports
-import settings.guidance
-
 from .attention_tracker import AttentionTracker
 from .counter import Counter
 from .quality_tracker import QualityTracker
@@ -51,20 +49,28 @@ class Guide:
     ====================  ======================================================
 
     DATA:
+    HIGHEST_PERMITTED_PRIORITY  int; default of 5
+    
     attention             instance of AttentionTracker
     complete              bool; convenience marker used by external objects
     quality               instance of QualityTracker
     priority              instance of Counter
     selection             instance of SelectionTracker
     
+    
     FUNCTIONS:
     reset()               reruns __init__ on self
     ====================  ======================================================
     """
-    def __init__(self, priority = None, quality = None):
+    HIGHEST_PERMITTED_PRIORITY = 5
+    
+    def __init__(self, priority=None, quality=None):
+        
         self.attention = AttentionTracker()
         self.complete = False
-        self.priority = Counter(cut_off = settings.guidance.PRIORITY_MAX)
+
+        self.priority = Counter(cut_off=self.HIGHEST_PERMITTED_PRIORITY)
+        
         self.quality = QualityTracker()
         self.selection = SelectionTracker()
         if priority:

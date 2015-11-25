@@ -29,7 +29,6 @@ Step                  single logical step, compatible with selection algos
 
 
 #imports
-import settings.guidance
 import tools.for_printing as printing_tools
 
 from data_structures.guidance.guide import Guide
@@ -60,9 +59,12 @@ class Step(Tags, PrintAsLine):
     pre_format()          sets instance.formatted to a line with a checkbox
     ====================  ======================================================
     """
-    def __init__(self, name = None,
-                 priority = settings.guidance.PRIORITY_DEFAULT,
-                 quality = settings.guidance.QUALITY_DEFAULT):
+    DEFAULT_PRIORITY_LEVEL = 1
+    DEFAULT_QUALITY_REQUIREMENT = 5
+    
+    def __init__(self, name=None,
+                 priority=DEFAULT_PRIORITY_LEVEL,
+                 quality=DEFAULT_QUALITY_REQUIREMENT):
         Tags.__init__(self)
         PrintAsLine.__init__(self)
         #
