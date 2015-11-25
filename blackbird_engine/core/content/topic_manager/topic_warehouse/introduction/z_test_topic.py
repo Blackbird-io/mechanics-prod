@@ -40,13 +40,7 @@ n/a
 
 
 #imports
-import BBGlobalVariables as Globals
-
-##from Managers.TopicManager import SharedKnowledge as GeneralKnowledge
-##from TopicWarehouse.ParentDirectory import SharedKnowledge as SubjectKnowledge
-##from data_structures.modelling.business_unit import BusinessUnit
-##from data_structures.modelling.driver import Driver
-##from data_structures.modelling.model import Model
+from tools import for_messages as message_tools
 
 
 
@@ -158,7 +152,7 @@ def apply_data(topic, datapoint):
 
 scenarios[None] = scenario_1
 scenarios[my_question] = scenario_2
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 
 
 

@@ -36,10 +36,8 @@ scenario_2
 
 
 #imports
-import BBGlobalVariables as Globals
-
 from data_structures.modelling.business_unit import BusinessUnit
-
+from tools import for_messages as message_tools
 
 
 
@@ -194,6 +192,6 @@ def apply_data(topic, datapoint):
 
 scenarios[None] = scenario_1
 scenarios[my_question] = scenario_2
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 
 

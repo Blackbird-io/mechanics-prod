@@ -40,13 +40,7 @@ n/a
 
 
 #imports
-import BBGlobalVariables as Globals
-
-##from Managers.TopicManager import SharedKnowledge as GeneralKnowledge
-##from TopicWarehouse.ParentDirectory import SharedKnowledge as SubjectKnowledge
-##from DataStructures.Modelling.Model import Model
-##from DataStructures.Modelling.BusinessUnit import BusinessUnit
-##from DataStructures.Modelling.Driver import Driver
+from tools import for_messages as message_tools
 
 
 
@@ -264,7 +258,7 @@ for intro, add a short-name module. when gets name:
 
 scenarios[None] = scenario_1
 scenarios["is this a real question?"] = scenario_2
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 
 
 

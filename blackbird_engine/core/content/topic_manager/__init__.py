@@ -38,7 +38,6 @@ LocalCatalog          subclass of Catalog that cleans questions on every call
 import inspect
 
 import BBExceptions
-import BBGlobalVariables as Globals
 
 import content.color_manager as ColorManager
 import content.formula_manager as FormulaManager
@@ -47,6 +46,8 @@ import content.question_manager as QuestionManager
 from data_structures.system.bbid import ID
 from data_structures.system.catalog import Catalog
 from data_structures.system.topic import Topic
+
+from tools import for_messages as message_tools
 from tools.for_managers import walk_package
 
 from . import topic_warehouse as TopicWarehouse
@@ -237,9 +238,9 @@ def load_scenarios(topic, content_module):
     #
     #handle the special keys first
     start_scenario = content_module.scenarios.pop(None)
-    end_scenario = content_module.scenarios.pop(Globals.user_stop)
+    end_scenario = content_module.scenarios.pop(message_tools.USER_STOP)
     topic.scenarios[None] = start_scenario
-    topic.scenarios[Globals.user_stop] = end_scenario
+    topic.scenarios[message_tools.USER_STOP] = end_scenario
     #
     #now move the keys that support bbids
     for (question_name,scenario) in content_module.scenarios.items():

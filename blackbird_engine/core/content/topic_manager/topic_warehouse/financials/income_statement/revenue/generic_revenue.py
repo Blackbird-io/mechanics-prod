@@ -40,9 +40,9 @@ n/a
 
 
 #imports
-import BBGlobalVariables as Globals
-
 from data_structures.modelling.driver import Driver
+
+from tools import for_messages as message_tools
 
 
 
@@ -146,7 +146,7 @@ scenarios[None] = scenario_1
 scenarios["annual unit revenue at maturity?"] = scenario_2
 scenarios["annual revenue at mature stores?"] = scenario_2
 #
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 #
 
 

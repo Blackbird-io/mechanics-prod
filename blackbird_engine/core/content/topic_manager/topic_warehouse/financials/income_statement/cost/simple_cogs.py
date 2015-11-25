@@ -41,12 +41,10 @@ n/a
 #imports
 import copy
 
-import BBGlobalVariables as Globals
-
 from data_structures.modelling.driver import Driver
+from tools import for_messages as message_tools
 
 from . import shared_knowledge as SubjectKnowledge
-
 
 
 
@@ -242,4 +240,4 @@ def end_scenario(topic):
 
 scenarios[None] = scenario_1
 scenarios["average gross margin at a mature unit?"] = scenario_2
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario

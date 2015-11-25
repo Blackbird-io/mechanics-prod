@@ -43,6 +43,8 @@ from datetime import date, timedelta
 
 import BBGlobalVariables as Globals
 
+from tools import for_messages as message_tools
+
 from .. import SharedKnowledge as SubjectKnowledge
 
 
@@ -150,5 +152,5 @@ scenarios[None] = scenario_1
 #
 scenarios["time to open leased store?"] = scenario_2
 #
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 

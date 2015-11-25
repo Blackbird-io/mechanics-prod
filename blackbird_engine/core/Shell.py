@@ -55,7 +55,7 @@ n/a
 
 
 
-#imports
+# Imports
 import sys
 import os
 
@@ -72,7 +72,6 @@ if sub_folder not in sys.path:
 
 
 import BBExceptions
-import BBGlobalVariables as Globals
 import simple_portal as portal
 
 from content import question_manager as QuestionManager
@@ -81,11 +80,15 @@ from data_structures.portal.portal_model import PortalModel
 from data_structures.system.messenger import Messenger
 from data_structures.valuation.cr_reference import CR_Reference
 from flow import supervisor
+from tools import for_messages as message_tools
 
 
 
 
-#globals
+# Constants
+# n/a
+
+# Other Globals
 blank_credit_reference = CR_Reference()
 launched = False
 MR = Messenger()
@@ -100,14 +103,12 @@ QuestionManager.populate()
 #QM.populate() should run a no-op here because downstram modules beat Shell to
 #the punch
 
-#functions
-def continuous(first_message = None, cycles = 200, portal_format = False):
+# Functions
+def continuous(first_message=None, cycles=200, portal_format=False):
     """
 
 
-    Shell.continuous([first_message = None
-                     [, cycles = 200
-                     [, portal_format = False]]]) -> obj
+    Shell.continuous() -> obj
 
 
     Function runs a continuous processing loop until Engine completes the
@@ -151,8 +152,8 @@ def continuous(first_message = None, cycles = 200, portal_format = False):
         R = first_message["R"]
         mock_engine_msg = (M,Q,R)
         #skip expensive formal unpack for now
-        status = Globals.checkMessageStatus(mock_engine_msg)
-        if status == Globals.status_pendingQuestion:
+        status = message_tools.checkMessageStatus(mock_engine_msg)
+        if status == message_tools.status_pendingQuestion:
             MR.messageIn = to_engine(first_message)
             #convert message so it tracks standard supervisor output; that way,
             #can use loop to keep track of cycles without running ``shadow``
@@ -173,8 +174,8 @@ def continuous(first_message = None, cycles = 200, portal_format = False):
         #to make sure portal sees MQEND, break only when checking message out
         if MR.messageOut:
             message_for_engine = to_engine(MR.messageOut)
-            status = Globals.checkMessageStatus(message_for_engine)
-            if status == Globals.status_endSession:
+            status = message_tools.checkMessageStatus(message_for_engine)
+            if status == message_tools.status_endSession:
                 last_message = message_for_engine
                 if portal_format:
                     last_message = MR.messageOut
@@ -183,7 +184,7 @@ def continuous(first_message = None, cycles = 200, portal_format = False):
                 MR.messageIn = supervisor.process(message_for_engine)
                 MR.messageOut = None
         elif MR.messageIn:
-            status = Globals.checkMessageStatus(MR.messageIn)
+            status = message_tools.checkMessageStatus(MR.messageIn)
             message_for_portal = to_portal(MR.messageIn)
             MR.messageOut = portal.process(message_for_portal,
                                            display = show_responses)

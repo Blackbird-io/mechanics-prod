@@ -45,6 +45,7 @@ from datetime import timedelta
 import BBGlobalVariables as Globals
 
 from data_structures.modelling.line_item import LineItem
+from tools import for_messages as message_tools
 
 
 
@@ -269,5 +270,5 @@ scenarios[None] = scenario_1
 #
 scenarios["subscriber life range?"] = scenario_2
 #
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 

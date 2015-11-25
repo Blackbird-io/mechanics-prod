@@ -45,6 +45,7 @@ import BBGlobalVariables as Globals
 
 from data_structures.modelling.business_unit import BusinessUnit
 from data_structures.modelling.line_item import LineItem
+from tools import for_messages as message_tools
 
 from . import knowledge_re_software
 from .standard_financials import basic_fins
@@ -210,5 +211,5 @@ def apply_data(topic, datapoint):
 
 scenarios[None] = scenario_1
 scenarios["subscription term in months?"] = scenario_2
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 

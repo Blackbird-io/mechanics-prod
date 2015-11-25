@@ -40,9 +40,8 @@ n/a
 
 
 #imports
-import BBGlobalVariables as Globals
-
 from data_structures.modelling.line_item import LineItem
+from tools import for_messages as message_tools
 
 
 
@@ -212,6 +211,6 @@ def apply_data(topic, datapoint):
 
 scenarios[None] = scenario_1
 scenarios["do you charge subscribers by seat?"] = scenario_2
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 
 

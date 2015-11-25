@@ -45,10 +45,10 @@ n/a
 import datetime
 import time
 
-import BBGlobalVariables as Globals
-
 from data_structures import modelling
 from data_structures.modelling.business_unit import BusinessUnit
+
+from tools import for_messages as message_tools
 
 from ..structure.standard_financials import basic_fins
 
@@ -201,7 +201,7 @@ scenarios["user name?"] = scenario_4
 scenarios["user position?"] = scenario_5
 scenarios["company start date?"] = scenario_6
 #
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 
 
 

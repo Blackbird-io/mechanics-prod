@@ -42,10 +42,10 @@ n/a
 #imports
 from datetime import timedelta
 
-import BBGlobalVariables as Globals
 import BBExceptions
 
 from DataStructures.Modelling.BusinessUnit import BusinessUnit
+from tools import for_messages as message_tools
 
 from ..StandardFinancials import standard_financials
 
@@ -216,5 +216,5 @@ scenarios[None] = scenario_1
 #
 scenarios["monthly subscription price?"] = scenario_2
 #
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 

@@ -39,11 +39,11 @@ n/a
 
 
 #imports
-from datetime import date, timedelta
-
-import BBGlobalVariables as Globals
+from tools import for_messages as message_tools
 
 from .. import SharedKnowledge as SubjectKnowledge
+
+
 
 
 #globals
@@ -140,5 +140,5 @@ scenarios[None] = scenario_1
 #
 scenarios["software function?"] = scenario_2
 #
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 

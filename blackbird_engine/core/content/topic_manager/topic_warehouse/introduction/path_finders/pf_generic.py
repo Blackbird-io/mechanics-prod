@@ -55,9 +55,8 @@ n/a
 
 
 #imports
-import BBGlobalVariables as Globals
-
 from data_structures.modelling.statement import Statement
+from tools import for_messages as message_tools
 
 from . import shared_knowledge as SK
 
@@ -145,6 +144,6 @@ def end_scenario(topic):
     raise BBExceptions.AnalyticalError(c)
     
 scenarios[None] = scenario_1
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 
 

@@ -43,7 +43,7 @@ n/a
 
 
 
-#imports
+# Imports
 import time
 
 import BBExceptions
@@ -55,21 +55,24 @@ from data_structures.portal.portal_response import PortalResponse
 from data_structures.portal.response_element import ResponseElement
 from data_structures.system.messenger import Messenger
 
+from tools import for_messages as message_tools
+
 from textwrap import TextWrapper
 
 
 
 
-#constants
+# Constants
 CACHE_LIMIT = 100
 SCREEN_WIDTH = Globals.SCREEN_WIDTH - 20
 USER_ATTEMPT_LIMIT = 5
-USER_STOP = "STOP INTERVIEW"
+USER_STOP = message_tools.USER_STOP
 #
 BB = " Blackbird:  "
 UX = " User:       "
 PR = " Progress:   "
 
+# Other Globals
 #cache controls
 cache = []
 cache_offset = 0
@@ -105,7 +108,7 @@ instructions = wrapper_instructions.fill(instructions)
 ##instructions += "\nExample:\n"
 ##instructions += "``[1984-11-11, 1996-08-20], [2006-09-01, 2009-06-01]``\n"
 
-#functions
+# Functions
 def _get_response(message):
     """
 
@@ -132,9 +135,9 @@ def _get_response(message):
     #
     newR = R
     engine_message_in = (M,Q,R)
-    status = Globals.checkMessageStatus(engine_message_in)
+    status = message_tools.checkMessageStatus(engine_message_in)
     #
-    if status != Globals.status_endSession:
+    if status != message_tools.status_endSession:
         if Q:
             newR = PortalResponse()
             #

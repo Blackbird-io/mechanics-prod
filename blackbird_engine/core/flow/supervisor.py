@@ -40,7 +40,7 @@ n/a
 
 
 
-#imports
+# Imports
 import BBExceptions
 
 from data_structures.system.messenger import Messenger
@@ -51,10 +51,13 @@ from .starter import Starter
 
 
 
-#globals
+# Constants
+#n/a
+
+# Other Globals
 MR = Messenger()
 
-#functions
+# Functions
 def check_started(message):
     """
 

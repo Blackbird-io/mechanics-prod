@@ -28,7 +28,7 @@ Yenta                 selects best fitting topic to analyze an object
 
 
 
-#imports
+# Imports
 import content.topic_manager as TopicManager
 
 from tools.for_tag_operations import build_basic_profile, build_combo_profile
@@ -36,11 +36,12 @@ from tools.for_tag_operations import build_basic_profile, build_combo_profile
 
 
 
-#globals
+# Constants
 #n/a
+
 #NOTE: class variables set at bottom of the module
 
-#classes
+# Classes
 #
 #UPGRADE-S: module currently uses a lot of dictionary[key] calls to retrieve
 #topic objects based on lists of tdexes passed from method to method. Module
