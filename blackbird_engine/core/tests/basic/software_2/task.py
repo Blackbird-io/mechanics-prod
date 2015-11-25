@@ -34,9 +34,10 @@ n/a
 
 
 #imports
-import BBGlobalVariables as Globals
 import Shell as Engine
 import simple_portal as Portal
+
+from tools import for_messages as message_tools
 
 from scripts import software_2_flat_fee_no_devs as seed
 

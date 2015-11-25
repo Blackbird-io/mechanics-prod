@@ -43,9 +43,10 @@ n/a
 
 
 #imports
-import BBGlobalVariables as Globals
 import Shell as Engine
 import simple_portal as Portal
+
+from tools import for_messages as message_tools
 
 from scripts import template_module as seed #<<<<<<<<<REPLACE WITH ACTUAL TO USE
 #<------------------------------------------------------------------------------
@@ -109,8 +110,8 @@ def do():
         msg_1 = Engine.process_interview(msg_0)
         msg_mqr = Engine.to_engine(msg_1)
         #
-        status = Globals.checkMessageStatus(msg_mqr)
-        if status == Globals.status_endSession:
+        status = message_tools.checkMessageStatus(msg_mqr)
+        if status == message_tools.status_endSession:
             final_message = msg_1
             break
         else:
@@ -124,8 +125,8 @@ def do():
         msg_1 = Engine.process_interview(msg_0)
         msg_mqr = Engine.to_engine(msg_1)
         #
-        status = Globals.checkMessageStatus(msg_mqr)
-        if status == Globals.status_endSession:
+        status = message_tools.checkMessageStatus(msg_mqr)
+        if status == message_tools.status_endSession:
             final_message = msg_1
             break
         else:
