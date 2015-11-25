@@ -50,7 +50,7 @@ class Counter:
     reset()               sets current value to 0
     ====================  ======================================================
     """
-    def __init__(self, start = 0, cut_off = None):
+    def __init__(self, start=0, cut_off=None):
         self.current = start
         self.cut_off = cut_off
 
@@ -58,7 +58,7 @@ class Counter:
         """
 
 
-        C.increment([step]) ->  None
+        Counter.increment([step]) ->  None
 
 
         Sets self.current to the sum of the existing value and the increment. If
@@ -80,7 +80,7 @@ class Counter:
         """
 
 
-        C.reset() -> None
+        Counter.reset() -> None
 
 
         Resets self.current to 0.

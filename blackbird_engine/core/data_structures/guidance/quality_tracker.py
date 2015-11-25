@@ -26,8 +26,6 @@ QualityTracker        specialized gauge to track quality, includes standards
 
 
 #imports
-import settings.guidance
-
 from .counter import Counter
 
 
@@ -52,14 +50,20 @@ class QualityTracker(Counter):
 
     DATA:
     standard              quality score where item is considered ``done``
+    QUALITY_DEFAULT       default quality requirement
+    QUALITY_MAX           highest permitted quality requirement
 
     FUNCTIONS:
     set_standard()        sets standard
     ====================  ======================================================
     """
-    def __init__(self, standard = settings.guidance.QUALITY_DEFAULT):
+    
+    QUALITY_DEFAULT = 5
+    QUALITY_MAX = 10
+    
+    def __init__(self, standard=QUALITY_DEFAULT):
         #
-        Counter.__init__(self, cut_off = settings.guidance.QUALITY_MAX)
+        Counter.__init__(self, cut_off=self.QUALITY_MAX)
         self.set_standard(standard)
 
     def set_standard(self, standard):

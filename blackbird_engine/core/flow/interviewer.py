@@ -37,9 +37,10 @@ Interviewer           selects focal point for Blackbird analysis
 
 # Imports
 import bb_exceptions
-import settings.guidance
 
 from data_structures.system.messenger import Messenger
+from data_structures.guidance.guide import Guide
+
 from tools import for_messages as message_tools
 
 from . import completion_rules
@@ -224,7 +225,7 @@ class Interviewer:
         """
         levels = dict()
         single_level = Level()
-        levels[settings.guidance.PRIORITY_MAX] = single_level
+        levels[Guide.HIGHEST_PERMITTED_PRIORITY] = single_level
         for item in container:
             if not item.guide.priority.current:
                 #skip 0-priority items

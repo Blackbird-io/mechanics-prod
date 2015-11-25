@@ -57,8 +57,8 @@ batch_count = min(batch_count, max_unit_count)
 #optimize to something more compact. 
 
 #Market
-cc_haircut = 0.20
 ASSUMED_ANNUAL_INFLATION = 0.03
+HAIRCUT_TO_EXPECTED_VALUE = 0.20
 user_correction = 0.10
 
 #Calendar

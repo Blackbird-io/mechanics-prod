@@ -25,8 +25,6 @@ AttentionTracker      specialized gauge to track attention, includes allowance
 
 
 #imports
-import settings.guidance
-
 from .counter import Counter
 
 
@@ -57,7 +55,8 @@ class AttentionTracker(Counter):
     allowance             maximum attention this object can use before it stops
                           being worthwhile to analyze. Set externally.  
     asked                 number of questions asked (to the human user) about
-                          this item. 
+                          this item.
+    ATTENTION_MAX         maximum size for attention budget
 
     FUNCTIONS:
     clear_asked()         sets asked to 0
@@ -65,8 +64,10 @@ class AttentionTracker(Counter):
     set_allowance()       sets allowance
     ====================  ======================================================
     """
+    ATTENTION_MAX = 10
+    
     def __init__(self):
-        Counter.__init__(self, cut_off = settings.guidance.ATTENTION_MAX)
+        Counter.__init__(self, cut_off=self.ATTENTION_MAX)
         self.allowance = None
         self.asked = 0
         
