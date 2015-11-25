@@ -1,26 +1,26 @@
+"""
+Module integrates Engine core into Enginer-Wrapper.
+"""
 
 
 
 
-
-#imports
-from . import BBGlobalVariables as Globals
+# Imports
 from . import Shell as Engine
-from .. import mock as MockEngine
+from .tools import for_messages as message_tools
 
 
 
-#globals
+
+# Constants
+# n/a
+
+# Other globals
 Engine.low_error  = True
 Engine.enable_web_mode()
 
-EndInterview = Globals.END_INTERVIEW
+EndInterview = message_tools.END_INTERVIEW
 
-if True:
-    get_forecast = Engine.get_forecast
-    get_landscape_summary = Engine.get_landscape_summary
-    process_interview = Engine.process_interview
-else:
-    get_forecast = MockEngine.get_forecast
-    get_landscape_summary = MockEngine.get_landscape_summary
-    process_interview = MockEngine.process_interview
+get_forecast = Engine.get_forecast
+get_landscape_summary = Engine.get_landscape_summary
+process_interview = Engine.process_interview
