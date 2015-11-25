@@ -41,12 +41,10 @@ n/a
 
 
 #imports
-import operator
-
-import BBGlobalVariables as Globals
-
 from data_structures.modelling.driver import Driver
 from data_structures.modelling.line_item import LineItem
+
+from tools import for_messages as message_tools
 
 
 
@@ -389,5 +387,5 @@ scenarios[None] = scenario_1
 #
 scenarios["net subscription revenues after commission?"] = scenario_2
 #
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 

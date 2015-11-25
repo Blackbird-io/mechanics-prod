@@ -47,9 +47,11 @@ import tools
 
 from data_structures.modelling.business_unit import BusinessUnit
 from data_structures.valuation.company_value import CompanyValue
+from tools import for_messages as message_tools
 
 from .. import shared_knowledge as SubjectKnowledge
 from .. import standard_financials
+
 
 
 
@@ -556,5 +558,5 @@ scenarios["months to unit maturity?"] = scenario_4
 scenarios["first store open date?"] = scenario_5
 scenarios["latest store open date?"] = scenario_6
 #
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 

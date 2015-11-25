@@ -35,6 +35,7 @@ import BBExceptions
 import BBGlobalVariables as Globals
 
 from content import color_manager as ColorManager
+from tools import for_messages as message_tools
 
 from .bbid import ID
 from .messenger import Messenger
@@ -45,7 +46,7 @@ from .tags import Tags
 
 #globals
 ColorManager.populate()
-user_stop = Globals.user_stop
+user_stop = message_tools.USER_STOP
 
 #classes
 class Topic:

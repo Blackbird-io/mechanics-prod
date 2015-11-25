@@ -46,9 +46,7 @@ import BBGlobalVariables as Globals
 import BBExceptions
 
 from data_structures.modelling.business_unit import BusinessUnit
-
-from .standard_financials import basic_fins #<------------------------------------- this topic should be able to get by
-                                            # w/o importing fins because it should just use the unit in the taxonomy (which already has fins)
+from tools import for_messages as message_tools
 
 
 
@@ -370,5 +368,5 @@ scenarios[None] = scenario_1
 #
 scenarios["subscriber count?"] = scenario_2
 #
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 

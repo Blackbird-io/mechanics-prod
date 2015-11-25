@@ -40,8 +40,7 @@ n/a
 
 
 #imports
-import BBGlobalVariables as Globals
-import BBExceptions
+from tools import for_messages as message_tools
 
 
 
@@ -250,5 +249,5 @@ scenarios[None] = scenario_1
 #
 scenarios["total paying subscriber seats?"] = scenario_2
 #
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 

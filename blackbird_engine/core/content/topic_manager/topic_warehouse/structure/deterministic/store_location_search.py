@@ -40,6 +40,7 @@ n/a
 
 #imports
 from DataStructures.Modelling.BusinessUnit import BusinessUnit
+from tools import for_messages as message_tools
 
 from .. import SharedKnowledge as SubjectKnowledge
 
@@ -138,5 +139,5 @@ scenarios[None] = scenario_1
 #
 scenarios["time to sign new store lease?"] = scenario_2
 #
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 

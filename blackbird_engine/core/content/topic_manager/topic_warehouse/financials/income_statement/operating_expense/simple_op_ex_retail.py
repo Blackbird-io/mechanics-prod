@@ -46,7 +46,7 @@ import BBGlobalVariables as Globals
 
 from data_structures.modelling.driver import Driver
 from data_structures.modelling.line_item import LineItem
-
+from tools import for_messages as message_tools
 
 
 #globals
@@ -343,7 +343,7 @@ scenarios[None] = scenario_1
 scenarios["average monthly rent for a unit?"] = scenario_2
 scenarios["unit employee expense per year?"] = scenario_3
 #
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 #
 
 

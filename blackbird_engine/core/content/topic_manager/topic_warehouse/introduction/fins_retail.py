@@ -40,9 +40,8 @@ n/a
 # Imports
 import copy
 
-import BBGlobalVariables as Globals
-
 from data_structures.modelling.line_item import LineItem
+from tools import for_messages as message_tools
 
 
 
@@ -134,7 +133,7 @@ scenarios = dict()
 #
 scenarios[None] = scenario_1
 #
-scenarios[Globals.user_stop] = scenario_1
+scenarios[message_tools.USER_STOP] = scenario_1
 
 
 

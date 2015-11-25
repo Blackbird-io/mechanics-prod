@@ -54,11 +54,10 @@ n/a
 
 
 #imports
-import BBGlobalVariables as Globals
-
 from data_structures.valuation.company_value import CompanyValue
 from data_structures.valuation.cr_scenario import CR_Scenario
 
+from tools import for_messages as message_tools
 
 
 
@@ -171,5 +170,5 @@ def scenario_1(topic):
     topic.wrap_topic()
 
 scenarios[None] = scenario_1
-scenarios[Globals.user_stop] = scenario_1
+scenarios[message_tools.USER_STOP] = scenario_1
 #

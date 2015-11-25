@@ -35,9 +35,10 @@ Interviewer           selects focal point for Blackbird analysis
 
 
 
-#imports
+# Imports
 import BBExceptions
-import BBGlobalVariables as Globals
+##import BBGlobalVariables as Globals
+from tools import for_messages as Globals
 import settings.guidance
 
 from data_structures.system.messenger import Messenger
@@ -50,7 +51,7 @@ from .level import Level
 
 
 
-#globals
+# Constants
 #n/a
 
 ##attention tracking: 
@@ -71,7 +72,7 @@ from .level import Level
 ## alternatively, could change the quality thing to a single quality        requirement. so would have minStandard only. at every iteration, see how much quality you still have to put in, vs how much attention you have left for budget. 
 
 
-#classes
+# Classes
 class Interviewer:
     """
 

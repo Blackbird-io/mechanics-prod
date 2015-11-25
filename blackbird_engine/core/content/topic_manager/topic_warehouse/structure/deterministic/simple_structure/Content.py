@@ -45,6 +45,7 @@ import BBGlobalVariables as Globals
 import tools
 
 from data_structures.modelling.business_unit import BusinessUnit
+from tools import for_messages as message_tools
 
 from . import PrivateKnowledge
 from ... import shared_knowledge as SubjectKnowledge
@@ -301,5 +302,5 @@ scenarios["number of business units?"] = scenario_2
 scenarios["unit lifespan in years?"] = scenario_3
 scenarios["months to unit maturity?"] = scenario_4
 #
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 

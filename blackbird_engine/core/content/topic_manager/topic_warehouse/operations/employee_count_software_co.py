@@ -43,11 +43,8 @@ n/a
 #imports
 from datetime import timedelta
 
-import BBGlobalVariables as Globals
-import BBExceptions
-
 from data_structures.modelling.business_unit import BusinessUnit
-
+from tools import for_messages as message_tools
 
 
 
@@ -257,5 +254,5 @@ scenarios[None] = scenario_1
 #
 scenarios["employee head count across software company roles?"] = scenario_2
 #
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 

@@ -42,7 +42,7 @@ n/a
 #imports
 from datetime import date, timedelta
 
-import BBGlobalVariables as Globals
+from tools import for_messages as message_tools
 
 
 
@@ -200,5 +200,5 @@ scenarios[None] = scenario_1
 #
 scenarios["number of signed new store leases?"] = scenario_2
 #
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 

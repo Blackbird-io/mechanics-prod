@@ -5,7 +5,6 @@
 
 #Blackbird Environment
 #Module: flow.analyst
-
 """
 
 Module defines Analyt class. Analysts receive messages and work on a response
@@ -28,8 +27,9 @@ Analyst               worker object, can run independently
 
 
 
-#imports
-import BBGlobalVariables as Globals
+# Imports
+##import BBGlobalVariables as Globals
+from tools import for_messages as Globals
 
 from .interviewer import Interviewer
 from .yenta import Yenta
@@ -37,21 +37,25 @@ from .yenta import Yenta
 
 
 
-#globals
-check = Globals.checkMessageStatus
-#
-charlie_rose = Interviewer()
-larry_king = Interviewer()
-#
+
+# Constants
 summary_t_name = "basic model summary, annualized current with capex"
-yenta = Yenta()
-#
+
+# Other Globals
+check = Globals.checkMessageStatus
+
 topic_needed = Globals.status_topicNeeded
 pending_question = Globals.status_pendingQuestion
 pending_response = Globals.status_pendingResponse
 end_session = Globals.status_endSession
 
-#classes    
+charlie_rose = Interviewer()
+larry_king = Interviewer()
+
+yenta = Yenta()
+
+
+# Classes    
 class Analyst:
     """
 

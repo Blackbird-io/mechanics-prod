@@ -54,10 +54,9 @@ n/a
 
 
 #imports
-import BBGlobalVariables as Globals
-
 from data_structures.modelling.financials import Financials
 from data_structures.modelling.line_item import LineItem
+from tools import for_messages as message_tools
 
 from . import SharedKnowledge as SK
 
@@ -182,7 +181,7 @@ def apply_data(topic, datapoint):
     
 scenarios[None] = scenario_1
 scenarios["are you a very big business?"] = scenario_2
-scenarios[Globals.user_stop] = end_scenario
+scenarios[message_tools.USER_STOP] = end_scenario
 
 #Conventions and general notes:
 # -- n/a
