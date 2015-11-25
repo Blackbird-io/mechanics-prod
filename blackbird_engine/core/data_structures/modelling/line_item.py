@@ -26,12 +26,11 @@ LineItem              storage for numerical values and tags
 
 
 
-#imports
+# Imports
 import copy
 import time
 
 import BBExceptions
-import BBGlobalVariables as Globals
 
 from data_structures.guidance.guide import Guide
 from data_structures.system.tags import Tags
@@ -42,10 +41,10 @@ from .equalities import Equalities
 
 
 
-#globals
+# Constants
 #n/a
 
-#classes
+# Classes
 class LineItem(PrintAsLine, Tags, Equalities):
     """
     Instances of this class become components of a BusinessUnit.Financials list.
@@ -86,7 +85,7 @@ class LineItem(PrintAsLine, Tags, Equalities):
     ====================  ======================================================
     """
     #adjust Equalities parameters (name is requiredTags[0]):
-    keyAttributes = ["value","sign","requiredTags","optionalTags"]
+    keyAttributes = ["value", "sign", "requiredTags", "optionalTags"]
 
 ##
 ##    LineItem object currently runs on defined (``keyAttribute``) comparisons;
@@ -95,7 +94,12 @@ class LineItem(PrintAsLine, Tags, Equalities):
 ##    the parentObj may itself have an __eq__ method that points back to this
 ##    lineItem. See Equalities docs for more info.
     
-    def __init__(self, name = None, value = None):
+    SIGNATURE_FOR_CREATION = "__init__"
+    SIGNATURE_FOR_VALUE_RESET = "LineItem.resetValue"
+    SIGNATURE_FOR_DEFAULT_EXTRAPOLATION = "LineItem.ex_to_default"
+    SIGNATURE_FOR_SPECIAL_EXTRAPOLATION = "LineItem.ex_to_special"
+    
+    def __init__(self, name=None, value=None):
         PrintAsLine.__init__(self)
         Tags.__init__(self, name)
         self._value = None
@@ -107,8 +111,7 @@ class LineItem(PrintAsLine, Tags, Equalities):
             #other hand, BU.consolidate() will increment items with value == 0.
             #Once consolidate() changes a lineitem, derive() will skip it. To
             #allow derivation of empty lineitems, must start w value==None.
-            isig = Globals.signatures["LineItem.__init__"]
-            self.setValue(value, isig)
+            self.setValue(value, self.SIGNATURE_FOR_CREATION)
     
     def __hash__(self):
         HH = self.name
@@ -179,9 +182,9 @@ class LineItem(PrintAsLine, Tags, Equalities):
         Tags.checkTouch() returns False if the instance has tags that completely
         prohibit modification.
         """
-        sig = Globals.signatures["LineItem.clear"]
+        sig = self.SIGNATURE_FOR_VALUE_RESET
         if self.checkTouch():
-            self.setValue(None,sig,overrideValueManagement=True)
+            self.setValue(None, sig, overrideValueManagement=True)
             self.toggleSign(1)
             
     def copy(self, enforce_rules = True):
@@ -232,8 +235,10 @@ class LineItem(PrintAsLine, Tags, Equalities):
         Copy continues to point to seed parentObject.
         """
         #basic behavior: copy instance, set to seed.parentObject, if any
-        result = self.copy(enforce_rules = True)
-        ex_d_sig = Globals.signatures["LineItem.ex_to_default"]
+        result = self.copy(enforce_rules=True)
+        
+        ex_d_sig = self.SIGNATURE_FOR_DEFAULT_EXTRAPOLATION
+
         if ex_d_sig not in result.modifiedBy[-1]:
             r_val = result.value
             result.setValue(r_val,ex_d_sig)
@@ -253,7 +258,9 @@ class LineItem(PrintAsLine, Tags, Equalities):
         modifiedBy already ends with its signature.
         """
         result = Tags.ex_to_special(self,target)
-        ex_s_sig = Globals.signatures["LineItem.ex_to_special"]
+        
+        ex_s_sig = self.SIGNATURE_FOR_SPECIAL_EXTRAPOLATION
+
         if ex_s_sig not in result.modifiedBy[-1]:
             r_val = result.value
             result.setValue(r_val,ex_s_sig)
@@ -292,13 +299,12 @@ class LineItem(PrintAsLine, Tags, Equalities):
             replica.setName(newName)
         return replica
       
-    def setValue(self, newValue, driverSignature, declineSignature = False,
-                 overrideValueManagement = False):
+    def setValue(self, newValue, driverSignature, declineSignature=False,
+                 overrideValueManagement=False):
         """
 
 
-        L.setValue(newValue,driverSignature[,declineSignature = False
-        [,overrideValueManagement = False]]) -> None
+        L.setValue() -> None
 
 
         Method sets line value. If the specified value is less than 0, method

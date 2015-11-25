@@ -31,7 +31,6 @@ import copy
 import time
 
 import BBExceptions
-import BBGlobalVariables as Globals
 
 from data_structures.system.tags import Tags
 from tools import parsing as ParsingTools
@@ -169,6 +168,9 @@ class Statement(list, Tags, Equalities):
     _LABEL_MISFIT = "MISFIT"
     _INDENT = 2
 
+    SIGNATURE_FOR_SUMMARY_RESET = "update reset"
+    SIGNATURE_FOR_SUMMARY_UPDATES = "updateSummaries"
+    SIGNATURE_FOR_MANAGING_REPLICAS = "manageDDR"
     SIGNATURE_FOR_INCREMENTATION = "Incremented "
     SUMMARY_PREFIX = "TOTAL"
     
@@ -749,7 +751,7 @@ class Statement(list, Tags, Equalities):
         out by a business unit, will generate the same outcome as a different
         business unit with identical drivers and components. So, if a user was
         to copy a filled out business unit, running financials.reset() and then
-        fillOut() on the copy would generate a Financials state equal to that
+        fill_out() on the copy would generate a Financials state equal to that
         of the original.
         """
         self._erase_managed_lines()
@@ -962,14 +964,18 @@ class Statement(list, Tags, Equalities):
             self._hierarchy_groups = first_hierarchy
             
         elif (reprocess and second_misfits != []):
-            misfitDelta = []
+
+            misfit_delta = []
             counter = 0
+
             while counter < attempts:
+
                 for L in first_misfits:
                     if L not in second_misfits:
-                        misfitDelta.append(L)
+                        misfit_delta.append(L)
                     else:
                         continue
+
                 if misfit_delta == []:
                     break
                 # Stop working as soon as you go through a cycle without
@@ -980,7 +986,7 @@ class Statement(list, Tags, Equalities):
                 second_hierarchy, second_misfits = self._categorize(first_misfits, first_hierarchy)
                 counter +=1    
 
-            # Loop is over.
+            # While loop is over.
             result = (second_hierarchy, second_misfits)
             self._hierarchy_groups = second_hierarchy
         else:
@@ -988,57 +994,68 @@ class Statement(list, Tags, Equalities):
         
         return result
     
-    def _categorize(self, items, hierarchy):
+    def _categorize(self, container, hierarchy):
         """
 
-        Utility function for _group_by_hierarchy().
+
+        Statement._categorize() -> (list, list)
+
+        
+        Return completed hierarchy and a list of misfits. Misfits will be an
+        empty list if all items in container fit into a hierarchy. Utility
+        function for _group_by_hierarchy().
         """
         misfits = []
         
-        for unknownLineItem in items:
+        for line in container:
 
-            if unknownLineItem.partOf in self._top_level_names:
-                hierarchy[0].append(unknownLineItem)
+            if line.partOf in self._top_level_names:
+                hierarchy[0].append(line)
                 
             else:
-                currentDepth = len(hierarchy)
-                for n in range(currentDepth):
+                depth = len(hierarchy)
+
+                for n in range(depth):
                     try: 
-                        for placedLineItem in hierarchy[n]:
-                            if unknownLineItem.partOf == placedLineItem.name:
-                                #current lineitem is part of an nth-level lineitem
+
+                        for potential_parent in hierarchy[n]:
+                            
+                            if not line.partOf == potential_parent.name:
+                                continue
+                            else:
+                                # Current line is part of an nth-level line. Now
+                                # that we know the line's relationship to the
+                                # container structure, we have to put it in the
+                                # right group. 
+                                
                                 #check if there is an n+1 level
-                                if not n == currentDepth - 1:
+                                if not n == (depth - 1):
                                     #there is a deeper level
                                     #append current lineitem to the next level
-                                    hierarchy[n+1].append(unknownLineItem)
+                                    hierarchy[n+1].append(line)
                                     raise PlacementSuccess
                                 
                                 else:
                                     #there is not a deeper level, so make one
-                                    newLevel = []
-                                    newLevel.append(unknownLineItem)
-                                    hierarchy.append(newLevel)
+                                    new_level = []
+                                    new_level.append(line)
+                                    hierarchy.append(new_level)
                                     raise PlacementSuccess
-                            else:
-                                #no partOf match, check next lineitem at
-                                #this level
-                                continue
+                            
                     except PlacementSuccess:
                         break
+
                 else:
                     #finished going through hierarchy, didnt find the right
                     #top at any level. could be because proper top follows
                     #after unknownLineItem or because proper top is missing
                     #completely. in either event, the current line item is
                     #a misfit
-                    misfits.append(unknownLineItem)
+                    misfits.append(line)
                     
         return (hierarchy, misfits)
 
-    def _manage_replicas(self, *tagsToOmit,
-                         signature=Globals.signatures["Financials.manageDropDownReplicas"],
-                         trace=False):
+    def _manage_replicas(self, *tagsToOmit):
         """
 
 
@@ -1066,7 +1083,8 @@ class Statement(list, Tags, Equalities):
         # of this list. If a line is eligible, check if it has a replica. If it
         # does, increment the replica by the line's value, then zero the line.
         # if the line doesn't have a replica, insert one.
-        
+
+        signature = self.SIGNATURE_FOR_MANAGING_REPLICAS
         fixed_order = self[:]
         fixed_count = len(fixed_order)
         off_set = 0
@@ -1116,7 +1134,7 @@ class Statement(list, Tags, Equalities):
 
                 if not dropDownReplicaTag in existing_replica.allTags:
                     existing_replica.tag(dropDownReplicaTag)
-                line.setValue(0,signature)
+                line.setValue(0, signature)
                 continue
 
             else: 
@@ -1132,7 +1150,7 @@ class Statement(list, Tags, Equalities):
                 new_replica.setPartOf(line)
                 if new_replica.value == line.value:
                     #check that replica picked up value before zeroing original 
-                    line.setValue(0,signature)
+                    line.setValue(0, signature)
                 else:
                     c = "replica value does not equal line."
                     raise BBExceptions.IOPMechanicalError(c, line, new_replica)
@@ -1447,41 +1465,48 @@ class Statement(list, Tags, Equalities):
         If ``refresh`` is True, method builds a new existingSummaries dict on
         call and saves it to self.dSummaries. 
         """
-        
+        usSig = self.SIGNATURE_FOR_SUMMARY_UPDATES
         tagsToOmit = set(tagsToOmit)
         existingSummaries = self.dSummaries
+        
         if refresh:
             existingSummaries = self.build_custom_table([summaryTag])
+
         for i in existingSummaries[summaryTag]:
             summaryLine = self[i]
             if summaryLine.value:
-                summaryLine.setValue(0, "update reset")
+                summaryLine.setValue(0, self.SIGNATURE_FOR_SUMMARY_RESET)
+                
         #no insertions so ok to use self:
         for L in self:
+            
             if not L.value:
                 continue
             if L.partOf in self._top_level_names:
                 continue
             if set(L.allTags) & tagsToOmit != set():
                 continue
+
             summaryName = self.SUMMARY_PREFIX + " " + L.partOf
             summaryName = summaryName.casefold()
+
             try:
                 places = existingSummaries[summaryName]
                 spot = min(places)
                 matchingSummary = self[spot]
-                sValue = matchingSummary.value
-                if not sValue:
-                    sValue = 0
+                sValue = matchingSummary.value or 0
+                # Replace None with 0
                 newValue = sValue + L.value
-                usSig = Globals.signatures["Financials.updateSummaries"]
+                
                 matchingSummary.setValue(newValue,usSig)
                 matchingSummary.inheritTagsFrom(L, *uninheritableTags)
                 continue
+            
             except KeyError as X:
                 c = "Summary line ``%s`` expected but does not exist"
                 c = c % summaryName
                 raise BBExceptions.HierarchyError(c)
+
         if refresh:
             self.dSummaries = existingSummaries
         

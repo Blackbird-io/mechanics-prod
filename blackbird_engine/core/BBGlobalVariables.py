@@ -59,16 +59,16 @@ uninheritableTags = [doNotTouchTag, dropDownReplicaTag]
 #check usage (should only be in Financials module), replace
 
 #Method Signatures:
-signatures = {}
+##signatures = {}
 ##signatures["BusinessUnit.consolidate"] = "consolidated by %s"
 #
-signatures["Financials.manageDropDownReplicas"] = "manageDDR"
-signatures["Financials.updateSummaries"] = "updateSummaries"
+##signatures["Financials.manageDropDownReplicas"] = "manageDDR"
+##signatures["Financials.updateSummaries"] = "updateSummaries"
 #
-signatures["LineItem.__init__"] = "__init__"
-signatures["LineItem.clear"] = "LineItem.resetValue"
-signatures["LineItem.ex_to_default"] = "LineItem.ex_to_default"
-signatures["LineItem.ex_to_special"] = "LineItem.ex_to_special"
+##signatures["LineItem.__init__"] = "__init__"
+##signatures["LineItem.clear"] = "LineItem.resetValue"
+##signatures["LineItem.ex_to_default"] = "LineItem.ex_to_default"
+##signatures["LineItem.ex_to_special"] = "LineItem.ex_to_special"
 
 #Exceptions:
 class BlackbirdError(Exception): pass
@@ -79,7 +79,6 @@ class BBAnalyticalError(BlackbirdError): pass
 DEBUG_MODE = False
 SCREEN_WIDTH = 80
 min_progress_per_question = 2
-##misfitLabel = "MISFIT"  #<---------------------------------------------------------eliminate
 END_INTERVIEW = "END_interview"
 user_stop = "STOP INTERVIEW"
 
@@ -134,9 +133,6 @@ def checkMessageStatus(mqrMessage):
 #Modelling:
 DEFAULT_MODEL_NAME = "Blank Blackbird Model"
 
-##default_unit_name = "Blank Unit" #<------------------------------------------eliminate
-##default_periods_back = 36 #<-------------------------------------------------eliminate
-##default_periods_fwd = 36 #<--------------------------------------------------eliminate
 max_unit_count = 200
 mid_unit_count = 20
 high_unit_count = 50
