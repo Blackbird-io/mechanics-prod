@@ -27,6 +27,8 @@ InterviewTracker      plan and monitor machine-user interview
 
 
 #imports
+import bb_exceptions
+
 from data_structures.modelling.line_item import LineItem
 from flow import completion_rules
 
@@ -90,7 +92,7 @@ class InterviewTracker(Outline):
         """
         if not override:
             if not 0 <= p <= 100:
-                raise BBExceptions.PortalError
+                raise bb_exceptions.PortalError
             new_p = max(p, self.progress)
         else:
             new_p = p
