@@ -27,6 +27,8 @@ TextInput             Describes a text input field.
 
 
 #imports
+import bb_exceptions
+
 from .generic import GenericInput
 
 
@@ -97,6 +99,6 @@ class TextInput(GenericInput):
             if value in ok_values:
                 instance.__dict__["_size"] = value
             else:
-                raise BBExceptions.ManagedAttributeError
+                raise bb_exceptions.ManagedAttributeError
                 
     size = SizeDescriptor()

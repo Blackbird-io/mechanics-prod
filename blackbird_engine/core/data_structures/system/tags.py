@@ -34,6 +34,7 @@ Tags                  mix-in class that provides tagging, naming, and belonging
 
 #imports
 import copy
+import bb_exceptions
 
 from content.tag_manager import loaded_tagManager as tag_manager
 from tools.parsing import deCase
@@ -305,7 +306,7 @@ class Tags:
 
         def __set__(self,instance,value):
             c = "Direct write to ``optionalTags`` prohibited."
-            raise BBExceptions.ManagedAttributeError(c)
+            raise bb_exceptions.ManagedAttributeError(c)
     #dynamic class attribute:
     optionalTags = dyn_OptTManager()
 
@@ -323,7 +324,7 @@ class Tags:
 
         def __set__(self,instance,value):
             c = "Direct write to ``allTags`` prohibited."
-            raise BBExceptions.ManagedAttributeError(c)
+            raise bb_exceptions.ManagedAttributeError(c)
     #allTags is a Tags class attribute managed by the descriptor above
     allTags = dyn_AllTManager()
 
@@ -428,11 +429,11 @@ class Tags:
             result = True
         return result
         
-    def clearInheritedTags(self, recur = False):
+    def clearInheritedTags(self, recur=False):
         """
 
 
-        Tags.clearInheritedTags([recur = True]) -> None
+        Tags.clearInheritedTags() -> None
 
 
         Method sets instance._inheritedTags to an empty list.
@@ -444,9 +445,9 @@ class Tags:
         if recur:
             for attr in self.tagSources:
                 obj = getattr(self,attr)
-                obj.clearInheritedTags(recur = True)
+                obj.clearInheritedTags(recur=True)
 
-    def copy(self,enforce_rules = True):
+    def copy(self, enforce_rules=True):
         """
 
 
@@ -895,14 +896,14 @@ class Tags:
                 if self.reg_req == True:
                     c = "'%s' is not a registered tag. " % tag
                     c = c + "Registration required for tagging."
-                    raise BBExceptions.TagRegistrationError(c)
+                    raise bb_exceptions.TagRegistrationError(c)
                 else:
                     if self.tagManager and self.autoRegister:
                         self.registerTag(tag)
                     #tag not registered, but that's ok, just append it
                     real_thing.append(tag)
             
-    def unTag(self,badTag,checkInherited = True):
+    def unTag(self, badTag, checkInherited=True):
         """
 
 
