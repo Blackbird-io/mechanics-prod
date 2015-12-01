@@ -422,49 +422,61 @@ def _respond_to_message(message):
     if status != message_tools.status_endSession:
         if Q:
             newR = PortalResponse()
-            #
+            conditional = False
+            
             array_caption = Q["array_caption"]
             comment = Q["comment"]
-            conditional = Q["conditional"]
-            input_array = Q["input_array"]
+            input_array = Q["input_array"].copy()
+            # Copy here to make sure we don't change the original
             name = Q["name"]
             progress = Q["progress"]
             prompt = Q["prompt"]
             short = Q["short"]
-            #
+            gating_element = Q["show_if"]
+
+            if gating_element is not None:
+                conditional = True
+                input_array.insert(0, gating_element)
+                # Put the gating element into the array so we can process all
+                # of the elements together. Adjusted to track Web Portal per
+                # case 563.
+            
             number_of_elements = len(input_array)
             multi_element = False
             element_indent = indent
             if number_of_elements > 1:
                 multi_element = True
                 element_indent = indent + 4
-            #
+            
             print("\n\n")
             if permit_caching:
                 count = len(cache) + cache_offset
                 counter_line = " (Q" + ("#" + str(count)).rjust(4) +") " + short
                 counter_line += "\n" + "\n"
                 print(counter_line)
-                #prints "Q #34: Vendor Concentration"
-            #
+                # Prints something like ``Q #34: Vendor Concentration``
+            
             prompt = BB + prompt
             prompt = wrapper_lead.fill(prompt)
             print(prompt, "\n")
-            #
+            
             if comment:
                 print(wrapper_detail.fill(comment), "\n")
             if array_caption:
                 print(wrapper_detail.fill(array_caption), "\n")
-            #
+            
             full_q = FullQuestion()
             full_q.build_custom_array(input_array,
                                       Q["input_type"],
                                       Q["input_sub_type"],
                                       ignore_fixed=True)
-            #input_array contains flat dictionaries; use full_q to turn it into a
-            #list of rich objects that can do their own response checking.
+            # Input_array contains flat dictionaries in JSON. We can turn use
+            # full_q to automatically create matching rich element objects that
+            # can then do their own response validation.
+            
             try:
                 for i in range(number_of_elements):
+
                     rich_element = full_q.input_array[i]
                     #
                     if multi_element:
@@ -485,24 +497,28 @@ def _respond_to_message(message):
                                 continue
                             else:
                                 break
-                #filled out the response, print progress bar
+                            
+                # Loop over, filled out the response, print progress bar
                 _print_progress_bar(progress)
+                
             except bb_exceptions.UserInterrupt:
                 newR = USER_STOP
+                
             finally:
                 del full_q 
                 print("\n")
     else:
-        #inbound message signals end session
+        # Inbound message signals end session
         print("\n")
         print("We have completed our interview. Thank you.")
         print("Use Blackbird Analytics to explore your market position.")
         print("\n")
-        #can write Model to completed database here
+        # Can write Model to completed database here
+        
     result = {"M": M, "Q": Q, "R": newR}
     MR.messageOut = result
     MR.clearMessageIn()
-    #
+    
     return result
 
 def _store(message):

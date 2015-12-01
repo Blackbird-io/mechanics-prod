@@ -30,7 +30,6 @@ FullQuestion          Object that defines question for both Engine and Portal
 
 
 
-
 #imports
 import copy
 import decimal
@@ -102,14 +101,11 @@ class FullQuestion:
     transcribe            bool; whether portal should show question to lenders
     
     FUNCTIONS:
-    _check_length()       check if array fits max length
-    _check_types()        check if elements match the instance type
     build_basic_array()   build an array for single-type elements
     build_custom_array()  build an array of elements from spec; can be mixed
     check()               check if elements match instance type and length
     copy()                returns new obj with deep id, tags, array, and context
-    ProgressDescriptor()  manages class and instance progress attributes
-    set_condition()
+    set_condition()       sets instance gating element to valid binary spec
     set_prompt()          sets prompt to formatted custom if possible, or basic
     update()              updates instance attributes from MiniQuestion
     ====================  ======================================================
@@ -135,13 +131,13 @@ class FullQuestion:
         #
         self.array_caption = None
         self.comment = None
-        self.conditional = False
         self.input_array = []
         self.input_type = None
         self.input_sub_type = None
         self.prompt = None
         self._progress = 0
         self.short = None
+        self.show_if = None
         self.source = None
         self.topic_name = None
         self.transcribe = False
@@ -150,7 +146,7 @@ class FullQuestion:
         self.context = dict()
         self.custom_prompt = None
 
-    class ProgressDescriptor:
+    class _ProgressDescriptor:
         """
 
         Descriptor for ``progress`` attribute. Limits value to [0,100] range,
@@ -167,7 +163,7 @@ class FullQuestion:
                 c = "Attribute requires value between 0 and 100, inclusive."
                 raise bb_exceptions.ManagedAttributeError(c)
 
-    progress = ProgressDescriptor()
+    progress = _ProgressDescriptor()
         
     def _check_length(self):
         """
@@ -213,10 +209,11 @@ class FullQuestion:
         for element in self.input_array:
             types_in_array.add(element.input_type)
             sub_types_in_array.add(element.input_sub_type)
-        #
-        if self.conditional:
-            if self.input_type != "binary":
-                types_in_array.remove("binary")
+##        #
+##        if self.conditional:
+##            if self.input_type != "binary":
+##                types_in_array.remove("binary")
+##        # Skip this step now that we store gating specs at instance.show_if
         #
         types_in_array = sorted(types_in_array)
         sub_types_in_array = sorted(sub_types_in_array)
@@ -275,9 +272,7 @@ class FullQuestion:
         """
 
 
-        FullQuestion.build_basic_array(input_type
-                                      [, input_sub_type = None]
-                                      [, active_elements = 1]]) -> None
+        FullQuestion.build_basic_array() -> None
 
 
         Clear existing contents, then add the maximum permitted number of
@@ -302,10 +297,7 @@ class FullQuestion:
         """
 
 
-        FullQuestion.build_custom_array(array_spec,
-                                       [, input_type
-                                       [, input_sub_type=None
-                                       [, ignore_fixed=False]]]]) -> None
+        FullQuestion.build_custom_array() -> None
 
                                        
         Clear existing contents, then add elements as specified in spec.
@@ -387,17 +379,18 @@ class FullQuestion:
         """
 
 
-        FullQuestion.set_condition(binary_spec) -> None
+        FullQuestion.set_condition() -> None
 
 
-        Create a binary gating element that matches the spec, insert at the
-        beginning of the instance input array.
+        Create a binary gating element that matches the spec, assign to
+        instance.show_if.
         """
         gating_element = self._klasses["binary"]()
         gating_element._active = True
         gating_element.update(binary_spec)
-        self.input_array.insert(0, gating_element)
-        self.conditional = True
+##        self.input_array.insert(0, gating_element)
+##        self.conditional = True
+        self.show_if = gating_element
 
     def set_prompt(self):
         """
@@ -424,7 +417,7 @@ class FullQuestion:
         """
 
 
-        FullQuestion.update(mini_q) -> None
+        FullQuestion.update() -> None
 
 
         Method walks through mini_q.__dict__ and for True values, sets matching

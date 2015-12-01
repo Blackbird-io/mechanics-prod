@@ -114,11 +114,11 @@ def make_mini(full_q):
     #
     return new_mini
 
-def make_portal(mini_q, language = "English", web = False):
+def make_portal(mini_q, language="English", web=False):
     """
 
 
-    make_portal(mini_q, language = "English") -> dict()
+    make_portal() -> dict()
 
 
     Function returns a dictionary that follows the PortalQuestion schema from
@@ -139,11 +139,11 @@ def make_portal(mini_q, language = "English", web = False):
     #keeps PortalQuestion independent of QuestionManager
     #keeps FullQuestion independent of QuestionManager
     
-def make_question(content_module, catalog = local_catalog):
+def make_question(content_module, catalog=local_catalog):
     """
 
 
-    make_question(content_module) -> FullQuestion
+    make_question() -> FullQuestion
 
 
     Function creates a FullQuestion objects that follows the specifications of
@@ -189,8 +189,8 @@ def make_question(content_module, catalog = local_catalog):
     # Questions get an id within the QuestionManager namespace.
     #
     #tags
-    new_question.tags.tag(*content_module.requiredTags, field = "req")
-    new_question.tags.tag(*content_module.optionalTags, field = "opt")
+    new_question.tags.tag(*content_module.requiredTags, field="req")
+    new_question.tags.tag(*content_module.optionalTags, field="opt")
     #
     #source
     location = inspect.getfile(content_module)
@@ -231,7 +231,7 @@ def make_question(content_module, catalog = local_catalog):
     # if routine encounters a problem.
     new_question.check()
     #
-    #register the question in the catalog
+    # Register the question in the catalog
     reverse_lookup_keys = [new_question.tags.name, location]
     catalog.register(new_question, *reverse_lookup_keys)
     #
