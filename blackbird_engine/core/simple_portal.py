@@ -109,11 +109,293 @@ instructions = wrapper_instructions.fill(instructions)
 ##instructions += "``[1984-11-11, 1996-08-20], [2006-09-01, 2009-06-01]``\n"
 
 # Functions
-def _get_response(message):
+
+def disable_caching():
     """
 
 
-    _get_response(message) -> PortalMessage
+    disable_caching() -> None
+
+
+    Function turns off message storage and deletes all old messages.     
+    """
+    global cache, permit_caching
+    permit_caching = False
+    cache.clear()
+    
+def enable_caching():
+    """
+
+
+    enable_caching() -> None
+
+
+    Function turns on local storage for processed messages.
+
+    NOTE: simple_portal cache behaviors may differ from web portal.    
+    """
+    global permit_caching
+    permit_caching = True
+        
+def go_to(question_number):
+    """
+
+
+    go_to() -> message
+
+
+    Function pulls the message that corresponds to question_number from cache,
+    discards any subsequent messages, and returns a re-processed response
+    message.
+
+    ``question_number`` should be the number displayed next to the
+    ``short_name``. Function will raise error if question falls outside the
+    cache range.
+    """
+    global cache
+    #
+    i = (question_number - 1) - cache_offset
+    if not 0 <= i <= len(cache):
+        c = "Requested question falls outside cache range. Cache currently"
+        c += "stores messages %s to %y."
+        c = c % (cache_offset, len(cache) + cache_offset)
+        raise IndexError(c)
+    #
+    cache = cache[:(i+1)]
+    prior_message = cache.pop()
+    result = process(prior_message)
+    #
+    return result
+
+def launch(credentials=""):
+    """
+
+
+    launch() -> PortalMessage
+
+
+    Function checks if credentials match authorized and returns a blank
+    PortalMessage. 
+    """
+    #
+    #Dummy pseudo security
+    attempts = 1
+    max_attempts = 3
+    #
+    l1 = "Blackbird Engine"
+    l1 = l1.center(SCREEN_WIDTH)
+    l2 = "*" * SCREEN_WIDTH + "\n"
+    l_rights = "(c) Blackbird Logical Applications, LLC 2015"
+    print("\n\n",l2,l1,"\n",l2,l_rights,"\n\n")   
+    l_version = " v.0.1"    
+    ref_lt = time.localtime()
+    ref_date = str(ref_lt.tm_mon).zfill(2)+"/"
+    ref_date += str(ref_lt.tm_mday).zfill(2)+"/"
+    ref_date += str(ref_lt.tm_year)
+    ref_time = str(ref_lt.tm_hour).zfill(2)+":"
+    ref_time += str(ref_lt.tm_min).zfill(2)+":"
+    ref_time += str(ref_lt.tm_sec).zfill(2)
+    l_cal = (" " + ref_date +
+             " " * (SCREEN_WIDTH - len(ref_date) - len(ref_time)))
+    l_cal += ref_time
+    print(l_version)
+    print(l_cal)
+    print("\n\n\n")
+    l_welcome = " Welcome to Blackbird"
+    print(l_welcome,"\n\n\n")
+    a = "iop"
+    k = "start"
+    if ((a not in credentials) or
+        (k not in credentials)):
+        l_prompt = " Please enter credentials to begin.\n "
+        r = input(l_prompt)
+        while k not in r or a not in r:
+            if attempts < max_attempts:
+                print("\n")
+                r = input(" Access denied. Please try again.\n ")
+                attempts += 1
+                continue
+            else:
+                locked_out = "You have exceeded the number of permitted attempts. "
+                locked_out += "Good bye."
+                locked_out = wrapper_instructions.fill(locked_out)
+                locked_out = "\n" + locked_out
+                print(locked_out)
+                #can exit process here
+                break
+    #
+    return starting_message
+
+def process(message, display=True):
+    """
+
+
+    process() -> message
+
+
+    Function gets user response and returns updated message. If caching is on,
+    function stores the input message before returning output. 
+    """
+    if permit_caching:
+        _store(message)
+    result = _respond_to_message(message)
+    #
+    return result
+
+def rewind(steps_back=1):
+    """
+
+
+    rewind() -> message
+
+
+    Function runs get_response() on the message that's ``steps_back`` away.
+    """
+    if not permit_caching:
+        c = "Portal supports rewind operations only when caching enabled."
+        raise bb_exceptions.ProcessError(c)
+    current_step = len(cache)
+    prior_step = current_step - steps_back
+    result = go_to(prior_step)
+    #
+    return result
+
+def set_script(new_script):
+    """
+
+
+    set_script() -> None
+
+
+    Function sets module global ``script`` to new_script argument. 
+    """
+    global script
+    script = new_script
+
+#*****************************************************************************#
+#                            NON-PUBLIC FUNCTIONS                             #
+#*****************************************************************************#
+
+def _get_scripted_response(rich_element, question_name, position):
+    """
+
+
+    _get_scripted_response() -> str or None
+
+
+    Return response to element from script. Search by caption first; if no
+    element matches, pull response by position.
+    """
+    scripted_response = None
+    response_array = script[question_name]
+    
+    k_caption = "main_caption"
+    k_response = "response"
+    # Store keys in vars to avoid silently passing over typos with dict.get()
+    
+    target_caption = rich_element.main_caption
+
+    for response_element in response_array:
+        
+        if response_element.get(k_caption) == target_caption:
+            # Found the right element
+            scripted_response = response_element[k_response]
+            break
+        else:
+            continue
+
+    else:
+        # No matching caption, probably because script does not include caption
+        # names. Pull the response by index.
+        scripted_response = response_array[position][k_response]
+
+    return scripted_response
+    
+def _print_progress_bar(progress):
+    """
+
+
+    _print_progress_bar() -> None
+
+
+    Print progress bar. Expects ``progress`` to be int in [0,100].
+    """
+    pr_max_length = SCREEN_WIDTH - len(PR + "||")
+    #include both progress bookends when computing length
+    pr_bar_length = int(progress / 100 * pr_max_length)
+    pr_bar_length = max(1, pr_bar_length)
+    #always show some progress
+    marks = "B" * pr_bar_length
+    spaces  = " " * (pr_max_length - pr_bar_length)
+    pr_indicator = PR + "|" + marks + spaces + "|"
+    #
+    print("\n\n")
+    print(border)
+    print(pr_indicator)
+    print(border)
+
+def _respond_to_element(element, question_name, position):
+    """
+
+
+    _respond_to_element() -> ResponseElement
+
+    
+    Return ResponseElement dictionary with either user or script input.
+
+    If input doesn't match element requirements, repeat up to
+    USER_ATTEMPT_LIMIT, then raise ResponseFormatError. 
+    """
+    result = dict()
+    #
+    complex_types = {"date",
+                     "date-range",
+                     "number-range",
+                     "time",
+                     "time-range"}
+    loop = True
+    count = 0
+    while loop:
+        try:
+            # First, get the raw response string
+            if script:
+                user_answer = _get_scripted_response(element, question_name, position)
+##                user_answer = script[question_name][element_index]["response"]
+                ux_w_answer = UX + user_answer
+                print(ux_w_answer)
+            else:
+                if element.input_type in complex_types:
+                    print(instructions)
+                    print("\n")
+                user_answer = input(UX)
+            
+            # Second, check that response satisfies element
+            if user_answer == USER_STOP:
+                raise bb_exceptions.UserInterrupt
+            else:
+                element.set_response(user_answer, target=result)
+                # set_response() runs formats the response, verifies that it fits
+                # type requirements, and then records it in target. Call will
+                # raise a ResponseFormatError if there is any trouble
+                #
+                loop = False
+                #
+        except bb_exceptions.ResponseFormatError as E:
+            # Catch only format-related exceptions
+            print(E)
+            count +=1
+            if count < USER_ATTEMPT_LIMIT:
+                continue
+            else:
+                raise E
+    #
+    return result
+
+def _respond_to_message(message):
+    """
+
+
+    _respond_to_message() -> PortalMessage
 
 
     Function solicits a response to the message it receives as an argument and
@@ -223,91 +505,11 @@ def _get_response(message):
     #
     return result
 
-def _print_progress_bar(progress):
-    """
-
-
-    _print_progress_bar(progress) -> None
-
-
-    Print progress bar. Expects ``progress`` to be int in [0,100].
-    """
-    pr_max_length = SCREEN_WIDTH - len(PR + "||")
-    #include both progress bookends when computing length
-    pr_bar_length = int(progress / 100 * pr_max_length)
-    pr_bar_length = max(1, pr_bar_length)
-    #always show some progress
-    marks = "B" * pr_bar_length
-    spaces  = " " * (pr_max_length - pr_bar_length)
-    pr_indicator = PR + "|" + marks + spaces + "|"
-    #
-    print("\n\n")
-    print(border)
-    print(pr_indicator)
-    print(border)
-
-def _respond_to_element(element, question_name, element_index):
-    """
-
-
-    _respond_to_element(element, question_name,
-                        element_index) -> ResponseElement
-
-    
-    Return ResponseElement dictionary with either user or script input.
-
-    If input doesn't match element requirements, repeat up to
-    USER_ATTEMPT_LIMIT, then raise ResponseFormatError
-    """
-    result = dict()
-    #
-    complex_types = {"date",
-                     "date-range",
-                     "number-range",
-                     "time",
-                     "time-range"}
-    loop = True
-    count = 0
-    while loop:
-        try:
-            #first, get the raw response string
-            if script:
-                user_answer = script[question_name][element_index]["response"]
-                ux_w_answer = UX + user_answer
-                print(ux_w_answer)
-            else:
-                if element.input_type in complex_types:
-                    print(instructions)
-                    print("\n")
-                user_answer = input(UX)
-            #
-            #second, check that response satisfies element
-            if user_answer == USER_STOP:
-                raise bb_exceptions.UserInterrupt
-            else:
-                element.set_response(user_answer, target = result)
-                #set_response() runs formats the response, verifies that it fits
-                #type requirements, and then records it in target. call will
-                #raise a ResponseFormatError if there is any trouble
-                #
-                loop = False
-                #
-        except bb_exceptions.ResponseFormatError as E:
-            #catch only format-related exceptions
-            print(E)
-            count +=1
-            if count < USER_ATTEMPT_LIMIT:
-                continue
-            else:
-                raise E
-    #
-    return result
-
 def _store(message):
     """
 
 
-    store(message) -> None
+    store() -> None
 
     
     Function appends message to cache. If cache exceeds size limit, function
@@ -326,167 +528,5 @@ def _store(message):
         # know the cache starts at q5, ie q15 - len(cache). cache_offset tracks
         # this information.
     cache.append(message)
-    
-def disable_caching():
-    """
-
-
-    disable_caching() -> None
-
-
-    Function turns off message storage and deletes all old messages.     
-    """
-    global cache, permit_caching
-    permit_caching = False
-    cache.clear()
-    
-def enable_caching():
-    """
-
-
-    enable_caching() -> None
-
-
-    Function turns on local storage for processed messages.
-
-    NOTE: simple_portal cache behaviors may differ from web portal.    
-    """
-    global permit_caching
-    permit_caching = True
-        
-def go_to(question_number):
-    """
-
-
-    go_to(question_number) -> message
-
-
-    Function pulls the message that corresponds to question_number from cache,
-    discards any subsequent messages, and returns a re-processed response
-    message.
-
-    ``question_number`` should be the number displayed next to the
-    ``short_name``. Function will raise error if question falls outside the
-    cache range.
-    """
-    global cache
-    #
-    i = (question_number - 1) - cache_offset
-    if not 0 <= i <= len(cache):
-        c = "Requested question falls outside cache range. Cache currently"
-        c += "stores messages %s to %y."
-        c = c % (cache_offset, len(cache) + cache_offset)
-        raise IndexError(c)
-    #
-    cache = cache[:(i+1)]
-    prior_message = cache.pop()
-    result = process(prior_message)
-    #
-    return result
-
-def launch(credentials=""):
-    """
-
-
-    launch([credentials=""]) -> PortalMessage
-
-
-    Function checks if credentials match authorized and returns a blank
-    PortalMessage. 
-    """
-    #
-    #Dummy pseudo security
-    attempts = 1
-    max_attempts = 3
-    #
-    l1 = "Blackbird Engine"
-    l1 = l1.center(SCREEN_WIDTH)
-    l2 = "*" * SCREEN_WIDTH + "\n"
-    l_rights = "(c) Blackbird Logical Applications, LLC 2015"
-    print("\n\n",l2,l1,"\n",l2,l_rights,"\n\n")   
-    l_version = " v.0.1"    
-    ref_lt = time.localtime()
-    ref_date = str(ref_lt.tm_mon).zfill(2)+"/"
-    ref_date += str(ref_lt.tm_mday).zfill(2)+"/"
-    ref_date += str(ref_lt.tm_year)
-    ref_time = str(ref_lt.tm_hour).zfill(2)+":"
-    ref_time += str(ref_lt.tm_min).zfill(2)+":"
-    ref_time += str(ref_lt.tm_sec).zfill(2)
-    l_cal = (" " + ref_date +
-             " " * (SCREEN_WIDTH - len(ref_date) - len(ref_time)))
-    l_cal += ref_time
-    print(l_version)
-    print(l_cal)
-    print("\n\n\n")
-    l_welcome = " Welcome to Blackbird"
-    print(l_welcome,"\n\n\n")
-    a = "iop"
-    k = "start"
-    if ((a not in credentials) or
-        (k not in credentials)):
-        l_prompt = " Please enter credentials to begin.\n "
-        r = input(l_prompt)
-        while k not in r or a not in r:
-            if attempts < max_attempts:
-                print("\n")
-                r = input(" Access denied. Please try again.\n ")
-                attempts += 1
-                continue
-            else:
-                locked_out = "You have exceeded the number of permitted attempts. "
-                locked_out += "Good bye."
-                locked_out = wrapper_instructions.fill(locked_out)
-                locked_out = "\n" + locked_out
-                print(locked_out)
-                #can exit process here
-                break
-    #
-    return starting_message
-
-def process(message, display=True):
-    """
-
-
-    process(message[, display = True]) -> message
-
-
-    Function gets user response and returns updated message. If caching is on,
-    function stores the input message before returning output. 
-    """
-    if permit_caching:
-        _store(message)
-    result = _get_response(message)
-    #
-    return result
-
-def rewind(steps_back=1):
-    """
-
-
-    rewind(steps_back=1) -> message
-
-
-    Function runs get_response() on the message that's ``steps_back`` away.
-    """
-    if not permit_caching:
-        c = "Portal supports rewind operations only when caching enabled."
-        raise bb_exceptions.ProcessError(c)
-    current_step = len(cache)
-    prior_step = current_step - steps_back
-    result = go_to(prior_step)
-    #
-    return result
-
-def set_script(new_script):
-    """
-
-
-    set_script(new_script) -> None
-
-
-    Function sets module global ``script`` to new_script argument. 
-    """
-    global script
-    script = new_script
 
     
