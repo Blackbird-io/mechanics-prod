@@ -36,6 +36,7 @@ from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
 from content import formula_manager as FormulaManager
 
+from .parameters import Parameters
 
 
 
@@ -138,15 +139,15 @@ class Driver(Tags):
         cls.FM = None
     
     @classmethod
-    def setFormulaManager(cls,new_FM):
+    def setFormulaManager(cls, new_FM):
         cls.FM = new_FM
         
-    def __init__(self, signature = None):
+    def __init__(self, signature=None):
         Tags.__init__(self)
         #
         
         self.active = True
-        self.data = {}
+        self.data = Parameters()
         self.formula_bbid = None
         self.id = ID()
         #specific uuid assigned when TopicManager configures topic catalog,
@@ -165,11 +166,11 @@ class Driver(Tags):
         #set condition values to a default that must be overwritten to make sure
         #default configuration doesnt apply to every lineItem.
 
-    def __eq__(self, comp, trace = False, tab_width = 4):
+    def __eq__(self, comp, trace=False, tab_width=4):
         """
 
 
-        Driver.__eq__(comp) -> bool
+        Driver.__eq__() -> bool
 
 
         Method returns True if instance and comp hash the same, False otherwise.
@@ -179,11 +180,11 @@ class Driver(Tags):
             result = True
         return result
 
-    def __ne__(self, comp, trace = False, tab_width = 4):
+    def __ne__(self, comp, trace=False, tab_width=4):
         """
 
 
-        Driver.__ne__(comp) -> bool
+        Driver.__ne__() -> bool
 
 
         Method returns boolean negative of __eq__.
@@ -206,12 +207,14 @@ class Driver(Tags):
             c = c1 + c2
             raise bb_exceptions.IDAssignmentError(c)
         return hash(self.id.bbid)
+        #<-------------------------------------------------------------this should really be a hash of the formula,
+        # the data, and the work conditions. That means data here should be an immutable mapping. 
     
-    def canWorkOnThis(self,targetLineItem):
+    def canWorkOnThis(self, targetLineItem):
         """
 
 
-        Driver.canWorkOnThis(targetLineItem) -> bool
+        Driver.canWorkOnThis() -> bool
 
 
         This method checks whether the targetLineItem satisfies workConditions.
@@ -255,7 +258,10 @@ class Driver(Tags):
         errors in topics.         
         """
         self.setData(data)
-        self.setFormula(formula)
+        self.setFormula(formula, known_params=data) #<--------------------------------think about this
+           #the idea is to validate a formula against a particular piece of data
+           #should add this to validate? but thats used in a different context
+        #<-------------------------------------------------------------------------------WILL HAVE TO REVIEW
         
     def copy(self, enforce_rules=True):
         """
@@ -284,7 +290,8 @@ class Driver(Tags):
         """
         result = copy.copy(self)
         Tags.copyTagsTo(self,result,enforce_rules)
-        result.data = copy.deepcopy(self.data)
+        result.data = copy.deepcopy(self.data) #<------------------------------------WILL HAVE TO REVIEW
+        #<---------------------------------------------------------------------------MAY BE ABLE TO USE SHALLOW COPY
         result.workConditions = copy.deepcopy(self.workConditions)
         return result
 
@@ -298,17 +305,20 @@ class Driver(Tags):
         Method updates instance ``data`` dictionary with a deep copy of
         new_data.
         """
+        return self._set_parameters(new_data)
+
+    def _set_parameters(self, new_data):
         new_data = copy.deepcopy(new_data)
-        self.data.update(new_data)
+        self.data.add(new_data)
         
-    def setFormula(self, F):
+    def setFormula(self, F, known_params=None):
         """
 
 
-        Driver.setFormula(F) -> None
+        Driver.setFormula() -> None
 
 
-        Sets instance.formula_bbid to that of the argument. Method first checks
+        Sets instance.formula_bbid to that of the argument. Method first checks  #<------------------update doc string to explain the we validate against known_params
         if instance data includes all parameters required by formula.
 
         Method raises a DefinitionError if one of the parameters is missing.
@@ -325,12 +335,16 @@ class Driver(Tags):
         object. As such, Driver instance should continue referencing the same
         formula object if it's id changes in place.        
         """
+        if known_params is None:
+            known_params = self._build_params()
+        
         for parameter in F.required_data:
-            if parameter not in self.data:
+            if parameter not in known_params:
                 c = ""
                 c += "Instance data does not include required parameter ``%s``."
                 c = c % (parameter)
-                raise bb_exceptions.DefinitionError(c)
+                raise bb_exceptions.DefinitionError(c) #<-------------------------------should make this variable?
+
         if F.id.bbid:
             self.formula_bbid = F.id.bbid
         else:
@@ -339,7 +353,7 @@ class Driver(Tags):
             c += "Driver."
             raise bb_exceptions.DefinitionError(c)
 
-    def setSignature(self,newSig):
+    def setSignature(self, newSig):
         """
 
 
@@ -427,10 +441,13 @@ class Driver(Tags):
         Method is a no-op if instance is not active.
         """
         if self.active:
-            if self.canWorkOnThis(line):
-                formula = self.FM.local_catalog.issue(self.formula_bbid)
+            if self.canWorkOnThis(line): #<-------------------------------------------------make private
+                formula = self.FM.local_catalog.issue(self.formula_bbid) #<-------------------should check to make sure this is just key retrieval
                 bu = self.parentObject
-                formula.func(line, bu, self.data, self.signature)
+
+                params = self._build_params()
+                
+                formula.func(line, bu, params, self.signature)
                 #each funcion is "disposable": delete from memory after single
                 #use, get new one next time. 
                 del formula
@@ -439,8 +456,33 @@ class Driver(Tags):
                 raise bb_exceptions.BBAnalyticalError(c)
         else:
             pass
+        #<----------------------------------------------------------------------------------
 
-#connect Driver class to FormulaManager; now all instances of Driver will be
-#able to access FormulaManager.catalog resources
+    def _build_params(self):
+        bu = self.parentObject
+        period = None
+        time_line = None
+        
+        if bu:
+            period = bu.period
+        if period:
+            time_line = period.parentObject
+        
+        # Specific parameters trump general ones. Start with time_line, then
+        # update for period (more specific) and driver (even more specific).
+
+        params = dict()
+
+        if time_line:
+            params.update(time_line.parameters)
+        if period:
+            params.update(period.parameters)
+        
+        params.update(self.data)
+
+        return params
+
+# Connect Driver class to FormulaManager. Now all instances of Driver will be
+# able to access FormulaManager.catalog resources.
 FormulaManager.populate()
-Driver.setFormulaManager(FormulaManager)
+Driver.setFormulaManager(FormulaManager) #<------------------------------------------------------should be private
