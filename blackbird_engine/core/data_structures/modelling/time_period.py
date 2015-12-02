@@ -100,6 +100,7 @@ class TimePeriod(Tags):
         #
         self.content = content
         self.id = ID()
+        self.parameters = dict()
         self.prior = None
 
         # The current approach to indexing units within a period assumes that
