@@ -229,6 +229,7 @@ class TimeLine(dict):
         Method extrapolates all periods in instance sequentially from seed. If
         seed not specified, method uses instance.current_period.
 
+
         Method expects ``seed`` to be a TimePeriod instance. Method will not
         change seed during operation. 
         """
@@ -240,11 +241,11 @@ class TimeLine(dict):
         past = segments[0]
         future = segments[-1]
         #
-        self.extrapolate_dates(seed, past, work_backward = True)
+        self.extrapolate_dates(seed, past, work_backward=True)
         self.extrapolate_dates(seed, future)
         #
 
-    def extrapolate_dates(self, seed, dates, work_backward = False):
+    def extrapolate_dates(self, seed, dates, work_backward=False):
         """
 
 
