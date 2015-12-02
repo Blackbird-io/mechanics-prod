@@ -246,7 +246,7 @@ class Driver(Tags):
         """
 
 
-        Driver.configure(data, formula) -> None
+        Driver.configure() -> None
 
 
         Method configures instance in proper order: first sets data using
@@ -257,11 +257,11 @@ class Driver(Tags):
         self.setData(data)
         self.setFormula(formula)
         
-    def copy(self,enforce_rules = True):
+    def copy(self, enforce_rules=True):
         """
 
 
-        Driver.copy([enforce_rules = True]) -> Driver
+        Driver.copy() -> Driver
 
 
         Method returns a new Driver object. Result is a shallow copy of instance
@@ -288,7 +288,7 @@ class Driver(Tags):
         result.workConditions = copy.deepcopy(self.workConditions)
         return result
 
-    def setData(self,new_data):
+    def setData(self, new_data):
         """
 
 
@@ -301,7 +301,7 @@ class Driver(Tags):
         new_data = copy.deepcopy(new_data)
         self.data.update(new_data)
         
-    def setFormula(self,F):
+    def setFormula(self, F):
         """
 
 
@@ -343,19 +343,18 @@ class Driver(Tags):
         """
 
 
-        Driver.setSignature(newSig) -> None
+        Driver.setSignature() -> None
 
 
         Method sets self.signature to the specified value. 
         """
         self.signature = newSig
 
-    def setWorkConditions(self,nameCondition,partCondition=None,*tagConditions):
+    def setWorkConditions(self, nameCondition, partCondition=None, *tagConditions):
         """
 
 
-        Driver.setWorkConditions(nameCondition[,partCondition=None
-                                          [,*tagConditions]]) -> None
+        Driver.setWorkConditions() -> None
 
 
         Method sets workConditions for the instance. ``tagConditions`` collects
@@ -414,11 +413,11 @@ class Driver(Tags):
                 result = False
         return result
         
-    def workOnThis(self,line):
+    def workOnThis(self, line):
         """
 
 
-        Driver.workOnThis([line]) -> None
+        Driver.workOnThis() -> None
 
 
         Method retries Driver's formula from the formula catalog. Method then
