@@ -27,7 +27,7 @@ TimePeriod            a snapshot of data over a period of time.
 
 
 
-#imports
+# Imports
 import copy
 import datetime
 import time
@@ -38,13 +38,15 @@ import bb_settings
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
 
+from .parameters import Parameters
 
 
 
-#globals
-#n/a
 
-#classes
+# Constants
+# n/a
+
+# Classes
 class TimePeriod(Tags):
     """
 
@@ -73,6 +75,7 @@ class TimePeriod(Tags):
     end                   datetime.date; last date in period 
     id                    instance of ID class
     length                float; seconds between start and end
+    parameters            Parameters object, specifies shared parameters
     prior                 pointer to immediately preceding time period
     start                 datetime.date; first date in period.
     ty_directory          dict; keys are strings, values are sets of bbids
@@ -90,7 +93,7 @@ class TimePeriod(Tags):
     set_content()         attach company to period
     ====================  ======================================================
     """
-    def __init__(self, start_date, end_date, content = None):
+    def __init__(self, start_date, end_date, content=None):
         Tags.__init__(self)
         self.start = start_date
         self.end = end_date
@@ -100,7 +103,7 @@ class TimePeriod(Tags):
         #
         self.content = content
         self.id = ID()
-        self.parameters = dict()
+        self.parameters = Parameters()
         self.prior = None
 
         # The current approach to indexing units within a period assumes that

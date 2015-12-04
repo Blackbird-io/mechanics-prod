@@ -151,6 +151,8 @@ def scenario_3(topic):
     """
     """
     M = topic.MR.activeModel
+    time_line = M.time_line
+    
     ltm_ga = float(topic.get_first_answer())
     M.interview.work_space["ltm ga"] = ltm_ga
 
@@ -179,35 +181,38 @@ def scenario_3(topic):
     #
     market_conditions = topic.CM.get_color(m_ref_date)
     inflation = market_conditions.inflation.annual
-    marketing_data["annual_inflation"] = inflation
-    #
+    if "annual_inflation" not in time_line.parameters:
+        time_line.parameters.add({"annual_inflation" : inflation})
+    
     ltm_marketing_spend = M.interview.work_space["ltm marketing"]
     expected_user_understatement = market_conditions.corrections.understatement
-    adj_marketing_spend = (ltm_marketing_spend *
-                           (1 + expected_user_understatement))
-    marketing_data["base_annual_expense"] = adj_marketing_spend
-    #
-    driver_marketing.setData(marketing_data)
-    driver_marketing.setFormula(marketing_formula)
+    adj_marketing_spend = (ltm_marketing_spend * (1 + expected_user_understatement))
+    time_line.parameters.add({"ltm marketing" : adj_marketing_spend})
+    
+    driver_marketing.conversion_table["ltm marketing"] = "base_annual_expense"
+    driver_marketing.configure(data=marketing_data, formula=marketing_formula)
+    
     del marketing_data, marketing_formula
     
     #
     ##G&A Driver
     driver_ga = topic.applied_drivers["GA Driver"]
-    ga_data = dict()
     ga_formula = topic.formulas["monthly expense from known annual start."]
-    #
-    ga_data["base_annual_expense"] = M.interview.work_space["ltm ga"]
-    #
-    driver_ga.setData(ga_data)
+    
+    time_line.parameters.add(
+        {
+            "ltm ga" : M.interview.work_space["ltm ga"]
+            }
+        )
+    driver_ga.conversion_table["ltm ga"] = "base_annual_expense"
     driver_ga.setFormula(ga_formula)
-    del ga_data, ga_formula
+    del ga_formula
     
     #insert lines and drivers into model
     #
     #make a other_key : driver dictionary for easy insertion into BUs
     #
-    #this setup is redundant with the indexing that bu.addDriver() now performs
+    #this setup is redundant with the indexing that bu.add_driver() now performs
     #automatically on each call for work conditions and other keys supplied by
     #caller; preserve here for legacy comparability.
     #
@@ -232,9 +237,9 @@ def scenario_3(topic):
             localL = copy.deepcopy(L)
             fins.insert(i_sga+1,localL)
             localL.setPartOf(line_sga)
-        for (k,tDriver) in local_drivers.items():
+        for (k, tDriver) in local_drivers.items():
             clean_dr = tDriver.copy()
-            bu.addDriver(clean_dr,k)
+            bu.add_driver(clean_dr,k)
     #
     topic.wrap_topic()    
 

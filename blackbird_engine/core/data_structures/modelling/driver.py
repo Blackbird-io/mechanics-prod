@@ -146,7 +146,9 @@ class Driver(Tags):
         Tags.__init__(self)
         #
         
+        
         self.active = True
+        self.conversion_table = dict()
         self.data = Parameters()
         self.formula_bbid = None
         self.id = ID()
@@ -245,7 +247,7 @@ class Driver(Tags):
                 else:
                     return True
         
-    def configure(self, data, formula):
+    def configure(self, data, formula, conversion_table=None):
         """
 
 
@@ -257,8 +259,12 @@ class Driver(Tags):
         validates formula against instance data. Use this method to avoid
         errors in topics.         
         """
-        self.setData(data)
-        self.setFormula(formula, known_params=data) #<--------------------------------think about this
+        if conversion_table is not None:
+            self.conversion_table = conversion_table
+        
+        self._set_parameters(data)
+        self.setFormula(formula)
+##        self.check_data() #<--------------------------------------------------------------------------------------------think about this
            #the idea is to validate a formula against a particular piece of data
            #should add this to validate? but thats used in a different context
         #<-------------------------------------------------------------------------------WILL HAVE TO REVIEW
@@ -295,32 +301,33 @@ class Driver(Tags):
         result.workConditions = copy.deepcopy(self.workConditions)
         return result
 
-    def setData(self, new_data):
-        """
-
-
-        Driver.setData(new_data) -> None
-
-
-        Method updates instance ``data`` dictionary with a deep copy of
-        new_data.
-        """
-        return self._set_parameters(new_data)
+##    def setData(self, new_data):
+##        """
+##
+##
+##        Driver.setData(new_data) -> None
+##
+##
+##        Method updates instance ``data`` dictionary with a deep copy of
+##        new_data.
+##        """
+##        return self._set_parameters(new_data)
 
     def _set_parameters(self, new_data):
         new_data = copy.deepcopy(new_data)
         self.data.add(new_data)
         
-    def setFormula(self, F, known_params=None):
+    def setFormula(self, F):
         """
 
 
         Driver.setFormula() -> None
 
 
-        Sets instance.formula_bbid to that of the argument. Method first checks  #<------------------update doc string to explain the we validate against known_params
+        Sets instance.formula_bbid to that of the argument. Method first checks
         if instance data includes all parameters required by formula.
 
+        #<-----------------------------------------------------------------------------------------------update doc string
         Method raises a DefinitionError if one of the parameters is missing.
         Topics may inject drivers into business units at time A with the
         intent that these drivers work only at some future time B (when their
@@ -335,16 +342,6 @@ class Driver(Tags):
         object. As such, Driver instance should continue referencing the same
         formula object if it's id changes in place.        
         """
-        if known_params is None:
-            known_params = self._build_params()
-        
-        for parameter in F.required_data:
-            if parameter not in known_params:
-                c = ""
-                c += "Instance data does not include required parameter ``%s``."
-                c = c % (parameter)
-                raise bb_exceptions.DefinitionError(c) #<-------------------------------should make this variable?
-
         if F.id.bbid:
             self.formula_bbid = F.id.bbid
         else:
@@ -352,6 +349,21 @@ class Driver(Tags):
             c += "Formula does not have valid bbid; bbid required for use in\n"
             c += "Driver."
             raise bb_exceptions.DefinitionError(c)
+
+    def check_data(self, parent=None):
+        """
+        """
+        #<------------------------------------------------------------------------------------------------need doc string
+        known_params = self._build_params(parent)
+        formula = self.FM.local_catalog.issue(self.formula_bbid)
+        
+        for parameter in formula.required_data:
+            if parameter not in known_params:
+                c = ""
+                c += "Instance data does not include required parameter ``%s``."
+                c = c % (parameter)
+                raise bb_exceptions.DefinitionError(c)
+        
 
     def setSignature(self, newSig):
         """
@@ -458,13 +470,20 @@ class Driver(Tags):
             pass
         #<----------------------------------------------------------------------------------
 
-    def _build_params(self):
-        bu = self.parentObject
+    def _build_params(self, parent=None):
+        """
+
+        -> dict()
+
+        - ``parent`` 
+        """
+        if parent is None:
+            parent = self.parentObject
         period = None
         time_line = None
         
-        if bu:
-            period = bu.period
+        if parent:
+            period = parent.period
         if period:
             time_line = period.parentObject
         
@@ -480,7 +499,29 @@ class Driver(Tags):
         
         params.update(self.data)
 
+        converted = self._map_params_to_formula(params)
+        params.update(converted)
+        # Turn unique shared data into variables formula can understand
+
         return params
+
+    def _map_params_to_formula(self, params, conversion_table=None):
+        """
+        -> dict
+
+        return dict with conversion keys and original
+        
+        """
+        
+        result = dict()
+        
+        if conversion_table is None:
+            conversion_table = self.conversion_table
+
+        for param_name, var_name in conversion_table.items():
+            result[var_name] = params[param_name]
+        
+        return result
 
 # Connect Driver class to FormulaManager. Now all instances of Driver will be
 # able to access FormulaManager.catalog resources.
