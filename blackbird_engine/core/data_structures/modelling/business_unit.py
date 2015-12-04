@@ -247,12 +247,14 @@ class BusinessUnit(Tags,Equalities):
         """
 
 
-        BusinessUnit.add_driver(newDriver,*otherKeys) -> None
+        BusinessUnit.add_driver() -> None
 
 
         Method registers a driver to names and tags of lines it supports.
         Method delegates all work to DrContainer.addItem().
         """
+        newDriver.check_data(parent=self)
+        # Will raise error if driver doesnt have sufficient data to run
         self.drivers.add_item(newDriver, *otherKeys)
                   
     def clear(self):
