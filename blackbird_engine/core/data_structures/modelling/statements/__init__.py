@@ -11,6 +11,9 @@
 #
 from .income import IncomeStatement as Income
 from .overview import OverviewStatement as Overview
+from .balances import Balances
+from .cash import CashFlowStatement as CashFlow
+
 
 
 
