@@ -27,7 +27,7 @@ StatementBundle       a bundle of statements with a minimal shared interface.
 
 
 # Imports
-from . import Bundle
+from .bundle import Bundle
 
 
 

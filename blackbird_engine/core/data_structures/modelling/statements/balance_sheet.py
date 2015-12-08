@@ -1,3 +1,46 @@
+#PROPRIETARY AND CONFIDENTIAL
+#Property of Blackbird Logical Applications, LLC
+#Copyright Blackbird Logical Applications, LLC 2015
+#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+
+#Blackbird Environment
+#Module: data_structures.modelling.statements.balance_sheet
+"""
+
+Module definesf BalanceSheet, a StatementBundle with Assets, Liabilities, and
+Equity.
+====================  ==========================================================
+Attribute             Description
+====================  ==========================================================
+
+DATA:
+n/a
+
+FUNCTIONS:
+n/a
+
+CLASSES:
+BalanceSheet          objects include assets, liabilities, and equity
+====================  ==========================================================
+"""
+
+
+
+
+# Imports
+from ..statement import Statement
+from ..statement_bundle import StatementBundle
+
+
+
+
+# Constants
+# n/a
+
+# Globals
+# n/a
+
+# Classes
 class BalanceSheet(StatementBundle):
     #<-------------------------------------------------------------------------has to descend from Tags
     """
