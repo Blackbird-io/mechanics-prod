@@ -104,11 +104,11 @@ class Equalities:
     def __init__(self):
         pass
     
-    def __eq__(self, comparator, trace = False, tab_width = 4):
+    def __eq__(self, comparator, trace=False, tab_width=4):
         """
 
 
-        Equalities.__eq__(comparator[,trace = False]) -> bool
+        Equalities.__eq__() -> bool
 
 
         Provides a boolean result to equality (==) tests against comparator.
@@ -470,15 +470,15 @@ class Equalities:
                         #can add double-check logic here
         return result
 
-    def __ne__(self,comparator, trace = False, tab_width = 4):
+    def __ne__(self, comparator, trace=False, tab_width=4):
         """
 
 
-        Equalities.__ne__(comparator[, trace = False, [tab_width = 4]]) -> bool
+        Equalities.__ne__() -> bool
 
 
         Returns boolean negative of Equalities.__eq__(comparator)
         """
-        eq = self.__eq__(comparator,trace,tab_wdith)
+        eq = self.__eq__(comparator, trace, tab_width)
         result = not eq
         return result
