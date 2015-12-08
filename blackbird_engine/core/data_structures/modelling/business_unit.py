@@ -51,8 +51,11 @@ from .life import Life as LifeCycle
 
 
 # Constants
-#Tags class carries a pointer to the tag manager; access individual tags
-#through that pointer
+# n/a
+
+# Globals
+# Tags class carries a pointer to the tag manager; access individual tags
+# through that pointer
 bookMarkTag = Tags.tagManager.catalog["bookmark"]
 summaryTag = Tags.tagManager.catalog["summary"]
 tConsolidated = Tags.tagManager.catalog["consolidated"]
@@ -253,8 +256,17 @@ class BusinessUnit(Tags,Equalities):
         Method registers a driver to names and tags of lines it supports.
         Method delegates all work to DrContainer.addItem().
         """
-        newDriver.check_data(parent=self)
-        # Will raise error if driver doesnt have sufficient data to run
+        newDriver.validate(parent=self)
+        # Validation call will throw DefinitionError if driver does not have
+        # sufficient data to run in this instance at the time of insertion.
+        
+        # Topics may inject drivers into business units at time A with the
+        # intent that these drivers work only at some future time B (when their
+        # work conditions or other logic has been satisfied). Time B may be
+        # arbitrarily far away in the future. This method looks to avoid
+        # confusing future errors by making sure that the Topic author is aware
+        # of the required formula parameters at the time the Topic runs.
+
         self.drivers.add_item(newDriver, *otherKeys)
                   
     def clear(self):
