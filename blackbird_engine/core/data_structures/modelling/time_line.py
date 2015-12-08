@@ -35,6 +35,7 @@ import bb_settings
 
 from data_structures.system.bbid import ID
 
+from .parameters import Parameters
 from .time_period import TimePeriod
 
 
@@ -61,6 +62,7 @@ class TimeLine(dict):
     current_period        P; pointer to the period that represents the present
     id                    instance of PlatformComponents.ID class, for interface
     master                TimePeriod; unit templates that fall outside of time
+    parameters            Parameters object, specifies shared parameters
     
     FUNCTIONS:
     build()               populates instance with adjacent time periods
@@ -84,7 +86,8 @@ class TimeLine(dict):
         # Timeline objects support the id interface and pass the model's id down
         # to time periods. The timeline instance itself does not get its own
         # bbid.
-        self.master = None        
+        self.master = None
+        self.parameters = Parameters()
 
     @property
     def current_period(self):
@@ -203,7 +206,7 @@ class TimeLine(dict):
                 back_end_date = curr_start_date - timedelta(1)
         # All set.
 
-    def _configure_period(self,period):
+    def _configure_period(self, period):
         """
 
 
@@ -217,6 +220,8 @@ class TimeLine(dict):
         period.id.set_namespace(model_namespace)
         # Period has only a pointer to the Model.namespace_id; periods dont have
         # their own bbids.
+        period.setPartOf(self)
+        
         return period
         
     def extrapolate_all(self, seed=None):

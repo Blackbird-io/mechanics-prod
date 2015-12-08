@@ -125,16 +125,19 @@ def scenario_2(topic):
     M = topic.MR.activeModel
     Q = topic.MR.activeQuestion
     R = topic.MR.activeResponse
+    
     annual_unit_rev = float(topic.get_first_answer())
     D1 = topic.applied_drivers["D1"]
     rev_formula = topic.formulas["monthly unit revenue over lifecycle."]
     data = {}
     data["annual_rev_per_mature_unit"] = annual_unit_rev
-    D1.setData(data)
-    D1.setFormula(rev_formula)
+
+    D1.configure(data=data, formula=rev_formula)
+
     for sub_bu in M.time_line.current_period.get_lowest_units():
         sub_d1 = D1.copy()
         sub_bu.addDriver(sub_d1)
+
     topic.wrap_topic()
 
 def end_scenario(topic):

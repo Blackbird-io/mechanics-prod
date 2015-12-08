@@ -101,15 +101,19 @@ def scenario_1(topic):
     M = topic.MR.activeModel
     driver_ebitda = topic.applied_drivers["EBITDA Driver"]
     ebitda_formula = topic.formulas["basic ebitda calculator"]
-    driver_ebitda.setFormula(ebitda_formula)
-    #
-    #insert driver into model
-    #to make sure ebitda picks up any line items at the top level, insert
-    #into top unit only; otherwise ground-level calculations will block top
-    #from deriving it with its own line items taken into account
-    #
+    driver_ebitda.configure(data=dict(), formula=ebitda_formula)
+    
+    # Driver carries no instance data. Formula finds its own arguments.
+    
     top_bu = M.time_line.current_period.content
+
+    # Insert driver into model
     top_bu.addDriver(driver_ebitda, "EBITDA", "ebitda")
+    
+    # To make sure ebitda picks up any line items at the top level, we insert
+    # the driver only at the company (top) level. Otherwise, ground-level
+    # calculations will block top from deriving it with its own line items
+    # taken into account.
     #
     #don't clear Model.interview cache (protocol, etc) because didnt add any
     #lineitems
