@@ -78,11 +78,11 @@ def get_units_linearly(number, container):
 
     # Populate master_list, a sorted list of container objects by birth date
     master_list = list()
-    if type(container) == dict():
+    if type(container) == dict:
         master_list = list(container.values())
     else:
         # if container is a list or set
-        master_list = container.copy()
+        master_list = list(container.copy())
     #
     master_list.sort(key=lambda x: x.life.events[KEY_BIRTH])
 
