@@ -43,9 +43,11 @@ from .line_item import LineItem
 
 
 # Constants
+# n/a
 
-#Tags class carries a pointer to the tag manager; access individual tags
-#through that pointer
+# Globals
+# Tags class carries a pointer to the tag manager; access individual tags
+# through that pointer
 bookMarkTag = Tags.tagManager.catalog["bookmark"]
 builtInTag = Tags.tagManager.catalog["built_in"] 
 doNotTouchTag = Tags.tagManager.catalog["do_not_touch"]
