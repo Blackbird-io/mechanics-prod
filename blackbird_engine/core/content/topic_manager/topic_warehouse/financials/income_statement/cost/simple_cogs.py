@@ -156,8 +156,9 @@ def sub_scenario_1a(topic):
     cost_formula = topic.formulas["compute cost from known gross margin."]
     data = {}
     data["active_gross_margin"] = M.interview.work_space["active_gross_margin"]
-    D1.setData(data)
-    D1.setFormula(cost_formula)
+    
+    D1.configure(data=data, formula=cost_formula)
+    
     for sub_bu in M.time_line.current_period.get_lowest_units():
         sub_d1 = D1.copy()
         sub_bu.addDriver(sub_d1, "Cost", "COGS")
@@ -227,8 +228,9 @@ def scenario_2(topic):
     cost_formula = topic.formulas["compute cost from known gross margin."]
     data = {}
     data["active_gross_margin"] = adjR
-    D1.setData(data)
-    D1.setFormula(cost_formula)
+
+    D1.configure(data=data, formula=cost_formula)
+    
     for sub_bu in M.time_line.current_period.get_lowest_units():
         sub_d1 = D1.copy()
         sub_bu.addDriver(sub_d1,"Cost")
