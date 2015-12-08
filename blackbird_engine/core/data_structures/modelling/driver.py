@@ -56,7 +56,7 @@ class Driver(Tags):
 
     To limit the size of extrapolated models, a Driver instance stores
     only a bbid for its formula, not the formula itself. When the Driver
-    has to work, the Driver retries the formula from the formula catalog
+    has to work, the Driver retrieves the formula from the formula catalog
     (managed by FormulaManager) and applies it to the relevant line and
     business unit. 
 
@@ -104,10 +104,10 @@ class Driver(Tags):
     ====================  ======================================================
     
     DATA:
-    active                bool; is instance turned on 
+    active                bool; is instance turned on
+    conversion_table      dict; parameter name : formula argument
     data                  dict; place holder for driver-specific data
     id                    instance of ID
-    FM                    class; pointer to formula manager 
     formula_bbid          bbid for formula that Driver applies
     position              int; from 0 to 100
     signature             string; how the driver signs lines it modifies
@@ -117,43 +117,38 @@ class Driver(Tags):
     __eq__                True for objects with the same work function              
     __ne__                returns bool negative of __eq__
     __hash__              returns hash of instance bbid, raises error if blank
-    canWorkOnThis()       returns bool if line satsifies work conditions
     copy()                returns a new instance w own objects in key places
     configure()           set data and formula on instance in order
-    disconnect()          CLASS method, sets FM pointer to None
-    setData()             sets instance.data to deep copy of argument
-    setFormula()          sets instance work function to argument (for hash)
-    setFormulaManager()   CLASS method, sets FM pointer to new object
     setSignature()        sets instance signature to object
     setWorkConditions()   sets conditions for suitable objects
     workOnThis()          gets and runs formula with instance data and sig
+    validate()            check that driver can perform computations
     ====================  ======================================================
     """
-    FM = None
+    _FM = None
     # We will connect the class to the FormulaManager at the bottom of the
     # module. Driver objects will then be able to pull formulas directly
     # from catalog. 
 
     @classmethod
-    def disconnect(cls):
-        cls.FM = None
+    def _disconnect(cls):
+        cls._FM = None
     
     @classmethod
-    def setFormulaManager(cls, new_FM):
-        cls.FM = new_FM
+    def _set_formula_manager(cls, new_FM):
+        cls._FM = new_FM
         
     def __init__(self, signature=None):
-        Tags.__init__(self)
-        #
-        
+        Tags.__init__(self)        
         
         self.active = True
         self.conversion_table = dict()
-        self.data = Parameters()
+        self.parameters = Parameters()
         self.formula_bbid = None
         self.id = ID()
-        #specific uuid assigned when TopicManager configures topic catalog,
-        #based on driver's name in topic's namespace id
+        # TopicManager will assign a specific uuid to the driver when
+        # during topic catalog configuration. Each Driver gets an id within the
+        # namespace of its defining topic.
         
         self.position = 10
         # ``position`` must be an integer value between 0 and 100. used to sort
@@ -165,8 +160,8 @@ class Driver(Tags):
         self.workConditions["name"] = ["FAIL"]
         self.workConditions["partOf"] = ["FAIL"]
         self.workConditions["allTags"] = ["FAIL"]
-        #set condition values to a default that must be overwritten to make sure
-        #default configuration doesnt apply to every lineItem.
+        # We set condition values to a default that must be overwritten to make
+        # sure default configuration doesnt apply to every lineItem.
 
     def __eq__(self, comp, trace=False, tab_width=4):
         """
@@ -209,43 +204,14 @@ class Driver(Tags):
             c = c1 + c2
             raise bb_exceptions.IDAssignmentError(c)
         return hash(self.id.bbid)
-        #<-------------------------------------------------------------this should really be a hash of the formula,
-        # the data, and the work conditions. That means data here should be an immutable mapping. 
     
-    def canWorkOnThis(self, targetLineItem):
-        """
-
-
-        Driver.canWorkOnThis() -> bool
-
-
-        This method checks whether the targetLineItem satisfies workConditions.
-        If the targetLineItem satisfies each of the workConditions specified for
-        the instance, the method returns True. Otherwise, the method returns
-        False.
-
-        To satisfy the allTags condition, an object must carry each tag in
-        instance.workConditions["allTags"] (ie, instance.wC[allTags] must be
-        a subset of target.allTags). 
-
-        NOTE: driver.workConditions keys may include None as values to indicate
-        absence of a constraint. Accordingly, match is evaluated against
-        candidate attributes plus a None element.
-
-        A workCondition with a value equal to None or an empty list will be
-        satisfied for all lineItems.
-        """
-        #must be careful not to split strings (names) into letters with set()
-        if not set(self.workConditions["name"]).issubset([targetLineItem.name]+[None]):
-            return False
-        else:
-            if not set(self.workConditions["partOf"]).issubset([targetLineItem.partOf]+[None]):
-                return False
-            else:
-                if not set(self.workConditions["allTags"]).issubset(targetLineItem.allTags + [None]):
-                    return False
-                else:
-                    return True
+        # Ideally, drivers should hash to a combination of the instance formula,
+        # params, conversion table, and work conditions. These attributes define
+        # what it means for the driver to be the same.
+        # 
+        # The issue is that params and conversion table are mutable containers.
+        # So either have to make them immutable or figure out some other
+        # approach. 
         
     def configure(self, data, formula, conversion_table=None):
         """
@@ -254,20 +220,22 @@ class Driver(Tags):
         Driver.configure() -> None
 
 
-        Method configures instance in proper order: first sets data using
-        setData(), then sets formula using setFormula(). The second step
-        validates formula against instance data. Use this method to avoid
-        errors in topics.         
+        Configure instance for use.
+        
+        Steps:
+         -- set instance conversion_table
+         -- set instance parameters to data, with overwrite permissions
+         -- set formula
         """
         if conversion_table is not None:
             self.conversion_table = conversion_table
+
+        self._set_parameters(data, overwrite=True)
+        # Overwrite any existing parameters on configuration. Do this to
+        # make sure topics that reconfigure the same driver template can run
+        # multiple times. 
         
-        self._set_parameters(data)
-        self.setFormula(formula)
-##        self.check_data() #<--------------------------------------------------------------------------------------------think about this
-           #the idea is to validate a formula against a particular piece of data
-           #should add this to validate? but thats used in a different context
-        #<-------------------------------------------------------------------------------WILL HAVE TO REVIEW
+        self._set_formula(formula)
         
     def copy(self, enforce_rules=True):
         """
@@ -279,7 +247,7 @@ class Driver(Tags):
         Method returns a new Driver object. Result is a shallow copy of instance
         except for the following attributes, which are deep:
 
-        -- data
+        -- parameters
         -- workConditions
 
         Original object copies tags to result using Tags.copyTagsTo(), so method
@@ -293,78 +261,15 @@ class Driver(Tags):
         same formula even if that formula's id changes in place. The result
         should also track any in-place changes to original's id (e.g., change
         in namespace).
+
+        NOTE2: Result points to the original conversion table.
         """
         result = copy.copy(self)
-        Tags.copyTagsTo(self,result,enforce_rules)
-        result.data = copy.deepcopy(self.data) #<------------------------------------WILL HAVE TO REVIEW
-        #<---------------------------------------------------------------------------MAY BE ABLE TO USE SHALLOW COPY
+        Tags.copyTagsTo(self, result, enforce_rules)
+        result.parameters = copy.deepcopy(self.parameters)
         result.workConditions = copy.deepcopy(self.workConditions)
         return result
-
-##    def setData(self, new_data):
-##        """
-##
-##
-##        Driver.setData(new_data) -> None
-##
-##
-##        Method updates instance ``data`` dictionary with a deep copy of
-##        new_data.
-##        """
-##        return self._set_parameters(new_data)
-
-    def _set_parameters(self, new_data):
-        new_data = copy.deepcopy(new_data)
-        self.data.add(new_data)
         
-    def setFormula(self, F):
-        """
-
-
-        Driver.setFormula() -> None
-
-
-        Sets instance.formula_bbid to that of the argument. Method first checks
-        if instance data includes all parameters required by formula.
-
-        #<-----------------------------------------------------------------------------------------------update doc string
-        Method raises a DefinitionError if one of the parameters is missing.
-        Topics may inject drivers into business units at time A with the
-        intent that these drivers work only at some future time B (when their
-        work conditions or other logic has been satisfied). Time B may be
-        arbitrarily far away in the future. This method looks to avoid
-        confusing future errors by making sure that the Topic author is aware
-        of the required formula parameters at the time the Topic runs.
-        
-        Method also raises a DefinitionError if F does not have a bbid.
-
-        NOTE: Method sets ``formula_id`` to point to the actual formula's id
-        object. As such, Driver instance should continue referencing the same
-        formula object if it's id changes in place.        
-        """
-        if F.id.bbid:
-            self.formula_bbid = F.id.bbid
-        else:
-            c = ""
-            c += "Formula does not have valid bbid; bbid required for use in\n"
-            c += "Driver."
-            raise bb_exceptions.DefinitionError(c)
-
-    def check_data(self, parent=None):
-        """
-        """
-        #<------------------------------------------------------------------------------------------------need doc string
-        known_params = self._build_params(parent)
-        formula = self.FM.local_catalog.issue(self.formula_bbid)
-        
-        for parameter in formula.required_data:
-            if parameter not in known_params:
-                c = ""
-                c += "Instance data does not include required parameter ``%s``."
-                c = c % (parameter)
-                raise bb_exceptions.DefinitionError(c)
-        
-
     def setSignature(self, newSig):
         """
 
@@ -396,6 +301,7 @@ class Driver(Tags):
         names = []
         parts = []
         tags = []
+        
         if nameCondition:
             names.append(nameCondition.casefold())
         else:
@@ -409,34 +315,44 @@ class Driver(Tags):
                 tags.append(tag.casefold())
             else:
                 tags.append(tag)
+                
         self.workConditions["name"]=names
         self.workConditions["partOf"]=parts
         self.workConditions["allTags"]=tags
 
-    def validate(self):
+    def validate(self, check_data=True, parent=None):
         """
 
 
         Driver.validate() -> bool
         
 
-        Method checks if the instance is properly configured to use formulas.
+        Check if instance is properly configured to do work.
 
-        Returns False if:
+        Returns False iff:
          -- instance points to a formula catalog with 0 keys
          -- instance does not have a formula_bbid
          -- the formula_bbid specified for instance is not in catalog
-        True otherwise.
+         -- instance and parent don't supply adequate data (also throws
+            exception).        
         """
         result = True
-        if len(self.FM.local_catalog.by_id) == 0:
+        if len(self._FM.local_catalog.by_id) == 0:
             result = False
+
         if result:
             if not self.formula_bbid:
                 result = False
+                
         if result:
-            if self.formula_bbid not in self.FM.local_catalog.by_id:
+            if self.formula_bbid not in self._FM.local_catalog.by_id:
                 result = False
+
+        if check_data:
+            result = self._check_data(parent) 
+        # Always check data, regardless of result. Function will throw
+        # exception if the instance lacks required data for the its formula.
+        
         return result
         
     def workOnThis(self, line):
@@ -453,29 +369,45 @@ class Driver(Tags):
         Method is a no-op if instance is not active.
         """
         if self.active:
-            if self.canWorkOnThis(line): #<-------------------------------------------------make private
-                formula = self.FM.local_catalog.issue(self.formula_bbid) #<-------------------should check to make sure this is just key retrieval
+            if self._can_work_on_this(line):
+                formula = self._FM.local_catalog.issue(self.formula_bbid)
+                # formula_catalog.issue() only performs dict retrieval and
+                # return for key.
                 bu = self.parentObject
 
                 params = self._build_params()
                 
                 formula.func(line, bu, params, self.signature)
-                #each funcion is "disposable": delete from memory after single
-                #use, get new one next time. 
+                # Each funcion is "disposable", so we explicitly delete the
+                # pointer after each use. 
                 del formula
+                
             else:
                 c = "Driver cannot work on the specified LineItem."
                 raise bb_exceptions.BBAnalyticalError(c)
         else:
             pass
-        #<----------------------------------------------------------------------------------
+
+    #*************************************************************************#
+    #                          NON-PUBLIC METHODS                             #
+    #*************************************************************************#
 
     def _build_params(self, parent=None):
         """
 
-        -> dict()
 
-        - ``parent`` 
+        Driver._build_params() -> dict
+
+
+        Prepare a parameter dictionary for the formula.
+
+        Expects ``parent`` to be a business unit with a defined period pointer.
+        
+        Method builds its result by collating parameters from the parent,
+        parent's time_line and instance. Specific parameters trump general ones.
+        Method then converts uniquely named global parameters to standard
+        formula arguments using instance.conversion_table. Result includes both
+        the original and converted keys.
         """
         if parent is None:
             parent = self.parentObject
@@ -484,6 +416,7 @@ class Driver(Tags):
         
         if parent:
             period = parent.period
+            
         if period:
             time_line = period.parentObject
         
@@ -494,25 +427,92 @@ class Driver(Tags):
 
         if time_line:
             params.update(time_line.parameters)
+                                                 
         if period:
             params.update(period.parameters)
         
-        params.update(self.data)
+        params.update(self.parameters)
 
         converted = self._map_params_to_formula(params)
         params.update(converted)
-        # Turn unique shared data into variables formula can understand
+        # Turn unique shared data into common variables that the formula can
+        # understand. So a key like "lowest maintenance bid" becomes
+        # "base annual expense".
 
         return params
 
+    def _can_work_on_this(self, targetLineItem):
+        """
+
+
+        Driver._can_work_on_this() -> bool
+
+
+        This method checks whether the targetLineItem satisfies workConditions.
+        If the targetLineItem satisfies each of the workConditions specified for
+        the instance, the method returns True. Otherwise, the method returns
+        False.
+
+        To satisfy the allTags condition, an object must carry each tag in
+        instance.workConditions["allTags"] (ie, instance.wC[allTags] must be
+        a subset of target.allTags). 
+
+        NOTE: driver.workConditions keys may include None as values to indicate
+        absence of a constraint. Accordingly, match is evaluated against
+        candidate attributes plus a None element.
+
+        A workCondition with a value equal to None or an empty list will be
+        satisfied for all lineItems.
+        """
+        #must be careful not to split strings (names) into letters with set()
+        if not set(self.workConditions["name"]).issubset([targetLineItem.name]+[None]):
+            return False
+        else:
+            if not set(self.workConditions["partOf"]).issubset([targetLineItem.partOf]+[None]):
+                return False
+            else:
+                if not set(self.workConditions["allTags"]).issubset(targetLineItem.allTags + [None]):
+                    return False
+                else:
+                    return True
+
+    def _check_data(self, parent=None):
+        """
+
+
+        Driver._check_data() -> bool
+
+
+        Check if instance and parent specify all required data for formula.
+        Throw DefinitionError if that's not the case.
+        """
+        result = False
+        
+        known_params = self._build_params(parent)
+        formula = self._FM.local_catalog.issue(self.formula_bbid)
+        
+        for parameter in formula.required_data:
+            if parameter not in known_params:
+                c = ""
+                c += "Instance data does not include required parameter ``%s``."
+                c = c % (parameter)
+                raise bb_exceptions.DefinitionError(c)
+                break
+        else:
+            result = True
+
+        return result
+    
     def _map_params_to_formula(self, params, conversion_table=None):
         """
-        -> dict
 
-        return dict with conversion keys and original
-        
+
+        Driver._map_params_to_formula() -> dict
+
+
+        Return a dictionary that maps values from ``params`` to keys in the
+        conversion table.         
         """
-        
         result = dict()
         
         if conversion_table is None:
@@ -523,7 +523,36 @@ class Driver(Tags):
         
         return result
 
+    def _set_formula(self, F):
+        """
+
+
+        Driver._set_formula() -> None
+
+
+        Set instance.formula_bbid to that of the argument.
+        """
+        if F.id.bbid:
+            self.formula_bbid = F.id.bbid
+        else:
+            c = ""
+            c += "Formula does not have valid bbid; bbid required for use in\n"
+            c += "Driver."
+            raise bb_exceptions.DefinitionError(c)
+
+    def _set_parameters(self, new_data, overwrite=False):
+        """
+
+
+        Driver._set_parameters() -> None
+
+
+        Add new_data to instance.parameters. 
+        """
+        new_data = copy.deepcopy(new_data)
+        self.parameters.add(new_data, overwrite)
+
 # Connect Driver class to FormulaManager. Now all instances of Driver will be
 # able to access FormulaManager.catalog resources.
 FormulaManager.populate()
-Driver.setFormulaManager(FormulaManager) #<------------------------------------------------------should be private
+Driver._set_formula_manager(FormulaManager)

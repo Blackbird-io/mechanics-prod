@@ -205,7 +205,9 @@ def scenario_3(topic):
             }
         )
     driver_ga.conversion_table["ltm ga"] = "base_annual_expense"
-    driver_ga.setFormula(ga_formula)
+    driver_ga.configure(data=dict(), formula=ga_formula)
+    # Driver runs on shared data. 
+    
     del ga_formula
     
     #insert lines and drivers into model

@@ -223,12 +223,10 @@ def scenario_3(topic):
     inflation = market_conditions.inflation.annual
     employee_data["annual_inflation"] = inflation
     employee_data["base_annual_expense"] = annual_unit_comp
-    #
-    #
     employee_data["ref_year"] = m_ref_year  
-    #
-    driver_ee.setData(employee_data)
-    driver_ee.setFormula(employee_formula)
+    
+    driver_ee.configure(data=employee_data, formula=employee_formula)
+    
     del employee_data, employee_formula
     
     #
@@ -243,8 +241,8 @@ def scenario_3(topic):
                                       "non-straight-line",
                                       "non-GAAP"]
     #
-    driver_rent.setData(rent_data)
-    driver_rent.setFormula(rent_formula)
+    driver_rent.configure(data=rent_data, formula=rent_formula)
+
     del rent_data, rent_formula
 
     #
@@ -259,8 +257,7 @@ def scenario_3(topic):
     util_data["source_multiplier"] = 0.05
     util_data["source_line_name"] = "Rent"
     #
-    driver_util.setData(util_data)
-    driver_util.setFormula(util_formula)
+    driver_util.configure(data=util_data, formula=util_formula)
     del util_data, util_formula
 
     #
@@ -274,8 +271,7 @@ def scenario_3(topic):
     security_data["source_multiplier"] = 0.02
     security_data["source_line_name"] = "Rent"
     #
-    driver_security.setData(security_data)
-    driver_security.setFormula(security_formula)
+    driver_security.configure(data=security_data, formula=security_formula)
     del security_data, security_formula
 
     #
@@ -291,8 +287,7 @@ def scenario_3(topic):
                                     "cell phone",
                                     "land line"]
     #
-    driver_it.setData(it_data)
-    driver_it.setFormula(it_formula)
+    driver_it.configure(data=it_data, formula=it_formula)
     del it_data, it_formula
     
     #insert lines and drivers into model
