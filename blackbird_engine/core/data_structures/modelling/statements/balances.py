@@ -60,7 +60,7 @@ class Balances(StatementBundle):
              "ending")
     # Use tuple for immutability
      
-    def __init__(self, start_date, end_date):
+    def __init__(self, start_date=None, end_date=None):
 ##        if start_date or end_date:
 ##            if start_date > end_date:
 ##                raise Error
