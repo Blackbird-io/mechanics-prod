@@ -27,7 +27,7 @@ Financials            a StatementBundle with income, cash, balance and others.
 
 
 # Imports
-from .statements import Overview, Income, CashFlow, Balances
+from .statements import Overview, Income, CashFlow, BalanceSheet
 from .statement_bundle import StatementBundle
 
 
@@ -62,7 +62,8 @@ class Financials(StatementBundle):
     ORDER = ("overview",
              "income",
              "cash",
-             "balances",
+             "starting",
+             "ending",
              "ledger")
     # tuple for immutability
     
@@ -70,7 +71,8 @@ class Financials(StatementBundle):
         self.overview = Overview()
         self.income = Income()
         self.cash = CashFlow()
-        self.balances = Balances()
+        self.starting = BalanceSheet("Starting Balance Sheet")
+        self.ending = BalanceSheet("Ending Balance Sheet")
         self.ledger = None
 
     

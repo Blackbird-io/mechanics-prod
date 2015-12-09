@@ -28,8 +28,8 @@ BalanceSheet          objects include assets, liabilities, and equity
 
 
 # Imports
-from ..line_item import LineItem
 from ..statement import Statement
+from ..statement_bundle import StatementBundle
 
 
 
@@ -41,10 +41,11 @@ from ..statement import Statement
 # n/a
 
 # Classes
-class BalanceSheet(Statement):
+class BalanceSheet(StatementBundle):
+    #<-------------------------------------------------------------------------has to descend from Tags
     """
-
-    []
+    A StatementBundle with individual statements for Assets, Liabilities, and
+    Equity. 
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -52,54 +53,56 @@ class BalanceSheet(Statement):
     DATA:
     as_of
 
+    **statements**
+    assets
+    liabilities
+    equity
+
     FUNCTIONS:
     check()
     ====================  ======================================================
     """
-    def __init__(self, name, as_of=None):
-        
-        Statement.__init__(self, name)
+    ORDER = ("assets",
+             "liabilities",
+             "equity")
+    
+    def __init__(self, as_of):
 
         self.as_of = as_of
-
-        assets = LineItem(name="Assets")
-        liabilities = LineItem(name="Liabilities")
-        equity = LineItem(name="Equity")
-
-        for line in [assets, liabilities, equity]:
-            self.add_top_line(line)
-
-      #can add custom str that shows as of date
         
-##    def check(self):
-##        """
-##
-##
-##        BalanceSheet.check() -> bool
-##
-##
-##        Return True iff instance Assets = Liabilities + Equity.
-##        """
-##        result = False
-##
-##        A = None
-##        L = None
-##        E = None
-##
-##        assignments = [(A, self.assets),
-##                       (L, self.liabilities),
-##                       (E, self.equities)
-##                       ]
-##
-##
-##        for counter, lines in assignments:
-##            for line in lines:
-##                if line.value:
-##                    counter += line.value
-##
-##        if A == L + E:
-##            result = True
-##
-##        return result
-##
-##    
+        self.assets = Statement("Assets")
+        self.liabilities = Statement("Liabilities")
+        self.equity = Statement("Equity")
+        
+    def check(self):
+        """
+
+
+        BalanceSheet.check() -> bool
+
+
+        Return True iff instance Assets = Liabilities + Equity.
+        """
+        result = False
+
+        A = None
+        L = None
+        E = None
+
+        assignments = [(A, self.assets),
+                       (L, self.liabilities),
+                       (E, self.equities)
+                       ]
+
+
+        for counter, lines in assignments:
+            for line in lines:
+                if line.value:
+                    counter += line.value
+
+        if A == L + E:
+            result = True
+
+        return result
+
+    
