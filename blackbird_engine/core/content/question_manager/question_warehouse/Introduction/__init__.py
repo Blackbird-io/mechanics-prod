@@ -46,5 +46,6 @@ from . import software_function
 from . import software_license_status
 from . import subscription_by_seat
 from . import z_test_question
+from . import z_bool_question
 
 

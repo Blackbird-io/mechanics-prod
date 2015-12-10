@@ -112,8 +112,12 @@ class BoolInput(GenericInput):
         NOTE: For result[0] == False, input must be an empty string ('').
         All other strings have a True boolean value.
         """
-        obj = bool(raw_response)
-        result = [obj]
+        val = bool(raw_response)
+        if raw_response == "False":
+            val = False
+        
+        result = [val]
+        
         return result
         
 
