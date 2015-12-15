@@ -46,6 +46,7 @@ from .dr_container import DrContainer
 from .equalities import Equalities
 from .financials import Financials
 from .life import Life as LifeCycle
+from .parameters import Parameters
 
 
 
@@ -62,7 +63,7 @@ tConsolidated = Tags.tagManager.catalog["consolidated"]
 tHardCoded = Tags.tagManager.catalog["hard"]
 
 # Classes   
-class BusinessUnit(Tags,Equalities):
+class BusinessUnit(Tags, Equalities):
     """
    
     Object describes a group of business activity. A business unit can be a
@@ -81,6 +82,7 @@ class BusinessUnit(Tags,Equalities):
     id                    instance of ID object
     life                  instance of Life object
     location              placeholder for location functionality
+    parameters            #<------------------------------------------------------------ fill in doc string
     size                  int; number of real-life equivalents obj represents
     type                  str or None; unit's in-model type (e.g., "team")
     summary               None or BusinessSummary; investment summary
@@ -133,6 +135,7 @@ class BusinessUnit(Tags,Equalities):
         
         self.life = LifeCycle()
         self.location = None
+        self.parameters = Parameters()
         self.period = None
         # May want to change period to a property, so that a set to new value
         # will always cause the unit to rerun registration. 
