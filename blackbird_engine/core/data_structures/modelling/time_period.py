@@ -77,6 +77,7 @@ class TimePeriod(Tags):
     length                float; seconds between start and end
     parameters            Parameters object, specifies shared parameters
     prior                 pointer to immediately preceding time period
+    following             pointer to immediately following time period
     start                 datetime.date; first date in period.
     ty_directory          dict; keys are strings, values are sets of bbids
     
@@ -97,14 +98,16 @@ class TimePeriod(Tags):
         Tags.__init__(self)
         self.start = start_date
         self.end = end_date
-        #
+
+        self.prior = None
+        self.following = None
+        
         self.bu_directory = {}
         self.ty_directory = {}
-        #
+        
         self.content = content
         self.id = ID()
         self.parameters = Parameters()
-        self.prior = None
 
         # The current approach to indexing units within a period assumes that
         # Blackbird will rarely remove existing units from a model. both
@@ -225,8 +228,8 @@ class TimePeriod(Tags):
         Method updates tags on seed and target and then passes them to standard
         Tags.extrapolate_to() selection logic. 
         """
-        self.inheritTags(recur = True)
-        target.inheritTags(recur = True)
+        self.inheritTags(recur=True)
+        target.inheritTags(recur=True)
         result = Tags.extrapolate_to(self,target)
         return result
     
@@ -274,12 +277,12 @@ class TimePeriod(Tags):
         #step 2: configure and fill container
         result.start = copy.copy(target.start)
         result.end = copy.copy(target.end)
+        
         if seed.content:
             new_content = seed.content.copy(enforce_rules = True)
             result.set_content(new_content, updateID = False)
-        result._set_prior(seed)
-        #
-        #return container
+        
+        # return container
         return result        
         
     def ex_to_special(self,target):
@@ -319,17 +322,16 @@ class TimePeriod(Tags):
         #updates result with those target tags it doesnt have already. "at" mode
         #picks up all tags from target. other attributes stay identical because
         #Tags uses a shallow copy.
-        #
-        #configure and fill container
+        
+        # Configure and fill container
         result.start = copy.copy(target.start)
         result.end = copy.copy(target.end)
         bu_seed = seed.content 
         bu_target = target.content
         bu_new = bu_seed.extrapolate_to(bu_target)
-        result.set_content(bu_new, updateID = False)
-        result._set_prior(seed)
-        #
-        #return container
+        result.set_content(bu_new, updateID=False)
+        
+        # Return container
         return result
                 
     def register(self, bu, updateID=True, reset_directories=False):
@@ -392,11 +394,13 @@ class TimePeriod(Tags):
         self.register(bu, updateID=updateID, reset_directories=True)
         # Reset directories when setting the top node in the period.
         self.content = bu
+        #if self.linked:
+            #bu.link(recur=True) #<------------------------------------------------------think about this
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
-    
+              
     def _reset_directories(self):
         """
 
@@ -410,16 +414,25 @@ class TimePeriod(Tags):
         self.bu_directory = {}
         self.ty_directory = {}
         
-    def _set_prior(self, prior_period):
+    def link(self, prior_period, recur=True):
         """
 
 
-        TimePeriod._set_prior() -> None
+        TimePeriod.link_to() -> None
 
 
-        For consecutive periods, set instance.prior to argument.
+        For consecutive periods, set instance.prior to argument. Also sets
+        argument.following to instance to maintain symmetry. If ``recur`` is
+        True, links instance instance content too.
         """
-        self.prior = prior_period
+        #<-----------------------------------------------------------------------------add to public methods
+        self.past = prior_period
+        prior_period.future = self
+
+        if self.content and recur:
+            self.content.link()
+        
+        
 
 
       
