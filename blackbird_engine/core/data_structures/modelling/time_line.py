@@ -413,8 +413,25 @@ class TimeLine(dict):
         for end_date in sorted(self.keys()):
             period = self[end_date]
             result.append(period)
+            
         return result
 
+    def link(self, ordered=None):
+        """
+
+        -> None
+        
+        """
+        #<--------------------------------------------------------------------add doc string
+        if not ordered:
+            ordered = self.get_ordered()
+
+        for i in range((len(ordered) - 1)):
+            period_1 = ordered[i]
+            period_2 = ordered[i+1]
+            period_2.link(period_1)
+
+             
     def _make_pretty_strings(self, dates=None, sep="<<", border="-", hook=True):
         """
 

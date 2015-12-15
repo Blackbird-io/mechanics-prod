@@ -75,4 +75,10 @@ class Financials(StatementBundle):
         self.ending = BalanceSheet("Ending Balance Sheet")
         self.ledger = None
 
+    def link(self, source):
+        self.source = source
+        self.starting = source.ending
+        
+        
+
     

@@ -143,7 +143,20 @@ class BusinessUnit(Tags, Equalities):
         self.size = 1
         self.summary = BusinessSummary()
         self.valuation = CompanyValue()
+
+    @property
+    def past(self):
         
+        result = None
+        
+        my_id = self.id.bbid
+        prior_period = self.period.prior
+
+        if prior_period and my_id:
+            result = prior_period.bu_directory[my_id]
+
+        return result
+    
     @property
     def type(self):
         """
@@ -553,8 +566,18 @@ class BusinessUnit(Tags, Equalities):
         #need to change tagging rules above to make sure BU.consolidate() tags
         #lines appropriately. also need to make sure that inheritTagsFrom() does----------------------------------------------------------
         #not pick up blockingTags
+
+        ordered = []
+        for name in self.financials.ORDER:
+            if name == "starting":
+                continue
+            else:
+                statement = getattr(self.financials, name)
+                ordered.append(statement)
+        # Never derive starting balance sheet. Drivers can only write to ending
+        # balance sheet.
         
-        for statement in self.financials.ordered:
+        for statement in ordered:
 
             if statement is not None:
                 
@@ -570,11 +593,11 @@ class BusinessUnit(Tags, Equalities):
                         for driver in matching_drivers:
                             driver.workOnThis(line)
                     
-    def extrapolate_to(self,target):
+    def extrapolate_to(self, target, reverse=False):
         """
 
 
-        BU.extrapolate_to(target) -> BU
+        BU.extrapolate_to() -> BU
 
 
         Returns a new business unit that combines seed and target
@@ -593,7 +616,7 @@ class BusinessUnit(Tags, Equalities):
         result = Tags.extrapolate_to(self, target)
         return result
     
-    def ex_to_special(self, target):
+    def ex_to_special(self, target, reverse=False):
         """
 
        
@@ -609,21 +632,22 @@ class BusinessUnit(Tags, Equalities):
         (ii) an unenforced copy of the target attribute, if that attribute does
         not permit modification. 
         """
-        #
-        #step 1: make container
+        # Step 1: make container
         seed = self
         alt_seed = copy.copy(self)
         alt_seed.clear()
-        #zero out the recursive attributes; a different part of the method works
-        #on those
+        # Zero out the recursive attributes; a different part of the method works
+        # on those
+        
         result = alt_seed.copy(enforce_rules=True)
-        #class-specific copy that picks up any class-specific data
+        # Class-specific copy that picks up any class-specific data
+
         result = Tags.ex_to_special(result, target, mode="at")
-        #updates result with those target tags it doesnt have already. "at" mode
-        #picks up all tags from target. other attributes stay identical because
-        #Tags uses a shallow copy.
-        #
-        #step 2: fill container
+        # Updates result with those target tags it doesnt have already. "at" mode
+        # picks up all tags from target. other attributes stay identical because
+        # Tags uses a shallow copy.
+        
+        # Step 2: fill container
         for attr in self.tagSources:
             o_seed = getattr(self, attr)
             o_targ = getattr(target, attr)
@@ -633,8 +657,8 @@ class BusinessUnit(Tags, Equalities):
                 o_res = o_targ.copy(enforce_rules=False)
                 #if can't touch an attribute, copy the target wholesale
             setattr(result,attr,o_res)
-        #
-        #step 3: return container
+        
+        # Step 3: return container
         return result
 
     def fillOut(self, *tagsToOmit):
@@ -767,6 +791,16 @@ class BusinessUnit(Tags, Equalities):
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
+
+    def link(self, recur=True):
+        #<-----------------------------------------------------------------------------------need doc string
+        if self.past is not None:
+            self.financials.link(self.past.financials)
+
+        if recur:
+            for unit in self.components.values():
+                # intentionally unordered
+                unit.link(recur=True)
 
     def _fit_to_period(self, time_period, recur=True):
         """
