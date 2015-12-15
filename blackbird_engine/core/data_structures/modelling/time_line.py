@@ -204,7 +204,15 @@ class TimeLine(dict):
                 #
                 #close loop:
                 back_end_date = curr_start_date - timedelta(1)
+        
+##        # Now link all of the periods. 
+##        self.link()
+##        #<-------------------------------------------------------------------------------may be inefficient
+                #if you run link() here, by end of interview period.past and period.future point towards
+                #objects outside the  timeline for some reason
+
         # All set.
+        
 
     def _configure_period(self, period):
         """
@@ -238,6 +246,9 @@ class TimeLine(dict):
         Method expects ``seed`` to be a TimePeriod instance. Method will not
         change seed during operation. 
         """
+        self.link()
+        #<-------------------------------------------------------------------------------may be inefficient
+        
         if not seed:
             seed = self.current_period
         seed_date = seed.end
@@ -424,7 +435,7 @@ class TimeLine(dict):
         """
         #<--------------------------------------------------------------------add doc string
         if not ordered:
-            ordered = self.get_ordered()
+            ordered = self.getOrdered()
 
         for i in range((len(ordered) - 1)):
             period_1 = ordered[i]

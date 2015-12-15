@@ -150,10 +150,11 @@ class BusinessUnit(Tags, Equalities):
         result = None
         
         my_id = self.id.bbid
-        prior_period = self.period.prior
+        prior_period = self.period.past
 
-        if prior_period and my_id:
-            result = prior_period.bu_directory[my_id]
+        if prior_period:
+            if my_id in prior_period.bu_directory:
+                result = prior_period.bu_directory[my_id]
 
         return result
     
@@ -567,17 +568,19 @@ class BusinessUnit(Tags, Equalities):
         #lines appropriately. also need to make sure that inheritTagsFrom() does----------------------------------------------------------
         #not pick up blockingTags
 
-        ordered = []
-        for name in self.financials.ORDER:
-            if name == "starting":
-                continue
-            else:
-                statement = getattr(self.financials, name)
-                ordered.append(statement)
-        # Never derive starting balance sheet. Drivers can only write to ending
-        # balance sheet.
+##        ordered = []
+##        for name in self.financials.ORDER:
+##            if name == "starting":
+##                continue
+##            else:
+##                statement = getattr(self.financials, name)
+##                ordered.append(statement)
+##        # Never derive starting balance sheet. Drivers can only write to ending
+##        # balance sheet.
+
+        # irrelevant, stripped "starting" out of fins.ORDER
         
-        for statement in ordered:
+        for statement in self.financials.ordered:
 
             if statement is not None:
                 
@@ -691,10 +694,16 @@ class BusinessUnit(Tags, Equalities):
         if self.filled:
             return
         else:
+            self.load_balance()
             self.consolidate(*tagsToOmit)
             self.derive(*tagsToOmit)
             self.financials.summarize()
             self.filled = True
+
+    def load_balance(self):
+        #<------------------------------------------------------------------------------------clean up
+        if self.past:
+            self.financials.starting = self.past.financials.ending
 
     def kill(self, date=None, recur=True):
         """
@@ -794,13 +803,17 @@ class BusinessUnit(Tags, Equalities):
 
     def link(self, recur=True):
         #<-----------------------------------------------------------------------------------need doc string
+        #<---------------------------method should be called "link_back()" or smtg to explain that it always
+        # looks to past
+        #<-------------------------------------------------------add a "future" property
         if self.past is not None:
-            self.financials.link(self.past.financials)
+            self.financials.link_to(self.past.financials)
 
         if recur:
             for unit in self.components.values():
                 # intentionally unordered
                 unit.link(recur=True)
+        
 
     def _fit_to_period(self, time_period, recur=True):
         """

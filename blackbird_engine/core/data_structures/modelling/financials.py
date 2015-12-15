@@ -59,12 +59,7 @@ class Financials(StatementBundle):
     n/a
     ====================  ======================================================
     """
-    ORDER = ("overview",
-             "income",
-             "cash",
-             "starting",
-             "ending",
-             "ledger")
+    ORDER = ("overview", "income", "cash", "ending", "ledger")
     # tuple for immutability
     
     def __init__(self):
@@ -75,9 +70,17 @@ class Financials(StatementBundle):
         self.ending = BalanceSheet("Ending Balance Sheet")
         self.ledger = None
 
-    def link(self, source):
-        self.source = source
-        self.starting = source.ending
+    def __str__(self):
+        self.ORDER = ("overview", "income", "cash", "starting", "ending", "ledger")
+        # intentionally block class-level thing
+        result = StatementBundle.__str__(self)
+        del self.ORDER
+        # unblock
+        return result    
+
+##    def link(self, source):
+##        self.source = source
+##        self.starting = source.ending
         
         
 
