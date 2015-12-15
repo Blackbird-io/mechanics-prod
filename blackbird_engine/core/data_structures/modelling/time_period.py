@@ -96,11 +96,12 @@ class TimePeriod(Tags):
     """
     def __init__(self, start_date, end_date, content=None):
         Tags.__init__(self)
+
         self.start = start_date
         self.end = end_date
 
-        self.prior = None
-        self.following = None
+        self.past = None
+        self.future = None
         
         self.bu_directory = {}
         self.ty_directory = {}
@@ -414,7 +415,7 @@ class TimePeriod(Tags):
         self.bu_directory = {}
         self.ty_directory = {}
         
-    def link(self, prior_period, recur=True):
+    def link(self, prior_period):
         """
 
 
@@ -422,15 +423,12 @@ class TimePeriod(Tags):
 
 
         For consecutive periods, set instance.prior to argument. Also sets
-        argument.following to instance to maintain symmetry. If ``recur`` is
-        True, links instance instance content too.
+        argument.following to instance to maintain symmetry. 
         """
         #<-----------------------------------------------------------------------------add to public methods
         self.past = prior_period
         prior_period.future = self
 
-        if self.content and recur:
-            self.content.link()
         
         
 
