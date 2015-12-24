@@ -521,6 +521,7 @@ class BusinessUnit(Tags, Equalities):
         # objects. Guide shouldn't point to a business unit or model
         result.id = copy.copy(self.id)
         result.life = self.life.copy()
+        result.parameters = copy.deepcopy(self.parameters)
         result.summary = BusinessSummary()
         result.valuation = CompanyValue()
         #
