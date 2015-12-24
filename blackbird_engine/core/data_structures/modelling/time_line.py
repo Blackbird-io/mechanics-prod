@@ -27,7 +27,7 @@ TimeLine              collection of TimePeriod objects indexed by end date
 
 
 
-#imports
+# imports
 from datetime import date, timedelta
 import time
 
@@ -41,10 +41,10 @@ from .time_period import TimePeriod
 
 
 
-#globals
-#n/a
+# globals
+# n/a
 
-#classes
+# classes
 class TimeLine(dict):
     """
 
@@ -241,7 +241,6 @@ class TimeLine(dict):
 
         Method extrapolates all periods in instance sequentially from seed. If
         seed not specified, method uses instance.current_period.
-
 
         Method expects ``seed`` to be a TimePeriod instance. Method will not
         change seed during operation. 
@@ -442,7 +441,16 @@ class TimeLine(dict):
             period_2 = ordered[i+1]
             period_2.link(period_1)
 
-             
+        #what about this:
+            #for date in sorted(self.keys()):
+                #link the prior to the next
+                #period2.set_source(period1)
+
+            #for i in range(1, len(sorted(self.keys()):
+                #period2 = self[i]
+                #period1 = self[i-1]
+                #period2.set_source(period1)
+
     def _make_pretty_strings(self, dates=None, sep="<<", border="-", hook=True):
         """
 
@@ -484,7 +492,7 @@ class TimeLine(dict):
         space = " "
         #
         underscore = "_"
-        bu_lines = self.current_period.content.pretty_print()
+        bu_lines = self.current_period.content._get_pretty_lines()
         bu_width = len(bu_lines[0])
         bu_height = len(bu_lines)
         sep_width = len(sep)
@@ -555,7 +563,7 @@ class TimeLine(dict):
                 if period.content:
                     bot_brdr = hook_char.center(column_width, border)
                     hanger = "|".center(column_width)
-                    for line in period.content.pretty_print():
+                    for line in period.content._get_pretty_lines():
                         adj_line = line.center(column_width)
                         col_bu_lines.append(adj_line)
                 else:

@@ -139,7 +139,7 @@ class TimePeriod(Tags):
         """
 
 
-        TimePeriod.copy(enforce_rules) -> TimePeriod
+        TimePeriod.copy() -> TimePeriod
 
 
         Method returns a new TimePeriod object whose content is a class-specific
@@ -217,11 +217,11 @@ class TimePeriod(Tags):
             c = "``pool`` is empty, method requires explicit permission to run."
             raise bb_exceptions.ProcessError(c) 
         
-    def extrapolate_to(self,target):
+    def extrapolate_to(self, target):
         """
 
 
-        TimePeriod.extrapolate_to(target) -> TimePeriod
+        TimePeriod.extrapolate_to() -> TimePeriod
 
 
         Method returns a new time period with a mix of seed and target data.
@@ -231,14 +231,19 @@ class TimePeriod(Tags):
         """
         self.inheritTags(recur=True)
         target.inheritTags(recur=True)
-        result = Tags.extrapolate_to(self,target)
+        result = Tags.extrapolate_to(self, target)
+
+        #result.set_source(self)
+        
         return result
+        # should the result be... linked to the instance?
+        # or should that be the basic behavior
     
-    def ex_to_default(self,target):
+    def ex_to_default(self, target):
         """
 
 
-        TimePeriod.ex_to_default(target) -> TimePeriod
+        TimePeriod.ex_to_default() -> TimePeriod
 
 
         Method used for extrapolation when existing target content can be
@@ -263,25 +268,29 @@ class TimePeriod(Tags):
         #
         #step 1: make container
         seed = self
+
         alt_seed = copy.copy(seed)
-        #keep all attributes identical, but now can zero out the complicated
-        #stuff
+        # Keep all attributes identical, but now can zero out the complicated
+        # stuff.
         alt_seed.clear()
-        result = alt_seed.copy(enforce_rules = True)
-        #use class-specific copy to create independent objects for any important
-        #container-level data structures; Tags.copy() only creates new tag lists 
-        result = Tags.ex_to_special(result,target,mode = "at")
-        #updates result with those target tags it doesnt have already. "at" mode
-        #picks up all tags from target. other attributes stay identical because
-        #Tags uses a shallow copy.
-        #
+        
+        result = alt_seed.copy(enforce_rules=True)
+        # Use class-specific copy to create independent objects for any important
+        # container-level data structures; Tags.copy() only creates new tag lists
+        
+        result = Tags.ex_to_special(result, target, mode="at")
+        # Updates result with those target tags it doesnt have already. "at" mode
+        # picks up all tags from target. Other attributes stay identical because
+        # Tags uses a shallow copy.
+        
         #step 2: configure and fill container
         result.start = copy.copy(target.start)
         result.end = copy.copy(target.end)
+        #result.source = alt_seed
         
         if seed.content:
-            new_content = seed.content.copy(enforce_rules = True)
-            result.set_content(new_content, updateID = False)
+            new_content = seed.content.copy(enforce_rules=True)
+            result.set_content(new_content, updateID=False)
         
         # return container
         return result        
@@ -395,9 +404,19 @@ class TimePeriod(Tags):
         self.register(bu, updateID=updateID, reset_directories=True)
         # Reset directories when setting the top node in the period.
         self.content = bu
-        #if self.linked:
-            #bu.link(recur=True) #<------------------------------------------------------think about this
 
+    def set_source(self, prior_period):
+        """
+
+
+        TimePeriod.set_source() -> None
+
+
+        Set instance.past to argument. Also sets argument.future to instance.
+        """
+        self.past = prior_period
+        prior_period.future = self
+        
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
@@ -415,19 +434,8 @@ class TimePeriod(Tags):
         self.bu_directory = {}
         self.ty_directory = {}
         
-    def link(self, prior_period):
-        """
-
-
-        TimePeriod.link_to() -> None
-
-
-        For consecutive periods, set instance.prior to argument. Also sets
-        argument.following to instance to maintain symmetry. 
-        """
-        #<-----------------------------------------------------------------------------add to public methods
-        self.past = prior_period
-        prior_period.future = self
+    
+        
 
         
         
