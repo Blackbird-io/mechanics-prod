@@ -71,6 +71,7 @@ class TimeLine(dict):
     find_period()         returns period that contains queried time point
     get_segments()        split time line into past, present, and future
     getOrdered()          returns list of periods ordered by end point
+    link()                connect adjacent periods
     revert_current()      go back to the prior current period
     update_current()      updates current_period for reference or actual date    
     ====================  ======================================================
@@ -199,38 +200,16 @@ class TimeLine(dict):
                 curr_start_date = date(curr_end_date.year,
                                        curr_end_date.month,
                                        1)
-                back_period = TimePeriod(curr_start_date,curr_end_date)
+                back_period = TimePeriod(curr_start_date, curr_end_date)
                 self.add_period(back_period)
                 #
                 #close loop:
                 back_end_date = curr_start_date - timedelta(1)
         
-##        # Now link all of the periods. 
-##        self.link()
-##        #<-------------------------------------------------------------------------------may be inefficient
-                #if you run link() here, by end of interview period.past and period.future point towards
-                #objects outside the  timeline for some reason
+        # Now link all of the periods. 
+        self.link()
 
         # All set.
-        
-
-    def _configure_period(self, period):
-        """
-
-
-        TimeLine._configure_period() -> period
-
-
-        Method sets period's namespace id to that of the TimeLine, then returns
-        period. 
-        """
-        model_namespace = self.id.namespace
-        period.id.set_namespace(model_namespace)
-        # Period has only a pointer to the Model.namespace_id; periods dont have
-        # their own bbids.
-        period.setPartOf(self)
-        
-        return period
         
     def extrapolate_all(self, seed=None):
         """
@@ -244,21 +223,17 @@ class TimeLine(dict):
 
         Method expects ``seed`` to be a TimePeriod instance. Method will not
         change seed during operation. 
-        """
-        self.link()
-        #<-------------------------------------------------------------------------------may be inefficient
-        
+        """        
         if not seed:
             seed = self.current_period
         seed_date = seed.end
-        #
+        
         segments = self.get_segments(seed_date)
         past = segments[0]
         future = segments[-1]
-        #
+        
         self.extrapolate_dates(seed, past, work_backward=True)
         self.extrapolate_dates(seed, future)
-        #
 
     def extrapolate_dates(self, seed, dates, work_backward=False):
         """
@@ -373,7 +348,93 @@ class TimeLine(dict):
         future_dates = dates[(ref_spot + 1 ): ]
         past_dates = dates[:ref_spot]
         result = [past_dates, [ref_end], future_dates]
+        return result        
+    
+    def getOrdered(self):
+        """
+
+
+        TimeLine.getOrdered() -> list
+
+        
+        Method returns list of periods in instance, ordered from earliest to
+        latest endpoint.
+        """
+        result = []
+        for end_date in sorted(self.keys()):
+            period = self[end_date]
+            result.append(period)
+            
         return result
+
+    def link(self):
+        """
+
+
+        TimeLine.link() -> None
+
+
+        Connect adjacent periods to each other to form a history.
+        """
+
+        dates = sorted(self.keys())
+
+        for i in range(1, len(dates)):
+            date_0 = dates[i-1]
+            date_1 = dates[1]
+
+            period_0 = self[date_0]
+            period_1 = self[date)1]
+
+            period_1.set_history(period_0)
+            
+    def revert_current(self):
+        """
+
+
+        TimeLine.revert_current() -> None
+
+
+        Method reverts instance.current_period to preceding value.
+        """
+        self.current_period = self._old_current_period
+        
+    def update_current(self, ref_date=None):
+        """
+
+
+        TimeLine.update_current() -> None
+
+
+        Method sets instance.current_period to whichever period contains the
+        ref_date. If ``ref_date`` == None, method uses current system time. 
+        """
+        if not ref_date:
+            ref_date = date.today()
+        ref_period = self.find_period(ref_date)
+        self.current_period = ref_period        
+        
+    #*************************************************************************#
+    #                          NON-PUBLIC METHODS                             #
+    #*************************************************************************#
+
+    def _configure_period(self, period):
+        """
+
+
+        TimeLine._configure_period() -> period
+
+
+        Method sets period's namespace id to that of the TimeLine, then returns
+        period. 
+        """
+        model_namespace = self.id.namespace
+        period.id.set_namespace(model_namespace)
+        # Period has only a pointer to the Model.namespace_id; periods dont have
+        # their own bbids.
+        period.setPartOf(self)
+        
+        return period
     
     def _get_fwd_start_date(self, ref_date):
         """
@@ -407,50 +468,8 @@ class TimeLine(dict):
         fwd_start_date = self._get_fwd_start_date(ref_date)
         ref_end_date = fwd_start_date - timedelta(1)
         result = ref_end_date
-        return result        
-    
-    def getOrdered(self):
-        """
-
-
-        TimeLine.getOrdered() -> list
-
-        
-        Method returns list of periods in instance, ordered from earliest to
-        latest endpoint.
-        """
-        result = []
-        for end_date in sorted(self.keys()):
-            period = self[end_date]
-            result.append(period)
-            
         return result
-
-    def link(self, ordered=None):
-        """
-
-        -> None
-        
-        """
-        #<--------------------------------------------------------------------add doc string
-        if not ordered:
-            ordered = self.getOrdered()
-
-        for i in range((len(ordered) - 1)):
-            period_1 = ordered[i]
-            period_2 = ordered[i+1]
-            period_2.link(period_1)
-
-        #what about this:
-            #for date in sorted(self.keys()):
-                #link the prior to the next
-                #period2.set_source(period1)
-
-            #for i in range(1, len(sorted(self.keys()):
-                #period2 = self[i]
-                #period1 = self[i-1]
-                #period2.set_source(period1)
-
+    
     def _make_pretty_strings(self, dates=None, sep="<<", border="-", hook=True):
         """
 
@@ -603,30 +622,6 @@ class TimeLine(dict):
         #
         return clean_lines
         
-    def revert_current(self):
-        """
-
-
-        TimeLine.revert_current() -> None
-
-
-        Method reverts instance.current_period to preceding value.
-        """
-        self.current_period = self._old_current_period
-        
-    def update_current(self, ref_date=None):
-        """
-
-
-        TimeLine.update_current() -> None
-
-
-        Method sets instance.current_period to whichever period contains the
-        ref_date. If ``ref_date`` == None, method uses current system time. 
-        """
-        if not ref_date:
-            ref_date = date.today()
-        ref_period = self.find_period(ref_date)
-        self.current_period = ref_period
+    
     
     
