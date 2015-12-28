@@ -39,6 +39,7 @@ from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
 
 from .parameters import Parameters
+from .history import History
 
 
 
@@ -47,7 +48,7 @@ from .parameters import Parameters
 # n/a
 
 # Classes
-class TimePeriod(Tags):
+class TimePeriod(History, Tags):
     """
 
     TimePeriod objects represent periods of time and store a snapshot of some
@@ -76,8 +77,6 @@ class TimePeriod(Tags):
     id                    instance of ID class
     length                float; seconds between start and end
     parameters            Parameters object, specifies shared parameters
-    prior                 pointer to immediately preceding time period
-    following             pointer to immediately following time period
     start                 datetime.date; first date in period.
     ty_directory          dict; keys are strings, values are sets of bbids
     
@@ -95,14 +94,13 @@ class TimePeriod(Tags):
     ====================  ======================================================
     """
     def __init__(self, start_date, end_date, content=None):
+        
+        History.__init__(self, recursive_attribute = "content")
         Tags.__init__(self)
 
         self.start = start_date
         self.end = end_date
 
-        self.past = None
-        self.future = None
-        
         self.bu_directory = {}
         self.ty_directory = {}
         
@@ -145,7 +143,7 @@ class TimePeriod(Tags):
         Method returns a new TimePeriod object whose content is a class-specific
         copy of the caller content. 
         """
-        result = Tags.copy(self,enforce_rules)
+        result = Tags.copy(self, enforce_rules)
         result.start = copy.copy(self.start)
         result.end = copy.copy(self.end)
         if self.content:
@@ -233,11 +231,9 @@ class TimePeriod(Tags):
         target.inheritTags(recur=True)
         result = Tags.extrapolate_to(self, target)
 
-        #result.set_source(self)
+        result.set_history(self, recur=True)
         
         return result
-        # should the result be... linked to the instance?
-        # or should that be the basic behavior
     
     def ex_to_default(self, target):
         """
@@ -283,15 +279,17 @@ class TimePeriod(Tags):
         # picks up all tags from target. Other attributes stay identical because
         # Tags uses a shallow copy.
         
-        #step 2: configure and fill container
-        result.start = copy.copy(target.start)
-        result.end = copy.copy(target.end)
-        #result.source = alt_seed
-        
+        #step 2: configure and fill container        
         if seed.content:
             new_content = seed.content.copy(enforce_rules=True)
             result.set_content(new_content, updateID=False)
-        
+
+        if result.end > seed.end:
+            result.set_history(seed, recur=True)
+        else:
+            seed.set_history(result, recur=True)
+            # For backwards extrapolation
+    
         # return container
         return result        
         
@@ -404,18 +402,6 @@ class TimePeriod(Tags):
         self.register(bu, updateID=updateID, reset_directories=True)
         # Reset directories when setting the top node in the period.
         self.content = bu
-
-    def set_source(self, prior_period):
-        """
-
-
-        TimePeriod.set_source() -> None
-
-
-        Set instance.past to argument. Also sets argument.future to instance.
-        """
-        self.past = prior_period
-        prior_period.future = self
         
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #

@@ -97,9 +97,11 @@ class BusinessUnit(Tags, Equalities):
     derive()              uses drivers to determine values for financials
     fill_out()            integrates consolidate() and derive()
     kill()                make dead, optionally recursive
+    load_balance()        populate starting balance sheet from history
     reset_financials()    resets instance and (optionally) component financials
     set_analytics()       attaches an object to instance.analytics 
     set_financials()      attaches a Financials object from the right template
+    set_history()         connect instance to older snapshot, optionally recur
     synchronize()         set components to same life, optionally recursive
     ====================  ======================================================
     """
@@ -700,12 +702,7 @@ class BusinessUnit(Tags, Equalities):
             self.derive(*tagsToOmit)
             self.financials.summarize()
             self.filled = True
-
-    def load_balance(self):
-        #<------------------------------------------------------------------------------------clean up
-        if self.past:
-            self.financials.starting = self.past.financials.ending
-
+            
     def kill(self, date=None, recur=True):
         """
 
@@ -727,20 +724,17 @@ class BusinessUnit(Tags, Equalities):
             for unit in self.components.values():
                 unit.kill(date, recur)
 
-    def synchronize(self, recur=True):
+    def load_balance(self):
         """
 
 
-        BusinessUnit.synchronize() -> None
+        BusinessUnit.load_balance() -> None
 
 
-        Set life on all components to copy of caller. If ``recur`` is True,
-        repeat all the way down.
+        Point instance.financials.starting to historical ending balance sheet.
         """
-        for unit in self.components.values():
-            unit.life = self.life.copy()
-            if recur:
-                unit.synchronize()
+        if self.past:
+            self.financials.starting = self.past.financials.ending
 
     def reset_financials(self, recur=True):
         """
@@ -798,23 +792,41 @@ class BusinessUnit(Tags, Equalities):
         else:            
             self.financials = Financials()
 
-    #*************************************************************************#
-    #                          NON-PUBLIC METHODS                             #
-    #*************************************************************************#
+    def set_history(self, history, recur=True):
+        """
 
-    def link(self, recur=True):
-        #<-----------------------------------------------------------------------------------need doc string
-        #<---------------------------method should be called "link_back()" or smtg to explain that it always
-        # looks to past
-        #<-------------------------------------------------------add a "future" property
-        if self.past is not None:
-            self.financials.link_to(self.past.financials)
+
+        BusinessUnit.set_history() -> None
+
+
+        Set history for instance; repeat for components (by bbid) if recur is
+        True.
+        """
+        History.set_history(self, history)
 
         if recur:
-            for unit in self.components.values():
-                # intentionally unordered
-                unit.link(recur=True)
-        
+            for bbid, unit in self.components.items():
+                mini_history = history.components[bbid]
+                unit.set_history(mini_history)
+
+    def synchronize(self, recur=True):
+        """
+
+
+        BusinessUnit.synchronize() -> None
+
+
+        Set life on all components to copy of caller. If ``recur`` is True,
+        repeat all the way down.
+        """
+        for unit in self.components.values():
+            unit.life = self.life.copy()
+            if recur:
+                unit.synchronize()
+
+    #*************************************************************************#
+    #                          NON-PUBLIC METHODS                             #
+    #*************************************************************************#    
 
     def _fit_to_period(self, time_period, recur=True):
         """
