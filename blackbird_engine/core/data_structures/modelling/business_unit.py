@@ -45,6 +45,7 @@ from .driver import Driver
 from .dr_container import DrContainer
 from .equalities import Equalities
 from .financials import Financials
+from .history import History
 from .life import Life as LifeCycle
 from .parameters import Parameters
 
@@ -63,7 +64,7 @@ tConsolidated = Tags.tagManager.catalog["consolidated"]
 tHardCoded = Tags.tagManager.catalog["hard"]
 
 # Classes   
-class BusinessUnit(Tags, Equalities):
+class BusinessUnit(History, Tags, Equalities):
     """
    
     Object describes a group of business activity. A business unit can be a
@@ -118,7 +119,10 @@ class BusinessUnit(Tags, Equalities):
     _CONSOLIDATION_SIGNATURE = "Consolidated "
         
     def __init__(self, name, fins=None):
-        Tags.__init__(self,name) 
+
+        History.__init__(self)
+        Tags.__init__(self, name)
+        
         self._type = None
         
         self.components = None
@@ -146,20 +150,6 @@ class BusinessUnit(Tags, Equalities):
         self.summary = BusinessSummary()
         self.valuation = CompanyValue()
 
-    @property
-    def past(self):
-        
-        result = None
-        
-        my_id = self.id.bbid
-        prior_period = self.period.past
-
-        if prior_period:
-            if my_id in prior_period.bu_directory:
-                result = prior_period.bu_directory[my_id]
-
-        return result
-    
     @property
     def type(self):
         """
@@ -598,11 +588,11 @@ class BusinessUnit(Tags, Equalities):
                         for driver in matching_drivers:
                             driver.workOnThis(line)
                     
-    def extrapolate_to(self, target, reverse=False):
+    def extrapolate_to(self, target):
         """
 
 
-        BU.extrapolate_to() -> BU
+        BusinessUnit.extrapolate_to() -> BU
 
 
         Returns a new business unit that combines seed and target
@@ -619,14 +609,14 @@ class BusinessUnit(Tags, Equalities):
         fix by removing express delegation and relying on built-in Python MRO. 
         """
         result = Tags.extrapolate_to(self, target)
-        #result.set_source(self)
+        
         return result
     
     def ex_to_special(self, target, reverse=False):
         """
 
        
-        BU.ex_to_special() -> BU
+        BusinessUnit.ex_to_special() -> BU
 
 
         Method returns a new business unit that contains a blend of seed
@@ -654,6 +644,7 @@ class BusinessUnit(Tags, Equalities):
         # Tags uses a shallow copy.
         
         # Step 2: fill container
+        
         for attr in self.tagSources:
             o_seed = getattr(self, attr)
             o_targ = getattr(target, attr)
@@ -803,11 +794,14 @@ class BusinessUnit(Tags, Equalities):
         True.
         """
         History.set_history(self, history)
-
+        
         if recur:
             for bbid, unit in self.components.items():
                 mini_history = history.components[bbid]
                 unit.set_history(mini_history)
+
+        self.reset_financials(recur=False)
+        # We handle recursion explicitly above, so don't recur here.
 
     def synchronize(self, recur=True):
         """

@@ -379,12 +379,14 @@ class TimeLine(dict):
 
         dates = sorted(self.keys())
 
-        for i in range(1, len(dates)):
-            date_0 = dates[i-1]
-            date_1 = dates[1]
+        for i in range(len(dates) - 1):
+            # Iterate until the second-to-last date
+            
+            date_0 = dates[i]
+            date_1 = dates[i+1]
 
             period_0 = self[date_0]
-            period_1 = self[date)1]
+            period_1 = self[date_1]
 
             period_1.set_history(period_0)
             
