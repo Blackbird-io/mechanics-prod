@@ -175,6 +175,11 @@ class TimePeriod(History, Tags):
         else:
             self.set_history(result, clear_future=False, recur=True)
             # For backwards extrapolation; keep future as-is.
+
+        if result.content:
+            result.content.reset_financials()
+            result.content.fill_out()
+            # This logic should really run on the business unit
         
         return result
     
