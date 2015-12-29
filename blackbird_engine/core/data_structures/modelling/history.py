@@ -1,3 +1,16 @@
+class HistoryIterator:
+    def __init__(self, snapshot):
+        self.now = snapshot
+        #should call this now
+
+    def __next__(self):
+        future = self.now.future
+        if future is None:
+            raise StopIteration
+        else:
+            self.now = future
+            return future
+
 class History:
     """
 
@@ -47,8 +60,9 @@ class History:
 
                 if attr:
                     attr.set_history(attr_history,  clear_future=clear_future, recur=True)
-            
 
+    def __iter__(self):
+        return HistoryIterator(self)
 
 
         
