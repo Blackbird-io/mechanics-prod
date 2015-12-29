@@ -21,23 +21,33 @@ class History:
         self.future = None
         self._recursive_attribute = recursive_attribute
 
-    def set_history(self, history, recur=True):
+    def set_history(self, history, clear_future=True, recur=True):
         """
 
         -> None
         ``history`` and instance should usually be two instances of the same
-        class.
+        class. If ``clear_future`` is True, method will set future on instance
+        to None. Generally want to keep this setting when extrapolating forward
+        on a timeline. You would want to set the argument to False if you are
+        substituting the past while preserving linkages to the future, or if you
+        are extrapolating backwards. 
         """
-        self.past = history
+        self.past = history    
         history.future = self
+
+        if clear_future:
+            self.future=None        
+
+        if recur:
         
-        if self._recursive_attribute is not None:
+            if self._recursive_attribute is not None:
 
-            attr = getattr(self, self._recursive_attribute)
-            attr_history = getattr(history, self._recursive_attribute)
+                attr = getattr(self, self._recursive_attribute)
+                attr_history = getattr(history, self._recursive_attribute)
 
-            if attr:
-                attr.set_history(attr_history, recur=True)
+                if attr:
+                    attr.set_history(attr_history,  clear_future=clear_future, recur=True)
+            
 
 
 
