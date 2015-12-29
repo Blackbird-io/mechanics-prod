@@ -609,9 +609,31 @@ class BusinessUnit(History, Tags, Equalities):
         fix by removing express delegation and relying on built-in Python MRO. 
         """
         result = Tags.extrapolate_to(self, target)
-        result.future = None
-        #dont i want result.future to point to target.future
-            
+
+        #should i have a history op here? seems like it; would run the reset
+            #i should probably define the ex_to_default() method
+            #copy
+            # + set_history(recur=False) #but then history could point in the wrong direction on
+                                         #backwards extrapolation
+            # + fill_out() if top node
+
+##        if result.parentObject is None:
+##            result.reset_financials()
+##            result.fill_out()
+##            # If we are running this at the top-level node (a unit that is not
+##            # part of anyone's components), clear and fill before delivery.
+
+        #have to set history before filling out financials, because they depend
+        # on prior balance sheet.
+
+        # now, if i forget about the backwards extrapolation, i can do:
+        #   ex_to_default(self):
+        #       result = Tags.ex_to(self, target)
+        #       result.set_history(self) #can include reset_financials() here
+        
+        #       if result.parent is None:
+        #          result.fill_out()
+    
         return result
     
     def ex_to_special(self, target, reverse=False):
@@ -656,7 +678,7 @@ class BusinessUnit(History, Tags, Equalities):
                 o_res = o_targ.copy(enforce_rules=False)
                 #if can't touch an attribute, copy the target wholesale
             setattr(result,attr,o_res)
-        
+
         # Step 3: return container
         return result
 
@@ -804,7 +826,8 @@ class BusinessUnit(History, Tags, Equalities):
                 unit.set_history(mini_history)
 
         self.reset_financials(recur=False)
-
+        # Reset financials here because we just connected a new starting balance
+        # sheet.
 
     def synchronize(self, recur=True):
         """
