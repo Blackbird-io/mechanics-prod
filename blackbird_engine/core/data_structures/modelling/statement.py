@@ -779,6 +779,16 @@ class Statement(list, Tags, Equalities):
         self._manage_summaries(*tagsToOmit)
         self._update_summaries(*tagsToOmit)
 
+    def update(self, lines, *tagsToOmit):
+        #source = Statement()
+        ##turn lines into a statement if they are not already so that lookup tables work
+        
+        #for line in self:
+            #if line has tags to omit:
+                #continue
+            #else, find match in lines
+                #set line value to that of match
+
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
