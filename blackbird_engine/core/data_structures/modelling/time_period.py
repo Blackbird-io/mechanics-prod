@@ -95,7 +95,7 @@ class TimePeriod(History, Tags):
     """
     def __init__(self, start_date, end_date, content=None):
         
-        History.__init__(self, recursive_attribute = "content")
+        History.__init__(self, recursive_attribute="content")
         Tags.__init__(self)
 
         self.start = start_date
@@ -152,68 +152,6 @@ class TimePeriod(History, Tags):
         #same id namespace (old model)
         #
         return result
-    
-    def get_units(self, pool):
-        """
-
-
-        TimePeriod.get_units(pool) -> list
-
-
-        Method returns a list of objects from instance.bu_directory that
-        correspond to each bbid in ``pool``. Method sorts pool prior to
-        processing.
-
-        Method expects ``pool`` to be an iterable of bbids. 
-        """
-        pool = sorted(pool)
-        #make sure to sort pool for stable output order
-        units = []
-        for bbid in pool:
-            u = self.bu_directory[bbid]
-            units.append(u)
-        return units
-
-    def get_lowest_units(self, pool=None, run_on_empty=False):
-        """
-
-
-        TimePeriod.get_lowest_units([pool = None
-          [, run_on_empty = False]]) -> list
-
-
-        Method returns a list of units in pool that have no components.
-        
-        Method expects ``pool`` to be an iterable of bbids. 
-
-        If ``pool`` is None, method will build its own pool from all keys in
-        the instance's bu_directory. Method will raise error if asked to run
-        on an empty pool unless ``run_on_empty`` == True.
-        
-        NOTE: method performs identity check (``is``) for building own pool;
-        accordingly, running a.select_bottom_units(pool = set()) will raise
-        an exception.         
-        """
-        if pool is None:
-            pool = sorted(self.bu_directory.keys())
-        else:
-            pool = sorted(pool)
-        #make sure to sort pool for stable output order
-        #
-        if any([pool, run_on_empty]):
-            foundation = []
-            for bbid in pool:
-                bu = self.bu_directory[bbid]
-                if bu.components:
-                    continue
-                else:
-                    foundation.append(bu)
-            #
-            return foundation
-            #
-        else:
-            c = "``pool`` is empty, method requires explicit permission to run."
-            raise bb_exceptions.ProcessError(c) 
         
     def extrapolate_to(self, target):
         """
@@ -230,8 +168,13 @@ class TimePeriod(History, Tags):
         self.inheritTags(recur=True)
         target.inheritTags(recur=True)
         result = Tags.extrapolate_to(self, target)
+        # Tags method will delegate to appropriate class-specific subroutine.
 
-        result.set_history(self, recur=True)
+        if result.end > self.end:
+            result.set_history(self, clear_future=True, recur=True)
+        else:
+            self.set_history(result, clear_future=False, recur=True)
+            # For backwards extrapolation; keep future as-is.
         
         return result
     
@@ -283,17 +226,11 @@ class TimePeriod(History, Tags):
         if seed.content:
             new_content = seed.content.copy(enforce_rules=True)
             result.set_content(new_content, updateID=False)
-
-        if result.end > seed.end:
-            result.set_history(seed, recur=True)
-        else:
-            seed.set_history(result, recur=True)
-            # For backwards extrapolation
     
         # return container
         return result        
         
-    def ex_to_special(self,target):
+    def ex_to_special(self, target):
         """
 
 
@@ -341,6 +278,67 @@ class TimePeriod(History, Tags):
         
         # Return container
         return result
+
+    def get_units(self, pool):
+        """
+
+
+        TimePeriod.get_units() -> list
+
+
+        Method returns a list of objects from instance.bu_directory that
+        correspond to each bbid in ``pool``. Method sorts pool prior to
+        processing.
+
+        Method expects ``pool`` to be an iterable of bbids. 
+        """
+        pool = sorted(pool)
+        #make sure to sort pool for stable output order
+        units = []
+        for bbid in pool:
+            u = self.bu_directory[bbid]
+            units.append(u)
+        return units
+
+    def get_lowest_units(self, pool=None, run_on_empty=False):
+        """
+
+
+        TimePeriod.get_lowest_units() -> list
+
+
+        Method returns a list of units in pool that have no components.
+        
+        Method expects ``pool`` to be an iterable of bbids. 
+
+        If ``pool`` is None, method will build its own pool from all keys in
+        the instance's bu_directory. Method will raise error if asked to run
+        on an empty pool unless ``run_on_empty`` == True.
+        
+        NOTE: method performs identity check (``is``) for building own pool;
+        accordingly, running a.select_bottom_units(pool = set()) will raise
+        an exception.         
+        """
+        if pool is None:
+            pool = sorted(self.bu_directory.keys())
+        else:
+            pool = sorted(pool)
+        #make sure to sort pool for stable output order
+        #
+        if any([pool, run_on_empty]):
+            foundation = []
+            for bbid in pool:
+                bu = self.bu_directory[bbid]
+                if bu.components:
+                    continue
+                else:
+                    foundation.append(bu)
+            #
+            return foundation
+            #
+        else:
+            c = "``pool`` is empty, method requires explicit permission to run."
+            raise bb_exceptions.ProcessError(c) 
                 
     def register(self, bu, updateID=True, reset_directories=False):
         """

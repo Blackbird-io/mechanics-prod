@@ -609,7 +609,9 @@ class BusinessUnit(History, Tags, Equalities):
         fix by removing express delegation and relying on built-in Python MRO. 
         """
         result = Tags.extrapolate_to(self, target)
-        
+        result.future = None
+        #dont i want result.future to point to target.future
+            
         return result
     
     def ex_to_special(self, target, reverse=False):
@@ -783,7 +785,7 @@ class BusinessUnit(History, Tags, Equalities):
         else:            
             self.financials = Financials()
 
-    def set_history(self, history, recur=True):
+    def set_history(self, history, clear_future=True, recur=True):
         """
 
 
@@ -793,15 +795,16 @@ class BusinessUnit(History, Tags, Equalities):
         Set history for instance; repeat for components (by bbid) if recur is
         True.
         """
-        History.set_history(self, history)
-        
+        History.set_history(self, history, clear_future=clear_future)
+
+        # Use dedicated logic to handle recursion. 
         if recur:
             for bbid, unit in self.components.items():
                 mini_history = history.components[bbid]
                 unit.set_history(mini_history)
 
         self.reset_financials(recur=False)
-        # We handle recursion explicitly above, so don't recur here.
+
 
     def synchronize(self, recur=True):
         """
