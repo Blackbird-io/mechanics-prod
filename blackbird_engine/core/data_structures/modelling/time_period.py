@@ -222,7 +222,10 @@ class TimePeriod(History, Tags):
         # picks up all tags from target. Other attributes stay identical because
         # Tags uses a shallow copy.
         
-        #step 2: configure and fill container        
+        #step 2: configure and fill container
+        result.start = copy.copy(target.start)
+        result.end = copy.copy(target.end)
+        
         if seed.content:
             new_content = seed.content.copy(enforce_rules=True)
             result.set_content(new_content, updateID=False)
@@ -271,6 +274,7 @@ class TimePeriod(History, Tags):
         # Configure and fill container
         result.start = copy.copy(target.start)
         result.end = copy.copy(target.end)
+        
         bu_seed = seed.content 
         bu_target = target.content
         bu_new = bu_seed.extrapolate_to(bu_target)
