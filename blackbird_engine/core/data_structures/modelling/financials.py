@@ -76,12 +76,7 @@ class Financials(StatementBundle):
         result = StatementBundle.__str__(self)
         del self.ORDER
         # unblock
-        return result    
-
-##    def link(self, source):
-##        self.source = source
-##        self.starting = source.ending
-        
+        return result        
         
 
     
