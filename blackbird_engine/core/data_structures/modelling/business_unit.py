@@ -527,7 +527,6 @@ class BusinessUnit(History, Tags, Equalities):
         # objects. Guide shouldn't point to a business unit or model
         result.id = copy.copy(self.id)
         result.life = self.life.copy()
-        result.parameters = copy.deepcopy(self.parameters)
         result.summary = BusinessSummary()
         result.valuation = CompanyValue()
         #
@@ -561,17 +560,8 @@ class BusinessUnit(History, Tags, Equalities):
         #lines appropriately. also need to make sure that inheritTagsFrom() does----------------------------------------------------------
         #not pick up blockingTags
 
-##        ordered = []
-##        for name in self.financials.ORDER:
-##            if name == "starting":
-##                continue
-##            else:
-##                statement = getattr(self.financials, name)
-##                ordered.append(statement)
-##        # Never derive starting balance sheet. Drivers can only write to ending
-##        # balance sheet.
-
-        # irrelevant, stripped "starting" out of fins.ORDER
+        # We never derive the starting balance sheet. Accordingly,
+        # financials.ordered does not include ``starting``. 
         
         for statement in self.financials.ordered:
 
@@ -580,15 +570,73 @@ class BusinessUnit(History, Tags, Equalities):
                 for line in statement:
                     if tags_to_omit & set(line.allTags):
                         continue
+                    
                     key = line.name.casefold()
                     if key not in self.drivers:
                         continue
                     else:
-                        line.clear()
+                        line.clear() #<----------------------------------------------------may have to eliminate if
+                        # we add an update_balance() function
+                        #or not - only kicks in if there is a driver
+                        #so by default stays the same
+                        #but if you change you must specify exact value
+                        #
                         matching_drivers = self.drivers.get_drivers(key)
                         for driver in matching_drivers:
                             driver.workOnThis(line)
-                    
+
+    #NOTE: we shouldn't be consolidating starting balance either
+                            
+    def _update_balance(self, tags_to_omit):
+        starting_balance = self.financials.starting
+        ending_balance = self.financials.ending
+
+        sources = starting_balance.build_custom_table(exclude=tags_to_omit, key_tags=False)
+        #should route this through tools filtering. its a stupid method. should remove it from statement.
+
+        if starting_balance and ending_balance:
+            
+            for line in ending_balance:
+
+                if tags_to_omit & set(line.allTags):
+                    continue
+
+                else:
+                    source = starting_balance.get_line(line) #< don't bother with the match
+                    #should build a custom table here that excludes lines with bad tags
+
+                    line.setValue(source.value, UPDATE_SIG)
+
+        #Also need to pick up lines that aren't there, so really do need to increment
+        #How about this:
+            #first, in load_balance, we increment and reset: get the shape, but not the
+                    #values
+            #then we do consolidate
+            #then we do update, which picks up anything that hasn't been changed
+            #then we do derive
+            #
+    
+    def update_balance(self):
+        pass
+
+##        self.financials.ending.reset() #<----- should i be resetting here?
+        # probably not, because that operation is meant for resetting financials to rebuild them
+        # this logic runs before derive
+        # so if the target is not consolidated then cant touch it
+        
+        
+##        self.financials.ending.increment(self.financials.starting, tags_to_omit, signature = UPDATE_BS)
+        #so now ending balance will have non-zero values
+        #consolidate will pick it up
+        #and derive will be blocked above
+        #
+        #this really should be part of the logic for derive
+        #cause governed by the same idea and rules
+            #namely, if there is a line that's been consolidated, skip
+            #so at the top, wont be updating anything anymore
+            #basically only runs if the balance sheet is empty
+        #
+    
     def extrapolate_to(self, target):
         """
 
@@ -715,6 +763,8 @@ class BusinessUnit(History, Tags, Equalities):
         else:
             self.load_balance()
             self.consolidate(*tagsToOmit)
+            self.update_balance(*tagsToOmit)
+            # Sets ending balance lines to starting values by default
             self.derive(*tagsToOmit)
             self.financials.summarize()
             self.filled = True
