@@ -494,32 +494,36 @@ class Statement(list, Tags, Equalities):
         in instance.table_by_part.
         """
         result = Tags.copy(self,enforce_rules)
-        #Tags.copy returns a shallow copy of the instance w deep copies
-        #of the instance tag attributes
+        # Tags.copy returns a shallow copy of the instance w deep copies
+        # of the instance tag attributes.
         result.clear()
-        #result is its own container; clearing it will not clear the seed
-        #instance
+        # Result is its own container; clearing it will not clear the seed
+        # instance.
         result._clear_tables()
-        #create independent objects for any attributes that point to something
-        #mutable or structured
+        # Create independent objects for any attributes that point to something
+        # mutable or structured.
         result._hierarchy_groups = None
         result._hierarchy_map = None
         result._top_level_names = copy.copy(self._top_level_names)
-        tags_to_omit = []
+        
 ##        tags_to_omit = [summaryTag,
 ##                        summaryTag.casefold(),
 ##                        dropDownReplicaTag,
 ##                        dropDownReplicaTag.casefold()]
         tags_to_omit = set(tags_to_omit)
+        
         for line in self:
             problem_tags = tags_to_omit & set(line.allTags)
             if problem_tags != set():
                 continue
             else:                    
                 rL = line.copy(enforce_rules)
+                
                 if rL.partOf in result._top_level_names:
                     rL.setPartOf(result)
+
                 result.append(rL)
+        
         return result
 
 ##    def extrapolate_to(self,target):
