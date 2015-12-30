@@ -327,7 +327,7 @@ class BusinessUnit(History, Tags, Equalities):
         """
 
 
-        BU.consolidate_unit() -> None
+        BusinessUnit.consolidate_unit() -> None
         
 
         -- ``sub`` should be a BusinessUnit object
@@ -587,13 +587,26 @@ class BusinessUnit(History, Tags, Equalities):
 
     #NOTE: we shouldn't be consolidating starting balance either
                             
-    def _update_balance(self, tags_to_omit):
+    def update_balance(self, tags_to_omit):
+        """
+
+        -> None
+        
+        Populate blank lines in the ending balance sheet with starting values.
+        Ignore lines that we have already consolidated. Derive() can later
+        overwrite these values. 
+        """
+        #figure out whether we need to build tables
+        #
+        tags_to_omit = set(tagsToOmit)
+        
         starting_balance = self.financials.starting
         ending_balance = self.financials.ending
 
-        sources = starting_balance.build_custom_table(exclude=tags_to_omit, key_tags=False)
-        #should route this through tools filtering. its a stupid method. should remove it from statement.
-
+        # Method expects balance sheet to come with accurate tables. We first
+        # build the table in load_balance(). We then run consolidate(), which
+        # will automatically update the tables if it changes the statement. 
+        
         if starting_balance and ending_balance:
             
             for line in ending_balance:
@@ -602,10 +615,12 @@ class BusinessUnit(History, Tags, Equalities):
                     continue
 
                 else:
-                    source = starting_balance.get_line(line) #< don't bother with the match
-                    #should build a custom table here that excludes lines with bad tags
+                    i = min(starting_balance.table_by_name[line.name])
+                    source = starting_balance[i]
+                    line.setValue(source.value, UPDATE_SIG) #<---------------------------------------------------------------------------------------------------------------add this sig
+                    
 
-                    line.setValue(source.value, UPDATE_SIG)
+
 
         #Also need to pick up lines that aren't there, so really do need to increment
         #How about this:
@@ -616,27 +631,18 @@ class BusinessUnit(History, Tags, Equalities):
             #then we do derive
             #
     
-    def update_balance(self):
-        pass
+    def recalculate(self, adjust_future=True):
+        """
 
-##        self.financials.ending.reset() #<----- should i be resetting here?
-        # probably not, because that operation is meant for resetting financials to rebuild them
-        # this logic runs before derive
-        # so if the target is not consolidated then cant touch it
+        -> None
+
+        Recalculate instance and optionally all future snapshots.
+        """
+        self.reset_financials()
+        self.fill_out()
+        if adjust_future and self.future:
+            self.future.recalculate(adjust_future=True)
         
-        
-##        self.financials.ending.increment(self.financials.starting, tags_to_omit, signature = UPDATE_BS)
-        #so now ending balance will have non-zero values
-        #consolidate will pick it up
-        #and derive will be blocked above
-        #
-        #this really should be part of the logic for derive
-        #cause governed by the same idea and rules
-            #namely, if there is a line that's been consolidated, skip
-            #so at the top, wont be updating anything anymore
-            #basically only runs if the balance sheet is empty
-        #
-    
     def extrapolate_to(self, target):
         """
 
@@ -766,6 +772,7 @@ class BusinessUnit(History, Tags, Equalities):
             self.update_balance(*tagsToOmit)
             # Sets ending balance lines to starting values by default
             self.derive(*tagsToOmit)
+            # Derive() will overwrite ending balance sheet where appropriate
             self.financials.summarize()
             self.filled = True
             
@@ -790,17 +797,28 @@ class BusinessUnit(History, Tags, Equalities):
             for unit in self.components.values():
                 unit.kill(date, recur)
 
-    def load_balance(self):
+    def _load_balance(self): #<------------------------------------------------------------------------------------------------add to docstring
+        #<---------------------------------------------------------------------------------------------------------------------should be non-public
         """
 
 
-        BusinessUnit.load_balance() -> None
+        BusinessUnit._load_balance() -> None
 
 
-        Point instance.financials.starting to historical ending balance sheet.
+        Point instance.financials.starting to historical ending balance sheet,
+        set instance ending balance sheet to a zero-value copy of the start.
         """
         if self.past:
             self.financials.starting = self.past.financials.ending
+
+            self.financials.ending = self.financials.starting.copy(enforce_rules=False) #<-------------------------------------------------------------------statement.copy() zeros out tables, we may want to fix that
+            # Copy all lines from starting; we are assuming no changes here.
+            
+            self.financials.ending.reset()
+            # By default, the ending balance sheet should look the same as the
+            # starting one. Here, we copy the starting structure and zero out
+            # the values. We will fill in the values later through
+            # consolidate(), update_balance(), and derive(). 
 
     def reset_financials(self, recur=True):
         """
