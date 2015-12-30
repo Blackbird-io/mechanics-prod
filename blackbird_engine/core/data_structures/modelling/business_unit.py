@@ -619,6 +619,7 @@ class BusinessUnit(History, Tags, Equalities):
         result = Tags.extrapolate_to(self, target)   
         return result
 
+        #<---------------------------------------------------------------------------------------summarize
         #should i have a history op here? seems like it; would run the reset
             #i should probably define the ex_to_default() method
             #copy
@@ -719,9 +720,9 @@ class BusinessUnit(History, Tags, Equalities):
         if self.filled:
             return
         else:
-            self.load_balance()
+            self._load_balance()
             self.consolidate(*tagsToOmit)
-            self.update_balance(*tagsToOmit)
+            self._update_balance(*tagsToOmit)
             # Sets ending balance lines to starting values by default
             self.derive(*tagsToOmit)
             # Derive() will overwrite ending balance sheet where appropriate
@@ -1210,6 +1211,7 @@ class BusinessUnit(History, Tags, Equalities):
         starting_balance = self.financials.starting
         ending_balance = self.financials.ending
 
+        starting_balance.build_tables()
         # Method expects balance sheet to come with accurate tables. We first
         # build the table in load_balance(). We then run consolidate(), which
         # will automatically update the tables if it changes the statement. 
@@ -1224,7 +1226,8 @@ class BusinessUnit(History, Tags, Equalities):
                 else:
                     i = min(starting_balance.table_by_name[line.name])
                     source = starting_balance[i]
-                    line.setValue(source.value, self._UPDATE_BALANCE_SIGNATURE)
+                    if source.value is not None:
+                        line.setValue(source.value, self._UPDATE_BALANCE_SIGNATURE)
     
     def _update_id(self, namespace, recur=True):
         """
