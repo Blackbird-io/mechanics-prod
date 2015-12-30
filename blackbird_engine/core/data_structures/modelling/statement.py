@@ -510,7 +510,7 @@ class Statement(list, Tags, Equalities):
 ##                        summaryTag.casefold(),
 ##                        dropDownReplicaTag,
 ##                        dropDownReplicaTag.casefold()]
-        tags_to_omit = set(tags_to_omit)
+        tags_to_omit = set()
         
         for line in self:
             problem_tags = tags_to_omit & set(line.allTags)
@@ -782,16 +782,6 @@ class Statement(list, Tags, Equalities):
         self._manage_replicas(*tagsToOmit)
         self._manage_summaries(*tagsToOmit)
         self._update_summaries(*tagsToOmit)
-
-    def update(self, lines, *tagsToOmit):
-        #source = Statement()
-        ##turn lines into a statement if they are not already so that lookup tables work
-        
-        #for line in self:
-            #if line has tags to omit:
-                #continue
-            #else, find match in lines
-                #set line value to that of match
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
