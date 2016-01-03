@@ -39,24 +39,17 @@ DEFAULT_LINE_WIDTH = bb_settings.SCREEN_WIDTH
 
 #functions
 def format_as_line(obj,
-                   name = None,
-                   value = None,
-                   prefix = "",
-                   header = False,
-                   width = DEFAULT_LINE_WIDTH,
-                   left_tab = 4,
-                   right_tab = 4):
+                   name=None,
+                   value=None,
+                   prefix="",
+                   header=False,
+                   width=DEFAULT_LINE_WIDTH,
+                   left_tab=4,
+                   right_tab=4):
     """
 
 
-    format_as_line(obj,
-                   [name = None,
-                   [value = None,
-                   [prefix = ""
-                   [header = False,
-                   [width = Globals.screen_width,
-                   [left_tab = 4,
-                   [right_tab = 4]]]]]]]) -> str
+    format_as_line() -> str
 
 
     Function formats objects into a line.
@@ -126,7 +119,7 @@ def format_completed(obj, **kargs):
     """
 
 
-    format_completed(obj, *kargs) -> str
+    format_completed() -> str
 
 
     Function formats obj and arguments as a line with a completeness indicator
@@ -168,5 +161,6 @@ def format_completed(obj, **kargs):
     #
     result = format_as_line(obj, **kargs)
     return result
-    
+
+
     
