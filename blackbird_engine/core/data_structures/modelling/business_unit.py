@@ -822,11 +822,10 @@ class BusinessUnit(History, Tags, Equalities):
                         self._derive_line(line)
 
     def _derive_line(self, line):
-        line.clear()
-
         # Derive the line
         key = line.name.casefold()
         if key in self.drivers:
+##            line.clear()
             matching_drivers = self.drivers.get_drivers(key)
             for driver in matching_drivers:
                 driver.workOnThis(line)

@@ -581,10 +581,10 @@ class Statement(Tags, Equalities):
         #increment lines where they match
         #repeat recursively
         """
-        for name, line in matching_statement.details.items():
+        for name, external_line in matching_statement.details.items():
             # ORDER SHOULD NOT MATTER HERE
             
-            if set(tagsToOmit) & set(line.allTags):
+            if set(tagsToOmit) & set(external_line.allTags):
                 continue
 
             # If we get here, the line has survived screening. We now have two
@@ -593,24 +593,19 @@ class Statement(Tags, Equalities):
             # line into the instance. We apply Option B only when we can't do
             # Option A.
             
-            existing_line = self.details.get(name)
+            own_line = self.details.get(name)
 
-            if existing_line:
-                # Option A:
-                if line.value is None:
-                    continue
-                    # Keep existing line available for derivation
-                    
-                else:
-                    existing_line.increment(line, consolidating=consolidating)
+            if own_line:
+                # Option A
+                own_line.increment(external_line, consolidating=consolidating)
 
             else:
                 # Option B
-                local_copy = line.copy(enforce_rules=False)
+                local_copy = external_line.copy(enforce_rules=False)
                 # Dont enforce rules to track old line.replicate() method
                 
                 if consolidating:
-                    if line.value is not None:
+                    if external_line.value is not None:
                         if tConsolidated not in local_copy.allTags:
                             local_copy.tag(tConsolidated)
                     # Pick up lines with None values, but don't tag them. We
