@@ -26,7 +26,7 @@ n/a
 #imports
 from data_structures.modelling.statement import Statement
 from data_structures.modelling.financials import Financials
-from data_structures.modelling.line_item import LineItem
+from data_structures.modelling._new_line import Line as LineItem
 
 
 
@@ -47,14 +47,17 @@ sga = LineItem("SG&A")
 sga.tag("GAAP","Operations","excludes d&a")
 ebitda = LineItem("EBITDA")
 ebitda.tag("Operations")
-income_lines = [revenue,cogs,opex,sga,ebitda]
+
+opex.add_line(sga)
+income_lines = [revenue,cogs,opex,ebitda]
 for L in income_lines:
     L.setPartOf(standard_financials.income)
     standard_financials.income.append(L)
     
 basic_fins = standard_financials.copy()
-b_sga_i = basic_fins.income.indexByName("sg&a")
-b_opex_i = basic_fins.income.indexByName("operating expense")
-b_sga = basic_fins.income[b_sga_i]
-b_opex = basic_fins.income[b_opex_i]
-b_sga.setPartOf(b_opex)
+
+##b_sga_i = basic_fins.income.indexByName("sg&a")
+##b_opex_i = basic_fins.income.indexByName("operating expense")
+##b_sga = basic_fins.income[b_sga_i]
+##b_opex = basic_fins.income[b_opex_i]
+##b_sga.setPartOf(b_opex)

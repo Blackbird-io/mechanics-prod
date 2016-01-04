@@ -55,7 +55,7 @@ n/a
 
 
 #imports
-from data_structures.modelling.statement import Statement
+from data_structures.modelling._new_statement import Statement
 from data_structures.modelling.line_item import LineItem
 from tools import for_messages as message_tools
 
@@ -109,19 +109,16 @@ standard_path.extend(SK.standard_close.copy())
 #
 #refine standard path
 #0. increase the quality requirements for structure
-st_i = standard_path.indexByName("structure")
-structure = standard_path[st_i]
+structure = standard_path.details["structure"]
 structure.guide.quality.set_standard(3) #max used to be 5
 #
 #1. reduce the significance of product cost
-cost_i = standard_path.indexByName("cost")
-cost = standard_path[cost_i]
+cost = standard_path.details["cost"]
 cost.guide.priority.reset()
 cost.guide.priority.increment(1)
 #
 #2. add important details to opex
-opex_i = standard_path.indexByName("operating expense")
-opex = standard_path[opex_i]
+opex = standard_path.details["operating expense"]
 opex.guide.priority.reset()
 opex.guide.priority.increment(1)
 #opex details are more important here than the general category
@@ -199,8 +196,7 @@ for line in opex_details:
 
 #3. increase quality requirements for sg&a
 #(can also place it under opex here)
-sga_i = standard_path.indexByName("sg&a")
-sga = standard_path[sga_i]
+sga = standard_path.details["sg&a"]
 sga.guide.quality.set_standard(4) #max used to be 6
 sga.setPartOf(opex)
 

@@ -403,7 +403,7 @@ class Statement(Tags, Equalities):
         """
 
 
-        Statement.copy() -> Fins
+        Statement.copy() -> Statement
 
 
         Method returns a deep copy of the instance. If ``enforce_rules`` is
@@ -433,15 +433,7 @@ class Statement(Tags, Equalities):
         result = Tags.copy(self, enforce_rules)
         # Tags.copy returns a shallow copy of the instance w deep copies
         # of the instance tag attributes.
-        result.clear()
-        # Result is its own container; clearing it will not clear the seed
-        # instance.
-        result._clear_tables()
-        # Create independent objects for any attributes that point to something
-        # mutable or structured.
-        result._hierarchy_groups = None
-        result._hierarchy_map = None
-        result._top_level_names = copy.copy(self._top_level_names)
+        result.details = dict()
         
 ##        tags_to_omit = [summaryTag,
 ##                        summaryTag.casefold(),
@@ -449,20 +441,15 @@ class Statement(Tags, Equalities):
 ##                        dropDownReplicaTag.casefold()]
         tags_to_omit = set()
         
-        for line in self:
+        for line in self.get_ordered():
             problem_tags = tags_to_omit & set(line.allTags)
             if problem_tags != set():
                 continue
             else:                    
                 rL = line.copy(enforce_rules)
-                
-                if rL.partOf in result._top_level_names:
-                    rL.setPartOf(result)
-
                 result.append(rL)
         
-        return result #<--------------------------------------------------------------------------------------------------------------------rewrite
-    #<----------------------------------------------------------------------------------------------should add a copy() feature that setsPartOf for all the details
+        return result
 
 ##    def extrapolate_to(self,target):
 ##        """
@@ -598,7 +585,7 @@ class Statement(Tags, Equalities):
                     # Keep existing line available for derivation
                     
                 else:
-                    existing_line.increment(new_line, consolidating=consolidating)
+                    existing_line.increment(line, consolidating=consolidating)
 
             else:
                 # Option B
@@ -619,37 +606,43 @@ class Statement(Tags, Equalities):
     #think about what happens when you increment one statement with 5 lines by another w 5 lines and the lines are same rel position #<-------------------
 
     def extend(self, lines):
-        for line in lines:
-            self._verify(line)
-            self._bind_and_record(line)
-        self._repair_order(starting = self.POSITION_SPACING)
-
+        """
+        -> None
+        lines can be either an ordered container or a Statement object
+        """
+        try:
+            for line in lines:
+                self.append(line)
+        except TypeError:
+            for line in lines.get_ordered():
+                self.append(line)
+                
     # Can further improve speed by eliminating overwrite protection
     
-    def indexByName(self, name):
-        """
-
-
-        **LEGACY INTERFACE: use direct lookup
-        
-        Statement.indexByName() -> int
-
-
-        Method returns index where first item with matching name is located in
-        the instance. Checks for name matches on a caseless (casefolded) basis.
-        If no such item exists, returns ValueError.
-
-        NOTE: This method runs build_tables() on every call. It is expensive.
-        You should manually retrieve results from the dictionaries for better
-        performance.
-        """
-        line = self.details.get(name) or self.details.get(name.casefold())
-        if not line:
-            raise ValueError    
-        return line.position
-
-    #<-----------------------------------------------------------------------------------------------------------can add index operations
-    #(get_item and set_item)
+##    def indexByName(self, name):
+##        """
+##
+##
+##        **LEGACY INTERFACE: use direct lookup
+##        
+##        Statement.indexByName() -> int
+##
+##
+##        Method returns index where first item with matching name is located in
+##        the instance. Checks for name matches on a caseless (casefolded) basis.
+##        If no such item exists, returns ValueError.
+##
+##        NOTE: This method runs build_tables() on every call. It is expensive.
+##        You should manually retrieve results from the dictionaries for better
+##        performance.
+##        """
+##        line = self.details.get(name) or self.details.get(name.casefold())
+##        if not line:
+##            raise ValueError    
+##        return line.position
+##
+##    #<-----------------------------------------------------------------------------------------------------------can add index operations
+##    #(get_item and set_item)
     
     def inheritTags(self, recur=True):
         """

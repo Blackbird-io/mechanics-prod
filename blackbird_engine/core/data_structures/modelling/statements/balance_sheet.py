@@ -29,7 +29,7 @@ BalanceSheet          objects include assets, liabilities, and equity
 
 # Imports
 from ..line_item import LineItem
-from ..statement import Statement
+from .._new_statement import Statement
 
 
 
