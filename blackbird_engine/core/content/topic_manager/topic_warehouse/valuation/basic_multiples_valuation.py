@@ -119,13 +119,14 @@ def scenario_1(topic):
         clean_atx = CompanyValue()
         topBU.setAnalytics(clean_atx)
         atx = topBU.valuation
-    i_ebitda = fins.indexByName("EBITDA")
-    line_ebitda = fins[i_ebitda]
+        
+    line_ebitda = fins.find("EBITDA")
     #line is monthly, multiply by 12 for simplicity, though could do day-by-day
     #annualization (or week-by-week)
     annual_ebitda = line_ebitda.value * 12
     #Part 1 pending
-    #
+    
+    
     #2) Locate industry color
     #this topic theoretically runs for either retail or generic
     k = None

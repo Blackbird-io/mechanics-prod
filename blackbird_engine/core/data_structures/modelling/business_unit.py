@@ -822,18 +822,20 @@ class BusinessUnit(History, Tags, Equalities):
                         self._derive_line(line)
 
     def _derive_line(self, line):
+        line.clear()
+
+        # Derive the line
         key = line.name.casefold()
-        if key not in self.drivers:
-            pass
-        else:
-            if line.details:
-                for detail in line.get_ordered():
-                    self._derive_line(detail)
-            else:
-                line.clear()
-                matching_drivers = self.drivers.get_drivers(key)
-                for driver in matching_drivers:
-                    driver.workOnThis(line)        
+        if key in self.drivers:
+            matching_drivers = self.drivers.get_drivers(key)
+            for driver in matching_drivers:
+                driver.workOnThis(line)
+
+        # Repeat for any details
+        if line.details:
+            for detail in line.get_ordered():
+                self._derive_line(detail)
+        
                 
     def _fit_to_period(self, time_period, recur=True):
         """

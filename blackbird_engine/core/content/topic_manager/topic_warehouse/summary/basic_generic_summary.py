@@ -108,34 +108,25 @@ def scenario_1(topic):
                     "ebitda",
                     "adjusted ebitda",
                     "capex"]
-    #financials will generally have only one of ``cogs`` vs ``cost``
-    #
-    #get appropriate lines out of financials
+    # Financials will generally have only one of ``cogs`` vs ``cost``
+    
+    # Get appropriate lines out of financials
     for name in names_to_add:
-        try:
-            try:
-                #try to find a summary first
-                summary_name = top_fins.SUMMARY_PREFIX.casefold() + " " + name
-                spot = top_fins.indexByName(summary_name)
-            except ValueError:
-                #if no summary, look at the original
-                spot = top_fins.indexByName(name)
-            line = top_fins[spot]
-            #annualize line values and put them into summary; use original names
-            #here to avoid system prefix in output
-            model.summary.data[name] = 12 * (line.value or 0)
-        except ValueError:
-            #line is missing completely
-            continue
-    #
-    #manually add credit capacity
+
+        line = top_fins.find(name)
+        if line:
+            if line.value is not None:  
+                model.summary.data[name] = 12 * line.value
+                # Annualize values and put them into summary
+    
+    # Manually add credit capacity
     landscape_summary = model.valuation.credit.combined.get_summary()
     print(landscape_summary)
     cc_raw = landscape_summary["size"]["hi"]
     cc_adj = cc_raw * (1 - bb_settings.HAIRCUT_TO_EXPECTED_VALUE)
     model.summary.data["credit_capacity"] = cc_adj
-    #
-    #finish work, wrap topic()
+    
+    # Finish work, wrap topic()
     topic.wrap_topic()
 
 scenarios[None] = scenario_1
