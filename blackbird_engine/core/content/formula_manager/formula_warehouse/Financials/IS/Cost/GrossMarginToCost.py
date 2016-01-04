@@ -69,17 +69,10 @@ def func(line, business_unit, data, driver_signature):
     
     """
     gross_margin = float(data["active_gross_margin"])
-    fins = business_unit.financials.income
-    # Legacy naming
-    i_rev = None
-    try:
-        i_rev = fins.indexByName("revenue")
-    except ValueError:
-        pass
-    if i_rev is not None:
-        rev = fins[i_rev].value
+    rev = business_unit.financials.income.find("revenue")
+        
     if business_unit.life.alive and rev:
-        COGS = rev * (1 - gross_margin)
+        COGS = rev.value * (1 - gross_margin)
         line.setValue(COGS, driver_signature)
     #
     #always return None

@@ -627,7 +627,7 @@ class BusinessUnit(History, Tags, Equalities):
         for unit in pool:
             
             if unit.life.conceived:
-                self.consolidate_unit(unit, *tagsToOmit)
+                self._consolidate_unit(unit, *tagsToOmit)
         
     def _consolidate_unit(self, sub, *tagsToOmit):
         """
@@ -1209,7 +1209,7 @@ class BusinessUnit(History, Tags, Equalities):
                     continue
 
                 else:
-                    ending_line = ending_balance[name]
+                    ending_line = ending_balance.find(name)
                     if starting_line.value is not None:
                         ending_line.set_value(source.value, self._UPDATE_BALANCE_SIGNATURE)
     
