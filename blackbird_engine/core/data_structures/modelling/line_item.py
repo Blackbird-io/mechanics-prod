@@ -298,25 +298,30 @@ class LineItem(Statement):
         Increment line value by matching line and details. If ``consolidating``
         is True, 
         """
-        if matching_line.details:
-            self._bring_down_local_value()
-            Statement.increment(self, matching_line, consolidating=consolidating)
-            # Will copy all of the details all the way down, tagging each new
-            # detail "consolidated"
-    
-        else:
-            if signature is None:
-                signature = self.SIGNATURE_FOR_INCREMENTATION
+        if matching_line.value is None:
+            pass
 
-            starting_value = self.value or 0            
-            new_value = starting_value + matching_line.value
-            
-            self.set_value(new_value, signature)
+        else:
+            if matching_line.details:
+                Statement.increment(self, matching_line, consolidating=consolidating)
+                # Use Statement method here because we are treating the matching
+                # line as a Statement too. We assume that its details represent
+                # all of its value data. Statement.increment() will copy those
+                # details to this instance. 
         
-            if consolidating:
-                self.inheritTagsFrom(matching_line)
-                self.tag(T_CONSOLIDATED)
-                #<-------------------------------------------------------------------------------------------------------check when im supposed to inherit tags
+            else:
+                if signature is None:
+                    signature = self.SIGNATURE_FOR_INCREMENTATION
+
+                starting_value = self.value or 0            
+                new_value = starting_value + matching_line.value
+                
+                self.set_value(new_value, signature)
+            
+                if consolidating:
+                    self.inheritTagsFrom(matching_line)
+                    self.tag(T_CONSOLIDATED)
+                    #<-------------------------------------------------------------------------------------------------------check when im supposed to inherit tags
         #
 
     #
@@ -361,22 +366,29 @@ class LineItem(Statement):
         Line._bring_down_local_value() -> None
 
 
-        Bring down instance's local value to replica.
+        Bring down instance's local value to replica. No-op if local value is
+        None.
         """
-        replica = self._get_replica()
-        sig = self.SIGNATURE_FOR_REPLICA_MANAGEMENT
-                                      
-        if replica:
-            # Replica already exists, will have a non-zero value
-            new_value = replica.value + self._local_value
-            replica.set_value(new_value, sig)
-            replica.inheritTagsFrom(self)
+        if self._local_value is None:
+            pass
 
         else:
-            self._make_replica()
-            # New replica will come with existing local value
+            replica = self._get_replica()
+            sig = self.SIGNATURE_FOR_REPLICA_MANAGEMENT
+                                          
+            if replica:
+                # Replica already exists, so it must have a non-None value. We
+                # also know that instance has a non-None value, otherwise we
+                # would be in the no-op block.
+                new_value = replica.value + self._local_value
+                replica.set_value(new_value, sig)
+                replica.inheritTagsFrom(self)
 
-        self.set_value(None, sig, override=True)
+            else:
+                self._make_replica()
+                # New replica will come with existing local value
+
+            self.set_value(None, sig, override=True)
 
     def _get_line_strings(self, prefix=""):
         """
