@@ -307,13 +307,17 @@ class LineItem(Statement):
         else:
             if signature is None:
                 signature = self.SIGNATURE_FOR_INCREMENTATION
-            new_value = self.value + matching_line.value
-            self.set_value(new_value, signature)
+
+            starting_value = self.value or 0            
+            new_value = starting_value + matching_line.value
             
-        if consolidating:
-            self.inheritTagsFrom(matching_line)
-            #<-------------------------------------------------------------------------------------------------------check when im supposed to inherit tags
-            self.tag(T_CONSOLIDATED)
+            self.set_value(new_value, signature)
+        
+            if consolidating:
+                self.inheritTagsFrom(matching_line)
+                self.tag(T_CONSOLIDATED)
+                #<-------------------------------------------------------------------------------------------------------check when im supposed to inherit tags
+        #
 
     #
     #go through basic cases: adding 2 lines with 2 details each
