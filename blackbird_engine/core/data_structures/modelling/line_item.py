@@ -97,6 +97,9 @@ class LineItem(Statement):
     
     def __init__(self, name=None, value=None):
         Statement.__init__(self, name)
+
+        self._local_value = None
+        
         self.guide = Guide()
         self.log = []
         self.position = None

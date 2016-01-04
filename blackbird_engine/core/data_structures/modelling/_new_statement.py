@@ -212,15 +212,16 @@ class Statement(Tags, Equalities):
         Return a detail that matches the ancestor tree or None. 
         """
         result = None
-        
-        first_detail = self.details.get(ancestor_tree[0])
 
-        if first_detail:
+        caseless_root_name = ancestor_tree[0].casefold()
+        root = self.details.get(caseless_root_name)
+
+        if root:
             remainder = ancestor_tree[1:]
             if remainder:
-                result = first_detail.find(*remainder)
+                result = root.find(*remainder)
             else:
-                result = first_detail
+                result = root
                 # Caller specified one criteria and we matched it. Stop work.
 
         else:
@@ -315,6 +316,22 @@ class Statement(Tags, Equalities):
         Return a list of details in order of relative position
         """
         result = sorted(self.details.values(), key = lambda line: line.position)
+        return result
+
+    def get_full_ordered(self):
+        """
+
+        -> list
+
+        Return ordered list of lines and their details. 
+        """
+        result = list()
+        for line in self.get_ordered():
+            if line.details:
+                increment = line.get_full_ordered()
+                result.extend(increment)
+            else:
+                result.append(line)
         return result
         
     def add_line_to(self, line, *ancestor_tree):

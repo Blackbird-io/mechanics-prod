@@ -296,23 +296,10 @@ class Topic:
         if self.work_plan != {}:
             for C in self.record_containers:
                 if C:
-                    C.build_tables()
-                    for (lineName,contribution) in self.work_plan.items():
-                        if lineName in C.table_by_name.keys():
-                            spots_name = C.table_by_name[lineName]
-                            spots_name = list(spots_name)
-                            spots_name.sort()
-                            i_name = spots_name[0]
-                            L = C[i_name]
-                            L.guide.quality.increment(contribution)
-                        else:
-                            if lineName.casefold() in C.table_by_name.keys():
-                                spots_name = C.table_by_name[lineName.casefold()]
-                                spots_name = list(spots_name)
-                                spots_name.sort()
-                                i_name = spots_name[0]
-                                L = C[i_name]
-                                L.guide.quality.increment(contribution)
+                    for (line_name, contribution) in self.work_plan.items():
+                        line = C.find(line_name) or C.find(line_name.casefold())
+                        if line:
+                            line.guide.quality.increment(contribution)
 
     def reset_work_plan(self):
         """

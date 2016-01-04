@@ -309,20 +309,28 @@ def scenario_3(topic):
     top_bu = M.time_line.current_period.content
     bottom_bus = M.time_line.current_period.get_lowest_units()
     for bu in bottom_bus:
-        fins = bu.financials.income
-        # Point directly to the income statement for legacy interface
-        i_opex = fins.indexByName("Operating Expense")
-        line_opex = fins[i_opex]
-        for line in lines[::-1]:
-            if line.name in fins.table_by_name.keys():
-                print()
-                print("Skipping line %s" % line.name)
-                print()
-                continue
-            local_line = line.copy()
-            fins.insert(i_opex+1, local_line)
-            if not local_line.partOf:
-                local_line.setPartOf(line_opex)
+
+        opex = bu.financials.income.find("Operating Expense")
+        for detail in lines[::-1]:
+            local_detail = detail.copy()
+            opex.append(local_detail)
+
+##        fins = bu.financials.income
+##        # Point directly to the income statement for legacy interface
+##        i_opex = fins.indexByName("Operating Expense")
+##        line_opex = fins[i_opex]
+##        for line in lines[::-1]:
+##            if line.name in fins.table_by_name.keys():
+##                print()
+##                print("Skipping line %s" % line.name)
+##                print()
+##                continue
+##            local_line = line.copy()
+##            fins.insert(i_opex+1, local_line)
+##            if not local_line.partOf:
+##                local_line.setPartOf(line_opex)
+##
+
         for (k, tDriver) in local_drivers.items():
             clean_dr = tDriver.copy()
             bu.add_driver(clean_dr, k)

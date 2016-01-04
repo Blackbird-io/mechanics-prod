@@ -384,7 +384,8 @@ class Interviewer:
         #picks out first open one
         #
         path = model.stage.path
-        model.stage.levels = self.prioritize_multi(path)
+        ordered = path.get_full_ordered()
+        model.stage.levels = self.prioritize_multi(ordered)        
         fp = self.focus(model, selection_rules.for_quality)
         #
         return fp
@@ -411,8 +412,9 @@ class Interviewer:
             path = model.stage.path
             if path:
                 try:
-                    i = path.index(fp)
-                    new_progress = i/len(path)
+                    steps = path.get_ordered()
+                    i = steps.index(fp)
+                    new_progress = i/len(steps)
                     new_progress = new_progress * 100
                     new_progress = round(new_progress)
                     model.stage.set_progress(new_progress)
