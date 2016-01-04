@@ -55,7 +55,7 @@ n/a
 
 
 #imports
-from data_structures.modelling.statement import Statement
+from data_structures.modelling._new_statement import Statement
 from tools import for_messages as message_tools
 
 from . import shared_knowledge as SK

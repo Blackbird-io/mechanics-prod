@@ -46,7 +46,7 @@ n/a
 
 
 #imports
-from data_structures.modelling.statement import Statement
+from data_structures.modelling._new_statement import Statement
 from data_structures.modelling.line_item import LineItem
 
 

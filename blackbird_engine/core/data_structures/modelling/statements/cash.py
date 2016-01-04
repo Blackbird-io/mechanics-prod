@@ -27,7 +27,7 @@ CashFlowStatement     statement that may contain specialized info
 
 
 # Imports
-from ..statement import Statement
+from .._new_statement import Statement
 
 
 

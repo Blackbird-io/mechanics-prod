@@ -1,4 +1,4 @@
-from ..statement import Statement
+from .._new_statement import Statement
 
 class OverviewStatement(Statement):
     def __init__(self):
