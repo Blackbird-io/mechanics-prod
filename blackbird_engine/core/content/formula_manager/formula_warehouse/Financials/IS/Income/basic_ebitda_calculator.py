@@ -67,98 +67,30 @@ def func(line, business_unit, data, driver_signature):
     [no external data necessary]    
     """
     bu = business_unit
-    fins = bu.financials.income
-    # Update pointer, keep legacy naming.
-    fins.summarize()
-    fins.build_tables()
-    summaryPrefix = fins.SUMMARY_PREFIX
-    rev = "revenue"
-    cogs = "cogs"
-    cost = "cost"
-    opex = "operating expense"
-    sga = "sg&a"
-    da = "d&a"
-    spots_rev = None
-    spots_cogs = None
-    spots_opex = None
-    spots_sga = None
-    spots_da = None
-    def sN(name):
-        result = summaryPrefix.casefold()+" "+name
-        return result
-    keys_table_by_name = list(fins.table_by_name.keys())
-    #get keys once and freeze so dont compute on every check
-    if sN(rev) in keys_table_by_name:
-        spots_rev = fins.table_by_name[sN(rev)]
-    else:
-        spots_rev = fins.table_by_name[rev]
-    if cogs in keys_table_by_name:
-        if sN(cogs) in keys_table_by_name:
-            spots_cogs = fins.table_by_name[sN(cogs)]
-        else:
-            spots_cogs = fins.table_by_name[cogs]
-    else:
-        if sN(cost) in keys_table_by_name:
-            spots_cogs = fins.table_by_name[sN(cost)]
-        else:
-            spots_cogs = fins.table_by_name[cost]
-    #if COGS not a line, use ``cost`` instead
-    #can improve to run on tags and stuff
-    if sN(opex) in keys_table_by_name:
-        spots_opex = fins.table_by_name[sN(opex)]
-    else:
-        spots_opex = fins.table_by_name[opex]
-    if sN(sga) in keys_table_by_name:
-        spots_sga = fins.table_by_name[sN(sga)]
-    else:
-        spots_sga = fins.table_by_name[sga]
-    if da in keys_table_by_name:
-        if sN(da) in keys_table_by_name:
-            spots_da = fins.table_by_name[sN(da)]
-        else:
-            spots_da = fins.table_by_name[da]
-    spots_rev = list(spots_rev)
-    spots_rev.sort()
-    i_rev = spots_rev[0]
-    spots_cogs = list(spots_cogs)
-    spots_cogs.sort()
-    i_cogs = spots_cogs[0]
-    spots_opex = list(spots_opex)
-    spots_opex.sort()
-    i_opex = spots_opex[0]
-    spots_sga = list(spots_sga)
-    spots_sga.sort()
-    i_sga = spots_sga[0]
-    if spots_da:
-        spots_da = list(spots_da)
-        spots_da.sort()
-        i_da = spots_da[0]
-    else:
-        i_da = None
-    line_rev = fins[i_rev]
-    line_cogs = fins[i_cogs]
-    line_opex = fins[i_opex]
-    line_sga = fins[i_sga]
-    line_da = None
-    if i_da:
-        line_da = fins[i_da]
-    def val(L):
+    line_rev = bu.financials.income.find("revenue")
+    line_cogs = bu.financials.income.find("cogs")
+    line_cost = bu.financials.income.find("cost")
+
+    line_cost = line_cogs or line_cost
+    
+    line_opex = bu.financials.income.find("operating expense")
+    line_sga = bu.financials.income.find("sg&a")
+    line_da = bu.financials.income.find("d&a")
+
+    def val(line):
         result = 0
-        if L.value:
-            result = L.value
+        if line:
+            result = line.value or 0
         return result
-    opProfit = val(line_rev)-val(line_cogs)-val(line_opex)-val(line_sga)
-    #check if d&a is top-level; if it is, it is not in the other lines.
-    #otherwise, add it back
+
+    ebitda = val(line_rev) - val(line_cost) - val(line_opex) - val(line_sga)
     if line_da:
-        if line_da.partOf not in fins.topLevelNames:
-            ebitda = opProfit + val(line_da)
-            line.tag("d&a added back")
-        else:
-            ebitda = opProfit
-    else:
-        ebitda = opProfit
-    #set value to the line provided to driver
-    line.setValue(ebitda, driver_signature)
-    #always return None
+        ebitda = val(line_da)
+        line.tag("d&a added back")
+        # We should really make EBITDA a function of net income to make sure we
+        # are not double-counting addbacks.
+    
+    line.set_value(ebitda, driver_signature)
+
+    # Always return None
     return None
