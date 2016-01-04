@@ -24,9 +24,8 @@ n/a
 
 
 #imports
-from data_structures.modelling.statement import Statement
 from data_structures.modelling.financials import Financials
-from data_structures.modelling._new_line import Line as LineItem
+from data_structures.modelling.line_item import LineItem
 
 
 

@@ -131,8 +131,8 @@ def apply_data(topic):
     #
     new_steps = standard_path.copy()
     private_path.extend(new_steps)
-    next_step = private_path[1]
-    #expect next_step to be structure
+    next_step = private_path.get_ordered()[1]
+    #``intro`` should be at 0; expect next_step to be structure
     #
     model.interview.set_path(private_path)
     model.interview.set_focal_point(next_step)
