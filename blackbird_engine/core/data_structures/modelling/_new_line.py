@@ -276,30 +276,6 @@ class Line(Statement):
                     
         return result
                                     
-    def _bring_down_local_value(self):
-        """
-
-
-        Line._bring_down_local_value() -> None
-
-
-        Bring down instance's local value to replica.
-        """
-        replica = self._get_replica()
-        sig = self.SIGNATURE_FOR_REPLICA_MANAGEMENT
-                                      
-        if replica:
-            # Replica already exists, will have a non-zero value
-            new_value = replica.value + self._local_value
-            replica.set_value(new_value, sig)
-            replica.inheritTagsFrom(self)
-
-        else:
-            replica = self._make_replica()
-            # New replica will come with existing local value
-
-        self.set_value(None, sig, override=True)
-    
     def increment(self, matching_line, signature=None, consolidating=False):
         """
 
@@ -345,6 +321,30 @@ class Line(Statement):
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
 
+    def _bring_down_local_value(self):
+        """
+
+
+        Line._bring_down_local_value() -> None
+
+
+        Bring down instance's local value to replica.
+        """
+        replica = self._get_replica()
+        sig = self.SIGNATURE_FOR_REPLICA_MANAGEMENT
+                                      
+        if replica:
+            # Replica already exists, will have a non-zero value
+            new_value = replica.value + self._local_value
+            replica.set_value(new_value, sig)
+            replica.inheritTagsFrom(self)
+
+        else:
+            self._make_replica()
+            # New replica will come with existing local value
+
+        self.set_value(None, sig, override=True)
+
     def _get_line_strings(self, prefix=""):
         """
         -> list
@@ -383,22 +383,24 @@ class Line(Statement):
 
         -> None
         """
-        replica = Tags.copy(self, enforce_rules=False)
-        # Start with a generally shallow copy that picks up all of the tags.
-        # Goal is to preserve tags like "hardcoded" or "do not touch". If
-        # enforce_rules is True, "do not touch" would not transfer to the
-        # replica because the copy counts as an "out" move. Then, if the
-        # original value was to somehow get reset to None, the lineitem could
-        # get behind and the entire financials unit could lose a special processing trigger.
-                                      
-        replica.details.clear()
-        # Replicas don't have any details of their own
+        replica = Tags.copy(self, enforce_rules=False)                                      
+        replica.details = dict()
+        # Replicas don't have any details of their own; can't run clear here
+        # because instance and replica both point to the same details dictionary
+        # at first. 
                                       
         # Replica should have the same local value right now
         if replica._local_value != self._local_value:
             raise IOPMechanicalError
 
         self.add_line(replica, position=0) #<------------------------------------------------------------------------------------or whatever the lowest is?
+
+        # Start with a generally shallow copy that picks up all of the tags.
+        # Goal is to preserve tags like "hardcoded" or "do not touch". If
+        # enforce_rules is True, "do not touch" would not transfer to the
+        # replica because the copy counts as an "out" move. Then, if the
+        # original value was to somehow get reset to None, the lineitem could
+        # get behind and the entire financials unit could lose a special processing trigger.
 
     def _sum_details(self, ordered=False):
         """
@@ -412,7 +414,7 @@ class Line(Statement):
         """
         result = None
         #if ordered, can go through get_ordered()
-        for detail in self.details.items():
+        for detail in self.details.values():
             if detail.value is None:
                 continue
             else:

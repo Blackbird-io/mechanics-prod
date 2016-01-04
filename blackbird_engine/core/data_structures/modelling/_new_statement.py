@@ -243,37 +243,51 @@ class Statement(Tags, Equalities):
         """
         
         self._inspect_line_for_insertion(new_line)
-        
+
         if position is None:
             self.append(new_line)
             
         else:
             new_line.position = position
-            ordered = self.get_ordered()
-            
-            for i in range(len(ordered)):
-                existing_line = ordered[i]
+
+            if not self.details:
+                self._bind_and_record(new_line)
+                # This block differs from append in that we preserve the
+                # requested line position
                 
-                if new_line.position < existing_line.position:
-                    continue
+            else:
+                ordered = self.get_ordered()
+                
+                if new_line.position < ordered[0].position or ordered[-1].position < new_line.position:
 
-                elif new_line.position == existing_line.position:
-                    
-                    lines_to_push = ordered[i:]
-                    for pushed_line in lines_to_push:
-                        pushed_line.position += self.POSITION_SPACING
-
-                    self._bind_and_record(line)
-                    break
+                    self._bind_and_record(new_line)
+                    # Requested position falls outside existing range. No
+                    # conflict, insert line as is.
 
                 else:
 
-                    # Existing position is less than new position. Only get here
-                    # if new position is not taken, otherwise we would have
-                    # broken out of loop by now.
-                    
-                    self._bind_and_record(line)
-                    break
+                    # Potential conflict in positions. Spot existing, adjust as
+                    # necessary. 
+                    for i in range(len(ordered)):
+                        existing_line = ordered[i]
+                        
+                        if new_line.position < existing_line.position:
+                            self._bind_and_record(new_line)
+                            break
+
+                        elif new_line.position == existing_line.position:
+                            
+                            tail = ordered[i:]
+                            for pushed_line in tail:
+                                pushed_line.position += self.POSITION_SPACING
+
+                            self._bind_and_record(new_line)
+                            break
+
+                        else:
+                            continue            
+            
+
                 
     def append(self, line):
         """
