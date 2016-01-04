@@ -701,7 +701,7 @@ class Statement(Tags, Equalities):
         Clear all values, preserve line shape.
         """
         #clears values, not shape
-        for line in self.details:
+        for line in self.details.values():
             line.clear()
         
     #*************************************************************************#

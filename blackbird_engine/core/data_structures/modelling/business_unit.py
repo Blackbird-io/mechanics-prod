@@ -296,199 +296,6 @@ class BusinessUnit(History, Tags, Equalities):
         for attr in self.tagSources:
             blank_attr = getattr(blank_bu,attr)
             setattr(self,attr,blank_attr)
-
-    def consolidate(self, *tagsToOmit, trace=False):
-        """
-
-
-        BusinessUnit.consolidate() -> None
-
-
-        Method iterates through instance components in order and consolidates
-        each living component into instance using BU.consolidate_unit()
-        """
-        if tagsToOmit == tuple():
-            tagsToOmit = [bookMarkTag.casefold(), summaryTag]
-            
-        self.financials.build_tables()
-        # Refresh once at the parent level to avoid unnecessary work for each
-        # unit. 
-
-        pool = self.components.getOrdered()
-        # Need stable order to make sure we pick up peer lines from untis in
-        # the same order. Otherwise, their order might switch and financials
-        # would look different (even though the bottom line would be the same).
-            
-        for unit in pool:
-            
-            if unit.life.conceived:
-                self.consolidate_unit(unit, *tagsToOmit, refresh=False, trace=trace)
-        
-    def consolidate_unit(self, sub, *tagsToOmit, refresh=False, trace=False):
-        """
-
-
-        BusinessUnit.consolidate_unit() -> None
-        
-
-        -- ``sub`` should be a BusinessUnit object
-        
-        -- ``sub_position`` is sub's position in an ordered list of components;
-           argument only matters for custom replica names
-           
-        -- ``tagsToOmit`` is a tuple of tags; method will ignore sub lines with
-           any of these tags
-           
-        -- ``refresh_dictionaries`` is a bool value; if True, method will build
-           dictionaries for instance financials from scratchbefore doing hard
-           work, in case they are stale.
-
-           This method will **always** build dictionaries after inserting a new
-           line in instance financials to make sure that indeces are up to date.
-
-           To maximize speed, caller should build dictionaries first, and then
-           run this method with refresh_dictionaries == False. 
-    
-        -- ``trace`` is a bool value; if True, method prints comments during
-           work.
-        
-        The Blackbird environment contemplates that BusinessUnits (``parents``)
-        may contain multiple component BusinessUnits (``subs``). This method
-        consolidates the financials of one sub into the caller instance
-        (parent).
-
-        The parent does NOT have to include sub in the parent's components for
-        this method to run. 
-
-        Method first fills out the sub, then integrates each line in sub's
-        financials into parent financials. 
-
-
-
-        The specific sub-to-parent integration algorithm has 5 stages:
-
-        ************************************************************************
-        STAGE 1: Check if the sub is alive.
-        ************************************************************************
-
-        Method performs no-op if sub is not alive. 
-
-        ************************************************************************
-        STAGE 2: Check if the sub LineItem is "informative".
-        ************************************************************************
-        For a living sub, method steps through each line in sub financials to
-        check if the line is ``informative``. 
-
-        ``Informative`` sub LineItems are those that provide insight into the
-        meaningful structural or financial profile of the sub. Informative lines
-        satisfy at least one of the following conditions:
-        
-            i)   the LineItem has a non-None name 
-            ii)  the LineItem has a non-None value
-            iii) the LineItem's allTags list is distinct from the default value
-            ([None,None,<spacer>])
-            
-        Informative LineItems that satisfy condition (i) are ``named``
-        LineItems. Informative LineItems that do not satisfy condition (i) but
-        do satisfy condition (ii) or (iii) are ``unnamed.``
-
-        NOTE: A lineitem that includes any tags specified in the method's
-        ``tagsToOmit`` argument cannot be informative even if it otherwise
-        satisifes one of the necessary conditions.
-
-        By default, tagsToOmit include summaryTag and bookMarkTag. That is,
-        bookmarks and summaries are per se uninformative and do not increment
-        symmetric parent lineitems.         
-
-        This method integrates some of the data from each informative sub line
-        into parent's financials. Method skips uninformative sub lines. 
-
-        ************************************************************************
-        STAGE 3: Increment named LineItems that have symmetric names.
-        ************************************************************************
-        If a sub and parent LineItem have the same name, the value of sub
-        increments the value of the parent.
-
-        Specifically, for a given named sub lineitem, this method finds the
-        **first** line in parent financials with the same name.
-        
-        Next, method increments the parent line by the sub line value, if the
-        sub line has a specified (non-None value). Method skips sub lines with
-        None values even if they are named.<-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------absorb tags?
-
-        A signature from this method blocks drivers from modifying a line. 
-        
-        NOTE1: consolidate() **will** sign a parent line when a sub line
-        specifies a value of 0, 0.00, decimal.Decimal(0), etc. 
-
-        That is, setting a lineitem's value to 0 instead of None prevents
-        drivers from modifying that lineitem. In the Blackbird environment, 0 is
-        affirmative information. Only None signals the absence of information. 
-
-        NOTE2: Only named sub LineItems are eligible for incrementation
-        treatment, and only if their names are symmetric to a parent object.
-        
-        Named LineItems required a non-None value for LineItem.name. Therefore,
-        a sub LineItem with .name == None will NOT increment a parent LineItem
-        with a .name == None.
-
-        ************************************************************************
-        STAGE 4: Create & adjust replicas of name-asymettric sub LineItems.
-        ************************************************************************
-
-        For all informative LineItems that do not match the name of a parent
-        line, this method copies the line into parent financials.
-
-        Method attempts to insert these ``replica`` lines into parent in the
-        same position relative to other lines as the sub line has in sub.
-
-        Prior to insertion, method sets the name for any unnamed informative sub
-        lines to a combination of (i) their sub_position and the first 3 tags on
-        the sub line. As a result, unnnamed lines from one component should not
-        increment the value of parent lines with identical tags.
-        
-        [UPGRADE-F: TAG-RICH EVO: may require sub lineitems to increment parent
-        lineitems with matching or sub.superset tags]
-
-        ************************************************************************
-        STAGE 5: Insert replica LineItems into parent.financials.
-        ************************************************************************
-
-        Method places replica lines in parent financials to maintain relative
-        position of the line against other items in sub financials. 
-
-        Example:
-
-        If lines are ordered [L1,L2,L3,L4] in sub financials, L1 should
-        precede L2 in parent.financials. Other lines (LA, LB, LC) can go between
-        L1 and L2 in parent because the position of L1 and L2 has no
-        relationship to these other lines.
-
-        By contrast, the following order of
-        parent lines would violate the relative position of sub L3 and L4:
-        
-        [L1, ..., L2, ... L4,L3].
-        
-        Method uses Financials.spotGenerally() to locate the appropriate
-        position for a replica. 
-        """
-        # Step 1: Prep
-        if tagsToOmit == tuple():
-            tagsToOmit = [bookMarkTag.casefold(), summaryTag]
-        tagsToOmit = set(tagsToOmit) #<---------------------------------------------------------------------------------------------------------should be on statement?
-
-        signature = self._CONSOLIDATION_SIGNATURE + "for Unit " + str(sub.id.bbid)
-        # Signature will be long
-        
-        # Step 2: Actual consolidation
-        sub.fill_out()
-
-        for attr_name in sub.financials.ORDER:
-            child_statement = getattr(sub.financials, attr_name)
-            
-            if child_statement:
-                parent_statement = getattr(self.financials, attr_name)
-                parent_statement.increment(child_statement, *tagsToOmit, refresh=refresh, signature=signature)
     
     def copy(self, enforce_rules=True):
         """
@@ -532,54 +339,6 @@ class BusinessUnit(History, Tags, Equalities):
         result.valuation = CompanyValue()
         #
         return result
-
-    def derive(self, *tagsToOmit):
-        """
-
-
-        BusinessUnit.derive() -> None
-
-
-        Method for calculating the value of certain financials lineitems by
-        using drivers. Method builds a Queue of applicable drivers for each
-        LineItem in BusinessUnit.financials. Method then runs the drivers in the
-        queue sequentially. Each LineItem gets a unique queue. Derive() ignores
-        drivers that fail Queue.alignItems (misfits)
-
-        In addition to any user-specified tags, method will not derive any lines
-        carrying tags for consolidation or hard-coding.
-
-        Method will try to use drivers specifically assigned to the line name in
-        instance.drivers. If and only if the drivers dictionary for the line is
-        empty, derive() will check if any unassigned (BU.drivers[None]) drivers
-        match the line.
-        
-        NOTE: ALWAYS RUN BusinessUnit.consolidate() BEFORE BusinessUnit.Derive()
-        """
-        tags_to_omit = set(tagsToOmit) | {tConsolidated, tHardCoded}
-        #need to change tagging rules above to make sure BU.consolidate() tags
-        #lines appropriately. also need to make sure that inheritTagsFrom() does----------------------------------------------------------
-        #not pick up blockingTags
-
-        # We never derive the starting balance sheet. Accordingly,
-        # financials.ordered does not include ``starting``. 
-        
-        for statement in self.financials.ordered:
-
-            if statement is not None:
-                
-                for line in statement:
-                    if tags_to_omit & set(line.allTags):
-                        continue
-                    
-                    key = line.name.casefold()
-                    if key not in self.drivers:
-                        continue
-                    else:
-                        line.clear()
-                        matching_drivers = self.drivers.get_drivers(key)
-                        for driver in matching_drivers:
-                            driver.workOnThis(line)
                                 
     def recalculate(self, adjust_future=True):
         """
@@ -721,12 +480,12 @@ class BusinessUnit(History, Tags, Equalities):
             return
         else:
             self._load_balance()
-            self.consolidate(*tagsToOmit)
-            self._update_balance(*tagsToOmit)
+            self._consolidate(*tagsToOmit)
+            self._update_balance(*tagsToOmit) #<--------------------------------------we may be able to improve / eliminate this routine
             # Sets ending balance lines to starting values by default
-            self.derive(*tagsToOmit)
+            self._derive(*tagsToOmit)
             # Derive() will overwrite ending balance sheet where appropriate
-            self.financials.summarize()
+            
             self.filled = True
             
     def kill(self, date=None, recur=True):
@@ -847,6 +606,235 @@ class BusinessUnit(History, Tags, Equalities):
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#    
 
+    def _consolidate(self, *tagsToOmit, trace=False):
+        """
+
+
+        BusinessUnit.consolidate() -> None
+
+
+        Method iterates through instance components in order and consolidates
+        each living component into instance using BU.consolidate_unit()
+        """
+        if tagsToOmit == tuple():
+            tagsToOmit = [bookMarkTag.casefold(), summaryTag]
+
+        pool = self.components.getOrdered() #<---------------------------------------------------------------------------may be able to eliminate ordering with new financials
+        # Need stable order to make sure we pick up peer lines from units in
+        # the same order. Otherwise, their order might switch and financials
+        # would look different (even though the bottom line would be the same).
+            
+        for unit in pool:
+            
+            if unit.life.conceived:
+                self.consolidate_unit(unit, *tagsToOmit)
+        
+    def _consolidate_unit(self, sub, *tagsToOmit):
+        """
+
+
+        BusinessUnit.consolidate_unit() -> None
+        
+
+        -- ``sub`` should be a BusinessUnit object
+           
+        -- ``tagsToOmit`` is a tuple of tags; method will ignore sub lines with
+           any of these tags
+           
+        The Blackbird environment contemplates that BusinessUnits (``parents``)  #<------------------------------------------------update doc string
+        may contain multiple component BusinessUnits (``subs``). This method
+        consolidates the financials of one sub into the caller instance
+        (parent).
+
+        The parent does NOT have to include sub in the parent's components for
+        this method to run. 
+
+        Method first fills out the sub, then integrates each line in sub's
+        financials into parent financials. 
+
+
+
+        The specific sub-to-parent integration algorithm has 5 stages:
+
+        ************************************************************************
+        STAGE 1: Check if the sub is alive.
+        ************************************************************************
+
+        Method performs no-op if sub is not alive. 
+
+        ************************************************************************
+        STAGE 2: Check if the sub LineItem is "informative".
+        ************************************************************************
+        For a living sub, method steps through each line in sub financials to
+        check if the line is ``informative``. 
+
+        ``Informative`` sub LineItems are those that provide insight into the
+        meaningful structural or financial profile of the sub. Informative lines
+        satisfy at least one of the following conditions:
+        
+            i)   the LineItem has a non-None name 
+            ii)  the LineItem has a non-None value
+            iii) the LineItem's allTags list is distinct from the default value
+            ([None,None,<spacer>])
+            
+        Informative LineItems that satisfy condition (i) are ``named``
+        LineItems. Informative LineItems that do not satisfy condition (i) but
+        do satisfy condition (ii) or (iii) are ``unnamed.``
+
+        NOTE: A lineitem that includes any tags specified in the method's
+        ``tagsToOmit`` argument cannot be informative even if it otherwise
+        satisifes one of the necessary conditions.
+
+        By default, tagsToOmit include summaryTag and bookMarkTag. That is,
+        bookmarks and summaries are per se uninformative and do not increment
+        symmetric parent lineitems.         
+
+        This method integrates some of the data from each informative sub line
+        into parent's financials. Method skips uninformative sub lines. 
+
+        ************************************************************************
+        STAGE 3: Increment named LineItems that have symmetric names.
+        ************************************************************************
+        If a sub and parent LineItem have the same name, the value of sub
+        increments the value of the parent.
+
+        Specifically, for a given named sub lineitem, this method finds the
+        **first** line in parent financials with the same name.
+        
+        Next, method increments the parent line by the sub line value, if the
+        sub line has a specified (non-None value). Method skips sub lines with
+        None values even if they are named.<-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------absorb tags?
+
+        A signature from this method blocks drivers from modifying a line. 
+        
+        NOTE1: consolidate() **will** sign a parent line when a sub line
+        specifies a value of 0, 0.00, decimal.Decimal(0), etc. 
+
+        That is, setting a lineitem's value to 0 instead of None prevents
+        drivers from modifying that lineitem. In the Blackbird environment, 0 is
+        affirmative information. Only None signals the absence of information. 
+
+        NOTE2: Only named sub LineItems are eligible for incrementation
+        treatment, and only if their names are symmetric to a parent object.
+        
+        Named LineItems required a non-None value for LineItem.name. Therefore,
+        a sub LineItem with .name == None will NOT increment a parent LineItem
+        with a .name == None.
+
+        ************************************************************************
+        STAGE 4: Create & adjust replicas of name-asymettric sub LineItems.
+        ************************************************************************
+
+        For all informative LineItems that do not match the name of a parent
+        line, this method copies the line into parent financials.
+
+        Method attempts to insert these ``replica`` lines into parent in the
+        same position relative to other lines as the sub line has in sub.
+
+        Prior to insertion, method sets the name for any unnamed informative sub
+        lines to a combination of (i) their sub_position and the first 3 tags on
+        the sub line. As a result, unnnamed lines from one component should not
+        increment the value of parent lines with identical tags.
+        
+        [UPGRADE-F: TAG-RICH EVO: may require sub lineitems to increment parent
+        lineitems with matching or sub.superset tags]
+
+        ************************************************************************
+        STAGE 5: Insert replica LineItems into parent.financials.
+        ************************************************************************
+
+        Method places replica lines in parent financials to maintain relative
+        position of the line against other items in sub financials. 
+
+        Example:
+
+        If lines are ordered [L1,L2,L3,L4] in sub financials, L1 should
+        precede L2 in parent.financials. Other lines (LA, LB, LC) can go between
+        L1 and L2 in parent because the position of L1 and L2 has no
+        relationship to these other lines.
+
+        By contrast, the following order of
+        parent lines would violate the relative position of sub L3 and L4:
+        
+        [L1, ..., L2, ... L4,L3].
+        
+        Method uses Financials.spotGenerally() to locate the appropriate
+        position for a replica. 
+        """
+        # Step 1: Prep
+        if tagsToOmit == tuple():
+            tagsToOmit = [bookMarkTag.casefold(), summaryTag]
+        tagsToOmit = set(tagsToOmit) #<---------------------------------------------------------------------------------------------------------should be on statement?
+
+        signature = self._CONSOLIDATION_SIGNATURE + "for Unit " + str(sub.id.bbid)
+        # Signature will be long
+        
+        # Step 2: Actual consolidation
+        sub.fill_out()
+
+        for attr_name in sub.financials.ORDER:
+            child_statement = getattr(sub.financials, attr_name)
+            
+            if child_statement:
+                parent_statement = getattr(self.financials, attr_name)
+                parent_statement.increment(child_statement, *tagsToOmit)
+
+
+    def _derive(self, *tagsToOmit):
+        """
+
+
+        BusinessUnit.derive() -> None
+
+
+        Method for calculating the value of certain financials lineitems by
+        using drivers. Method builds a Queue of applicable drivers for each
+        LineItem in BusinessUnit.financials. Method then runs the drivers in the
+        queue sequentially. Each LineItem gets a unique queue. Derive() ignores
+        drivers that fail Queue.alignItems (misfits)
+
+        In addition to any user-specified tags, method will not derive any lines
+        carrying tags for consolidation or hard-coding.
+
+        Method will try to use drivers specifically assigned to the line name in
+        instance.drivers. If and only if the drivers dictionary for the line is
+        empty, derive() will check if any unassigned (BU.drivers[None]) drivers
+        match the line.
+        
+        NOTE: ALWAYS RUN BusinessUnit.consolidate() BEFORE BusinessUnit.Derive()
+        """
+        tags_to_omit = set(tagsToOmit) | {tConsolidated, tHardCoded}
+        #need to change tagging rules above to make sure BU.consolidate() tags
+        #lines appropriately. also need to make sure that inheritTagsFrom() does---------------------------------------------------------------
+        #not pick up blockingTags
+
+        # We never derive the starting balance sheet. Accordingly,
+        # financials.ordered does not include ``starting``. 
+        
+        for statement in self.financials.ordered:
+
+            if statement is not None:
+                
+                for line in statement.get_ordered():
+                    if tags_to_omit & set(line.allTags):
+                        continue
+                    else:
+                        self._derive_line(line)
+
+    def _derive_line(self, line):
+        key = line.name.casefold()
+        if key not in self.drivers:
+            pass
+        else:
+            if line.details:
+                for detail in line.get_ordered():
+                    self._derive_line(detail)
+            else:
+                line.clear()
+                matching_drivers = self.drivers.get_drivers(key)
+                for driver in matching_drivers:
+                    driver.workOnThis(line)        
+                
     def _fit_to_period(self, time_period, recur=True):
         """
 
@@ -1071,10 +1059,8 @@ class BusinessUnit(History, Tags, Equalities):
 
         self.financials.ending = self.financials.starting.copy(enforce_rules=False) 
         # Copy all lines from starting; we are assuming no changes here.
-        self.financials.ending.build_tables()
-        # Statement.copy() clears tables.        
         
-        self.financials.ending.reset()
+        self.financials.ending.reset() #<-------------------------------------------------------------we may be able to improve this routine
         # By default, the ending balance sheet should look the same as the
         # starting one. Here, we copy the starting structure and zero out
         # the values. We will fill in the values later through
@@ -1211,23 +1197,21 @@ class BusinessUnit(History, Tags, Equalities):
         starting_balance = self.financials.starting
         ending_balance = self.financials.ending
 
-        starting_balance.build_tables()
         # Method expects balance sheet to come with accurate tables. We first
         # build the table in load_balance(). We then run consolidate(), which
         # will automatically update the tables if it changes the statement. 
         
         if starting_balance and ending_balance:
             
-            for line in ending_balance:
+            for name, starting_line in ending_balance.details.items():
 
-                if tags_to_omit & set(line.allTags):
+                if tags_to_omit & set(starting_line.allTags):
                     continue
 
                 else:
-                    i = min(starting_balance.table_by_name[line.name])
-                    source = starting_balance[i]
-                    if source.value is not None:
-                        line.setValue(source.value, self._UPDATE_BALANCE_SIGNATURE)
+                    ending_line = ending_balance[name]
+                    if starting_line.value is not None:
+                        ending_line.set_value(source.value, self._UPDATE_BALANCE_SIGNATURE)
     
     def _update_id(self, namespace, recur=True):
         """

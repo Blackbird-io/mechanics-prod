@@ -229,16 +229,23 @@ def scenario_3(topic):
     topBU = M.time_line.current_period.content
     activeBUs = [topBU]
     for bu in activeBUs:
-        fins = bu.financials.income
-        # Point directly to income statement to preserve legacy naming.
-        i_sga = fins.indexByName("SG&A")
-        line_sga = fins[i_sga]
-        for L in lines[::-1]:
-            if L.name in fins.table_by_name.keys():
-                continue
-            localL = copy.deepcopy(L)
-            fins.insert(i_sga+1,localL)
-            localL.setPartOf(line_sga)
+
+        sga = bu.financials.income.find("SG&A") 
+        for detail in lines[::-1]:
+            local_detail = detail.copy()
+            sga.add_line(local_detail)
+        
+##        fins = bu.financials.income
+##        # Point directly to income statement to preserve legacy naming.
+##        i_sga = fins.indexByName("SG&A")
+##        line_sga = fins[i_sga]
+##        for L in lines[::-1]:
+##            if L.name in fins.table_by_name.keys():
+##                continue
+##            localL = copy.deepcopy(L)
+##            fins.insert(i_sga+1,localL)
+##            localL.setPartOf(line_sga)
+
         for (k, tDriver) in local_drivers.items():
             clean_dr = tDriver.copy()
             bu.add_driver(clean_dr,k)
