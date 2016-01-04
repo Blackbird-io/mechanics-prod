@@ -202,11 +202,11 @@ class Statement(Tags, Equalities):
         
         return result
                 
-    def find(self, *ancestor_tree):
+    def find_first(self, *ancestor_tree):
         """
 
 
-        Statement.find() -> Line or None
+        Statement.find_first() -> Line or None
 
 
         Return a detail that matches the ancestor tree or None. 
@@ -219,17 +219,46 @@ class Statement(Tags, Equalities):
         if root:
             remainder = ancestor_tree[1:]
             if remainder:
-                result = root.find(*remainder)
+                result = root.find_first(*remainder)
             else:
                 result = root
                 # Caller specified one criteria and we matched it. Stop work.
 
         else:
             for detail in self.get_ordered():
-                result = detail.find(*ancestor_tree)
+                result = detail.find_first(*ancestor_tree)
                 if result is not None:
                     break
                 else:
+                    continue
+
+        return result
+
+    def find_all(self, *ancestor_tree):
+        """
+
+        -> list
+        """
+        result = []
+
+        caseless_root_name = ancestor_tree[0].casefold()
+        root = self.details.get(caseless_root_name)
+
+        if root:
+            remainder = ancestor_tree[1:]
+            if remainder:
+                lower_nodes = root.find_all(*remainder)
+                if lower_nodes:
+                    result.extend(lower_nodes)
+            else:
+                # Nothing left, at the final node
+                node = root
+                result.append(node)
+        else:
+            for detail in self.get_ordered():
+                lower_nodes = detail.find_all(*ancestor_tree)
+                if lower_nodes:
+                    result.extend(lower_nodes)
                     continue
 
         return result
