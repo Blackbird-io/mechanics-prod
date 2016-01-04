@@ -33,7 +33,7 @@ import copy
 
 import bb_exceptions
 
-from data_structures.modelling._old_line_item import LineItem
+from data_structures.modelling.line_item import LineItem
 
 
 
@@ -251,15 +251,13 @@ class Pattern(dict, LineItem):
         self.setValue(None,"resetValue()")
         #<-------------------------------------------------------------------------------------------------------------------------------------------------------------need signature mgmt
         
-    def setValue(self,newValue,driverSignature,declineSignature = False):
+    def setValue(self, newValue, driverSignature):
         """
 
-        Pattern.setValue(newValue,driverSignature
-        [,declineSignature = False]) -> None
+        Pattern.setValue() -> None
                 
         Method delegates to LineItem.setValue() with value management
         suppressed. 
         """
-        LineItem.setValue(self,newValue,driverSignature,declineSignature,
-                          overrideValueManagement = True)
+        LineItem.set_value(self, newValue, driverSignature, override=True)
 
