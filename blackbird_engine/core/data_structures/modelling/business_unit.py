@@ -823,6 +823,10 @@ class BusinessUnit(History, Tags, Equalities):
 
     def _derive_line(self, line):
         # Derive the line
+
+        print("Deriving line")
+        print(line.name)
+        
         key = line.name.casefold()
         if key in self.drivers:
 ##            line.clear()
@@ -832,7 +836,14 @@ class BusinessUnit(History, Tags, Equalities):
 
         # Repeat for any details
         if line.details:
+
+            print("Line has details. Work through those.")
+            
             for detail in line.get_ordered():
+
+                print("Passing detail in for derivation...")
+                print(detail.name)
+
                 self._derive_line(detail)
         
                 

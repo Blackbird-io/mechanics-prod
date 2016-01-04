@@ -195,18 +195,18 @@ def scenario_3(topic):
     l_rent = LineItem("Rent")
     l_util = LineItem("Utilities")
     l_misc = LineItem("Miscellanious")
+
     l_security = LineItem("Security")
-    l_security.setPartOf(l_misc)
     l_it = LineItem("IT")
-    l_it.setPartOf(l_misc)
-    lines = [l_comp, l_rent, l_util, l_misc, l_security, l_it]
-    for L in lines[::-1]:
+
+    l_misc.extend([l_security, l_it])
+    
+    lines = [l_comp, l_rent, l_util, l_misc]
+    for L in lines:
         L.guide.priority.increment(1)
     l_misc.guide.priority.reset()
 
     #Configure drivers (data and formulas)
-    
-    #
     ##Employee Expense Driver
     driver_ee = topic.applied_drivers["EE Driver"]
     employee_data = dict()
@@ -308,28 +308,13 @@ def scenario_3(topic):
     # Bottom units: lines and drivers
     top_bu = M.time_line.current_period.content
     bottom_bus = M.time_line.current_period.get_lowest_units()
+
     for bu in bottom_bus:
 
         opex = bu.financials.income.find("Operating Expense")
-        for detail in lines[::-1]:
+        for detail in lines:
             local_detail = detail.copy()
             opex.append(local_detail)
-
-##        fins = bu.financials.income
-##        # Point directly to the income statement for legacy interface
-##        i_opex = fins.indexByName("Operating Expense")
-##        line_opex = fins[i_opex]
-##        for line in lines[::-1]:
-##            if line.name in fins.table_by_name.keys():
-##                print()
-##                print("Skipping line %s" % line.name)
-##                print()
-##                continue
-##            local_line = line.copy()
-##            fins.insert(i_opex+1, local_line)
-##            if not local_line.partOf:
-##                local_line.setPartOf(line_opex)
-##
 
         for (k, tDriver) in local_drivers.items():
             clean_dr = tDriver.copy()

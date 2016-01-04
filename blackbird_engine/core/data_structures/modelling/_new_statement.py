@@ -729,7 +729,7 @@ class Statement(Tags, Equalities):
         by_position = dict()
 
         for line in self.details.values():
-            entry = by_position.setdefault(line.position)
+            entry = by_position.setdefault(line.position, list())
             entry.append(line)
 
         # Now, go through the table and build a list
@@ -743,7 +743,7 @@ class Statement(Tags, Equalities):
         # Now can assign positions
         for i in range(len(ordered)):
             line = ordered[i]
-            new_position = starting + (i * self.POSITION_SPACING)
+            new_position = starting + (i * self.POSITION_SPACING) #<---------------------------fix this
             line.position = new_position
 
         # Changes lines in place.
