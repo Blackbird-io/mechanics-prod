@@ -33,7 +33,7 @@ import copy
 
 import bb_exceptions
 
-from data_structures.modelling.line_item import LineItem
+from data_structures.modelling._old_line_item import LineItem
 
 
 

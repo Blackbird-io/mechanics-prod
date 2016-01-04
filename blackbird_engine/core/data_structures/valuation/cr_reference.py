@@ -67,7 +67,7 @@ class CR_Reference(Pattern):
     ====================  ======================================================
     """
     
-    def __init__(self, name = "CR_Reference",standard = None):
+    def __init__(self, name="CR_Reference", standard=None):
         Pattern.__init__(self,name)
         self.fromkeys(parameters.fields_CR_Reference)
         if not standard:
