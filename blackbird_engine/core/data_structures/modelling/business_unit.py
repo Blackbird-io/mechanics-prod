@@ -619,7 +619,7 @@ class BusinessUnit(History, Tags, Equalities):
         if tagsToOmit == tuple():
             tagsToOmit = [bookMarkTag.casefold(), summaryTag]
 
-        pool = self.components.getOrdered() #<---------------------------------------------------------------------------may be able to eliminate ordering with new financials
+        pool = self.components.getOrdered()
         # Need stable order to make sure we pick up peer lines from units in
         # the same order. Otherwise, their order might switch and financials
         # would look different (even though the bottom line would be the same).
@@ -822,10 +822,14 @@ class BusinessUnit(History, Tags, Equalities):
                         self._derive_line(line)
 
     def _derive_line(self, line):
-        # Derive the line
-##
-##        print("Deriving line")
-##        print(line.name)
+        """
+
+
+        BusinessUnit._derive_line() -> None
+
+
+        Compute the value of a line using drivers storedf in the instance.
+        """
         
         key = line.name.casefold()
         if key in self.drivers:
@@ -836,14 +840,8 @@ class BusinessUnit(History, Tags, Equalities):
 
         # Repeat for any details
         if line.details:
-
-##            print("Line has details. Work through those.")
             
             for detail in line.get_ordered():
-##
-##                print("Passing detail in for derivation...")
-##                print(detail.name)
-
                 self._derive_line(detail)
         
                 
@@ -1069,10 +1067,12 @@ class BusinessUnit(History, Tags, Equalities):
             self.financials.starting = self.past.financials.ending
             # Connect to the past
 
+        ending_name = self.financials.ending.name
         self.financials.ending = self.financials.starting.copy(enforce_rules=False) 
         # Copy all lines from starting; we are assuming no changes here.
+        self.financials.ending.setName(ending_name)
         
-        self.financials.ending.reset() #<-------------------------------------------------------------we may be able to improve this routine
+        self.financials.ending.reset()
         # By default, the ending balance sheet should look the same as the
         # starting one. Here, we copy the starting structure and zero out
         # the values. We will fill in the values later through

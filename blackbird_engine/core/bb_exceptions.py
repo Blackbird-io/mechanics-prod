@@ -17,10 +17,6 @@ class IOPMechanicalError(StructureError):
     #intended
     pass
 
-class HierarchyError(StructureError):
-    #special error you raise when something doesnt fit into a hierarchy
-    pass
-
 class AccountingError(BlackbirdError):
     pass
 

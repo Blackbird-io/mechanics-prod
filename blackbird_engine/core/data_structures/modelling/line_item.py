@@ -48,34 +48,35 @@ T_CONSOLIDATED = Tags.tagManager.catalog["consolidated"]
 # Classes
 class LineItem(Statement):
     """
-    
 
-    Instances of this class become components of a BusinessUnit.Financials list.
+    A LineItem is a Statement that can have a value and a position.
 
-    A lineitem's value should be specified through setValue(). setValue()
-    requires a signature. Values specified at instance construction get signed
-    by LineItem.__init__(). Some methods may decline to sign a lineitem. 
+    A LineItem can have value in two ways. First, an instance can define
+    local value. A local value is written directly to that instance via
+    set_value() at some point. The instance log tracks any changes to local
+    value.
 
+    Second, a Line can have value because it contains details that have value.
+    In such an event, the line's value is always the sum of its parts.
+
+    When you add details to a line that already has a local value, the instance
+    will automatically move its local value to a replica detail. After the
+    operation, the instance value will be the sum of its old local value, now
+    stored in the replica detail, and the other details.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
     guide                 instance of Guide object
-    keyAttributes         list, CLASS, parameters for comparison by Equalities
-    log            list of (signature,time,value) tuples
-    value
+    log                   list of entries that modified local value
+    value                 instance value
     
     FUNCTIONS:
     clear()               if modification permitted, sets value to None
     copy()                returns a new line w copies of key attributes
-    extrapolate_to()      delegates to Tags.extrapolate_to()
-    ex_to_default()       returns a Line.copy() of self w target parentObject
-    ex_to_special()       delegates to Tags.ex_to_special()
-    pre_format()          make the ``formatted`` string
-    replicate()           make a copy and fix line name
-    setValue()            sets value to input, records signature
-    toggleSign()          change sign to 0 or 1
+    set_value()           sets value to input, records signature
+    
     ====================  ======================================================
     """
     keyAttributes = Statement.keyAttributes + ["value", "requiredTags", "optionalTags"]
@@ -127,17 +128,17 @@ class LineItem(Statement):
         # Now at the top, you print the lines and they look normal
         # but at the level of each line you have recursion and extra tabs
     
-    def clear(self):
+    def clear(self, force=False, recur=True):
         """
 
 
         L.clear() -> None
 
 
-        Method sets self.value to None by running L.setValue() with the value
-        override. Method also sets the instance's sign to positive.
+        Clear value from instance and optionally details (if recur is True).
 
         NOTE: Method is a no-op for instances that do not pass checkTouch()
+
         Tags.checkTouch() returns False if the instance has tags that completely
         prohibit modification.
         """
@@ -149,7 +150,10 @@ class LineItem(Statement):
             else:
                 sig = self.SIGNATURE_FOR_VALUE_RESET
                 self.set_value(None, sig, override=True)
-                                              
+
+        # Upgrade: May want to raise error if caller is trying to reset a hard-
+        # coded line. "Never let exceptions pass silently."
+        
         #<-----------------------------------------------------------------------------------may want to raise error #<-------------------------------redo this here
             # if you are trying to clear a hard-coded value, unless force=True
             
@@ -160,9 +164,8 @@ class LineItem(Statement):
         Line.copy() -> Line
 
 
-        Method returns a copy of the instance. Uses Tags.copy() to generate a
-        shallow copy with independent tags objects. If enforce_rules is True,
-        copy conforms to ``out`` rules.
+        Return a deep copy of the instance and its details. If enforce_rules is
+        True, copy conforms to ``out`` rules.
         """
         new_line = Statement.copy(self, enforce_rules)
         # Statement method picks up details, _local_value, and tags
@@ -170,13 +173,6 @@ class LineItem(Statement):
         new_line.log = self.log[:]
 
         return new_line
-
-##        new_line = Tags.copy(self, enforce_rules)
-##        new_line.details = self.details.copy()
-##        new_line.guide = copy.deepcopy(self.guide)
-##        new_line.log = self.log[:] #<-------------------------------------------------------can add a line that we copied
-##
-##        return new_line
 
     def extrapolate_to(self, target):
         """
@@ -215,6 +211,8 @@ class LineItem(Statement):
         if ex_d_sig not in result.log[-1]:
             r_val = result.value
             result.set_value(r_val, ex_d_sig)
+
+            #<---------------------------------------------------------------------------------remove
             
         return result
 
@@ -429,7 +427,11 @@ class LineItem(Statement):
     def _get_replica(self):
         """
 
-        -> Line
+
+        LineItem._get_replica() -> LineItem or None
+
+
+        Get existing replica from details, return result (None if no replica). 
         """
         replica = self.details.get(self.name)
         return replica
@@ -437,28 +439,32 @@ class LineItem(Statement):
     def _make_replica(self):
         """
 
-        -> None
+
+        LineItem._make_replica() -> None
+
+
+        Add a replica to instance details. 
         """
-        replica = Tags.copy(self, enforce_rules=False)                                      
+        replica = Tags.copy(self, enforce_rules=False)
+        # Start with a shallow copy that picks up all the tags, including ones
+        # like "hardcoded" or "do not touch" that don't normally go ``out``. If
+        # enforce_rules is True, these would not transfer to the replica because
+        # the copy counts as an "out" move. Then, if the original value was to
+        # somehow get reset to None, the lineitem could get behind and the
+        # entire financials unit could lose a special processing trigger.
+        
         replica.details = dict()
-        # Replicas don't have any details of their own; can't run clear here
-        # because instance and replica both point to the same details dictionary
-        # at first. 
+        # Replicas don't have any details of their own. Can't run .clear() here
+        # because instance and replica initially point to the same details dict.
                                       
-        # Replica should have the same local value right now
         if replica._local_value != self._local_value:
-            raise IOPMechanicalError
+            comment = "At creation, replica should have the same value as instance."
+            raise bb_exceptions.IOPMechanicalError(c)
 
-        self.add_line(replica, position=0) #<------------------------------------------------------------------------------------or whatever the lowest is?
+        self.add_line(replica, position=0)
+        # Add replica in first position.       
 
-        # Start with a generally shallow copy that picks up all of the tags.
-        # Goal is to preserve tags like "hardcoded" or "do not touch". If
-        # enforce_rules is True, "do not touch" would not transfer to the
-        # replica because the copy counts as an "out" move. Then, if the
-        # original value was to somehow get reset to None, the lineitem could
-        # get behind and the entire financials unit could lose a special processing trigger.
-
-    def _sum_details(self, ordered=False):
+    def _sum_details(self):
         """
 
 
@@ -469,7 +475,6 @@ class LineItem(Statement):
         value. Method distinguishes between 0s and None.
         """
         result = None
-        #if ordered, can go through get_ordered()
         for detail in self.details.values():
             if detail.value is None:
                 continue
