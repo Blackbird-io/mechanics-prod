@@ -93,7 +93,9 @@ class LineItem(Statement):
     SIGNATURE_FOR_REPLICA_MANAGEMENT = "Bringing down value."
     SIGNATURE_FOR_INCREMENTATION = "Incremented "
 
-    SUMMARY_PREFIX = "TOTAL"
+    SUMMARY_PREFIX = "total "
+
+    TAB_WIDTH = 2
     
     def __init__(self, name=None, value=None):
         Statement.__init__(self, name)
@@ -390,30 +392,62 @@ class LineItem(Statement):
 
             self.set_value(None, sig, override=True)
 
-    def _get_line_strings(self, prefix=""):
+##    def _get_line_strings_old(self, prefix=""):
+##        """
+##        -> list
+##
+##        Return list of formatted strings for instance and any details. 
+##        """
+##        result = []
+##        if self.details:
+##            header = prefix + printing_tools.format_as_line(self, header=True)
+##            result.append(header)
+##
+##            detail_indent = prefix + "\t"
+##            for line in self.get_ordered():
+##                
+##                view = line._get_line_strings(prefix=detail_indent)
+##                result.extend(view)
+##
+##            footer = prefix + printing_tools.format_as_line(self, prefix=self.SUMMARY_PREFIX) #<-------------------- should have format_as_footer and format_as_header() methods
+##            result.append(footer)
+##                                
+##        else:
+##            basic = prefix + printing_tools.format_as_line(self)
+##            result.append(basic)
+##
+##        return result
+
+    def _get_line_strings(self, indent=TAB_WIDTH):
         """
         -> list
 
-        Return list of formatted strings for instance and any details. 
+        Return list of one or more strings that describe this line and any
+        details. Lines have raw ends. 
         """
+
         result = []
-        if self.details:
-            header = prefix + printing_tools.format_as_line(self, header=True)
+        
+        if not self.details:
+            # Simple view: only the local value
+            simple = printing_tools.format_as_line(self, left_tab=indent)
+            result.append(simple)
+        else:
+            # Detailed view: when this line has details
+            header = printing_tools.format_as_line(self, header=True, left_tab=indent)
             result.append(header)
 
-            for line in self.get_ordered():
-                view = line._get_line_strings(prefix="\t")
+            extra_tab = indent + self.TAB_WIDTH
+            for detail in self.get_ordered():
+                view = detail._get_line_strings(extra_tab)
+                # Will always return a list of strings
                 result.extend(view)
 
-            footer = prefix + printing_tools.format_as_line(self, prefix=self.SUMMARY_PREFIX) #<-------------------- should have format_as_footer and format_as_header() methods
+            footer = printing_tools.format_as_line(self, prefix=self.SUMMARY_PREFIX, left_tab=indent)
             result.append(footer)
-                                      
-        else:
-            basic = prefix + printing_tools.format_as_line(self)
-            result.append(basic)
 
         return result
-
+    
     def _get_replica(self):
         """
 

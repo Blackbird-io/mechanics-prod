@@ -194,11 +194,9 @@ class Statement(Tags, Equalities):
         return Equalities.__ne__(self, comparator, trace, tab_width)
 
     def __str__(self):
-        result = ""
+        result = "\n"
         for line in self.get_ordered():
             result += str(line)
-
-        result = result.expandtabs(self._INDENT)
         
         return result
                 
