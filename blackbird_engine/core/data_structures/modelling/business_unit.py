@@ -93,9 +93,6 @@ class BusinessUnit(History, Tags, Equalities):
     add_component()       adds unit to instance components
     add_driver()          registers a driver 
     clear()               restore default attribute values
-    consolidate()         consolidates financials from every component
-    consolidate_unit()    consolidates financials from one business unit
-    derive()              uses drivers to determine values for financials
     fill_out()            integrates consolidate() and derive()
     kill()                make dead, optionally recursive
     recalculate()         
@@ -190,11 +187,11 @@ class BusinessUnit(History, Tags, Equalities):
     def __hash__(self):
         return self.id.__hash__()
 
-    def __str__(self, lines = None):
+    def __str__(self, lines=None):
         """
 
 
-        BusinessUnit.__str__(lines = None) -> str
+        BusinessUnit.__str__() -> str
 
 
         Method concatenates each line in ``lines``, adds a new-line character at
@@ -205,10 +202,11 @@ class BusinessUnit(History, Tags, Equalities):
         # a string with all the lines joined together.
         if not lines:
             lines = self._get_pretty_lines()
+            
         # Add empty strings for header and footer padding
         lines.insert(0, "")
         lines.append("")
-        #
+        
         box = "\n".join(lines)
         return box
 
@@ -234,7 +232,7 @@ class BusinessUnit(History, Tags, Equalities):
         contains the new business unit's bbid.
 
         If all id verification steps go smoothly, method delegates insertion
-        down to Components.addItem().       
+        down to Components.add_item().       
         """
         bu.summary = None
         bu.valuation = None
