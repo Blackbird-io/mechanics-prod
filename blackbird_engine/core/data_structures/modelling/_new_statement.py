@@ -664,10 +664,26 @@ class Statement(Tags, Equalities):
     #*************************************************************************#
 
     def _bind_and_record(self, line):
+        """
+
+
+        Statement._bind_and_record() -> None
+
+
+        Set instance as line parent, add line to details. 
+        """
         line.setPartOf(self)
         self.details[line.name] = line
             
     def _inspect_line_for_insertion(self, line):
+        """
+
+
+        Statement._inspect_line_for_insertion() -> None
+
+
+        Will throw exception if Line if you can't insert line into instance.
+        """
         if not line.name:
             c = "Cannot add nameless lines."
             raise bb_exceptions.BBAnalyticalError(c)
@@ -676,12 +692,21 @@ class Statement(Tags, Equalities):
             c = "Implicit overwrites prohibited."
             raise bb_exceptions.BBAnalyticalError(c)
         
-    def _repair_order(self, starting=0):
+    def _repair_order(self, starting=0, recur=False):
         """
-         -> list
 
-         return ordered items
-        if starting is 0 and position spacing is 1, will create consecutively numbered positions
+
+        Statement._repair_order() -> list
+
+
+        Build an ordered list of details, then adjust their positions so
+        that get_ordered()[0].position == starting and any two items are
+        POSITION_SPACING apart. Sort by name in case of conflict.
+        
+        If ``starting`` is 0 and position spacing is 1, positions will match
+        item index in self.get_ordered().
+
+        Repeats all the way down on recur.
         """
         
         # Build table by position
@@ -703,11 +728,10 @@ class Statement(Tags, Equalities):
         # Now can assign positions
         for i in range(len(ordered)):
             line = ordered[i]
-            new_position = starting + (i * self.POSITION_SPACING) #<---------------------------fix this
+            new_position = starting + (i * self.POSITION_SPACING)
             line.position = new_position
+            if recur:
+                line._repair_order(starting=starting, recur=recur)
 
         # Changes lines in place.
         return ordered
-    
-        # Can also do more complex stuff where you only add spacing on conflicts,
-        # so the result is uneven   
