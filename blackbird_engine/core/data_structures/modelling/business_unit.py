@@ -58,8 +58,6 @@ from .parameters import Parameters
 # Globals
 # Tags class carries a pointer to the tag manager; access individual tags
 # through that pointer
-bookMarkTag = Tags.tagManager.catalog["bookmark"]
-summaryTag = Tags.tagManager.catalog["summary"]
 tConsolidated = Tags.tagManager.catalog["consolidated"]
 tHardCoded = Tags.tagManager.catalog["hard"]
 
@@ -83,7 +81,7 @@ class BusinessUnit(History, Tags, Equalities):
     id                    instance of ID object
     life                  instance of Life object
     location              placeholder for location functionality
-    parameters            #<--------------------------------------------------------------------------------------- fill in doc string
+    parameters            flexible storage for data that shapes unit performance
     size                  int; number of real-life equivalents obj represents
     type                  str or None; unit's in-model type (e.g., "team")
     summary               None or BusinessSummary; investment summary
@@ -95,7 +93,7 @@ class BusinessUnit(History, Tags, Equalities):
     clear()               restore default attribute values
     fill_out()            integrates consolidate() and derive()
     kill()                make dead, optionally recursive
-    recalculate()         
+    recalculate()         reste financials, compute again, repeat for future
     reset_financials()    resets instance and (optionally) component financials
     set_analytics()       attaches an object to instance.analytics 
     set_financials()      attaches a Financials object from the right template
@@ -113,7 +111,6 @@ class BusinessUnit(History, Tags, Equalities):
     
     tagSources = ["components", "drivers", "financials"]
     
-    _CONSOLIDATION_SIGNATURE = "Consolidated "
     _UPDATE_BALANCE_SIGNATURE = "Update balance"
         
     def __init__(self, name, fins=None):
@@ -176,7 +173,7 @@ class BusinessUnit(History, Tags, Equalities):
             old_entry.remove(self.id.bbid)
             new_entry = self.period.ty_directory.setdefault(value, set())
             new_entry.add(self.id.bbid)
-            #entries are sets of bbids for units that belong to that type
+            # Entries are sets of bbids for units that belong to that type
 
     @type.deleter
     def type(self):
@@ -290,10 +287,10 @@ class BusinessUnit(History, Tags, Equalities):
         **NOTE: clear() will permanently delete data**
         
         """
-        blank_bu = BusinessUnit(name = self.name)
+        blank_bu = BusinessUnit(name=self.name)
         for attr in self.tagSources:
             blank_attr = getattr(blank_bu,attr)
-            setattr(self,attr,blank_attr)
+            setattr(self, attr, blank_attr)
     
     def copy(self, enforce_rules=True):
         """
@@ -321,13 +318,17 @@ class BusinessUnit(History, Tags, Equalities):
         respective class documenation for mode detail.
         """
         result = Tags.copy(self, enforce_rules)
+        # Start with a basic shallow copy
         #
         r_comps = self.components.copy(enforce_rules)
         result._set_components(r_comps)
+        
         r_drivers = self.drivers.copy(enforce_rules)
         result._set_drivers(r_drivers)
+
         r_fins = self.financials.copy(enforce_rules)
         result.set_financials(r_fins)
+
         result.guide = copy.deepcopy(self.guide)
         # Have to make a deep copy of guide because it is composed of Counter
         # objects. Guide shouldn't point to a business unit or model
@@ -335,7 +336,7 @@ class BusinessUnit(History, Tags, Equalities):
         result.life = self.life.copy()
         result.summary = BusinessSummary()
         result.valuation = CompanyValue()
-        #
+
         return result
                                 
     def recalculate(self, adjust_future=True):
@@ -375,20 +376,6 @@ class BusinessUnit(History, Tags, Equalities):
         """
         result = Tags.extrapolate_to(self, target)   
         return result
-
-        #<---------------------------------------------------------------------------------------summarize
-        #should i have a history op here? seems like it; would run the reset
-            #i should probably define the ex_to_default() method
-            #copy
-            # + set_history(recur=False) #but then history could point in the wrong direction on
-                                         #backwards extrapolation
-            # + fill_out() if top node
-
-##        if result.parentObject is None:
-##            result.reset_financials()
-##            result.fill_out()
-##            # If we are running this at the top-level node (a unit that is not
-##            # part of anyone's components), clear and fill before delivery.
 
         #have to set history before filling out financials, because they depend
         # on prior balance sheet.
@@ -479,7 +466,7 @@ class BusinessUnit(History, Tags, Equalities):
         else:
             self._load_balance()
             self._consolidate(*tagsToOmit)
-            self._update_balance(*tagsToOmit) #<--------------------------------------we may be able to improve / eliminate this routine
+            self._update_balance(*tagsToOmit)
             # Sets ending balance lines to starting values by default
             self._derive(*tagsToOmit)
             # Derive() will overwrite ending balance sheet where appropriate
@@ -614,9 +601,6 @@ class BusinessUnit(History, Tags, Equalities):
         Method iterates through instance components in order and consolidates
         each living component into instance using BU.consolidate_unit()
         """
-        if tagsToOmit == tuple():
-            tagsToOmit = [bookMarkTag.casefold(), summaryTag]
-
         pool = self.components.getOrdered()
         # Need stable order to make sure we pick up peer lines from units in
         # the same order. Otherwise, their order might switch and financials
@@ -760,13 +744,8 @@ class BusinessUnit(History, Tags, Equalities):
         position for a replica. 
         """
         # Step 1: Prep
-        if tagsToOmit == tuple():
-            tagsToOmit = [bookMarkTag.casefold(), summaryTag]
         tagsToOmit = set(tagsToOmit) #<---------------------------------------------------------------------------------------------------------should be on statement?
 
-        signature = self._CONSOLIDATION_SIGNATURE + "for Unit " + str(sub.id.bbid)
-        # Signature will be long
-        
         # Step 2: Actual consolidation
         sub.fill_out()
 
@@ -776,7 +755,6 @@ class BusinessUnit(History, Tags, Equalities):
             if child_statement:
                 parent_statement = getattr(self.financials, attr_name)
                 parent_statement.increment(child_statement, *tagsToOmit, consolidating=True)
-
 
     def _derive(self, *tagsToOmit):
         """
@@ -1203,6 +1181,7 @@ class BusinessUnit(History, Tags, Equalities):
         overwrite these values. 
         """
         tags_to_omit = set(tagsToOmit)
+        tags_to_omit.add(tConsolidated)
         
         starting_balance = self.financials.starting
         ending_balance = self.financials.ending
