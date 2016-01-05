@@ -106,13 +106,13 @@ class Statement(Tags, Equalities):
     reset()               clear values
     ====================  ======================================================
     """
-    keyAttributes = ["details"]
+    keyAttributes = ["_details"]
     # Should rename this comparable_attributes
    
     def __init__(self, name=None, spacing=100):
 
         Tags.__init__(self, name=name)        
-        self.details = dict()
+        self._details = dict()
 
         if spacing < 1:
             raise error
@@ -155,7 +155,7 @@ class Statement(Tags, Equalities):
         result += header
         result += "\n\n"
 
-        if self.details:
+        if self._details:
             for line in self.get_ordered():
                 result += str(line)
         else:
@@ -190,7 +190,7 @@ class Statement(Tags, Equalities):
         else:
             new_line.position = position
 
-            if not self.details:
+            if not self._details:
                 self._bind_and_record(new_line)
                 # This block differs from append in that we preserve the
                 # requested line position
@@ -297,7 +297,7 @@ class Statement(Tags, Equalities):
         ``after`` == None, method appends line to self.
         """
         if after:
-            new_position = self.details[after].position + self.POSITION_SPACING
+            new_position = self._details[after].position + self.POSITION_SPACING
             self.add_line(line, new_position)
         else:
             self.append(line)
@@ -336,7 +336,7 @@ class Statement(Tags, Equalities):
         """
         Tags.clearInheritedTags(self, recur)
         if recur:
-            for line in self.details.values():
+            for line in self._details.values():
                 line.clearInheritedTags(recur)
 
     def copy(self, enforce_rules=True):
@@ -352,10 +352,10 @@ class Statement(Tags, Equalities):
         result = Tags.copy(self, enforce_rules)
         # Tags.copy returns a shallow copy of the instance w deep copies
         # of the instance tag attributes.
-        result.details = dict()
+        result._details = dict()
         # Clean dictionary
         
-        for own_line in self.details.values():
+        for own_line in self._details.values():
 
             new_line = own_line.copy(enforce_rules)
             result.add_line(new_line, position=own_line.position)
@@ -427,8 +427,8 @@ class Statement(Tags, Equalities):
         # attributes. 
         
         # Step 2: Fill the container
-        for name, own_line in self.details.items():
-            target_line = target.details.get(name)
+        for name, own_line in self._details.items():
+            target_line = target._details.get(name)
 
             if target_line:
 
@@ -443,8 +443,8 @@ class Statement(Tags, Equalities):
 
             result.add_line(result_line, position=result_line.position)
 
-        for name, target_line in target.details.items():
-            if name in result.details:
+        for name, target_line in target._details.items():
+            if name in result._details:
                 continue
             else:
                 if self.checkOrdinary(target_line):
@@ -490,7 +490,7 @@ class Statement(Tags, Equalities):
         result = []
 
         caseless_root_name = ancestor_tree[0].casefold()
-        root = self.details.get(caseless_root_name)
+        root = self._details.get(caseless_root_name)
 
         if root:
             remainder = ancestor_tree[1:]
@@ -534,7 +534,7 @@ class Statement(Tags, Equalities):
         result = None
 
         caseless_root_name = ancestor_tree[0].casefold()
-        root = self.details.get(caseless_root_name)
+        root = self._details.get(caseless_root_name)
 
         if root:
             remainder = ancestor_tree[1:]
@@ -566,7 +566,7 @@ class Statement(Tags, Equalities):
         """
         result = list()
         for line in self.get_ordered():
-            if line.details:
+            if line._details:
                 increment = line.get_full_ordered()
                 result.extend(increment)
             else:
@@ -582,7 +582,7 @@ class Statement(Tags, Equalities):
 
         Return a list of details in order of relative position.
         """
-        result = sorted(self.details.values(), key=lambda line: line.position)
+        result = sorted(self._details.values(), key=lambda line: line.position)
         return result
     
     def increment(self, matching_statement, *tagsToOmit, consolidating=False):
@@ -598,7 +598,7 @@ class Statement(Tags, Equalities):
         tags any affected lines with the "consolidated" tag (method delegates
         incrementation-level tagging to LineItem.consolidate()).
         """
-        for name, external_line in matching_statement.details.items():
+        for name, external_line in matching_statement._details.items():
             # ORDER SHOULD NOT MATTER HERE
             
             if set(tagsToOmit) & set(external_line.allTags):
@@ -610,7 +610,7 @@ class Statement(Tags, Equalities):
             # line into the instance. We apply Option B only when we can't do
             # Option A.
             
-            own_line = self.details.get(name)
+            own_line = self._details.get(name)
 
             if own_line:
                 # Option A
@@ -656,7 +656,7 @@ class Statement(Tags, Equalities):
         Clear all values, preserve line shape.
         """
         #clears values, not shape
-        for line in self.details.values():
+        for line in self._details.values():
             line.clear()
         
     #*************************************************************************#
@@ -673,7 +673,7 @@ class Statement(Tags, Equalities):
         Set instance as line parent, add line to details. 
         """
         line.setPartOf(self)
-        self.details[line.name] = line
+        self._details[line.name] = line
             
     def _inspect_line_for_insertion(self, line):
         """
@@ -688,7 +688,7 @@ class Statement(Tags, Equalities):
             c = "Cannot add nameless lines."
             raise bb_exceptions.BBAnalyticalError(c)
 
-        if line.name in self.details:
+        if line.name in self._details:
             c = "Implicit overwrites prohibited."
             raise bb_exceptions.BBAnalyticalError(c)
         
@@ -713,7 +713,7 @@ class Statement(Tags, Equalities):
         ordered = list()
         by_position = dict()
 
-        for line in self.details.values():
+        for line in self._details.values():
             entry = by_position.setdefault(line.position, list())
             entry.append(line)
 

@@ -107,23 +107,23 @@ standard_path.extend(SK.standard_open.copy())
 standard_path.extend(SK.standard_core.copy())
 standard_path.extend(SK.standard_close.copy())
 #
-#refine standard path
-#0. increase the quality requirements for structure
-structure = standard_path.details["structure"]
+# Refine standard path
+# 0. increase the quality requirements for structure
+structure = standard_path.find_first("structure")
 structure.guide.quality.set_standard(3) #max used to be 5
-#
-#1. reduce the significance of product cost
-cost = standard_path.details["cost"]
+
+# 1. reduce the significance of product cost
+cost = standard_path.find_first("cost")
 cost.guide.priority.reset()
 cost.guide.priority.increment(1)
-#
-#2. add important details to opex
-opex = standard_path.details["operating expense"]
+
+# 2. add important details to opex
+opex = standard_path.find_first("operating expense")
 opex.guide.priority.reset()
 opex.guide.priority.increment(1)
-#opex details are more important here than the general category
-#
-#opex details:
+# opex details are more important here than the general category
+
+# Opex details:
 head_count = LineItem("employee count")
 head_count.tag("all teams",
                "full-time employees",
@@ -196,7 +196,7 @@ for line in opex_details:
 
 #3. increase quality requirements for sg&a
 #(can also place it under opex here)
-sga = standard_path.details["sg&a"]
+sga = standard_path.find_first("sg&a")
 sga.guide.quality.set_standard(4) #max used to be 6
 sga.setPartOf(opex)
 

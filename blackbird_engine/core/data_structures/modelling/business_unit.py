@@ -837,7 +837,7 @@ class BusinessUnit(History, Tags, Equalities):
                 driver.workOnThis(line)
 
         # Repeat for any details
-        if line.details:
+        if line._details:
             
             for detail in line.get_ordered():
                 self._derive_line(detail)
@@ -1213,23 +1213,22 @@ class BusinessUnit(History, Tags, Equalities):
         
         if starting_balance and ending_balance:
             
-            for name, starting_line in ending_balance.details.items():
+            for name, starting_line in ending_balance._details.items():
 
                 if tags_to_omit & set(starting_line.allTags):
                     continue
 
                 else:
-                    ending_line = ending_balance.find_first(name) #<--------------------------------may create problems
+                    ending_line = ending_balance.find_first(starting_line.name)
                     if starting_line.value is not None:
                         ending_line.set_value(source.value, self._UPDATE_BALANCE_SIGNATURE)
 
-                    # Relying on find_first() may create problems if the balance
-                    # sheet has mutliple similar lines. For example, if both
-                    # short-term and long-term liabilities include ``bonds``.
-                    # Solution would be to search for the full tree.
-
-                    # <--------------------------------------------------------------------------actually want to
-                    # increment here...
+                # Theoretically find_first() could create problems if multiple lines in a
+                # balance sheet have the same details (ie short-term and long-term bonds).
+                # In practice, we are going through only the top-level items in the ending
+                # balance sheet, so the only conflict could arise if starting balance sheet
+                # somehow has only a detail like ending but not the top-level item to block
+                # it. That's basically impossible.
     
     def _update_id(self, namespace, recur=True):
         """
