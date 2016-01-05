@@ -67,15 +67,15 @@ def func(line, business_unit, data, driver_signature):
     [no external data necessary]    
     """
     bu = business_unit
-    line_rev = bu.financials.income.find("revenue")
-    line_cogs = bu.financials.income.find("cogs")
-    line_cost = bu.financials.income.find("cost")
+    line_rev = bu.financials.income.find_first("revenue")
+    line_cogs = bu.financials.income.find_first("cogs")
+    line_cost = bu.financials.income.find_first("cost")
 
     line_cost = line_cogs or line_cost
     
-    line_opex = bu.financials.income.find("operating expense")
-    line_sga = bu.financials.income.find("sg&a")
-    line_da = bu.financials.income.find("d&a")
+    line_opex = bu.financials.income.find_first("operating expense")
+    line_sga = bu.financials.income.find_first("sg&a")
+    line_da = bu.financials.income.find_first("d&a")
 
     def val(line):
         result = 0

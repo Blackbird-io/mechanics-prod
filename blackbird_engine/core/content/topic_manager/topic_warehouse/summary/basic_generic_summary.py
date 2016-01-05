@@ -113,7 +113,7 @@ def scenario_1(topic):
     # Get appropriate lines out of financials
     for name in names_to_add:
 
-        line = top_fins.find(name)
+        line = top_fins.find_first(name)
         if line:
             if line.value is not None:  
                 model.summary.data[name] = 12 * line.value

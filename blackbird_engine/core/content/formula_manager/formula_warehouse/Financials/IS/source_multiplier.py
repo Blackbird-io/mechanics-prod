@@ -76,7 +76,7 @@ def func(line, business_unit, data, driver_signature):
     """
     #
     fins = business_unit.financials.income
-    source_line = fins.find(data["source_line_name"])
+    source_line = fins.find_first(data["source_line_name"])
 
     if source_line.value is not None:
         

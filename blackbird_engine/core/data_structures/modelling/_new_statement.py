@@ -30,10 +30,10 @@ Statement             container that stores, updates, and organizes LineItems
 import copy
 
 import bb_exceptions
+import bb_settings
 
 from data_structures.system.tags import Tags
 from .equalities import Equalities
-
 
 
 
@@ -194,11 +194,18 @@ class Statement(Tags, Equalities):
         return Equalities.__ne__(self, comparator, trace, tab_width)
 
     def __str__(self):
+
         result = "\n"
+
+        header = str(self.name).upper()
+        header = header.center(bb_settings.SCREEN_WIDTH)
+        result += header
+        result += "\n\n"
+                
         for line in self.get_ordered():
             result += str(line)
         
-        return result
+        return result        
                 
     def find_first(self, *ancestor_tree):
         """
@@ -207,7 +214,9 @@ class Statement(Tags, Equalities):
         Statement.find_first() -> Line or None
 
 
-        Return a detail that matches the ancestor tree or None. 
+        Return a detail that matches the ancestor tree or None.
+
+        Will return the highest-level line first. 
         """
         result = None
 
@@ -398,7 +407,7 @@ class Statement(Tags, Equalities):
               sandals..........................6
         """
         if ancestor_tree:
-            detail = self.find(*ancestor_tree)
+            detail = self.find_first(*ancestor_tree)
             if detail is None:
                 raise KeyError(ancestor_tree)
             else:

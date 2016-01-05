@@ -167,8 +167,8 @@ def sub_scenario_1a(topic):
         # For backwards compatibility, point ``fins`` directly to income
         # statement.
         
-        line_cost = fins.find("cost")
-        line_cogs = fins.find("cogs")
+        line_cost = fins.find_first("cost")
+        line_cogs = fins.find_first("cogs")
 
         if line_cost:
             line_cost.tag("To Confirm","BB Estimate","Industry Standard")
