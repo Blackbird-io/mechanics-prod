@@ -128,7 +128,7 @@ class LineItem(Statement):
         """
         result = None
 
-        if not self.details:
+        if not self._details:
             result = self._local_value
 
         else:
@@ -156,7 +156,7 @@ class LineItem(Statement):
         ``force`` is True. 
         """
         if self.checkTouch() or force:
-            if self.details:
+            if self._details:
                 self._bring_down_local_value()
                 if recur:
                     Statement.reset(self)
@@ -223,7 +223,7 @@ class LineItem(Statement):
             pass
 
         else:
-            if matching_line.details:
+            if matching_line._details:
                 Statement.increment(self, matching_line, consolidating=consolidating)
                 # Use Statement method here because we are treating the matching
                 # line as a Statement too. We assume that its details represent
@@ -345,7 +345,7 @@ class LineItem(Statement):
 
         result = []
         
-        if not self.details:
+        if not self._details:
             # Simple view: only the local value
             simple = printing_tools.format_as_line(self, left_tab=indent)
             result.append(simple)
@@ -374,7 +374,7 @@ class LineItem(Statement):
 
         Get existing replica from details, return result (None if no replica). 
         """
-        replica = self.details.get(self.name)
+        replica = self._details.get(self.name)
         return replica
 
     def _make_replica(self):
@@ -394,7 +394,7 @@ class LineItem(Statement):
         # somehow get reset to None, the lineitem could get behind and the
         # entire financials unit could lose a special processing trigger.
         
-        replica.details = dict()
+        replica._details = dict()
         # Replicas don't have any details of their own. Can't run .clear() here
         # because instance and replica initially point to the same details dict.
                                       
@@ -416,7 +416,7 @@ class LineItem(Statement):
         value. Method distinguishes between 0s and None.
         """
         result = None
-        for detail in self.details.values():
+        for detail in self._details.values():
             if detail.value is None:
                 continue
             else:
