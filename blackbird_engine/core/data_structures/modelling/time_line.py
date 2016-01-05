@@ -66,8 +66,11 @@ class TimeLine(dict):
     
     FUNCTIONS:
     build()               populates instance with adjacent time periods
+    clear()               delete content from past and future periods
+    clear_future()        delete content from future periods
     extrapolate_all()     use seed to fill out all periods in instance
     extrapolate_dates()   use seed to fill out a range of dates
+    extrapolate_future()  project seed content to future periods
     find_period()         returns period that contains queried time point
     get_segments()        split time line into past, present, and future
     getOrdered()          returns list of periods ordered by end point
@@ -210,6 +213,38 @@ class TimeLine(dict):
         self.link()
 
         # All set.
+
+    def clear(self):
+        """
+
+
+        TimeLine.clear() -> None
+
+
+        Clear content from past and future, preserve current_period.
+        """
+        past, present, future = self.get_segments()
+        to_delete = past + future
+        for date in to_delete:
+            period = self[date]
+            period.clear()
+        #<-----------------------------------------------------------------have to dereference history
+            # have to do so recursively, to make sure that none of the objects retain their external
+            # pointers. 
+        
+    def clear_future(self, seed=None):
+        """
+
+
+        TimeLine.clear_future() -> None
+
+
+        Clear content from all periods after seed. Method expects a period as
+        ``seed``, will use instance.current_period if seed is None.
+        """
+        past, present, future = self.get_segments(seed.end)
+        for date in future:
+            self[date].clear()
         
     def extrapolate_all(self, seed=None):
         """
@@ -228,14 +263,13 @@ class TimeLine(dict):
             seed = self.current_period
         seed_date = seed.end
         
-        segments = self.get_segments(seed_date)
-        past = segments[0]
-        future = segments[-1]
+        past, present, future = self.get_segments(seed_date)
         
-        self.extrapolate_dates(seed, past, work_backward=True)
+        self.extrapolate_dates(seed, past, backward=True)
+        # This will reset financials for seed.
         self.extrapolate_dates(seed, future)
 
-    def extrapolate_dates(self, seed, dates, work_backward=False):
+    def extrapolate_dates(self, seed, dates, backward=False):
         """
 
 
@@ -263,38 +297,54 @@ class TimeLine(dict):
         last-one-first.
         """
         #
-        if work_backward:
+        if backward:
             dates = dates[::-1]
-            #reverse order, so go from newest to oldest
-        #
+            # Reverse order, so go from newest to oldest
+        
         for i in range(len(dates)):
+
             date = dates[i]                
-            #with default arguments, start work at the period immediately
-            #prior to the current period
+            # With default arguments, start work at the period immediately
+            # prior to the current period
+
             target_period = self[date]
             updated_period = seed.extrapolate_to(target_period)
-            #
-            #extrapolate_to() always does work on an external object and leaves
-            #the target untouched. Manually swap the old period for the new
-            #period.
-            #
+            # extrapolate_to() always does work on an external object and leaves
+            # the target untouched. Manually swap the old period for the new
+            # period.
+            
             if i == 0:
                 updated_period = self._configure_period(updated_period)
-                #on i == 0, extrapolating from the original seed. seed can be
-                #external (come from a different model), in which case it would
-                #use a different model namespace id for unit tracking.
+
+                # On i == 0, extrapolating from the original seed. seed can be
+                # external (come from a different model), in which case it would
+                # use a different model namespace id for unit tracking.
                 #
-                #accordingly, when extrapolating from the may-be-external seed,
-                #use configure_period() to conform output to current model.
+                # Accordingly, when extrapolating from the may-be-external seed,
+                # use configure_period() to conform output to current model.
                 #
-                #subsequent iterations of the loop will start w periods that are
-                #already in the model, so method can leave their namespace id
-                #configuration as is.
-                #
+                # Subsequent iterations of the loop will start w periods that are
+                # already in the model, so method can leave their namespace id
+                # configuration as is.
+    
             self[date] = updated_period
             seed = updated_period
-        #
 
+    def extrapolate_future(self, seed=None):
+        """
+
+
+        TimeLine.extrapolate_future() -> None
+
+
+        Extrapolate seed to future periods. Expects a period as seed, will use
+        current_period by default.
+        """
+        if seed is None:
+            seed = self
+        past, present, future = self.get_segments(seed.end)
+        self.extrapolate_dates(seed, future)
+        
     def find_period(self, query):
         """
 
