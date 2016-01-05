@@ -777,7 +777,7 @@ class BusinessUnit(History, Tags, Equalities):
             
             if child_statement:
                 parent_statement = getattr(self.financials, attr_name)
-                parent_statement.increment(child_statement, *tagsToOmit)
+                parent_statement.increment(child_statement, *tagsToOmit, consolidating=True)
 
 
     def _derive(self, *tagsToOmit):
