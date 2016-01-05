@@ -392,35 +392,13 @@ class LineItem(Statement):
 
             self.set_value(None, sig, override=True)
 
-##    def _get_line_strings_old(self, prefix=""):
-##        """
-##        -> list
-##
-##        Return list of formatted strings for instance and any details. 
-##        """
-##        result = []
-##        if self.details:
-##            header = prefix + printing_tools.format_as_line(self, header=True)
-##            result.append(header)
-##
-##            detail_indent = prefix + "\t"
-##            for line in self.get_ordered():
-##                
-##                view = line._get_line_strings(prefix=detail_indent)
-##                result.extend(view)
-##
-##            footer = prefix + printing_tools.format_as_line(self, prefix=self.SUMMARY_PREFIX) #<-------------------- should have format_as_footer and format_as_header() methods
-##            result.append(footer)
-##                                
-##        else:
-##            basic = prefix + printing_tools.format_as_line(self)
-##            result.append(basic)
-##
-##        return result
 
     def _get_line_strings(self, indent=TAB_WIDTH):
         """
-        -> list
+
+
+        LineItem._get_line_strings() -> list
+
 
         Return list of one or more strings that describe this line and any
         details. Lines have raw ends. 

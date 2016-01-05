@@ -311,7 +311,7 @@ def scenario_3(topic):
 
     for bu in bottom_bus:
 
-        opex = bu.financials.income.find("Operating Expense")
+        opex = bu.financials.income.find_first("Operating Expense")
         for detail in lines:
             local_detail = detail.copy()
             opex.append(local_detail)

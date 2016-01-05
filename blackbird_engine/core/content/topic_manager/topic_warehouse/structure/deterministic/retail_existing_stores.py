@@ -509,7 +509,7 @@ def scenario_6(topic):
     if more_structure_processing:
         M.tag("check for stores in progress")
         #this tag functions like a homing beacon.
-        step_structure = M.interview.path.find("structure")
+        step_structure = M.interview.path.find_first("structure")
         step_structure.guide.quality.set_standard(3) #max used to be 5
         #
         step_structure.guide.selection.eligible.clear()

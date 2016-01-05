@@ -230,7 +230,7 @@ def scenario_3(topic):
     activeBUs = [topBU]
     for bu in activeBUs:
 
-        sga = bu.financials.income.find("SG&A") 
+        sga = bu.financials.income.find_first("SG&A") 
         for detail in lines[::-1]:
             local_detail = detail.copy()
             sga.add_line(local_detail)

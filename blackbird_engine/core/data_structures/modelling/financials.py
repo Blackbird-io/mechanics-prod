@@ -27,6 +27,8 @@ Financials            a StatementBundle with income, cash, balance and others.
 
 
 # Imports
+import bb_settings
+
 from .statements import Overview, Income, CashFlow, BalanceSheet
 from .statement_bundle import StatementBundle
 
@@ -71,11 +73,39 @@ class Financials(StatementBundle):
         self.ledger = None
 
     def __str__(self):
+        
         self.ORDER = ("overview", "income", "cash", "starting", "ending", "ledger")
-        # intentionally block class-level thing
-        result = StatementBundle.__str__(self)
+        # Use a special tuple that includes all statements to block the default
+        # class order.
+
+        result = "\n"
+
+        if getattr(self, "parentObject", None):
+
+            header = "Financial statements for " + str(self.parentObject.name)
+            header = header.center(bb_settings.SCREEN_WIDTH)
+            header += "\n\n"
+
+            starting = "Period starting: " + str(self.parentObject.period.starting)
+            starting = starting.center(bb_settings.SCREEN_WIDTH)
+            starting += "\n"
+
+            header += starting
+
+            ending =  "Period ending:   " + str(self.parentObject.period.ending)
+            ending = ending.center(bb_settings.SCREEN_WIDTH)
+            ending += "\n"
+
+            header += ending
+            header += "\n"
+
+            result += header
+            
+        result += StatementBundle.__str__(self)
+
         del self.ORDER
         # unblock
+
         return result        
         
 

@@ -69,7 +69,7 @@ def func(line, business_unit, data, driver_signature):
     
     """
     gross_margin = float(data["active_gross_margin"])
-    rev = business_unit.financials.income.find("revenue")
+    rev = business_unit.financials.income.find_first("revenue")
         
     if business_unit.life.alive and rev:
         COGS = rev.value * (1 - gross_margin)

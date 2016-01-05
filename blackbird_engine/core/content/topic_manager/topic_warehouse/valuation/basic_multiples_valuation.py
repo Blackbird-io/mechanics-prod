@@ -120,7 +120,7 @@ def scenario_1(topic):
         topBU.setAnalytics(clean_atx)
         atx = topBU.valuation
         
-    line_ebitda = fins.find("EBITDA")
+    line_ebitda = fins.find_first("EBITDA")
     #line is monthly, multiply by 12 for simplicity, though could do day-by-day
     #annualization (or week-by-week)
     annual_ebitda = line_ebitda.value * 12

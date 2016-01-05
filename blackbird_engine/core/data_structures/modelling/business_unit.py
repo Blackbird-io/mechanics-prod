@@ -560,10 +560,10 @@ class BusinessUnit(History, Tags, Equalities):
         ``fins``. Otherwise, method will set financials to a new Financials
         instance. 
         """
-        if fins:
-            self.financials = fins
-        else:            
-            self.financials = Financials()
+        if fins is None:
+            fins = Financials()
+##        fins.setPartOf(self)
+        self.financials = fins
 
     def set_history(self, history, clear_future=True, recur=True):
         """
@@ -823,9 +823,9 @@ class BusinessUnit(History, Tags, Equalities):
 
     def _derive_line(self, line):
         # Derive the line
-
-        print("Deriving line")
-        print(line.name)
+##
+##        print("Deriving line")
+##        print(line.name)
         
         key = line.name.casefold()
         if key in self.drivers:
@@ -837,12 +837,12 @@ class BusinessUnit(History, Tags, Equalities):
         # Repeat for any details
         if line.details:
 
-            print("Line has details. Work through those.")
+##            print("Line has details. Work through those.")
             
             for detail in line.get_ordered():
-
-                print("Passing detail in for derivation...")
-                print(detail.name)
+##
+##                print("Passing detail in for derivation...")
+##                print(detail.name)
 
                 self._derive_line(detail)
         
@@ -1221,9 +1221,17 @@ class BusinessUnit(History, Tags, Equalities):
                     continue
 
                 else:
-                    ending_line = ending_balance.find(name)
+                    ending_line = ending_balance.find_first(name) #<--------------------------------may create problems
                     if starting_line.value is not None:
                         ending_line.set_value(source.value, self._UPDATE_BALANCE_SIGNATURE)
+
+                    # Relying on find_first() may create problems if the balance
+                    # sheet has mutliple similar lines. For example, if both
+                    # short-term and long-term liabilities include ``bonds``.
+                    # Solution would be to search for the full tree.
+
+                    # <--------------------------------------------------------------------------actually want to
+                    # increment here...
     
     def _update_id(self, namespace, recur=True):
         """

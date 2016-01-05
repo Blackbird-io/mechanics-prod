@@ -297,7 +297,7 @@ class Topic:
             for C in self.record_containers:
                 if C:
                     for (line_name, contribution) in self.work_plan.items():
-                        line = C.find(line_name) or C.find(line_name.casefold())
+                        line = C.find_first(line_name)
                         if line:
                             line.guide.quality.increment(contribution)
 
