@@ -657,7 +657,7 @@ class Statement(Tags, Equalities):
         """
         #clears values, not shape
         for line in self._details.values():
-            line.clear()
+            line.clear(recur=True)
         
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
