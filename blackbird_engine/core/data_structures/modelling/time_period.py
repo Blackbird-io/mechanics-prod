@@ -209,8 +209,7 @@ class TimePeriod(History, Tags):
         NOTE2: For best results, may want to clear and re-inherit tags on result
         after method returns it. 
         """
-        #
-        #step 1: make container
+        # Step 1: make container
         seed = self
 
         alt_seed = copy.copy(seed)
@@ -223,11 +222,9 @@ class TimePeriod(History, Tags):
         # container-level data structures; Tags.copy() only creates new tag lists
         
         result = Tags.ex_to_special(result, target, mode="at")
-        # Updates result with those target tags it doesnt have already. "at" mode
-        # picks up all tags from target. Other attributes stay identical because
-        # Tags uses a shallow copy.
+        # Updates result with target tags. We use "at" mode to pick up all tags. 
         
-        #step 2: configure and fill container
+        # Step 2: configure and fill container
         result.start = copy.copy(target.start)
         result.end = copy.copy(target.end)
         
@@ -235,7 +232,7 @@ class TimePeriod(History, Tags):
             new_content = seed.content.copy(enforce_rules=True)
             result.set_content(new_content, updateID=False)
     
-        # return container
+        # Step 3: return container
         return result        
         
     def ex_to_special(self, target):
