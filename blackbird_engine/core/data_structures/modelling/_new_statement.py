@@ -52,7 +52,7 @@ tConsolidated = Tags.tagManager.catalog["consolidated"]
 class Statement(Tags, Equalities):
     """
 
-    Ordered container that supports hierarchies and fast(er) lookup.
+    A Statement is a container that supports fast lookup and ordered views.
     
     ITEM HIERARCHIES:
     
@@ -149,6 +149,7 @@ class Statement(Tags, Equalities):
     # Should rename this comparable_attributes
    
     def __init__(self, name=None, spacing=100):
+
         Tags.__init__(self, name=name)        
         self.details = dict()
 
@@ -172,8 +173,6 @@ class Statement(Tags, Equalities):
         support tracing.
         """
         return Equalities.__eq__(self, comparator, trace, tab_width)
-        #<------------------------------------------------------------------------------------------------------------------------need to revise and customize for Line
-            #line should include tags? value? (track existing line)
     
     def __ne__(self, comparator, trace=False, tab_width=4):
         """
@@ -218,7 +217,16 @@ class Statement(Tags, Equalities):
 
         Return a detail that matches the ancestor tree or None.
 
-        Will return the highest-level line first. 
+        The ancestor tree should be one or more strings naming objects in order
+        of their relationship, from most junior to most senior. So if "bubbles"
+        is part of "cost", you can run stmt.find_first("bubbles", "cost").
+
+        If only one object named "bubbles" exists in the instance and any of its
+        details, a call to stmt.find_first("bubbles") will return the same
+        result.
+
+        Method searches breadth-first within instance, then depth-first within
+        instance details.
         """
         result = None
 
@@ -246,7 +254,17 @@ class Statement(Tags, Equalities):
     def find_all(self, *ancestor_tree):
         """
 
-        -> list
+
+        Statement.find_all() -> list
+
+
+        Return a list of details that matches the ancestor_tree.
+
+        The ancestor tree should be one or more strings naming objects in order
+        of their relationship, from most junior to most senior. 
+
+        Method searches breadth-first within instance, then depth-first within
+        instance details.
         """
         result = []
 
@@ -275,7 +293,10 @@ class Statement(Tags, Equalities):
     def add_line(self, new_line, position=None):
         """
 
-        -> int
+
+        Statement.add_line() -> int
+
+        
         #return position where we inserted?
 
         #if position is None, adds to end (max position + spacer)
@@ -326,13 +347,14 @@ class Statement(Tags, Equalities):
                         else:
                             continue            
             
-
-                
     def append(self, line):
         """
-        -> None
+
+
+        Statement.append() -> None
 
         
+        Add line to instance in final position.
         """
         self._inspect_line_for_insertion(line)
         # Will throw exception if problem
@@ -349,9 +371,12 @@ class Statement(Tags, Equalities):
         
     def get_ordered(self):
         """
-        -> list
 
-        Return a list of details in order of relative position
+
+        Statement.get_ordered() -> list
+
+
+        Return a list of details in order of relative position.
         """
         result = sorted(self.details.values(), key = lambda line: line.position)
         return result
@@ -359,9 +384,12 @@ class Statement(Tags, Equalities):
     def get_full_ordered(self):
         """
 
-        -> list
 
-        Return ordered list of lines and their details. 
+        Statement.get_full_ordered() -> list
+
+
+        Return ordered list of lines and their details. Result will show lines
+        in order of relative position depth-first. 
         """
         result = list()
         for line in self.get_ordered():
@@ -375,7 +403,10 @@ class Statement(Tags, Equalities):
     def add_line_to(self, line, *ancestor_tree):
         """
 
-        **LEGACY INTERFACE: use add_line() instead**
+        **OBSOLETE**
+
+        Legacy interface for find_first() and add_line().
+    
 
         Statement.add_line_to() -> None
 
@@ -420,10 +451,9 @@ class Statement(Tags, Equalities):
     def add_top_line(self, line, after=None):
         """
 
+        **OBSOLETE**
 
-        **LEGACY INTERFACE: use add_line() instead**
-
-        Statement.add_line_to() -> None
+        Legacy interface for add_line()
 
 
         Statement.add_top_line() -> None
@@ -449,10 +479,10 @@ class Statement(Tags, Equalities):
         Method runs Tags.clearInheritedTags() on instance. If ``recur`` is True,
         does the same for every line in instance.
         """
-        Tags.clearInheritedTags(self, recur) #<-------------------------------------------------------------check what this does
+        Tags.clearInheritedTags(self, recur)
         if recur:
             for line in self.details.values():
-                line.clearInheritedTags(recur) #<----------------------------------------------------------------------------------------------review
+                line.clearInheritedTags(recur)
 
     def copy(self, enforce_rules=True):
         """
@@ -461,29 +491,8 @@ class Statement(Tags, Equalities):
         Statement.copy() -> Statement
 
 
-        Method returns a deep copy of the instance. If ``enforce_rules`` is
-        True, the copy itself and all lineItems in copy conform to ``out``
-        rules.
-
-        Method first creates a shell for the copy by using Tags.copy(). Method
-        then fills that shell with copies of any lineItems in the instance. 
-
-        NOTE: Method resets dictionaries and summarizes the copy from scratch,
-        so copying an unsummarized Financials object may return a new object
-        that does not compare equal. Summarized instances and their copies
-        should always compare equal, however.
-
-        NOTE2: Line.parentObject pointers for lines below top level may not
-        point to objects within the copy.
-      
-        The method generally tries to ensure some partOf consistency within the
-        copy by manually setting all top-level lines to point to the copy. For
-        detail lines, however, the method does not try to set line.parentObject
-        to anything other than the default value for that line.copy().
-
-        Can remedy by running updatePart() on every line in the result. Make
-        sure to update dictionaries every time, or manually enter the new part
-        in instance.table_by_part.
+        Method returns a deep copy of the instance and any details. If
+        ``enforce_rules`` is True, copy will conform to ``out`` rules.
         """
         result = Tags.copy(self, enforce_rules)
         # Tags.copy returns a shallow copy of the instance w deep copies
@@ -594,7 +603,7 @@ class Statement(Tags, Equalities):
         # Step 3: return the container
         return result #<--------------------------------------------------------------------------------------------------------------rewrite
 
-    def increment(self, matching_statement, *tagsToOmit, refresh=False, consolidating=False):
+    def increment(self, matching_statement, *tagsToOmit, consolidating=False):
         """
 
 
