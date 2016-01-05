@@ -44,16 +44,11 @@ from .equalities import Equalities
 # Globals
 # Tags class carries a pointer to the tag manager; access individual tags
 # through that pointer
-bookMarkTag = Tags.tagManager.catalog["bookmark"]
-builtInTag = Tags.tagManager.catalog["built_in"] 
+builtInTag = Tags.tagManager.catalog["built_in"]
 doNotTouchTag = Tags.tagManager.catalog["do_not_touch"]
-dropDownReplicaTag = Tags.tagManager.catalog["ddr"]
-ddr_tag = dropDownReplicaTag
-skipTag = Tags.tagManager.catalog["skip"]
-summaryTag = Tags.tagManager.catalog["summary"]
 tConsolidated = Tags.tagManager.catalog["consolidated"]
-uninheritableTags = [doNotTouchTag, dropDownReplicaTag]
 
+# Classes
 class Statement(Tags, Equalities):
     """
 
@@ -494,20 +489,13 @@ class Statement(Tags, Equalities):
         # Tags.copy returns a shallow copy of the instance w deep copies
         # of the instance tag attributes.
         result.details = dict()
+        # Clean dictionary
         
-##        tags_to_omit = [summaryTag,
-##                        summaryTag.casefold(),
-##                        dropDownReplicaTag,
-##                        dropDownReplicaTag.casefold()]
-        tags_to_omit = set()
-        
-        for line in self.get_ordered():
-            problem_tags = tags_to_omit & set(line.allTags)
-            if problem_tags != set():
-                continue
-            else:                    
-                rL = line.copy(enforce_rules)
-                result.append(rL)
+        for own_line in self.details.values():
+
+            new_line = own_line.copy(enforce_rules)
+            result.add_line(new_line, position=own_line.position)
+            # Preserve relative order
         
         return result
 
@@ -549,10 +537,7 @@ class Statement(Tags, Equalities):
         Third, return result.
         """
         # Step 1: make a container
-        tags_to_omit = [summaryTag,
-                        summaryTag.casefold(),
-                        dropDownReplicaTag,
-                        dropDownReplicaTag.casefold()]
+        tags_to_omit = []
         seed = self
         alt_seed = copy.copy(seed)
         alt_seed.clear()
@@ -674,31 +659,6 @@ class Statement(Tags, Equalities):
                 
     # Can further improve speed by eliminating overwrite protection
     
-##    def indexByName(self, name):
-##        """
-##
-##
-##        **LEGACY INTERFACE: use direct lookup
-##        
-##        Statement.indexByName() -> int
-##
-##
-##        Method returns index where first item with matching name is located in
-##        the instance. Checks for name matches on a caseless (casefolded) basis.
-##        If no such item exists, returns ValueError.
-##
-##        NOTE: This method runs build_tables() on every call. It is expensive.
-##        You should manually retrieve results from the dictionaries for better
-##        performance.
-##        """
-##        line = self.details.get(name) or self.details.get(name.casefold())
-##        if not line:
-##            raise ValueError    
-##        return line.position
-##
-##    #<-----------------------------------------------------------------------------------------------------------can add index operations
-##    #(get_item and set_item)
-    
     def inheritTags(self, recur=True):
         """
 
@@ -706,28 +666,12 @@ class Statement(Tags, Equalities):
         Statement.inheritTags() -> None
 
 
-        Method runs standard Tags routine and then inherits tags from every
-        line item in the instance. Method skips lines with bookmark, summary, or
-        drop-down replica tags. 
-        """
-        Tags.inheritTags(self, recur)
-        
-        tags_to_omit = [bookMarkTag,
-                        bookMarkTag.casefold(),
-                        dropDownReplicaTag,
-                        dropDownReplicaTag.casefold(),
-                        summaryTag,
-                        summaryTag.casefold()]
-        tags_to_omit = set(tags_to_omit)        
-
-        for line in self.details.values(): #<-----------------------------------------------------MUST SORT HERE to make sure order is constant
-            if tags_to_omit & set(line.allTags) != set():
-                continue
-            else:
-                self.inheritTagsFrom(line)
-
-        #<-----------------------------------------------------------------------------------------------------------rewrite
-        #should just pick up lines from details
+        Method inherits tags from details in fixed order.
+        """      
+        for line in self.get_ordered():
+            # Go through lines in fixed order to make sure that we pick up
+            # tags in the same sequence. 
+            self.inheritTagsFrom(line)
 
     def reset(self):
         """
