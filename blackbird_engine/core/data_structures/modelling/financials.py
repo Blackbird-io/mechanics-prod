@@ -74,10 +74,6 @@ class Financials(StatementBundle):
 
     def __str__(self):
         
-        self.ORDER = ("overview", "income", "cash", "starting", "ending", "ledger")
-        # Use a special tuple that includes all statements to block the default
-        # class order.
-
         result = "\n"
 
         if getattr(self, "parentObject", None):
@@ -100,11 +96,21 @@ class Financials(StatementBundle):
             header += "\n"
 
             result += header
-            
-        result += StatementBundle.__str__(self)
 
+        border = "***"
+        border = border.center(bb_settings.SCREEN_WIDTH) + "\n\n"
+
+        result += border
+        
+        self.ORDER = ("overview", "income", "cash", "starting", "ending", "ledger")
+        # Use a special tuple that includes all statements to block the default
+        # class order.
+        result += StatementBundle.__str__(self)
         del self.ORDER
         # unblock
+
+        result += "\n"
+        result += border
 
         return result        
         

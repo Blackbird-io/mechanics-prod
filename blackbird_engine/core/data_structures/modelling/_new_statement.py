@@ -152,8 +152,6 @@ class Statement(Tags, Equalities):
     """
     keyAttributes = ["details"]
     # Should rename this comparable_attributes
-
-    _INDENT = 2
    
     def __init__(self, name=None, spacing=100):
         Tags.__init__(self, name=name)        
@@ -201,9 +199,18 @@ class Statement(Tags, Equalities):
         header = header.center(bb_settings.SCREEN_WIDTH)
         result += header
         result += "\n\n"
-                
-        for line in self.get_ordered():
-            result += str(line)
+
+        if self.details:
+            for line in self.get_ordered():
+                result += str(line)
+        else:
+            comment = "[intentionally left blank]"
+            comment = comment.center(bb_settings.SCREEN_WIDTH)
+            comment = "\n" + comment
+
+            result += comment
+
+        result += "\n\n"
         
         return result        
                 
