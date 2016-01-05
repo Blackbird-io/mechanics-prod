@@ -7,7 +7,7 @@
 #Module: data_structures.modelling.line_item
 """
 
-Module defines LineItem class. 
+Module defines a class of Statemenets with value.  
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -19,7 +19,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-LineItem              storage for numerical values and tags
+LineItem              a Statement that has its own value
 ====================  ==========================================================
 """
 
@@ -76,16 +76,13 @@ class LineItem(Statement):
     clear()               if modification permitted, sets value to None
     copy()                returns a new line w copies of key attributes
     set_value()           sets value to input, records signature
-    
     ====================  ======================================================
     """
     keyAttributes = Statement.keyAttributes + ["value", "requiredTags", "optionalTags"]
 
-##    LineItem object currently runs on defined (``keyAttribute``) comparisons;
-##    if using comprehensive attribute comparisons instead, make sure to specify
-##    parentObject as an irrelevantAttribute. Otherwise, comparisons will loop:
-##    the parentObj may itself have an __eq__ method that points back to this
-##    lineItem. See Equalities docs for more info.
+    # Make sure that equality analysis skips potentially circular pointers like
+    # .parentObject. Otherwise, comparing children could look to parent, which could
+    # look to child, and so on. 
     
     SIGNATURE_FOR_CREATION = "__init__"
     SIGNATURE_FOR_VALUE_RESET = "LineItem.resetValue"
@@ -99,7 +96,11 @@ class LineItem(Statement):
     TAB_WIDTH = 2
     
     def __init__(self, name=None, value=None):
+
         Statement.__init__(self, name)
+        # We intentionally use inheritance for the Statement relationship here
+        # because then the .find_ and .add_ methods map right on top of each
+        # other by default. 
 
         self._local_value = None
         
@@ -120,42 +121,51 @@ class LineItem(Statement):
     # a particular set that actually contains an instance with the
     # same value but very different details. 
                                   
+    @property
+    def value(self):
+        """
+        read-only property
+        """
+        result = None
+
+        if not self.details:
+            result = self._local_value
+
+        else:
+            if self._local_value:
+                self._bring_down_local_value()
+
+            result = self._sum_details()
+                    
+        return result
+    
     def __str__(self):
         result = "\n".join(self._get_line_strings())
         result += "\n"
         return result
 
-        # Now at the top, you print the lines and they look normal
-        # but at the level of each line you have recursion and extra tabs
-    
-    def clear(self, force=False, recur=True):
+    def clear(self, recur=True, force=False):
         """
 
 
-        L.clear() -> None
+        Line.clear() -> None
 
 
-        Clear value from instance and optionally details (if recur is True).
-
-        NOTE: Method is a no-op for instances that do not pass checkTouch()
-
-        Tags.checkTouch() returns False if the instance has tags that completely
-        prohibit modification.
+        Clear value from instance and optionally details (if ``recur`` is True).
+        If instance fails Tags.checkTouch(), will throw exception unless
+        ``force`` is True. 
         """
-        if self.checkTouch():
+        if self.checkTouch() or force:
             if self.details:
                 self._bring_down_local_value()
-                Statement.reset(self)
+                if recur:
+                    Statement.reset(self)
 
-            else:
-                sig = self.SIGNATURE_FOR_VALUE_RESET
-                self.set_value(None, sig, override=True)
-
-        # Upgrade: May want to raise error if caller is trying to reset a hard-
-        # coded line. "Never let exceptions pass silently."
-        
-        #<-----------------------------------------------------------------------------------may want to raise error #<-------------------------------redo this here
-            # if you are trying to clear a hard-coded value, unless force=True
+            sig = self.SIGNATURE_FOR_VALUE_RESET
+            self.set_value(None, sig, override=True)
+        else:
+            comment = "Unable to clear value from line."
+            raise bb_exceptions.BBAnalyticalError(c, self)
             
     def copy(self, enforce_rules=True):
         """
@@ -168,7 +178,9 @@ class LineItem(Statement):
         True, copy conforms to ``out`` rules.
         """
         new_line = Statement.copy(self, enforce_rules)
-        # Statement method picks up details, _local_value, and tags
+        # Shallow copy, should pick up _local_value as is, and then create
+        # independent containers for tags. 
+        
         new_line.guide = copy.deepcopy(self.guide)
         new_line.log = self.log[:]
 
@@ -190,104 +202,12 @@ class LineItem(Statement):
         result = Tags.extrapolate_to(self, target)
         return result
 
-    def ex_to_default(self, target):
-        """
-
-
-        Line.ex_to_default() -> Line
-
-
-        Method creates a LineItem.copy() of instance. Method signs copy with
-        extrapolation signature if copy.modifiedBy() doesn't already end with
-        one.
-
-        Copy continues to point to seed parentObject.
-        """
-        #basic behavior: copy instance, set to seed.parentObject, if any
-        result = self.copy(enforce_rules=True)
-        
-        ex_d_sig = self.SIGNATURE_FOR_DEFAULT_EXTRAPOLATION
-
-        if ex_d_sig not in result.log[-1]:
-            r_val = result.value
-            result.set_value(r_val, ex_d_sig)
-
-            #<---------------------------------------------------------------------------------remove
-            
-        return result
-
-    def ex_to_special(self,target):
-        """
-
-
-        LineItem.ex_to_special() -> LineItem
-
-
-        Method delegates all work to Tags.ex_to_special.
-
-        Special extrapolation for LineItems returns a LineItem.copy of seed
-        updated with new tags from the target. Method signs the result unless
-        modifiedBy already ends with its signature.
-        """
-        result = Tags.ex_to_special(self,target)
-        
-        ex_s_sig = self.SIGNATURE_FOR_SPECIAL_EXTRAPOLATION
-
-        if ex_s_sig not in result.log[-1]:
-            r_val = result.value
-            result.setValue(r_val,ex_s_sig)
-        return result        
+        # We include this feature only to show that delegation takes place
+        # explicitly. Real work runs through .copy() for default process
+        # and through statement logic for the more complex versions. A Line
+        # only differs from Statement by its log and local value, and .copy()
+        # picks up both.
       
-    def setValue(self, value, signature,
-                 overrideValueManagement=False):
-        """
-
-
-        L.setValue() -> None
-
-
-        **LEGACY INTERFACE**
-
-        Use set_value() instead.
-        """
-        return self.set_value(value, signature, overrideValueManagement)
-            
-    def set_value(self, value, signature, override=False):
-        """
-
-
-        Line.set_value() -> None
-
-
-        Set line value, add entry to log. Value must be numeric unless
-        ``override`` is True. 
-        """
-        if not override:
-            test = value + 1
-            # Will throw exception if value doesn't support arithmetic
-            
-        self._local_value = value
-        log_entry = (signature, time.time(), value)
-        self.log.append(log_entry)
-    
-    @property
-    def value(self):
-        """
-        read-only property
-        """
-        result = None
-
-        if not self.details:
-            result = self._local_value
-
-        else:
-            if self._local_value:
-                self._bring_down_local_value()
-
-            result = self._sum_details()
-                    
-        return result
-                                    
     def increment(self, matching_line, signature=None, consolidating=False):
         """
 
@@ -296,7 +216,8 @@ class LineItem(Statement):
 
 
         Increment line value by matching line and details. If ``consolidating``
-        is True, 
+        is True, method will tag lines accordingly when incrementing local
+        value. 
         """
         if matching_line.value is None:
             pass
@@ -321,39 +242,60 @@ class LineItem(Statement):
                 if consolidating:
                     self.inheritTagsFrom(matching_line)
                     self.tag(T_CONSOLIDATED)
-                    #<-------------------------------------------------------------------------------------------------------check when im supposed to inherit tags
-        #
 
+    # Upgrade-F: The new line structure gives us the option to implement a
+    # different approach to line calculation. Basically, we can allow drivers to
+    # write "on top" of consolidated lines. So a parent unit can consolidate
+    # results from children and then add its own to the same line with the same
+    # driver (e.g., rent). The driver would have to increment the line instead
+    # of writing a clean value, but that's a simple driver-level change.
     #
-    #go through basic cases: adding 2 lines with 2 details each
-    # the details from the bottom (C, D) should get the consolidated tag
-    # the details from the top should not
-    
-    # Once we tag the instance with "consolidate", we will no longer try
-    # to write to its value. But can still write to its details.
-    # So need to make sure that replica is also tagged consolidate
-        #but presumably we will tag replica when the recursion gets to it
-        #if replica is tagged consolidate... then parent can no longer get a derivation
-            #and should also be tagged consolidate #<------------------------------------------------------------------------------
-            #<-------is this even the right pattern? can have superimposition: pick up from below, plus add local results
-                    #vs requiring the activity to take place in a separate "operating" unit
+    # One existing alternative is to capture the parallel "operating" activities
+    # of parent in a separate child unit that kind of resembles our line replica.
+    # Consolidating the parent would then combine results from the real children
+    # and the replica.
+    #
+    # A benefit to the "incremental driver" approach is that we can make
+    # driver calculations depend on the profile (count, type, etc.) of the
+    # parent's children.
+    #
+    # But you can also do the same thing by adding unique lines to the parent
+    # that won't overlap with those of the children and running the computation
+    # there.
 
-    #new approach to derive:
-        #a. get all ordered(): generate a full list
-            #generate complete list:
-                #for line in self:
-                    #if line.details:
-                        #result.extend(line.get_complete_list())
-                    #else:
-                        #result.append(line)
-    
-        #b. walk through incrementally:
-            #def derive_line():
-                #if line.details:
-                    #for detail in line.get_ordered():
-                        #self.derive(detail)
-                #else:
-                    #basic derive routine   
+    def setValue(self, value, signature,
+                 overrideValueManagement=False):
+        """
+
+        **OBSOLETE**
+
+        Legacy interface for set_value()
+
+
+        L.setValue() -> None
+
+
+        Use set_value() instead.
+        """
+        return self.set_value(value, signature, overrideValueManagement)
+            
+    def set_value(self, value, signature, override=False):
+        """
+
+
+        Line.set_value() -> None
+
+
+        Set line value, add entry to log. Value must be numeric unless
+        ``override`` is True. 
+        """
+        if not override:
+            test = value + 1
+            # Will throw exception if value doesn't support arithmetic
+            
+        self._local_value = value
+        log_entry = (signature, time.time(), value)
+        self.log.append(log_entry)
             
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
@@ -389,7 +331,6 @@ class LineItem(Statement):
                 # New replica will come with existing local value
 
             self.set_value(None, sig, override=True)
-
 
     def _get_line_strings(self, indent=TAB_WIDTH):
         """

@@ -53,95 +53,56 @@ class Statement(Tags, Equalities):
     """
 
     A Statement is a container that supports fast lookup and ordered views.
+
+    CONTAINER:
     
-    ITEM HIERARCHIES:
+    Statements generally contain Lines, which may themselves contain additional
+    Lines. You can use Statement.find_first() or find_all() to locate the
+    item you need from the top level of any statement.
+
+    You can add details to a statement through add_line(). Statements also
+    support the append() and extend() list interfaces.
+
+    You can easily combine statements by running stmt_a.increment(stmt_b).
+
+    ORDER:
     
-    A Statement object is generally a list of lines or line-like objects.
+    Statements provide ordered views of their contents on demand through
+    get_ordered(). The ordered view is a list of details sorted by their
+    relative position.
 
-    Lines vary by significance. Some show very basic information and would
-    appear in the least granular presentation of the statement. We call these
-    lines ``top-level``.  Other lines elaborate on the top-level lines. We call
-    these lines ``details``. 
+    Positions should be integers GTE 0. Positions can (and usually should) be
+    non-consecutive. You can specify your own positions when adding a detail or
+    have the Statement automatically assign a position to the detail. You can
+    change detail order by adjusting the .position attribute of any detail.
 
-    The distinction here is one of financial custom: you could easily imagine a
-    ``flat`` statement that shows every piece of information in order. It can
-    be difficult for people to read a long, flat list, so finance professionals
-    generally add hierarchy to split the lines into logical chunks.
+    Statement automatically maintains and repairs order. If you add a line in
+    an existing position, the Statement will move the existing lines and all
+    those behind it back. If you manually change the position of one line to
+    conflict with another, Statement will sort them in alphabetical order.
 
-    Our Statement objects track this pattern. Statements support multiple
-    levels of hierarchy: one line can have details, and those details can have
-    details too.
-
-    TOP OF THE PILE:
+    RECURSION:
     
-    Objects that say they are part of the Statement go at the top of our
-    hierarchy. In other words, if obj.partOf is in instance._top_level_names,
-    the Statement will treat the object as a top-level item. A blank (None)
-    .partOf attribute also classifies the object as top-level. 
-
-    DETAILS:
+    You can view the full, recursive list of all the details in a statement
+    by running stmt.get_full_ordered().
     
-    Detail objects name another object in the container as their parent. 
-    
-    Example 1: financials2014 includes lineitem1 and lineitem5.
-    
-      lineitem1.name = "Insurance"
-      lineitem1.partOf = "SGA".
-      lineitem5.name = "SGA"
-      lineitem5.partOf = "Financials".
-
-    In such a scenario, lineitem1 is a detail of lineitem5.
-
-    Details should follow immediately after their parents in the Statement.
-    
-    SUMMARIES:
-    
-    Statement objects automatically sum values for lines that have details. The
-    Statement lists these total values on new lines called ``summaries.``
-
-    1.  Summaries appear after the last detail for a given item.        
-    2.  Summary line names are a concatenation of the parent and the
-        summary prefix. For example, a summary for lineitem5 above would have
-        .name ==``TOTAL SGA``
-    3.  Summaries are at the same level of the statement hierarchy as their
-        parent. In code, summary.partOf == parent.partOf.
-
-    REPLICAS:
-    
-    Statements create replicas of lines that have both details and a defined
-    value to help tabulate summaries.
-
-    Replicas are copies of a line that are also part of that same line. When a
-    Statement inserts a replica for a line, it moves the line's value to the
-    replica and zeroes out the parent. If the parent then picks up more value
-    in the future, Statement will increment the replica by that value and zero
-    out the parent. 
-
-    Visually, the outcome looks as follows:
-
-        SGA .......... 10                 SGA ..........0              
-          Employees... 6                    SGA.........10
-          Insurance... 8        ===>        Employees...6  
-          Security.... 2                    Insurance...8
-        *TOTAL SGA.... 16                   Security....2
-                                          TOTAL SGA.....26
-
-        *only lineitems that are partOf SGA increment the summary
-            
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
-    details
-    POSITION_SPACING
+    POSITION_SPACING      default distance between positions
     
     FUNCTIONS:
-    append()
+    add_line()            add line to instance
+    append()              add line to instance in final position
     copy()                return deep copy
-    extend()
-    find()
-    increment()           add data from a collection of objects
+    extend()              append multiple lines to instance in order
+    find_all()            return all matching items
+    find_first()          return the first matching item
+    get_ordered()         return list of instance details
+    get_full_ordered()    return recursive list of details
+    increment()           add data from another statement
     reset()               clear values
     ====================  ======================================================
     """
@@ -207,101 +168,20 @@ class Statement(Tags, Equalities):
         result += "\n\n"
         
         return result        
-                
-    def find_first(self, *ancestor_tree):
-        """
-
-
-        Statement.find_first() -> Line or None
-
-
-        Return a detail that matches the ancestor tree or None.
-
-        The ancestor tree should be one or more strings naming objects in order
-        of their relationship, from most junior to most senior. So if "bubbles"
-        is part of "cost", you can run stmt.find_first("bubbles", "cost").
-
-        If only one object named "bubbles" exists in the instance and any of its
-        details, a call to stmt.find_first("bubbles") will return the same
-        result.
-
-        Method searches breadth-first within instance, then depth-first within
-        instance details.
-        """
-        result = None
-
-        caseless_root_name = ancestor_tree[0].casefold()
-        root = self.details.get(caseless_root_name)
-
-        if root:
-            remainder = ancestor_tree[1:]
-            if remainder:
-                result = root.find_first(*remainder)
-            else:
-                result = root
-                # Caller specified one criteria and we matched it. Stop work.
-
-        else:
-            for detail in self.get_ordered():
-                result = detail.find_first(*ancestor_tree)
-                if result is not None:
-                    break
-                else:
-                    continue
-
-        return result
-
-    def find_all(self, *ancestor_tree):
-        """
-
-
-        Statement.find_all() -> list
-
-
-        Return a list of details that matches the ancestor_tree.
-
-        The ancestor tree should be one or more strings naming objects in order
-        of their relationship, from most junior to most senior. 
-
-        Method searches breadth-first within instance, then depth-first within
-        instance details.
-        """
-        result = []
-
-        caseless_root_name = ancestor_tree[0].casefold()
-        root = self.details.get(caseless_root_name)
-
-        if root:
-            remainder = ancestor_tree[1:]
-            if remainder:
-                lower_nodes = root.find_all(*remainder)
-                if lower_nodes:
-                    result.extend(lower_nodes)
-            else:
-                # Nothing left, at the final node
-                node = root
-                result.append(node)
-        else:
-            for detail in self.get_ordered():
-                lower_nodes = detail.find_all(*ancestor_tree)
-                if lower_nodes:
-                    result.extend(lower_nodes)
-                    continue
-
-        return result
 
     def add_line(self, new_line, position=None):
         """
 
 
-        Statement.add_line() -> int
+        Statement.add_line() -> None
 
         
-        #return position where we inserted?
+        Add line to instance at position.
 
-        #if position is None, adds to end (max position + spacer)
+        If ``position`` is None, method appends line. If position conflicts
+        with existing line, method will place it at the requested position
+        and push back all of the lines behind it by POSITION_SPACING.
         """
-        
         self._inspect_line_for_insertion(new_line)
 
         if position is None:
@@ -331,11 +211,17 @@ class Statement(Tags, Equalities):
                     for i in range(len(ordered)):
                         existing_line = ordered[i]
                         
-                        if new_line.position < existing_line.position:
+                        if new_line.position < existing_line.position: 
                             self._bind_and_record(new_line)
                             break
+                            # If we get here, ok to insert as-is. New position
+                            # could only conflict with lines below the current
+                            # because we are going through the lines in order.
+                            # But we know that the line does not because the
+                            # conflict block breaks the loop.
 
                         elif new_line.position == existing_line.position:
+                            # Conflict resolution block.
                             
                             tail = ordered[i:]
                             for pushed_line in tail:
@@ -346,59 +232,6 @@ class Statement(Tags, Equalities):
 
                         else:
                             continue            
-            
-    def append(self, line):
-        """
-
-
-        Statement.append() -> None
-
-        
-        Add line to instance in final position.
-        """
-        self._inspect_line_for_insertion(line)
-        # Will throw exception if problem
-        
-        ordered = self.get_ordered()
-        if ordered:
-            last_position = ordered[-1].position
-        else:
-            last_position = 0
-        new_position = last_position + self.POSITION_SPACING
-        line.position = new_position
-
-        self._bind_and_record(line)
-        
-    def get_ordered(self):
-        """
-
-
-        Statement.get_ordered() -> list
-
-
-        Return a list of details in order of relative position.
-        """
-        result = sorted(self.details.values(), key = lambda line: line.position)
-        return result
-
-    def get_full_ordered(self):
-        """
-
-
-        Statement.get_full_ordered() -> list
-
-
-        Return ordered list of lines and their details. Result will show lines
-        in order of relative position depth-first. 
-        """
-        result = list()
-        for line in self.get_ordered():
-            if line.details:
-                increment = line.get_full_ordered()
-                result.extend(increment)
-            else:
-                result.append(line)
-        return result
         
     def add_line_to(self, line, *ancestor_tree):
         """
@@ -469,6 +302,28 @@ class Statement(Tags, Equalities):
         else:
             self.append(line)
     
+    def append(self, line):
+        """
+
+
+        Statement.append() -> None
+
+        
+        Add line to instance in final position.
+        """
+        self._inspect_line_for_insertion(line)
+        # Will throw exception if problem
+        
+        ordered = self.get_ordered()
+        if ordered:
+            last_position = ordered[-1].position
+        else:
+            last_position = 0
+        new_position = last_position + self.POSITION_SPACING
+        line.position = new_position
+
+        self._bind_and_record(line)
+        
     def clearInheritedTags(self, recur=True):
         """
 
@@ -524,10 +379,10 @@ class Statement(Tags, Equalities):
         """
 
 
-        Statement.ex_to_special() -> Fins
+        Statement.ex_to_special() -> Statement
 
 
-        Method returns new Financials object, runs custom logic.
+        Method returns new Statement object, runs custom logic.
 
         First, make a container by creating a shallow copy of seed instance,
         clearing out any contents, clearing out that shell's inherited tags,
@@ -545,64 +400,191 @@ class Statement(Tags, Equalities):
 
         Third, return result.
         """
-        # Step 1: make a container
+        # Conceptually, we are merging seed and target. Because seed carries
+        # new, revised information, we implement all of its changes. We then
+        # pick up any additional information (content) the target may carry
+        # and add it to the result. 
+        # 
+        # When seed and target carry the same data, we try to merge their
+        # versions (ie work recursively through their details). We take seed
+        # data in the event of conflict. The one exception occurs when target
+        # tags its data as special, in which case we ignore seed changes.
+        
+        # Step 1: Make a container
         tags_to_omit = []
         seed = self
         alt_seed = copy.copy(seed)
-        alt_seed.clear()
-        #blending container level data only for now, so discard the complex,
-        #recrusive contents from alt_seed. we will insert them independently
-        #in step 2.
-        result = alt_seed.copy(enforce_rules = True)
-        #result is now a class-specific copy of alt_target, with all container
-        #data in independent objects
-        result = Tags.ex_to_special(result,target,mode = "at")
-        #updates result with those target tags it doesnt have already. "at" mode
-        #picks up all tags from target. other attributes stay identical because
-        #Tags uses a shallow copy.
+        alt_seed._details = dict()
+        # Create an empty version of the instance. 
+        alt_seed.clearInheritedTags()
         
-        # Step 2: fill the result container
-        # go line by line
-        alt_target.build_tables(*tags_to_omit)
-        # Exclude summaries and replicas from the target
-        tags_to_omit = set(tags_to_omit)
-        for sL in self:
-            if tags_to_omit & set(sL.allTags) != set():
-                continue
-            #shared line items. extrapolate seed on to target. 
-            if sL.name in alt_target.table_by_name.keys():
-                itL = min(alt_target.table_by_name[sL.name])
-                tL = alt_target[itL]
-                if tL.checkTouch():
-                    newL = sL.extrapolate_to(tL)
+        result = alt_seed.copy(enforce_rules=True)
+        # Copy container data according to all the rules.
+        
+        result = Tags.ex_to_special(result, target, mode="at")
+        # Updates result with tags from target. We use "at" mode to pick up
+        # all of the tags. This method should not affect other container
+        # attributes. 
+        
+        # Step 2: Fill the container
+        for name, own_line in self.details.items():
+            target_line = target.details.get(name)
+
+            if target_line:
+
+                if target_line.checkTouch():
+                    result_line = own_line.extrapolate_to(target_line)
+
                 else:
-                    newL = tL.copy(enforce_rules = False)
+                    result_line = target_line.copy(enforce_rules=False)
+
             else:
-                newL = sL.copy(enforce_rules = True)
-            if newL.partOf in result._top_level_names:
-                newL.setPartOf(result)
-                #to catch any new top-level seed lines
-            result.append(newL)
+                result_line = own_line.copy(enforce_rules=True)
 
-        result.build_tables()
+            result.add_line(result_line, position=result_line.position)
 
-        target_only = set(alt_target.table_by_name.keys()) - set(result.table_by_name.keys())
-        target_only = sorted(target_only)
-        #enforce stable order to maintain consistency across runtimes
-        for l_name in target_only:
-            i_target = min(alt_target.table_by_name[l_name])
-            line = alt_target[i_target]
-            if self.checkOrdinary(line):
+        for name, target_line in target.details.items():
+            if name in result.details:
                 continue
             else:
-                #insert lines that are special, hardcoded, or do_not_touch
-                i_result = result._spot_generally(line,alt_target,i_target)
-                r_line = line.copy(enforce_rules = False)
-                result.insert(i,r_line)
-        
-        # Step 3: return the container
-        return result #<--------------------------------------------------------------------------------------------------------------rewrite
+                if self.checkOrdinary(target_line):
+                    continue
+                else:
+                    result_line = target_line.copy(enforce_rules=False)
+                    result.add_line(result_line, position=result_line.position)
 
+        # Step 3: Return result
+        return result 
+
+    def extend(self, lines):
+        """
+
+
+        Statement.extend() -> None
+
+        
+        lines can be either an ordered container or a Statement object
+        """
+        try:
+            for line in lines:
+                self.append(line)
+        except TypeError:
+            for line in lines.get_ordered():
+                self.append(line)
+                
+    def find_all(self, *ancestor_tree):
+        """
+
+
+        Statement.find_all() -> list
+
+
+        Return a list of details that matches the ancestor_tree.
+
+        The ancestor tree should be one or more strings naming objects in order
+        of their relationship, from most junior to most senior. 
+
+        Method searches breadth-first within instance, then depth-first within
+        instance details.
+        """
+        result = []
+
+        caseless_root_name = ancestor_tree[0].casefold()
+        root = self.details.get(caseless_root_name)
+
+        if root:
+            remainder = ancestor_tree[1:]
+            if remainder:
+                lower_nodes = root.find_all(*remainder)
+                if lower_nodes:
+                    result.extend(lower_nodes)
+            else:
+                # Nothing left, at the final node
+                node = root
+                result.append(node)
+        else:
+            for detail in self.get_ordered():
+                lower_nodes = detail.find_all(*ancestor_tree)
+                if lower_nodes:
+                    result.extend(lower_nodes)
+                    continue
+
+        return result
+    
+    def find_first(self, *ancestor_tree):
+        """
+
+
+        Statement.find_first() -> Line or None
+
+
+        Return a detail that matches the ancestor tree or None.
+
+        The ancestor tree should be one or more strings naming objects in order
+        of their relationship, from most junior to most senior. So if "bubbles"
+        is part of "cost", you can run stmt.find_first("bubbles", "cost").
+
+        If only one object named "bubbles" exists in the instance and any of its
+        details, a call to stmt.find_first("bubbles") will return the same
+        result.
+
+        Method searches breadth-first within instance, then depth-first within
+        instance details.
+        """
+        result = None
+
+        caseless_root_name = ancestor_tree[0].casefold()
+        root = self.details.get(caseless_root_name)
+
+        if root:
+            remainder = ancestor_tree[1:]
+            if remainder:
+                result = root.find_first(*remainder)
+            else:
+                result = root
+                # Caller specified one criteria and we matched it. Stop work.
+
+        else:
+            for detail in self.get_ordered():
+                result = detail.find_first(*ancestor_tree)
+                if result is not None:
+                    break
+                else:
+                    continue
+
+        return result
+
+    def get_full_ordered(self):
+        """
+
+
+        Statement.get_full_ordered() -> list
+
+
+        Return ordered list of lines and their details. Result will show lines
+        in order of relative position depth-first. 
+        """
+        result = list()
+        for line in self.get_ordered():
+            if line.details:
+                increment = line.get_full_ordered()
+                result.extend(increment)
+            else:
+                result.append(line)
+        return result
+    
+    def get_ordered(self):
+        """
+
+
+        Statement.get_ordered() -> list
+
+
+        Return a list of details in order of relative position.
+        """
+        result = sorted(self.details.values(), key=lambda line: line.position)
+        return result
+    
     def increment(self, matching_statement, *tagsToOmit, consolidating=False):
         """
 
@@ -610,13 +592,11 @@ class Statement(Tags, Equalities):
         Statement.increment() -> None
         
 
-        Increment matching lines, add new ones to instance. 
-        ``tags_to_omit`` should be a set of tags for speed #<---------------------------------------------
+        Increment matching lines, add new ones to instance. Works recursively.
 
-        #algo:
-        #add lines where they are missing
-        #increment lines where they match
-        #repeat recursively
+        Method skips lines with tagsToOmit. If ``consolidating`` is True, method
+        tags any affected lines with the "consolidated" tag (method delegates
+        incrementation-level tagging to LineItem.consolidate()).
         """
         for name, external_line in matching_statement.details.items():
             # ORDER SHOULD NOT MATTER HERE
@@ -651,22 +631,6 @@ class Statement(Tags, Equalities):
                 self.add_line(local_copy, local_copy.position)
                 # For speed, could potentially add all the lines and then fix
                 # positions once.         
-
-    #think about what happens when you increment one statement with 5 lines by another w 5 lines and the lines are same rel position #<-------------------
-
-    def extend(self, lines):
-        """
-        -> None
-        lines can be either an ordered container or a Statement object
-        """
-        try:
-            for line in lines:
-                self.append(line)
-        except TypeError:
-            for line in lines.get_ordered():
-                self.append(line)
-                
-    # Can further improve speed by eliminating overwrite protection
     
     def inheritTags(self, recur=True):
         """
