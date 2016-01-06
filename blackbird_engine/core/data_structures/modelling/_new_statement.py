@@ -472,7 +472,7 @@ class Statement(Tags, Equalities):
             for line in lines.get_ordered():
                 self.append(line)
                 
-    def find_all(self, *ancestor_tree):
+    def find_all(self, *ancestor_tree, remove=False):
         """
 
 
@@ -486,16 +486,30 @@ class Statement(Tags, Equalities):
 
         Method searches breadth-first within instance, then depth-first within
         instance details.
+
+        If ``remove`` is True, method **removes** the result from its parent
+        prior to delivery.
+
+        NOTE: Use caution when removing items through this method, since you may
+        have difficulty putting them back.
+
+        For most removal tasks, find_first(remove=True) will offer significantly
+        more comfort at a relatively small performance cost.        
         """
         result = []
 
         caseless_root_name = ancestor_tree[0].casefold()
-        root = self._details.get(caseless_root_name)
+        if remove:
+            root = self._details.pop(caseless_root_name, None)
+            # Pull root out of details
+        else:
+            root = self._details.get(caseless_root_name)
+            # Keep root in details
 
         if root:
             remainder = ancestor_tree[1:]
             if remainder:
-                lower_nodes = root.find_all(*remainder)
+                lower_nodes = root.find_all(*remainder, remove=remove)
                 if lower_nodes:
                     result.extend(lower_nodes)
             else:
@@ -504,7 +518,7 @@ class Statement(Tags, Equalities):
                 result.append(node)
         else:
             for detail in self.get_ordered():
-                lower_nodes = detail.find_all(*ancestor_tree)
+                lower_nodes = detail.find_all(*ancestor_tree, remove=remove)
                 if lower_nodes:
                     result.extend(lower_nodes)
                     continue
@@ -530,14 +544,25 @@ class Statement(Tags, Equalities):
 
         Method searches breadth-first within instance, then depth-first within
         instance details.
+
+        If ``remove`` is True, method **removes** the result from its parent
+        prior to delivery.
+
+        NOTE: Use caution when removing items through this method, since you may
+        have difficulty putting them back.
+
+        The best way to reinsert an item you accidentally removed is to find
+        its parent using detail.parentObject and insert the item directly back.
         """
         result = None
 
         caseless_root_name = ancestor_tree[0].casefold()
         if remove:
             root = self._details.pop(caseless_root_name, None)
+            # Pull root out of details
         else:
             root = self._details.get(caseless_root_name)
+            # Keep root in details
 
         if root:
             remainder = ancestor_tree[1:]
