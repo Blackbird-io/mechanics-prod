@@ -246,16 +246,16 @@ def apply_data(topic, datapoint):
     model.interview.clear_cache()
     #always clear interview cache before modifying path, otherwise controller
     #may follow old plan
-    #
-    path.build_tables()
-    if sbr_count_label in path.table_by_name:
+    
+    
+    if path.find_first(sbr_count_label):
         pass
     else:
         subscriber_count = LineItem(sbr_count_label)
         subscriber_count.guide.quality.set_standard(1) #max used to be 5
         subscriber_count.guide.priority.increment(3)
         path.add_line_to(subscriber_count, "structure")
-    #
+    
     ##    model.interview.set_focal_point(subscriber_count)
     #direct controller attention to focal point
     #
