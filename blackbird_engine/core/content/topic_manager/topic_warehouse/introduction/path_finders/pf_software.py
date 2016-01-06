@@ -194,11 +194,12 @@ for line in opex_details:
     line.guide.quality.set_standard(3) #max used to be 5
     standard_path.add_line_to(line.copy(), "operating expense")
 
-#3. increase quality requirements for sg&a
-#(can also place it under opex here)
-sga = standard_path.find_first("sg&a")
+#3. increase quality requirements for sg&a, place it under opex
+sga = standard_path.find_first("sg&a", remove=True)
 sga.guide.quality.set_standard(4) #max used to be 6
-sga.tag(opex.name) #<-------------------------------------------------------imperfect, just trying out
+standard_path.add_line_to(sga, "operating expense")
+
+##sga.tag(opex.name) #<-------------------------------------------------------imperfect, just trying out
 ##sga.setPartOf(opex)
 
 #4. add an AEBITDA line

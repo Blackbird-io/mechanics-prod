@@ -511,7 +511,7 @@ class Statement(Tags, Equalities):
 
         return result
     
-    def find_first(self, *ancestor_tree):
+    def find_first(self, *ancestor_tree, remove=False):
         """
 
 
@@ -534,19 +534,22 @@ class Statement(Tags, Equalities):
         result = None
 
         caseless_root_name = ancestor_tree[0].casefold()
-        root = self._details.get(caseless_root_name)
+        if remove:
+            root = self._details.pop(caseless_root_name, None)
+        else:
+            root = self._details.get(caseless_root_name)
 
         if root:
             remainder = ancestor_tree[1:]
             if remainder:
-                result = root.find_first(*remainder)
+                result = root.find_first(*remainder, remove=remove)
             else:
                 result = root
                 # Caller specified one criteria and we matched it. Stop work.
 
         else:
             for detail in self.get_ordered():
-                result = detail.find_first(*ancestor_tree)
+                result = detail.find_first(*ancestor_tree, remove=remove)
                 if result is not None:
                     break
                 else:
