@@ -336,7 +336,6 @@ def unit_work(product,
 
     Function then inserts drivers that fill out the rate and product commission.
     """
-    product.financials.build_tables()
     overview = product.financials.overview
     income = product.financials.income
     
@@ -361,18 +360,12 @@ def unit_work(product,
     dr_own_commission.setWorkConditions(product_label)
     dr_own_commission.configure(product_data, f_multiplier)
     #
-    #add lines to product financials
-    if l_average_commission.name not in overview.table_by_name:
-        overview.add_top_line(l_average_commission.copy())
-    
-    if l_ee.name not in income.table_by_name:
-        income.add_line_to(l_ee.copy(), "operating expense")
-        
-    if l_commissions.name not in income.table_by_name:
-        income.add_line_to(l_commissions.copy(), "operating expense", l_ee.name)
-        
+    #add lines to product financials:
+    overview.add_top_line(l_average_commission.copy())
+    income.add_line_to(l_ee.copy(), "operating expense")    
+    income.add_line_to(l_commissions.copy(), "operating expense", l_ee.name)
     income.add_line_to(l_own_commission.copy(), l_commissions.name)
-    #
+    
     #add drivers
     product.addDriver(dr_own_commission)
     product.addDriver(dr_own_average)
