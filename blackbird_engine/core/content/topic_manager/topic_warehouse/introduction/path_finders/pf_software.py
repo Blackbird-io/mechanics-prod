@@ -198,7 +198,8 @@ for line in opex_details:
 #(can also place it under opex here)
 sga = standard_path.find_first("sg&a")
 sga.guide.quality.set_standard(4) #max used to be 6
-sga.setPartOf(opex)
+sga.tag(opex.name) #<-------------------------------------------------------imperfect, just trying out
+##sga.setPartOf(opex)
 
 #4. add an AEBITDA line
 adj_ebitda = LineItem("Adjusted EBITDA")
