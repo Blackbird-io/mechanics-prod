@@ -567,6 +567,7 @@ class Statement(Tags, Equalities):
         result = list()
         for line in self.get_ordered():
             if line._details:
+                result.append(line)
                 increment = line.get_full_ordered()
                 result.extend(increment)
             else:
