@@ -241,12 +241,9 @@ def apply_data(topic):
     #
     new_steps = standard_path.copy()
     private_path.extend(new_steps)
-    next_step = private_path[1]
-    #expect next_step to be structure
     #
     model.interview.clear_cache()
     model.interview.set_path(private_path)
-##    model.interview.set_focal_point(intro_line)
 
 def end_scenario(topic):
     c = "Topic %s does not ask questions. Process should not be in "
