@@ -1043,12 +1043,13 @@ class BusinessUnit(History, Tags, Equalities):
             self.financials.starting = self.past.financials.ending
             # Connect to the past
 
-        ending_name = self.financials.ending.name
-        self.financials.ending = self.financials.starting.copy(enforce_rules=False) 
-        # Copy all lines from starting; we are assuming no changes here.
-        self.financials.ending.setName(ending_name)
-        
-        self.financials.ending.reset()
+        ending_balance = self.financials.ending
+        starting_balance = self.financials.starting
+
+        ending_balance.increment(starting_balance, consolidating=False)
+        ending_balance.reset()
+        # Our goal is to pick up shape, so clear values. 
+
         # By default, the ending balance sheet should look the same as the
         # starting one. Here, we copy the starting structure and zero out
         # the values. We will fill in the values later through
@@ -1200,7 +1201,7 @@ class BusinessUnit(History, Tags, Equalities):
                 else:
                     ending_line = ending_balance.find_first(starting_line.name)
                     if starting_line.value is not None:
-                        ending_line.set_value(source.value, self._UPDATE_BALANCE_SIGNATURE)
+                        ending_line.set_value(starting_line.value, self._UPDATE_BALANCE_SIGNATURE)
 
                 # Theoretically find_first() could create problems if multiple lines in a
                 # balance sheet have the same details (ie short-term and long-term bonds).
