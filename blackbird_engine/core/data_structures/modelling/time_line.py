@@ -400,7 +400,7 @@ class TimeLine(dict):
         result = [past_dates, [ref_end], future_dates]
         return result        
     
-    def getOrdered(self):
+    def get_ordered(self):
         """
 
 
@@ -417,6 +417,15 @@ class TimeLine(dict):
             
         return result
 
+    def getOrdered(self):
+        """
+
+        **OBSOLETE**
+
+        Legacy interface for TimeLine.get_ordered()
+        """
+        return self.get_ordered()
+    
     def link(self):
         """
 
