@@ -33,6 +33,7 @@ import dill
 
 import bb_exceptions
 import bb_settings
+import openpyxl as excel_interface
 
 from data_structures.guidance.interview_tracker import InterviewTracker
 from data_structures.system.bbid import ID
@@ -278,6 +279,232 @@ class Model(Tags):
         time_stamp = time.time()
         record = (message,time_stamp)
         self.transcript.append(record)
+
+    def spread(self, path):
+        """
+        Return an Excel model
+        """
+        pass
+
+    def _spread_foundation(self):
+        """
+        Return a workbook with:
+           cover
+           scenarios
+           timeline
+           
+        """       
+        wb = excel_interface.Workbook()
+        self._create_scenarios_tab(wb)
+        self._create_time_line_tab(wb)
+        return wb
+
+    def _create_scenarios_tab(self, book):
+        scenarios = book.create_sheet("Scenarios")
+        scenarios.bb_row_lookup = dict() #<----------------------------should be Statement so we can manage insertions
+        scenarios.bb_col_lookup = dict()
+        # Should just create an object with both of these things
+
+        # Sheet map:
+        # A          |  B      | C             | D     | E
+        # param names|  blank  | active values | blank | blackbird values
+
+        starting_row = 1
+        starting_column = 1
+        # should make this a lookup table too: column name to index
+        
+        scenarios.bb_col_lookup["params"] = 1
+        scenarios.bb_col_lookup["active"] = 3
+        scenarios.bb_col_lookup["base"] = 5
+        # these keys should be standard
+        # all other scenarios should be a function of selection
+        # can do something like bb_case cells are an index of bb scenarios
+        # and then active just points to those
+
+        active_row = starting_row
+
+        f_pull_from_cell = "=%s"
+        
+        for param_name in sorted(self.time_line.parameters):
+
+            param_cell = scenarios.cell(row=active_row, column=starting_column)
+            scenarios.bb_row_lookup[param_name] = active_row
+
+            active_cell = scenarios.cell(row=active_row, column=(starting_column+2))
+            bb_cell = scenarios.cell(row=active_row, column=(starting_column+4))
+            # ideally should be active_cell.column+2
+                        
+            param_cell.value = param_name
+            bb_cell.value = self.time_line.parameters[param_name]
+
+            active_cell.value = f_pull_from_cell % bb_cell.coordinate
+
+            active_row += 1
+            
+        #Can expand this logic to print every scenario
+        
+        return book
+            
+    def _create_time_line_tab(self, book):
+        
+        scenarios = book["Scenarios"]
+        
+        my_tab = book.create_sheet("Timeline")
+        my_tab.bb_row_lookup = dict()
+        my_tab.bb_col_lookup = dict()
+
+        get_column_letter = excel_interface.utils.get_column_letter
+
+        # first column will be params
+        # second column will be blank
+        # third column will be master
+        
+        col_params = 1
+        col_master = 3
+        # have to record column <---------------------------------
+
+        header_row = 3
+
+##        f_active_scenario = "=" + str(scenarios.title) + "!" + "$" + str(scenarios.bb_col_lookup["active"]) + "%s"
+        f_active_scenario = "=Scenarios!C%s"
+        # first, write the param colum and the master column: "=Scenarios! $A1"
+
+        # Make the param name and master value columns
+        for param_name, row_number in scenarios.bb_row_lookup.items():
+            # Order doesn't matter here
+
+            active_row = header_row + row_number
+            my_tab.bb_row_lookup[param_name] = active_row
+            
+            name_cell = my_tab.cell(column=col_params, row=active_row)
+            name_cell.value = param_name
+
+            master_cell = my_tab.cell(column=col_master, row=active_row)
+            master_cell.value = f_active_scenario % row_number
+
+        f_pull_master = "=" + "$" + get_column_letter(col_master) + "%s"
+        # "=$A1"
+        
+        starting_column = col_master + 2
+        active_column = starting_column
+        
+        for period in self.time_line.get_ordered():
+
+            # record column in lookup table so future routines can coordinate
+            my_tab.bb_col_lookup[period.end] = active_column
+            
+            header_cell = my_tab.cell(column=active_column, row=header_row)
+            header_cell.value = period.end
+
+            # first, add period-level parameters
+            # first, drop the pull value for all cells through the params thing
+            for param_row in my_tab.bb_row_lookup.values():
+                
+                # Note: will probably write cells in non-sequential order
+
+                param_cell = my_tab.cell(column=active_column, row=param_row)
+                param_cell.value = f_pull_master % param_row
+
+                # Or could add links to the prior period's parameters <--------------------------
+                # Can probably also make this a named range or something? Cause these formulas
+                # are all the same.
+
+            # then, overwrite them with explicitly specified params
+            for spec_name, spec_value in period.parameters.items():
+                param_row = my_tab.bb_row_lookup[spec_name]
+                param_cell = my_tab.cell(column=active_column, row=param_row)
+                param_cell.value = spec_value
+##                spec_cell.format = blue_font_color
+            
+            active_column += 1
+            # Move on to the next period
+
+        return book
+
     
+
+        #//
+
+        # later routines:
+            # in business unit, should have ._add_time_line(tab)
+            # 
+
+        # should have written the full timeline
+        # should enter all of these into bb_col_lookup
+            #by end date
+            #then unit-specific sheets can pick those up        
+    
+        # but better logic is:
+            # write the date
+            # write the period      
+
+        # first, carry over the master
+        ##for every row that's filled out in params, should also copy here
+        ##need to know what column params start in
+        ##so let's establish the params as a named range
+
+        # ranges i set up here:
+        # end_dates
+        ## need to somehow be able to access the params on every unit
+        ## could just have them copied
+
+        # for cell in tl_param_names:
+            # param names in th
+
+        # for cell in tl_param_values:
+            # put in the master column
+
+        # then for every period, ...
+            # period params should point to master by default
+                #populate these first
+                #starting_row
+                #period_
+
+            # if time_line.period has a certain value,
+                # we should overwrite it and hardcode it (a particular color)
+                # find the row, write there?
+
+        # can probably delegate this down to the timeline itself
+        # time_line should raise error if there is no scenarios tab
+            #would then be easier to ask each period to do its thing?
+            #or alternatively would pick every unit in the current period and go from there
+                #yeah, should start with the current period, and then step through the company hierarchy
+        
+    
+        # Loren's point: create an intermediate representation in memory
+            # then can write that quickly
+            # so would probably set up sheets (in memory), formulas, etcetera
+
+        #for unit:
+            #take the active tab
+            #for each line, add consolidation functionality
+            #have to connect old balance sheet as starting
+            
+        #for driver:
+            # need to map ``data`` to cell coordinates
+                #as in, take each key and connect it to a cell
+                    #populate the cell with the driver's value
+                    #remember the coordinates
+
+                #
+            
+            # need to translate formula to one that works on cell coordinates
+            # formula should have an _xl equivalent
+                # which should take the actual formula and turn it into excel compatible string
+                # use string formatting to convert var names into coordinates
+
+            # for something like ebitda calc, would need to:
+                # know the column
+                # figure out the relevant rows for each input cell
+                ## could have a general conversion routine for .find_first(), which looks up name in lookup table
+                ## may also want to organize lookup tables by section to avoid name collisions
+                ## so have a .income or .cash section where names have to be unique
+
+        # should put all of this stuff into a single class called ExcelConverter
+        # which could then have interfaces and other stuff
+
         
 
+    
+        
+            
