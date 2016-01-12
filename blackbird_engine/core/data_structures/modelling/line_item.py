@@ -322,7 +322,8 @@ class LineItem(Statement):
                 # Replica already exists, so it must have a non-None value. We
                 # also know that instance has a non-None value, otherwise we
                 # would be in the no-op block.
-                new_value = replica.value + self._local_value
+                starting_value = replica.value or 0
+                new_value = starting_value + self._local_value
                 replica.set_value(new_value, sig)
                 replica.inheritTagsFrom(self)
 
