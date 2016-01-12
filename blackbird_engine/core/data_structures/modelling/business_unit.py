@@ -1201,14 +1201,15 @@ class BusinessUnit(History, Tags, Equalities):
         
         if starting_balance and ending_balance:
             
-            for name, starting_line in ending_balance._details.items():
+            for name, starting_line in starting_balance._details.items():
 
                 if tags_to_omit & set(starting_line.allTags):
                     continue
 
                 else:
-                    ending_line = ending_balance.find_first(starting_line.name)
                     if starting_line.value is not None:
+                        
+                        ending_line = ending_balance.find_first(starting_line.name)
                         ending_line.set_value(starting_line.value, self._UPDATE_BALANCE_SIGNATURE)
 
                 # Theoretically find_first() could create problems if multiple lines in a
