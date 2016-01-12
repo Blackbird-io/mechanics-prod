@@ -246,6 +246,25 @@ class TimeLine(dict):
         for date in future:
             self[date].clear()
         
+    def extrapolate(self, seed=None):
+        """
+
+
+        TimeLine.extrapolate() -> None
+
+
+        Extrapolate current period to future dates.
+        """
+        if seed is None:
+            seed = self.current_period
+        seed_date = seed.end
+        
+        past, present, future = self.get_segments(seed_date)
+        self.extrapolate_dates(seed, future)
+
+        # Could run in parallel in simple mode by projecting
+        # each snapshot separately and then connecting them
+
     def extrapolate_all(self, seed=None):
         """
 
