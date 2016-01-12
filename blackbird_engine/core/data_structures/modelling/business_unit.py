@@ -60,6 +60,7 @@ from .parameters import Parameters
 # through that pointer
 tConsolidated = Tags.tagManager.catalog["consolidated"]
 tHardCoded = Tags.tagManager.catalog["hard"]
+T_REPLICA = Tags.tagManager.catalog["ddr"]
 
 # Classes   
 class BusinessUnit(History, Tags, Equalities):
@@ -819,7 +820,13 @@ class BusinessUnit(History, Tags, Equalities):
         if line._details:
             
             for detail in line.get_ordered():
-                self._derive_line(detail)
+                
+                if T_REPLICA in detail.allTags:
+                    continue
+                    # Skip replicas to make sure we apply the driver only once
+                    # A replica should never have any details
+                else:
+                    self._derive_line(detail)
         
                 
     def _fit_to_period(self, time_period, recur=True):
