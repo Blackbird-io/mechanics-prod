@@ -44,6 +44,7 @@ from ._new_statement import Statement
 
 # Constants
 T_CONSOLIDATED = Tags.tagManager.catalog["consolidated"]
+T_REPLICA = Tags.tagManager.catalog["ddr"]
 
 # Classes
 class LineItem(Statement):
@@ -352,6 +353,8 @@ class LineItem(Statement):
             result.append(simple)
         else:
             # Detailed view: when this line has details
+            self._bring_down_local_value()
+            
             header = printing_tools.format_as_line(self, header=True, left_tab=indent)
             result.append(header)
 
@@ -398,6 +401,7 @@ class LineItem(Statement):
         replica._details = dict()
         # Replicas don't have any details of their own. Can't run .clear() here
         # because instance and replica initially point to the same details dict.
+        replica.tag(T_REPLICA)
                                       
         if replica._local_value != self._local_value:
             comment = "At creation, replica should have the same value as instance."
