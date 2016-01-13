@@ -127,18 +127,35 @@ class LineItem(Statement):
         """
         read-only property
         """
-        result = None
+        result = self._local_value
+        # Could be None
 
-        if not self._details:
-            result = self._local_value
+        if self._details:
 
-        else:
-            if self._local_value:
-                self._bring_down_local_value()
+            total_details = self._sum_details()
+            if total_details is not None:
 
-            result = self._sum_details()
-                    
+                result = result or 0
+                result += total_details
+
         return result
+
+##    
+##        if not self._details:
+##            result = self._local_value
+##
+##        else:
+##            result = self._local_value
+##            total_details = self._sum_details()
+##            if total_details is not None:
+##                
+##                
+##            result = total_details + (self._local_value or 0)
+##            
+##        return result
+##        # bring down value would go in get strings?
+##        # or add line
+##        # 
     
     def __str__(self):
         result = "\n".join(self._get_line_strings())
@@ -294,9 +311,34 @@ class LineItem(Statement):
             test = value + 1
             # Will throw exception if value doesn't support arithmetic
             
-        self._local_value = value
+        #
+        new_value = value
+        if new_value is None:
+
+            self._local_value = new_value
+
+        else:
+            
+            if self._details:
+
+                replica = self._get_replica()
+                
+                if not replica:
+                    replica = self._make_replica()
+
+                replica_value = replica.value or 0
+                total_value = self.value or 0
+                detail_value = total_value - replica_value
+
+                new_replica_value = new_value - detail_value
+                replica.set_value(new_replica_value, signature)
+
+            else:
+                self._local_value = value
+
         log_entry = (signature, time.time(), value)
         self.log.append(log_entry)
+            
             
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
@@ -320,11 +362,11 @@ class LineItem(Statement):
             sig = self.SIGNATURE_FOR_REPLICA_MANAGEMENT
                                           
             if replica:
-                # Replica already exists, so it must have a non-None value. We
-                # also know that instance has a non-None value, otherwise we
-                # would be in the no-op block.
+                
                 starting_value = replica.value or 0
                 new_value = starting_value + self._local_value
+                # We know that instance has a non-None value, otherwise we
+                # would be in the no-op block.
                 replica.set_value(new_value, sig)
                 replica.inheritTagsFrom(self)
 
@@ -385,10 +427,10 @@ class LineItem(Statement):
         """
 
 
-        LineItem._make_replica() -> None
+        LineItem._make_replica() -> LineItem
 
 
-        Add a replica to instance details. 
+        Create a replica, add replica to details, return the replica. 
         """
         replica = Tags.copy(self, enforce_rules=False)
         # Start with a shallow copy that picks up all the tags, including ones
@@ -408,7 +450,9 @@ class LineItem(Statement):
             raise bb_exceptions.IOPMechanicalError(c)
 
         self.add_line(replica, position=0)
-        # Add replica in first position.       
+        # Add replica in first position.
+
+        return replica
 
     def _sum_details(self):
         """
