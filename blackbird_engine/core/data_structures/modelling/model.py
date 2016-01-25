@@ -474,19 +474,27 @@ class Model(Tags):
         # Loren's point: create an intermediate representation in memory
             # then can write that quickly
             # so would probably set up sheets (in memory), formulas, etcetera
+            # would need to have offsets and everything
+            # 
 
         #for unit:
-            #take the active tab
-            #for each line, add consolidation functionality
-            #have to connect old balance sheet as starting
+            
+            # spread life somehow
+                # row for each property
+            
+            # can just record age and stuff
+            # or record all events in some profile section
+            
+            # take the active tab
+            # for each line, add consolidation functionality
+            # have to connect old balance sheet as starting
+                # that's simple enough
             
         #for driver:
             # need to map ``data`` to cell coordinates
                 #as in, take each key and connect it to a cell
                     #populate the cell with the driver's value
                     #remember the coordinates
-
-                #
             
             # need to translate formula to one that works on cell coordinates
             # formula should have an _xl equivalent
@@ -503,6 +511,10 @@ class Model(Tags):
         # should put all of this stuff into a single class called ExcelConverter
         # which could then have interfaces and other stuff
 
+        # test would be:
+            # compare net income and balance sheet to existing representation
+
+        # 
         
 
     
