@@ -327,9 +327,16 @@ class ExcelConverter:
         # UnitSheet(unit) -> sheet with all of the stuff, standard offsets, etc.
         # but not that great; similar to a function, and may need multiple sheets (ie a book)
         
-    def _old_link_to_timeline(self, sheet, book):
+    def _link_to_time_line(self, sheet, book):
+        """
 
-        tl_sheet = book[self.SHEET_NAME_TIME_LINE]
+        -> None
+
+        Link sheet to the book's timeline.
+        
+        """
+
+        source = book[self.SHEET_NAME_TIME_LINE]
         # Timeline has columns with info. The first column is the index. Others
         # are periods. We want to copy the index and the periods. We can't iterate
         # over cells because that creates them in memory.
@@ -338,44 +345,19 @@ class ExcelConverter:
         linking_formula = "{sheet_name}!{column}{row}"
         linking_formula.format(
             {
-                "sheet_name" : tl_sheet.name
+                "sheet_name" : source.name
              }
             )
 
         # Use 3.x string formatting for more explicit syntax
         # formulas can be constant at class or module level    <-------------------------------------------------------------------------------------
-
-        # Step 1: we start with the index column. Link cells in our sheet to those
-        # cells. The cells there should contain strings that point to a parameter.
-
-        for source_row in source.time_line.row_lookup:
-
-            for source_column in source.time_line.col_lookup:
-
-                local_row = my_sheet.time_line.starting_row + source_row
-                local_col = my_sheet.time_line.starting_col + source_col
-                # We could have all of the Range references in relative numbers
-                # and then have a starting line. So values in the lookups would always start
-                # at 0, and we would write to .starting + value
-                # ending = .starting + max(lookup_vals)
-                # validate?
-                # could then run update operations too
-                # <-----------------------------------------------------------------------------------------------good idea
-
-                local_cell = my_tab.get_cell(local_column, local_row)
-                
-                local_cell.value = linking_formula.format(column, row)
-                # Populate my_tab's tables with the right info
-
-    def _link_to_time_line(self, sheet, book):
-        source = book[TL_NAME]
-
-        sheet.time_line.update(source.time_line)
+        local = sheet
+        local.time_line.update(source.time_line)
 
         for row in source.time_line.row_lookup.values():
 
             source_row = source.time_line.starting_row + row
-            local_row = sheet.time_line.starting_row + row
+            local_row = local.time_line.starting_row + row
 
             for column in source.time_line.column_lookup.values():
 
@@ -383,8 +365,10 @@ class ExcelConverter:
                 local_col = local.time_line.starting_col + column 
 
                 cell = local.get_cell(local_col, local_row)
-                cell.value = formula.format(source_col, source_row)
+                cell.value = linking_formula.format(source_col, source_row) 
 
+            # May be we can automate this whole thing? Call it _link_to_range() <--------------------------------------------------------------------
+            # _link_to_range(local, source, range_name)
 
     def _link_to_period_parameters(self, sheet, book):
 
@@ -409,7 +393,82 @@ class ExcelConverter:
 
         # may want to group this stuff
 
-    def _add_unit_parameters(self, sheet, unit, column):
+    def _link_to_range(self, local, source, range_name, group=True):
+        """
+
+        -> sheet
+
+        Updates local range with source data. 
+
+        ``local`` : sheet that receives data
+        ``source``: sheet that provides data
+        ``range_name``: name of BB-style range
+
+        Expects sheets to be in the same book, otherwise formulas won't work
+        (unless you switch the formula)
+        
+        """
+        local_range = getattr(local, range_name)
+        source_range = getattr(source, range_name)
+
+        local_range.update(source_range)
+
+        # Since linking copies all existing data from source, the cell-wise
+        # order of operation should not matter. You can copy the cellsf in 3x4
+        # array starting anywhere and get the same result every time, especially
+        # since we never compute anything during the export runtime (so
+        # Excel will evaluate cell dependencies only when we have long since
+        # finished writing the formulas.
+
+        for row in source_range.row_lookup.values():
+            # Can add a sorted parameter here
+
+            source_row = source_range.starting_row + row
+            local_row = local_range.starting_row + row
+
+            for column in source_range.col_lookup.values():
+                # Expects source range to contain proper column data <-------------------------------------------------!
+                # Later, we can introduce ability to link row range across specific columns
+
+                source_col = source_range.starting_col + column
+                local_col = local_range.starting_col + column
+
+                local_cell = local.get_cell(local_col, local_row) #<-------------------------------------------------------check syntax
+                custom_link = linking_formula.format(             #<-------------------------------------------------------add var, check syntax
+                    {
+                        "sheet" : source.name,
+                        "column" : source_column,
+                        "row" : source_row
+                        }
+                    )
+                local_cell.value = custom_link
+
+        #if group: group starting to ending
+                
+        return local
+                    
+    # general unit routine:
+        # (single period)
+        #
+        # set starting point on local tl
+        # link timeline
+        #
+        # set starting point on local params (end of tl + 2)
+        # link params
+        # add unit params
+        #
+        # [if components]
+        # spread components
+        # add the consolidation range
+        #
+        # add the derivation range
+        #
+        # add the clean financials range
+        #
+        # that's it.
+        
+
+    def _add_unit_parameters(self, local, unit, column):
         """
         add to active sheet?
         """
@@ -418,7 +477,7 @@ class ExcelConverter:
         if active_column is None:
             active_column = sheet.time_line.current_period_column
             # or could do get_current() and mathc unit.period.ends to known
-            # columns in timeline. probably better
+            # columns in timeline. probably better <----------------------------------------------
                         
         ordered_params = sorted(unit.parameters.items(), key = lambda x: x[0])
         # Sort parameters so they appear in constant order
@@ -437,9 +496,8 @@ class ExcelConverter:
             
             cell = local.get_cell(current_column, parameter_row)
             cell.value = parameter_value
-            
             # add formatting
-            # cell.format(local_data_in_blue)
+            # cell.format(local_data_in_blue) <------------------------------------------------------------------------- add formatting
 
         return local
 
@@ -453,6 +511,63 @@ class ExcelConverter:
 
         # later, this can link to templates
 
+        # <------------------------------------------------------------------------------------------------------------ finish
+
+    # Both of these should be in _add_financials(), which will also add the clean
+    # section
+    
+    def _add_consolidating(self, sheet, unit):
+        # Figure out single-column or multicolumn? Multicolumn is more efficient
+        pass
+
+    def _add_derived(self, sheet, unit):
+        # go through lines recursively
+        # add drivers
+        # when you finish details, add a summation line
+
+
+
+    def _spread_statement(self):
+        # look up line in consolidation section
+        #   # if it's there, add a first subtotal with a link to the consolidated result
+        # 
+        # if line.details:
+            # for detail in line.get_ordered():
+                # _spread_line(detail)
+            # else:
+                # _add_summation()
+        # else:
+            # get drivers
+            # for each driver, _spread_driver(starting_point)
+        pass
+
+    def _spread_driver(self, range):
+        # set up a private range
+        # add a line for every datapoint in the driver's formula
+        # link cells for the datapoints to existing params
+        # if the driver contains its own data, overwrite that data where appropriate
+        # map the formula's other inputs somehow
+        # add the formula, as adjusted for this spreadsheet
+            # include comments where necessary
+            # comment can include code for complex formulas
+            # that's the subtotal
+        # update reference for the line
+        #
+        #
+        # if
+        # group
+        pass
+
+    def _spread_formula(self):
+        # let's assume this routine runs in the formula
+        # give the formula a sheet with all of the info it expects in the standard format
+        # 
+        # give it an active cell
+            # or, more specifically, an active column
+            #
+        # output should be a xl formula in a cell that points to all the right places
+        #
+    
     def _add_financials(self, sheet, unit, column):
 
         # go down every line
