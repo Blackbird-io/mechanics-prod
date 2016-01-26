@@ -47,6 +47,7 @@ class AttributeRange:
         
         self.row_lookup = dict()
         self.col_lookup = dict()
+        # These should be Statement objects to support nesting
 
     def get_row(self, label):
         relative_position = self.row_lookup[label] 
@@ -76,7 +77,26 @@ class AttributeRange:
         Return True or error if endpoints dont match up
         """
         pass
-            
+
+
+class RowTracker:
+    """
+    Used for tracking line spreads
+    """
+    def __init__(self):
+        self.consolidated = None
+        self.derived = None
+        self.final = None
+
+class CellRange:
+    """
+
+    Most basic
+    """
+    def __init__(self):
+        self.starting
+        self.ending
+
 class ExcelConverter:
     def convert(self, model):
         """
@@ -497,7 +517,7 @@ class ExcelConverter:
             cell = local.get_cell(current_column, parameter_row)
             cell.value = parameter_value
             # add formatting
-            # cell.format(local_data_in_blue) <------------------------------------------------------------------------- add formatting
+                # cell.format(local_data_in_blue) <------------------------------------------------------------------------- add formatting
 
         return local
 
@@ -527,7 +547,12 @@ class ExcelConverter:
 
 
 
-    def _spread_statement(self):
+    def _spread_statement(self, unit, statement, column):
+        """
+
+        ? default column is current_period
+          or active column?
+        """
         # look up line in consolidation section
         #   # if it's there, add a first subtotal with a link to the consolidated result
         # 
@@ -539,7 +564,214 @@ class ExcelConverter:
         # else:
             # get drivers
             # for each driver, _spread_driver(starting_point)
+
+        for line in statement.get_ordered():
+            if line._details:
+                for detail in line.get_ordered():
+                    self._spread_statement(detail, unit, column=column)
+                    # Recursion
+            else:
+                drivers = unit.drivers.get_drivers(line)
+                for driver in drivers:
+                    self._spread_driver(column)
+        else:
+            # add summation
+            self._add_summation()
+            # should cover private range:
+            # so line starts at x, ends at y
+            # sum should be of all the things
+            #
+
+        # Have to keep writing the line names in the params column!!
+        # Have to return the coordinates of the cell where the total is
+            # Or may be return the range!
+            # Right back to question of whether we should have nested ranges
+                #Answer: probably
+                #Let's try to piggyback on existing statement
+                    # need:
+                        # relative position (in range)
+                        # starting position
+                        # cumulative range for details
+                        # find abilities
+
+    # let's say:
+        #statement.xl = AttributeRange()
+            # statement.add_detail()
+                #detail.xl.starting_row = something
+                #statement.xl.row_lookup[detail.name] = x (something to do with rel positioning)
+
+                # that means that every detail will come with its own row reference baked in!
+
+            # statement.spread():
+                # can do the work?            
+            
+
+    # line.xl.rows:
+        # starting = int
+            ## when you add this line as a detail, its xl.starting value changes
+            ## to reflect relative position in the parent and parent's thing
+
+            ## issue: how to deal with manual changes in position?
+            ## presumably want to make xl position dynamic? so that it's always
+            ## starting plus relative?
+            ## or can assign based on order in get_ordered()
+        
+        # ending = int
+        # lookup = ?
+            ## for lookup, you have to do the usual line interface
+            ## will go as deep as you want
+            ## then you can get the line position
+
+    # line.xl.columns:
+        ## undefined
+    
+
+    ## each detail has its own range?
+        
+    
+    #\\ 
+    # can integrate the fill out and spreading routines
+    # so you'd build the model but not extrapolate it, and then spread it
+
+    # can build the model in parallel, one sheet at a time
+
+    #line.xl.rows:
+        #.consolidated
+        #.derived
+        #.cumulative
+        #.clean
+
+    #can walk one tree multiple times
+        # [for simple line, without details]:
+        
+        #first build out the consolidated section of the spreadsheet
+            #add links to all of the source units
+            #sum them
+            #record the subtotal row in .consolidated
+
+        #second build out the derived section
+            # [should be blank if consolidated]
+            # spread each driver. after each, record location of in .derived (or .value)
+        
+        #third:
+            # cumulative ops:
+                # add all the details
+                # make a formula that adds the .final value of all the details
+                    # literally, for each detail, formula += "+{detail coordinates}"
+                    
+    # recap: [at line level]
+
+        # 1. consolidate
+            # [separate section?]
+        # 2. derive (check if this should be last)
+        # 3. recur for details
+        # 4. total
+
+    # so what should line.xl.rows look like?
+        # .consolidated
+        # .derived
+        # .final
+        
+    # 
+    #
+    #
+    def _fill_out(self, column):
         pass
+        
+    def _consolidate(self, column):
+        # fill out each unit in components
+
+        # walk down lines in financials
+            # for each line:
+                ## have to figure out what to increment
+                ## otherwise will just keep adding pointers to sums
+                ## want to have see-through financials at the top
+                ##
+                ## should just track existing logic:
+                    ## if don't have detail, add it:
+                        #i.e., add link
+                        #needs to be recursive
+                    ## if you do have the detail, increment it:
+                        #add a line with a link to value
+
+                ## basically, if you are working with a spreadsheet, consolidate() should automatically fill out
+                ## the column
+                    ## can keep passing the sheet down to the lines during increment()
+                    ## when increment adds a detail, it will add a cell to the spreadsheet
+                    ##
+                    ## since you are going detail by detail, can add details to the bottom
+                    ## of the current open item (will never close an item before completing all its details)
+                    ##
+                    ## but you do need to work on the details in order (can expedite this in c eventually) to
+                    ## make sure they display in the same order every time
+                    ##
+                    ## can do this recursively
+                    ##
+                    ## if you do this during consolidate() run-time, you may add a bunch of lines from one
+                    ## unit and then have to add a bunch of lines from another unit
+                    ## <-----------need to be able to insert rows!!
+                        ## alternative to inserting rows:
+                            ## could just write the cell coordinate and value on the line
+                            ## would leverage existing position management
+                            ## but conceptually complicated
+
+            
+        pass
+
+        ## let's say each line has a range for each of the steps
+            ## goal is to maintain relative position and then assemble everything later
+    
+        ## challenge is how to maintain links
+    
+            ## upside:
+                ## when you are doing the consolidation linking, the sources (children)
+                ## already have stable sheets
+                ## so can actually just specify the value as a formula: "Child!$A$3"
+                ## you just need to know where to put this formula, and that's where dynamic ordering comes in
+                ##
+
+                ## basically, build a column (ie 1-dim array) of formulas during consolidation
+                ## put that column segment in on .spread() or something like that (when actually constructing
+                ## the sheet)
+
+                ## the other stuff i should be able to build in order, so not as crazy
+                    ## data should be in columns (a list should be column) to make appends easy!
+                ## so:
+                    # line.xl.consolidating.cells := []
+                    # line.xl.consolidating.value := formula that adds all the cells
+                    #
+                    ## when you are assembling the column, write it in order
+                    ## then add a formula that tabulates it
+
+            ## then when you go on to derive, you can
+                ## put the consolidated cells in,
+                ## add the drivers,
+                ## add the details
+                ## add the total (formula that sums total for every detail)
+
+            ## have to track starting rows anyways to make dynamic positioning work
+                ## basically, starting + index in ordered
+
+            ## 
+                    
+            ## 
+
+            ## 
+     
+
+    def _derive(self, column):
+        pass
+        
+    def _fill_out(self, column):
+        # run the consolidate operation, pick up the cells
+        # during derive:
+            # already going through lines (switch to recursive)?
+            # for each line:
+                # get drivers
+                # spread drivers in the column
+
+                # move on to details
+                # 
 
     def _spread_driver(self, range):
         # set up a private range
@@ -552,12 +784,61 @@ class ExcelConverter:
             # comment can include code for complex formulas
             # that's the subtotal
         # update reference for the line
-        #
-        #
-        # if
+            # what does this mean
+                # originally, i meant that you would be changing the row value associated
+                # with the line name in the general lookup. the result would be that the
+                # line name would point to the updated row value, which could potentially
+                # be non-consecutive
+
+            # but now...
+                # ...unclear
+                # goal: locate cell where driver finished work
+                # ideally, this cell should be in the line range
+                # we will need to be able to track the line down later
+
+            # could potentially add .derive, .consolidate, and .clean sections to line.xl
+                # these could be noncontiguous
+                # 
+                
         # group
         pass
 
+    def _spread_driver_revised(self):
+        # get a line
+        # get a unit
+            # unit should have sheet on it)
+            # unit.xl.sheet
+            # or book? and find sheet by name?
+                # pointer to sheet should stay constant during extrapolation?
+                # 
+                
+            # sheet should have current column highlighted or somehow active
+
+        # find the parameters range on the sheet
+        # populate
+
+        ## should run once, when driver goes to work
+
+        ## Basically, this whole routine of saving to Excel is predicated on
+        ## building it once, then not building it again (ie setting .xl.book to None)
+
+        ## so top-level control would:
+            # reset financials on company
+            # run fill out with the book
+            # take a pointer to the book
+            # clear the .xl storage
+            # return the book
+
+        ## now, just decide how we are going to access the book
+        ## for purposes of derive just need a sheet really
+
+        ## unit.xl.book = point to workbook
+        ## unit.xl.sheet = point to unit sheet
+        ## line.xl.rows.consolidating.cells =
+        ## line.xl.rows.derived
+        ## line.xl.rows.starting
+        ## line.xl.rows.ending
+    
     def _spread_formula(self):
         # let's assume this routine runs in the formula
         # give the formula a sheet with all of the info it expects in the standard format
@@ -567,6 +848,11 @@ class ExcelConverter:
             #
         # output should be a xl formula in a cell that points to all the right places
         #
+
+        ## assume that you cannot add data at the formula level.
+        ## formula can write intermediate steps in its own discretiojn
+        ## should return sheet and active cell coordinates
+        ## has to be part of the definition module
     
     def _add_financials(self, sheet, unit, column):
 
