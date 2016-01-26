@@ -564,15 +564,28 @@ class ExcelConverter:
                 # will make for very long spreadsheets, but whatever
                     # problem is that you have to repeat for every line
                     # have to make sure you group
-                    # 
+
+                    # can toggle format (consolidate_in_line = False)
+                        # if consolidate_in_line=True, use long formulas
+                        # otherwise, go by row
+                        # can even toggle number of references: ie consolidate every 5 units into a cell, every 10
+                            # number of units per cell is the control                        
 
                 # can simplify the spreadsheets by adding templates and explicit links between the templates and everything else
                 
                 # and can then do the derive elements
-                
 
-                
+        ##
 
+        # consolidate: one range
+        # derive: a second range
+        # finals: a third range
+
+        # add columns 1,2,3... that show ranges
+            # specify them
+    
+        
+        # 
         ##         
 
     def _spread_parent_unit(self, unit, book):
