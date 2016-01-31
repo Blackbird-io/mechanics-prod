@@ -376,10 +376,28 @@ class Driver(Tags):
                 bu = self.parentObject
 
                 params = self._build_params()
+                # if spread:
+                    # put the params on the sheet
+                    # should be in _build_params()
                 
                 formula.func(line, bu, params, self.signature)
+                if spread_to:
+                    formula.spread(line, bu, param_range, on_sheet)
+                    # Formula can locate lines on the spreadsheet directly
+                    # by walking the unit's financials. Most often, formula
+                    # will rely on the param_range, which specifies the nearby
+                    # cells associated with params
+
+                    # Alternatively, could embed the spread logic in the main
+                    # function. Seems like not worth it. 
+
+                    # Could also have a _spread() routine on the driver
+                    # Takes different arguments
+                    # First spreads the params
+                    # Then spreads the formula
+                
                 # Each funcion is "disposable", so we explicitly delete the
-                # pointer after each use. 
+                # pointer after each use.
                 del formula
                 
             else:
@@ -387,6 +405,74 @@ class Driver(Tags):
                 raise bb_exceptions.BBAnalyticalError(c)
         else:
             pass
+
+    def spread(self, line, sheet):
+        """
+
+        -> sheet
+        
+        """
+
+        positions = self._spread_params(sheet, line)
+
+        formula.spread(line, bu, positions, sheet) #<--------------------------------check order of args
+        # formula will record the row where it wrote its final bit of
+        # analysis on line.xl.rows.derived.ending
+        
+        line.xl.rows.final = line.xl.rows.derived.ending
+
+        return sheet
+    
+    def _spread_params(self, sheet, line):
+        """
+        -> RangeLookup
+
+        Add driver-level parameters to column, prep lookup for formula.
+
+        # goal: give formula a range that specifies locations of all its
+        # datapoints
+
+        """
+        # sheet-level params already represent unit
+        # now just have to layer on the conversion logic
+
+        
+        # Add driver-level parameters: write them into the column, note
+        # their location in result. Overwrite general parameters with
+        # driver-level ones in the lookup, but keep them as is on the
+        # sheet. 
+        labels_column = sheet.time_line.cols.by_name["labels"]
+        
+        row = line.xl.rows.derived.ending + 1
+        column = sheet.active_column
+
+        result = RangeLookup()
+        result.rows.starting 
+        
+        result.update(sheet.parameters)
+        # pull in pointers to all of the unit-level parameters
+        
+        for param_name in sorted(self.parameters):
+            param_value = self.parameters[param_name]
+            
+            value_cell = sheet.cell(column, row)
+            value_cell.value = param_value
+            # May need some formatting here?
+
+            label_cell = sheet.cell(labels_column, row)
+            label_cell.value = param_name
+
+            result.rows.by_name[param_name] = row
+
+            var_name = self.conversion_table.get(param_name)
+            if var_name:
+                result.rows.by_name[var_name] = row
+                
+            row +=1
+
+        return result
+    
+        ## <--------------------------------------------------------------------------------------Make sure the transform here is correct! First update the params range
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #

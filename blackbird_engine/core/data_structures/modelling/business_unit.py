@@ -756,7 +756,7 @@ class BusinessUnit(History, Tags, Equalities):
                 parent_statement = getattr(self.financials, attr_name)
                 parent_statement.increment(child_statement, *tagsToOmit, consolidating=True)
 
-    def _derive(self, *tagsToOmit):
+    def _derive(self, *tagsToOmit, spread=False, sheet=None):
         """
 
 
@@ -788,38 +788,366 @@ class BusinessUnit(History, Tags, Equalities):
         # financials.ordered does not include ``starting``. 
         
         for statement in self.financials.ordered:
-
             if statement is not None:
                 
-                for line in statement.get_ordered():
+                for line in statement.get_ordered():    
                     if tags_to_omit & set(line.allTags):
                         continue
+                        # _spread_line()
+                        # _
+                        
                     else:
-                        self._derive_line(line)
+                        self._derive_line(line, spread=spread, sheet=sheet)
+                        # Each line will move the current row to the next
+                        # empty cell
 
-    def _derive_line(self, line):
+    def _spread_or_derive_line():
+
+        for line in statement:
+
+            if tags_to_omit & set(line.allTags):
+
+                self._spread_as_is()
+                continue
+
+            else:
+
+                self._derive_line()
+                # Derivation works best with spreading because formulas
+                # can then look up parameters and other lines
+
+                # If they only look up parameters, you can write the formulas as strings
+                # to a list and then put the strings whereever, cause their referents
+                # won't change. But some formulas will want to look at other lines and
+                # potentially other periods. It's more difficult to do so if you don't know
+                # where they are, though we could have some system that sets up pointers
+                # to the input lines and then we resolve the pointers when we know where
+                # they are. Like literally, the formula would deliver a string template
+                # with a bunch of blank fields "{cost}.xl.final + {opex}.xl.final + {sga}.xl.final" and then an array of
+                # objects (!): [a, b, c]  (or a dictionary: "cost" : a, "opex" : b, "sga" : c} and we would format the string at the appropriate time (once
+                # we have completed those other things). A more explicit format like that
+                # could actually prove useful as a comment in excel: we can literally take
+                # the entire string and put it on as a comment (or only in the current column)
+                #
+                # We would still want to piggyback on the recursion cause otherwise difficult
+                # to replicate the order of operations.
+                #
+                # The challenge with drivers is that they work in sequence and build on
+                # existing values. And then update the xl.derived.final attribute to wherever
+                # they finish. I guess we could make that operation automatic in the _spread()
+                # function. 
+                #
+                # In the separate spread approach, each driver could append row-style entries to
+                # a list. The entries should have a formula, a context dictionary, and a label.
+                # Basically, up to a 3-column array. If the driver wants to use params, it can
+                # specify those as well.
+                #
+                # The spreader function could then spread all those entries to a list. 
+                #
+                #   The issue is how to do incremental things. I guess could just point to line.xl.final
+                #   and would have to be careful about when I increment them (ie, whatever the value was
+                #   at that time). 
+                #
+                #   The outcome is basically the same cause you still get each one of the steps to
+                #   generate a thing. Also, still expect the formula to use parameters, and those are still
+                #   on the sheet. The difference is now you can organize the positions separate from
+                #   the order of operations. 
+                #
+                #   Finally, if you point to other periods, ... kind of need to know what column they are in
+                #   So the final coordinate has to have a row and a column.
+                #
+                #   Potentially allows much faster spreading because you make the formula once, its on the
+                #   driver, and then you can apply it many times (copy the columns).
+                #
+                # One other challenge is inserting lines // when the periods differ from each
+                # other. Here, you really would want to insert lines in the spreadsheet, because
+                # you want to make sure you keep the alignment. 
+                #
+                # So driver would build up driver cells and put them on .xl.derived.rows
+                #
+                # and then the spreader would put all the cells in a particular order
+                #
+                # the spreader could be the one that assembles the details into the whole
+                    # walks each line in each statement
+                        # for detail in order:
+                            # spreads line:
+                                # consolidated results
+                                # derived results
+                                # detailed results
+                            # adds summations for each, where appropriate
+                        # 
+                #
+                # then the load_balance function can assign xl coordinates to the right cells
+                #
+                # in terms of insertion:
+                #   you have to move existing cells down if you are putting in a line that wasn't there in
+                #   prior period in same position
+                # 
+                #   and you have to leave cells blank if you are missing a line
+                #       otherwise you are going to be putting things in the wrong place
+                #       could introduce ranges for this
+                #        or line ids
+                #        or something else
+                #
+                #
+
+                        # <----------------------------------------------------this will skip derivation on details?
+                        # Can flip this logic into:
+                            # for line in statement.get_ordered():
+                                # self._derive_line(line)
+
+                        # Then in _derive_line():
+                            # if line & bad_tags == set():
+                                ## run the drivers
+                                # _spread_line():
+
+                            # else:
+                                ## _spread_line()
+
+                            # if line._details:
+                                ## self._derive_line(details)
+
+                        # Or, can make it derive_and_spread():
+                            # 
+
+                        # Also, can add starting balance sheet after CF?
+                            # too late? what about change in working capital?
+                            
+                        # It doesn't get evaluated until we load the sheet anyways, so can just ??
+                            # but then don't know where to point formulas
+
+                        # Better approach:
+                            # put it at the top, hide it, then can move it again to the bottom
+                            # 
+
+                        # Issue is that until we do derive for a statement, we dont know many rows
+                        # it's going to take. 
+
+                        # Could simplify this somewhat and just say, ok, each driver gets a row
+                        # and all the vars go into the formula directly, and we put a label on the
+                        # row.
+
+                        # Really need insert_row() and insert_column() functionality:
+                            # Moves everything else down, updates all the formulas that reference the row
+                                # for every cell, have a formula attribute
+                                # for every formula, have a references attribute
+                                    # if the row is referenced, have to adjust
+                                    # if the 
+                                    
+                            # could then rework the derive mechanism, though 
+
+                if spread:
+                    sheet.current_row += 1
+                    # Add an extra row between statements
+
+    # Each driver's cells should come in a block, so we can put spaces between them, group them, etc.
+    # and update the pointer to the line value
+
+    # A rows object should be a list
+        # can modify later to support relative positioning
+
+    def _driver_spread(self):
+        """
+        Add rows for my own production
+        """
+
+        # 1 {label: x, formula: y, references: z}
+        # 2 {
+        # 
+
+    def _formula_spread(self):
+        # returns a string
+        # with params
+        #
+        # formula should attach cells to the driver block
+        #   or return cells to the driver
+        #
+        # can finally separate derive and spread (sort of)
+        #   if formula looks to past periods, that's ok; formula can conduct
+        #   complex search ops and that's ok too: can just add pointers to the
+        #   results (hopefully).
+        #
+        # for the vars it uses:
+        #   driver can give it the dictionary of hard-coded addresses?
+                # most natural
+        #   or it can pass in the sheet
+
+        #   or it can deliver a matrix of rows
+        #     issue is that now at derive time, we dont know absolute position
+        #     not entirely true: we know absolute position of parameters
+        #
+        # 
+        #
+        #   alternatively, driver can deliver a map 
+        #
+        # can start off by using hard-coded params within the formula
+        # (or driver can add rows to a lookup; but dont want a huge thing)
+        # 
+        # ok come on lets do the skeleton
+        # 
+
+    def _derive_line(self, line, spread=False, sheet=None, indent=0):
         """
 
 
         BusinessUnit._derive_line() -> None
 
 
-        Compute the value of a line using drivers storedf in the instance.
+        Compute the value of a line using drivers stored in the instance.
         """
+
+        if spread:
+            # By the time we get here, each line should have it's consolidating
+            # links.
+            
+            # First, add the cells from line consolidation
+            line.xl.rows.consolidated.starting = sheet.current_row
+            label_column = sheet.time_line.cols.get_position("label")
+            
+            for link, label in line.xl.rows.consolidated.links_and_labels:
+
+                link_cell = sheet.cell(sheet.current_column, sheet.current_row)
+                link_cell.value = link
+                # Link should actually be a properly configured formula because
+                # it has to point to a different sheet in the book
+
+                label_cell = sheet.cell(label_column, sheet.current_row)
+                # Labels should be in the form "from unit 1..."
+
+                line.xl.rows.consolidated.ending = sheet.current_row
+                sheet.current_row += 1
+
+                # Can modify this logic to split consolidation into different
+                # chunks (ie 5 children per line, 10 children per line, etc.).                
+
+            # Second, add a summation line for the consolidated formulas
+            summation_formula = "=sum({column}{starting_row}:{column}{ending_row})"
+            local_summation = summation_formula.format(
+                "column" : sheet.current_column,
+                "starting_row" : line.xl.consolidated.starting,
+                "ending_row" : line.xl.consolidated.ending
+                )
+
+            summation_cell = sheet.cell(sheet.current_column, sheet.current_row)
+            summation_cell.value = summation_formula
+
+            summation_label_cell = sheet.cell(label_column, sheet.current_row)
+            if summation_label_cell.value is None:
+                summation_label_cell.value = "Consolidated %s" % line.name
+                # Conditional to avoid duplicate runs on multi-period
+
+            # Update coordinates
+            line.xl.consolidated.ending = sheet.current_row
+            line.xl.final = sheet.current_row #<--------------------------------------------------------------------------fixed attr coordinates are absolute; lookup coordinates are relative!!!
+
+            sheet.current_row += 1
+            line.xl.rows.derived.starting = sheet.current_row
         
         key = line.name.casefold()
         if key in self.drivers:
+
 ##            line.clear()
             matching_drivers = self.drivers.get_drivers(key)
+
             for driver in matching_drivers:
                 driver.workOnThis(line)
+                
+                if spread:
+                    driver.spread(line, sheet)                     # <--------------------------------------------------------------------Each driver should update current row on sheet
 
-        # Repeat for any details
+        # Repeat for any details            
         if line._details:
+
+            if spread:
+                # Prep area:
+
+                line.xl.rows.details.starting = sheet.current_row
+                
+                f_sum_rows = "+sum("
+                f_add_row = "{column}{row},"
+                f_add_row.format(
+                    "column" : sheet.current_column
+                    )
+                detail_summation = blah
             
             for detail in line.get_ordered():
-                self._derive_line(detail)
-        
+
+                if indent is not None:
+                    indent += 2
+
+                self._derive_line(detail, spread=spread, sheet=sheet, indent=indent)
+                # <-------------------------------------------------------------------------------------- Sheet should track the current row
+                
+                if spread:
+                     detail_summation += (f_add_row % detail.xl.rows.final)
+                     
+            else:
+
+                detail_summation += ")"
+                # Add a closing parenthesis to the summation formula
+
+            if details and spread:
+
+                # Add a summation line
+                summation_cell = sheet.cell(sheet.current_column, sheet.current_row)
+                summation_cell.value = detail_summation
+                line.xl.rows.details.ending = sheet.current_row
+
+                label_cell = sheet.cell(label_column, sheet.current_row)
+                if label_cell.value is None:
+                    label = indent * " "
+                    label += ("%s: total details" % line.name)
+                    label_cell.value = label
+                    
+                sheet.current_row +=1
+            
+        if spread:
+
+            # Now, pull it all together: final line value is sum of consolidated, derived, and detailed
+            
+            # Make the total row
+            f_total_summation = f_summation
+
+            if line.xl.rows.consolidated.ending:
+                f_total_summation += (f_add_row % line.xl.rows.consolidated.final)
+
+            if line.xl.rows.derived.ending:
+                f_total_summation += (f_add_row % line.xl.rows.derived.final)
+
+            if line.xl.rows.detailed.ending is not None:
+                f_total_summation += (f_add_row % line.xl.rows.detailed.ending)
+
+            f_total_summation += ")"
+
+            total_cell = sheet.cell(sheet.current_column, sheet.current_row)             # May be safer to keep column index in letters
+            total_cell.value = f_total_summation
+
+            label_cell = sheet.cell(label_column, sheet.current_row)
+            label_cel.value = "Total %s" % line.name
+
+            sheet.current_row +=1 
+            
+                    
+        # May be I should indicate the current row on the sheet? Would simplify
+        # matters a fair amount
+
+        # HAVEN'T WRITTEN THE LINE NAME ANYWHERE YET <-------------------------------------------ISSUE !!!
+            # in the consolidation block, should be writing unit names
+            # in the derivation block, should be writing driver names?
+            # all of the labelling is a waste if we do more than one column
+            
+        # Generally speaking, "current row" should always be empty. Each routine
+        # should move the index to the right place when its done.
+
+        # Right now, all the logic takes place in _derive_line. As a result, the spreading
+        # logic won't run on lines that we've consolidated (or any of their details).
+        # 
+        # We should remove this dependency. First pass does not have to be efficient. Can
+        # duplicate the routines. if not bad_tags: derive, else: derive, spread? Alternatively
+        # can make the cells and then put them on the list. Probably best to do that.
+
+        # Then final _spread is like fill_out() or something. Can add this later, let's finish
+        # this first bit of logic first.
                 
     def _fit_to_period(self, time_period, recur=True):
         """

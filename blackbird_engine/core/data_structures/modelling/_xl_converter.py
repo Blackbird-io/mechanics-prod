@@ -119,120 +119,10 @@ class ExcelConverter:
     def _make_time_line_tab(self, model, book):
         pass
 
-    def _spread_unit(self, model, book):
-        # should do so on last tab
-
-        # algo:
-          # first, spread all of the components
-          # then connect the balance sheet
-          # then consolidate
-          # then derive
-
-        pass
-
-    def _spread_line(self):
-        """
-
-        Can integrate into line and the line handle recursion
-        """
-        pass
-    
-    def _spread_driver(self, driver, tab, column, row):
-        # goal:
-            # take all of the params for the driver
-            # put them in rows
-            # put a formula in subtotal row
-            # repeat for all columns? #<----------------------------------------------------------could do this at the unit level?
-                # could do at unit level to start, since all columns should be the same generally
-                # but undermines premise of extrapolation
-                # so could toggle: extrapolate or stretch
-            
-            # group
-
-        # steps:
-            ## formula needs to supply its own formula
-            ## formula MUST NOT look for lines on its own? (like EBITDA does today)
-                ## won't know what to do
-                ## may be i should have a formula port
-                ## formula needs to specify the vars it uses
-                ## may need to have a formula prep routine
-                    ## can confirm that results fit?
-
-            ## make a params-to-cells table
-                ## if driver has its own params,
-                    # add appropriate rows
-                    # DONT put these in the lookup table; they are private
-
-                ## or could be super explicit
-                    # each driver always duplicates a row when it uses a shared param
-                    # then overwrites some of these params on their own rows for driver-specific data
-
-            ## make a driver subtotal line
-                ## contains formula, generates the value you would get after the driver
-
-            ## need a beginning value line
-                ## so always have a starting value
-                ## and ending value
-
-            ## adjust the lookup table to point to the ending value as the row for that item
-                ## 
-
-            ## group
-
-            ## add a clean final result
-            
-                ## at the end of derivation, the line should have a bunch of subtotals that are hidden
-                ## and then a nice clean line underneath
-                ## so this should be the final step
-
-
-    def _spread_line(self):
-        # challenge with lines is that they are recursive
-        # i could do something like _get_ordered() and just list them in order
-        # want to keep the auto-summation
-
-        # for details in line.get_ordered():
-            # spread basic line
-
-        # then have to sum them
-            # so cant really do full recursion
-            # have to do just the elements here
-
-        # general algo:
-            # if you dont have details:
-                # do the simple line derive
-
-            # if you do have details:
-                # fro each detail, do a line derive
-                # create a table of final values for each detail
-                # sum all of those values
-
-    def _spread_unit_outline(self):
-        # need to have a routine for consolidation
-            # can just be a single line that sums results from other units
-        # only comes in when you have components
-            # so first spread all of them
-            # then add them up
-            # challenge:
-                # what to do when you have lots and lots of components
-                # end up with very long formulas
-                # is that a problem per se?
-                    # could do something in vba:
-                        #if parent:
-                            #consolidate into parent
-                        #else:
-                            #blah
-
-        # need to have a line for derivation
-        
-        # steps:
-            #make a derivation routine
-            #make a consolidation routine
-
-        # move to a general ledger
-            # then balance sheet consolidation would be easier:
-                # start with starting balance sheet
-                # increment ending balance sheet by all of the child entries
+    # move to a general ledger
+    # then balance sheet consolidation would be easier:
+        # start with starting balance sheet
+        # increment ending balance sheet by all of the child entries
 
     def _spread_unit(self, unit, book):
         children = unit.components.get_ordered()
@@ -313,6 +203,7 @@ class ExcelConverter:
            
             # Each section should have a starting_, ending_, and elements
                 # lo and hi?
+
             # elements should be a Statement() and should nest (?)
                 # nesting may not be useful, because then cant see top-down
                 # but you do want to be able to find cells in a given range:
@@ -869,8 +760,7 @@ class ExcelConverter:
             #
             # or could require a local runtime for some of these things, in which case can actually route through
             # the python routine?
-
-            
+            #
             #
             # could i have the formulas map themselves?
                 # driver.spread()
