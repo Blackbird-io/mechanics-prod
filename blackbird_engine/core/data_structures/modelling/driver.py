@@ -474,6 +474,30 @@ class Driver(Tags):
     
         ## <--------------------------------------------------------------------------------------Make sure the transform here is correct! First update the params range
 
+
+    def _spread2(self, line):
+        """
+
+        attach all rows to line.xl.derived.cells
+        
+        
+        """
+        dr_map.rows = []
+        # first, add driver-level params
+        for param_name, param_value in self.params.items():
+            row = [param_name, param_value, None]
+            xl_dr.rows.append(row)
+
+        # second, attach the conversion table
+        xl_dr.conversion_table = self.conversion_table.copy()
+
+        # third, attach the formula
+        formula = self.catalog.issue(formula)
+        xl_dr.formula, xl_dr.references = formula.spread()
+
+        line.xl.derived.drivers.append(xl_dr)
+        
+    
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
