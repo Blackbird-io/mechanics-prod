@@ -953,7 +953,22 @@ class BusinessUnit(History, Tags, Equalities):
 
         # 1 {label: x, formula: y, references: z}
         # 2 {
-        # 
+        #
+
+    def _spread_driver_data(self, line, sheet):
+
+        for xl_dr in line.xl.derived.drivers:
+
+            for label, value in xl_dr.rows:
+
+                # put on current row
+                # add to map
+
+            # convert the map
+            # format the formula
+            # put the formula in
+            # move on  
+    
 
     def _formula_spread(self):
         # returns a string
@@ -965,7 +980,8 @@ class BusinessUnit(History, Tags, Equalities):
         # can finally separate derive and spread (sort of)
         #   if formula looks to past periods, that's ok; formula can conduct
         #   complex search ops and that's ok too: can just add pointers to the
-        #   results (hopefully).
+        #   results (hopefully). You won't see the search logic in excel, but
+        #   you'll see the relationships. 
         #
         # for the vars it uses:
         #   driver can give it the dictionary of hard-coded addresses?
@@ -984,7 +1000,53 @@ class BusinessUnit(History, Tags, Equalities):
         # (or driver can add rows to a lookup; but dont want a huge thing)
         # 
         # ok come on lets do the skeleton
-        # 
+        #
+        # formula expects to receive variables:
+        #   NOT params
+        #   so we have to give it row position associated with those variables anyways
+        #
+        #   driver carries some params and a map to change params into vars
+        #   driver could deliver its params in a couple rows
+        #   and the map
+        #   formula could deliver its string
+        #   we could then assemble the dictionary of row references at spread time
+        #    # as in, could put the driver rows where they belong
+        #    # copy the params range from the sheet, update it with the new rows
+        #    # map the values in the range to keys in the conversion map, so we have rows associated with vars
+        #    # and format the formula with those values
+        #
+        #  what if the formula string comes back with the following:
+        #    # references: {}
+        #    # parameters: {}
+        #    and then you can key each one
+
+        
+        #   issue is that have to format twice, once for the params and once for the other stuff
+        #    # could mush them together
+        #    # really would be a LOT more elegant if we could eliminate the driver-level params
+        #    # could give the sheet to the formula and get
+
+        #   i want to get a formula like "={references}[line].xl.final * 1.03" or "=c4 * (1+{inflation})"
+            # {line} requires a final position
+            # inflation is just a parameter
+            # and i m responsible for filling in the parameters later
+            #
+            # formula is going to deliver a string, a references dictionary
+            # and then for params, im supposed to supply those
+            #
+            # basically need to separate driver-level parameters and larger ones
+            #
+
+        # formula.spread() -> string, dict
+
+        #   string is the formula
+        #   dict is a dictionary of references that the formula connects to
+        #
+        # then on spread, also supply it with a dict of parameters and life
+        #
+        #   these contain straight up cell references
+        #
+        # so if the formula is: "=100 * {life}[percent]"
 
     def _derive_line(self, line, spread=False, sheet=None, indent=0):
         """
