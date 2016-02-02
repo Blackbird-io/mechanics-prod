@@ -793,13 +793,9 @@ class BusinessUnit(History, Tags, Equalities):
                 for line in statement.get_ordered():    
                     if tags_to_omit & set(line.allTags):
                         continue
-                        # _spread_line()
-                        # _
                         
                     else:
-                        self._derive_line(line, spread=spread, sheet=sheet)
-                        # Each line will move the current row to the next
-                        # empty cell
+                        self._derive_line(line)
 
     def _spread_or_derive_line():
 
