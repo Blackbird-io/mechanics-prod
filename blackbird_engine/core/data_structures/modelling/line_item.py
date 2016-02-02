@@ -243,6 +243,8 @@ class LineItem(Statement):
                     self.inheritTagsFrom(matching_line)
                     self.tag(T_CONSOLIDATED)
 
+                    self.xl.consolidated.sources.append(matching_line)
+
     # Upgrade-F: The new line structure gives us the option to implement a
     # different approach to line calculation. Basically, we can allow drivers to
     # write "on top" of consolidated lines. So a parent unit can consolidate

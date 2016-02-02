@@ -56,6 +56,9 @@ class LineData(PositionTracker):
         self.detailed = Range()
         # detailed.data should be empty?
 
+        # consolidated.sources should be list of pointers
+        # derived.calculations should be list of driver data chunks
+
     def get_coordinates(self, column):
         """
         -> tuple(int, int)
@@ -77,9 +80,14 @@ class LineData(PositionTracker):
         # _set_sheet() and then we can derive. Or can pass it in during the
         # call somehow. But that requires the coordinator to know where to look
 
+    def set_sheet(self):
+        
+
 class UnitData:
     def __init__(self, book=None, sheet=None):
         self.sheet = sheet
+
+    def set_sheet(self)
         
 class RowData:
     def __init__(self):

@@ -3,8 +3,10 @@ class Formulas:
 
 class Eggcellent:
     """
-    """
 
+    Objects that export models into Excel
+
+    """
     formulas = dict()
     
 
@@ -175,7 +177,13 @@ class Eggcellent:
         return sheet
 
     def _spread_line(self, line, sheet):
+        """
+        by the end of this routine, the line and all its details should have a sheet assignment
+        """
 
+        line.xl.set_sheet(sheet)
+        # Line can now deliver coordinates
+        
         self._spread_consolidation_data(sheet, line, set_labels=set_labels)
         sheet.bb.y += 2
 
@@ -214,12 +222,12 @@ class Eggcellent:
                 
                 sheet.bb.current_row +=1
 
-        self._build_line_total(sheet, line, set_labels=set_labels)
+        self._combine_line_segments(sheet, line, set_labels=set_labels)
         # Could also group here
 
         return sheet
         # If I toggle this logic a bit, I should be able to put all of the consolidation
-        # logic in one part of the sheet, and then the derivation logic elsewhere.
+        # cells in one part of the sheet, and then the derivation logic elsewhere.
 
         # This relies on:
             # line.increment() tracking sources
@@ -227,31 +235,39 @@ class Eggcellent:
         
     # formula.to_excel()-> string, dict;
         # should
-        
-    # or could return array of row_info dictionaries
-        # for complex work
-        # could include comments
-    # that driver will then append to itself
 
     def _spread_unit(self, book, unit):
+        """
+
+        Children should be spread before parent
+        """
         children = unit.components.get_ordered()
 
         for child in children:
+            
             self._spread_unit(book, child)
-            child.xl._set_sheet(sheet)
 
         sheet = book.create_sheet(unit.id.bbid)
-        # or something
+        unit.xl.set_sheet(sheet)
+
         self._add_params(sheet, unit)
         self._add_life(sheet, unit)
         self._add_financials(sheet, unit)
 
+        return sheet
+
+        # Premise 1: by the time you run this routine, all children should already be in book
+        # Premise 2: a unit without any children should be easy to spread on a sheet
+        # Premise 3: 
+
     def _add_financials(self, sheet, unit):
         unit.fill_out()
+        # fill out populates the unit with all of the information
+        
         for statement in unit.financials:
             for line in statement.get_ordered():
 
-                self._spread_line()
+                self._spread_line(sheet)
 
     # Have to manage book depth (ie max sheets)
 

@@ -376,25 +376,21 @@ class Driver(Tags):
                 bu = self.parentObject
 
                 params = self._build_params()
-                # if spread:
-                    # put the params on the sheet
-                    # should be in _build_params()
                 
                 formula.func(line, bu, params, self.signature)
-                if spread_to:
-                    formula.spread(line, bu, param_range, on_sheet)
-                    # Formula can locate lines on the spreadsheet directly
-                    # by walking the unit's financials. Most often, formula
-                    # will rely on the param_range, which specifies the nearby
-                    # cells associated with params
+                if xl_prep:
 
-                    # Alternatively, could embed the spread logic in the main
-                    # function. Seems like not worth it. 
+                    data_cluster = self.to_excel()
+                    # Should come in with rows and conversion map
+        
+                    string, references = formula.to_excel()
+                    # formula.to_excel() expects formula.func() to have
+                    # populated state. May be an issue cause I'm not sure if funcs see the instance.
 
-                    # Could also have a _spread() routine on the driver
-                    # Takes different arguments
-                    # First spreads the params
-                    # Then spreads the formula
+                    data_cluster.formula = string
+                    data_cluster.references = references
+                    
+                    line.xl.derived.calculations.append(data_cluster)
                 
                 # Each funcion is "disposable", so we explicitly delete the
                 # pointer after each use.
@@ -406,22 +402,23 @@ class Driver(Tags):
         else:
             pass
 
-    def spread(self, line, sheet):
+    def to_excel(self):
         """
-
-        -> sheet
-        
         """
+        #<--------------------------------------------------------------------------------------------------------------------- need doc string
 
-        positions = self._spread_params(sheet, line)
+        result = DriverData()
+        result.conversion_map = self.conversion_map.copy()
 
-        formula.spread(line, bu, positions, sheet) #<--------------------------------check order of args
-        # formula will record the row where it wrote its final bit of
-        # analysis on line.xl.rows.derived.ending
-        
-        line.xl.rows.final = line.xl.rows.derived.ending
+        for param_name, param_value in self.parameters.items():
 
-        return sheet
+            row = RowData()
+            row["label"] = param_name
+            row["value"] = param_value #<---------------------------------------------could have issues here if this is mutable or a structure
+
+            result.rows.append(row)
+
+        return result
     
     def _spread_params(self, sheet, line):
         """
