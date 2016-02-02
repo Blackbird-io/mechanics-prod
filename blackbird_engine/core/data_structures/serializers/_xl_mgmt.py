@@ -107,8 +107,30 @@ class DriverData:
         self.formula_string = None
         self.formula_references = None
         self.conversion_map = None
-        
-             
+
+class SheetData:
+
+    def __init__(self):
+
+        self.general = Area()
+        self.current_row = None
+        self.current_column = None
+
+    # Alternative interface:
+        # def __init__(self):
+        #   Area.__init__(self)
+        #   self.current_row = None
+        #   self.current_column = None
+        #
+        ## then can add new subareas (time_line, params, etc)
+        ## so have a general and a specific
+
+        ## sheet can also have a .public and .private attrs
+        ## each of which could be a dictionary of areas.
+        ## 
+
+
+
 
         
 

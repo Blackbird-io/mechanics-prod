@@ -280,12 +280,6 @@ class Model(Tags):
         record = (message,time_stamp)
         self.transcript.append(record)
 
-    def spread(self, path):
-        """
-        Return an Excel model
-        """
-        pass
-
     def _spread_foundation(self):
         """
         Return a workbook with:
@@ -299,51 +293,7 @@ class Model(Tags):
         self._create_time_line_tab(wb)
         return wb
 
-    def _create_scenarios_tab(self, book):
-        scenarios = book.create_sheet("Scenarios")
-        scenarios.bb_row_lookup = dict() #<----------------------------should be Statement so we can manage insertions
-        scenarios.bb_col_lookup = dict()
-        # Should just create an object with both of these things
-
-        # Sheet map:
-        # A          |  B      | C             | D     | E
-        # param names|  blank  | active values | blank | blackbird values
-
-        starting_row = 1
-        starting_column = 1
-        # should make this a lookup table too: column name to index
-        
-        scenarios.bb_col_lookup["params"] = 1
-        scenarios.bb_col_lookup["active"] = 3
-        scenarios.bb_col_lookup["base"] = 5
-        # these keys should be standard
-        # all other scenarios should be a function of selection
-        # can do something like bb_case cells are an index of bb scenarios
-        # and then active just points to those
-
-        active_row = starting_row
-
-        f_pull_from_cell = "=%s"
-        
-        for param_name in sorted(self.time_line.parameters):
-
-            param_cell = scenarios.cell(row=active_row, column=starting_column)
-            scenarios.bb_row_lookup[param_name] = active_row
-
-            active_cell = scenarios.cell(row=active_row, column=(starting_column+2))
-            bb_cell = scenarios.cell(row=active_row, column=(starting_column+4))
-            # ideally should be active_cell.column+2
-                        
-            param_cell.value = param_name
-            bb_cell.value = self.time_line.parameters[param_name]
-
-            active_cell.value = f_pull_from_cell % bb_cell.coordinate
-
-            active_row += 1
-            
-        #Can expand this logic to print every scenario
-        
-        return book
+    
             
     def _create_time_line_tab(self, book):
         

@@ -1,29 +1,4 @@
-#Excel converter class
-
-import openpyxl as xlio
-
-class BBWorkBook(xlio.WorkBook):
-
-    def __init__(self):        
-        xlio.WorkBook.__init__(self)
-        # Should probably use composition here: ._native_book = xlio.WorkBook()?
-
-    def create_sheet_with_lookups(self, *pargs, **kwargs):
-
-        sheet = self.create_sheet(*pargs, **kwargs)
-        sheet.row_lookup = dict()
-        sheet.col_lookup = dict()
-    
-        return sheet
-
-    # Add range-management features (ie, make sure no ranges overlap)
-    # can add a bb_ranges attribute that's just a dictionary. Then
-    # would add ranges there.
-
-    def validate(self):
-        pass
-        # check that none of the ranges overlap
-    
+   
 class AttributeRange:
     """
     A range of cells that describe a particular attribute. 
@@ -325,7 +300,7 @@ class ExcelConverter:
         local_range.update(source_range)
 
         # Since linking copies all existing data from source, the cell-wise
-        # order of operation should not matter. You can copy the cellsf in 3x4
+        # order of operation should not matter. You can copy the cells in 3x4
         # array starting anywhere and get the same result every time, especially
         # since we never compute anything during the export runtime (so
         # Excel will evaluate cell dependencies only when we have long since
@@ -356,28 +331,7 @@ class ExcelConverter:
 
         #if group: group starting to ending
                 
-        return local
-                    
-    # general unit routine:
-        # (single period)
-        #
-        # set starting point on local tl
-        # link timeline
-        #
-        # set starting point on local params (end of tl + 2)
-        # link params
-        # add unit params
-        #
-        # [if components]
-        # spread components
-        # add the consolidation range
-        #
-        # add the derivation range
-        #
-        # add the clean financials range
-        #
-        # that's it.
-        
+        return local        
 
     def _add_unit_parameters(self, local, unit, column):
         """
@@ -411,30 +365,6 @@ class ExcelConverter:
                 # cell.format(local_data_in_blue) <------------------------------------------------------------------------- add formatting
 
         return local
-
-    def _add_unit_life(self, sheet, unit, column):
-
-        sheet.life = AttributeRange()
-        # should start where Params end + 2
-        # walk through events in order of keys
-        # add each event to the section
-        # check if event is already in section, if not, add
-
-        # later, this can link to templates
-
-        # <------------------------------------------------------------------------------------------------------------ finish
-
-    # Both of these should be in _add_financials(), which will also add the clean
-    # section
-    
-    def _add_consolidating(self, sheet, unit):
-        # Figure out single-column or multicolumn? Multicolumn is more efficient
-        pass
-
-    def _add_derived(self, sheet, unit):
-        # go through lines recursively
-        # add drivers
-        # when you finish details, add a summation line
 
 
 
