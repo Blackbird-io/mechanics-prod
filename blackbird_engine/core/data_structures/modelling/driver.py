@@ -404,6 +404,9 @@ class Driver(Tags):
 
     def to_excel(self):
         """
+
+        -> DriverData
+        
         """
         #<--------------------------------------------------------------------------------------------------------------------- need doc string
 
@@ -418,82 +421,7 @@ class Driver(Tags):
 
             result.rows.append(row)
 
-        return result
-    
-    def _spread_params(self, sheet, line):
-        """
-        -> RangeLookup
-
-        Add driver-level parameters to column, prep lookup for formula.
-
-        # goal: give formula a range that specifies locations of all its
-        # datapoints
-
-        """
-        # sheet-level params already represent unit
-        # now just have to layer on the conversion logic
-
-        
-        # Add driver-level parameters: write them into the column, note
-        # their location in result. Overwrite general parameters with
-        # driver-level ones in the lookup, but keep them as is on the
-        # sheet. 
-        labels_column = sheet.time_line.cols.by_name["labels"]
-        
-        row = line.xl.rows.derived.ending + 1
-        column = sheet.active_column
-
-        result = RangeLookup()
-        result.rows.starting 
-        
-        result.update(sheet.parameters)
-        # pull in pointers to all of the unit-level parameters
-        
-        for param_name in sorted(self.parameters):
-            param_value = self.parameters[param_name]
-            
-            value_cell = sheet.cell(column, row)
-            value_cell.value = param_value
-            # May need some formatting here?
-
-            label_cell = sheet.cell(labels_column, row)
-            label_cell.value = param_name
-
-            result.rows.by_name[param_name] = row
-
-            var_name = self.conversion_table.get(param_name)
-            if var_name:
-                result.rows.by_name[var_name] = row
-                
-            row +=1
-
-        return result
-    
-        ## <--------------------------------------------------------------------------------------Make sure the transform here is correct! First update the params range
-
-
-    def _spread2(self, line):
-        """
-
-        attach all rows to line.xl.derived.cells
-        
-        
-        """
-        dr_map.rows = []
-        # first, add driver-level params
-        for param_name, param_value in self.params.items():
-            row = [param_name, param_value, None]
-            xl_dr.rows.append(row)
-
-        # second, attach the conversion table
-        xl_dr.conversion_table = self.conversion_table.copy()
-
-        # third, attach the formula
-        formula = self.catalog.issue(formula)
-        xl_dr.formula, xl_dr.references = formula.spread()
-
-        line.xl.derived.drivers.append(xl_dr)
-        
+        return result        
     
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
