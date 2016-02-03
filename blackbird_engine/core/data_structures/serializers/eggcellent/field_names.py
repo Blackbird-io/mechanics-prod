@@ -4,10 +4,10 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 #Blackbird Environment
-#Module: data_structures.serializers.eggcellent.tab_names
+#Module: data_structures.serializers.eggcellent.field_names
 """
 
-Module defines a class that stores standard tab names
+Module defines a class that stores standard row and column names.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -19,7 +19,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-TabNames              standard tab names for Blackbird workbooks
+FieldNames            standard keys for column and row lookups
 ====================  ==========================================================
 """
 
@@ -39,22 +39,29 @@ TabNames              standard tab names for Blackbird workbooks
 # n/a
 
 # Classes
-class TabNames:
+class FieldNames:
     """
 
-    Dedicated data storage for standard tab names in our workbooks.   
+    Class stores standard keys for row and column lookups within SheetData. 
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
-    SCENARIOS             "Scenarios"
-    TIME_LINE             "Timeline"
+    BASE_CASE             "base_case"
+
+    LABELS                "labels"
+    MASTER                "master"
+    VALUES                "values"
 
     FUNCTIONS:
     n/a
     ====================  ======================================================
     """
-    SCENARIOS = "Scenarios"
-    TIME_LINE = "Timeline"
+
+    BASE_CASE = "base_case"
+    
+    LABELS = "labels"
+    MASTER = "master"
+    VALUES = "values"
     

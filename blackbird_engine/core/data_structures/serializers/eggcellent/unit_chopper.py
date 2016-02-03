@@ -1,4 +1,61 @@
+#PROPRIETARY AND CONFIDENTIAL
+#Property of Blackbird Logical Applications, LLC
+#Copyright Blackbird Logical Applications, LLC 2016
+#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+
+#Blackbird Environment
+#Module: data_structures.serializers.eggcellent.unit_chopper
+"""
+
+Module defines a class that represents arbitrarily rich BusinessUnit instances
+as a collection of linked Excel worksheets. 
+====================  ==========================================================
+Attribute             Description
+====================  ==========================================================
+
+DATA:
+n/a
+
+FUNCTIONS:
+n/a
+
+CLASSES:
+UnitChopper           chop BusinessUnit into dynamic Excel structure
+====================  ==========================================================
+"""
+
+
+
+
+# Imports
+# n/a
+
+
+
+# Constants
+# n/a
+
+# Module Globals
+# n/a
+
+# Classes
 class UnitChopper:
+    """
+
+    Class packages an Engine model into an Excel Workbook with dynamic links.
+    ====================  ======================================================
+    Attribute             Description
+    ====================  ======================================================
+
+    DATA:
+    field_names
+    formula_templates
+    tab_names             standard tab names
+
+    FUNCTIONS:
+    chop_model()          returns sheet with a SheetData instance at sheet.bb
+    ====================  ======================================================
+    """
  
     def chop_unit(self, book, unit):
         """

@@ -1,13 +1,13 @@
 #PROPRIETARY AND CONFIDENTIAL
 #Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
+#Copyright Blackbird Logical Applications, LLC 2016
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 #Blackbird Environment
 #Module: data_structures.serializers.eggcellent.model_chopper
 """
 
-Module defines workbook with custom native-Python data storage on each sheet.
+Class for creating dynamic Excel representations of Blackbird Engine models.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -27,7 +27,12 @@ ModelChopper          chop Blackbird Engine model into a dynamic Excel workbook
 
 
 # Imports
+import openpyxl as excel_interface
+
 from .bb_workbook import BB_Workbook as Workbook
+
+from .field_names import FieldNames
+from .formulas import FormulaTemplates
 from .tab_names import TabNames
 
 
@@ -37,7 +42,7 @@ from .tab_names import TabNames
 # n/a
 
 # Module Globals
-# n/a
+get_column_letter = excel_interface.utils.get_column_letter
 
 # Classes
 class ModelChopper:
@@ -49,14 +54,17 @@ class ModelChopper:
     ====================  ======================================================
 
     DATA:
+    field_names           commonly used field names
+    formula_templates     string templates for commonly used formulas
     tab_names             standard tab names
 
     FUNCTIONS:
     chop_model()          returns sheet with a SheetData instance at sheet.bb
     ====================  ======================================================
     """
+    field_names = FieldNames()
+    formula_templates = FormulaTemplates()
     tab_names = TabNames()
-    
     
     def chop_model(self, model):
         """
@@ -83,11 +91,13 @@ class ModelChopper:
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
 
-    def _spread_foundation(self, model):
+    def _build_foundation(self, model):
         """
 
-        -> book
+
+        ModelChopper._build_foundation() -> Workbook
         
+
         Return a workbook with:
            cover [not implemented yet]
            scenarios
@@ -105,8 +115,12 @@ class ModelChopper:
     def _create_scenarios_tab(self, book, model):
         """
 
-        -> should return sheet
 
+        ModelChopper._create_scenarios_tab() -> Worksheet
+
+        
+        Return a worksheet that lays out the assumptions used by the model in
+        various scenarios. 
         """
         scenarios = book.create_sheet(self.tab_names.SCENARIOS)
 
@@ -115,122 +129,202 @@ class ModelChopper:
         # param names|  blank  | active values | blank | blackbird values
 
         starting_row = 1
-        starting_column = 1
-        # should make this a lookup table too: column name to index
+
+        label_column = 1
+        in_effect_column = 3
+        base_case_column = 5
         
-        scenarios.bb.general.columns.by_name["params"] = 1
-        scenarios.bb.general.columns.by_name["active"] = 3
-        scenarios.bb.general.columns.by_name["base"] = 5
-        # these keys should be standard
-        # all other scenarios should be a function of selection
-        # can do something like bb_case cells are an index of bb scenarios
-        # and then active just points to those
+        scenarios.bb.general.columns.by_name[self.field_names.LABELS] = label_column
+        scenarios.bb.general.columns.by_name[self.field_names.VALUES] = in_effect_column
+        scenarios.bb.general.columns.by_name[self.field_names.BASE_CASE] = base_case_column
 
-        active_row = starting_row
-
-        f_pull_from_cell = "=%s"
+        current_row = starting_row
         
         for param_name in sorted(model.time_line.parameters):
-            # Use sorted to make sure order is consistent
+            # Sort to make sure we display the parameters in stable order,
+            # otherwise order could vary from chop to chop on the same model.
 
-            label_cell = scenarios.cell(row=active_row, column=starting_column)
-            scenarios.bb.general.rows.by_name[param_name] = active_row
+            label_cell = scenarios.cell(column=label_column, row=current_row)
+            scenarios.bb.general.rows.by_name[param_name] = current_row
 
-            active_cell = scenarios.cell(row=active_row, column=(starting_column+2)) #<--------------------------------fix the column indexing
-            bb_cell = scenarios.cell(row=active_row, column=(starting_column+4))
-            # ideally should be active_cell.column+2 <---------------------------------------------------------------- fix the coordinates
+            in_effect_cell = scenarios.cell(column=in_effect_column, row=current_row)
+            base_case_cell = scenarios.cell(column=base_case_column, row=current_row)
                         
             label_cell.value = param_name
-            bb_cell.value = model.time_line.parameters[param_name]
+            base_case_cell.value = model.time_line.parameters[param_name]
 
-            active_cell.value = f_pull_from_cell % bb_cell.coordinate
+            link = self.formulas.ADD_COORDINATES
+            link = link.format(coordinates=base_case_cell.coordinate)
+            in_effect_cell.value = link
 
-            active_row += 1
-            
-        #Can expand this logic to print every scenario
+            current_row += 1
         
         return scenarios
 
+        # TO DO:
+        # - print every scenario in model.scenarios ("base", "bad", "good", etc.)
+        # - add headers to the columns (to specify what they are)
+        # - hide grid lines
+        # - add formatting
+        # - add the selector function for user input so can see own assumptions
+        #   and bb side by side, with only the active choice feeding into
+        #   in_effect column.
+        # - potentially add a widget on each page that allows you to toggle the
+        #   scenarios (so you can keep looking wherever you were looking and
+        #   see how it plays out).
+        
     def _create_time_line_tab(self, book, model):
         """
 
-        -> sheet ?
 
-        book should have a "scenarios" tab by now
-        """
+        ModelChopper._create_time_line_tab() -> Worksheet
+
+
+        Add a sheet that spreads out the time periods and shows each period's
+        parameters.
+
+        By default, each period inherits all parameters from the active scenario
+        (on the scenarios sheet) by default. If a period specifies its own value
+        for a parameter, routine will overwrite the link with a hard-coded
+        value. 
         
+        Method expects book to include a completed scenarios sheet. 
+        """        
         scenarios = book[self.tab_names.SCENARIOS]
         
         my_tab = book.create_sheet(self.tab_names.TIME_LINE)
-        my_tab.bb.parameters = Area()
-
-        get_column_letter = excel_interface.utils.get_column_letter
-
-        # first column will be params
-        # second column will be blank
-        # third column will be master
+        parameters = Area("Parameters")
+        parameters.parent = my_tab #<------------------------------------------------------------------------- this should be a sheet-level routine
+        # Sheet.add_area("parameters") -> Area with name and parent relationship
         
-        col_params = 1
-        col_master = 3
-        # have to record column <--------------------------------------------------------------------------------------------------------------
+        my_tab.bb.parameters = parameters
 
+        # Pick starting positions
+        local_labels_column = 1
+        local_master_column = 3
+
+        alpha_master_column = get_column_letter(local_master_column)
+        
+        parameters.columns.by_name[self.field_names.LABELS] = local_labels_column
+        parameters.columns.by_name[self.field_names.MASTER] = local_master_column
+        
         header_row = 3
+        my_tab.bb.time_line.rows.by_name[self.field_names.LABELS] = header_row
+
+
+
+        # First, pull the parameter names and active values from the scenarios
+        # tab into a local "label" and "master" column, respectively.
         
-        f_active_scenario = "=Scenarios!C%s"
-        # first, write the param colum and the master column: "=Scenarios! $A1"
+        external_link = self.formula_templates.ADD_CELL_FROM_SHEET
 
-        # Make the param name and master value columns
-        for param_name, row_number in scenarios.bb.general.rows.by_name.items(): #<-----------------------------------need to make sure we get the right position here
-            # Order doesn't matter here
+        external_coordinates = dict()
+        external_coordinates["sheet"] = scenarios.title
 
-            active_row = header_row + row_number
-            my_tab.bb.parameters.rows.by_name[param_name] = active_row
-            #<--------------------------------------------------------------------------------have to think about whether these are absolute or relative
+        source_label_column = scenarios.bb.general.columns.get_position(self.column_names.LABELS)
+        source_value_column = scenarios.bb.general.columns.get_position(self.column_names.ACTIVE_SCENARIO)
+        
+        for param_name in scenarios.bb.general.rows.by_name:
+            # We can build the page in any order here
+
+            row_number = scenarios.bb.general.rows.get_position(param_name)
+            # Get the correct relative position
             
-            name_cell = my_tab.cell(column=col_params, row=active_row)
-            name_cell.value = param_name
+            source_coordinates = external_coordinates.copy()
+            source_coordinates["row"] = row_number
 
-            master_cell = my_tab.cell(column=col_master, row=active_row)
-            master_cell.value = f_active_scenario % row_number
+            active_row = header_row + row_number 
+            my_tab.bb.parameters.rows.by_name[param_name] = active_row
+            # TO DO: Think about whether we should be keeping the row number differently here.
 
-        f_pull_master = "=" + "$" + get_column_letter(col_master) + "%s"
-        # "=$A1"
+            # Label cell should link to the parameter name on the scenarios sheet
+            label_cell = my_tab.cell(column=label_column, row=active_row)
+            
+            cos = source_coordinates.copy()
+            cos["column"] = source_label_column
+            link = master_link.format(**cos)
+            label_cell.value = link
+
+            # Master cell should link to the active value 
+            master_cell = my_tab.cell(column=local_master_column, row=active_row)
+
+            cos = source_coordinates.copy()
+            cos["column"] = source_value_column
+            link = master_link.format(**cos)
+            master_cell.value = link
+
+
+
+        # Second, build a column for each period. Pull values from our local
+        # master column and overwrite them if necessary with direct values.        
         
-        starting_column = col_master + 2
+        starting_column = local_master_column + 2
         active_column = starting_column
-
-        my_tab.bb.time_line.rows.by_name["labels"] = header_row
         
         for period in model.time_line.get_ordered():
 
             my_tab.bb.time_line.columns.by_name[period.end] = active_column
-            my_tab.bb.parameters.columns.by_name[period_end] = active_column
+            parameters.columns.by_name[period_end] = active_column
+            # Need this to make sure the parameters Area looks as wide as the
+            # timeline. Otherwise, other routines may think that the params area
+            # is only one column wide. 
             
             header_cell = my_tab.cell(column=active_column, row=header_row)
             header_cell.value = period.end
 
-            # first, add period-level parameters
-            # first, drop the pull value for all cells through the params thing
+            # 1. Pulling the master values for each parameter.
+
             for param_row in my_tab.bb.parameters.rows.by_name.values():
+                # May write the column in undefined order
+
+                param_cell = my_tab.cell(column=active_column, row=param_row)
+                link = local_link.format(alpha_column=alpha_master_column, row=param_row)
+                param_cell.value = link
+
+            # 2. Overwrite links with hard-coded values where the period
+            #    specifies them. Add period-specific parameters.
+
+            for spec_name in sorted(period.parameters):
+
+                spec_value = period.parameters[spec_name]
                 
-                # Note: will probably write cells in non-sequential order
+                if spec_name in parameters.rows.by_name:
+                    
+                    param_row = parameters.rows.get_position(spec_name)                
+                    param_cell = my_tab.cell(column=active_column, row=param_row)
+                    param_cell.value = spec_value
+    ##                spec_cell.format = blue_font_color
 
-                param_cell = my_tab.cell(column=active_column, row=param_row)
-                param_cell.value = f_pull_master % param_row
+                else:
+                    # The parameter is specific to the period; we don't have it
+                    # on the page yet. Add a row and write the value there.
 
-                # Or could add links to the prior period's parameters <--------------------------
+                    # Register the new row
+                    param_row = parameters.rows.ending + 1
+                    parameters.rows.by_name[spec_name] = param_row
+                    # TO DO: Could also use max_row() or bb.current_row
 
-            # then, overwrite them with explicitly specified params
-            for spec_name, spec_value in period.parameters.items():
-                param_row = my_tab.bb_row_lookup[spec_name]
-                param_cell = my_tab.cell(column=active_column, row=param_row)
-                param_cell.value = spec_value
-##                spec_cell.format = blue_font_color
+                    # Add the label
+                    label_cell = my_tab.cell(column=label_column, row=param_row)
+                    label_cell.value = spec_name
+
+                    # Add the master value (from this period)
+                    master_cell = my_tab.cell(column=master_column, row=param_row)
+                    master_cell.value = spec_value
+
+                    # Link the period to the master
+                    param_cell = my_tab.cell(column=active_column, row=param_row)
+                    link = self.formula_templates.ADD_COORDINATES
+                    link = link.format(coordinates=master_cell.coordinate)
+                    param_cell.value = link
             
             active_column += 1
-            # Move on to the next period
 
         return my_tab
   
-
+        # To do:
+        # - Group
+        # - Add formatting for hard-coded numbers (blue font)
+        # - Improve efficiency by splitting period params into uniques and
+        #   specifics first. That way, don't have to overwrite anything. 
         

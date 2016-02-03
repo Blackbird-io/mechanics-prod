@@ -155,10 +155,89 @@
 
  - control number of total sheets (max should be like ~200 or so)
    -- figure out what to do when model would exceed that number. could potentially
-      route calculations through bb itself. 
- -
-"""
+      route calculations through bb itself.
+ - think about creating a Coordinates class in DataManagement,
+   -- with a .row, .column, and .sheet attrs
+   -- can be properties to make sure values always conform (e.g., column should
+      always be a number or smtg, values should always be positive integers)
+   -- can have .dict() method that returns a dictionary (or the instance __dict__
 
+ - should probably apply formatting wholesale if possible:
+   -- keep track of all hard-coded cells (by location with sheet); format them in one
+      lump sum
+
+IOP:
+ - add the "ending" property to data_management.Range
+ - figure out what to do with the position indexing to make it consistent?
+   -- really have to watch out for adding absolute positions to the relative lookup (will create gaps)
+
+
+"""
+# Expected interface
+
+class Workbook:
+    def __init__(self):
+        pass
+    
+    def create_sheet(name):
+        """
+        -> Worksheet
+        """
+        # Sample logic:
+        
+##        result = Worksheet(name)
+##        result.parent = self
+##        self._sheets[name] = result
+##        
+##        return result
+        pass
+
+    def __getitem__(name):
+        """
+
+        -> Worksheet
+        """
+        return self._sheets[name]
+
+class Worksheet:
+
+    def __init__(self, name):
+        self.parent = None
+        # Points to book
+        
+        self.title = name
+        
+    def cell(column, row):
+        """
+        -> returns Cell with column and row
+        """
+        pass
+
+class Cell
+    def __init__(self):
+        self.parent = None
+        # Points to sheet
+
+        self.value = None
+        # Raw value
+
+    @property
+    def coordinate(self):
+        pass
+        # Returns alphanumeric coordinates
+
+    @property
+    def row(self):
+        pass
+        # Returns integer row
+
+    @property
+    def column(self):
+        pass
+        # Returns alphabetical column
+    
+
+        
 
 
                 
