@@ -6,25 +6,39 @@ class Range:
     Uses absolute coordinates
     """
 
-    def __init__(self, starting=0, ending=None):
+    def __init__(self, starting=None, ending=None):
         
         self.starting = starting
         self.ending = None
 ##        self.data = list() 
         # points to active row or column
 
+    # May be starting should be a property, so when you change it, you move
+    # all values up or down. Should also get error if its < 1. 
+
 class Lookup(Range):
     """
     values in the lookup are always relative to the starting point
     """
+    @property
+    def ending(self):
+        result = None
+        
+        if self.by_name: 
+            starting_value = self.starting or 0
+            result = starting_value + max(self.by_name.values())
+
+        return result
 
     def __init__(self, *pargs, **kwargs):
         Range.__init__(self, *pargs, **kwargs)
         self.by_name = dict()
 
     def get_position(self, name):
-        result = self.starting + self.by_name[name]
+        first_position = self.starting or 0
+        result = first_position + self.by_name[name]
         return result
+        # Return natural if starting is blank
 
     def update(self, source):
         pass
@@ -34,7 +48,10 @@ class Area:
     could also name this ``Field``
     """
     
-    def __init__(self):
+    def __init__(self, name=None):
+        self.name = name
+        self.parent = None
+        
         self.rows = Lookup()
         self.cols = Lookup()
         
