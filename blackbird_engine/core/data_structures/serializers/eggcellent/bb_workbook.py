@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 #Blackbird Environment
-#Module: data_structures.eggscellent.bb_workbook
+#Module: data_structures.serializers.eggcellent.bb_workbook
 """
 
 Module defines workbook with custom native-Python data storage on each sheet.
@@ -26,19 +26,24 @@ BB_Workbook           workbook where each sheet has a SheetData record set
 
 
 
-# imports
+# Imports
 import openpyxl as excel_interface
 
 from .data_management import SheetData
 
 
 
+# Constants
+# n/a
 
-# classes
+# Module Globals
+# n/a
+
+# Classes
 class BB_Workbook(excel_interface.Workbook):
     """
 
-    Class modifies standardf workbook to include a SheetData record set on each
+    Class modifies standard workbook to include a SheetData record set on each
     sheet. As a result, we can do data lookups and reference builds faster and
     more explicitly.     
     ====================  ======================================================

@@ -151,5 +151,14 @@
     # should move the index to the right place when its done.
 
 
+# To do:
+
+ - control number of total sheets (max should be like ~200 or so)
+   -- figure out what to do when model would exceed that number. could potentially
+      route calculations through bb itself. 
+ -
+"""
+
+
 
                 

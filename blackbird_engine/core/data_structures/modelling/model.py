@@ -278,88 +278,7 @@ class Model(Tags):
         """
         time_stamp = time.time()
         record = (message,time_stamp)
-        self.transcript.append(record)
-
-    
-    
-            
-    def _create_time_line_tab(self, book):
-        
-        scenarios = book["Scenarios"]
-        
-        my_tab = book.create_sheet("Timeline")
-        my_tab.bb_row_lookup = dict()
-        my_tab.bb_col_lookup = dict()
-
-        get_column_letter = excel_interface.utils.get_column_letter
-
-        # first column will be params
-        # second column will be blank
-        # third column will be master
-        
-        col_params = 1
-        col_master = 3
-        # have to record column <---------------------------------
-
-        header_row = 3
-
-##        f_active_scenario = "=" + str(scenarios.title) + "!" + "$" + str(scenarios.bb_col_lookup["active"]) + "%s"
-        f_active_scenario = "=Scenarios!C%s"
-        # first, write the param colum and the master column: "=Scenarios! $A1"
-
-        # Make the param name and master value columns
-        for param_name, row_number in scenarios.bb_row_lookup.items():
-            # Order doesn't matter here
-
-            active_row = header_row + row_number
-            my_tab.bb_row_lookup[param_name] = active_row
-            
-            name_cell = my_tab.cell(column=col_params, row=active_row)
-            name_cell.value = param_name
-
-            master_cell = my_tab.cell(column=col_master, row=active_row)
-            master_cell.value = f_active_scenario % row_number
-
-        f_pull_master = "=" + "$" + get_column_letter(col_master) + "%s"
-        # "=$A1"
-        
-        starting_column = col_master + 2
-        active_column = starting_column
-        
-        for period in self.time_line.get_ordered():
-
-            # record column in lookup table so future routines can coordinate
-            my_tab.bb_col_lookup[period.end] = active_column
-            
-            header_cell = my_tab.cell(column=active_column, row=header_row)
-            header_cell.value = period.end
-
-            # first, add period-level parameters
-            # first, drop the pull value for all cells through the params thing
-            for param_row in my_tab.bb_row_lookup.values():
-                
-                # Note: will probably write cells in non-sequential order
-
-                param_cell = my_tab.cell(column=active_column, row=param_row)
-                param_cell.value = f_pull_master % param_row
-
-                # Or could add links to the prior period's parameters <--------------------------
-                # Can probably also make this a named range or something? Cause these formulas
-                # are all the same.
-
-            # then, overwrite them with explicitly specified params
-            for spec_name, spec_value in period.parameters.items():
-                param_row = my_tab.bb_row_lookup[spec_name]
-                param_cell = my_tab.cell(column=active_column, row=param_row)
-                param_cell.value = spec_value
-##                spec_cell.format = blue_font_color
-            
-            active_column += 1
-            # Move on to the next period
-
-        return book
-
-    
+        self.transcript.append(record)  
 
         #//
 
@@ -446,9 +365,7 @@ class Model(Tags):
                 ## may also want to organize lookup tables by section to avoid name collisions
                 ## so have a .income or .cash section where names have to be unique
 
-        # should put all of this stuff into a single class called ExcelConverter
-        # which could then have interfaces and other stuff
-
+        
         # test would be:
             # compare net income and balance sheet to existing representation
 
