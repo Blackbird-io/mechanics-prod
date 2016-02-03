@@ -33,6 +33,7 @@ class LineChopper:
 
     def _spread_driver_data(self, sheet, line, driver_data, set_labels=True):
         """
+
         -> sheet
         """
         label_column = sheet.time_line.cols.get_position("label") #<-----------------------------this can be sheet.labels if we

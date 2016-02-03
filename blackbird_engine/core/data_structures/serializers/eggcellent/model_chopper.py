@@ -35,6 +35,8 @@ from .field_names import FieldNames
 from .formulas import FormulaTemplates
 from .tab_names import TabNames
 
+from .unit_chopper import UnitChopper
+
 
 
 
@@ -284,39 +286,29 @@ class ModelChopper:
             # 2. Overwrite links with hard-coded values where the period
             #    specifies them. Add period-specific parameters.
 
-            for spec_name in sorted(period.parameters):
+            existing_param_names = period.parameters.keys() & parameters.rows.by_name.keys()
+            new_param_names = period.parameters.keys() - existing_param_names
+            # New parameters are specific to the period. We don't have a row for
+            # them on the sheet yet, so we'll add them later.
+
+            for spec_name in existing_param_names:                
 
                 spec_value = period.parameters[spec_name]
-                
-                if spec_name in parameters.rows.by_name:
                     
-                    param_row = parameters.rows.get_position(spec_name)                
-                    param_cell = my_tab.cell(column=active_column, row=param_row)
-                    param_cell.value = spec_value
-    ##                spec_cell.format = blue_font_color
+                param_row = parameters.rows.get_position(spec_name)                
+                param_cell = my_tab.cell(column=active_column, row=param_row)
+                param_cell.value = spec_value
+##                spec_cell.format = blue_font_color
 
-                else:
-                    # The parameter is specific to the period; we don't have it
-                    # on the page yet. Add a row and write the value there.
+            new_params = dict()
+            for k in new_param_names:
+                new_params[k] = period.parameters[k]
 
-                    # Register the new row
-                    param_row = parameters.rows.ending + 1
-                    parameters.rows.by_name[spec_name] = param_row
-                    # TO DO: Could also use max_row() or bb.current_row
-
-                    # Add the label
-                    label_cell = my_tab.cell(column=label_column, row=param_row)
-                    label_cell.value = spec_name
-
-                    # Add the master value (from this period)
-                    master_cell = my_tab.cell(column=master_column, row=param_row)
-                    master_cell.value = spec_value
-
-                    # Link the period to the master
-                    param_cell = my_tab.cell(column=active_column, row=param_row)
-                    link = self.formula_templates.ADD_COORDINATES
-                    link = link.format(coordinates=master_cell.coordinate)
-                    param_cell.value = link
+            UnitChopper._add_param_rows(my_tab, new_params, active_column,
+                                        label_column=local_labels_column,
+                                        master_column=local_master_column)
+            # Supply column indeces for speed, otherwise routine would look
+            # them up on every call.
             
             active_column += 1
 
@@ -326,5 +318,7 @@ class ModelChopper:
         # - Group
         # - Add formatting for hard-coded numbers (blue font)
         # - Improve efficiency by splitting period params into uniques and
-        #   specifics first. That way, don't have to overwrite anything. 
+        #   specifics first. That way, don't have to overwrite anything.
+
+        
         

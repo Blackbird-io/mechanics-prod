@@ -28,6 +28,8 @@ UnitChopper           chop BusinessUnit into dynamic Excel structure
 
 
 # Imports
+import openpyxl as excel_interface
+
 from .tab_names import TabNames
 
 
@@ -36,6 +38,7 @@ from .tab_names import TabNames
 # n/a
 
 # Module Globals
+get_column_letter = excel_interface.utils.get_column_letter
 tab_names = TabNames()
 
 # Classes
@@ -103,38 +106,91 @@ class UnitChopper:
                 self._spread_line(sheet, line)
 
     # Have to manage book depth (ie max sheets) #<--------------------------------------------------!!
-    
+
+    def _add_param_rows(self, sheet, params, active_column, label_column=None, master_column=None):
+        """
+
+
+        -> Worksheet
+
+
+        "active_column" : integer, 1-based column index
+        "label_column" : integer,
+        "master_column" : integer
+
+        if label_column or master_column are left blank, method will find
+        indeces using .get_position(). to improve performance in loops, caller
+        can supply these indeces as arguments.
+        """
+
+        # The parameter is specific to the period; we don't have it
+        # on the page yet. Add a row and write the value there.
+
+        parameters = sheet.bb.parameters
+
+        if label_column is None:
+            label_column = sheet.bb.parameters.columns.get_position(field_names.LABELS)
+        if master_column is None:
+            master_column = sheet.bb.parameters.columns.get_position(field_names.MASTER)
+            
+        for param_name in sorted(params):
+
+            param_value = params[param_name]
+            
+            # Register the new row
+            param_row = parameters.rows.ending + 1
+            parameters.rows.by_name[spec_name] = param_row
+            # TO DO: Could also use max_row() or bb.current_row
+
+            # Add the label
+            label_cell = sheet.cell(column=label_column, row=param_row)
+            label_cell.value = param_name
+
+            # Add the master value (from this period)
+            master_cell = my_tab.cell(column=master_column, row=param_row)
+            master_cell.value = param_value
+
+            # Link the period to the master
+            param_cell = my_tab.cell(column=active_column, row=param_row)
+            link = self.formula_templates.ADD_COORDINATES
+            link = link.format(coordinates=master_cell.coordinate)
+            param_cell.value = link
+
+        return sheet
+            
     def _add_unit_params(self, sheet, unit):
         """
 
-        -> sheet
+
+        -> Worksheet
         
+
         """
 
         period_column = sheet.bb.time_line.columns.get_position(unit.period.ends)
-        label_column = sheet.bb.parameters.columns.get_position("label")
-        
-        for param_name in sorted(unit.parameters):
+        label_column = sheet.bb.parameters.columns.get_position(field_names.LABELS)
 
+        existing_param_names = unit.parameters.keys() & parameters.rows.by_name.keys()
+        new_param_names = unit.parameters.keys() - existing_param_names
+        
+        for param_name in existing_param_names:
             param_value = unit.parameters[param_name]
 
-            if param_name in sheet.bb.parameters.rows.by_name:
+            existing_row = sheet.bb.parameters.rows.get_position(param_name)
+            data_cell = sheet.cell(column=period_column, row=existing_row)
+            data_cell.value = param_value
+            # should format the cell in blue or whatever for hardcoded
 
-                existing_row = sheet.bb.parameters.rows.get_position(param_name)
-                data_cell = sheet.cell(column=period_column, row=existing_row)
-                data_cell.value = param_value
-                # should format the cell in blue or whatever for hardcoded
+        new_params = dict()
+        for k in new_param_names:
+            new_params[k] = unit.parameters[k]
 
-            else:
+        self._add_param_rows(sheet, new_params, period_column)
 
-                new_row = sheet.bb.parameters.ending + 1
-                data_cell = sheet.cell(column=period_column, row=new_row)
-                data_cell.value = param_value
-
-                label_cell = sheet.cell(column=label_column, row=new_row)
-                label_cell.value = param_name
-
-        return sheet
+        return sheet    
+        
+        # To Do:
+        # - add formatting
 
     def _create_unit_sheet(self, book, unit):
         """
@@ -145,7 +201,6 @@ class UnitChopper:
 
         
         """
-
         name = str(unit.id.bbid)[-self.MAX_TITLE_CHARACTERS: ]
         sheet = book.create_sheet(name)
         # Could also check if the actual unit name is in book, then switch to id
@@ -162,25 +217,22 @@ class UnitChopper:
 
         return sheet   
 
-    def _link_to_area(self, source_sheet, local_sheet, area_name):
+    def _link_to_area(self, source_sheet, local_sheet, area_name, group=False):
         """
 
 
         -> Worksheet
 
-        
+
+        "area_name" : string 
         """
         source_area = getattr(source.bb, area_name)
         local_area = getattr(local.bb, area_name, None)
 
         if local_area is None:
-            local_area = Area(area_name)
-            setattr(local.bb, area_name, local_area)
-            local_area.parent = local_sheet
-            #< ----------------------------------------------------------------------- SHOULD RUN THROUGH Relationship routine!!!!!!!!!
+            local_area = local_sheet.bb.add_area(area_name)
 
-        local_area.update(source_area) #<--------------------------------------------------------------- implement routine!
-        
+        local_area.update(source_area)
         coordinates = {"sheet" : source_sheet.title}
         
         for row in source_area.rows.by_name.values():
@@ -190,20 +242,25 @@ class UnitChopper:
 
             for column in source_area.columns.by_name.values():
 
-                source_col = source_area.columns.starting + column
-                local_col = source_area.columns.starting + column
+                source_column = source_area.columns.starting + column
+                local_column = source_area.columns.starting + column
 
                 local_cell = local_sheet.cell(column=local_column, row=local_row)
 
                 cos = coordinates.copy()
                 cos["row"] = source_row
-                cos["column"] = source_column
+                cos["alpha_column"] = get_column_letter(source_column)
 
-                link = self.formulas.ADD_FOREIGN_CELL.format(**cos)
+                link = self.formulas.ADD_CELL_FROM_SHEET.format(**cos)
                 local_cell.value = link
                 
-        # if group, group starting and ending
+        # if group:
+        #   ##group cells
+        
         return local_sheet
+
+        # To do:
+        # - if group: group the range
 
     def _link_to_time_line(self, book, sheet):
         """

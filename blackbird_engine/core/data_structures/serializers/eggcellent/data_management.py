@@ -40,8 +40,12 @@ class Lookup(Range):
         return result
         # Return natural if starting is blank
 
-    def update(self, source):
-        pass
+    def update(self, source_lookup):
+        """
+        -> None
+        """
+        self.by_name.update(source.by_name)
+        
 
 class Area:
     """
@@ -54,6 +58,13 @@ class Area:
         
         self.rows = Lookup()
         self.cols = Lookup()
+
+    def update(self, source_area):
+        """
+        -> None
+        """
+        self.rows.update(source_area.rows)
+        self.cols.update(source_area.cols)
         
 class LineData(Range):
 
@@ -133,6 +144,27 @@ class SheetData:
         self.general = Area()
         self.current_row = None
         self.current_column = None
+
+    def add_area(self, area_name, overwrite=False):
+        result = None
+        if getattr(self, area_name):
+
+            c = "No implicit overwrites."
+            raise Exception(c)
+
+        else:
+
+            new_area = Area(area_name)
+            setattr(self, area_name, new_area)
+            new_area.parent = self
+
+            result = new_area
+
+        return result
+
+    def set_sheet(self, sheet):
+
+        self.sheet = sheet
 
     # Alternative interface:
         # def __init__(self):
