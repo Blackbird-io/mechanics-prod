@@ -5,11 +5,12 @@ class Range:
 
     Uses absolute coordinates
     """
+    ending = None
+    # To allow property below
 
     def __init__(self, starting=None):
         
         self.starting = starting
-        self.ending = None
 
     # May be starting should be a property, so when you change it, you move
     # all values up or down. Should also get error if its < 1. 
@@ -18,6 +19,10 @@ class Lookup(Range):
     """
     values in the lookup are always relative to the starting point
     """
+    def __init__(self, *pargs, **kwargs):
+        Range.__init__(self, *pargs, **kwargs)
+        self.by_name = dict()
+
     @property
     def ending(self):
         result = None
@@ -27,10 +32,6 @@ class Lookup(Range):
             result = starting_value + max(self.by_name.values())
 
         return result
-
-    def __init__(self, *pargs, **kwargs):
-        Range.__init__(self, *pargs, **kwargs)
-        self.by_name = dict()
 
     def get_position(self, name):
         first_position = self.starting or 0
@@ -55,7 +56,7 @@ class Area:
         self.parent = None
         
         self.rows = Lookup()
-        self.cols = Lookup()
+        self.columns = Lookup()
 
     def update(self, source_area):
         """
@@ -145,7 +146,7 @@ class SheetData:
 
     def add_area(self, area_name, overwrite=False):
         result = None
-        if getattr(self, area_name):
+        if getattr(self, area_name, None):
 
             c = "No implicit overwrites."
             raise Exception(c)

@@ -33,6 +33,7 @@ import openpyxl as excel_interface
 
 from .bb_workbook import BB_Workbook as Workbook
 
+from .data_management import Area
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
 from .tab_names import TabNames
@@ -49,6 +50,8 @@ from .unit_chopper import UnitChopper
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
 tab_names = TabNames()
+
+unit_chopper = UnitChopper()
 
 get_column_letter = excel_interface.utils.get_column_letter
 
@@ -109,9 +112,9 @@ class ModelChopper:
         """       
         book = Workbook()
         
-        # self._create_cover_tab(model, book)
-        self._create_scenarios_tab(book)
-        self._create_time_line_tab(book)
+        # self._create_cover_tab(book, model)
+        self._create_scenarios_tab(book, model)
+        self._create_time_line_tab(book, model)
 
         return book
 
@@ -125,7 +128,7 @@ class ModelChopper:
         Return a worksheet that lays out the assumptions used by the model in
         various scenarios. 
         """
-        scenarios = book.create_sheet(tab_names.SCENARIOS)
+        my_tab = book.create_sheet(tab_names.SCENARIOS)
 
         # Sheet map:
         # A          |  B      | C             | D     | E
@@ -136,10 +139,12 @@ class ModelChopper:
         label_column = 1
         in_effect_column = 3
         base_case_column = 5
-        
-        scenarios.bb.general.columns.by_name[field_names.LABELS] = label_column
-        scenarios.bb.general.columns.by_name[field_names.VALUES] = in_effect_column
-        scenarios.bb.general.columns.by_name[field_names.BASE_CASE] = base_case_column
+
+        area = my_tab.bb.general
+
+        area.columns.by_name[field_names.LABELS] = label_column
+        area.columns.by_name[field_names.VALUES] = in_effect_column
+        area.columns.by_name[field_names.BASE_CASE] = base_case_column
 
         current_row = starting_row
         
@@ -147,11 +152,11 @@ class ModelChopper:
             # Sort to make sure we display the parameters in stable order,
             # otherwise order could vary from chop to chop on the same model.
 
-            label_cell = scenarios.cell(column=label_column, row=current_row)
-            scenarios.bb.general.rows.by_name[param_name] = current_row
+            label_cell = my_tab.cell(column=label_column, row=current_row)
+            area.rows.by_name[param_name] = current_row
 
-            in_effect_cell = scenarios.cell(column=in_effect_column, row=current_row)
-            base_case_cell = scenarios.cell(column=base_case_column, row=current_row)
+            in_effect_cell = my_tab.cell(column=in_effect_column, row=current_row)
+            base_case_cell = my_tab.cell(column=base_case_column, row=current_row)
                         
             label_cell.value = param_name
             base_case_cell.value = model.time_line.parameters[param_name]
@@ -161,8 +166,8 @@ class ModelChopper:
             in_effect_cell.value = link
 
             current_row += 1
-        
-        return scenarios
+    
+        return my_tab
 
         # TO DO:
         # - print every scenario in model.scenarios ("base", "bad", "good", etc.)
@@ -194,13 +199,12 @@ class ModelChopper:
         Method expects book to include a completed scenarios sheet. 
         """        
         scenarios = book[tab_names.SCENARIOS]
+        scenarios_area = scenarios.bb.general
         
         my_tab = book.create_sheet(tab_names.TIME_LINE)
-        parameters = Area("Parameters")
-        parameters.parent = my_tab #<------------------------------------------------------------------------- this should be a sheet-level routine
-        # Sheet.add_area("parameters") -> Area with name and parent relationship
-        
-        my_tab.bb.parameters = parameters
+
+        parameters = my_tab.bb.add_area("parameters")
+        time_line = my_tab.bb.add_area("time_line")
 
         # Pick starting positions
         local_labels_column = 1
@@ -212,20 +216,17 @@ class ModelChopper:
         parameters.columns.by_name[field_names.MASTER] = local_master_column
         
         header_row = 3
-        my_tab.bb.time_line.rows.by_name[field_names.LABELS] = header_row
+        time_line.rows.by_name[field_names.LABELS] = header_row
 
 
 
         # First, pull the parameter names and active values from the scenarios
         # tab into a local "label" and "master" column, respectively.
-        
-        external_link = formula_templates.ADD_CELL_FROM_SHEET
-
         external_coordinates = dict()
         external_coordinates["sheet"] = scenarios.title
 
-        source_label_column = scenarios.bb.general.columns.get_position(self.column_names.LABELS)
-        source_value_column = scenarios.bb.general.columns.get_position(self.column_names.ACTIVE_SCENARIO)
+        source_label_column = scenarios_area.columns.get_position(field_names.LABELS)
+        source_value_column = scenarios_area.columns.get_position(field_names.VALUES)
         
         for param_name in scenarios.bb.general.rows.by_name:
             # We can build the page in any order here
@@ -238,22 +239,24 @@ class ModelChopper:
 
             active_row = header_row + row_number 
             my_tab.bb.parameters.rows.by_name[param_name] = active_row
-            # TO DO: Think about whether we should be keeping the row number differently here.
+            # TO DO: Think about whether we should be keeping track of the row
+            # number differently here.
 
-            # Label cell should link to the parameter name on the scenarios sheet
-            label_cell = my_tab.cell(column=label_column, row=active_row)
+            # Label cell should link to the parameter name on the scenarios
+            # sheet
+            label_cell = my_tab.cell(column=local_labels_column, row=active_row)
             
             cos = source_coordinates.copy()
-            cos["column"] = source_label_column
-            link = master_link.format(**cos)
+            cos["alpha_column"] = get_column_letter(source_label_column)
+            link = formula_templates.ADD_CELL_FROM_SHEET.format(**cos)
             label_cell.value = link
 
             # Master cell should link to the active value 
             master_cell = my_tab.cell(column=local_master_column, row=active_row)
 
             cos = source_coordinates.copy()
-            cos["column"] = source_value_column
-            link = master_link.format(**cos)
+            cos["alpha_column"] = get_column_letter(source_value_column)
+            link = formula_templates.ADD_CELL_FROM_SHEET.format(**cos)
             master_cell.value = link
 
 
@@ -267,7 +270,7 @@ class ModelChopper:
         for period in model.time_line.get_ordered():
 
             my_tab.bb.time_line.columns.by_name[period.end] = active_column
-            parameters.columns.by_name[period_end] = active_column
+            parameters.columns.by_name[period.end] = active_column
             # Need this to make sure the parameters Area looks as wide as the
             # timeline. Otherwise, other routines may think that the params area
             # is only one column wide. 
@@ -281,7 +284,11 @@ class ModelChopper:
                 # May write the column in undefined order
 
                 param_cell = my_tab.cell(column=active_column, row=param_row)
-                link = local_link.format(alpha_column=alpha_master_column, row=param_row)
+
+                link_template = formula_templates.ADD_CELL
+                cos = dict(alpha_column=alpha_master_column, row=param_row)
+                link = link_template.format(**cos)
+                
                 param_cell.value = link
 
             # 2. Overwrite links with hard-coded values where the period
@@ -305,7 +312,7 @@ class ModelChopper:
             for k in new_param_names:
                 new_params[k] = period.parameters[k]
 
-            UnitChopper._add_param_rows(my_tab, new_params, active_column,
+            unit_chopper._add_param_rows(my_tab, new_params, active_column,
                                         label_column=local_labels_column,
                                         master_column=local_master_column)
             # Supply column indeces for speed, otherwise routine would look
