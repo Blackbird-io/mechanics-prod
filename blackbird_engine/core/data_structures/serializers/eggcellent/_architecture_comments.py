@@ -150,6 +150,11 @@
     # Generally speaking, "current row" should always be empty. Each routine
     # should move the index to the right place when its done.
 
+    When working on row insertion and deletion, it will generally be easier to
+    build a new sheet from updated SheetData information, since you will have to
+    re-do all of the formulas with references below your deletion/insertion target.
+
+
 
 # To do:
 

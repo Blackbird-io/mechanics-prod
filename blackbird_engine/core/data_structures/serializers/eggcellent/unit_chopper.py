@@ -28,7 +28,7 @@ UnitChopper           chop BusinessUnit into dynamic Excel structure
 
 
 # Imports
-# n/a
+from .tab_names import TabNames
 
 
 
@@ -36,31 +36,41 @@ UnitChopper           chop BusinessUnit into dynamic Excel structure
 # n/a
 
 # Module Globals
-# n/a
+tab_names = TabNames()
 
 # Classes
 class UnitChopper:
     """
 
-    Class packages an Engine model into an Excel Workbook with dynamic links.
+    [Add doc string ]
+    One tab per unit
+    Children first
+    Arbitrarily recursive (though should max out at sheet limit; alternatively,
+    book should prohibit new sheets after that? or can have 2 limits: a soft
+    limit where ModelChopper shifts into different representation mode, and a
+    hard limit, where you just cant create any more sheets.)
+    
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
-    field_names
-    formula_templates
-    tab_names             standard tab names
+    n/a
 
     FUNCTIONS:
-    chop_model()          returns sheet with a SheetData instance at sheet.bb
+    chop_unit()           returns sheet with a SheetData instance at sheet.bb
     ====================  ======================================================
     """
+    MAX_TITLE_CHARACTERS = 8
+
+    
  
     def chop_unit(self, book, unit):
         """
 
-        -> sheet
+
+        -> Worksheet
+
 
         Children should be spread before parent
         """
@@ -127,10 +137,25 @@ class UnitChopper:
         return sheet
 
     def _create_unit_sheet(self, book, unit):
+        """
 
-        name = str(unit.id.bbid)[-8:] #<-----------------------------------------------------------------should be a class var
+
+        -> Worksheet
+
+
+        
+        """
+
+        name = str(unit.id.bbid)[-self.MAX_TITLE_CHARACTERS: ]
         sheet = book.create_sheet(name)
-        unit.xl.set_sheet(sheet)
+        # Could also check if the actual unit name is in book, then switch to id
+        # if it is (or 4 chars of name + 8 chars of id); would make more sense
+        
+        unit.xl.set_sheet(sheet) #<--------------------------------------------------------------------------------------- IMPLEMENT ROUTINE
+
+        # Should auto-hide components below level 2 or smtg to make the book cleaner; sheet_state="hidden"
+        # Could have a relationships.depth number on each unit. Then if relationships.depth >= x, you
+        # do something. Ask Erika to start working on refactoring .relationships out of Tags. 
 
         self._link_to_time_line(sheet, book)
         self._add_unit_params(sheet, unit)
@@ -139,19 +164,24 @@ class UnitChopper:
 
     def _link_to_area(self, source_sheet, local_sheet, area_name):
         """
-        """
 
+
+        -> Worksheet
+
+        
+        """
         source_area = getattr(source.bb, area_name)
         local_area = getattr(local.bb, area_name, None)
-        if local_area is None:
-            local_area = Area()
-            setattr(local.bb, range_name, local_area)
 
-        local_area.update(source_area)
+        if local_area is None:
+            local_area = Area(area_name)
+            setattr(local.bb, area_name, local_area)
+            local_area.parent = local_sheet
+            #< ----------------------------------------------------------------------- SHOULD RUN THROUGH Relationship routine!!!!!!!!!
+
+        local_area.update(source_area) #<--------------------------------------------------------------- implement routine!
         
-        coordinates = {
-            "sheet" : source_sheet.name
-            }
+        coordinates = {"sheet" : source_sheet.title}
         
         for row in source_area.rows.by_name.values():
 
@@ -178,11 +208,13 @@ class UnitChopper:
     def _link_to_time_line(self, book, sheet):
         """
 
-        -> sheet
+
+        -> Worksheet
+        
 
         Link sheet to book's time_line
         """
-        source = book[self.names.TIME_LINE]
+        source = book[tab_names.TIME_LINE]
         
         self._link_to_area(source, sheet, "time_line")
         self._link_to_area(source, sheet, "parameters")
