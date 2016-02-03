@@ -10,7 +10,7 @@ class Range:
         
         self.starting = starting
         self.ending = None
-        self.data = list() 
+##        self.data = list() 
         # points to active row or column
 
 class Lookup(Range):
@@ -33,12 +33,12 @@ class Area:
     """
     could also name this ``Field``
     """
+    
     def __init__(self):
-        
         self.rows = Lookup()
         self.cols = Lookup()
         
-class LineData(PositionTracker):
+class LineData(Range):
 
     """
     For coordinating line location across multiple non-continguous
@@ -50,14 +50,14 @@ class LineData(PositionTracker):
         Range.__init__(self)
 
         self.consolidated = Range()
-        # Expects each item in consolidated.data to be a row_data object
+        self.consolidated.sources = list()
+        # List should contain pointers to source lines
+        
         self.derived = Range()
-        # Expects each item in derived.data to be a driver_data object
-        self.detailed = Range()
-        # detailed.data should be empty?
+        self.derived.calculations = list()
+        # Each item should be a driver_data object
 
-        # consolidated.sources should be list of pointers
-        # derived.calculations should be list of driver data chunks
+        self.detailed = Range()
 
     def get_coordinates(self, column):
         """
@@ -81,13 +81,14 @@ class LineData(PositionTracker):
         # call somehow. But that requires the coordinator to know where to look
 
     def set_sheet(self):
+        pass
         
-
 class UnitData:
     def __init__(self, book=None, sheet=None):
         self.sheet = sheet
 
-    def set_sheet(self)
+    def set_sheet(self):
+        pass
         
 class RowData:
     def __init__(self):

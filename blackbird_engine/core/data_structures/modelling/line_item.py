@@ -35,6 +35,7 @@ import tools.for_printing as printing_tools
 
 from data_structures.guidance.guide import Guide
 from data_structures.system.tags import Tags
+from data_structures.serializers import xl_mgmt
 
 from .equalities import Equalities
 from ._new_statement import Statement
@@ -71,6 +72,7 @@ class LineItem(Statement):
     guide                 instance of Guide object
     log                   list of entries that modified local value
     value                 instance value
+    xl                    instance of LineData record set
     
     FUNCTIONS:
     clear()               if modification permitted, sets value to None
@@ -113,6 +115,8 @@ class LineItem(Statement):
             # Once consolidate() changes a lineitem, derive() will skip it. To
             # allow derivation of empty lineitems, must start w value==None.
             self.set_value(value, self.SIGNATURE_FOR_CREATION)
+
+        self.xl = xl_mgmt.LineData()
 
     # Lines can contain a mutable set of details, so we don't include a hash
     # method. Since it's difficult to compare lines to each other unless you

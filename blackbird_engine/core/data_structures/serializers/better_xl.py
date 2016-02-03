@@ -1,12 +1,12 @@
-import openpyxl as xlio
+import openpyxl as excel_interface
 
-class Bbook(excel_interface.WorkBook):
+class Bbook(excel_interface.Workbook):
     def __init__(self, *pargs, **kwargs):
 
-        excel_interface.WorkBook.__init__(*pargs, **kwargs)
+        excel_interface.Workbook.__init__(*pargs, **kwargs)
 
     def create_sheet(self, name):
-        sheet = excel_interface.WorkBook.create_sheet(self, name)
+        sheet = excel_interface.Workbook.create_sheet(self, name)
         sheet.bb = SheetData()
 
         return sheet
@@ -140,7 +140,7 @@ class Eggcellent:
             "starting_row" : line.xl.consolidated.starts,
             "ending_row" : line.xl.consolidated.ends,
             "column" : sheet.current_column
-            )
+            }
         #<------------------------------------------------------------------------------------------------------------------------need to make sure column is alphabetical
         
         summation_formula = self.formulas.SUM_RANGE.format(**summation_params)
@@ -281,7 +281,7 @@ class Eggcellent:
         for statement in unit.financials:
             for line in statement.get_ordered():
 
-                self._spread_line(sheet)
+                self._spread_line(sheet, line)
 
     # Have to manage book depth (ie max sheets)
 

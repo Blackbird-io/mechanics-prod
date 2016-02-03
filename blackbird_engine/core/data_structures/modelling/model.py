@@ -280,19 +280,7 @@ class Model(Tags):
         record = (message,time_stamp)
         self.transcript.append(record)
 
-    def _spread_foundation(self):
-        """
-        Return a workbook with:
-           cover
-           scenarios
-           timeline
-           
-        """       
-        wb = excel_interface.Workbook()
-        self._create_scenarios_tab(wb)
-        self._create_time_line_tab(wb)
-        return wb
-
+    
     
             
     def _create_time_line_tab(self, book):

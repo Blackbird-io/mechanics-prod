@@ -355,7 +355,7 @@ class Driver(Tags):
         
         return result
         
-    def workOnThis(self, line):
+    def workOnThis(self, line, xl_prep=False):
         """
 
 
