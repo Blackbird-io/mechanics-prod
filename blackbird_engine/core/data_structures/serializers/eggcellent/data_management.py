@@ -6,12 +6,10 @@ class Range:
     Uses absolute coordinates
     """
 
-    def __init__(self, starting=None, ending=None):
+    def __init__(self, starting=None):
         
         self.starting = starting
         self.ending = None
-##        self.data = list() 
-        # points to active row or column
 
     # May be starting should be a property, so when you change it, you move
     # all values up or down. Should also get error if its < 1. 

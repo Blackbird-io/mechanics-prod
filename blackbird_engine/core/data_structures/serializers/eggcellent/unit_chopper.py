@@ -30,7 +30,9 @@ UnitChopper           chop BusinessUnit into dynamic Excel structure
 # Imports
 import openpyxl as excel_interface
 
+from .field_names import FieldNames
 from .tab_names import TabNames
+
 
 
 
@@ -39,6 +41,7 @@ from .tab_names import TabNames
 
 # Module Globals
 get_column_letter = excel_interface.utils.get_column_letter
+field_names = FieldNames()
 tab_names = TabNames()
 
 # Classes

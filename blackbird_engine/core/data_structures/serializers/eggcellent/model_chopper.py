@@ -13,7 +13,9 @@ Attribute             Description
 ====================  ==========================================================
 
 DATA:
-n/a
+field_names           commonly used field names
+formula_templates     string templates for commonly used formulas
+tab_names             standard tab names
 
 FUNCTIONS:
 n/a
@@ -44,6 +46,10 @@ from .unit_chopper import UnitChopper
 # n/a
 
 # Module Globals
+field_names = FieldNames()
+formula_templates = FormulaTemplates()
+tab_names = TabNames()
+
 get_column_letter = excel_interface.utils.get_column_letter
 
 # Classes
@@ -56,17 +62,12 @@ class ModelChopper:
     ====================  ======================================================
 
     DATA:
-    field_names           commonly used field names
-    formula_templates     string templates for commonly used formulas
-    tab_names             standard tab names
+    n/a
 
     FUNCTIONS:
     chop_model()          returns sheet with a SheetData instance at sheet.bb
     ====================  ======================================================
     """
-    field_names = FieldNames()
-    formula_templates = FormulaTemplates()
-    tab_names = TabNames()
     
     def chop_model(self, model):
         """
@@ -124,7 +125,7 @@ class ModelChopper:
         Return a worksheet that lays out the assumptions used by the model in
         various scenarios. 
         """
-        scenarios = book.create_sheet(self.tab_names.SCENARIOS)
+        scenarios = book.create_sheet(tab_names.SCENARIOS)
 
         # Sheet map:
         # A          |  B      | C             | D     | E
@@ -136,9 +137,9 @@ class ModelChopper:
         in_effect_column = 3
         base_case_column = 5
         
-        scenarios.bb.general.columns.by_name[self.field_names.LABELS] = label_column
-        scenarios.bb.general.columns.by_name[self.field_names.VALUES] = in_effect_column
-        scenarios.bb.general.columns.by_name[self.field_names.BASE_CASE] = base_case_column
+        scenarios.bb.general.columns.by_name[field_names.LABELS] = label_column
+        scenarios.bb.general.columns.by_name[field_names.VALUES] = in_effect_column
+        scenarios.bb.general.columns.by_name[field_names.BASE_CASE] = base_case_column
 
         current_row = starting_row
         
@@ -155,7 +156,7 @@ class ModelChopper:
             label_cell.value = param_name
             base_case_cell.value = model.time_line.parameters[param_name]
 
-            link = self.formulas.ADD_COORDINATES
+            link = formula_templates.ADD_COORDINATES
             link = link.format(coordinates=base_case_cell.coordinate)
             in_effect_cell.value = link
 
@@ -192,9 +193,9 @@ class ModelChopper:
         
         Method expects book to include a completed scenarios sheet. 
         """        
-        scenarios = book[self.tab_names.SCENARIOS]
+        scenarios = book[tab_names.SCENARIOS]
         
-        my_tab = book.create_sheet(self.tab_names.TIME_LINE)
+        my_tab = book.create_sheet(tab_names.TIME_LINE)
         parameters = Area("Parameters")
         parameters.parent = my_tab #<------------------------------------------------------------------------- this should be a sheet-level routine
         # Sheet.add_area("parameters") -> Area with name and parent relationship
@@ -207,18 +208,18 @@ class ModelChopper:
 
         alpha_master_column = get_column_letter(local_master_column)
         
-        parameters.columns.by_name[self.field_names.LABELS] = local_labels_column
-        parameters.columns.by_name[self.field_names.MASTER] = local_master_column
+        parameters.columns.by_name[field_names.LABELS] = local_labels_column
+        parameters.columns.by_name[field_names.MASTER] = local_master_column
         
         header_row = 3
-        my_tab.bb.time_line.rows.by_name[self.field_names.LABELS] = header_row
+        my_tab.bb.time_line.rows.by_name[field_names.LABELS] = header_row
 
 
 
         # First, pull the parameter names and active values from the scenarios
         # tab into a local "label" and "master" column, respectively.
         
-        external_link = self.formula_templates.ADD_CELL_FROM_SHEET
+        external_link = formula_templates.ADD_CELL_FROM_SHEET
 
         external_coordinates = dict()
         external_coordinates["sheet"] = scenarios.title
