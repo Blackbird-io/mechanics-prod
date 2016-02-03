@@ -29,16 +29,41 @@ BB_Workbook           workbook where each sheet has a SheetData record set
 # imports
 import openpyxl as excel_interface
 
+from .data_management import SheetData
+
 
 
 
 # classes
 class BB_Workbook(excel_interface.Workbook):
-    def __init__(self, *pargs, **kwargs):
+    """
 
-        excel_interface.Workbook.__init__(*pargs, **kwargs)
+    Class modifies standardf workbook to include a SheetData record set on each
+    sheet. As a result, we can do data lookups and reference builds faster and
+    more explicitly.     
+    ====================  ======================================================
+    Attribute             Description
+    ====================  ======================================================
+
+    DATA:
+    n/a
+
+    FUNCTIONS:
+    create_sheet()        returns sheet with a SheetData instance at sheet.bb
+    ====================  ======================================================
+    """ 
+    def __init__(self, *pargs, **kwargs):
+        excel_interface.Workbook.__init__(self, *pargs, **kwargs)
 
     def create_sheet(self, name):
+        """
+
+
+        BB_WorkBook.create_sheet(name) -> Worksheet
+
+
+        Return worksheet with a SheetData record set at instance.bb.
+        """
         sheet = excel_interface.Workbook.create_sheet(self, name)
         sheet.bb = SheetData()
 
