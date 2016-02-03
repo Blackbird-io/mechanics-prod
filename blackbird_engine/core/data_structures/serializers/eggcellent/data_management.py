@@ -6,7 +6,7 @@ class Range:
     Uses absolute coordinates
     """
 
-    def __init__(self, starting=None, ending=None):
+    def __init__(self, starting=0, ending=None):
         
         self.starting = starting
         self.ending = None

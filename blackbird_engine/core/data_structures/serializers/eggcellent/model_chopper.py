@@ -1,12 +1,87 @@
+#PROPRIETARY AND CONFIDENTIAL
+#Property of Blackbird Logical Applications, LLC
+#Copyright Blackbird Logical Applications, LLC 2015
+#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
+#Blackbird Environment
+#Module: data_structures.serializers.eggcellent.model_chopper
+"""
+
+Module defines workbook with custom native-Python data storage on each sheet.
+====================  ==========================================================
+Attribute             Description
+====================  ==========================================================
+
+DATA:
+n/a
+
+FUNCTIONS:
+n/a
+
+CLASSES:
+ModelChopper          chop Blackbird Engine model into a dynamic Excel workbook
+====================  ==========================================================
+"""
+
+
+
+
+# Imports
+from .bb_workbook import BB_Workbook as Workbook
+from .tab_names import TabNames
+
+
+
+
+# Constants
+# n/a
+
+# Module Globals
+# n/a
+
+# Classes
 class ModelChopper:
+    """
+
+    Class packages an Engine model into an Excel Workbook with dynamic links.
+    ====================  ======================================================
+    Attribute             Description
+    ====================  ======================================================
+
+    DATA:
+    tab_names             standard tab names
+
+    FUNCTIONS:
+    chop_model()          returns sheet with a SheetData instance at sheet.bb
+    ====================  ======================================================
+    """
+    tab_names = TabNames()
+    
+    
     def chop_model(self, model):
         """
 
-        -> book
+        -> Workbook
 
         """
-        pass
+        # self._import_historical_data(model)
+        
+        book = self._spread_foundation(model)
+        now = model.time_line.current_period
+        company = now.content
+        
+        UnitChopper.chop_unit(company, book)
+        # <-------------------------------------------------------------------------------- May need to specify period, column, etc.
+
+        # book = self._create_annual_summary_tab(model, book)
+        # book = self._create_dcf_tab(model, book)
+        # book = self._create_ev_tab(model, book)
+                
+        return book
+
+    #*************************************************************************#
+    #                          NON-PUBLIC METHODS                             #
+    #*************************************************************************#
 
     def _spread_foundation(self, model):
         """
@@ -14,21 +89,26 @@ class ModelChopper:
         -> book
         
         Return a workbook with:
-           cover
+           cover [not implemented yet]
            scenarios
            timeline
            
         """       
-        wb = excel_interface.Workbook() #<--------------------------------------------------- this should be our custom class
-        self._create_scenarios_tab(wb)
-        self._create_time_line_tab(wb)
-        return wb
+        book = Workbook()
+        
+        # self._create_cover_tab(model, book)
+        self._create_scenarios_tab(book)
+        self._create_time_line_tab(book)
+
+        return book
 
     def _create_scenarios_tab(self, book, model):
         """
-        -> should return sheet!
+
+        -> should return sheet
+
         """
-        scenarios = book.create_sheet("Scenarios") #<--------------------------------------------------------------key should be standard
+        scenarios = book.create_sheet(self.tab_names.SCENARIOS)
 
         # Sheet map:
         # A          |  B      | C             | D     | E
@@ -79,9 +159,9 @@ class ModelChopper:
         book should have a "scenarios" tab by now
         """
         
-        scenarios = book["Scenarios"] #<-------------------------------------------------------------------------------- search by standard key
+        scenarios = book[self.tab_names.SCENARIOS]
         
-        my_tab = book.create_sheet("Timeline") #<------------------------------------------------------------------------add standard key
+        my_tab = book.create_sheet(self.tab_names.TIME_LINE)
         my_tab.bb.parameters = Area()
 
         get_column_letter = excel_interface.utils.get_column_letter
