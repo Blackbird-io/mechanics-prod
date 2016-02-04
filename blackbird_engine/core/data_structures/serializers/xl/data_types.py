@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 #Blackbird Environment
-#Module: data_structures.serializers.eggcellent.data_types
+#Module: data_structures.serializers.eggcellent.type_codes
 """
 
 Module defines a class that stores explicit data type codes compatible with the
@@ -40,7 +40,7 @@ DataTypes             known cell data types
 # n/a
 
 # Classes
-class DataTypes:
+class TypeCodes:
     """
 
     Class stores type strings known to the excel interface. 
