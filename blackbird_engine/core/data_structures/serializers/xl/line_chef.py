@@ -54,12 +54,14 @@ class LineChef:
     Objects that export models into Excel
 
     """
-    def chop_line(self, *pargs, line, sheet):
+    def chop_line(self, *pargs, sheet, line):
         """
         by the end of this routine, the line and all its details should have a
         sheet assignment. that way, we can gather 
 
-        Expects sheet to have current_column SET UP <------------------------------------------------------------------------------------------!
+        Expects sheet to have current_column SET UP
+
+        Routines deliver sheet with the current_row pointing to the last filled in cell. 
         """
 
         line.xl.set_sheet(sheet)
@@ -84,10 +86,8 @@ class LineChef:
 
                 self.chop_line(sheet, detail, set_labels=set_labels, indent=sub_indent)
 
-                cos = coordinates.copy()
-                cos["row"] = detail.xl.ending
-                link = formula_templates.ADD_CELL.format(**cos)
-                
+                coordinates["row"] = detail.xl.ending
+                link = formula_templates.ADD_CELL.format(**cos)        
                 detail_summation += link
         
                 sheet.bb.current_row += 1
@@ -107,7 +107,6 @@ class LineChef:
                 sheet.bb.current_row +=1
 
         self._combine_segments(sheet, line, set_labels=set_labels)
-        sheet.bb.current_row += 1
         # Could also group here
 
         return sheet
@@ -147,7 +146,7 @@ class LineChef:
             
         return sheet
     
-    def rows_to_coordinates(self, table, column, sheet_name=None):
+    def rows_to_coordinates(self, *pargs, table, column, sheet_name=None):
         """
         -> dict
 
@@ -162,7 +161,7 @@ class LineChef:
 
         return result
 
-    def line_to_coordinates(self, line, column):
+    def line_to_coordinates(self, *pargs, line, column):
         result = line.xl.get_coordinates(column)
         return result
 
@@ -198,7 +197,7 @@ class LineChef:
             summation_params = {
                 "starting_row" : line.xl.consolidated.starts,
                 "ending_row" : line.xl.consolidated.ends,
-                "column" : sheet.current_column
+                "alpha_column" : sheet.current_column
                 }
             #<------------------------------------------------------------------------------------------------------------------------need to make sure column is alphabetical
             
@@ -210,9 +209,7 @@ class LineChef:
                 # Add the "x : consolidated value" label #<---------------------------------------------------------------------------------------fix
                 pass
 
-            line.xl.consolidated.ending = sheet.current_row
-
-            sheet.current_row +=1 #<---------------------------------------should move this to the manager function so can explictly see how we move up and down book
+            line.xl.consolidated.ending = sheet.bb.current_row
 
         return sheet
 
@@ -311,7 +308,11 @@ class LineChef:
     def _combine_segments(self, *pargs, sheet, line, set_labels=True):
         """
 
-        -> Worksheet
+
+        LineChef._combine_segments() -> Worksheet
+
+
+        
         """
 
         ends = [
@@ -328,7 +329,7 @@ class LineChef:
 
             if set_labels:
                 pass
-                # This should also be a utility function: set_label() 
+                # <---------------------------------------------------------------------------------------------------------ADD LABELING
 
             line.xl.ending = sheet.bb.current_row 
             
@@ -337,7 +338,15 @@ class LineChef:
     def _set_label(self, *pargs, label, sheet, row, column=None, overwrite=False):
         """
 
-        -> Worksheet
+
+        LineChef._set_label() -> Worksheet
+
+
+        Set (column, row) cell value to label. Throw exception if cell already
+        has a different label, unless ``overwrite`` is True.
+
+        If ``column`` is None, method attempts to locate the labels column in
+        the sheet.bb.parameters area.
         """
         if column is None:
             column=sheet.bb.parameters.get_position(field_names.LABELS)
@@ -362,21 +371,22 @@ class LineChef:
 
         return sheet
 
-    def _sum_endpoints(self, *pargs, endpoints, column):
+    def _sum_endpoints(self, *pargs, rows, column):
         """
 
-        -> string
 
-        Return summation formula, ready to go
+        LineChef._sum_endpoints() -> string
         
-        # May want to add sheet later
+
+        Return a summation of each of the rows in column. Expects rows to be a
+        collection of absolute row indeces.
         """
         summation = ""
 
         coordinates = dict()
         coordinates["alpha_column"] = get_column_letter(column)
 
-        for row in endpoints:
+        for row in rows:
             if row is not None:
                 coordinates["row"] = row
                 link = formula_templates.ADD_CELL.format(**coordinates)
