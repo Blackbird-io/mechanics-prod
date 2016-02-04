@@ -1,10 +1,10 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
-#Blackbird Environment
-#Module: data_structures.modelling.driver
+# Blackbird Environment
+# Module: data_structures.modelling.driver
 """
 
 Module defines Driver class. Drivers modify LineItems. 
@@ -26,12 +26,14 @@ Driver                objects that modify lineitems from inside business units
 
 
  
-#imports
+# Imports
 import copy
 import time
 
 import bb_exceptions
+import bb_settings
 
+from data_structures.serializers.xl import data_management as xl_mgmt
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
 from content import formula_manager as FormulaManager
@@ -40,10 +42,11 @@ from .parameters import Parameters
 
 
 
-#constants
-#n/a
 
-#classes
+# Constants
+# n/a
+
+# Classes
 class Driver(Tags):
     """
 
@@ -355,7 +358,7 @@ class Driver(Tags):
         
         return result
         
-    def workOnThis(self, line, xl_prep=False):
+    def workOnThis(self, line):
         """
 
 
@@ -369,7 +372,9 @@ class Driver(Tags):
         Method is a no-op if instance is not active.
         """
         if self.active:
+            
             if self._can_work_on_this(line):
+                
                 formula = self._FM.local_catalog.issue(self.formula_bbid)
                 # formula_catalog.issue() only performs dict retrieval and
                 # return for key.
@@ -377,17 +382,15 @@ class Driver(Tags):
 
                 params = self._build_params()
                 
-                formula.func(line, bu, params, self.signature)
-                if xl_prep:
+                if not bb_settings.EXCEL_PREP:
+
+                    formula.func(line, bu, params, self.signature)
+
+                else:
+                    excel_template, references = formula.func(line, bu, params, self.signature)
 
                     data_cluster = self.to_excel()
-                    # Should come in with rows and conversion map
-        
-                    string, references = formula.to_excel()
-                    # formula.to_excel() expects formula.func() to have
-                    # populated state. May be an issue cause I'm not sure if funcs see the instance.
-
-                    data_cluster.formula = string
+                    data_cluster.formula = excel_template
                     data_cluster.references = references
                     
                     line.xl.derived.calculations.append(data_cluster)
@@ -405,19 +408,23 @@ class Driver(Tags):
     def to_excel(self):
         """
 
-        -> DriverData
-        
-        """
-        #<--------------------------------------------------------------------------------------------------------------------- need doc string
 
-        result = DriverData()
+        Driver.to_excel() -> DriverData
+
+        
+        Return a record set with instance parameters and conversion map. 
+        """
+        result = xl_mgmt.DriverData()
         result.conversion_map = self.conversion_map.copy()
 
         for param_name, param_value in self.parameters.items():
 
-            row = RowData()
-            row["label"] = param_name
-            row["value"] = param_value #<---------------------------------------------could have issues here if this is mutable or a structure
+            row = xl_mgmt.RowData()
+            row[xl_mgmt.RowData.field_names.LABELS] = param_name
+            row[xl_mgmt.RowData.field_names.VALUES] = param_value
+
+            # UPGRADE / ISSUE: We need to find a way for managing parameters
+            # whose values are containers or other mutable structures in Excel.
 
             result.rows.append(row)
 

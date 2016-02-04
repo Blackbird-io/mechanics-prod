@@ -120,10 +120,16 @@ class UnitData:
 class RowData:
     def __init__(self):
         dict.__init__(self)
-        self["value"] = None
-        self["label"] = None
-        self["comment"] = None
-        self["references"] = None
+        self[self.field_names.VALUES] = None
+        self[self.field_names.LABELS] = None
+##        self[self.field_names.COMMENT] = None
+        # Comment always goes on the labels line?
+##        self[self.field_names.REFERENCES] = None
+
+        # Probably better to change this into a regular instance with attributes (.value, .label), etc.
+        # then have a .get_dict() method that delivers the instance dictionary.
+
+        # Would fit in better anyways. 
 
 class DriverData:
     """
@@ -137,7 +143,6 @@ class DriverData:
         self.conversion_map = None
 
 class SheetData:
-
     def __init__(self):
 
         self.general = Area()
