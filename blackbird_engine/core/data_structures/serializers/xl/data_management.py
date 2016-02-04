@@ -146,9 +146,10 @@ class DriverData:
     """
     def __init__(self):
         self.rows = []
-        self.formula_string = None
-        self.formula_references = None
+        self.formula = None
+        self.references = None
         self.conversion_map = None
+        self.name = None
 
 class SheetData:
     def __init__(self):
