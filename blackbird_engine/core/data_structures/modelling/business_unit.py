@@ -33,6 +33,7 @@ import bb_exceptions
 import bb_settings
 
 from data_structures.guidance.guide import Guide
+from data_structures.serializers.xl import data_management as xl_mgmt
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
 from data_structures.valuation.business_summary import BusinessSummary
@@ -144,6 +145,8 @@ class BusinessUnit(History, Tags, Equalities):
         self.size = 1
         self.summary = BusinessSummary()
         self.valuation = CompanyValue()
+
+        self.xl = xl_mgmt.UnitData()
 
     @property
     def type(self):
