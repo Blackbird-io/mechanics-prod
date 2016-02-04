@@ -299,7 +299,8 @@ class LineChef:
         for k, obj in driver_data.line_references.items():
             references[k] = self.obj_to_coordinates(obj)
 
-        formula = template.format(references=references, parameters=param_coordinates)
+        formula = template.format(lines=references, parameters=param_coordinates)
+        # Formulas should deliver templates with the {lines} key.
         
         calc_cell = sheet.cell(sheet.current_column, sheet.current_row)
         calc_cell.set_explicit_value(formula, data_type=type_codes.FORMULA)

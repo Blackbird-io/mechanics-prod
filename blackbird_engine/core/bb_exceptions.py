@@ -91,6 +91,12 @@ class CatalogError(BBAnalyticalError):
     """
     pass
 
+class ExcelPrepError(BBAnalyticalError):
+    """
+    Exception signals issue with an Excel-oriented prep operation.
+    """
+    pass
+
 class TagRegistrationError(CatalogError):
     """
     """
@@ -120,4 +126,5 @@ class IDNamespaceError(IDError):
     """
     """
     content = "Object UUID not in the object's namespace UUID."
+
 

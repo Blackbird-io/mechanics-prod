@@ -221,6 +221,10 @@ IOP:
  - !add grouping to LineChef
 
  - add a main interface
+ - add formula name, original output, may be even the docstring from func to formula info. That way, we can
+   quickly trace it. Also add format_error intercept into Chef itself. 
+ - !add line reference verification to Driver.workOnThis()
+ - !add formatting error intercept to LineChef
 
 PROBLEM:
  - Good excel prep is not totally compatible with speed optimization. End up doing work in cases where

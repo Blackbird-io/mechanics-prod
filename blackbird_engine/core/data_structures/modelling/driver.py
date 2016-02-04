@@ -390,17 +390,19 @@ class Driver(Tags):
                     output = formula.func(line, bu, params, self.signature)
                     try:
                         excel_template, references = output
-                    except TypeError as x:
-                        print()
-                        print("Formula does not support Excel output.")
-                        print("Name: ", formula.tags.name)
-                        print("BBID: ", self.formula_bbid)
-                        print()
-                        raise x
+                    except TypeError:
+
+                        c = "\nFormula does not support Excel output."
+                        c += "\nName: %s" % formula.tags.name
+                        c += "\nBBID: $s" % self.formula_bbid
+                        c += "\n"
+                        
+                        raise bb_exceptions.ExcelPrepError(c)
 
                     data_cluster = self.to_excel()
                     data_cluster.formula = excel_template
                     data_cluster.references = references
+                    data_cluster.name = formula.tags.name
                     
                     line.xl.derived.calculations.append(data_cluster)
                 
