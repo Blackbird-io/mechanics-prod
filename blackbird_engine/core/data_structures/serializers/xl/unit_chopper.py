@@ -35,6 +35,8 @@ from .field_names import FieldNames
 from .formulas import FormulaTemplates
 from .tab_names import TabNames
 
+from .line_chef import LineChef
+
 
 
 
@@ -42,11 +44,14 @@ from .tab_names import TabNames
 # n/a
 
 # Module Globals
-get_column_letter = excel_interface.utils.get_column_letter
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
 tab_names = TabNames()
 type_codes = TypeCodes()
+
+get_column_letter = excel_interface.utils.get_column_letter
+
+line_chef = LineChef()
 
 # Classes
 class UnitChopper:
@@ -59,6 +64,9 @@ class UnitChopper:
     book should prohibit new sheets after that? or can have 2 limits: a soft
     limit where ModelChopper shifts into different representation mode, and a
     hard limit, where you just cant create any more sheets.)
+
+    Most non-public methods force keyword-based arg entry to avoid potentially
+    confusing erros (switching rows for columns, etc.)
     
     ====================  ======================================================
     Attribute             Description
@@ -75,7 +83,7 @@ class UnitChopper:
 
     
  
-    def chop_unit(self, book, unit):
+    def chop_unit(self, *pargs, book, unit):
         """
 
 
@@ -90,12 +98,12 @@ class UnitChopper:
             
             self.chop_unit(book, child)
 
-        sheet = self._create_unit_sheet(unit)
+        sheet = self._create_unit_sheet(book=book, unit=unit)
         unit.xl.set_sheet(sheet)
 
-        self._add_params(sheet, unit)
-##        self._add_life(sheet, unit)
         self._add_financials(sheet, unit)
+        # Should I set the sheet here too? Every line has to have a sheet
+        # Or I could just get the cell.parent ! Much cleaner, arguably. 
 
         return sheet
 
@@ -110,7 +118,7 @@ class UnitChopper:
         for statement in unit.financials:
             for line in statement.get_ordered():
 
-                self._spread_line(sheet, line)
+                line_chef._spread_line(sheet, line)
 
     # Have to manage book depth (ie max sheets) #<--------------------------------------------------!!
 
@@ -201,7 +209,7 @@ class UnitChopper:
         # To Do:
         # - add formatting
 
-    def _create_unit_sheet(self, book, unit):
+    def _create_unit_sheet(self, *pargs, book, unit):
         """
 
 
@@ -260,8 +268,9 @@ class UnitChopper:
                 cos["row"] = source_row
                 cos["alpha_column"] = get_column_letter(source_column)
 
-                link = formula_templates.ADD_CELL_FROM_SHEET.format(**cos)
-                local_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+                link = formula_templates.LINK_TO_CELL_ON_SHEET.format(**cos)
+                # local_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+                local_cell.value = link
                 
         # if group:
         #   ##group cells
@@ -270,6 +279,7 @@ class UnitChopper:
 
         # To do:
         # - if group: group the range
+        # - copy styles? the result should inherit styling from source
 
     def _link_to_time_line(self, *pargs, book, sheet):
         """

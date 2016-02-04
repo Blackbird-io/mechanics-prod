@@ -44,3 +44,5 @@ class FormulaTemplates:
     ADD_CELL = "+{alpha_column}{row}"
     ADD_CELL_FROM_SHEET = "+{sheet}!{alpha_column}{row}"
     ADD_COORDINATES = "+{coordinates}"
+
+    LINK_TO_CELL_ON_SHEET = "={sheet}!{alpha_column}{row}"
