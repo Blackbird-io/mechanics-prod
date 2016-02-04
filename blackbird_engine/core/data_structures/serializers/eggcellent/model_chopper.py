@@ -8,6 +8,9 @@
 """
 
 Class for creating dynamic Excel representations of Blackbird Engine models.
+
+Eggcellent modules write formulas to cells explicitly, using the .set_explicit_value()
+method, to make sure Excel interprets the strings correctly. 
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -163,7 +166,10 @@ class ModelChopper:
 
             link = formula_templates.ADD_COORDINATES
             link = link.format(coordinates=base_case_cell.coordinate)
-            in_effect_cell.value = link
+            in_effect_cell.set_explicit_value(link, data_type="f")
+            # Since our formulas start with a "+" instead of "=" to allow easy
+            # nesting, we use the explicit call to tell Excel to read them as
+            # formulas instead of strings
 
             current_row += 1
     
@@ -249,7 +255,7 @@ class ModelChopper:
             cos = source_coordinates.copy()
             cos["alpha_column"] = get_column_letter(source_label_column)
             link = formula_templates.ADD_CELL_FROM_SHEET.format(**cos)
-            label_cell.value = link
+            label_cell.set_explicit_value(link, data_type="f") #<------------------------SHOULD BE A GLOBAL
 
             # Master cell should link to the active value 
             master_cell = my_tab.cell(column=local_master_column, row=active_row)
@@ -257,7 +263,7 @@ class ModelChopper:
             cos = source_coordinates.copy()
             cos["alpha_column"] = get_column_letter(source_value_column)
             link = formula_templates.ADD_CELL_FROM_SHEET.format(**cos)
-            master_cell.value = link
+            master_cell.set_explicit_value(link, data_type="f")
 
 
 
@@ -289,7 +295,7 @@ class ModelChopper:
                 cos = dict(alpha_column=alpha_master_column, row=param_row)
                 link = link_template.format(**cos)
                 
-                param_cell.value = link
+                param_cell.set_explicit_value(link, data_type="f")
 
             # 2. Overwrite links with hard-coded values where the period
             #    specifies them. Add period-specific parameters.
