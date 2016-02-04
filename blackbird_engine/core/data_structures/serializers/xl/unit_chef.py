@@ -1,10 +1,10 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2016
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
-#Blackbird Environment
-#Module: data_structures.serializers.eggcellent.unit_chopper
+# Blackbird Environment
+# Module: data_structures.serializers.xl.unit_chef
 """
 
 Module defines a class that represents arbitrarily rich BusinessUnit instances
@@ -20,7 +20,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-UnitChopper           chop BusinessUnit into dynamic Excel structure
+UnitChef              chop BusinessUnit into dynamic Excel structure
 ====================  ==========================================================
 """
 
@@ -54,7 +54,7 @@ get_column_letter = excel_interface.utils.get_column_letter
 line_chef = LineChef()
 
 # Classes
-class UnitChopper:
+class UnitChef:
     """
 
     [Add doc string ]
@@ -93,6 +93,7 @@ class UnitChopper:
         Children should be spread before parent
         """
         children = unit.components.get_ordered()
+        # Spread children in order to ensure stable results across run times.
 
         for child in children:
             
@@ -111,13 +112,15 @@ class UnitChopper:
         # Premise 2: a unit without any children should be easy to spread on a sheet
         # Premise 3:
 
-    def _add_financials(self, sheet, unit):
+    def _add_financials(self, *pargs, sheet, unit):
+        """
+        -> Worksheet
+        """
         unit.fill_out()
-        # fill out populates the unit with all of the information
+        # Fill out populates the unit with all of the information
         
-        for statement in unit.financials:
+        for statement in unit.financials: #<---------------------------------------------- this is wrong, should be for statement
             for line in statement.get_ordered():
-
                 line_chef._spread_line(sheet, line)
 
     # Have to manage book depth (ie max sheets) #<--------------------------------------------------!!

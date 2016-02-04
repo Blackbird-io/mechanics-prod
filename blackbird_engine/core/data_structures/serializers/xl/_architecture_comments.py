@@ -181,6 +181,8 @@ IOP:
 
  - !move to type_code entry in ModelChopper
  - !!move to kw-only arg entry in important places (book, sheet, etc.)
+ - !!!add life spread to UnitChef
+ - !add grouping to LineChef
 
  - add a main interface
 

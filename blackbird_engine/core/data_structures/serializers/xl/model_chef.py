@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 #Blackbird Environment
-#Module: data_structures.serializers.eggcellent.model_chopper
+#Module: data_structures.serializers.xl.chef
 """
 
 Class for creating dynamic Excel representations of Blackbird Engine models.
@@ -24,7 +24,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-ModelChopper          chop Blackbird Engine model into a dynamic Excel workbook
+Chef                  chop Blackbird Engine model into a dynamic Excel workbook
 ====================  ==========================================================
 """
 
@@ -41,7 +41,7 @@ from .field_names import FieldNames
 from .formulas import FormulaTemplates
 from .tab_names import TabNames
 
-from .unit_chopper import UnitChopper
+from .unit_chef import UnitChef
 
 
 
@@ -54,12 +54,12 @@ field_names = FieldNames()
 formula_templates = FormulaTemplates()
 tab_names = TabNames()
 
-unit_chopper = UnitChopper()
+unit_chef = UnitChef()
 
 get_column_letter = excel_interface.utils.get_column_letter
 
 # Classes
-class ModelChopper:
+class Chef:
     """
 
     Class packages an Engine model into an Excel Workbook with dynamic links.
@@ -318,7 +318,7 @@ class ModelChopper:
             for k in new_param_names:
                 new_params[k] = period.parameters[k]
 
-            unit_chopper._add_param_rows(my_tab, new_params, active_column,
+            unit_chef._add_param_rows(my_tab, new_params, active_column,
                                         label_column=local_labels_column,
                                         master_column=local_master_column)
             # Supply column indeces for speed, otherwise routine would look
