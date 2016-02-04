@@ -30,7 +30,9 @@ UnitChopper           chop BusinessUnit into dynamic Excel structure
 # Imports
 import openpyxl as excel_interface
 
+from .data_types import TypeCodes
 from .field_names import FieldNames
+from .formulas import FormulaTemplates
 from .tab_names import TabNames
 
 
@@ -42,7 +44,9 @@ from .tab_names import TabNames
 # Module Globals
 get_column_letter = excel_interface.utils.get_column_letter
 field_names = FieldNames()
+formula_templates = FormulaTemplates()
 tab_names = TabNames()
+type_codes = TypeCodes()
 
 # Classes
 class UnitChopper:
@@ -142,7 +146,7 @@ class UnitChopper:
             
             # Register the new row
             param_row = parameters.rows.ending + 1
-            parameters.rows.by_name[spec_name] = param_row
+            parameters.rows.by_name[param_name] = param_row
             # TO DO: Could also use max_row() or bb.current_row
 
             # Add the label
@@ -150,14 +154,14 @@ class UnitChopper:
             label_cell.value = param_name
 
             # Add the master value (from this period)
-            master_cell = my_tab.cell(column=master_column, row=param_row)
+            master_cell = sheet.cell(column=master_column, row=param_row)
             master_cell.value = param_value
 
             # Link the period to the master
-            param_cell = my_tab.cell(column=active_column, row=param_row)
-            link = self.formula_templates.ADD_COORDINATES
+            param_cell = sheet.cell(column=active_column, row=param_row)
+            link = formula_templates.ADD_COORDINATES
             link = link.format(coordinates=master_cell.coordinate)
-            param_cell.value = link
+            param_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
 
         return sheet
             
@@ -168,10 +172,12 @@ class UnitChopper:
         -> Worksheet
         
 
+        Adds unit parameters for a single period
         """
-
-        period_column = sheet.bb.time_line.columns.get_position(unit.period.ends)
-        label_column = sheet.bb.parameters.columns.get_position(field_names.LABELS)
+        parameters = sheet.bb.parameters
+        
+        period_column = sheet.bb.time_line.columns.get_position(unit.period.end)
+        label_column = parameters.columns.get_position(field_names.LABELS)
 
         existing_param_names = unit.parameters.keys() & parameters.rows.by_name.keys()
         new_param_names = unit.parameters.keys() - existing_param_names
@@ -215,7 +221,7 @@ class UnitChopper:
         # Could have a relationships.depth number on each unit. Then if relationships.depth >= x, you
         # do something. Ask Erika to start working on refactoring .relationships out of Tags. 
 
-        self._link_to_time_line(sheet, book)
+        self._link_to_time_line(book=book, sheet=sheet)
         self._add_unit_params(sheet, unit)
 
         return sheet   
@@ -229,8 +235,8 @@ class UnitChopper:
 
         "area_name" : string 
         """
-        source_area = getattr(source.bb, area_name)
-        local_area = getattr(local.bb, area_name, None)
+        source_area = getattr(source_sheet.bb, area_name)
+        local_area = getattr(local_sheet.bb, area_name, None)
 
         if local_area is None:
             local_area = local_sheet.bb.add_area(area_name)
@@ -240,13 +246,13 @@ class UnitChopper:
         
         for row in source_area.rows.by_name.values():
 
-            source_row = source_area.rows.starting + row
-            local_row = local_area.rows.starting + row
+            source_row = (source_area.rows.starting or 0) + row
+            local_row = (local_area.rows.starting or 0) + row
 
             for column in source_area.columns.by_name.values():
 
-                source_column = source_area.columns.starting + column
-                local_column = source_area.columns.starting + column
+                source_column = (source_area.columns.starting or 0) + column
+                local_column = (local_area.columns.starting or 0) + column
 
                 local_cell = local_sheet.cell(column=local_column, row=local_row)
 
@@ -254,8 +260,8 @@ class UnitChopper:
                 cos["row"] = source_row
                 cos["alpha_column"] = get_column_letter(source_column)
 
-                link = self.formulas.ADD_CELL_FROM_SHEET.format(**cos)
-                local_cell.value = link
+                link = formula_templates.ADD_CELL_FROM_SHEET.format(**cos)
+                local_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
                 
         # if group:
         #   ##group cells
@@ -265,7 +271,7 @@ class UnitChopper:
         # To do:
         # - if group: group the range
 
-    def _link_to_time_line(self, book, sheet):
+    def _link_to_time_line(self, *pargs, book, sheet):
         """
 
 
@@ -273,8 +279,10 @@ class UnitChopper:
         
 
         Link sheet to book's time_line
+        Force keyword-entry for book and sheet to make sure we feed in the right
+        arguments. 
         """
-        source = book[tab_names.TIME_LINE]
+        source = book.get_sheet_by_name(tab_names.TIME_LINE)
         
         self._link_to_area(source, sheet, "time_line")
         self._link_to_area(source, sheet, "parameters")

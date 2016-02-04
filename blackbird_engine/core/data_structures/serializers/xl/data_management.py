@@ -39,7 +39,7 @@ class Lookup(Range):
         return result
         # Return natural if starting is blank
 
-    def update(self, source_lookup):
+    def update(self, source):
         """
         -> None
         """
@@ -63,7 +63,7 @@ class Area:
         -> None
         """
         self.rows.update(source_area.rows)
-        self.cols.update(source_area.cols)
+        self.columns.update(source_area.columns)
         
 class LineData(Range):
 

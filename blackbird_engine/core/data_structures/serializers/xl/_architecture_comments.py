@@ -171,10 +171,19 @@
    -- keep track of all hard-coded cells (by location with sheet); format them in one
       lump sum
 
+ - figure out what to do with SheetData on save (may be find a place in the work book to put it? or
+   at least delete it explicitly)
+
 IOP:
  - add the "ending" property to data_management.Range
  - figure out what to do with the position indexing to make it consistent?
    -- really have to watch out for adding absolute positions to the relative lookup (will create gaps)
+
+ - !move to type_code entry in ModelChopper
+ - !!move to kw-only arg entry in important places (book, sheet, etc.)
+
+ - add a main interface
+
 
 
 """
@@ -197,11 +206,14 @@ class Workbook:
 ##        return result
         pass
 
-    def __getitem__(name):
+    def __getitem__(self, name):
         """
 
         -> Worksheet
         """
+        return self._sheets[name]
+
+    def get_sheet_by_name(self, name):
         return self._sheets[name]
 
 class Worksheet:
@@ -240,6 +252,13 @@ class Cell
     def column(self):
         pass
         # Returns alphabetical column
+
+    def set_explicit_value(value, data_type=None):
+        """
+        Coerce type
+        """
+        self.value = value
+        self._data_type = data_type
     
 
         
