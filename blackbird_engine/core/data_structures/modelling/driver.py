@@ -382,12 +382,21 @@ class Driver(Tags):
 
                 params = self._build_params()
                 
-                if not bb_settings.EXCEL_PREP:
+                if not bb_settings.PREP_FOR_EXCEL:
 
                     formula.func(line, bu, params, self.signature)
 
                 else:
-                    excel_template, references = formula.func(line, bu, params, self.signature)
+                    output = formula.func(line, bu, params, self.signature)
+                    try:
+                        excel_template, references = output
+                    except TypeError as x:
+                        print()
+                        print("Formula does not support Excel output.")
+                        print("Name: ", formula.tags.name)
+                        print("BBID: ", self.formula_bbid)
+                        print()
+                        raise x
 
                     data_cluster = self.to_excel()
                     data_cluster.formula = excel_template
@@ -415,7 +424,7 @@ class Driver(Tags):
         Return a record set with instance parameters and conversion map. 
         """
         result = xl_mgmt.DriverData()
-        result.conversion_map = self.conversion_map.copy()
+        result.conversion_map = self.conversion_table.copy()
 
         for param_name, param_value in self.parameters.items():
 

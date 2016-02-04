@@ -67,14 +67,19 @@ def func(line, business_unit, data, driver_signature):
 
     -- "new_optional_tags"    |   list of tags to add to line after value
     """
-    #
+    excel_template = "={parameters}[fixed_monthly_value]*{life}[alive]"
+    references = dict()
+
     if business_unit.life.alive:
+
         expense = data["fixed_monthly_value"]
         line.setValue(expense, driver_signature)
+
         line.tag("fixed value")
+
         new_optional_tags = data.get("new_optional_tags")
         if new_optional_tags:
-            line.tag(*new_optional_tags, field = "opt")
-    #
-    #always return None
-    return None
+            line.tag(*new_optional_tags, field="opt")
+    
+    # Always return Excel signature
+    return excel_template, references

@@ -74,9 +74,23 @@ def func(line, business_unit, data, driver_signature):
     -- "min"                  |   floor value for line
     -- "max"                  |   ceiling value for line
     """
-    #
+    excel_template = None
+    line_references = dict()
+    
     fins = business_unit.financials.income
     source_line = fins.find_first(data["source_line_name"])
+
+    
+    line_references["source"] = source_line
+    # Store a pointer to the source so chef can link the formula template
+    # in Excel.
+    xl_core = "+{lines}[source]*{parameters}[source_multiplier]"
+    xl_ceiling = "+MIN(%s, {parameters}[max])"
+    xl_floor = "+MAX(%s, {parameters}{min})"
+
+    excel_template = xl_core
+    # Start with the core calculation, because we don't know if the optional
+    # keywords are in data.
 
     if source_line.value is not None:
         
@@ -84,10 +98,14 @@ def func(line, business_unit, data, driver_signature):
 
         floor = data.get("min")
         ceiling = data.get("max")
+
         if floor:
             new_val = max(new_val, floor)
+            excel_template = xl_floor % excel_template
+            
         if ceiling:
             new_val = min(new_val, ceiling)
+            excel_template = xl_ceiling % excel_template
 
         line.setValue(new_val, driver_signature)
 
@@ -97,6 +115,6 @@ def func(line, business_unit, data, driver_signature):
         new_optional_tags = data.get("new_optional_tags")
         if new_optional_tags:
             line.tag(*new_optional_tags, field = "opt")
-    #
-    # Always return None
-    return None
+    
+    # Always return calculation package
+    return excel_template, line_references
