@@ -209,7 +209,7 @@ class UnitChopper:
         # Could also check if the actual unit name is in book, then switch to id
         # if it is (or 4 chars of name + 8 chars of id); would make more sense
         
-        unit.xl.set_sheet(sheet) #<--------------------------------------------------------------------------------------- IMPLEMENT ROUTINE
+        unit.xl.set_sheet(sheet)
 
         # Should auto-hide components below level 2 or smtg to make the book cleaner; sheet_state="hidden"
         # Could have a relationships.depth number on each unit. Then if relationships.depth >= x, you

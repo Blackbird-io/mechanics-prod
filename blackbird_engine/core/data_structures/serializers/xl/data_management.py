@@ -111,11 +111,11 @@ class LineData(Range):
         pass
         
 class UnitData:
-    def __init__(self, book=None, sheet=None):
+    def __init__(self, sheet=None):
         self.sheet = sheet
 
-    def set_sheet(self):
-        pass
+    def set_sheet(self, sheet):
+        self.sheet = sheet
         
 class RowData:
     def __init__(self):
