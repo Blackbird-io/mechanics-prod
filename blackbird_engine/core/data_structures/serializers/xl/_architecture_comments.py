@@ -222,8 +222,14 @@ IOP:
 
  - add a main interface
 
+PROBLEM:
+ - Good excel prep is not totally compatible with speed optimization. End up doing work in cases where
+   a unit is dead and could otherwise pass.
 
+   Examples (formulas):
+   1. monthly_from_annual_inflation
 
+Have to write an explanation that references can only point to lines
 """
 # Expected interface
 

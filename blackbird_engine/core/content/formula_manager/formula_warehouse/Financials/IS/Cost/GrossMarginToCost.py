@@ -68,12 +68,22 @@ def func(line, business_unit, data, driver_signature):
     -- "active_gross_margin"
     
     """
+    excel_template = None
+    references = dict()
+    
+    
     gross_margin = float(data["active_gross_margin"])
     rev = business_unit.financials.income.find_first("revenue")
         
     if business_unit.life.alive and rev:
         COGS = rev.value * (1 - gross_margin)
         line.setValue(COGS, driver_signature)
-    #
-    #always return None
-    return None
+
+        excel_template = "{references}[revenue]*(1-{parameters}[active_gross_margin])"
+        references["revenue"] = rev
+        # NOTE: We used rich find_first() logic to locate the object that we
+        # call ``rev``. Now that we've found it, our Excel interface can build
+        # a simple link to wherever that object ends up. 
+    
+    # Return the signature.
+    return excel_template, references

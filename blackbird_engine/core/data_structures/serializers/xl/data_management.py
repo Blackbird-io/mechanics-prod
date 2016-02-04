@@ -1,5 +1,11 @@
 #Data structures for managing excel interface
 
+# Imports
+from .field_names import FieldNames
+
+# Module Globals
+# n/a
+
 class Range:
     """
 
@@ -117,11 +123,13 @@ class UnitData:
     def set_sheet(self, sheet):
         self.sheet = sheet
         
-class RowData:
+class RowData(dict):
+    field_names = FieldNames()
+    
     def __init__(self):
-        dict.__init__(self)
         self[self.field_names.VALUES] = None
         self[self.field_names.LABELS] = None
+        
 ##        self[self.field_names.COMMENT] = None
         # Comment always goes on the labels line?
 ##        self[self.field_names.REFERENCES] = None

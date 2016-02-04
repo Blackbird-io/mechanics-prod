@@ -65,7 +65,7 @@ def func(line, business_unit, data, driver_signature):
     Data must include:
 
     [no external data necessary]    
-    """
+    """    
     bu = business_unit
     line_rev = bu.financials.income.find_first("revenue")
     line_cogs = bu.financials.income.find_first("cogs")
@@ -84,13 +84,23 @@ def func(line, business_unit, data, driver_signature):
         return result
 
     ebitda = val(line_rev) - val(line_cost) - val(line_opex) - val(line_sga)
+
+    excel_template = "+{lines}[revenue]-{lines}[cost]-{lines}[opex]-{lines}[sga]"
+    line_references = dict(
+        revenue=line_rev, cost=line_cost, opex=line_opex, sga=line_sga
+        )
+    
     if line_da:
-        ebitda = val(line_da)
+        da = val(line_da)
+        ebitda = ebitda + da
         line.tag("d&a added back")
         # We should really make EBITDA a function of net income to make sure we
         # are not double-counting addbacks.
+
+        excel_template += "+{lines}[da]"
+        line_references["da"] = line_da
     
     line.set_value(ebitda, driver_signature)
 
-    # Always return None
-    return None
+    # Always return calculation package
+    return excel_template, line_references
