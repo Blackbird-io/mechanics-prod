@@ -174,6 +174,42 @@
  - figure out what to do with SheetData on save (may be find a place in the work book to put it? or
    at least delete it explicitly)
 
+ - !figure out what to do about large or mutable parameter values
+
+ - implement template relationships (ie, create a unit template, have units inherit
+   from that template). Could provide an avenue for mutable structure work, because the templates
+   only exist in a single period, so we could spread them over multiple cells.
+
+   -- alternatives for mutable structures:
+      --- compute things dynamically in python, a la xlwings
+
+      --- if you have one of these things, you can flip the timeline into a vertical (so it goes
+          by rows), and then spread the array across columns. You would deliver the results as
+          an Excel array (into a single cell, probably), and expect the formula to include read
+          logic for that thing.
+
+          In this kind of parametrization, you could have mappings look like a key per row, with values
+          being columns.
+
+          in the period column, you could then merge the cells for all the keys, so when you are walking
+          down that column, you always go period by period. or something like that.
+
+      --- add excel named ranges for a similar approach to above.
+
+      Probably want to do some combination. If you have a bunch of complex mapping data that requires
+      sheet-like spread, Excel will probably run very slowly (since its all sequential vs random access).
+      So probably better to manage in memory in Python. On the other hand, basic arrays are kind of
+      not a big deal.
+      
+         Other issue is that this approach creates a new tab per fancy parameter. That can mean waaaay
+         more tabs. Which again costs speed.
+
+         Ideally, you probably want something like a BB Client running on your computer, that Excel
+         can use for complex calculations. BB Main (online) could deliver Excel models with embedded Python
+         (or C) code, and then BB Client can help Excel calculate these things without access to the
+         knowledge base.
+          
+
 IOP:
  - add the "ending" property to data_management.Range
  - figure out what to do with the position indexing to make it consistent?

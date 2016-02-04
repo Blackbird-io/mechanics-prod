@@ -256,6 +256,9 @@ class LineChef:
         private_data = sheet.bb.parameters.copy() #<---------------------------------------------------Implement routine
         # Set up a private range that's going to include both "shared"
         # unit parameters from the column and "private" driver parameters
+
+        label_column = sheet.bb.parameters.get_position(field_names.LABELS)
+        period_column = sheet.bb.current_column
         
         for row_data in driver_data.rows:
 
@@ -263,20 +266,25 @@ class LineChef:
             private_value = row_data[field_names.VALUES]
             
             if private_label and set_labels:
-                self._set_label(sheet=sheet, label=private_label, row=sheet.bb.current_row)
+                self._set_label(sheet=sheet, label=private_label, row=sheet.bb.current_row,
+                                column=label_column)
 
-            param_cell = sheet.cell(column=sheet.bb.current_column, row=sheet.bb.current_row)
+            param_cell = sheet.cell(column=period_column, row=sheet.bb.current_row)
             param_cell.value = private_value
+            # Assume that private_value is a number or string, NOT a formula or
+            # container. Can change this later. 
 
-            relative_position = current_row - private_data.rows.starting
-            private_data.rows.by_name[private_label] = relative_position #<-----------should be a relative position? relative to what? -------------------------------------!!!
-            # should just keep private_data in absolute terms for simplicity ! <------------------------------------------------------------------------
-            # in this particular case, i could literally map the private_param to a cell... 
+            relative_position = current_row - (private_data.rows.starting or 0)
+            private_data.rows.by_name[private_label] = relative_position
+            # ... In this particular case, we could map a specific cell
+            # (in memory) to the parameter. Unclear whether that's useful though,
+            # because we generally look up locations for lines, not parameters.
+            # And lines continue to span several rows. 
 
             current_row += 1
 
         # Transform the range values from rows to coordinates
-        param_coordinates = self.to_coordinates(private_data, sheet.bb.current_column) #<-----------------------------------------------------Routine expects to get a sheet with an up-to-date column index
+        param_coordinates = self.to_coordinates(private_data, sheet.bb.current_column)
         
         # Apply the conversions as necessary to make sure formula
         # sees all the params it wants
@@ -284,7 +292,7 @@ class LineChef:
             param_coordinates[var_name] = param_coordinates[param_name]
 
         # Finally, format the formula as necessary
-        # (if references are a dict of objects, could map each obj to its coordinates)\
+        # (if references are a dict of objects, could map each obj to its coordinates)
         template = driver_data.formula_string
         
         references = dict()
