@@ -102,10 +102,18 @@ class UnitChef:
         sheet = self._create_unit_sheet(book=book, unit=unit)
         unit.xl.set_sheet(sheet)
 
+        sheet.bb.current_column=sheet.bb.time_line.columns.get_position(unit.period.end)
+        #<------------------------------------------------------------------------------------NEED TO FIX
         self._add_financials(sheet, unit)
         # Should I set the sheet here too? Every line has to have a sheet
         # Or I could just get the cell.parent ! Much cleaner, arguably. 
 
+        #<-----------------------------------------------------------------------------------!!! could add a column
+        #argument to add_financials? or could ... pass in a list of periods?? that's probably better.
+        #or could just iterate through the unit? we want this to integrate with load_balance functionality, so
+        #may be better at the UnitChef level: he is the guy that knows how to manage a unit, iterate over it,
+        #etc. So probably better to just iterate through every period here.
+        
         return sheet
 
         # Premise 1: by the time you run this routine, all children should already be in book
@@ -121,7 +129,7 @@ class UnitChef:
         
         for statement in unit.financials: #<---------------------------------------------- this is wrong, should be for statement
             for line in statement.get_ordered():
-                line_chef._spread_line(sheet, line)
+                line_chef.chop_line(sheet=sheet, line=line)
 
     # Have to manage book depth (ie max sheets) #<--------------------------------------------------!!
 

@@ -14,5 +14,11 @@ class Coordinates:
 
         # only set if > 0
 
-    def to_dict(self, alpha_column=True):
+    def get_dict(self, alpha_column=False):
         #return dictionary
+        pass
+
+    def get_tuple(self, alpha_column=False):
+        pass
+
+        
