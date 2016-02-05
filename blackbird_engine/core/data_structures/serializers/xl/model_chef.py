@@ -40,6 +40,7 @@ from .data_management import Area
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
 from .tab_names import TabNames
+from .type_codes import TypeCodes
 
 from .unit_chef import UnitChef
 
@@ -166,7 +167,7 @@ class Chef:
 
             link = formula_templates.ADD_COORDINATES
             link = link.format(coordinates=base_case_cell.coordinate)
-            in_effect_cell.set_explicit_value(link, data_type="f")
+            in_effect_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
             # Since our formulas start with a "+" instead of "=" to allow easy
             # nesting, we use the explicit call to tell Excel to read them as
             # formulas instead of strings
@@ -255,7 +256,7 @@ class Chef:
             cos = source_coordinates.copy()
             cos["alpha_column"] = get_column_letter(source_label_column)
             link = formula_templates.ADD_CELL_FROM_SHEET.format(**cos)
-            label_cell.set_explicit_value(link, data_type="f") #<------------------------SHOULD BE A GLOBAL
+            label_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
 
             # Master cell should link to the active value 
             master_cell = my_tab.cell(column=local_master_column, row=active_row)
@@ -263,7 +264,7 @@ class Chef:
             cos = source_coordinates.copy()
             cos["alpha_column"] = get_column_letter(source_value_column)
             link = formula_templates.ADD_CELL_FROM_SHEET.format(**cos)
-            master_cell.set_explicit_value(link, data_type="f")
+            master_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
 
 
 
@@ -295,7 +296,7 @@ class Chef:
                 cos = dict(alpha_column=alpha_master_column, row=param_row)
                 link = link_template.format(**cos)
                 
-                param_cell.set_explicit_value(link, data_type="f")
+                param_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
 
             # 2. Overwrite links with hard-coded values where the period
             #    specifies them. Add period-specific parameters.

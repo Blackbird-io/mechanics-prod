@@ -40,9 +40,23 @@ FormulaTempaltes      string templates with named fields
 
 # Classes
 class FormulaTemplates:
+
+    # GENERIC
     SUM_RANGE = "+SUM({sheet}!{alpha_column}{starting_row}:{sheet}!{alpha_column}{ending_row}"
+    
     ADD_CELL = "+{alpha_column}{row}"
     ADD_CELL_FROM_SHEET = "+{sheet}!{alpha_column}{row}"
     ADD_COORDINATES = "+{coordinates}"
 
     LINK_TO_CELL_ON_SHEET = "={sheet}!{alpha_column}{row}"
+    LINK_TO_COORDINATES = "={coordinates}"
+
+    # LIFE
+
+    COMPUTE_AGE_IN_DAYS = "=IF({birth}, {ref_date}-{birth})"
+    COMPUTE_AGE_IN_PERCENT = "=IF({span}, ROUND({age}/{span}*100,0))"
+    COMPUTE_SPAN_IN_DAYS = "=IF({death}, {death}-{birth})"
+    
+    IS_ALIVE = "=IF(AND({birth}<={ref_date},{ref_date}<{death}),TRUE,FALSE)"
+
+    

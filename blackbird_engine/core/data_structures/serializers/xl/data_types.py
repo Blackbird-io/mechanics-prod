@@ -60,3 +60,8 @@ class TypeCodes:
     BOOL = "b"
     FORMULA = "f"
     FORMULA_CACHE_STRING = "str"
+    NUMERIC = "n"
+
+class NumberFormats:
+    DATETIME = "yyyy-mm-dd h:mm:ss"
+    

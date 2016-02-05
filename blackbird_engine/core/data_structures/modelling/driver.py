@@ -399,6 +399,12 @@ class Driver(Tags):
                         
                         raise bb_exceptions.ExcelPrepError(c)
 
+                    if references and not excel_template:
+                        c = "Formula returned a line reference dictionary"
+                        c += " but did not return a template to populate." 
+                        
+                        raise bb_exceptions.ExcelPrepError(c, references)
+
                     data_cluster = self.to_excel()
                     data_cluster.formula = excel_template
                     data_cluster.references = references

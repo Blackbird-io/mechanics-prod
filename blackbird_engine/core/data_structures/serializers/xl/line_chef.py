@@ -358,7 +358,7 @@ class LineChef:
         the sheet.bb.parameters area.
         """
         if column is None:
-            column=sheet.bb.parameters.get_position(field_names.LABELS)
+            column=sheet.bb.parameters.columns.get_position(field_names.LABELS)
 
         label_cell = sheet.cell(column=column, row=row)
         exsiting_label = label_cell.value
