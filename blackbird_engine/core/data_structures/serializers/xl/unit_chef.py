@@ -67,6 +67,9 @@ class UnitChef:
 
     Most non-public methods force keyword-based arg entry to avoid potentially
     confusing erros (switching rows for columns, etc.)
+
+    Methods generally leave current row pointing to their last completed (filled)
+    row. 
     
     ====================  ======================================================
     Attribute             Description
@@ -100,7 +103,20 @@ class UnitChef:
             self.chop_unit(book, child)
 
         sheet = self._create_unit_sheet(book=book, unit=unit)
-        unit.xl.set_sheet(sheet)
+        # This should only cover the general: timeline, period params, and decorations
+
+        # Then should have period-level spreading:
+            # add unit params
+            # current_row += 2
+                ## blank row between params and life
+            # add unit life
+            # current_row += 2
+                ## blank row between life and fins
+            # add financials
+            # current_row += 2
+            
+        sheet.bb.current_
+        
 
         sheet.bb.current_column=sheet.bb.time_line.columns.get_position(unit.period.end)
         #<------------------------------------------------------------------------------------NEED TO FIX
@@ -158,32 +174,251 @@ class UnitChef:
             label_column = sheet.bb.parameters.columns.get_position(field_names.LABELS)
         if master_column is None:
             master_column = sheet.bb.parameters.columns.get_position(field_names.MASTER)
-            
+
+        new_row = parameters.rows.ending + 1
+        # TO DO: Could also use Workbook.max_row()
+        
         for param_name in sorted(params):
 
             param_value = params[param_name]
             
             # Register the new row
-            param_row = parameters.rows.ending + 1
-            parameters.rows.by_name[param_name] = param_row
-            # TO DO: Could also use max_row() or bb.current_row
-
+            parameters.rows.by_name[param_name] = new_row
+            
             # Add the label
-            label_cell = sheet.cell(column=label_column, row=param_row)
+            label_cell = sheet.cell(column=label_column, row=new_row)
             label_cell.value = param_name
 
             # Add the master value (from this period)
-            master_cell = sheet.cell(column=master_column, row=param_row)
+            master_cell = sheet.cell(column=master_column, row=new_row)
             master_cell.value = param_value
 
             # Link the period to the master
-            param_cell = sheet.cell(column=active_column, row=param_row)
+            param_cell = sheet.cell(column=active_column, row=new_row)
             link = formula_templates.ADD_COORDINATES
             link = link.format(coordinates=master_cell.coordinate)
             param_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
 
-        return sheet
+            sheet.bb.current_row = new_row
+            new_row +=1
             
+        return sheet
+
+    def _add_unit_life(self, *pargs, sheet, unit):
+        """
+
+        Expects to get sheet with current row pointing to a blank
+        Will start writing on current row
+        
+        """
+        # Routine:
+        #   add life
+                # no master
+        #   add events
+                # have master values. if the value is the same as master, keep link
+                # otherwise, overwrite?
+
+        # make SURE that at the end, you set current row to the ending row of EVENTS+1 or smtg (otherwise will overwrite everything)
+
+        # for multiperiod generally, want to have period n+1 inherit life and params
+        # from period n if they are the same. so establish links.
+
+        active_column = sheet.bb.time_line.columns.get_position(unit.period.end)
+
+        life_area = sheet.bb.add_area("life")
+        events_area = sheet.bb.add_area("events")
+        
+        first_life_row = sheet.bb.current_row + 2
+        first_event_row = first_life_row + 9
+        # Leave nine rows for basic life layout
+
+        sheet.bb.current_row = first_event_row
+        sheet = self._add_life_events(sheet=sheet, unit=unit, active_column=active_column)
+
+        sheet.bb.current_row = first_life_row
+        sheet = self._add_life_analysis(sheet=sheet, unit=unit, active_column=active_column)
+
+        sheet.bb.current_row = sheet.bb.events.ending
+        # Move current row down to the bottom (max_row() probably best here). 
+        return sheet
+
+    def _add_life_events(self, *pargs, sheet, unit, active_column):
+        """
+        """
+        active_row = sheet.bb.current_row + 1 #<---------------------------------------------------TAKE A POSITION ON WHETHER WE SHOULD WRITE TO ROW THAT WE GET OR MOVE OFF IT
+        
+        label_column = parameters.columns.get_position(field_names.LABELS)
+        master_column = parameters.columns.get_position(field_names.MASTER)
+
+        events = sheet.bb.events
+
+        # For natural presentation order, sort events by date
+        sorted_events = sorted(unit.life.events.items(), key=lambda x:x[1])
+
+        for event_name, event_date in sorted_events:
+            events.rows.by_name[event_name] = new_row
+
+            label_cell = sheet.cell(column=label_column, row=new_row)
+            label_cell.value = event_name
+
+            master_cell = sheet.cell(column=master_column, row=new_row)
+            master_cell.value.set_explicit_value(date, data_type=type_codes.DATE)
+
+            event_cell = sheet.cell(column=active_column, row=new_row)
+            link = formulate_templates.LINK_TO_CELL
+            link.format(coordinates=master_cell.coordinate)
+            event_cell.set_explicit_value(link, data_type=type_codes.DATE)
+
+            sheet.bb.current_row = active_row
+            active_row += 1
+
+        return sheet
+        
+        
+        
+
+        # now, we add the life
+        
+            
+            # add event date to master column
+            # link
+
+        #     
+        #
+        # Generally, should add life first everywhere (same formulas), once you know
+        # where the basic events fall (e.g., have to do one events)
+        # Then should add 
+        
+
+    def _add_life_analysis(self, sheet, unit, active_column):
+        """
+
+        -> Worksheet
+
+        Add unit life for a single period
+
+        Assumes events are filled out
+        # Can call all these: add_param_shapshot, add_life_snapshot, add_fin_snapshot, add_event_snapshot #<-------------------------------------------- THINK ABOUT
+        """
+
+        active_row=sheet.bb.current_row + 1 #<------------- Think about whether this belongs
+        
+        label_column = sheet.bb.parameters.columns.get_position(field_name.LABELS)
+        time_line_row = sheet.bb.time_line.rows.get_position(field_name.LABELS)
+        
+        fs = formula_templates
+        set_label = line_chef._set_label
+
+        events = sheet.bb.events
+
+        birth = sheet.cell(
+            column=active_column,
+            row=events.rows.get_position(common_events.KEY_BIRTH)
+            )
+        death = sheet.cell(
+            column=active_column,
+            row=events.rows.get_position(common_events.KEY_DEATH)
+            )
+        conception = sheet.cell(
+            column=active_column,
+            row=events.rows.get_position(common_events.KEY_CONCEPTION)
+            )
+
+        cells = dict()
+        cells["birth"] = birth
+        cells["death"] = death
+        cells["conception"] = conception       
+        
+        # 1. Add ref_date
+        life_area.rows.by_name[field_names.REF_DATE]=active_row
+        set_label(label=field_names.REF_DATE, sheet=sheet, row=active_row, column=label_column)        
+
+        ref_date = sheet.cell(column=active_column, row=active_row)
+        
+        time_line = sheet.cell(column=active_column, row=time_line_row)
+
+        cells["ref_date"] = ref_date
+        cos = {k:v.coordinate for k,v in cells.items()}
+        formula = fs.LINK_TO_COORDINATES.format(**cos)
+
+        ref_date.value = formula
+        ref_date.number_format = number_formats.DATETIME
+        del formula
+        # Make sure each cell gets its own formula by deleting F after use.
+        
+
+        # Move down two rows (to leave one blank)
+        active_row += 2
+        
+
+        # 2. Add age
+        sheet.bb.life.rows.by_name[field_names.AGE] = active_row
+        set_label(label=field_names.AGE, sheet=sheet, row=active_row, column=label_column)
+
+        age = sheet.cell(column=active_column, row=active_row)
+
+        cells["age"] = age
+        cos["age"] = age.coordinate
+        formula = fs.COMPUTE_AGE_IN_DAYS.format(**cos)
+
+        age.set_explicit_value(formula, data_type=type_codes.NUMERIC)
+        del formula
+
+
+        # Move row down 
+        active_row += 1
+        
+
+        # 3. Add alive
+        life.rows.by_name[field_names.ALIVE]=active_row
+        set_label(label=field_names.ALIVE, sheet=sheet, row=active_row, column=label_column)
+        
+        alive = sheet.cell(column=active_column, row=active_row)
+
+        cells["alive"] = alive
+        formula = fs.IS_ALIVE.format(**cos)
+        
+        age.set_explicit_value(formula, data_type=type_codes.BOOL)
+        del formula
+
+
+        # Move row down
+        active_row += 1
+
+
+        # 4. Add span (so we can use it as the denominator in our percent
+        #    computation below). 
+        life.rows.by_name[field_names.SPAN] = active_row
+        set_label(label=field_names.SPAN, sheet=sheet, row=active_row, column=label_column)
+
+        span = sheet.cell(column=active_column, row=active_row)
+
+        cells[field_names.SPAN] = span
+        cos[field_names.SPAN] = span.coordinate
+        formula = fs.COMPUTE_SPAN_IN_DAYS.format(**cos)
+
+        span.set_explicit_value(formula, data_type=type_codes.NUMERIC)
+        del formula
+
+
+        # Move row down
+        active_row += 1
+        sheet.bb.current_row = active_row
+
+
+        # 5. Add percent
+        life.rows.by_name[field_names.PERCENT] = active_row
+        set_label(label=field_names.PERCENT, sheet=sheet, row=active_row, column=label_column)
+
+        percent = sheet.cell(column=active_column, row=active_row)
+
+        formula = fs.COMPUTE_AGE_IN_PERCENT.format(**cos)
+
+        percent.set_explicit_value(formula, data_type=type_codes.NUMERIC)
+
+        # Return sheet
+        return sheet
+        
     def _add_unit_params(self, sheet, unit):
         """
 
@@ -280,9 +515,10 @@ class UnitChef:
                 cos["alpha_column"] = get_column_letter(source_column)
 
                 link = formula_templates.LINK_TO_CELL_ON_SHEET.format(**cos)
-                # local_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
-                local_cell.value = link
-                
+                local_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+
+            sheet.bb.current_row = local_row
+        
         # if group:
         #   ##group cells
         

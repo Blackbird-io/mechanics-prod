@@ -125,6 +125,7 @@ class Life(Equalities):
     age                   timedelta; ref_date minus birth
     alive                 bool; True if ref_date in [birth, death)
     conceived             bool; True if conception < ref_date
+    events                dict; 
     percent               int; age divided by span
     ref_date              timedelta; reference time point for status
     span                  timedelta; time between birth and death
@@ -278,7 +279,7 @@ class Life(Equalities):
         """
         return self._ref_date
 
-    @property
+    @pro0perty
     def span(self):
         """
 

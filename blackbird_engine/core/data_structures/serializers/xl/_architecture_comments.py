@@ -208,6 +208,9 @@
          can use for complex calculations. BB Main (online) could deliver Excel models with embedded Python
          (or C) code, and then BB Client can help Excel calculate these things without access to the
          knowledge base.
+
+ - add a nice column that tracks all of the areas, show the area name in the merged cells there.
+ - 
           
 
 IOP:
@@ -215,16 +218,16 @@ IOP:
  - figure out what to do with the position indexing to make it consistent?
    -- really have to watch out for adding absolute positions to the relative lookup (will create gaps)
 
- - !move to type_code entry in ModelChopper
- - !!move to kw-only arg entry in important places (book, sheet, etc.)
+  - !!move to kw-only arg entry in important places (book, sheet, etc.)
  - !!!add life spread to UnitChef
  - !add grouping to LineChef
 
  - add a main interface
  - add formula name, original output, may be even the docstring from func to formula info. That way, we can
    quickly trace it. Also add format_error intercept into Chef itself. 
- - !add line reference verification to Driver.workOnThis()
+ 
  - !add formatting error intercept to LineChef
+ - !add life export
 
 PROBLEM:
  - Good excel prep is not totally compatible with speed optimization. End up doing work in cases where
