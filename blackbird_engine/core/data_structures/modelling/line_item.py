@@ -187,6 +187,8 @@ class LineItem(Statement):
         
         new_line.guide = copy.deepcopy(self.guide)
         new_line.log = self.log[:]
+        
+        new_line.xl = xl_mgmt.LineData()
 
         return new_line
 

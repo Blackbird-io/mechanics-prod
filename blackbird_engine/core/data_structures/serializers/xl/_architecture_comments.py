@@ -210,7 +210,7 @@
          knowledge base.
 
  - add a nice column that tracks all of the areas, show the area name in the merged cells there.
- - 
+ - add a pretty cover sheet, with model name, "built by blackbird", legend if necessary
           
 
 IOP:
@@ -227,11 +227,10 @@ IOP:
    quickly trace it. Also add format_error intercept into Chef itself. 
  
  - !add formatting error intercept to LineChef
- - !add life export
-
- - add keep_formatting to link_to_area() (preserve number formatting)
- - add freeze panes to create unit sheet
  - move to only forward projection for build model foundation
+
+ - Move LineChef to explicit column parameters.
+ 
  
 
 PROBLEM:

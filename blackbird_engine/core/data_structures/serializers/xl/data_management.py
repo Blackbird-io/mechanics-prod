@@ -1,6 +1,8 @@
 #Data structures for managing excel interface
 
 # Imports
+import copy
+
 from .field_names import FieldNames
 
 # Module Globals
@@ -39,6 +41,18 @@ class Lookup(Range):
 
         return result
 
+    def copy(self):
+        """
+
+        -> Lookup
+        
+        Return a deep copy
+        """
+        result = copy.copy(self)
+        result.by_name = self.by_name.copy()
+
+        return result
+        
     def get_position(self, name):
         first_position = self.starting or 0
         result = first_position + self.by_name[name]
@@ -63,6 +77,19 @@ class Area:
         
         self.rows = Lookup()
         self.columns = Lookup()
+
+    def copy(self):
+        """
+
+        -> Area
+
+        Return deep copy
+        """
+        result = copy.copy(self)
+        result.rows = self.rows.cop()
+        result.columns = self.columns.copy()
+
+        return result
 
     def update(self, source_area):
         """
@@ -92,6 +119,11 @@ class LineData(Range):
 
         self.detailed = Range()
 
+        self.sheet = None
+
+##    def copy(self):
+##        result = copy.copy(self)        
+    
     def get_coordinates(self, column):
         """
         -> tuple(int, int)
@@ -99,12 +131,18 @@ class LineData(Range):
         x (column), y (row)
 
         # should return a dictionry of "sheet":, "row":, "column":
+        # shoudl return a formatted string {sheet}!{column}{row}
         """
-        x = column
-        y = self.ending
+        result = ""
+        if self.sheet:
+            result += sheet.title
+            result += "!"
 
-        result = (x, y)
+        result += get_column_letter(column)
+        result += str(self.ending)
+        
         return result
+        
         # Each line must be able to deliver a full coordinate set, with
         # sheet. Could add a ._set_sheet() method that goes through
         # each line and sets the sheet pointer. Or could do something with
@@ -113,8 +151,10 @@ class LineData(Range):
         # _set_sheet() and then we can derive. Or can pass it in during the
         # call somehow. But that requires the coordinator to know where to look
 
-    def set_sheet(self):
-        pass
+    def set_sheet(self, sheet):
+        self.sheet = sheet
+
+    
         
 class UnitData:
     def __init__(self, sheet=None):

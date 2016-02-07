@@ -46,6 +46,15 @@ from ...modelling import common_events
 # n/a
 
 # Module Globals
+_INVALID_CHARS = r"\/*[]:?"
+# Excel forbids the use of these in sheet names.
+REPLACEMENT_CHAR = None
+# When the replacement character is None, UnitChef will remove all bad chars
+# from sheet titles.
+
+bad_char_table = {ord(c):REPLACEMENT_CHAR for c in _INVALID_CHARS}
+# May be this should be on the UnitChef class itself
+
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
 number_formats = NumberFormats()
@@ -85,10 +94,8 @@ class UnitChef:
     chop_unit()           returns sheet with a SheetData instance at sheet.bb
     ====================  ======================================================
     """
-    MAX_TITLE_CHARACTERS = 8
-
+    MAX_TITLE_CHARACTERS = 30
     
- 
     def chop_unit(self, *pargs, book, unit):
         """
 
@@ -106,21 +113,9 @@ class UnitChef:
             self.chop_unit(book, child)
 
         sheet = self._create_unit_sheet(book=book, unit=unit)
-        # This should only cover the general: timeline, period params, and decorations
+        sheet = self._add_unit_life(sheet=sheet, unit=unit)
 
-        # Then should have period-level spreading:
-            # add unit params
-            # current_row += 2
-                ## blank row between params and life
-            # add unit life
-            # current_row += 2
-                ## blank row between life and fins
-            # add financials
-            # current_row += 2
-            
-        sheet.bb.current_
         
-
         sheet.bb.current_column=sheet.bb.time_line.columns.get_position(unit.period.end)
         #<------------------------------------------------------------------------------------NEED TO FIX
         self._add_financials(sheet, unit)
@@ -139,14 +134,35 @@ class UnitChef:
         # Premise 2: a unit without any children should be easy to spread on a sheet
         # Premise 3:
 
+        # To Do:
+        #   - move to multiperiod
+        #   - for each period in unit, add life, add financials
+        #
+        # This should only cover the general: timeline, period params, and decorations
+
+        # Then should have period-level spreading:
+            # add unit params
+            # current_row += 2
+                ## blank row between params and life
+            # add unit life
+            # current_row += 2
+                ## blank row between life and fins
+            # add financials
+            # current_row += 2     
+
+
     def _add_financials(self, *pargs, sheet, unit):
         """
+
         -> Worksheet
+
         """
         unit.fill_out()
         # Fill out populates the unit with all of the information
         
-        for statement in unit.financials: #<---------------------------------------------- this is wrong, should be for statement
+        for statement in [unit.financials.income]:
+            # should be unit.financials.ordered
+            
             for line in statement.get_ordered():
                 line_chef.chop_line(sheet=sheet, line=line)
 
@@ -514,10 +530,21 @@ class UnitChef:
 
         Returns sheet with current row pointing to last parameter row        
         """
-        name = str(unit.id.bbid)[-self.MAX_TITLE_CHARACTERS: ]
+
+        name = unit.name
+        if name in book:
+            rev_name = name + " ..." + str(unit.id.bbid)[-8: ]
+            name = rev_name
+
+            if name in book:
+                name = str(unit.id.bbid)
+
+        name = name.translate(bad_char_table)
+        name = name[:self.MAX_TITLE_CHARACTERS]
+        # Replace forbidden characters, make sure name is within length limits
+        
         sheet = book.create_sheet(name)
-        # Could also check if the actual unit name is in book, then switch to id #<--------------------ADD BETTER NAMING
-        # if it is (or 4 chars of name + 8 chars of id); would make more sense
+        
         
         unit.xl.set_sheet(sheet)
 
@@ -540,7 +567,12 @@ class UnitChef:
         sheet.freeze_panes = corner_cell
 
         # Return sheet
-        return sheet   
+        return sheet
+
+        # To Do:
+        # - add naming with better semantic relationships. For example, could specify name and
+        #   name of parent object, or something like that. May be add the type if its specified too.
+        
 
     def _link_to_area(self, source_sheet, local_sheet, area_name, group=False, keep_format=True):
         """

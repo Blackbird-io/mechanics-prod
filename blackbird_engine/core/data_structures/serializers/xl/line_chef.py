@@ -54,7 +54,7 @@ class LineChef:
     Objects that export models into Excel
 
     """
-    def chop_line(self, *pargs, sheet, line):
+    def chop_line(self, *pargs, sheet, line, indent=0, set_labels=True):
         """
         by the end of this routine, the line and all its details should have a
         sheet assignment. that way, we can gather 
@@ -80,7 +80,7 @@ class LineChef:
             detail_summation = ""
 
             coordinates = dict()
-            coordinates["alpha_column"] = sheet.bb.current_column
+            coordinates["alpha_column"] = sheet.bb.current_column #<---------------------------------------------------------------- REQUIRES CURRENT COLUMN TO BE ACTIVE 
 
             for detail in details:
 
@@ -109,7 +109,11 @@ class LineChef:
         self._combine_segments(sheet, line, set_labels=set_labels)
         # Could also group here
 
+        #<-----------------SHOULD ASSIGN A FINAL CELL TO THE LINE HERE
+
         return sheet
+
+    
         # If I toggle this logic a bit, I should be able to put all of the consolidation
         # cells in one part of the sheet, and then the derivation logic elsewhere.
 
@@ -118,7 +122,8 @@ class LineChef:
             # driver.workOnThis() collating data #<------------------------------------------------------------------------------------------------------CHECK WHAT THIS DOES!
         
     # formula.to_excel()-> string, dict;
-        # should
+        # should move formulas to return row data, so the xl formula is less
+        # complicated
 
     # could add to verification protocol: a map of coordinates to compute values!
     # have to run verification later, because formulas NEVER eval in memory. You actually
@@ -183,10 +188,11 @@ class LineChef:
 
             for source_pointer in line.xl.consolidated.sources:
                 
-                link_cell = sheet.cell(sheet.current_column, sheet.current_row)
-                source_coordinates = source.xl.get_coordinates()
+                link_cell = sheet.cell(sheet.bb.current_column, sheet.bb.current_row)
+                source_coordinates = source.xl.get_coordinates() #<------------------------------this won't work unless i add a .cell attribute to the line
+                # which may be i should. then can return .cell.parent.title + "!" + .cell.coordinate
                 
-                link_formula = self.formulas.LINK_TO_CELL.format(**source_coordinates)
+                link_formula = self.formulas.LINK_TO_COORDINATES.format(coordinates=source_coordinates)
                 link_cell.value = link_formula
 
                 line.xl.consolidated.ends = sheet.current_row
@@ -195,9 +201,9 @@ class LineChef:
             # Group the cells!! <--------------------------------------------------------------------------
 
             summation_params = {
-                "starting_row" : line.xl.consolidated.starts,
+                "starting_row" : line.xl.consolidated.starts, #<-------------------------------------------------- CHECK WHETHER THIS PIECE IS VALID
                 "ending_row" : line.xl.consolidated.ends,
-                "alpha_column" : sheet.current_column
+                "alpha_column" : sheet.bb.current_column
                 }
             #<------------------------------------------------------------------------------------------------------------------------need to make sure column is alphabetical
             
@@ -253,9 +259,9 @@ class LineChef:
 
         -> Worksheet
         """
-        private_data = sheet.bb.parameters.copy() #<---------------------------------------------------Implement routine
-        # Set up a private range that's going to include both "shared"
-        # unit parameters from the column and "private" driver parameters
+        private_data = sheet.bb.parameters.copy()
+        # Set up a private range that's going to include both "shared" period & unit
+        # parameters from the column and "private" driver parameters. 
 
         label_column = sheet.bb.parameters.get_position(field_names.LABELS)
         period_column = sheet.bb.current_column
@@ -266,8 +272,12 @@ class LineChef:
             private_value = row_data[field_names.VALUES]
             
             if private_label and set_labels:
-                self._set_label(sheet=sheet, label=private_label, row=sheet.bb.current_row,
-                                column=label_column)
+                self._set_label(
+                    sheet=sheet,
+                    label=private_label,
+                    row=sheet.bb.current_row,
+                    column=label_column
+                    )
 
             param_cell = sheet.cell(column=period_column, row=sheet.bb.current_row)
             param_cell.value = private_value
@@ -281,13 +291,12 @@ class LineChef:
             # because we generally look up locations for lines, not parameters.
             # And lines continue to span several rows. 
 
-            current_row += 1
+            sheet.bb.current_row += 1
 
         # Transform the range values from rows to coordinates
         param_coordinates = self.to_coordinates(private_data, sheet.bb.current_column)
         
-        # Apply the conversions as necessary to make sure formula
-        # sees all the params it wants
+        # Apply param:var conversions so formula can find its expected inputs
         for param_name, var_name in driver_data.conversion_map.items():
             param_coordinates[var_name] = param_coordinates[param_name]
 
@@ -302,12 +311,13 @@ class LineChef:
         formula = template.format(lines=references, parameters=param_coordinates)
         # Formulas should deliver templates with the {lines} key.
         
-        calc_cell = sheet.cell(sheet.current_column, sheet.current_row)
+        calc_cell = sheet.cell(sheet.bb.current_column, sheet.bb.current_row)
         calc_cell.set_explicit_value(formula, data_type=type_codes.FORMULA)
 
         # If formula included a reference to the prior value of the line itself, it
         # picked up here. Can now change line.xl.derived.final <--------------------------------------------incrementation is discouraged, right?
         line.xl.rows.derived.ending = sheet.bb.current_row
+        # <---------------------------------------------------------SHOULD MOVE 
 
         return sheet
         #<--------------------------------------------------------------------------------------formula should be able to deliver multiple rows
