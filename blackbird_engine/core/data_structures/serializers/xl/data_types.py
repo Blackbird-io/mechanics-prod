@@ -63,5 +63,5 @@ class TypeCodes:
     NUMERIC = "n"
 
 class NumberFormats:
-    DATETIME = "yyyy-mm-dd h:mm:ss"
+    DATETIME = "yyyy-mm-dd"
     

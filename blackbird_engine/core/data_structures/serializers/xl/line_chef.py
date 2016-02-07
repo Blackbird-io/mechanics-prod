@@ -361,12 +361,12 @@ class LineChef:
             column=sheet.bb.parameters.columns.get_position(field_names.LABELS)
 
         label_cell = sheet.cell(column=column, row=row)
-        exsiting_label = label_cell.value
+        existing_label = label_cell.value
 
         if overwrite or not existing_label:
-            label_cell.value = private_label
+            label_cell.value = label
         else:
-            if existing_label != private_label:
+            if existing_label != label:
                         
                 c = """
                 Something is wrong with our alignment. We are trying to
