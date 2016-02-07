@@ -207,22 +207,12 @@ class UnitChef:
     def _add_unit_life(self, *pargs, sheet, unit):
         """
 
+        -> Worksheet
+        
         Expects to get sheet with current row pointing to a blank
         Will start writing on current row
         
         """
-        # Routine:
-        #   add life
-                # no master
-        #   add events
-                # have master values. if the value is the same as master, keep link
-                # otherwise, overwrite?
-
-        # make SURE that at the end, you set current row to the ending row of EVENTS+1 or smtg (otherwise will overwrite everything)
-
-        # for multiperiod generally, want to have period n+1 inherit life and params
-        # from period n if they are the same. so establish links.
-
         active_column = sheet.bb.time_line.columns.get_position(unit.period.end)
 
         life_area = sheet.bb.add_area("life")
@@ -233,17 +223,33 @@ class UnitChef:
         # Leave nine rows for basic life layout
 
         sheet.bb.current_row = first_event_row
-        sheet = self._add_life_events(sheet=sheet, unit=unit, active_column=active_column)
+        sheet = self._add_life_events(
+            sheet=sheet,
+            unit=unit,
+            active_column=active_column
+            )
+        # For events, can keep link if they are the same as the master value,
+        # or write the specified value if its different.
 
         sheet.bb.current_row = first_life_row
-        sheet = self._add_life_analysis(sheet=sheet, unit=unit, active_column=active_column)
+        sheet = self._add_life_analysis(
+            sheet=sheet,
+            unit=unit,
+            active_column=active_column
+            )
 
         sheet.bb.current_row = sheet.bb.events.ending
         # Move current row down to the bottom (max_row() probably best here). 
         return sheet
 
+        # To Do:
+        # - for multiperiod generally, want to have period n+1 inherit life and
+        #   params from period n if they are the same. so establish links.
+
     def _add_life_events(self, *pargs, sheet, unit, active_column):
         """
+
+        -> Worksheet
         """
         active_row = sheet.bb.current_row + 1 #<---------------------------------------------------TAKE A POSITION ON WHETHER WE SHOULD WRITE TO ROW THAT WE GET OR MOVE OFF IT
         
@@ -262,33 +268,37 @@ class UnitChef:
             label_cell.value = event_name
 
             master_cell = sheet.cell(column=master_column, row=new_row)
-            master_cell.value.set_explicit_value(date, data_type=type_codes.DATE)
+            master_cell.value = date
 
             event_cell = sheet.cell(column=active_column, row=new_row)
             link = formulate_templates.LINK_TO_CELL
             link.format(coordinates=master_cell.coordinate)
-            event_cell.set_explicit_value(link, data_type=type_codes.DATE)
+            event_cell.set_explicit_value(link, dat_type=type_codes.FORMULA)
+            event_cell.number_format = master_cell.number_format
 
             sheet.bb.current_row = active_row
             active_row += 1
 
         return sheet
         
-        
-        
-
-        # now, we add the life
-        
-            
-            # add event date to master column
-            # link
-
-        #     
+        # In real life, this should run through an if() on whether the event
+        # already exists
         #
-        # Generally, should add life first everywhere (same formulas), once you know
-        # where the basic events fall (e.g., have to do one events)
-        # Then should add 
-        
+        # Generally, should add life first everywhere (same formulas), once you
+        # know where the basic events fall (e.g., have to do one events)
+        # Then should add.
+        #
+        # So general algo should be:
+        # -- add events for current period
+        # -- add life for current period
+        # -- add life for all other periods (all calc, and we know that the main
+        #    events will stay in the same places as current period
+        # -- add events for all subsequent periods
+        #
+        # Can even reinterpret this logic as: write the events you need to events
+        # (potentially without a period), so you have a row assigned to them. Then
+        # for each period you can put the basic events there and add new ones. At
+        # the same time, once you set up rows for the core events.
 
     def _add_life_analysis(self, sheet, unit, active_column):
         """
@@ -331,7 +341,12 @@ class UnitChef:
         
         # 1. Add ref_date
         life_area.rows.by_name[field_names.REF_DATE]=active_row
-        set_label(label=field_names.REF_DATE, sheet=sheet, row=active_row, column=label_column)        
+        set_label(
+            label=field_names.REF_DATE,
+            sheet=sheet,
+            row=active_row,
+            column=label_column
+            )        
 
         ref_date = sheet.cell(column=active_column, row=active_row)
         
@@ -353,7 +368,12 @@ class UnitChef:
 
         # 2. Add age
         sheet.bb.life.rows.by_name[field_names.AGE] = active_row
-        set_label(label=field_names.AGE, sheet=sheet, row=active_row, column=label_column)
+        set_label(
+            label=field_names.AGE,
+            sheet=sheet,
+            row=active_row,
+            column=label_column
+            )
 
         age = sheet.cell(column=active_column, row=active_row)
 
@@ -371,7 +391,12 @@ class UnitChef:
 
         # 3. Add alive
         life.rows.by_name[field_names.ALIVE]=active_row
-        set_label(label=field_names.ALIVE, sheet=sheet, row=active_row, column=label_column)
+        set_label(
+            label=field_names.ALIVE,
+            sheet=sheet,
+            row=active_row,
+            column=label_column
+            )
         
         alive = sheet.cell(column=active_column, row=active_row)
 
@@ -389,7 +414,12 @@ class UnitChef:
         # 4. Add span (so we can use it as the denominator in our percent
         #    computation below). 
         life.rows.by_name[field_names.SPAN] = active_row
-        set_label(label=field_names.SPAN, sheet=sheet, row=active_row, column=label_column)
+        set_label(
+            label=field_names.SPAN,
+            sheet=sheet,
+            row=active_row,
+            column=label_column
+            )
 
         span = sheet.cell(column=active_column, row=active_row)
 
@@ -408,7 +438,12 @@ class UnitChef:
 
         # 5. Add percent
         life.rows.by_name[field_names.PERCENT] = active_row
-        set_label(label=field_names.PERCENT, sheet=sheet, row=active_row, column=label_column)
+        set_label(
+            label=field_names.PERCENT,
+            sheet=sheet,
+            row=active_row,
+            column=label_column
+            )
 
         percent = sheet.cell(column=active_column, row=active_row)
 
@@ -450,6 +485,7 @@ class UnitChef:
 
         self._add_param_rows(sheet, new_params, period_column)
 
+        sheet.bb.current_row = parameters.rows.ending
         return sheet    
         
         # To Do:
@@ -462,7 +498,7 @@ class UnitChef:
         -> Worksheet
 
 
-        
+        Returns sheet with current row pointing to last parameter row        
         """
         name = str(unit.id.bbid)[-self.MAX_TITLE_CHARACTERS: ]
         sheet = book.create_sheet(name)
@@ -477,6 +513,7 @@ class UnitChef:
 
         self._link_to_time_line(book=book, sheet=sheet)
         self._add_unit_params(sheet, unit)
+        # At this point, sheet.bb.current_row will point to the last parameter.
 
         return sheet   
 
