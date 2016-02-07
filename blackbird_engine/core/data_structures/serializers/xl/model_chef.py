@@ -40,7 +40,7 @@ from .data_management import Area
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
 from .tab_names import TabNames
-from .type_codes import TypeCodes
+from .data_types import TypeCodes
 
 from .unit_chef import UnitChef
 
@@ -54,6 +54,7 @@ from .unit_chef import UnitChef
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
 tab_names = TabNames()
+type_codes = TypeCodes()
 
 unit_chef = UnitChef()
 

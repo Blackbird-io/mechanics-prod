@@ -30,12 +30,14 @@ UnitChef              chop BusinessUnit into dynamic Excel structure
 # Imports
 import openpyxl as excel_interface
 
-from .data_types import TypeCodes
+from .data_types import TypeCodes, NumberFormats
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
 from .tab_names import TabNames
 
 from .line_chef import LineChef
+
+from ...modelling import common_events
 
 
 
@@ -46,6 +48,7 @@ from .line_chef import LineChef
 # Module Globals
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
+number_formats = NumberFormats()
 tab_names = TabNames()
 type_codes = TypeCodes()
 
@@ -215,8 +218,8 @@ class UnitChef:
         """
         active_column = sheet.bb.time_line.columns.get_position(unit.period.end)
 
-        life_area = sheet.bb.add_area("life")
-        events_area = sheet.bb.add_area("events")
+        sheet.bb.add_area("life")
+        sheet.bb.add_area("events")
         
         first_life_row = sheet.bb.current_row + 2
         first_event_row = first_life_row + 9
@@ -238,7 +241,7 @@ class UnitChef:
             active_column=active_column
             )
 
-        sheet.bb.current_row = sheet.bb.events.ending
+        sheet.bb.current_row = sheet.bb.events.rows.ending
         # Move current row down to the bottom (max_row() probably best here). 
         return sheet
 
@@ -249,9 +252,15 @@ class UnitChef:
     def _add_life_events(self, *pargs, sheet, unit, active_column):
         """
 
+
         -> Worksheet
+
+
+        Expects to get sheet with current row pointing to first place you want to write
+        Returns sheet with current row pointing to last filled event
         """
-        active_row = sheet.bb.current_row + 1 #<---------------------------------------------------TAKE A POSITION ON WHETHER WE SHOULD WRITE TO ROW THAT WE GET OR MOVE OFF IT
+        active_row = sheet.bb.current_row
+        parameters = sheet.bb.parameters
         
         label_column = parameters.columns.get_position(field_names.LABELS)
         master_column = parameters.columns.get_position(field_names.MASTER)
@@ -262,18 +271,19 @@ class UnitChef:
         sorted_events = sorted(unit.life.events.items(), key=lambda x:x[1])
 
         for event_name, event_date in sorted_events:
-            events.rows.by_name[event_name] = new_row
+            events.rows.by_name[event_name] = active_row
 
-            label_cell = sheet.cell(column=label_column, row=new_row)
+            label_cell = sheet.cell(column=label_column, row=active_row)
             label_cell.value = event_name
 
-            master_cell = sheet.cell(column=master_column, row=new_row)
-            master_cell.value = date
+            master_cell = sheet.cell(column=master_column, row=active_row)
+            master_cell.value = event_date
 
-            event_cell = sheet.cell(column=active_column, row=new_row)
-            link = formulate_templates.LINK_TO_CELL
-            link.format(coordinates=master_cell.coordinate)
-            event_cell.set_explicit_value(link, dat_type=type_codes.FORMULA)
+            event_cell = sheet.cell(column=active_column, row=active_row)
+            link_template = formula_templates.LINK_TO_COORDINATES
+            link = link_template.format(coordinates=master_cell.coordinate)
+            
+            event_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
             event_cell.number_format = master_cell.number_format
 
             sheet.bb.current_row = active_row
@@ -313,13 +323,14 @@ class UnitChef:
 
         active_row=sheet.bb.current_row + 1 #<------------- Think about whether this belongs
         
-        label_column = sheet.bb.parameters.columns.get_position(field_name.LABELS)
-        time_line_row = sheet.bb.time_line.rows.get_position(field_name.LABELS)
+        label_column = sheet.bb.parameters.columns.get_position(field_names.LABELS)
+        time_line_row = sheet.bb.time_line.rows.get_position(field_names.LABELS)
         
         fs = formula_templates
         set_label = line_chef._set_label
 
         events = sheet.bb.events
+        life = sheet.bb.life
 
         birth = sheet.cell(
             column=active_column,
@@ -340,7 +351,7 @@ class UnitChef:
         cells["conception"] = conception       
         
         # 1. Add ref_date
-        life_area.rows.by_name[field_names.REF_DATE]=active_row
+        sheet.bb.life.rows.by_name[field_names.REF_DATE]=active_row
         set_label(
             label=field_names.REF_DATE,
             sheet=sheet,
@@ -353,11 +364,12 @@ class UnitChef:
         time_line = sheet.cell(column=active_column, row=time_line_row)
 
         cells["ref_date"] = ref_date
-        cos = {k:v.coordinate for k,v in cells.items()}
-        formula = fs.LINK_TO_COORDINATES.format(**cos)
+        formula = fs.LINK_TO_COORDINATES.format(
+            coordinates=time_line.coordinate
+            )
 
         ref_date.value = formula
-        ref_date.number_format = number_formats.DATETIME
+        ref_date.number_format = number_formats.DATETIME #<-----------------------------------------------------------------
         del formula
         # Make sure each cell gets its own formula by deleting F after use.
         
@@ -378,7 +390,7 @@ class UnitChef:
         age = sheet.cell(column=active_column, row=active_row)
 
         cells["age"] = age
-        cos["age"] = age.coordinate
+        cos = {k:v.coordinate for k,v in cells.items()}
         formula = fs.COMPUTE_AGE_IN_DAYS.format(**cos)
 
         age.set_explicit_value(formula, data_type=type_codes.NUMERIC)
@@ -462,6 +474,7 @@ class UnitChef:
         
 
         Adds unit parameters for a single period
+        Returns sheet with current row pointing to final param row
         """
         parameters = sheet.bb.parameters
         
@@ -502,7 +515,7 @@ class UnitChef:
         """
         name = str(unit.id.bbid)[-self.MAX_TITLE_CHARACTERS: ]
         sheet = book.create_sheet(name)
-        # Could also check if the actual unit name is in book, then switch to id
+        # Could also check if the actual unit name is in book, then switch to id #<--------------------ADD BETTER NAMING
         # if it is (or 4 chars of name + 8 chars of id); would make more sense
         
         unit.xl.set_sheet(sheet)
@@ -554,7 +567,7 @@ class UnitChef:
                 link = formula_templates.LINK_TO_CELL_ON_SHEET.format(**cos)
                 local_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
 
-            sheet.bb.current_row = local_row
+            local_sheet.bb.current_row = local_row
         
         # if group:
         #   ##group cells

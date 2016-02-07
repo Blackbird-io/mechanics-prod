@@ -279,7 +279,7 @@ class Life(Equalities):
         """
         return self._ref_date
 
-    @pro0perty
+    @property
     def span(self):
         """
 

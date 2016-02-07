@@ -58,10 +58,22 @@ class FieldNames:
     n/a
     ====================  ======================================================
     """
-
-    BASE_CASE = "base_case"
+    # GENERAL
     
     LABELS = "labels"
     MASTER = "master"
     VALUES = "values"
+
+    # SCENARIOS
+
+    BASE_CASE = "base_case"
+
+    # LIFE
+
+    REF_DATE = "ref_date"
+    AGE = "age"
+    ALIVE = "alive"
+    SPAN = "span"
+    PERCENT = "percent"
+    
     
