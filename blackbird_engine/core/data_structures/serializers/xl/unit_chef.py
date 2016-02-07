@@ -393,7 +393,7 @@ class UnitChef:
         cos = {k:v.coordinate for k,v in cells.items()}
         formula = fs.COMPUTE_AGE_IN_DAYS.format(**cos)
 
-        age.set_explicit_value(formula, data_type=type_codes.NUMERIC)
+        age.set_explicit_value(formula, data_type=type_codes.FORMULA)
         del formula
 
 
@@ -413,9 +413,10 @@ class UnitChef:
         alive = sheet.cell(column=active_column, row=active_row)
 
         cells["alive"] = alive
+        cos["alive"] = alive.coordinate
         formula = fs.IS_ALIVE.format(**cos)
         
-        age.set_explicit_value(formula, data_type=type_codes.BOOL)
+        alive.set_explicit_value(formula, data_type=type_codes.FORMULA)
         del formula
 
 
@@ -439,7 +440,7 @@ class UnitChef:
         cos[field_names.SPAN] = span.coordinate
         formula = fs.COMPUTE_SPAN_IN_DAYS.format(**cos)
 
-        span.set_explicit_value(formula, data_type=type_codes.NUMERIC)
+        span.set_explicit_value(formula, data_type=type_codes.FORMULA)
         del formula
 
 
@@ -461,7 +462,7 @@ class UnitChef:
 
         formula = fs.COMPUTE_AGE_IN_PERCENT.format(**cos)
 
-        percent.set_explicit_value(formula, data_type=type_codes.NUMERIC)
+        percent.set_explicit_value(formula, data_type=type_codes.FORMULA)
 
         # Return sheet
         return sheet
