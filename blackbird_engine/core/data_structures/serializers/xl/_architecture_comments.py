@@ -229,6 +229,11 @@ IOP:
  - !add formatting error intercept to LineChef
  - !add life export
 
+ - add keep_formatting to link_to_area() (preserve number formatting)
+ - add freeze panes to create unit sheet
+ - move to only forward projection for build model foundation
+ 
+
 PROBLEM:
  - Good excel prep is not totally compatible with speed optimization. End up doing work in cases where
    a unit is dead and could otherwise pass.

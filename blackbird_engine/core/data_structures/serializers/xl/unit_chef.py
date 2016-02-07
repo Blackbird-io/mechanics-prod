@@ -528,9 +528,20 @@ class UnitChef:
         self._add_unit_params(sheet, unit)
         # At this point, sheet.bb.current_row will point to the last parameter.
 
+        # Freeze panes:
+        corner_row = sheet.bb.time_line.rows.ending
+        corner_row +=1
+        
+        corner_column = sheet.bb.parameters.columns.get_position(field_names.MASTER)
+        corner_column +=1
+        
+        corner_cell = sheet.cell(column=corner_column, row=corner_row)
+        sheet.freeze_panes = corner_cell
+
+        # Return sheet
         return sheet   
 
-    def _link_to_area(self, source_sheet, local_sheet, area_name, group=False):
+    def _link_to_area(self, source_sheet, local_sheet, area_name, group=False, keep_format=True):
         """
 
 
@@ -567,11 +578,15 @@ class UnitChef:
                 link = formula_templates.LINK_TO_CELL_ON_SHEET.format(**cos)
                 local_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
 
+                if keep_format:
+                    source_cell = source_sheet.cell(column=source_column, row=source_row)
+                    local_cell.number_format = source_cell.number_format
+
             local_sheet.bb.current_row = local_row
         
         # if group:
         #   ##group cells
-        
+
         return local_sheet
 
         # To do:
