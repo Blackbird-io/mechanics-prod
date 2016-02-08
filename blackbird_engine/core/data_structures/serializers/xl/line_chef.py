@@ -86,6 +86,7 @@ class LineChef:
         if details:
 
             sheet.bb.current_row += 1
+            # Should have the header here instead
             
             sub_indent = indent + LineItem.TAB_WIDTH
             detail_summation = ""
@@ -116,14 +117,18 @@ class LineChef:
                 line.xl.detailed.cell = subtotal_cell
                 
                 if set_labels:
-                    label = line.name + ": details"
+                    label = indent*" " + line.name + ": details"
                     self._set_label(
                         sheet=sheet,
                         label=label,
                         row=sheet.bb.current_row
                         )
 
-        self._combine_segments(sheet=sheet, line=line, set_labels=set_labels)
+        self._combine_segments(
+            sheet=sheet,
+            line=line,
+            set_labels=set_labels,
+            indent=indent)
         # Could also group here
 
         return sheet
@@ -193,7 +198,7 @@ class LineChef:
             pass
 
         else:
-            sheet.bb.current_row += 2
+            sheet.bb.current_row += 1
             line.xl.consolidated.starts = sheet.bb.current_row
 
             for source_pointer in line.xl.consolidated.sources:
@@ -247,8 +252,7 @@ class LineChef:
         else:
             for data_cluster in line.xl.derived.calculations:
 
-                sheet.bb.current_row += 2
-                # Leave a blank row between each calculation
+                sheet.bb.current_row += 1
                 
                 self._add_driver_calculation(
                     sheet=sheet,
@@ -288,9 +292,12 @@ class LineChef:
             private_value = row_data[field_names.VALUES]
             
             if private_label and set_labels:
+                
+                indented_label = (indent * " ") + private_label
+
                 self._set_label(
                     sheet=sheet,
-                    label=private_label,
+                    label=indented_label,
                     row=sheet.bb.current_row,
                     column=label_column
                     )

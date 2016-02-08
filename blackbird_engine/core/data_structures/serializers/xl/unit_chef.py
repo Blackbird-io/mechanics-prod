@@ -95,6 +95,8 @@ class UnitChef:
     ====================  ======================================================
     """
     MAX_TITLE_CHARACTERS = 30
+    SHOW_GRID_LINES = False
+    ZOOM_SCALE = 80
     
     def chop_unit(self, *pargs, book, unit):
         """
@@ -544,7 +546,18 @@ class UnitChef:
         # Replace forbidden characters, make sure name is within length limits
         
         sheet = book.create_sheet(name)
-        
+        try:
+            sheet.sheet_view.showGridLines = self.SHOW_GRID_LINES
+            sheet.sheet_view.zoomScale = self.ZOOM_SCALE
+
+            # Try semi-experimental formatting. Unclear whether openpyxl fully
+            # supports these features.
+            #
+            # Re gred, see https://bitbucket.org/openpyxl/openpyxl/issues/199
+            # Re zoom, see https://bitbucket.org/openpyxl/openpyxl/issues/262
+            
+        except Exception:
+            pass      
         
         unit.xl.set_sheet(sheet)
 
