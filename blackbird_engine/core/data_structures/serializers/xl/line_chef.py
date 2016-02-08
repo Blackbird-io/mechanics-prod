@@ -54,7 +54,7 @@ class LineChef:
     Objects that export models into Excel
 
     """
-    def chop_line(self, *pargs, sheet, line, indent=0, set_labels=True):
+    def chop_line(self, *pargs, sheet, line, set_labels=True, indent=0):
         """
         by the end of this routine, the line and all its details should have a
         sheet assignment. that way, we can gather 
@@ -63,20 +63,26 @@ class LineChef:
 
         Routines deliver sheet with the current_row pointing to the last filled in cell. 
         """
+        self._add_consolidation_logic(
+            sheet=sheet,
+            line=line,
+            set_labels=set_labels,
+            indent=indent
+            )
 
-        line.xl.set_sheet(sheet)
-        # Line can now deliver coordinates.
-
-        self._add_consolidation_logic(sheet=sheet, line=line, set_labels=set_labels)
-        sheet.bb.current_row += 2
-
-        self._add_derivation_logic(sheet=sheet, line=line, set_labels=set_labels)
-        sheet.bb.current_row += 2
+        self._add_derivation_logic(
+            sheet=sheet,
+            line=line,
+            set_labels=set_labels,
+            indent=indent
+            )
 
         details = line.get_ordered()
         if details:
 
-            sub_indent = indent + 2 # <-------------------------------------------------------- IMPLEMENT INDENT
+            sheet.bb.current_row += 1
+            
+            sub_indent = indent + LineItem.TAB_WIDTH
             detail_summation = ""
 
             coordinates = dict()
@@ -84,32 +90,40 @@ class LineChef:
 
             for detail in details:
 
-                self.chop_line(sheet, detail, set_labels=set_labels, indent=sub_indent)
+                sheet.bb.current_row += 1
+                
+                self.chop_line(
+                    sheet=sheet,
+                    line=detail,
+                    set_labels=set_labels,
+                    indent=sub_indent
+                    )
 
                 coordinates["row"] = detail.xl.ending
-                link = formula_templates.ADD_CELL.format(**cos)        
+                link = formula_templates.ADD_CELL.format(**cos)
+                # Or could make this link = formula_templates.ADD_COORDINATES.format(coordinates=detail.xl.get_coordinates())
                 detail_summation += link
-        
-                sheet.bb.current_row += 1
                 
             else:
                 # Should group all the details here 
+                sheet.bb.current_row +=1
                 
                 subtotal_cell = sheet.cell(column=sheet.bb.current_column, row=sheet.bb.current_row)
                 subtotal_cell.set_explicit_value(detail_summation, data_type=type_codes.FORMULA)
 
                 line.xl.detailed.ending = sheet.bb.current_row
+                line.xl.detailed.cell = subtotal_cell
                 
                 if set_labels:
-                    pass
-                    # Add a "detail subtotal"
-                
-                sheet.bb.current_row +=1
+                    label = line.name + ": details"
+                    self._set_label(
+                        sheet=sheet,
+                        label=label,
+                        row=sheet.bb.current_row
+                        )
 
         self._combine_segments(sheet=sheet, line=line, set_labels=set_labels)
         # Could also group here
-
-        #<-----------------SHOULD ASSIGN A FINAL CELL TO THE LINE HERE
 
         return sheet
 
@@ -160,10 +174,6 @@ class LineChef:
             result[k] = alpha_column + str(row)
 
         return result
-    
-    def obj_to_coordinates(self, *pargs, line, column):
-        result = line.xl.get_coordinates(column)
-        return result
 
     def _add_consolidation_logic(self, *pargs, sheet, line, set_labels=True):
         """
@@ -179,6 +189,7 @@ class LineChef:
             pass
 
         else:
+            sheet.bb.current_row += 2
             line.xl.consolidated.starts = sheet.bb.current_row
 
             for source_pointer in line.xl.consolidated.sources:
@@ -218,10 +229,12 @@ class LineChef:
         # - group the cells
         # 
     
-    def _add_derivation_logic(self, *pargs, sheet, line, set_labels=True):
+    def _add_derivation_logic(self, *pargs, sheet, line, set_labels=True, indent=0):
         """
 
         -> Worksheet
+
+        Expects sheet current row to point to last filled cell. 
         
         """
         if not line.xl.derived.calculations:
@@ -230,15 +243,16 @@ class LineChef:
         else:
             for data_cluster in line.xl.derived.calculations:
 
+                sheet.bb.current_row += 2
+                # Leave a blank row between each calculation
+                
                 self._add_driver_calculation(
                     sheet=sheet,
                     line=line,
                     driver_data=data_cluster, 
-                    set_labels=set_labels
+                    set_labels=set_labels,
+                    indent=indent
                     )
-
-                sheet.bb.current_row += 2
-                # Leave a blank row between each calculation
 
             else:
                 pass
@@ -247,19 +261,22 @@ class LineChef:
                 # derived value may OR MAY NOT be the sum of priors. Up to
                 # driver to decide.
 
-        return sheet        
+        return sheet
 
-    def _add_driver_calculation(self, *pargs, sheet, line, driver_data, set_labels=True):
+    def _add_driver_calculation(self, *pargs, sheet, line, driver_data, set_labels=True, indent=0):
         """
 
+
         -> Worksheet
+
+        Will write to sheet current row
         """
         private_data = sheet.bb.parameters.copy()
         # Set up a private range that's going to include both "shared" period & unit
         # parameters from the column and "private" driver parameters. 
 
         label_column = sheet.bb.parameters.columns.get_position(field_names.LABELS)
-        period_column = sheet.bb.current_column
+        period_column = sheet.bb.current_column #<---------------------------------------------------- NEED EXPLICIT COLUMN PASSING
         
         for row_data in driver_data.rows:
 
@@ -287,6 +304,7 @@ class LineChef:
             # And lines continue to span several rows. 
 
             sheet.bb.current_row += 1
+            # Will add a blank row after all the columns
 
         # Transform the range values from rows to coordinates
         param_coordinates = self._rows_to_coordinates(
@@ -304,8 +322,8 @@ class LineChef:
         
         line_coordinates = dict()
         for k, obj in driver_data.references.items():
-            line_coordinates[k] = self.obj_to_coordinates(obj)
-
+            line_coordinates[k] = obj.xl.get_coordinates()
+            
         materials = dict()
         materials["lines"] = line_coordinates
         materials["parameters"] = param_coordinates
@@ -326,16 +344,27 @@ class LineChef:
         # Formulas should deliver templates with the {lines} key.
         
         calc_cell = sheet.cell(column=sheet.bb.current_column, row=sheet.bb.current_row)
-        calc_cell.set_explicit_value(formula, data_type=type_codes.FORMULA) #<------------------------------------------------ can point to calc cell here on line
+        calc_cell.set_explicit_value(formula, data_type=type_codes.FORMULA)
 
         # If formula included a reference to the prior value of the line itself, it
         # picked up here. Can now change line.xl.derived.final <--------------------------------------------incrementation is discouraged, right?
         line.xl.derived.ending = sheet.bb.current_row
+        line.xl.derived.cell = calc_cell
+
+        if set_label:
+            label = (indent * " ") + driver_data.name
+            self._set_label(sheet=sheet, label=label, row=sheet.bb.current_row)
 
         return sheet
         #<--------------------------------------------------------------------------------------formula should be able to deliver multiple rows
         #that build on each other (for complex calculations): could have something like last_step as the variable in params that we keep
         # changing
+
+        #<-------- should group each calculation like this
+        # TO DO:
+        # -- group each calculation
+        # -- add a nice header for the calculation (may be?)
+        # 
 
     def _combine_segments(self, *pargs, sheet, line, set_labels=True):
         """
@@ -344,7 +373,7 @@ class LineChef:
         LineChef._combine_segments() -> Worksheet
 
 
-        
+        Adds the combination to the current row.
         """
 
         ends = [
@@ -355,15 +384,18 @@ class LineChef:
 
         segment_summation = self._sum_endpoints(rows=ends, column=sheet.bb.current_column)
         if segment_summation:
+
+            sheet.bb.current_row += 2
             
             total_cell = sheet.cell(column=sheet.bb.current_column, row=sheet.bb.current_row)
             total_cell.set_explicit_value(segment_summation, data_type=type_codes.FORMULA)
 
-            if set_labels:
-                pass
-                # <---------------------------------------------------------------------------------------------------------ADD LABELING
+            line.xl.ending = sheet.bb.current_row
+            line.xl.cell = total_cell
 
-            line.xl.ending = sheet.bb.current_row 
+            if set_labels:
+                label = indent*" " + LineItem.SUMMARY_PREFIX + line.name
+                self._set_label(label=label, sheet=sheet, row=sheet.bb.current_row)
             
         return sheet
 
@@ -393,8 +425,7 @@ class LineChef:
                         
                 c = """
                 Something is wrong with our alignment. We are trying to
-                write a private parameter to an existing row with a
-                different label.""" 
+                write a parameter to an existing row with a different label.""" 
 
                 raise Error(c)
                     

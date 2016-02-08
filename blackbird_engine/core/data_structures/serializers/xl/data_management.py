@@ -112,14 +112,18 @@ class LineData(Range):
         self.consolidated = Range()
         self.consolidated.sources = list()
         # List should contain pointers to source lines
+        self.consolidated.cell = None
         
         self.derived = Range()
         self.derived.calculations = list()
         # Each item should be a driver_data object
+        self.derived.cell = None
 
         self.detailed = Range()
+        self.detailed.cell = None
 
         self.sheet = None
+        self.cell = None
 
 ##    def copy(self):
 ##        result = copy.copy(self)        
@@ -142,6 +146,16 @@ class LineData(Range):
         result += str(self.ending)
         
         return result
+
+    def get_coordinates2(self, include_sheet=True):
+        result = None
+        if not self.cell:
+            raise ExcelPrepError
+
+        else:
+            result = self.cell.parent.title + "!" + self.cell.coordinate()
+        return result
+        
         
         # Each line must be able to deliver a full coordinate set, with
         # sheet. Could add a ._set_sheet() method that goes through
