@@ -59,7 +59,7 @@ class LineChef:
         by the end of this routine, the line and all its details should have a
         sheet assignment. that way, we can gather 
 
-        Expects sheet to have current_column SET UP
+        Expects sheet to have current_column and current row SET UP
 
         Routines deliver sheet with the current_row pointing to the last filled in cell. 
         """
@@ -70,7 +70,7 @@ class LineChef:
         self._add_consolidation_logic(sheet=sheet, line=line, set_labels=set_labels)
         sheet.bb.current_row += 2
 
-        self._add_derivation_logic(sheet, line, set_labels=set_labels)
+        self._add_derivation_logic(sheet=sheet, line=line, set_labels=set_labels)
         sheet.bb.current_row += 2
 
         details = line.get_ordered()
@@ -106,7 +106,7 @@ class LineChef:
                 
                 sheet.bb.current_row +=1
 
-        self._combine_segments(sheet, line, set_labels=set_labels)
+        self._combine_segments(sheet=sheet, line=line, set_labels=set_labels)
         # Could also group here
 
         #<-----------------SHOULD ASSIGN A FINAL CELL TO THE LINE HERE
@@ -150,23 +150,18 @@ class LineChef:
             self.chop_line(sheet=sheet, line=line)
             
         return sheet
-    
-    def rows_to_coordinates(self, *pargs, table, column, sheet_name=None):
-        """
-        -> dict
 
-        Returns dict with table keys, coordinate values
-        """
+    def _rows_to_coordinates(self, *pargs, lookup, column):
         result = dict()
-        alpha_column = get_alpha(column)
+        alpha_column = get_column_letter(column)
         
-        for k, v in table.items():
-
-            result[k] = alpha_column + str(v)
+        for k in lookup.by_name:
+            row = lookup.get_position(k)
+            result[k] = alpha_column + str(row)
 
         return result
-
-    def line_to_coordinates(self, *pargs, line, column):
+    
+    def obj_to_coordinates(self, *pargs, line, column):
         result = line.xl.get_coordinates(column)
         return result
 
@@ -263,7 +258,7 @@ class LineChef:
         # Set up a private range that's going to include both "shared" period & unit
         # parameters from the column and "private" driver parameters. 
 
-        label_column = sheet.bb.parameters.get_position(field_names.LABELS)
+        label_column = sheet.bb.parameters.columns.get_position(field_names.LABELS)
         period_column = sheet.bb.current_column
         
         for row_data in driver_data.rows:
@@ -284,7 +279,7 @@ class LineChef:
             # Assume that private_value is a number or string, NOT a formula or
             # container. Can change this later. 
 
-            relative_position = current_row - (private_data.rows.starting or 0)
+            relative_position = sheet.bb.current_row - (private_data.rows.starting or 0)
             private_data.rows.by_name[private_label] = relative_position
             # ... In this particular case, we could map a specific cell
             # (in memory) to the parameter. Unclear whether that's useful though,
@@ -294,30 +289,48 @@ class LineChef:
             sheet.bb.current_row += 1
 
         # Transform the range values from rows to coordinates
-        param_coordinates = self.to_coordinates(private_data, sheet.bb.current_column)
-        
+        param_coordinates = self._rows_to_coordinates(
+            lookup=private_data.rows,
+            column=sheet.bb.current_column
+            )
+            
         # Apply param:var conversions so formula can find its expected inputs
         for param_name, var_name in driver_data.conversion_map.items():
             param_coordinates[var_name] = param_coordinates[param_name]
 
         # Finally, format the formula as necessary
         # (if references are a dict of objects, could map each obj to its coordinates)
-        template = driver_data.formula_string
+        template = driver_data.formula
         
-        references = dict()
-        for k, obj in driver_data.line_references.items():
-            references[k] = self.obj_to_coordinates(obj)
+        line_coordinates = dict()
+        for k, obj in driver_data.references.items():
+            line_coordinates[k] = self.obj_to_coordinates(obj)
 
-        formula = template.format(lines=references, parameters=param_coordinates)
+        materials = dict()
+        materials["lines"] = line_coordinates
+        materials["parameters"] = param_coordinates
+
+        life_coordinates = self._rows_to_coordinates(
+            lookup=sheet.bb.life.rows,
+            column=sheet.bb.current_column
+            )
+        materials["life"] = life_coordinates
+
+        event_coordinates = self._rows_to_coordinates(
+            lookup=sheet.bb.events.rows,
+            column=sheet.bb.current_column
+            )
+        materials["events"] = event_coordinates
+        
+        formula = template.format(**materials)
         # Formulas should deliver templates with the {lines} key.
         
-        calc_cell = sheet.cell(sheet.bb.current_column, sheet.bb.current_row)
-        calc_cell.set_explicit_value(formula, data_type=type_codes.FORMULA)
+        calc_cell = sheet.cell(column=sheet.bb.current_column, row=sheet.bb.current_row)
+        calc_cell.set_explicit_value(formula, data_type=type_codes.FORMULA) #<------------------------------------------------ can point to calc cell here on line
 
         # If formula included a reference to the prior value of the line itself, it
         # picked up here. Can now change line.xl.derived.final <--------------------------------------------incrementation is discouraged, right?
-        line.xl.rows.derived.ending = sheet.bb.current_row
-        # <---------------------------------------------------------SHOULD MOVE 
+        line.xl.derived.ending = sheet.bb.current_row
 
         return sheet
         #<--------------------------------------------------------------------------------------formula should be able to deliver multiple rows
@@ -340,7 +353,7 @@ class LineChef:
             line.xl.detailed.ending
                      ]
 
-        segment_summation = self._sum_endpoints(endpoints=ends, column=sheet.bb.current_column)
+        segment_summation = self._sum_endpoints(rows=ends, column=sheet.bb.current_column)
         if segment_summation:
             
             total_cell = sheet.cell(column=sheet.bb.current_column, row=sheet.bb.current_row)

@@ -211,7 +211,13 @@
 
  - add a nice column that tracks all of the areas, show the area name in the merged cells there.
  - add a pretty cover sheet, with model name, "built by blackbird", legend if necessary
-          
+ - move to a paradigm where it's easy to add (or subtract) units
+   -- can leverage the taxonomy concept
+   -- to add: contribute extra copies of the taxonomy somewhere
+      --- or can may be do that in memory?
+      --- or approximate calculations?? (by life)? Otherwise, might get too large of a spreadsheet
+      --- could add           
+
 
 IOP:
  - add the "ending" property to data_management.Range
@@ -229,7 +235,12 @@ IOP:
  - !add formatting error intercept to LineChef
  - move to only forward projection for build model foundation
 
- - Move LineChef to explicit column parameters.
+ -!! Move LineChef to explicit column parameters.
+ -!! check that lines and units don't share xl data
+ -!!! make sure drivers only add their DriverData when they are allowed to work on the item.
+ - think about whether to make maturity and decline dynamic from percent maturity, etc.
+   alternatively, could just make the formula look at the event itself; probably better.
+   so life[age]/(events{maturity}-events{birth}) <--------- can do this later. 
  
  
 

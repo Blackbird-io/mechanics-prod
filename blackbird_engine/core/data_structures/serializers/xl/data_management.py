@@ -86,7 +86,7 @@ class Area:
         Return deep copy
         """
         result = copy.copy(self)
-        result.rows = self.rows.cop()
+        result.rows = self.rows.copy()
         result.columns = self.columns.copy()
 
         return result

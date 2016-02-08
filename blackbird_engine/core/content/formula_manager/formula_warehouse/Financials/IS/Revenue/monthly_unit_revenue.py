@@ -92,7 +92,8 @@ def func(line, business_unit, data, driver_signature):
         # Assume youth until we know otherwise
 
         xl_stage_start = "0"
-        xl_stage_end = "+{life}[PERCENT_MATURITY]"
+        xl_stage_end = str(stage_end)
+##        xl_stage_end = "+{life[PERCENT_MATURITY]}"
 
         if bu.life.events[KEY_MATURITY] <= ref_date:
             # Upgrade to maturity if appropriate.
@@ -101,7 +102,9 @@ def func(line, business_unit, data, driver_signature):
             stage_end = bu.life.PERCENT_OLD_AGE
 
             xl_stage_start = xl_stage_end
-            xl_stage_end = "+{life}[PERCENT_OLD_AGE]"
+##            xl_stage_end = "+{life[PERCENT_OLD_AGE]}"
+            xl_stage_end = str(stage_end)
+            
 
         if bu.life.events[KEY_OLD_AGE] <= ref_date:
             # Upgrade further to decline. Use old label so we can keep next
@@ -120,7 +123,7 @@ def func(line, business_unit, data, driver_signature):
         annual_revenue = data["annual_rev_per_mature_unit"]
         monthly_revenue = annual_revenue / 12
 
-        excel_template = "={parameters}[annual_rev_per_mature_unit]/12"
+        excel_template = "={parameters[annual_rev_per_mature_unit]}/12"
         
         if stage_name == "maturity":
             line.setValue(monthly_revenue, driver_signature)
@@ -131,7 +134,7 @@ def func(line, business_unit, data, driver_signature):
             adj_growth_revenue = growth_adjustment * monthly_revenue
             line.setValue(adj_growth_revenue, driver_signature)
 
-            xl_growth = "*{life}[percent]/("+xl_stage_end+"-"+xl_stage_start+")"
+            xl_growth = "*{life[percent]}/("+xl_stage_end+"-"+xl_stage_start+")"
             excel_template += xl_growth
             
         elif stage_name == "decline":
@@ -140,7 +143,7 @@ def func(line, business_unit, data, driver_signature):
             adj_decline_revenue = decline_adjustment * monthly_revenue
             line.setValue(adj_decline_revenue, driver_signature)
 
-            xl_decline = "*(1-{life}[percent])/("+xl_stage_end+"-"+xl_stage_start+")"
+            xl_decline = "*(1-{life[percent]})/("+xl_stage_end+"-"+xl_stage_start+")"
             excel_template += xl_decline
     
     # Always return excel_template, references
