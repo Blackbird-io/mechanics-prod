@@ -115,7 +115,7 @@ class UnitChef:
         # Spread children in order to ensure stable results across run times.
         
         for child in children:           
-            self.chop_unit(book, child)
+            self.chop_unit(book=book, unit=child)
 
 
         # Second, chop the parent
@@ -130,9 +130,8 @@ class UnitChef:
         # Third, return result
         return sheet
 
-        # Premise 1: by the time you run this routine, all children should already be in book
-        # Premise 2: a unit without any children should be easy to spread on a sheet
-        # Premise 3:
+
+
 
         # To Do:
         #   - move to multiperiod

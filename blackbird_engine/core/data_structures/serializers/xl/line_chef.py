@@ -206,34 +206,37 @@ class LineChef:
 
         else:
             sheet.bb.current_row += 1
-            line.xl.consolidated.starts = sheet.bb.current_row
+            line.xl.consolidated.starting = sheet.bb.current_row
 
-            for source_pointer in line.xl.consolidated.sources:
+            for source in line.xl.consolidated.sources:
                 
                 link_cell = sheet.cell(column=column, row=sheet.bb.current_row)
                 source_coordinates = source.xl.get_coordinates()
                 
-                link = self.formulas.LINK_TO_COORDINATES.format(coordinates=source_coordinates)
+                link = formula_templates.LINK_TO_COORDINATES.format(coordinates=source_coordinates)
                 link_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
 
-                line.xl.consolidated.ends = sheet.current_row
-                sheet.current_row += 1
+                line.xl.consolidated.ending = sheet.bb.current_row
+                sheet.bb.current_row += 1
 
             # Group the cells!! <--------------------------------------------------------------------------
+            # Add better labels
 
+            alpha_column = get_column_letter(column)
             summation_params = {
-                "starting_row" : line.xl.consolidated.starts,
-                "ending_row" : line.xl.consolidated.ends,
-                "alpha_column" : get_column_letter(column)
+                "starting_row" : line.xl.consolidated.starting,
+                "ending_row" : line.xl.consolidated.ending,
+                "alpha_column" : alpha_column
                 }
             
-            summation_formula = self.formulas.SUM_RANGE.format(**summation_params)
+            summation = formula_templates.SUM_RANGE.format(**summation_params)
             summation_cell = sheet.cell(column=column, row=sheet.bb.current_row)
-            summation_cell.set_explicit_value = summation_formula
+            summation_cell.set_explicit_value(summation, data_type=type_codes.FORMULA)
 
             if set_labels:
-                # Add the "x : consolidated value" label #<---------------------------------------------------------------------------------------fix
-                pass
+                label = line.name + ": consolidated results"
+                label = (indent * " ") + label
+                self._set_label(sheet=sheet, label=label, row=sheet.bb.current_row)
 
             line.xl.consolidated.ending = sheet.bb.current_row
 

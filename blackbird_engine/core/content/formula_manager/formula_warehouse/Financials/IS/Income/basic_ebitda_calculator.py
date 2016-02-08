@@ -85,7 +85,7 @@ def func(line, business_unit, data, driver_signature):
 
     ebitda = val(line_rev) - val(line_cost) - val(line_opex) - val(line_sga)
 
-    excel_template = "+{lines}[revenue]-{lines}[cost]-{lines}[opex]-{lines}[sga]"
+    excel_template = "+{lines[revenue]}-{lines[cost]}-{lines[opex]}-{lines[sga]}"
     line_references = dict(
         revenue=line_rev, cost=line_cost, opex=line_opex, sga=line_sga
         )
@@ -97,7 +97,7 @@ def func(line, business_unit, data, driver_signature):
         # We should really make EBITDA a function of net income to make sure we
         # are not double-counting addbacks.
 
-        excel_template += "+{lines}[da]"
+        excel_template += "+{lines[da]}"
         line_references["da"] = line_da
     
     line.set_value(ebitda, driver_signature)

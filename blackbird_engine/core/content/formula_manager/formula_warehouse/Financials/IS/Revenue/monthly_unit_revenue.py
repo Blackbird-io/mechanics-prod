@@ -143,7 +143,7 @@ def func(line, business_unit, data, driver_signature):
             adj_decline_revenue = decline_adjustment * monthly_revenue
             line.setValue(adj_decline_revenue, driver_signature)
 
-            xl_decline = "*(1-{life[percent]})/("+xl_stage_end+"-"+xl_stage_start+")"
+            xl_decline = "*(100-{life[percent]})/("+xl_stage_end+"-"+xl_stage_start+")"
             excel_template += xl_decline
     
     # Always return excel_template, references
