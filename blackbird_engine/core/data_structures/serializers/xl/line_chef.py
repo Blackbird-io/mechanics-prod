@@ -378,29 +378,34 @@ class LineChef:
 
 
         Adds the combination to the current row.
+
         """
+        sheet.bb.current_row += 1
+        cell = sheet.cell(column=sheet.bb.current_column, row=sheet.bb.current_row)
 
         ends = [
             line.xl.consolidated.ending,
             line.xl.derived.ending,
             line.xl.detailed.ending
                      ]
-
+        
         segment_summation = self._sum_endpoints(rows=ends, column=sheet.bb.current_column)
-        if segment_summation:
 
-            sheet.bb.current_row += 2
-            
-            total_cell = sheet.cell(column=sheet.bb.current_column, row=sheet.bb.current_row)
-            total_cell.set_explicit_value(segment_summation, data_type=type_codes.FORMULA)
+        if segment_summation:    
+            cell.set_explicit_value(segment_summation, data_type=type_codes.FORMULA)
+            label = indent*" " + LineItem.SUMMARY_PREFIX + line.name
 
-            line.xl.ending = sheet.bb.current_row
-            line.xl.cell = total_cell
+        else:
+            # Blank or hard-coded line
+            cell.value = line.value
+            label = indent*" " + line.name
+        
+        line.xl.ending = sheet.bb.current_row
+        line.xl.cell = cell
 
-            if set_labels:
-                label = indent*" " + LineItem.SUMMARY_PREFIX + line.name
-                self._set_label(label=label, sheet=sheet, row=sheet.bb.current_row)
-            
+        if set_labels:                
+            self._set_label(label=label, sheet=sheet, row=sheet.bb.current_row)
+                
         return sheet
 
     def _set_label(self, *pargs, label, sheet, row, column=None, overwrite=False):
