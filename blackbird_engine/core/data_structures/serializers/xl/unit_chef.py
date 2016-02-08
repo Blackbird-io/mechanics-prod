@@ -122,10 +122,10 @@ class UnitChef:
         sheet = self._create_unit_sheet(book=book, unit=unit)
         sheet = self._add_unit_life(sheet=sheet, unit=unit)
 
-        now_column = sheet.bb.time_line.columns.get_position(unit.period.end)
+        current = sheet.bb.time_line.columns.get_position(unit.period.end)
         # Single periodl logic
 
-        self._add_financials(sheet=sheet, unit=unit, active_column=now_column)
+        self._add_financials(sheet=sheet, unit=unit, column=current)
 
         # Third, return result
         return sheet
@@ -158,7 +158,7 @@ class UnitChef:
         #       [load balance]
         #       add financials
 
-    def _add_financials(self, *pargs, sheet, unit, active_column):
+    def _add_financials(self, *pargs, sheet, unit, column):
         """
 
         -> Worksheet
@@ -168,13 +168,15 @@ class UnitChef:
         # Make sure the unit contains all relevant calculations by filling it
         # out. If BB already performed this action, call will be a no-op.
         
-        for statement in unit.financials.ordered: 
+        for statement in unit.financials.ordered:
+
+            if statement:
             
-            line_chef.chop_statement(
-                sheet=sheet,
-                statement=statement,
-                active_column=active_column
-                )
+                line_chef.chop_statement(
+                    sheet=sheet,
+                    statement=statement,
+                    column=column
+                    )
 
     # Have to manage book depth (ie max sheets) #<--------------------------------------------------!!
 

@@ -216,7 +216,7 @@
    -- to add: contribute extra copies of the taxonomy somewhere
       --- or can may be do that in memory?
       --- or approximate calculations?? (by life)? Otherwise, might get too large of a spreadsheet
-      --- could add           
+      --- could add
 
 
 IOP:
@@ -245,6 +245,7 @@ IOP:
  - by default, should add params to the master column
 
  - !! APPLY Sheet style to all sheets?
+ - consider moving all the LineChef routines to kwargs. 
 
 PROBLEM:
  - Good excel prep is not totally compatible with speed optimization. End up doing work in cases where
