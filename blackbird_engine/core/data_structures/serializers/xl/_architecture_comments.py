@@ -240,7 +240,9 @@ IOP:
  -!!! make sure drivers only add their DriverData when they are allowed to work on the item.
  - think about whether to make maturity and decline dynamic from percent maturity, etc.
    alternatively, could just make the formula look at the event itself; probably better.
-   so life[age]/(events{maturity}-events{birth}) <--------- can do this later. 
+   so life[age]/(events{maturity}-events{birth}) <--------- can do this later.
+ - define copy behavior for unit.xl (should probably get zeroed out)
+ - by default, should add params to the master column
  
  
 
