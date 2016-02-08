@@ -68,6 +68,9 @@ class LineChef:
         Direct cell references make a lot of this logic way more transparent, at the expense
         of making it a lot more dependent on the nature of the xlio Cell object. 
         """
+
+        # This could be a lot cleaner if we move it all to **kwargs. Then would only have to
+        # bump up the indent.
         self._add_consolidation_logic(
             sheet=sheet,
             column=column,
@@ -166,7 +169,7 @@ class LineChef:
         # set up levels and indent based on them. 
     # -
 
-    def chop_statement(self, *pargs, sheet, statement):
+    def chop_statement(self, *pargs, sheet, column, statement):
 
         # Relies on current column!
 
@@ -176,7 +179,7 @@ class LineChef:
         for line in statement.get_ordered():
 
             sheet.bb.current_row += 1
-            self.chop_line(sheet=sheet, line=line)
+            self.chop_line(sheet=sheet, column=column, line=line)
             
         return sheet
 
@@ -243,7 +246,7 @@ class LineChef:
         # - group the cells
         # 
     
-    def _add_derivation_logic(self, *pargs, sheet, line, set_labels=True, indent=0):
+    def _add_derivation_logic(self, *pargs, sheet, column, line, set_labels=True, indent=0):
         """
 
         -> Worksheet
@@ -261,6 +264,7 @@ class LineChef:
                 
                 self._add_driver_calculation(
                     sheet=sheet,
+                    column=column,
                     line=line,
                     driver_data=data_cluster, 
                     set_labels=set_labels,
