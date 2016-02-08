@@ -34,6 +34,8 @@ from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
 
+from ...modelling.line_item import LineItem
+
 
 
 
@@ -61,7 +63,10 @@ class LineChef:
 
         Expects sheet to have current_column and current row SET UP
 
-        Routines deliver sheet with the current_row pointing to the last filled in cell. 
+        Routines deliver sheet with the current_row pointing to the last filled in cell.
+
+        Direct cell references make a lot of this logic way more transparent, at the expense
+        of making it a lot more dependent on the nature of the xlio Cell object. 
         """
         self._add_consolidation_logic(
             sheet=sheet,
@@ -85,9 +90,6 @@ class LineChef:
             sub_indent = indent + LineItem.TAB_WIDTH
             detail_summation = ""
 
-            coordinates = dict()
-            coordinates["alpha_column"] = sheet.bb.current_column #<---------------------------------------------------------------- REQUIRES CURRENT COLUMN TO BE ACTIVE 
-
             for detail in details:
 
                 sheet.bb.current_row += 1
@@ -99,9 +101,8 @@ class LineChef:
                     indent=sub_indent
                     )
 
-                coordinates["row"] = detail.xl.ending
-                link = formula_templates.ADD_CELL.format(**cos)
-                # Or could make this link = formula_templates.ADD_COORDINATES.format(coordinates=detail.xl.get_coordinates())
+                link_template = formula_templates.ADD_COORDINATES
+                link = link_template.format(coordinates=detail.xl.get_coordinates())
                 detail_summation += link
                 
             else:
@@ -156,11 +157,14 @@ class LineChef:
 
     def chop_statement(self, *pargs, sheet, statement):
 
+        # Relies on current column!
+
         # Add a nice header row
         # Add some white space
 
         for line in statement.get_ordered():
 
+            sheet.bb.current_row += 1
             self.chop_line(sheet=sheet, line=line)
             
         return sheet
