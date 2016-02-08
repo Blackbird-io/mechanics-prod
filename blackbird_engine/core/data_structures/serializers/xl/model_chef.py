@@ -274,8 +274,10 @@ class Chef:
         
         starting_column = local_master_column + 2
         active_column = starting_column
-        
-        for period in model.time_line.get_ordered():
+
+        past, present, future = model.time_line.get_segments()
+        covered_periods = present + future
+        for period in covered_periods:
 
             my_tab.bb.time_line.columns.by_name[period.end] = active_column
             parameters.columns.by_name[period.end] = active_column
