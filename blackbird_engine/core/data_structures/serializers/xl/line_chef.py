@@ -158,6 +158,8 @@ class LineChef:
 
     # To Do:
     # - group all details
+        # for grouping, i should move the indent to a level count. then i can
+        # set up levels and indent based on them. 
     # -
 
     def chop_statement(self, *pargs, sheet, statement):
