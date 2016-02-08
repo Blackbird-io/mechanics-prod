@@ -42,7 +42,8 @@ FormulaTempaltes      string templates with named fields
 class FormulaTemplates:
 
     # GENERIC
-    SUM_RANGE = "+SUM({sheet}!{alpha_column}{starting_row}:{sheet}!{alpha_column}{ending_row}"
+    SUM_RANGE = "+SUM({alpha_column}{starting_row}:{alpha_column}{ending_row}"
+    SUM_RANGE_ON_SHEET = "+SUM({sheet}!{alpha_column}{starting_row}:{sheet}!{alpha_column}{ending_row}"
     
     ADD_CELL = "+{alpha_column}{row}"
     ADD_CELL_FROM_SHEET = "+{sheet}!{alpha_column}{row}"

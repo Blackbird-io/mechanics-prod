@@ -198,11 +198,9 @@ class LineChef:
 
         -> Worksheet
         
-        Expects line to include a full range of pointers (?) or formulas?
-        
+        Expects line.xl.consolidated.sources to include full range of pointers to source lines
+        on children.
         """
-        # Add feature to control how many refs per cell (children_per_cell)
-
         if not line.xl.consolidated.sources:
             pass
 
@@ -215,8 +213,8 @@ class LineChef:
                 link_cell = sheet.cell(column=column, row=sheet.bb.current_row)
                 source_coordinates = source.xl.get_coordinates()
                 
-                link_formula = self.formulas.LINK_TO_COORDINATES.format(coordinates=source_coordinates)
-                link_cell.value = link_formula
+                link = self.formulas.LINK_TO_COORDINATES.format(coordinates=source_coordinates)
+                link_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
 
                 line.xl.consolidated.ends = sheet.current_row
                 sheet.current_row += 1
@@ -224,15 +222,14 @@ class LineChef:
             # Group the cells!! <--------------------------------------------------------------------------
 
             summation_params = {
-                "starting_row" : line.xl.consolidated.starts, #<-------------------------------------------------- CHECK WHETHER THIS PIECE IS VALID
+                "starting_row" : line.xl.consolidated.starts,
                 "ending_row" : line.xl.consolidated.ends,
                 "alpha_column" : get_column_letter(column)
                 }
-            #<------------------------------------------------------------------------------------------------------------------------need to make sure column is alphabetical
             
             summation_formula = self.formulas.SUM_RANGE.format(**summation_params)
             summation_cell = sheet.cell(column=column, row=sheet.bb.current_row)
-            summation_cell.value = summation_formula
+            summation_cell.set_explicit_value = summation_formula
 
             if set_labels:
                 # Add the "x : consolidated value" label #<---------------------------------------------------------------------------------------fix
@@ -244,7 +241,8 @@ class LineChef:
 
         # To Do:
         # - group the cells
-        # 
+        # - add feature that controls the number of refs per cell (children per cell)
+        # - add labels
     
     def _add_derivation_logic(self, *pargs, sheet, column, line, set_labels=True, indent=0):
         """
