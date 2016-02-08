@@ -67,7 +67,7 @@ def func(line, business_unit, data, driver_signature):
 
     -- "new_optional_tags"    |   list of tags to add to line after value
     """
-    excel_template = "={parameters}[fixed_monthly_value]*{life}[alive]"
+    excel_template = "={parameters[fixed_monthly_value]}*{life[alive]}"
     references = dict()
 
     if business_unit.life.alive:

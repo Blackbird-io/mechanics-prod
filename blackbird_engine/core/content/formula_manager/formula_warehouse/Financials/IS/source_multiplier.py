@@ -85,7 +85,7 @@ def func(line, business_unit, data, driver_signature):
     # Store a pointer to the source so chef can link the formula template
     # in Excel.
     xl_core = "+{lines[source]}*{parameters[source_multiplier]}"
-    xl_ceiling = "+MIN(%s, {parameters[max]})"
+    xl_ceiling= "+MIN(%s, {parameters[max]})"
     xl_floor = "+MAX(%s, {parameters[min]})"
 
     excel_template = xl_core
