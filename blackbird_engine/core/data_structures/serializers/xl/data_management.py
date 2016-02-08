@@ -128,7 +128,7 @@ class LineData(Range):
 ##    def copy(self):
 ##        result = copy.copy(self)        
     
-    def get_coordinates(self, column):
+    def get_coordinates_old(self, column):
         """
         -> tuple(int, int)
 
@@ -147,7 +147,7 @@ class LineData(Range):
         
         return result
 
-    def get_coordinates2(self, include_sheet=True):
+    def get_coordinates(self, include_sheet=True):
         result = None
         if not self.cell:
             raise ExcelPrepError
