@@ -153,9 +153,10 @@ class LineData(Range):
             raise ExcelPrepError
 
         else:
-            result = self.cell.parent.title + "!" + self.cell.coordinate()
+            result = "'" + self.cell.parent.title + "'" + "!"
+            result += self.cell.coordinate
+            
         return result
-        
         
         # Each line must be able to deliver a full coordinate set, with
         # sheet. Could add a ._set_sheet() method that goes through

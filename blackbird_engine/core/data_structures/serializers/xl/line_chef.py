@@ -296,7 +296,7 @@ class LineChef:
                     )
 
             param_cell = sheet.cell(column=period_column, row=sheet.bb.current_row)
-            param_cell.value = private_value
+            param_cell.value = str(private_value)
             # Assume that private_value is a number or string, NOT a formula or
             # container. Can change this later. 
 
@@ -343,9 +343,15 @@ class LineChef:
             column=sheet.bb.current_column
             )
         materials["events"] = event_coordinates
-        
-        formula = template.format(**materials)
-        # Formulas should deliver templates with the {lines} key.
+
+        try:
+            formula = template.format(**materials)
+            # Formulas should deliver templates with the {lines} key.
+        except Exception as X:
+            print("Name:     ", driver_data.name)
+            print("Template: ", driver_data.formula)
+
+            raise X            
         
         calc_cell = sheet.cell(column=sheet.bb.current_column, row=sheet.bb.current_row)
         calc_cell.set_explicit_value(formula, data_type=type_codes.FORMULA)
@@ -407,6 +413,9 @@ class LineChef:
             self._set_label(label=label, sheet=sheet, row=sheet.bb.current_row)
                 
         return sheet
+    # TO DO:
+    # - should move blank lines to master and drive them from there. logic may be
+    #   a better fit in derive(). 
 
     def _set_label(self, *pargs, label, sheet, row, column=None, overwrite=False):
         """
