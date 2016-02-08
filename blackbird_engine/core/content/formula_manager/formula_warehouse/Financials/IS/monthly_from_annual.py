@@ -66,7 +66,7 @@ def func(line, business_unit, data, driver_signature):
 
     -- "base_annual_expense"
     """
-    excel_template = "=IF({life}[alive], {parameters}[base_annual_expense]/12)"
+    excel_template = "=IF({life[alive]}, {parameters[base_annual_expense]}/12)"
     line_references = dict()
     
     if business_unit.life.alive:
