@@ -119,12 +119,12 @@ def scenario_1(topic):
                 model.summary.data[name] = 12 * line.value
                 # Annualize values and put them into summary
     
-    # Manually add credit capacity
-    landscape_summary = model.valuation.credit.combined.get_summary()
-    print(landscape_summary)
-    cc_raw = landscape_summary["size"]["hi"]
-    cc_adj = cc_raw * (1 - bb_settings.HAIRCUT_TO_EXPECTED_VALUE)
-    model.summary.data["credit_capacity"] = cc_adj
+##    # Manually add credit capacity
+##    landscape_summary = model.valuation.credit.combined.get_summary()
+##    print(landscape_summary)
+##    cc_raw = landscape_summary["size"]["hi"]
+##    cc_adj = cc_raw * (1 - bb_settings.HAIRCUT_TO_EXPECTED_VALUE)
+##    model.summary.data["credit_capacity"] = cc_adj
     
     # Finish work, wrap topic()
     topic.wrap_topic()
