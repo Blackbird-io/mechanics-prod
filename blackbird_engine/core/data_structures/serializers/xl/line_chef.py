@@ -296,9 +296,12 @@ class LineChef:
                     )
 
             param_cell = sheet.cell(column=period_column, row=sheet.bb.current_row)
-            param_cell.value = str(private_value)
-            # Assume that private_value is a number or string, NOT a formula or
-            # container. Can change this later. 
+            if isinstance(private_value, (list, set, dict, map)):
+                private_value = str(private_value)
+                # Capture mutable and multi-dimensional objects here. We need
+                # to figure out how to represent them in Excel later.
+                
+            param_cell.value = private_value
 
             relative_position = sheet.bb.current_row - (private_data.rows.starting or 0)
             private_data.rows.by_name[private_label] = relative_position
@@ -350,8 +353,7 @@ class LineChef:
         except Exception as X:
             print("Name:     ", driver_data.name)
             print("Template: ", driver_data.formula)
-
-            raise X            
+            raise ExcelPrepError
         
         calc_cell = sheet.cell(column=sheet.bb.current_column, row=sheet.bb.current_row)
         calc_cell.set_explicit_value(formula, data_type=type_codes.FORMULA)

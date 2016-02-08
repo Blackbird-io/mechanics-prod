@@ -80,13 +80,13 @@ def func(line, business_unit, data, driver_signature):
     years_from_base = max(0, years_from_base)
     inflation_multiplier = (1 + data["annual_inflation"])** years_from_base
 
-    xl_multiplier = "(1+{parameters}[annual_inflation])^" + str(years_from_base)
+    xl_multiplier = "(1+{parameters[annual_inflation]})^" + str(years_from_base)
     # NOTE: This is a bit of a cop-out, but the basic premise is that you
     # don't have to redo **all** of your work in Excel. You can lump in
     # some results form Python-level analysis, with the understanding that
     # doing so will limit the power of your book. 
 
-    excel_template = "=IF({life}[alive],{parameters}[base_annual_expense]/12*" + xl_multiplier+")"
+    excel_template = "=IF({life[alive]},{parameters[base_annual_expense]}/12*" + xl_multiplier+")"
     
     if business_unit.life.alive:        
         
