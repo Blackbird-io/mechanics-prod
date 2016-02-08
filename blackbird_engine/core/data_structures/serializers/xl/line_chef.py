@@ -179,7 +179,7 @@ class LineChef:
 
         return result
 
-    def _add_consolidation_logic(self, *pargs, sheet, line, set_labels=True):
+    def _add_consolidation_logic(self, *pargs, sheet, line, set_labels=True, indent=0):
         """
 
         -> Worksheet
@@ -355,7 +355,7 @@ class LineChef:
         line.xl.derived.ending = sheet.bb.current_row
         line.xl.derived.cell = calc_cell
 
-        if set_label:
+        if set_labels:
             label = (indent * " ") + driver_data.name
             self._set_label(sheet=sheet, label=label, row=sheet.bb.current_row)
 
@@ -370,7 +370,7 @@ class LineChef:
         # -- add a nice header for the calculation (may be?)
         # 
 
-    def _combine_segments(self, *pargs, sheet, line, set_labels=True):
+    def _combine_segments(self, *pargs, sheet, line, set_labels=True, indent=0):
         """
 
 
