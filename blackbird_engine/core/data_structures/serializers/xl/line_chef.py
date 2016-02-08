@@ -56,12 +56,12 @@ class LineChef:
     Objects that export models into Excel
 
     """
-    def chop_line(self, *pargs, sheet, line, set_labels=True, indent=0):
+    def chop_line(self, *pargs, sheet, column, line, set_labels=True, indent=0):
         """
         by the end of this routine, the line and all its details should have a
         sheet assignment. that way, we can gather 
 
-        Expects sheet to have current_column and current row SET UP
+        Expects sheet to have current row SET UP
 
         Routines deliver sheet with the current_row pointing to the last filled in cell.
 
@@ -70,6 +70,7 @@ class LineChef:
         """
         self._add_consolidation_logic(
             sheet=sheet,
+            column=column,
             line=line,
             set_labels=set_labels,
             indent=indent
@@ -77,6 +78,7 @@ class LineChef:
 
         self._add_derivation_logic(
             sheet=sheet,
+            column=column,
             line=line,
             set_labels=set_labels,
             indent=indent
@@ -97,6 +99,7 @@ class LineChef:
                 
                 self.chop_line(
                     sheet=sheet,
+                    column=column,
                     line=detail,
                     set_labels=set_labels,
                     indent=sub_indent
@@ -110,7 +113,7 @@ class LineChef:
                 # Should group all the details here 
                 sheet.bb.current_row +=1
                 
-                subtotal_cell = sheet.cell(column=sheet.bb.current_column, row=sheet.bb.current_row)
+                subtotal_cell = sheet.cell(column=column, row=sheet.bb.current_row)
                 subtotal_cell.set_explicit_value(detail_summation, data_type=type_codes.FORMULA)
 
                 line.xl.detailed.ending = sheet.bb.current_row
@@ -126,6 +129,7 @@ class LineChef:
 
         self._combine_segments(
             sheet=sheet,
+            column=column,
             line=line,
             set_labels=set_labels,
             indent=indent)
@@ -186,7 +190,7 @@ class LineChef:
 
         return result
 
-    def _add_consolidation_logic(self, *pargs, sheet, line, set_labels=True, indent=0):
+    def _add_consolidation_logic(self, *pargs, sheet, column, line, set_labels=True, indent=0):
         """
 
         -> Worksheet
@@ -205,9 +209,8 @@ class LineChef:
 
             for source_pointer in line.xl.consolidated.sources:
                 
-                link_cell = sheet.cell(sheet.bb.current_column, sheet.bb.current_row)
-                source_coordinates = source.xl.get_coordinates() #<------------------------------this won't work unless i add a .cell attribute to the line
-                # which may be i should. then can return .cell.parent.title + "!" + .cell.coordinate
+                link_cell = sheet.cell(column=column, row=sheet.bb.current_row)
+                source_coordinates = source.xl.get_coordinates()
                 
                 link_formula = self.formulas.LINK_TO_COORDINATES.format(coordinates=source_coordinates)
                 link_cell.value = link_formula
@@ -220,12 +223,12 @@ class LineChef:
             summation_params = {
                 "starting_row" : line.xl.consolidated.starts, #<-------------------------------------------------- CHECK WHETHER THIS PIECE IS VALID
                 "ending_row" : line.xl.consolidated.ends,
-                "alpha_column" : sheet.bb.current_column
+                "alpha_column" : get_column_letter(column)
                 }
             #<------------------------------------------------------------------------------------------------------------------------need to make sure column is alphabetical
             
             summation_formula = self.formulas.SUM_RANGE.format(**summation_params)
-            summation_cell = sheet.cell(sheet.current_column, sheet.current_row)
+            summation_cell = sheet.cell(column=column, row=sheet.bb.current_row)
             summation_cell.value = summation_formula
 
             if set_labels:
@@ -273,7 +276,7 @@ class LineChef:
 
         return sheet
 
-    def _add_driver_calculation(self, *pargs, sheet, line, driver_data, set_labels=True, indent=0):
+    def _add_driver_calculation(self, *pargs, sheet, column, line, driver_data, set_labels=True, indent=0):
         """
 
 
@@ -286,7 +289,7 @@ class LineChef:
         # parameters from the column and "private" driver parameters. 
 
         label_column = sheet.bb.parameters.columns.get_position(field_names.LABELS)
-        period_column = sheet.bb.current_column #<---------------------------------------------------- NEED EXPLICIT COLUMN PASSING
+        period_column = column
         
         for row_data in driver_data.rows:
 
@@ -325,7 +328,7 @@ class LineChef:
         # Transform the range values from rows to coordinates
         param_coordinates = self._rows_to_coordinates(
             lookup=private_data.rows,
-            column=sheet.bb.current_column
+            column=period_column
             )
             
         # Apply param:var conversions so formula can find its expected inputs
@@ -346,13 +349,13 @@ class LineChef:
 
         life_coordinates = self._rows_to_coordinates(
             lookup=sheet.bb.life.rows,
-            column=sheet.bb.current_column
+            column=period_column
             )
         materials["life"] = life_coordinates
 
         event_coordinates = self._rows_to_coordinates(
             lookup=sheet.bb.events.rows,
-            column=sheet.bb.current_column
+            column=period_column
             )
         materials["events"] = event_coordinates
 
@@ -364,7 +367,7 @@ class LineChef:
             print("Template: ", driver_data.formula)
             raise ExcelPrepError
         
-        calc_cell = sheet.cell(column=sheet.bb.current_column, row=sheet.bb.current_row)
+        calc_cell = sheet.cell(column=period_column, row=sheet.bb.current_row)
         calc_cell.set_explicit_value(formula, data_type=type_codes.FORMULA)
 
         # If formula included a reference to the prior value of the line itself, it
@@ -387,7 +390,7 @@ class LineChef:
         # -- add a nice header for the calculation (may be?)
         # 
 
-    def _combine_segments(self, *pargs, sheet, line, set_labels=True, indent=0):
+    def _combine_segments(self, *pargs, sheet, column, line, set_labels=True, indent=0):
         """
 
 
@@ -398,7 +401,7 @@ class LineChef:
 
         """
         sheet.bb.current_row += 1
-        cell = sheet.cell(column=sheet.bb.current_column, row=sheet.bb.current_row)
+        cell = sheet.cell(column=column, row=sheet.bb.current_row)
 
         ends = [
             line.xl.consolidated.ending,
@@ -406,7 +409,7 @@ class LineChef:
             line.xl.detailed.ending
                      ]
         
-        segment_summation = self._sum_endpoints(rows=ends, column=sheet.bb.current_column)
+        segment_summation = self._sum_endpoints(rows=ends, column=column)
 
         if segment_summation:    
             cell.set_explicit_value(segment_summation, data_type=type_codes.FORMULA)

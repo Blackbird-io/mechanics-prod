@@ -106,30 +106,28 @@ class UnitChef:
 
 
         Children should be spread before parent
+
+        # Single-period only for now
         """
+        # First, chop up the kids so we can link to their results.
+        
         children = unit.components.get_ordered()
         # Spread children in order to ensure stable results across run times.
-
-        for child in children:
-            
+        
+        for child in children:           
             self.chop_unit(book, child)
 
+
+        # Second, chop the parent
         sheet = self._create_unit_sheet(book=book, unit=unit)
         sheet = self._add_unit_life(sheet=sheet, unit=unit)
 
-        
-        sheet.bb.current_column=sheet.bb.time_line.columns.get_position(unit.period.end)
-        #<------------------------------------------------------------------------------------NEED TO FIX
-        self._add_financials(sheet, unit)
-        # Should I set the sheet here too? Every line has to have a sheet
-        # Or I could just get the cell.parent ! Much cleaner, arguably. 
+        now_column = sheet.bb.time_line.columns.get_position(unit.period.end)
+        # Single periodl logic
 
-        #<-----------------------------------------------------------------------------------!!! could add a column
-        #argument to add_financials? or could ... pass in a list of periods?? that's probably better.
-        #or could just iterate through the unit? we want this to integrate with load_balance functionality, so
-        #may be better at the UnitChef level: he is the guy that knows how to manage a unit, iterate over it,
-        #etc. So probably better to just iterate through every period here.
-        
+        self._add_financials(sheet=sheet, unit=unit, active_column=now_column)
+
+        # Third, return result
         return sheet
 
         # Premise 1: by the time you run this routine, all children should already be in book
@@ -139,7 +137,6 @@ class UnitChef:
         # To Do:
         #   - move to multiperiod
         #   - for each period in unit, add life, add financials
-        #
         # This should only cover the general: timeline, period params, and decorations
 
         # Then should have period-level spreading:
@@ -150,23 +147,34 @@ class UnitChef:
             # current_row += 2
                 ## blank row between life and fins
             # add financials
-            # current_row += 2     
+            # current_row += 2
 
+        # For multiperiod routine:
+        #   try to only add life once or something:
+        #       map the events once, add logic for every period in timeline
+        #
+        #   then for each period:
+        #       add events
+        #       [load balance]
+        #       add financials
 
-    def _add_financials(self, *pargs, sheet, unit):
+    def _add_financials(self, *pargs, sheet, unit, active_column):
         """
 
         -> Worksheet
 
         """
         unit.fill_out()
-        # Fill out populates the unit with all of the information
+        # Make sure the unit contains all relevant calculations by filling it
+        # out. If BB already performed this action, call will be a no-op.
         
-        for statement in [unit.financials.income]:
-            # should be unit.financials.ordered
+        for statement in unit.financials.ordered: 
             
-            for line in statement.get_ordered():
-                line_chef.chop_line(sheet=sheet, line=line)
+            line_chef.chop_statement(
+                sheet=sheet,
+                statement=statement,
+                active_column=active_column
+                )
 
     # Have to manage book depth (ie max sheets) #<--------------------------------------------------!!
 
