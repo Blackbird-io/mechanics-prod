@@ -243,8 +243,8 @@ IOP:
    so life[age]/(events{maturity}-events{birth}) <--------- can do this later.
  - define copy behavior for unit.xl (should probably get zeroed out)
  - by default, should add params to the master column
- 
- 
+
+ - !! APPLY Sheet style to all sheets?
 
 PROBLEM:
  - Good excel prep is not totally compatible with speed optimization. End up doing work in cases where
