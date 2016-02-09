@@ -110,7 +110,7 @@ class UnitChef:
         # Single-period only for now
         """
         # First, chop up the kids so we can link to their results.
-        
+        before_kids = len(book.worksheets)
         children = unit.components.get_ordered()
         # Spread children in order to ensure stable results across run times.
         
@@ -119,7 +119,7 @@ class UnitChef:
 
 
         # Second, chop the parent
-        sheet = self._create_unit_sheet(book=book, unit=unit)
+        sheet = self._create_unit_sheet(book=book, unit=unit, index=before_kids)
         sheet = self._add_unit_life(sheet=sheet, unit=unit)
 
         current = sheet.bb.time_line.columns.get_position(unit.period.end)
@@ -532,7 +532,7 @@ class UnitChef:
         # To Do:
         # - add formatting
 
-    def _create_unit_sheet(self, *pargs, book, unit):
+    def _create_unit_sheet(self, *pargs, book, unit, index):
         """
 
 
@@ -554,7 +554,7 @@ class UnitChef:
         name = name[:self.MAX_TITLE_CHARACTERS]
         # Replace forbidden characters, make sure name is within length limits
         
-        sheet = book.create_sheet(name)
+        sheet = book.create_sheet(name, index)
         try:
             sheet.sheet_view.showGridLines = self.SHOW_GRID_LINES
             sheet.sheet_view.zoomScale = self.ZOOM_SCALE
