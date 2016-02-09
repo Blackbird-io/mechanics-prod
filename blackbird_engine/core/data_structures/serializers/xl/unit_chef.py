@@ -117,14 +117,11 @@ class UnitChef:
         for child in children:           
             self.chop_unit(book=book, unit=child)
 
-
         # Second, chop the parent
-        sheet = self._create_unit_sheet(book=book, unit=unit, index=before_kids)
+        sheet = self._create_unit_sheet(book=book, unit=unit, index=before_kids)        
         sheet = self._add_unit_life(sheet=sheet, unit=unit)
-
+        
         current = sheet.bb.time_line.columns.get_position(unit.period.end)
-        # Single period logic
-
         self._add_financials(sheet=sheet, unit=unit, column=current)
 
         # Third, return result
@@ -132,35 +129,54 @@ class UnitChef:
 
 
     def chop_multi(self, *pargs, book, unit):
+        """
 
-        # First, chop the children
+        Breadth-first analysis helps with vertical alignment at the cost
+        of some performance (go through loop 3x instead of once, but do
+        less at each step). 
+        """
+
+        # 1.   Chop the children
         before_kids = len(book.worksheets)
         children = unit.components.get_ordered()
 
         for child in children:
             self.chop_unit(book=book, unit=child)
 
+
         # 2.   Chop the parent
-        # 2.a.   set up the unit sheet
+        # 2.1.   set up the unit sheet and spread params
         sheet = self._create_unit_sheet(book=book, unit=unit, index=before_kids)
-
-        # 2.b.   spread current period and add labels
-        sheet = self._add_unit_life(sheet=sheet, unit=unit) #<--------------- THIS NEEDS A COLUMN and a set label control
-        current = sheet.bb.time_line.columns.get_position(unit.period.end)
-
-        self._add_financials(sheet=sheet, unit=unit, column=current)
+##        for future_snapshot in unit:
+##            self._add_unit_params(set_labels=False)
         
-        # 2.c.   spread future periods
+
+        # 2.2.   spread life
+        sheet = self._add_unit_life(sheet=sheet, unit=unit)
         for future_snapshot in unit:
+            
+            sheet.bb.current_row = sheet.bb.parameters.ending
+            # Have to reindex row up for every period, otherwise sheet will look
+            # like a staircase.
+            self._add_unit_life(set_labels=False)
+        
+
+        # 3.3.  spread fins
+        current = sheet.bb.time_line.columns.get_position(unit.period.end)
+        self._add_financials(sheet=sheet, unit=unit, column=current)
+
+        for future_snapshot in unit:
+
+            sheet.bb.current_row = sheet.bb.events.ending
             column = sheet.bb.time_line.columns.get_position(snapshot.period.end)
-            self._chop_period(book=book, unit=unit, column=column)
-            # Should add unit life, load balance, then add financials 
+            # Load balance from prior column
+            self._add_financials(sheet=sheet, unit=unit, column=column, set_labels=False)
 
-    def _chop_snapshot(self, *pargs, sheet, unit, column=None):
-        self._add_life_events()
-        # Load balance
-        self._add_financials(set_labels=False)
+            # Should make sure rows align here from one period to the next.
+            # Main problem lies in consolidation logic.
 
+        return sheet
+    
     def _add_financials(self, *pargs, sheet, unit, column, set_labels=True):
         """
 
@@ -239,22 +255,24 @@ class UnitChef:
             
         return sheet
 
-    def _add_area_items(self, *pargs, sheet, area, items, active_column, set_labels=True, label_column=None, master_column=None):
+    def _add_items_to_area(self, *pargs, sheet, area, items, active_column, set_labels=True):
         """
+
         -> Worksheet
 
+        Adds names in sorted order
         Expects sheet to come with parameters unless you specify the label and master column
         """
 
         parameters = sheet.bb.parameters
-        if label_column is None:
-            label_column = parameters.columns.get_position(field_names.LABELS)
-        if master_column is None:
-            master_column = parameters.columns.get_position(field_names.MASTER)
+        label_column = parameters.columns.get_position(field_names.LABELS)
+        master_column = parameters.columns.get_position(field_names.MASTER)
             # Master and labels always align to parameters.
-            # May be these should be in the general area? 
+            # May be these should be in the general area?
+            # Upgrade-S: Can pass col positions in for speed; downside is that
+            #            signature gets ugly. Can move to kwargs to protect. 
 
-        new_row = area.rows.ending + 1
+        new_row = sheet.bb.current_row + 1
         # TO DO: Could also use Workbook.max_row()
         
         for name in sorted(items):
@@ -285,19 +303,26 @@ class UnitChef:
             
         return sheet
         
-    def _add_unit_life(self, *pargs, sheet, unit):
+    def _add_unit_life(self, *pargs, sheet, unit, column=None, set_labels=True):
         """
 
         -> Worksheet
         
         Expects to get sheet with current row pointing to a blank
         Will start writing on current row
-        
-        """
-        active_column = sheet.bb.time_line.columns.get_position(unit.period.end)
 
-        sheet.bb.add_area("life")
-        sheet.bb.add_area("events")
+        """
+        sheet_data = sheet.bb
+        active_column = column
+
+        if not active_column:
+            active_column = sheet_data.time_line.columns.get_position(unit.period.end)
+            
+        if not getattr(sheet_data, "life", None):
+            sheet.bb.add_area("life")
+
+        if not getattr(sheet_data, "events", None):
+            sheet.bb.add_area("events")
         
         first_life_row = sheet.bb.current_row + 2
         first_event_row = first_life_row + 9
@@ -307,7 +332,8 @@ class UnitChef:
         sheet = self._add_life_events(
             sheet=sheet,
             unit=unit,
-            active_column=active_column
+            active_column=active_column,
+            set_labels=set_labels
             )
         # For events, can keep link if they are the same as the master value,
         # or write the specified value if its different.
@@ -316,7 +342,8 @@ class UnitChef:
         sheet = self._add_life_analysis(
             sheet=sheet,
             unit=unit,
-            active_column=active_column
+            active_column=active_column,
+            set_labels=set_labels
             )
 
         sheet.bb.current_row = sheet.bb.events.rows.ending
@@ -327,58 +354,60 @@ class UnitChef:
         # - for multiperiod generally, want to have period n+1 inherit life and
         #   params from period n if they are the same. so establish links.
 
-    def _add_life_events(self, *pargs, sheet, unit, active_column):
-        """
+##    def _add_life_events_old(self, *pargs, sheet, unit, active_column):
+##        """
+##
+##
+##        -> Worksheet
+##
+##
+##        Expects to get sheet with current row pointing to first place you want to write
+##        Returns sheet with current row pointing to last filled event
+##        """
+##        active_row = sheet.bb.current_row
+##        parameters = sheet.bb.parameters
+##        
+##        label_column = parameters.columns.get_position(field_names.LABELS)
+##        master_column = parameters.columns.get_position(field_names.MASTER)
+##
+##        events = sheet.bb.events
+##
+##        # For natural presentation order, sort events by date
+##        sorted_events = sorted(unit.life.events.items(), key=lambda x:x[1])
+##
+##        for event_name, event_date in sorted_events:
+##            events.rows.by_name[event_name] = active_row
+##
+##            label_cell = sheet.cell(column=label_column, row=active_row)
+##            label_cell.value = event_name
+##
+##            master_cell = sheet.cell(column=master_column, row=active_row)
+##            master_cell.value = event_date
+##
+##            event_cell = sheet.cell(column=active_column, row=active_row)
+##            link_template = formula_templates.LINK_TO_COORDINATES
+##            link = link_template.format(coordinates=master_cell.coordinate)
+##            
+##            event_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+##            event_cell.number_format = master_cell.number_format
+##
+##            sheet.bb.current_row = active_row
+##            active_row += 1
+##
+##        return sheet
 
+    def _add_life_events(self, *pargs, sheet, unit, active_column, set_labels=True):
+        """
 
         -> Worksheet
 
-
-        Expects to get sheet with current row pointing to first place you want to write
-        Returns sheet with current row pointing to last filled event
-        """
-        active_row = sheet.bb.current_row
-        parameters = sheet.bb.parameters
-        
-        label_column = parameters.columns.get_position(field_names.LABELS)
-        master_column = parameters.columns.get_position(field_names.MASTER)
-
-        events = sheet.bb.events
-
-        # For natural presentation order, sort events by date
-        sorted_events = sorted(unit.life.events.items(), key=lambda x:x[1])
-
-        for event_name, event_date in sorted_events:
-            events.rows.by_name[event_name] = active_row
-
-            label_cell = sheet.cell(column=label_column, row=active_row)
-            label_cell.value = event_name
-
-            master_cell = sheet.cell(column=master_column, row=active_row)
-            master_cell.value = event_date
-
-            event_cell = sheet.cell(column=active_column, row=active_row)
-            link_template = formula_templates.LINK_TO_COORDINATES
-            link = link_template.format(coordinates=master_cell.coordinate)
-            
-            event_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
-            event_cell.number_format = master_cell.number_format
-
-            sheet.bb.current_row = active_row
-            active_row += 1
-
-        return sheet
-
-    def _add_life_events_new(self, *pargs, sheet, unit, active_column):
-        """
-
-        -> Worksheet
+        Runs through 
         """
         active_row = sheet.bb.current_row
         events = sheet.bb.events
 
-        existing_events = unit.life.events.keys() & events.by_name.keys()
-        new_events = unit.life.events.keys() - existing_events
+        existing_names = unit.life.events.keys() & events.rows.by_name.keys()
+        new_names = unit.life.events.keys() - existing_names
 
         # Write values for existing events
         for name in existing_names:
@@ -387,18 +416,25 @@ class UnitChef:
             cell = sheet.cell(column=active_column, row=existing_row)
 
             cell.value = unit.life.events[name]
-            # Upgrade: link to master value if it's the same
+            # Upgrade: link to master value if it's the same as our live one
 
         # Now add 
         new_events = dict()
         for name in new_names:
             new_events[name] = unit.life.events[name]
 
-        self._add_items_to_area(sheet, events, column, set_labels=set_labels)
+        self._add_items_to_area(
+            sheet=sheet,
+            area=events,
+            items=new_events,
+            active_column=active_column,
+            set_labels=set_labels
+            )
+        # _add_items() will update current row to the last filled position
         
         return sheet
 
-    def _add_life_analysis(self, sheet, unit, active_column):
+    def _add_life_analysis(self, sheet, unit, active_column, set_labels=True):
         """
 
         -> Worksheet
@@ -406,7 +442,6 @@ class UnitChef:
         Add unit life for a single period
 
         Assumes events are filled out
-        # Can call all these: add_param_shapshot, add_life_snapshot, add_fin_snapshot, add_event_snapshot #<-------------------------------------------- THINK ABOUT
         """
 
         active_row=sheet.bb.current_row + 1 #<------------- Think about whether this belongs
@@ -440,12 +475,13 @@ class UnitChef:
         
         # 1. Add ref_date
         sheet.bb.life.rows.by_name[field_names.REF_DATE]=active_row
-        set_label(
-            label=field_names.REF_DATE,
-            sheet=sheet,
-            row=active_row,
-            column=label_column
-            )        
+        if set_labels:
+            set_label(
+                label=field_names.REF_DATE,
+                sheet=sheet,
+                row=active_row,
+                column=label_column
+                )        
 
         ref_date = sheet.cell(column=active_column, row=active_row)
         
@@ -457,7 +493,7 @@ class UnitChef:
             )
 
         ref_date.value = formula
-        ref_date.number_format = number_formats.DATETIME #<-----------------------------------------------------------------
+        ref_date.number_format = number_formats.DATETIME
         del formula
         # Make sure each cell gets its own formula by deleting F after use.
         
@@ -468,12 +504,13 @@ class UnitChef:
 
         # 2. Add age
         sheet.bb.life.rows.by_name[field_names.AGE] = active_row
-        set_label(
-            label=field_names.AGE,
-            sheet=sheet,
-            row=active_row,
-            column=label_column
-            )
+        if set_labels:
+            set_label(
+                label=field_names.AGE,
+                sheet=sheet,
+                row=active_row,
+                column=label_column
+                )
 
         age = sheet.cell(column=active_column, row=active_row)
 
@@ -491,12 +528,13 @@ class UnitChef:
 
         # 3. Add alive
         life.rows.by_name[field_names.ALIVE]=active_row
-        set_label(
-            label=field_names.ALIVE,
-            sheet=sheet,
-            row=active_row,
-            column=label_column
-            )
+        if set_labels:
+            set_label(
+                label=field_names.ALIVE,
+                sheet=sheet,
+                row=active_row,
+                column=label_column
+                )
         
         alive = sheet.cell(column=active_column, row=active_row)
 
@@ -515,12 +553,13 @@ class UnitChef:
         # 4. Add span (so we can use it as the denominator in our percent
         #    computation below). 
         life.rows.by_name[field_names.SPAN] = active_row
-        set_label(
-            label=field_names.SPAN,
-            sheet=sheet,
-            row=active_row,
-            column=label_column
-            )
+        if set_labels:
+            set_label(
+                label=field_names.SPAN,
+                sheet=sheet,
+                row=active_row,
+                column=label_column
+                )
 
         span = sheet.cell(column=active_column, row=active_row)
 
@@ -539,12 +578,13 @@ class UnitChef:
 
         # 5. Add percent
         life.rows.by_name[field_names.PERCENT] = active_row
-        set_label(
-            label=field_names.PERCENT,
-            sheet=sheet,
-            row=active_row,
-            column=label_column
-            )
+        if set_labels:
+            set_label(
+                label=field_names.PERCENT,
+                sheet=sheet,
+                row=active_row,
+                column=label_column
+                )
 
         percent = sheet.cell(column=active_column, row=active_row)
 
@@ -554,6 +594,12 @@ class UnitChef:
 
         # Return sheet
         return sheet
+
+        # To Do:
+        # - should make this multiperiod:
+        #   -- cover multiple columns in range
+        #   -- pull cells out first
+        #   -- add labels once if at all
         
     def _add_unit_params(self, sheet, unit):
         """

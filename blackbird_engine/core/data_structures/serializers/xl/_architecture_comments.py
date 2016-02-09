@@ -218,10 +218,13 @@
       --- or approximate calculations?? (by life)? Otherwise, might get too large of a spreadsheet
       --- could add
 
+ - figure out how to deal with unit growth:
+      --- if some units are inactive early and active later, need more rows, so everything shifts down on
+          their parents
+
 
 IOP:
- - add the "ending" property to data_management.Range
- - figure out what to do with the position indexing to make it consistent?
+  - figure out what to do with the position indexing to make it consistent?
    -- really have to watch out for adding absolute positions to the relative lookup (will create gaps)
 
  - !add grouping to LineChef
@@ -230,8 +233,6 @@ IOP:
  - add formula name, original output, may be even the docstring from func to formula info. That way, we can
    quickly trace it. Also add format_error intercept into Chef itself. 
  
- - !add formatting error intercept to LineChef
-
  -!! check that lines and units don't share xl data
  -!!! make sure drivers only add their DriverData when they are allowed to work on the item.
  - think about whether to make maturity and decline dynamic from percent maturity, etc.
@@ -242,6 +243,10 @@ IOP:
 
  - !! APPLY Sheet style to all sheets?
  - consider moving all the LineChef routines to kwargs.
+
+ - !!! move UnitChef._add_unit_params to run on add_items_to_area() 
+   
+ 
  
 
 PROBLEM:
