@@ -27,7 +27,7 @@ BB_Workbook           workbook where each sheet has a SheetData record set
 
 
 # Imports
-import openpyxl as excel_interface
+import openpyxl as xlio
 
 from .data_management import SheetData
 
@@ -40,7 +40,7 @@ from .data_management import SheetData
 # n/a
 
 # Classes
-class BB_Workbook(excel_interface.Workbook):
+class BB_Workbook(xlio.Workbook):
     """
 
     Class modifies standard workbook to include a SheetData record set on each
@@ -58,9 +58,9 @@ class BB_Workbook(excel_interface.Workbook):
     ====================  ======================================================
     """ 
     def __init__(self, *pargs, **kwargs):
-        excel_interface.Workbook.__init__(self, *pargs, **kwargs)
+        xlio.Workbook.__init__(self, *pargs, **kwargs)
 
-    def create_sheet(self, name):
+    def create_sheet(self, name, index=None):
         """
 
 
@@ -69,7 +69,7 @@ class BB_Workbook(excel_interface.Workbook):
 
         Return worksheet with a SheetData record set at instance.bb.
         """
-        sheet = excel_interface.Workbook.create_sheet(self, name)
+        sheet = xlio.Workbook.create_sheet(self, name, index=index)
         sheet.bb = SheetData()
 
         return sheet
