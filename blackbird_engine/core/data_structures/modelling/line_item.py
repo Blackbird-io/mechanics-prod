@@ -167,6 +167,10 @@ class LineItem(Statement):
 
             sig = self.SIGNATURE_FOR_VALUE_RESET
             self.set_value(None, sig, override=True)
+
+            self.xl = xl_mgmt.LineData()
+            # Start with a clean slate for Excel tracking
+            
         else:
             comment = "Unable to clear value from line."
             raise bb_exceptions.BBAnalyticalError(c, self)
