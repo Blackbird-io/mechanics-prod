@@ -141,36 +141,41 @@ class UnitChef:
         children = unit.components.get_ordered()
 
         for child in children:
-            self.chop_unit(book=book, unit=child)
+            self.chop_multi(book=book, unit=child)
 
 
         # 2.   Chop the parent
         # 2.1.   set up the unit sheet and spread params
         sheet = self._create_unit_sheet(book=book, unit=unit, index=before_kids)
-##        for future_snapshot in unit:
+##        for snapshot in unit:
 ##            self._add_unit_params(set_labels=False)
         
 
         # 2.2.   spread life
         sheet = self._add_unit_life(sheet=sheet, unit=unit)
-        for future_snapshot in unit:
+        for snapshot in unit:
             
-            sheet.bb.current_row = sheet.bb.parameters.ending
+            sheet.bb.current_row = sheet.bb.parameters.rows.ending
             # Have to reindex row up for every period, otherwise sheet will look
             # like a staircase.
-            self._add_unit_life(set_labels=False)
+            self._add_unit_life(sheet=sheet, unit=snapshot, set_labels=False)
         
 
         # 3.3.  spread fins
         current = sheet.bb.time_line.columns.get_position(unit.period.end)
         self._add_financials(sheet=sheet, unit=unit, column=current)
 
-        for future_snapshot in unit:
+        for snapshot in unit:
 
-            sheet.bb.current_row = sheet.bb.events.ending
+            sheet.bb.current_row = sheet.bb.events.rows.ending
             column = sheet.bb.time_line.columns.get_position(snapshot.period.end)
             # Load balance from prior column
-            self._add_financials(sheet=sheet, unit=unit, column=column, set_labels=False)
+
+            snapshot.reset_financials()
+            snapshot.fill_out()
+            # I think I need to do this to assign new sources
+            
+            self._add_financials(sheet=sheet, unit=snapshot, column=column, set_labels=False)
 
             # Should make sure rows align here from one period to the next.
             # Main problem lies in consolidation logic.
