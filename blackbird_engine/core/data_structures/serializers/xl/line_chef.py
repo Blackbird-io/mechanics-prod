@@ -169,7 +169,7 @@ class LineChef:
         # set up levels and indent based on them. 
     # -
 
-    def chop_statement(self, *pargs, sheet, column, statement):
+    def chop_statement(self, *pargs, sheet, column, statement, set_labels=True):
 
         # Relies on current column!
 
@@ -179,7 +179,12 @@ class LineChef:
         for line in statement.get_ordered():
 
             sheet.bb.current_row += 1
-            self.chop_line(sheet=sheet, column=column, line=line)
+            self.chop_line(
+                sheet=sheet,
+                column=column,
+                line=line,
+                set_labels=set_labels
+                )
             
         return sheet
 

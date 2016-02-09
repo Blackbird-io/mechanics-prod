@@ -123,7 +123,7 @@ class UnitChef:
         sheet = self._add_unit_life(sheet=sheet, unit=unit)
 
         current = sheet.bb.time_line.columns.get_position(unit.period.end)
-        # Single periodl logic
+        # Single period logic
 
         self._add_financials(sheet=sheet, unit=unit, column=current)
 
@@ -131,33 +131,37 @@ class UnitChef:
         return sheet
 
 
+    def chop_multi(self, *pargs, book, unit):
 
+        # First, chop the children
+        before_kids = len(book.worksheets)
+        children = unit.components.get_ordered()
 
-        # To Do:
-        #   - move to multiperiod
-        #   - for each period in unit, add life, add financials
-        # This should only cover the general: timeline, period params, and decorations
+        for child in children:
+            self.chop_unit(book=book, unit=child)
 
-        # Then should have period-level spreading:
-            # add unit params
-            # current_row += 2
-                ## blank row between params and life
-            # add unit life
-            # current_row += 2
-                ## blank row between life and fins
-            # add financials
-            # current_row += 2
+        # 2.   Chop the parent
+        # 2.a.   set up the unit sheet
+        sheet = self._create_unit_sheet(book=book, unit=unit, index=before_kids)
 
-        # For multiperiod routine:
-        #   try to only add life once or something:
-        #       map the events once, add logic for every period in timeline
-        #
-        #   then for each period:
-        #       add events
-        #       [load balance]
-        #       add financials
+        # 2.b.   spread current period and add labels
+        sheet = self._add_unit_life(sheet=sheet, unit=unit) #<--------------- THIS NEEDS A COLUMN and a set label control
+        current = sheet.bb.time_line.columns.get_position(unit.period.end)
 
-    def _add_financials(self, *pargs, sheet, unit, column):
+        self._add_financials(sheet=sheet, unit=unit, column=current)
+        
+        # 2.c.   spread future periods
+        for future_snapshot in unit:
+            column = sheet.bb.time_line.columns.get_position(snapshot.period.end)
+            self._chop_period(book=book, unit=unit, column=column)
+            # Should add unit life, load balance, then add financials 
+
+    def _chop_snapshot(self, *pargs, sheet, unit, column=None):
+        self._add_life_events()
+        # Load balance
+        self._add_financials(set_labels=False)
+
+    def _add_financials(self, *pargs, sheet, unit, column, set_labels=True):
         """
 
         -> Worksheet
@@ -174,7 +178,8 @@ class UnitChef:
                 line_chef.chop_statement(
                     sheet=sheet,
                     statement=statement,
-                    column=column
+                    column=column,
+                    set_labels=set_labels
                     )
 
     # Have to manage book depth (ie max sheets) #<--------------------------------------------------!!
@@ -234,6 +239,52 @@ class UnitChef:
             
         return sheet
 
+    def _add_area_items(self, *pargs, sheet, area, items, active_column, set_labels=True, label_column=None, master_column=None):
+        """
+        -> Worksheet
+
+        Expects sheet to come with parameters unless you specify the label and master column
+        """
+
+        parameters = sheet.bb.parameters
+        if label_column is None:
+            label_column = parameters.columns.get_position(field_names.LABELS)
+        if master_column is None:
+            master_column = parameters.columns.get_position(field_names.MASTER)
+            # Master and labels always align to parameters.
+            # May be these should be in the general area? 
+
+        new_row = area.rows.ending + 1
+        # TO DO: Could also use Workbook.max_row()
+        
+        for name in sorted(items):
+
+            value = items[name]
+            
+            # Register the new row
+            area.rows.by_name[name] = new_row
+            
+            # Add the label
+            if set_labels:
+                label_cell = sheet.cell(column=label_column, row=new_row)
+                label_cell.value = name
+                # Or run through labels routine
+
+            # Add the master value (from this period)
+            master_cell = sheet.cell(column=master_column, row=new_row)
+            master_cell.value = value
+
+            # Link the period to the master
+            current_cell = sheet.cell(column=active_column, row=new_row)
+            link = formula_templates.ADD_COORDINATES
+            link = link.format(coordinates=master_cell.coordinate)
+            current_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+
+            sheet.bb.current_row = new_row
+            new_row +=1
+            
+        return sheet
+        
     def _add_unit_life(self, *pargs, sheet, unit):
         """
 
@@ -317,25 +368,35 @@ class UnitChef:
             active_row += 1
 
         return sheet
+
+    def _add_life_events_new(self, *pargs, sheet, unit, active_column):
+        """
+
+        -> Worksheet
+        """
+        active_row = sheet.bb.current_row
+        events = sheet.bb.events
+
+        existing_events = unit.life.events.keys() & events.by_name.keys()
+        new_events = unit.life.events.keys() - existing_events
+
+        # Write values for existing events
+        for name in existing_names:
+
+            existing_row = events.rows.get_position(name)
+            cell = sheet.cell(column=active_column, row=existing_row)
+
+            cell.value = unit.life.events[name]
+            # Upgrade: link to master value if it's the same
+
+        # Now add 
+        new_events = dict()
+        for name in new_names:
+            new_events[name] = unit.life.events[name]
+
+        self._add_items_to_area(sheet, events, column, set_labels=set_labels)
         
-        # In real life, this should run through an if() on whether the event
-        # already exists
-        #
-        # Generally, should add life first everywhere (same formulas), once you
-        # know where the basic events fall (e.g., have to do one events)
-        # Then should add.
-        #
-        # So general algo should be:
-        # -- add events for current period
-        # -- add life for current period
-        # -- add life for all other periods (all calc, and we know that the main
-        #    events will stay in the same places as current period
-        # -- add events for all subsequent periods
-        #
-        # Can even reinterpret this logic as: write the events you need to events
-        # (potentially without a period), so you have a row assigned to them. Then
-        # for each period you can put the basic events there and add new ones. At
-        # the same time, once you set up rows for the core events.
+        return sheet
 
     def _add_life_analysis(self, sheet, unit, active_column):
         """

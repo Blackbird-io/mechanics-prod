@@ -224,8 +224,6 @@ IOP:
  - figure out what to do with the position indexing to make it consistent?
    -- really have to watch out for adding absolute positions to the relative lookup (will create gaps)
 
-  - !!move to kw-only arg entry in important places (book, sheet, etc.)
- - !!!add life spread to UnitChef
  - !add grouping to LineChef
 
  - add a main interface
@@ -233,9 +231,7 @@ IOP:
    quickly trace it. Also add format_error intercept into Chef itself. 
  
  - !add formatting error intercept to LineChef
- - move to only forward projection for build model foundation
 
- -!! Move LineChef to explicit column parameters.
  -!! check that lines and units don't share xl data
  -!!! make sure drivers only add their DriverData when they are allowed to work on the item.
  - think about whether to make maturity and decline dynamic from percent maturity, etc.
@@ -245,7 +241,8 @@ IOP:
  - by default, should add params to the master column
 
  - !! APPLY Sheet style to all sheets?
- - consider moving all the LineChef routines to kwargs. 
+ - consider moving all the LineChef routines to kwargs.
+ 
 
 PROBLEM:
  - Good excel prep is not totally compatible with speed optimization. End up doing work in cases where
