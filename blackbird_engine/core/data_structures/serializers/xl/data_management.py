@@ -126,7 +126,7 @@ class LineData(Range):
         self.cell = None
 
 ##    def copy(self):
-##        result = copy.copy(self)        
+##        result = copy.copy(self)       
     
     def get_coordinates_old(self, column):
         """

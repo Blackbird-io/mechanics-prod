@@ -657,6 +657,8 @@ class Statement(Tags, Equalities):
                     # Pick up lines with None values, but don't tag them. We
                     # want to allow derive to write to these if necessary.
 
+                    local_copy.xl.consolidated.sources.append(external_line)
+
                 self.add_line(local_copy, local_copy.position)
                 # For speed, could potentially add all the lines and then fix
                 # positions once.         
