@@ -35,7 +35,7 @@ import tools.for_printing as printing_tools
 
 from data_structures.guidance.guide import Guide
 from data_structures.system.tags import Tags
-from data_structures.serializers.xl import data_management as xl_mgmt
+from data_structures.serializers.chef import data_management as xl_mgmt
 
 from .equalities import Equalities
 from ._new_statement import Statement
