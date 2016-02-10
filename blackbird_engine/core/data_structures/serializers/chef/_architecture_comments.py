@@ -225,10 +225,10 @@
  - add vba option: topics should be able to add vba functions to a sheet
       -- should have a vba string that chef can format with explicit references
       -- should generally keep the vba simple. 
- - 
+ - consider moving all the LineChef routines to kwargs.
 
 IOP:
-  - Add a note that by convention, .starting is always None right now, to make sure all row
+  - !Add a note that by convention, .starting is always None right now, to make sure all row
     references are absolute
     
   - figure out what to do with the position indexing to make it consistent?
@@ -240,7 +240,6 @@ IOP:
  - !add grouping to LineChef
     -- cant do this until we figure out stable order for consolidation, at least
 
- - add a main interface
  - add formula name, original output, may be even the docstring from func to formula info. That way, we can
    quickly trace it. Also add format_error intercept into Chef itself. 
  
@@ -248,8 +247,7 @@ IOP:
  - define copy behavior for unit.xl (should probably get zeroed out)
  
  - !! APPLY Sheet style to all sheets?
- - consider moving all the LineChef routines to kwargs.
-
+ 
  - add master values for empty params / lines
  - !!!load balance?? 
  

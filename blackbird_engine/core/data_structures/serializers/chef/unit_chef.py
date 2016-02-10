@@ -4,7 +4,7 @@
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 # Blackbird Environment
-# Module: data_structures.serializers.xl.unit_chef
+# Module: serializers.chef.unit_chef
 """
 
 Module defines a class that represents arbitrarily rich BusinessUnit instances
@@ -156,7 +156,7 @@ class UnitChef:
         # 2.1.   set up the unit sheet and spread params
         sheet = self._create_unit_sheet(book=book, unit=unit, index=before_kids)
         for snapshot in unit:
-            sheet.bb.current_unit = sheet.bb.time_line.ending
+            sheet.bb.current_unit = sheet.bb.time_line.rows.ending
             self._add_unit_params(sheet=sheet, unit=snapshot)
     
         # 2.2.   spread life
@@ -181,29 +181,6 @@ class UnitChef:
             # Main problem lies in consolidation logic.
 
         return sheet
-    
-    def _add_financials(self, *pargs, sheet, unit, column, set_labels=True):
-        """
-
-        -> Worksheet
-
-        """
-        unit.fill_out()
-        # Make sure the unit contains all relevant calculations by filling it
-        # out. If BB already performed this action, call will be a no-op.
-        
-        for statement in unit.financials.ordered:
-
-            if statement:
-            
-                line_chef.chop_statement(
-                    sheet=sheet,
-                    statement=statement,
-                    column=column,
-                    set_labels=set_labels
-                    )
-
-    # Have to manage book depth (ie max sheets) #<--------------------------------------------------!!
 
     def add_items_to_area(self, *pargs, sheet, area, items, active_column, set_labels=True):
         """
@@ -253,6 +230,33 @@ class UnitChef:
             new_row +=1
             
         return sheet
+
+    #*************************************************************************#
+    #                          NON-PUBLIC METHODS                             #
+    #*************************************************************************#
+    
+    def _add_financials(self, *pargs, sheet, unit, column, set_labels=True):
+        """
+
+        -> Worksheet
+
+        """
+        unit.fill_out()
+        # Make sure the unit contains all relevant calculations by filling it
+        # out. If BB already performed this action, call will be a no-op.
+        
+        for statement in unit.financials.ordered:
+
+            if statement:
+            
+                line_chef.chop_statement(
+                    sheet=sheet,
+                    statement=statement,
+                    column=column,
+                    set_labels=set_labels
+                    )
+
+    # Have to manage book depth (ie max sheets) #<--------------------------------------------------!!
         
     def _add_unit_life(self, *pargs, sheet, unit, column=None, set_labels=True):
         """
@@ -283,12 +287,9 @@ class UnitChef:
         sheet = self._add_life_events(
             sheet=sheet,
             unit=unit,
-            active_column=active_column,
-            set_labels=set_labels
+            active_column=active_column
             )
-        # For events, can keep link if they are the same as the master value,
-        # or write the specified value if its different.
-
+        
         sheet.bb.current_row = first_life_row
         sheet = self._add_life_analysis(
             sheet=sheet,
@@ -298,24 +299,35 @@ class UnitChef:
             )
 
         sheet.bb.current_row = sheet.bb.events.rows.ending
+        
         # Move current row down to the bottom (max_row() probably best here). 
         return sheet
 
         # To Do:
-        # - for multiperiod generally, want to have period n+1 inherit life and
-        #   params from period n if they are the same. so establish links.
+        # - Should think about period n+1 inheriting params from period n,
+        #   per extrapolation logic (if the two values are the same). But
+        #   difficult to tell how this would work, since the links would not
+        #   evaluate in memory. Could potentially compare values within BB
+        #   and then connect them if they are the same (vs comparing them
+        #   on the sheet itself). Can implement this logic more generally
+        #   for other links too, since it relies on an object having some
+        #   history.
 
     def _add_life_events(self, *pargs, sheet, unit, active_column):
         """
 
-        -> Worksheet
 
+        UnitChef._add_life_events() -> Worksheet
+
+
+        Expects sheet to include areas for events and parameters. 
         Runs through add_items() [which is why we get name-based sorting]
         """
         events = sheet.bb.events
+        parameters = sheet.bb.parameters
 
         active_row = sheet.bb.current_row
-        master_column = events.bb.columns.get_position(field_names.MASTER)
+        master_column = parameters.columns.get_position(field_names.MASTER)
 
         existing_names = unit.life.events.keys() & events.rows.by_name.keys()
         new_names = unit.life.events.keys() - existing_names
@@ -328,13 +340,13 @@ class UnitChef:
             master_cell = sheet.cell(column=master_column, row=existing_row)
             active_cell = sheet.cell(column=active_column, row=existing_row)
 
-            event_date = unit.life.events[date]
+            event_date = unit.life.events[name]
 
             active_cell.value = event_date
             if master_cell.value == active_cell.value:
                 
                 link_template = formula_templates.ADD_COORDINATES
-                link = link_template.format(coordinates=master_cell.coordinates)
+                link = link_template.format(coordinates=master_cell.coordinate)
 
                 active_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
 
@@ -360,21 +372,23 @@ class UnitChef:
             items=new_events,
             active_column=active_column
             )
-        # add_items() will update current row to the last filled position
+        # Method will update current row to the last filled position.
         
         return sheet
 
     def _add_life_analysis(self, sheet, unit, active_column, set_labels=True):
         """
 
-        -> Worksheet
 
+        UnitChef._add_life_analysis() -> Worksheet
+
+        
         Add unit life for a single period
 
         Assumes events are filled out
         """
 
-        active_row=sheet.bb.current_row + 1 #<------------- Think about whether this belongs
+        active_row=sheet.bb.current_row + 1
         
         label_column = sheet.bb.parameters.columns.get_position(field_names.LABELS)
         time_line_row = sheet.bb.time_line.rows.get_position(field_names.LABELS)
@@ -562,9 +576,9 @@ class UnitChef:
 
         self.add_items_to_area(
             sheet=sheet,
-            area=paramters,
+            area=parameters,
             items=new_params,
-            column=period_column,
+            active_column=period_column,
             set_labels=True
             )
 
@@ -627,7 +641,7 @@ class UnitChef:
         # Chef-level constant. Use ``sheet_state := "hidden"`` to implement.
     
         self._link_to_time_line(book=book, sheet=sheet)
-        self._add_unit_params(sheet, unit)
+        self._add_unit_params(sheet=sheet, unit=unit)
         # At this point, sheet.bb.current_row will point to the last parameter.
 
         # Freeze panes:
@@ -657,6 +671,7 @@ class UnitChef:
 
         "area_name" : string 
         """
+        #<-------------------------------------------------------------------------------------------------------SHOULD BE PUBLIC ROUTINE
         source_area = getattr(source_sheet.bb, area_name)
         local_area = getattr(local_sheet.bb, area_name, None)
 
@@ -704,7 +719,7 @@ class UnitChef:
         """
 
 
-        -> Worksheet
+        UnitChef._link_to_time_line() -> Worksheet
         
 
         Link sheet to book's time_line
@@ -713,7 +728,9 @@ class UnitChef:
         """
         source = book.get_sheet_by_name(tab_names.TIME_LINE)
         
-        self._link_to_area(source, sheet, "time_line")
-        self._link_to_area(source, sheet, "parameters")
+        sheet = self._link_to_area(source, sheet, "time_line")
+        sheet = self._link_to_area(source, sheet, "parameters")
+
+        return sheet
 
     
