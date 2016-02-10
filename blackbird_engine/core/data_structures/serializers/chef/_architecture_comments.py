@@ -226,6 +226,7 @@
       -- should have a vba string that chef can format with explicit references
       -- should generally keep the vba simple. 
  - consider moving all the LineChef routines to kwargs.
+ - can keep position consistent by going breadth first: for every period, add rev, and so on. 
 
 IOP:
   - !Add a note that by convention, .starting is always None right now, to make sure all row
@@ -238,7 +239,7 @@ IOP:
       at first, and then 
 
  - !add grouping to LineChef
-    -- cant do this until we figure out stable order for consolidation, at least
+    -- cant do this until we figure out stable order
 
  - add formula name, original output, may be even the docstring from func to formula info. That way, we can
    quickly trace it. Also add format_error intercept into Chef itself. 
