@@ -205,7 +205,7 @@ class UnitChef:
 
     # Have to manage book depth (ie max sheets) #<--------------------------------------------------!!
 
-    def _add_items_to_area(self, *pargs, sheet, area, items, active_column, set_labels=True):
+    def add_items_to_area(self, *pargs, sheet, area, items, active_column, set_labels=True):
         """
 
         -> Worksheet
@@ -223,7 +223,7 @@ class UnitChef:
             # Upgrade-S: Can pass col positions in for speed; downside is that
             #            signature gets ugly. Can move to kwargs to protect.
 
-        new_row = sheet.bb.current_row + 1 #<----------------------------------------------------------------------------------!!
+        new_row = sheet.bb.current_row + 1
         # TO DO: Could also use Workbook.max_row()
         
         for name in sorted(items):
@@ -354,13 +354,13 @@ class UnitChef:
         for name in new_names:
             new_events[name] = unit.life.events[name]
 
-        self._add_items_to_area(
+        self.add_items_to_area(
             sheet=sheet,
             area=events,
             items=new_events,
             active_column=active_column
             )
-        # _add_items() will update current row to the last filled position
+        # add_items() will update current row to the last filled position
         
         return sheet
 
@@ -560,7 +560,7 @@ class UnitChef:
         for k in new_param_names:
             new_params[k] = unit.parameters[k]
 
-        self._add_items_to_area(
+        self.add_items_to_area(
             sheet=sheet,
             area=paramters,
             items=new_params,

@@ -33,7 +33,7 @@ import bb_exceptions
 import bb_settings
 
 from data_structures.guidance.guide import Guide
-from data_structures.serializers.xl import data_management as xl_mgmt
+from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
 from data_structures.valuation.business_summary import BusinessSummary

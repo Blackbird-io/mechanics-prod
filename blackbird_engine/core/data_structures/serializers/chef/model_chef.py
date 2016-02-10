@@ -61,7 +61,7 @@ unit_chef = UnitChef()
 get_column_letter = excel_interface.utils.get_column_letter
 
 # Classes
-class Chef:
+class ModelChef:
     """
 
     Class packages an Engine model into an Excel Workbook with dynamic links.
@@ -89,8 +89,7 @@ class Chef:
         now = model.time_line.current_period
         company = now.content
         
-        UnitChopper.chop_unit(company, book)
-        # <-------------------------------------------------------------------------------- May need to specify period, column, etc.
+        company_sheet = unit_chef.chop_multi(book=book, unit=company)
 
         # book = self._create_annual_summary_tab(model, book)
         # book = self._create_dcf_tab(model, book)
@@ -325,7 +324,7 @@ class Chef:
             for k in new_param_names:
                 new_params[k] = period.parameters[k]
 
-            unit_chef._add_items_to_area(
+            unit_chef.add_items_to_area(
                 sheet=my_tab,
                 area=my_tab.bb.parameters,
                 items=new_params,

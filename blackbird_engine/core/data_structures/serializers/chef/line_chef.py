@@ -30,11 +30,11 @@ LineChef              chop BB statements into dynamic Excel structures
 # Imports
 import openpyxl as excel_interface
 
+from data_structures.modelling.line_item import LineItem
+
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
-
-from ...modelling.line_item import LineItem
 
 
 
