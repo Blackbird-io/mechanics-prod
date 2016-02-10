@@ -248,7 +248,8 @@ IOP:
 
  - !!! move UnitChef._add_unit_params to run on add_items_to_area()
 
- - !!! add simple default revenue formula: ie, core. 
+ - check whether source cells on kid revenue are valid. error seems to be on revenue spread in
+   parent at first period.
    
  
  
