@@ -4,7 +4,7 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 #Blackbird Environment
-#Module: data_structures.serializers.xl.chef
+#Module: serializers.chef.model_chef
 """
 
 Class for creating dynamic Excel representations of Blackbird Engine models.
@@ -85,7 +85,7 @@ class ModelChef:
         """
         # self._import_historical_data(model)
         
-        book = self._spread_foundation(model)
+        book = self._build_foundation(model)
         now = model.time_line.current_period
         company = now.content
         
@@ -224,7 +224,7 @@ class ModelChef:
         
         header_row = 3
         time_line.rows.by_name[field_names.LABELS] = header_row
-        sheet.bb.current_row = header_row
+        my_tab.bb.current_row = header_row
 
 
 
