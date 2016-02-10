@@ -225,6 +225,7 @@ class Chef:
         
         header_row = 3
         time_line.rows.by_name[field_names.LABELS] = header_row
+        sheet.bb.current_row = header_row
 
 
 
@@ -235,7 +236,7 @@ class Chef:
 
         source_label_column = scenarios_area.columns.get_position(field_names.LABELS)
         source_value_column = scenarios_area.columns.get_position(field_names.VALUES)
-        
+
         for param_name in scenarios.bb.general.rows.by_name:
             # We can build the page in any order here
 
@@ -324,11 +325,14 @@ class Chef:
             for k in new_param_names:
                 new_params[k] = period.parameters[k]
 
-            unit_chef._add_param_rows(my_tab, new_params, active_column,
-                                        label_column=local_labels_column,
-                                        master_column=local_master_column)
-            # Supply column indeces for speed, otherwise routine would look
-            # them up on every call.
+            unit_chef._add_items_to_area(
+                sheet=my_tab,
+                area=my_tab.bb.parameters,
+                items=new_params,
+                active_column=active_column
+                )
+            # Upgrade-S: For speed, can supply master and label column indeces
+            # to the add_items() routine.
             
             active_column += 1
 
@@ -337,8 +341,5 @@ class Chef:
         # To do:
         # - Group
         # - Add formatting for hard-coded numbers (blue font)
-        # - Improve efficiency by splitting period params into uniques and
-        #   specifics first. That way, don't have to overwrite anything.
-
         
         

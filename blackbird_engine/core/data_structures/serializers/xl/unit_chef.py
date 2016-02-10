@@ -131,6 +131,8 @@ class UnitChef:
     def chop_multi(self, *pargs, book, unit):
         """
 
+        -> Workbook
+
         Breadth-first analysis helps with vertical alignment at the cost
         of some performance (go through loop 3x instead of once, but do
         less at each step). 
@@ -145,23 +147,25 @@ class UnitChef:
 
 
         # 2.   Chop the parent
+        #
+        # In this block, we gave to set the current row to the place where the
+        # last area ends before running the breadth-wise routines. Otherwise,
+        # they would treat the ending row of the last period as their own
+        # starting row, and the spreadsheet would look like a staircase.
+        
         # 2.1.   set up the unit sheet and spread params
         sheet = self._create_unit_sheet(book=book, unit=unit, index=before_kids)
-##        for snapshot in unit:
-##            self._add_unit_params(set_labels=False)
-        
-
+        for snapshot in unit:
+            sheet.bb.current_unit = sheet.bb.time_line.ending
+            self._add_unit_params(sheet=sheet, unit=snapshot)
+    
         # 2.2.   spread life
         sheet = self._add_unit_life(sheet=sheet, unit=unit)
         for snapshot in unit:
-            
             sheet.bb.current_row = sheet.bb.parameters.rows.ending
-            # Have to reindex row up for every period, otherwise sheet will look
-            # like a staircase.
             self._add_unit_life(sheet=sheet, unit=snapshot, set_labels=False)
         
-
-        # 3.3.  spread fins
+        # 2.3.  spread fins
         current = sheet.bb.time_line.columns.get_position(unit.period.end)
         self._add_financials(sheet=sheet, unit=unit, column=current)
 
@@ -169,11 +173,7 @@ class UnitChef:
 
             sheet.bb.current_row = sheet.bb.events.rows.ending
             column = sheet.bb.time_line.columns.get_position(snapshot.period.end)
-            # Load balance from prior column
-
-##            snapshot.reset_financials()
-##            snapshot.fill_out()
-##            # I think I need to do this to assign new sources
+            # Load balance from prior column!!!
             
             self._add_financials(sheet=sheet, unit=snapshot, column=column, set_labels=False)
 
@@ -205,67 +205,13 @@ class UnitChef:
 
     # Have to manage book depth (ie max sheets) #<--------------------------------------------------!!
 
-    def _add_param_rows(self, sheet, params, active_column, label_column=None, master_column=None):
-        """
-
-
-        -> Worksheet
-
-
-        "active_column" : integer, 1-based column index
-        "label_column" : integer,
-        "master_column" : integer
-
-        if label_column or master_column are left blank, method will find
-        indeces using .get_position(). to improve performance in loops, caller
-        can supply these indeces as arguments.
-        """
-
-        # The parameter is specific to the period; we don't have it
-        # on the page yet. Add a row and write the value there.
-
-        parameters = sheet.bb.parameters
-
-        if label_column is None:
-            label_column = sheet.bb.parameters.columns.get_position(field_names.LABELS)
-        if master_column is None:
-            master_column = sheet.bb.parameters.columns.get_position(field_names.MASTER)
-
-        new_row = parameters.rows.ending + 1
-        # TO DO: Could also use Workbook.max_row()
-        
-        for param_name in sorted(params):
-
-            param_value = params[param_name]
-            
-            # Register the new row
-            parameters.rows.by_name[param_name] = new_row
-            
-            # Add the label
-            label_cell = sheet.cell(column=label_column, row=new_row)
-            label_cell.value = param_name
-
-            # Add the master value (from this period)
-            master_cell = sheet.cell(column=master_column, row=new_row)
-            master_cell.value = param_value
-
-            # Link the period to the master
-            param_cell = sheet.cell(column=active_column, row=new_row)
-            link = formula_templates.ADD_COORDINATES
-            link = link.format(coordinates=master_cell.coordinate)
-            param_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
-
-            sheet.bb.current_row = new_row
-            new_row +=1
-            
-        return sheet
-
     def _add_items_to_area(self, *pargs, sheet, area, items, active_column, set_labels=True):
         """
 
         -> Worksheet
 
         Adds names in sorted order
+        ! Starts work after the current row
         Expects sheet to come with parameters unless you specify the label and master column
         """
 
@@ -275,9 +221,9 @@ class UnitChef:
             # Master and labels always align to parameters.
             # May be these should be in the general area?
             # Upgrade-S: Can pass col positions in for speed; downside is that
-            #            signature gets ugly. Can move to kwargs to protect. 
+            #            signature gets ugly. Can move to kwargs to protect.
 
-        new_row = sheet.bb.current_row + 1
+        new_row = sheet.bb.current_row + 1 #<----------------------------------------------------------------------------------!!
         # TO DO: Could also use Workbook.max_row()
         
         for name in sorted(items):
@@ -359,70 +305,50 @@ class UnitChef:
         # - for multiperiod generally, want to have period n+1 inherit life and
         #   params from period n if they are the same. so establish links.
 
-##    def _add_life_events_old(self, *pargs, sheet, unit, active_column):
-##        """
-##
-##
-##        -> Worksheet
-##
-##
-##        Expects to get sheet with current row pointing to first place you want to write
-##        Returns sheet with current row pointing to last filled event
-##        """
-##        active_row = sheet.bb.current_row
-##        parameters = sheet.bb.parameters
-##        
-##        label_column = parameters.columns.get_position(field_names.LABELS)
-##        master_column = parameters.columns.get_position(field_names.MASTER)
-##
-##        events = sheet.bb.events
-##
-##        # For natural presentation order, sort events by date
-##        sorted_events = sorted(unit.life.events.items(), key=lambda x:x[1])
-##
-##        for event_name, event_date in sorted_events:
-##            events.rows.by_name[event_name] = active_row
-##
-##            label_cell = sheet.cell(column=label_column, row=active_row)
-##            label_cell.value = event_name
-##
-##            master_cell = sheet.cell(column=master_column, row=active_row)
-##            master_cell.value = event_date
-##
-##            event_cell = sheet.cell(column=active_column, row=active_row)
-##            link_template = formula_templates.LINK_TO_COORDINATES
-##            link = link_template.format(coordinates=master_cell.coordinate)
-##            
-##            event_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
-##            event_cell.number_format = master_cell.number_format
-##
-##            sheet.bb.current_row = active_row
-##            active_row += 1
-##
-##        return sheet
-
-    def _add_life_events(self, *pargs, sheet, unit, active_column, set_labels=True):
+    def _add_life_events(self, *pargs, sheet, unit, active_column):
         """
 
         -> Worksheet
 
-        Runs through 
+        Runs through add_items() [which is why we get name-based sorting]
         """
-        active_row = sheet.bb.current_row
         events = sheet.bb.events
+
+        active_row = sheet.bb.current_row
+        master_column = events.bb.columns.get_position(field_names.MASTER)
 
         existing_names = unit.life.events.keys() & events.rows.by_name.keys()
         new_names = unit.life.events.keys() - existing_names
 
         # Write values for existing events
         for name in existing_names:
-
+            
             existing_row = events.rows.get_position(name)
-            cell = sheet.cell(column=active_column, row=existing_row)
 
-            cell.value = unit.life.events[name]
-            # Upgrade: link to master value if it's the same as our live one
+            master_cell = sheet.cell(column=master_column, row=existing_row)
+            active_cell = sheet.cell(column=active_column, row=existing_row)
 
+            event_date = unit.life.events[date]
+
+            active_cell.value = event_date
+            if master_cell.value == active_cell.value:
+                
+                link_template = formula_templates.ADD_COORDINATES
+                link = link_template.format(coordinates=master_cell.coordinates)
+
+                active_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+
+                # Have to first set the active cell and THEN compare it to master
+                # because our Excel interface may use a setter that transforms
+                # values. So:
+                # 
+                # >>> cell.value = x
+                # >>> cell.value == x
+                # False
+                #
+                # because cell value setter changed x into a representation that
+                # plays better with spreadsheets. 
+            
         # Now add 
         new_events = dict()
         for name in new_names:
@@ -432,8 +358,7 @@ class UnitChef:
             sheet=sheet,
             area=events,
             items=new_events,
-            active_column=active_column,
-            set_labels=set_labels
+            active_column=active_column
             )
         # _add_items() will update current row to the last filled position
         
@@ -606,7 +531,7 @@ class UnitChef:
         #   -- pull cells out first
         #   -- add labels once if at all
         
-    def _add_unit_params(self, sheet, unit):
+    def _add_unit_params(self, *pargs, sheet, unit, set_labels=True):
         """
 
 
@@ -617,17 +542,16 @@ class UnitChef:
         Returns sheet with current row pointing to final param row
         """
         parameters = sheet.bb.parameters
-        
         period_column = sheet.bb.time_line.columns.get_position(unit.period.end)
-        label_column = parameters.columns.get_position(field_names.LABELS)
-
+        
         existing_param_names = unit.parameters.keys() & parameters.rows.by_name.keys()
         new_param_names = unit.parameters.keys() - existing_param_names
         
         for param_name in existing_param_names:
+            
             param_value = unit.parameters[param_name]
-
             existing_row = sheet.bb.parameters.rows.get_position(param_name)
+
             data_cell = sheet.cell(column=period_column, row=existing_row)
             data_cell.value = param_value
             # should format the cell in blue or whatever for hardcoded
@@ -636,13 +560,30 @@ class UnitChef:
         for k in new_param_names:
             new_params[k] = unit.parameters[k]
 
-        self._add_param_rows(sheet, new_params, period_column)
+        self._add_items_to_area(
+            sheet=sheet,
+            area=paramters,
+            items=new_params,
+            column=period_column,
+            set_labels=True
+            )
 
+            # Always set labels for new items.
+            
         sheet.bb.current_row = parameters.rows.ending
         return sheet    
         
         # To Do:
         # - add formatting
+        # - move column control to explicit argument?
+
+        # NOTE:
+        # One intuitive relationship would be to link param cells to master
+        # cells when the two have the same value. Unfortunately, our current
+        # chef framework forebids this approach. Master cells may get their
+        # value by evaluating a formula, and we never evaluate formulas at
+        # run-time. So a "75" in the master column may differ from a "75" in
+        # the value column if the two cells use different derivations.
 
     def _create_unit_sheet(self, *pargs, book, unit, index):
         """
@@ -682,10 +623,9 @@ class UnitChef:
         
         unit.xl.set_sheet(sheet)
 
-        # Should auto-hide components below level 2 or smtg to make the book cleaner; sheet_state="hidden"
-        # Could have a relationships.depth number on each unit. Then if relationships.depth >= x, you
-        # do something. Ask Erika to start working on refactoring .relationships out of Tags. 
-
+        # Hide sheets for units below a certain depth. The depth should be a
+        # Chef-level constant. Use ``sheet_state := "hidden"`` to implement.
+    
         self._link_to_time_line(book=book, sheet=sheet)
         self._add_unit_params(sheet, unit)
         # At this point, sheet.bb.current_row will point to the last parameter.
@@ -706,8 +646,8 @@ class UnitChef:
         # To Do:
         # - add naming with better semantic relationships. For example, could specify name and
         #   name of parent object, or something like that. May be add the type if its specified too.
+        # - Autohide units below a certain depth in the family tree.
         
-
     def _link_to_area(self, source_sheet, local_sheet, area_name, group=False, keep_format=True):
         """
 
