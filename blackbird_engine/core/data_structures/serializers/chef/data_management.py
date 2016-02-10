@@ -212,6 +212,8 @@ class SheetData:
         self.general = Area()
         self.current_row = None
         self.current_column = None
+        self.consolidation_size = None
+        # Number of rows that consolidation area will take up
 
     def add_area(self, area_name, overwrite=False):
         result = None

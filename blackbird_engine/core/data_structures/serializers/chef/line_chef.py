@@ -198,11 +198,13 @@ class LineChef:
 
         return result
 
-    def _add_consolidation_logic(self, *pargs, sheet, column, line, set_labels=True, indent=0):
+    def _add_consolidation_logic_old(self, *pargs, sheet, column, line, set_labels=True, indent=0):
         """
+
 
         -> Worksheet
         
+
         Expects line.xl.consolidated.sources to include full range of pointers to source lines
         on children.
         """
@@ -218,7 +220,8 @@ class LineChef:
                 link_cell = sheet.cell(column=column, row=sheet.bb.current_row)
                 source_coordinates = source.xl.get_coordinates()
                 
-                link = formula_templates.LINK_TO_COORDINATES.format(coordinates=source_coordinates)
+                link_template = formula_templates.LINK_TO_COORDINATES
+                link = link_template.format(coordinates=source_coordinates)
                 link_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
 
                 line.xl.consolidated.ending = sheet.bb.current_row
@@ -249,8 +252,92 @@ class LineChef:
 
         # To Do:
         # - group the cells
-        # - add feature that controls the number of refs per cell (children per cell)
         # - add labels
+
+    def _add_consolidation_logic(self, *pargs, sheet, column, line, set_labels=True, indent=0):
+        """
+
+
+        -> Worksheet
+        
+
+        Expects line.xl.consolidated.sources to include full range of pointers to source lines
+        on children.
+
+        Always stuffs consolidation into the same number of rows.
+        Derive can still cause staircasing if the line picks up details in the future it doesnt
+        have now.
+
+        # better without labels?
+
+        Will split consolidation logic into constant number of cells. 
+        """
+        if not line.xl.consolidated.sources:
+            pass
+
+        else:            
+            sources = line.xl.consolidated.sources.copy()
+
+            required_rows = sheet.bb.consolidation_size
+            
+            links_per_cell = len(sources) // required_rows 
+            links_per_cell = max(1, links_per_cell)
+            # Make sure we include at least 1 link per cell.
+            
+            link_template = formula_templates.ADD_COORDINATES
+
+            sheet.bb.current_row += 1
+            line.xl.consolidated.starting = sheet.bb.current_row
+
+            for rr in range(required_rows):
+
+                if sources:
+                    batch_summation = ""
+                    for i in range(links_per_cell):
+                        
+                        if sources:
+                            source_line = sources.pop(0)
+                            # Can reverse sources for better performance.
+                            source_cos = source_line.xl.get_coordinates()
+                            link = link_template.format(coordinates=source_cos)
+                            batch_summation += link
+                        else:
+                            break
+
+                        # Inner loop will only run once if ``sources`` is empty
+
+                    if batch_summation:
+                        batch_cell = sheet.cell(column=column, row=sheet.bb.current_row)
+                        batch_cell.set_explicit_value(batch_summation, data_type=type_codes.FORMULA)
+    
+                # Move on to next row
+                line.xl.consolidated.ending = sheet.bb.current_row
+                sheet.bb.current_row += 1
+
+            # Group the cells!! <--------------------------------------------------------------------------
+            #   should also hide the cells (always, for consolidation).
+            # Add better labels
+
+            alpha_column = get_column_letter(column)
+            summation_params = {
+                "starting_row" : line.xl.consolidated.starting,
+                "ending_row" : line.xl.consolidated.ending,
+                "alpha_column" : alpha_column
+                }
+            
+            summation = formula_templates.SUM_RANGE.format(**summation_params)
+            summation_cell = sheet.cell(column=column, row=sheet.bb.current_row)
+            summation_cell.set_explicit_value(summation, data_type=type_codes.FORMULA)
+
+            if set_labels:
+                label = line.name + ": consolidated results"
+                label = (indent * " ") + label
+                self._set_label(sheet=sheet, label=label, row=sheet.bb.current_row)
+
+            line.xl.consolidated.ending = sheet.bb.current_row
+
+        return sheet
+        
     
     def _add_derivation_logic(self, *pargs, sheet, column, line, set_labels=True, indent=0):
         """

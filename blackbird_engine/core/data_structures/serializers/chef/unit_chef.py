@@ -94,6 +94,9 @@ class UnitChef:
     chop_unit()           returns sheet with a SheetData instance at sheet.bb
     ====================  ======================================================
     """
+    MAX_CONSOLIDATION_ROWS = 15
+    MAX_LINKS_PER_CELL = 1
+    
     MAX_TITLE_CHARACTERS = 30
     SHOW_GRID_LINES = False
     ZOOM_SCALE = 80
@@ -629,15 +632,26 @@ class UnitChef:
             # Try semi-experimental formatting. Unclear whether openpyxl fully
             # supports these features.
             #
-            # Re gred, see https://bitbucket.org/openpyxl/openpyxl/issues/199
+            # Re grid, see https://bitbucket.org/openpyxl/openpyxl/issues/199
             # Re zoom, see https://bitbucket.org/openpyxl/openpyxl/issues/262
             
         except Exception:
             pass      
         
+        req_rows = len(unit.components.by_name) // self.MAX_LINKS_PER_CELL
+        req_rows = min(req_rows, self.MAX_CONSOLIDATION_ROWS)
+        req_rows = max(1, req_rows)
+        
+        sheet.bb.consolidation_size = req_rows
+        # Compute the amount of rows we will use for consolidation on this
+        # sheet. In future periods, the number of kids may grow or shrink.
+        # LineChef will modify the number of links in each cell to make sure
+        # the full consolidation work always takes up the same amount of row
+        # space, to make sure our spreadsheet aligns.
+
         unit.xl.set_sheet(sheet)
 
-        # Hide sheets for units below a certain depth. The depth should be a
+        # Hide sheets for units below a certain depth. The depth should be a #<---------------------------------------------------------------
         # Chef-level constant. Use ``sheet_state := "hidden"`` to implement.
     
         self._link_to_time_line(book=book, sheet=sheet)
