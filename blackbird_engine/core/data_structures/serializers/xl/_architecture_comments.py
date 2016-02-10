@@ -223,35 +223,35 @@
           their parents
 
  - add vba option: topics should be able to add vba functions to a sheet
-      --- should have 
+      -- should have a vba string that chef can format with explicit references
+      -- should generally keep the vba simple. 
+ - 
 
 IOP:
+  - Add a note that by convention, .starting is always None right now, to make sure all row
+    references are absolute
+    
   - figure out what to do with the position indexing to make it consistent?
    -- really have to watch out for adding absolute positions to the relative lookup (will create gaps)
+   -- one approach is to set a finite range for consolidation at the beginning and then always fit
+      the number of links in that range. and keep the summation consistent. so if you say 1 per cell
+      at first, and then 
 
  - !add grouping to LineChef
+    -- cant do this until we figure out stable order for consolidation, at least
 
  - add a main interface
  - add formula name, original output, may be even the docstring from func to formula info. That way, we can
    quickly trace it. Also add format_error intercept into Chef itself. 
  
- -!! check that lines and units don't share xl data
  -!!! make sure drivers only add their DriverData when they are allowed to work on the item.
- - think about whether to make maturity and decline dynamic from percent maturity, etc.
-   alternatively, could just make the formula look at the event itself; probably better.
-   so life[age]/(events{maturity}-events{birth}) <--------- can do this later.
  - define copy behavior for unit.xl (should probably get zeroed out)
- - by default, should add params to the master column
-
+ 
  - !! APPLY Sheet style to all sheets?
  - consider moving all the LineChef routines to kwargs.
 
- - !!! move UnitChef._add_unit_params to run on add_items_to_area()
-
- - check whether source cells on kid revenue are valid. error seems to be on revenue spread in
-   parent at first period.
-   
- 
+ - add master values for empty params / lines
+ - !!!load balance?? 
  
 
 PROBLEM:
