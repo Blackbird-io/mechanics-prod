@@ -222,6 +222,8 @@
       --- if some units are inactive early and active later, need more rows, so everything shifts down on
           their parents
 
+ - add vba option: topics should be able to add vba functions to a sheet
+      --- should have 
 
 IOP:
   - figure out what to do with the position indexing to make it consistent?
