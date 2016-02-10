@@ -145,6 +145,50 @@ def func(line, business_unit, data, driver_signature):
 
             xl_decline = "*(100-{life[percent]})/("+xl_stage_end+"-"+xl_stage_start+")"
             excel_template += xl_decline
+
+
+    #--------------------------------------------------------------------------
+    #                   EXCEL FORMULA FORMATTING FOLLOWS                      |
+    #--------------------------------------------------------------------------
+    #
+    # The string composition logic below gradually builds up a large formula
+    # that tracks the Python func() calculation in a single Excel cell.
+    #
+    # Ideally, the results should be a string representing a VBA routine that
+    # the formula and chef can format with references and other data and add
+    # to the right cell. As a second-best alternative, formulas should be
+    # able to deliver multiple rows of dynamic calculation that build on each
+    # other in steps.
+    #
+    # We block old template construction logic here.
     
+    xl_birth = "{events[" + bu.life.KEY_BIRTH + "]}"
+    xl_maturity = "{events[" + KEY_MATURITY + "]}"
+    xl_old_age = "{events[" + KEY_OLD_AGE + "]}"
+    xl_death = "{events[" + bu.life.KEY_DEATH + "]}"
+    
+    alive_condition = "=IF({life[alive]}, %s)" 
+    youth_condition = "IF(AND({life[ref_date]}<" + xl_maturity + "), %s, %s)"
+    # have to be born for unit to be alive
+
+    mature_condition = "IF(AND(" + xl_maturity
+    mature_condition += "<={life[ref_date]}, {life[ref_date]}<" + xl_old_age + ", %s, %s)"
+    
+    x_growth = "*ROUND({life[age]}/(" + xl_maturity + "-" + xl_birth + "), 0)*100"
+    x_decline = "*ROUND(({life[span]}-{life[age]})/(" + xl_death + "-" + xl_old_age + "),0)*100"
+
+    core = "+{parameters[annual_rev_per_mature_unit]}/12"
+
+    decline_calc = core + x_decline
+    growth_calc = core + x_growth
+
+    mature = mature_condition % (core, decline_calc)
+    youth = youth_condition % (growth_calc, mature)
+    full = alive_condition % youth
+
+    excel_template = full
+    line_references = dict()
+    
+
     # Always return excel_template, references
     return excel_template, line_references
