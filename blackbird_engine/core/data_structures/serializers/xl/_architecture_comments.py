@@ -246,7 +246,9 @@ IOP:
  - !! APPLY Sheet style to all sheets?
  - consider moving all the LineChef routines to kwargs.
 
- - !!! move UnitChef._add_unit_params to run on add_items_to_area() 
+ - !!! move UnitChef._add_unit_params to run on add_items_to_area()
+
+ - !!! add simple default revenue formula: ie, core. 
    
  
  
