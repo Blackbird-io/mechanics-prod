@@ -171,9 +171,9 @@ class UnitChef:
             column = sheet.bb.time_line.columns.get_position(snapshot.period.end)
             # Load balance from prior column
 
-            snapshot.reset_financials()
-            snapshot.fill_out()
-            # I think I need to do this to assign new sources
+##            snapshot.reset_financials()
+##            snapshot.fill_out()
+##            # I think I need to do this to assign new sources
             
             self._add_financials(sheet=sheet, unit=snapshot, column=column, set_labels=False)
 
