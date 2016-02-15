@@ -61,6 +61,7 @@ from .parameters import Parameters
 # through that pointer
 tConsolidated = Tags.tagManager.catalog["consolidated"]
 tHardCoded = Tags.tagManager.catalog["hard"]
+T_REPLICA = Tags.tagManager.catalog["ddr"]
 
 # Classes   
 class BusinessUnit(History, Tags, Equalities):
@@ -337,6 +338,7 @@ class BusinessUnit(History, Tags, Equalities):
         # objects. Guide shouldn't point to a business unit or model
         result.id = copy.copy(self.id)
         result.life = self.life.copy()
+        result.parameters = copy.deepcopy(self.parameters)
         result.summary = BusinessSummary()
         result.valuation = CompanyValue()
 
@@ -823,8 +825,14 @@ class BusinessUnit(History, Tags, Equalities):
         if line._details:
             
             for detail in line.get_ordered():
-
-                self._derive_line(detail)
+                
+                if T_REPLICA in detail.allTags:
+                    continue
+                    # Skip replicas to make sure we apply the driver only once
+                    # A replica should never have any details
+                else:
+                    self._derive_line(detail)
+        
                 
     def _fit_to_period(self, time_period, recur=True):
         """
@@ -1048,12 +1056,13 @@ class BusinessUnit(History, Tags, Equalities):
             self.financials.starting = self.past.financials.ending
             # Connect to the past
 
-        ending_name = self.financials.ending.name
-        self.financials.ending = self.financials.starting.copy(enforce_rules=False) 
-        # Copy all lines from starting; we are assuming no changes here.
-        self.financials.ending.setName(ending_name)
-        
-        self.financials.ending.reset()
+        ending_balance = self.financials.ending
+        starting_balance = self.financials.starting
+
+        ending_balance.increment(starting_balance, consolidating=False)
+        ending_balance.reset()
+        # Our goal is to pick up shape, so clear values. 
+
         # By default, the ending balance sheet should look the same as the
         # starting one. Here, we copy the starting structure and zero out
         # the values. We will fill in the values later through
@@ -1197,15 +1206,16 @@ class BusinessUnit(History, Tags, Equalities):
         
         if starting_balance and ending_balance:
             
-            for name, starting_line in ending_balance._details.items():
+            for name, starting_line in starting_balance._details.items():
 
                 if tags_to_omit & set(starting_line.allTags):
                     continue
 
                 else:
-                    ending_line = ending_balance.find_first(starting_line.name)
                     if starting_line.value is not None:
-                        ending_line.set_value(source.value, self._UPDATE_BALANCE_SIGNATURE)
+                        
+                        ending_line = ending_balance.find_first(starting_line.name)
+                        ending_line.set_value(starting_line.value, self._UPDATE_BALANCE_SIGNATURE)
 
                 # Theoretically find_first() could create problems if multiple lines in a
                 # balance sheet have the same details (ie short-term and long-term bonds).
