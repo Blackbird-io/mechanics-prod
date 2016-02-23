@@ -50,7 +50,7 @@ import bb_settings
 
 from tools import for_messages as message_tools
 
-
+import pdb
 
 
 #globals
@@ -115,16 +115,16 @@ def scenario_1(topic):
 
         line = top_fins.find_first(name)
         if line:
-            if line.value is not None:  
+           if line.value is not None:
                 model.summary.data[name] = 12 * line.value
                 # Annualize values and put them into summary
     
 ##    # Manually add credit capacity
-##    landscape_summary = model.valuation.credit.combined.get_summary()
-##    print(landscape_summary)
-##    cc_raw = landscape_summary["size"]["hi"]
-##    cc_adj = cc_raw * (1 - bb_settings.HAIRCUT_TO_EXPECTED_VALUE)
-##    model.summary.data["credit_capacity"] = cc_adj
+    landscape_summary = model.valuation.credit.combined.get_summary()
+    print(landscape_summary)
+    cc_raw = landscape_summary["size"]["hi"]
+    cc_adj = cc_raw * (1 - bb_settings.HAIRCUT_TO_EXPECTED_VALUE)
+    model.summary.data["credit_capacity"] = cc_adj
     
     # Finish work, wrap topic()
     topic.wrap_topic()
@@ -132,4 +132,3 @@ def scenario_1(topic):
 scenarios[None] = scenario_1
 scenarios[message_tools.USER_STOP] = scenario_1
 #
-
