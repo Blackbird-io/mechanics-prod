@@ -68,12 +68,11 @@ class TimeLine(dict):
     build()               populates instance with adjacent time periods
     clear()               delete content from past and future periods
     clear_future()        delete content from future periods
-    extrapolate_all()     use seed to fill out all periods in instance
+    extrapolate()         use seed to fill out all future periods in instance
     extrapolate_dates()   use seed to fill out a range of dates
-    extrapolate_future()  project seed content to future periods
     find_period()         returns period that contains queried time point
     get_segments()        split time line into past, present, and future
-    getOrdered()          returns list of periods ordered by end point
+    get_ordered()         returns list of periods ordered by end point
     link()                connect adjacent periods
     revert_current()      go back to the prior current period
     update_current()      updates current_period for reference or actual date    
@@ -268,25 +267,12 @@ class TimeLine(dict):
     def extrapolate_all(self, seed=None):
         """
 
+        **OBSOLETE**
 
-        TimeLine.extrapolate_all() -> None
-
-
-        Method extrapolates all periods in instance sequentially from seed. If
-        seed not specified, method uses instance.current_period.
-
-        Method expects ``seed`` to be a TimePeriod instance. Method will not
-        change seed during operation. 
+        Backwards extrapolation is obsolete.
+        Legacy interface for TimeLine.extrapolate()
         """        
-        if not seed:
-            seed = self.current_period
-        seed_date = seed.end
-        
-        past, present, future = self.get_segments(seed_date)
-        
-        self.extrapolate_dates(seed, past, backward=True)
-        # This will reset financials for seed.
-        self.extrapolate_dates(seed, future)
+        return self.extrapolate(seed)
 
     def extrapolate_dates(self, seed, dates, backward=False):
         """
@@ -352,17 +338,11 @@ class TimeLine(dict):
     def extrapolate_future(self, seed=None):
         """
 
+        **OBSOLETE**
 
-        TimeLine.extrapolate_future() -> None
-
-
-        Extrapolate seed to future periods. Expects a period as seed, will use
-        current_period by default.
+        Legacy interface for TimeLine.extrapolate()
         """
-        if seed is None:
-            seed = self
-        past, present, future = self.get_segments(seed.end)
-        self.extrapolate_dates(seed, future)
+        return self.extrapolate(seed)
         
     def find_period(self, query):
         """
