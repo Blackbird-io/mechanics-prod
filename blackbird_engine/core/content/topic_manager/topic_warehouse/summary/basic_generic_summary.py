@@ -50,7 +50,6 @@ import bb_settings
 
 from tools import for_messages as message_tools
 
-import pdb
 
 
 #globals
