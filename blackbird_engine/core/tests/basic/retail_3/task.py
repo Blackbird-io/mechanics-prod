@@ -41,11 +41,12 @@ from tools import for_messages as message_tools
 
 from scripts import retail_3_low_sga_five_new as seed
 
+from collections import OrderedDict
 
 
 
 #globals
-output = {}
+output = OrderedDict()
 active_script = seed.answers
 
 #functions
@@ -153,11 +154,30 @@ def do():
     print(c)
     final_mqr = Engine.to_engine(final_message)
     model = final_mqr[0]
+    model.time_line.extrapolate()
+
+    #   current period
     current_period = model.time_line.current_period
     company = current_period.content
     output["2. current period"] = str(current_period)
     output["3. company financials"] = str(company.financials)
-    #
+
+    all_periods = model.time_line.get_ordered()
+    last_period = all_periods[-1]
+
+    mid_point = current_period.end + (last_period.end - current_period.end)/2.
+    mid_period = model.time_line.find_period(mid_point)
+
+    #   future period (mid-point between current and last period)
+    company = mid_period.content
+    output["4. future period (mid-point)"] = str(mid_period)
+    output["5. company financials"] = str(company.financials)
+
+    #   future period (last, period furthest into the future)
+    company = last_period.content
+    output["6. future period (last)"] = str(last_period)
+    output["7. company financials"] = str(company.financials)
+
     c = """
 
 

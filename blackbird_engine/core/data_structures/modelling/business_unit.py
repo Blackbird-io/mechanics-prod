@@ -510,7 +510,7 @@ class BusinessUnit(History, Tags, Equalities):
         each of the components. Method sets instance.filled to False.
         """
         self.filled = False
-        print("set ``filled`` to False for bbid\n%s\n" % self.id.bbid)
+        # print("set ``filled`` to False for bbid\n%s\n" % self.id.bbid)
         self.financials.reset()
         if recur:
 

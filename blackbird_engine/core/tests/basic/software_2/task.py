@@ -42,10 +42,12 @@ from tools import for_messages as message_tools
 from scripts import software_2_flat_fee_no_devs as seed
 
 
+from collections import OrderedDict
+
 
 
 #globals
-output = {}
+output = OrderedDict()
 active_script = seed.answers
 
 #functions
@@ -55,13 +57,13 @@ def do():
 
     Task.do() -> dict()
 
-    
+
     NOTE: Task.do() must always return output.
 
     Output is usually a dictionary of data. Output can be any object that the
     Grader for this Test understands
 
-    Function runs through an interview script until Engine declares completion. 
+    Function runs through an interview script until Engine declares completion.
     """
     #
     c = ""
@@ -86,7 +88,7 @@ def do():
     Start with a blank portal message. Call Engine through the API interface for
     the next message. Use the Simple Portal to process the engine output. Repeat
     until Engine returns an end-interview message.
-    
+
     For any message, Portal will collect the user response (here, from the
     script), package the response into an API-spec PortalResponse object, and
     return a new, conforming message.
@@ -108,15 +110,15 @@ def do():
             msg_2 = Portal.process(msg_1)
             msg_0 = msg_2
             continue
-    
+
     c+= """
     loop = True
     while loop:
         msg_1 = Engine.process_interview(msg_0)
         msg_mqr = Engine.to_engine(msg_1)
         #
-        status = message_tools.checkMessageStatus(msg_mqr)
-        if status == message_tools.status_endSession:
+        status = Globals.checkMessageStatus(msg_mqr)
+        if status == Globals.status_endSession:
             final_message = msg_1
             break
         else:
@@ -131,7 +133,7 @@ def do():
 
 
     Engine successfully concluded the interview and stored the final message
-    for grading. 
+    for grading.
 
     Test does not print final_message because it contains a long string for the
     serialized e_model.
@@ -153,11 +155,30 @@ def do():
     print(c)
     final_mqr = Engine.to_engine(final_message)
     model = final_mqr[0]
+    model.time_line.extrapolate()
+
+    #   current period
     current_period = model.time_line.current_period
     company = current_period.content
     output["2. current period"] = str(current_period)
     output["3. company financials"] = str(company.financials)
-    #
+
+    all_periods = model.time_line.get_ordered()
+    last_period = all_periods[-1]
+
+    mid_point = current_period.end + (last_period.end - current_period.end)/2.
+    mid_period = model.time_line.find_period(mid_point)
+
+    #   future period (mid-point between current and last period)
+    company = mid_period.content
+    output["4. future period (mid-point)"] = str(mid_period)
+    output["5. company financials"] = str(company.financials)
+
+    #   future period (last, period furthest into the future)
+    company = last_period.content
+    output["6. future period (last)"] = str(last_period)
+    output["7. company financials"] = str(company.financials)
+
     c = """
 
 
