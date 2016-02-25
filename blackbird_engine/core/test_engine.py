@@ -36,17 +36,22 @@ import argparse
 import tester
 import tests
 from collections import OrderedDict
-import pdb
 
-# Make dictionaries of tests, batteries, and designations
-dest_dict = OrderedDict()
+
+#test designation dictionary (test_desig_dict) has test designation: name
+#test dictionary (test_dict) has test designation: <test module>
+test_desig_dict = OrderedDict()
 test_dict = OrderedDict()
 
-desb_dict = OrderedDict()
+#battery designation dictionary (batt_desig_dict) has battery designation: name
+#battery dictionary (batt_dict) has battery designation: <test module>
+batt_desig_dict = OrderedDict()
 batt_dict = OrderedDict()
 
+# Make dictionaries of tests, batteries, and designations
+# Use test and battery names to assign designations
 for k in sorted(tests.basic.batteries.keys()):
-    desb_dict[k[0].strip().upper()] = k
+    batt_desig_dict[k[0].strip().upper()] = k
     batt_dict[k[0].strip().upper()] = tests.basic.batteries[k]
 
     for t in tests.basic.batteries[k]:
@@ -54,7 +59,7 @@ for k in sorted(tests.basic.batteries.keys()):
         temp = temp[0].strip().upper()
         temp = temp[0]+temp[-1]
 
-        dest_dict[temp] = t.name
+        test_desig_dict[temp] = t.name
         test_dict[temp] = t
 
 #   Add command line options
@@ -66,15 +71,15 @@ parser.add_argument("-l","--log", help="log test results to file",
 parser.add_argument("-ls","--list", help="list all available batteries and tests",
                     action="store_true")
 parser.add_argument("-t","--test", help="run a specific test, use -ls to get designations",
-                    type=str, choices=dest_dict.keys())
+                    type=str, choices=test_desig_dict.keys())
 parser.add_argument("-b","--battery", help="run a specific battery, use -ls to get designations",
-                    type=str, choices=desb_dict.keys())
+                    type=str, choices=batt_desig_dict.keys())
 parser.add_argument("-s","--summarize",help="summarize the results of tests in-line",
                     action="store_true")
 
 args = parser.parse_args()
 
-p = ".\\"
+p = r"."
 
 #   Complete tasks based on options entered
 
@@ -85,17 +90,17 @@ if args.list:
     * Use -b with one-letter designation to run a specific battery. *
     *****************************************************************
     """)
-    for k in desb_dict.keys():
-        print(k+': '+desb_dict[k])
+    for k in batt_desig_dict.keys():
+        print(k+': '+batt_desig_dict[k])
 
     print("""
-    **************************************************************
-    *                     Available Tests                        *
-    * Use -t with two-letter designation to run a specific test. *
-    **************************************************************
+    *****************************************************************
+    *                        Available Tests                        *
+    *   Use -t with two-letter designation to run a specific test.  *
+    *****************************************************************
     """)
-    for k in dest_dict.keys():
-        print(k+': '+dest_dict[k])
+    for k in test_desig_dict.keys():
+        print(k+': '+test_desig_dict[k])
 
 summary = []
 pass_fail = {True:"Passed", False:"Failed"}
@@ -117,9 +122,9 @@ if args.battery:
 
 if args.summarize:
     print("""
-    **********************************************************
-    *                     Test Results                       *
-    **********************************************************
+    *****************************************************************
+    *                         Test Results                          *
+    *****************************************************************
     """)
     for l in summary:
         print(l)
