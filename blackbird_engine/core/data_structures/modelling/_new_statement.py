@@ -156,7 +156,11 @@ class Statement(Tags, Equalities):
         result += "\n\n"
 
         if self._details:
-            for line in self.get_ordered():
+            lines = []
+            for k in sorted(self._details.keys()):
+                lines.append(self._details[k])
+
+            for line in lines:
                 result += str(line)
         else:
             comment = "[intentionally left blank]"
