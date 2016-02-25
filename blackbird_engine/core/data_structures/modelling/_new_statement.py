@@ -156,11 +156,7 @@ class Statement(Tags, Equalities):
         result += "\n\n"
 
         if self._details:
-            lines = []
-            for k in sorted(self._details.keys()):
-                lines.append(self._details[k])
-
-            for line in lines:
+            for line in self.get_ordered():
                 result += str(line)
         else:
             comment = "[intentionally left blank]"
@@ -631,7 +627,12 @@ class Statement(Tags, Equalities):
         tags any affected lines with the "consolidated" tag (method delegates
         incrementation-level tagging to LineItem.consolidate()).
         """
-        for name, external_line in matching_statement._details.items():
+        if bb_settings.DEBUG_MODE:
+            pool = sorted(matching_statement._details.items())
+        else:
+            pool = matching_statement._details.items()
+
+        for name, external_line in pool:
             # ORDER SHOULD NOT MATTER HERE
             
             if set(tagsToOmit) & set(external_line.allTags):
@@ -660,8 +661,6 @@ class Statement(Tags, Equalities):
                             local_copy.tag(tConsolidated)
                     # Pick up lines with None values, but don't tag them. We
                     # want to allow derive to write to these if necessary.
-
-                    local_copy.xl.consolidated.sources.append(external_line)
 
                 self.add_line(local_copy, local_copy.position)
                 # For speed, could potentially add all the lines and then fix
