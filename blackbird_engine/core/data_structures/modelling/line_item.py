@@ -413,7 +413,12 @@ class LineItem(Statement):
             result.append(header)
 
             extra_tab = indent + self.TAB_WIDTH
-            for detail in self.get_ordered():
+
+            lines = []
+            for k in sorted(self._details.keys()):
+                lines.append(self._details[k])
+
+            for detail in lines:
                 view = detail._get_line_strings(extra_tab)
                 # Will always return a list of strings
                 result.extend(view)
