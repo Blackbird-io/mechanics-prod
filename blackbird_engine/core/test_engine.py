@@ -51,8 +51,9 @@ batt_dict = OrderedDict()
 # Make dictionaries of tests, batteries, and designations
 # Use test and battery names to assign designations
 for k in sorted(tests.basic.batteries.keys()):
-    batt_desig_dict[k[0].strip().upper()] = k
-    batt_dict[k[0].strip().upper()] = tests.basic.batteries[k]
+    adj_k = k[0].strip().upper()
+    batt_desig_dict[adj_k] = k
+    batt_dict[adj_k] = tests.basic.batteries[k]
 
     for t in tests.basic.batteries[k]:
         temp = t.name.split(',')
