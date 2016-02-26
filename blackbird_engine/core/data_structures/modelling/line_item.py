@@ -29,6 +29,7 @@ LineItem              a Statement that has its own value
 # Imports
 import copy
 import time
+from collections import OrderedDict
 
 import bb_exceptions
 import tools.for_printing as printing_tools
@@ -457,7 +458,7 @@ class LineItem(Statement):
         # somehow get reset to None, the lineitem could get behind and the
         # entire financials unit could lose a special processing trigger.
         
-        replica._details = dict()
+        replica._details = OrderedDict()
         # Replicas don't have any details of their own. Can't run .clear() here
         # because instance and replica initially point to the same details dict.
         replica.tag(T_REPLICA)
