@@ -28,6 +28,7 @@ Statement             container that stores, updates, and organizes LineItems
 
 # Imports
 import copy
+from collections import OrderedDict
 
 import bb_exceptions
 import bb_settings
@@ -112,7 +113,7 @@ class Statement(Tags, Equalities):
     def __init__(self, name=None, spacing=100):
 
         Tags.__init__(self, name=name)        
-        self._details = dict()
+        self._details = OrderedDict()
 
         if spacing < 1:
             raise error
@@ -352,7 +353,7 @@ class Statement(Tags, Equalities):
         result = Tags.copy(self, enforce_rules)
         # Tags.copy returns a shallow copy of the instance w deep copies
         # of the instance tag attributes.
-        result._details = dict()
+        result._details = OrderedDict()
         # Clean dictionary
         
         for own_line in self._details.values():
@@ -414,7 +415,7 @@ class Statement(Tags, Equalities):
         tags_to_omit = []
         seed = self
         alt_seed = copy.copy(seed)
-        alt_seed._details = dict()
+        alt_seed._details = OrderedDict()
         # Create an empty version of the instance. 
         alt_seed.clearInheritedTags()
         
@@ -745,7 +746,7 @@ class Statement(Tags, Equalities):
         
         # Build table by position
         ordered = list()
-        by_position = dict()
+        by_position = OrderedDict()
 
         for line in self._details.values():
             entry = by_position.setdefault(line.position, list())
