@@ -22,6 +22,7 @@ run_battery()         returns dict w results for each test
 run_test()            returns bool, run task then grader for a single test
 run_test_do()         returns dict, use build to perform one test's task
 run_test_check()      returns True if build output passes test, else False
+make_test()           generates a new test from a script
 ====================  ==========================================================
 """
 
