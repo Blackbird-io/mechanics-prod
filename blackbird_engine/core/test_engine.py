@@ -20,11 +20,9 @@ CLASSES:
 
 COMMAND LINE OPTIONS:
 --all                 run all tests in all batteries
---log                 log test results to file
 --list                list all available batteries and test
 --test                run a specific test, use -ls to get designations
 --battery             run a specific battery, use -ls to get designations
---summarize           summarize the results of tests in-line
 ====================  ==========================================================
 """
 
