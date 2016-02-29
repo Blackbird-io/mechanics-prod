@@ -31,6 +31,7 @@ n/a
 from . import basic
 from . import legacy
 from . import stateful
+from . import templates
 
 
 

@@ -1,7 +1,7 @@
 #PROPRIETARY AND CONFIDENTIAL
 #Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2014
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+#Copyright Blackbird Logical Applications, LLC 2016
+#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 #Blackbird Diagnostics
 #Module: tests.basic.__init__
@@ -27,32 +27,8 @@ n/a
 
 
 
-#imports
-from . import ex_01
-from . import summarization
-from . import api_forecast
-from . import api_interview
-from . import api_landscape
-
-from . import retail_3
-from . import retail_4
-
-from . import software_1
-from . import software_2
-from . import software_3
-from . import software_4
-from . import software_5
-
 # placeholder for new imports
 
 
 # test batteries
 batteries = {}
-batteries["software"] = [software_1,
-                         software_2,
-                         software_3,
-                         software_4,
-                         software_5]
-
-batteries["retail"] = [retail_3,
-                       retail_4]
