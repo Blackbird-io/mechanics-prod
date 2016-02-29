@@ -383,8 +383,8 @@ def make_test(script, desc, directory, battery):
                 os.mkdir(base_path)
 
                 # also need to add __init__.py file
-                shutil.copy(main_template_dir + r"\__init__.py",
-                            base_path + r"\__init__.py")
+                shutil.copy(main_template_dir + ini_file,
+                            base_path + ini_file)
 
                 # within tests\__init__.py look for #imports to add new module
                 _add_module_to_tests(test_path, directory)
@@ -399,7 +399,7 @@ def make_test(script, desc, directory, battery):
             path_check = base_path + r"\%s" % dir_name
             while os.path.isdir(path_check):
                 # directory exists, see if it contains a test for this script
-                txt = open(path_check+r"\task.py")
+                txt = open(path_check+task_file)
                 check_text = "from scripts import * as seed*"
 
                 # find line designating script
