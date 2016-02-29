@@ -43,7 +43,9 @@ from . import software_3
 from . import software_4
 from . import software_5
 
-#test batteries
+# placeholder for new imports
+
+# test batteries
 batteries = {}
 batteries["software"] = [software_1,
                          software_2,
