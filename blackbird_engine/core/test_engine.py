@@ -23,6 +23,7 @@ COMMAND LINE OPTIONS:
 --list                list all available batteries and test
 --test                run a specific test, use -ls to get designations
 --battery             run a specific battery, use -ls to get designations
+--verbose             print test output to screen instead of logging
 ====================  ==========================================================
 """
 
@@ -81,8 +82,6 @@ parser = argparse.ArgumentParser(description="Command line test functionality "
 
 parser.add_argument("-a","--all", help="run all tests in all batteries",
                     action="store_true")
-parser.add_argument("-ls","--list", help="list all available batteries and tests",
-                    action="store_true")
 parser.add_argument("-b","--battery", help="run a specific battery, use -ls to "
                                            "get designations",
                     type=str, choices=batt_dict.keys(), metavar='')
@@ -90,6 +89,10 @@ parser.add_argument("-t","--test", help="run a specific test within the "
                                         "specified battery, use -ls to get"
                                         " designations",
                     type=str, metavar='')
+parser.add_argument("-ls","--list", help="list all available batteries and tests",
+                    action="store_true")
+parser.add_argument("-v","--verbose",help="print output to screen, do not log",
+                    action="store_true")
 
 args = parser.parse_args()
 
@@ -142,6 +145,11 @@ if args.list:
 summary = []
 pass_fail = {True:"Passed", False:"Failed"}
 
+if args.verbose:
+    log = False
+else:
+    log = True
+
 if args.all:
     for k in batt_dict.keys():
         summary.append("Tests in "+k+' Battery')
@@ -151,7 +159,7 @@ if args.all:
         battery = batt_dict[k][1]
         for test in battery:
             print("Running test: "+test.name+"...")
-            result = tester.run_test(p, test, log=True)
+            result = tester.run_test(p, test, log=log)
             summary.append("Test "+pass_fail[result]+": "+test.name)
 
         summary.extend(["", ""]) # add blank lines between batteries for clarity
@@ -165,7 +173,7 @@ if args.battery and not args.test:
     battery = batt_dict[args.battery][1]
     for test in battery:
         print("Running test: "+test.name+"...")
-        result = tester.run_test(p, test, log=True)
+        result = tester.run_test(p, test, log=log)
         summary.append("Test "+pass_fail[result]+": "+test.name)
 
 if args.test:
@@ -176,7 +184,7 @@ if args.test:
         if args.test in test_dict.keys():
             # test exists within battery , so run it
             print("Running test "+args.test+" in "+args.battery+" battery...")
-            result = tester.run_test(p, test_dict[args.test], log=True)
+            result = tester.run_test(p, test_dict[args.test], log=log)
             summary.append("Test "+pass_fail[result]+": "+
                            test_dict[args.test].name)
         else:
