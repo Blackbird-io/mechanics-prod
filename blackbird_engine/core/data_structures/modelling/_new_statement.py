@@ -104,7 +104,6 @@ class Statement(Tags, Equalities):
     get_full_ordered()    return recursive list of details
     increment()           add data from another statement
     reset()               clear values
-    get_ordered_items_debug() return all detail items ordered by line position
     ====================  ======================================================
     """
     keyAttributes = ["_details"]
@@ -437,7 +436,7 @@ class Statement(Tags, Equalities):
 
         # Step 2: Fill the container
         if bb_settings.DEBUG_MODE:
-            pool = self.get_ordered_items_debug()
+            pool = self._get_ordered_items_debug()
         else:
             pool = self._details.items()
 
@@ -458,7 +457,7 @@ class Statement(Tags, Equalities):
             result.add_line(result_line, position=result_line.position)
 
         if bb_settings.DEBUG_MODE:
-            pool = target.get_ordered_items_debug()
+            pool = target._get_ordered_items_debug()
         else:
             pool = target._details.items()
 
@@ -634,26 +633,6 @@ class Statement(Tags, Equalities):
         result = sorted(self._details.values(), key=lambda line: line.position)
         return result
 
-    def get_ordered_items_debug(self):
-        """
-
-
-        Statement.get_ordered_items_debug() -> list of tuples
-
-
-        Return a list of detail items in order of relative position.
-        """
-
-        items = self._details.items()
-
-        def item_sorter(item):
-            line = item[1]
-            return line.position
-
-        result = sorted(items, key=item_sorter)
-
-        return result
-
     def increment(self, matching_statement, *tagsToOmit, consolidating=False):
         """
 
@@ -668,7 +647,7 @@ class Statement(Tags, Equalities):
         incrementation-level tagging to LineItem.consolidate()).
         """
         if bb_settings.DEBUG_MODE:
-            pool = matching_statement.get_ordered_items_debug()
+            pool = matching_statement._get_ordered_items_debug()
         else:
             pool = matching_statement._details.items()
 
@@ -771,6 +750,27 @@ class Statement(Tags, Equalities):
             c = "Implicit overwrites prohibited."
             raise bb_exceptions.BBAnalyticalError(c)
 
+    def _get_ordered_items_debug(self):
+        """
+
+
+        Statement._get_ordered_items_debug() -> list of tuples
+
+
+        Return a list of _detail dictionary items in order of relative
+        position. Items are key-value pairings contained in list of tuples.
+        """
+
+        items = self._details.items()
+
+        def item_sorter(item):
+            line = item[1]
+            return line.position
+
+        result = sorted(items, key=item_sorter)
+
+        return result
+
     def _repair_order(self, starting=0, recur=False):
         """
 
@@ -819,4 +819,3 @@ class Statement(Tags, Equalities):
 
         # Changes lines in place.
         return ordered
-
