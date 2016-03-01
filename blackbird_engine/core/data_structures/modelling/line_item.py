@@ -29,8 +29,8 @@ LineItem              a Statement that has its own value
 # Imports
 import copy
 import time
-from collections import OrderedDict
 
+import bb_settings
 import bb_exceptions
 import tools.for_printing as printing_tools
 
@@ -415,11 +415,7 @@ class LineItem(Statement):
 
             extra_tab = indent + self.TAB_WIDTH
 
-            lines = []
-            for k in sorted(self._details.keys()):
-                lines.append(self._details[k])
-
-            for detail in lines:
+            for detail in self.get_ordered():
                 view = detail._get_line_strings(extra_tab)
                 # Will always return a list of strings
                 result.extend(view)
@@ -458,7 +454,7 @@ class LineItem(Statement):
         # somehow get reset to None, the lineitem could get behind and the
         # entire financials unit could lose a special processing trigger.
         
-        replica._details = OrderedDict()
+        replica._details = dict()
         # Replicas don't have any details of their own. Can't run .clear() here
         # because instance and replica initially point to the same details dict.
         replica.tag(T_REPLICA)
@@ -482,8 +478,14 @@ class LineItem(Statement):
         Return sum of all details or None if all of the details have a None
         value. Method distinguishes between 0s and None.
         """
+        if bb_settings.DEBUG_MODE:
+            pool = sorted(self._details.values(),
+                          key=lambda line: line.position)
+        else:
+            pool = self._details.values()
+
         result = None
-        for detail in self._details.values():
+        for detail in pool:
             if detail.value is None:
                 continue
             else:
