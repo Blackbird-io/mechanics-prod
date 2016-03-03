@@ -29,25 +29,49 @@ make_test()           generates a new test from a script
 
 
 
-#imports:
+# imports:
+import compileall
 import copy
 import dill as pickle
+import imp
 import inspect
 import os
+import shutil
+import string
 import sys
 import time
-import string
-from fnmatch import fnmatch
-import shutil
+
 from datetime import datetime
-import compileall
-import imp
+from fnmatch import fnmatch
 
-#constants
-FOLDER_NAME = r"diagnostics_log"
-# Address for log folder with respect to cwd.
 
-#functions
+
+
+# Constants
+FOLDER_NAME = r"diagnostics_log"  # Address for log folder with respect to cwd.
+
+# Constants for make_test
+MAIN_TEMPLATE_DIR = r".\tests\templates"
+TEMPLATE_DIR = MAIN_TEMPLATE_DIR + r"\_rev_test_template"
+TEST_PATH = r".\tests"
+SCRIPT_DIR = r".\scripts"
+LOG_FILE_NAME = r"\log.txt"
+_INIT_FILE = r"\__init__.py"
+_GRADER_FILE = r"\grader.py"
+_TASK_FILE = r"\task.py"
+_P = r"."
+
+# Template test file lines to replace
+_MODULE_INIT_LOCATION_BM = "#Module: Tests.Basic.interview_test_template." \
+                           "__init__\n"
+_NAME_VAR_BM = 'name = "interview_test_template"\n'
+_MODULE_TASK_LOCATION_BM = "#Module: Tests.Basic.interview_template.Task\n"
+_SCRIPT_TEMPLATE_BM = "SCRIPT: TEMPLATE\n"
+_IMPORT_SCRIPT_BM = "from scripts import template_module as seed  " \
+                    "# REPLACE WITH ACTUAL TO USE\n"
+
+
+# Functions
 def generate_standard(build_path, *tests, overwrite=False):
     """
 
@@ -96,6 +120,7 @@ def generate_standard(build_path, *tests, overwrite=False):
         file.close()
     #the end
 
+
 def print_result(result, truncate=True):
     """
 
@@ -126,6 +151,7 @@ def print_result(result, truncate=True):
             continue
     print("")
 
+
 def run_battery(build_path, *battery, force_finish=False):
     """
 
@@ -153,7 +179,8 @@ def run_battery(build_path, *battery, force_finish=False):
         else:
             break
     return tracker
-        
+
+
 def run_test(build_path, test, log=False, timer=False):
     """
 
@@ -173,7 +200,8 @@ def run_test(build_path, test, log=False, timer=False):
     s = run_test_check(build_path, test, r, log = log, timer = timer)
     #
     return s
-    
+
+
 def run_test_do(build_path, test, log=False, timer=False, retain_state=False,):
     """
 
@@ -266,6 +294,7 @@ def run_test_do(build_path, test, log=False, timer=False, retain_state=False,):
     sys.stdout = sys.__stdout__
     #
     return result
+
 
 def run_test_check(build_path, test, result, log=False, timer=False):
     """
@@ -360,185 +389,139 @@ def make_test(script, desc, directory, battery):
     -- ``battery`` must be the string name of the battery to which the test
         belongs; can be a new or existing battery
     """
-    main_template_dir = r".\tests\templates"
-    template_dir = main_template_dir + r"\_rev_test_template"
-    test_path = r".\tests"
-    ini_file = r"\__init__.py"
-    grader_file = r"\grader.py"
-    task_file = r"\task.py"
-    p = r"."
-    log_fnam = r"\log.txt"
 
-    try:
-        # check if script module exists
-        script_path = (r".\scripts\%s.py" % script)
-        if os.path.isfile(script_path) is False:
-            raise FileNotFoundError
-        else:
-            base_path = test_path + r"\%s" % directory
-
-            # first, check if directory where test will live exists
-            if not os.path.isdir(base_path):
-                # directory doesn't exist, have to make it
-                os.mkdir(base_path)
-
-                # also need to add __init__.py file
-                shutil.copy(main_template_dir + ini_file,
-                            base_path + ini_file)
-
-                # within tests\__init__.py look for #imports to add new module
-                _add_module_to_tests(test_path, directory)
-
-            # use first two "words" in script filename to try to divine what
-            # the test folder name should be
-            temp = script.split('_')
-            dir_name = temp[0]+"_"+temp[1]
-
-            # check if the proposed test name already exists in this directory
-            count = 0
-            path_check = base_path + r"\%s" % dir_name
-            while os.path.isdir(path_check):
-                # directory exists, see if it contains a test for this script
-                txt = open(path_check+task_file)
-                check_text = "from scripts import * as seed*"
-
-                # find line designating script
-                while True:
-                    txt_temp = txt.readline()
-                    if fnmatch(txt_temp, check_text):
-                        txt.close()
-                        break
-
-                temp = txt_temp.split(' ')
-                if temp[3] == script:
-                    # file contains the script
-                    # -> raise error and tell user this test has been made already
-                    raise FileExistsError
-                else:
-                    # file does NOT contain this script, try a different
-                    # directory name to find a place to put our new test
-                    if count == 0:
-                        dir_name += string.ascii_uppercase[count]
-                    else:
-                        dir_name = dir_name[:-1]+string.ascii_uppercase[count]
-
-                    path_check = base_path + r"\%s" % dir_name
-                    count += 1
-
-            # make the directory using non-conflicting name determined above
-            os.mkdir(path_check)
-
-            # create new log file and open for writing
-            logfile = open(path_check + log_fnam,"x")
-            logfile.write(str(datetime.today())+"\n")
-            logfile.write("Creating test "+dir_name+" from script: "+script+".py\n")
-
-            # copy template grader.py file form _rev_test_template normally
-            shutil.copy(template_dir+grader_file, path_check+grader_file)
-            logfile.write("Copied grader.py template.\n")
-
-            # make dictionary of lines to replace and their new values
-            rep_dict = dict()
-
-            rep_dict["#Module: Tests.Basic.interview_test_template.__init__\n"]\
-                = "#Module: Tests."+directory+"."+dir_name+".__init__\n"
-
-            rep_dict['name = "interview_test_template"\n']\
-                = 'name = "'+desc+'"\n'
-
-            rep_dict["#Module: Tests.Basic.interview_template.Task\n"]\
-                = "#Module: Tests."+directory+"."+dir_name+".Task\n"
-
-            rep_dict["SCRIPT: TEMPLATE\n"]\
-                = "SCRIPT: "+script+"\n"
-
-            rep_dict["from scripts import template_module as seed #" \
-                     "<<<<<<<<<REPLACE WITH ACTUAL TO USE\n"]\
-                = "from scripts import "+script+" as seed\n"
-
-            # update __init__.py with description of script/test
-            _file_copy_by_line_w_replace(template_dir+ini_file,
-                                         path_check+ini_file,
-                                         rep_dict)
-            logfile.write("Finished line-by-line custom copy of __init__.py "
-                          "template.\n")
-
-            # update task.py with module name to import
-            _file_copy_by_line_w_replace(template_dir+task_file,
-                                         path_check+task_file,
-                                         rep_dict)
-
-            logfile.write("Finished line-by-line custom copy of task.py "
-                          "template.\n")
-
-            # Add test to appropriate battery in test_directory.__init__
-            _add_basic_test_module(base_path, dir_name, battery)
-            logfile.write("Added new test to "+directory+" module.\n")
-            logfile.write("Added new test to "+battery+" battery.\n")
-
-            # need to compile and import here, otherwise new module will
-            # not be included, will also reload later
-            compileall.compile_dir(test_path, maxlevels=20)
-            import tests
-
-            # generate_standard using this framework
-            module = getattr(tests, directory)
-            imp.reload(module)  # gotta re-load it so we can use it
-
-            t = getattr(module, dir_name)
-            generate_standard(p, t, overwrite=False)
-            logfile.write("Standard generated for new test.\n")
-
-            # run_test and confirm build passes
-            res = run_test(p, t, log=True)
-            logfile.write("Test run and passed: "+str(res)+"\n")
-            logfile.write("See detailed results in diagnostics_log folder.\n")
-            logfile.close()
-
-            print("New test created for script ("+script+") and stored in "
-                  "tests (" + path_check + ").")
-            print("See log file in test folder for details.")
-
-    except FileExistsError:
-        msg = "!ERROR: The test associated with this script ("+script+".py) " \
-                                                     "has already been made!\n"
-        print(msg)
-        exit()
-
-    except FileNotFoundError:
+    # check if script module exists
+    script_path = (SCRIPT_DIR + r"\%s.py" % script)
+    if not os.path.isfile(script_path):
         msg = "!ERROR: This script ("+script+") does not exist in the " \
-                                             "scripts folder!"
+                                         "scripts folder!"
         print(msg)
         exit()
+    else:
+        base_path = TEST_PATH + r"\%s" % directory
+
+        # first, check if directory where test will live exists
+        if not os.path.isdir(base_path):
+            # directory doesn't exist, have to make it
+            os.mkdir(base_path)
+
+            # also need to add __init__.py file
+            template_file = MAIN_TEMPLATE_DIR + _INIT_FILE
+            newtest_file = base_path + _INIT_FILE
+            shutil.copy(template_file, newtest_file)
+
+            # within tests\__init__.py look for #imports to add new module
+            _add_module_to_tests(TEST_PATH, directory)
+
+        # use first two "words" in script filename to try to divine what
+        # the test folder name should be
+        temp = script.split('_')
+        dir_name = temp[0]+"_"+temp[1]
+
+        # check if the proposed test name already exists in this directory
+        path_check = base_path + r"\%s" % dir_name
+        while os.path.isdir(path_check):
+            # directory exists, see if it contains a test for this script
+            txt = open(path_check+_TASK_FILE)
+            check_text = "from scripts import * as seed*"
+
+            # find line designating script
+            while True:
+                txt_temp = txt.readline()
+                if fnmatch(txt_temp, check_text):
+                    txt.close()
+                    break
+
+            temp = txt_temp.split(' ')
+            if temp[3] == script:
+                # file contains the script
+                # -> print error and tell user this test has been made
+                #    already
+                msg = "!ERROR: The test associated with this script ("+\
+                      script+".py) has already been made!\n"
+                print(msg)
+                exit()
+            else:
+                # file does NOT contain this script, ask user to supply
+                # a valid test name
+                msg = "!ERROR: A test named "+dir_name+" has already "\
+                      "been created.  Please supply a valid test name:  "
+                dir_name = input(msg)
+                dir_name = dir_name.strip()
+                dir_name = dir_name.replace(" ", "_")
+
+                path_check = base_path + r"\%s" % dir_name
+
+        # make the directory using non-conflicting name determined above
+        os.mkdir(path_check)
+
+        # create new log file and open for writing
+        logfile = open(path_check + LOG_FILE_NAME,"x")
+        logfile.write(str(datetime.today())+"\n")
+        logfile.write("Creating test "+dir_name+" from script: " +
+                      script+".py\n")
+
+        # copy template grader.py file form _rev_test_template normally
+        shutil.copy(TEMPLATE_DIR+_GRADER_FILE, path_check+_GRADER_FILE)
+        logfile.write("Copied grader.py template.\n")
+
+        # make dictionary of lines to replace and their new values
+        rep_dict = dict()
+        rep_dict[_MODULE_INIT_LOCATION_BM]\
+            = "#Module: Tests."+directory+"."+dir_name+".__init__\n"
+        rep_dict[_NAME_VAR_BM] = 'name = "'+desc+'"\n'
+        rep_dict[_MODULE_TASK_LOCATION_BM]\
+            = "#Module: Tests."+directory+"."+dir_name+".Task\n"
+        rep_dict[_SCRIPT_TEMPLATE_BM] = "SCRIPT: "+script+"\n"
+        rep_dict[_IMPORT_SCRIPT_BM] = "from scripts import "+script + \
+                                      " as seed\n"
+
+        # update __init__.py with description of script/test
+        _file_copy_by_line_w_replace(TEMPLATE_DIR+_INIT_FILE,
+                                     path_check+_INIT_FILE,
+                                     rep_dict)
+        logfile.write("Finished line-by-line custom copy of __init__.py "
+                      "template.\n")
+
+        # update task.py with module name to import
+        _file_copy_by_line_w_replace(TEMPLATE_DIR+_TASK_FILE,
+                                     path_check+_TASK_FILE,
+                                     rep_dict)
+
+        logfile.write("Finished line-by-line custom copy of task.py "
+                      "template.\n")
+
+        # Add test to appropriate battery in test_directory.__init__
+        _add_basic_test_module(base_path, dir_name, battery)
+        logfile.write("Added new test to "+directory+" module.\n")
+        logfile.write("Added new test to "+battery+" battery.\n")
+
+        # need to compile and import here, otherwise new module will
+        # not be included, will also reload later
+        compileall.compile_dir(TEST_PATH, maxlevels=20)
+        import tests
+
+        # generate_standard using this framework
+        module = getattr(tests, directory)
+        imp.reload(module)  # gotta re-load it so we can use it
+
+        t = getattr(module, dir_name)
+        generate_standard(_P, t, overwrite=False)
+        logfile.write("Standard generated for new test.\n")
+
+        # run_test and confirm build passes
+        res = run_test(_P, t, log=True)
+        logfile.write("Test run and passed: "+str(res)+"\n")
+        logfile.write("See detailed results in diagnostics_log folder.\n")
+        logfile.close()
+
+        print("New test created for script ("+script+") and stored in "
+              "tests (" + path_check + ").")
+        print("See log file in test folder for details. Test passed: "
+              + str(res))
 
 
-def _read_file_lines_to_list(file_path):
-    """
-
-
-    _read_file_lines_to_list() -> list
-
-
-    Function reads file and saves all lines to list.
-
-    -- ``file_path`` must be a string path to the file to read
-    """
-    # Read in file as-is, line by line
-    file = open(file_path, "r")
-    file_lines = []
-
-    while True:
-        text = file.readline()
-        if text == "":
-            break
-
-        file_lines.append(text)
-    file.close()
-
-    return file_lines
-
-
-def _add_import_to_lines(file_lines, import_placeholder, import_text):
+def _add_import_to_lines(file_lines, insert_marker, insert_text):
     """
 
 
@@ -548,20 +531,21 @@ def _add_import_to_lines(file_lines, import_placeholder, import_text):
     Function adds new import to import section of __init__ file
 
     -- ``file_lines`` must be a list of file lines
-    -- ``import_placeholder`` must be a string indicating where new imports
+    -- ``insert_marker`` must be a string indicating where new imports
         are to be added
-    -- ``import_text`` must be the string containing the new import text
+    -- ``insert_text`` must be the string containing the new import text
     """
+
     for i, line in enumerate(file_lines):
         # check to see if it's time to import the new test
-        if import_placeholder in line:
-            file_lines.insert(i+1, import_text)
+        if insert_marker in line:
+            file_lines.insert(i+1, insert_text)
             break
 
     return file_lines
 
 
-def _add_module_to_tests(test_path, new_module):
+def _add_module_to_tests(TEST_PATH, new_module):
     """
 
 
@@ -571,19 +555,21 @@ def _add_module_to_tests(test_path, new_module):
     Function copies contents of main test directory __init__ file and adds
     new modules to the imports
 
-    -- ``test_path`` must be a string path to the main test directory
+    -- ``TEST_PATH`` must be a string path to the main test directory
     -- ``new_module`` must be the name of the newly created directory
     """
-    fpath = test_path + r"\__init__.py"
-    import_placeholder = '#imports'
-    import_text = "from . import "+new_module+"\n"
+    fpath = TEST_PATH + r"\__init__.py"
+    insert_marker = '#imports'
+    insert_text = "from . import "+new_module+"\n"
 
     # Read in basic.__init__.py file as-is, line by line
-    init_lines = _read_file_lines_to_list(fpath)
+    file = open(fpath,"r")
+    init_lines = file.readlines()
+    file.close()
 
     # Add import
-    init_lines = _add_import_to_lines(init_lines, import_placeholder,
-                                      import_text)
+    init_lines = _add_import_to_lines(init_lines, insert_marker,
+                                      insert_text)
 
     # Now open basic.__init__.py to write modifications
     init = open(fpath, "w")
@@ -608,7 +594,10 @@ def _file_copy_by_line_w_replace(old_file, new_file, rep_dict):
     -- ``new_file`` must be string path to new file to write
     -- ``rep_dict`` must be a dictionary containing lines and their replacement
     """
-    file_lines = _read_file_lines_to_list(old_file)
+    file = open(old_file,"r")
+    file_lines = file.readlines()
+    file.close()
+
     new_text = open(new_file, "x")
 
     for line in file_lines:
@@ -636,18 +625,20 @@ def _add_basic_test_module(test_directory, test, battery):
         belongs; can be a new or existing battery
     """
 
-    fpath = test_directory + r"\__init__.py"
+    fpath = test_directory + _INIT_FILE
     check_text = 'batteries["'+battery+'"]'
     end_text = "]"
-    import_placeholder = '# placeholder for new imports'
-    import_text = "from . import "+test+"\n"
+    insert_marker = '# placeholder for new imports'
+    insert_text = "from . import "+test+"\n"
 
     # Read in test_directory.__init__.py file as-is, line by line
-    init_lines = _read_file_lines_to_list(fpath)
+    file = open(fpath,"r")
+    init_lines = file.readlines()
+    file.close()
 
     # Add new import to lines
-    init_lines = _add_import_to_lines(init_lines, import_placeholder,
-                                      import_text)
+    init_lines = _add_import_to_lines(init_lines, insert_marker,
+                                      insert_text)
 
     # Now open test_directory.__init__.py to write modifications
     init = open(fpath,"w")
@@ -673,15 +664,20 @@ def _add_basic_test_module(test_directory, test, battery):
                 line_added = True
             else:
                 init.write(line)
-        elif batt_found is True and line_added is False:
+        elif batt_found and not line_added:
             # check here for last entry in battery
             if end_text in line:
                 # get correct number of blanks from last line for good format
-                blanks = ' '*(len(last_line) - len(last_line.strip(' ')))
+                blanks = ' '*(len(line) - len(line.strip(' ')))
 
-                new_line = line[:-2]+',\n'
+                idx = line.index(end_text)
+                new_end = line[idx:]
+
+                new_line = line[:idx]+',\n'
                 init.write(new_line)
-                init.write(blanks+test+']\n')
+
+                new_line = blanks+test+new_end
+                init.write(new_line)
                 line_added = True
             else:
                 init.write(line)
@@ -692,7 +688,7 @@ def _add_basic_test_module(test_directory, test, battery):
         # save this line for use in formatting if needed
         last_line = line
 
-    if batt_found is False:
+    if not batt_found:
         # We need to add a new battery
         line = '\nbatteries["'+battery+'"] = ['+test+']\n'
         init.write(line)
