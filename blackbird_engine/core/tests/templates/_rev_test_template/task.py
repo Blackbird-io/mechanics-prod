@@ -48,7 +48,7 @@ import simple_portal as Portal
 
 from tools import for_messages as message_tools
 
-from scripts import template_module as seed #<<<<<<<<<REPLACE WITH ACTUAL TO USE
+from scripts import template_module as seed  # REPLACE WITH ACTUAL TO USE
 #<------------------------------------------------------------------------------
 
 
