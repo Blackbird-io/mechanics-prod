@@ -51,24 +51,24 @@ from fnmatch import fnmatch
 FOLDER_NAME = r"diagnostics_log"  # Address for log folder with respect to cwd.
 
 # Constants for make_test
+LOG_FILE_NAME = r"\log.txt"
 MAIN_TEMPLATE_DIR = r".\tests\templates"
+SCRIPT_DIR = r".\scripts"
 TEMPLATE_DIR = MAIN_TEMPLATE_DIR + r"\_rev_test_template"
 TEST_PATH = r".\tests"
-SCRIPT_DIR = r".\scripts"
-LOG_FILE_NAME = r"\log.txt"
-_INIT_FILE = r"\__init__.py"
 _GRADER_FILE = r"\grader.py"
-_TASK_FILE = r"\task.py"
+_INIT_FILE = r"\__init__.py"
 _P = r"."
+_TASK_FILE = r"\task.py"
 
 # Template test file lines to replace
-_MODULE_INIT_LOCATION_BM = "#Module: Tests.Basic.interview_test_template." \
-                           "__init__\n"
-_NAME_VAR_BM = 'name = "interview_test_template"\n'
-_MODULE_TASK_LOCATION_BM = "#Module: Tests.Basic.interview_template.Task\n"
-_SCRIPT_TEMPLATE_BM = "SCRIPT: TEMPLATE\n"
 _IMPORT_SCRIPT_BM = "from scripts import template_module as seed  " \
                     "# REPLACE WITH ACTUAL TO USE\n"
+_MODULE_INIT_LOCATION_BM = "#Module: Tests.Basic.interview_test_template." \
+                           "__init__\n"
+_MODULE_TASK_LOCATION_BM = "#Module: Tests.Basic.interview_template.Task\n"
+_NAME_VAR_BM = 'name = "interview_test_template"\n'
+_SCRIPT_TEMPLATE_BM = "SCRIPT: TEMPLATE\n"
 
 
 # Functions
