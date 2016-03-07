@@ -18,7 +18,6 @@ n/a
 
 FUNCTIONS:
 check()               compare Task output to standard
-printRubric()         pretty print for performance results
 
 CLASSES:
 n/a
@@ -112,7 +111,7 @@ def check(result,standard):
         #
         #check rubric, figure out result
         #this test requires 100% accuracy, so decision criterion is simple
-        stepks,confks = printRubric(r = rubric)
+        stepks,confks = print_rubric(r = rubric)
         for k in confks:
             if rubric[k] == False:
                 passed = False
@@ -140,7 +139,7 @@ def check(result,standard):
         traceback.print_exc(file = sys.stdout)
         traceback.print_stack(file = sys.stdout)
         print("\n")
-        stepks, confks = printRubric(r=rubric)
+        stepks, confks = print_rubric(r=rubric)
         passed = False
         print("passed set to False by Grader")
     finally:

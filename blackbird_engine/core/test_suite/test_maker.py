@@ -1,10 +1,10 @@
 #PROPRIETARY AND CONFIDENTIAL
 #Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2014
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+#Copyright Blackbird Logical Applications, LLC 2016
+#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 #Blackbird Diagnostics
-#Module: tester
+#Module: test_maker
 """
 
 Module provides testing tools for Blackbird Engine.
@@ -13,15 +13,13 @@ Object                Description
 ====================  ==========================================================
 
 DATA:
-FOLDER_NAME           name of storage folder for diagnostics logs
+LOG_FILE_NAME         name of log file
+MAIN_TEMPLATE_DIR     path to test template directory
+SCRIPT_DIR            path to script directory
+TEMPLATE_DIR          path to test template
+TEST_PATH             path to tests folder
 
 FUNCTIONS:
-generate_standard()   run tests, save output as standard in test folder
-print_result()        pretty print for standard result dictionary
-run_battery()         returns dict w results for each test
-run_test()            returns bool, run task then grader for a single test
-run_test_do()         returns dict, use build to perform one test's task
-run_test_check()      returns True if build output passes test, else False
 make_test()           generates a new test from a script
 ====================  ==========================================================
 """
@@ -47,12 +45,11 @@ TEMPLATE_DIR = MAIN_TEMPLATE_DIR + r"\_rev_test_template"
 TEST_PATH = r".\test_suite\tests"
 _GRADER_FILE = r"\grader.py"
 _INIT_FILE = r"\__init__.py"
-_P = r"."
 _TASK_FILE = r"\task.py"
 
 # Template test file lines to replace
-_IMPORT_SCRIPT_BM = "from scripts import template_module as seed  " \
-                    "# REPLACE WITH ACTUAL TO USE\n"
+_IMPORT_SCRIPT_BM = "from test_suite.scripts import template_module as " \
+                    "seed  # REPLACE WITH ACTUAL TO USE\n"
 _MODULE_INIT_LOCATION_BM = "#Module: Tests.Basic.interview_test_template." \
                            "__init__\n"
 _MODULE_TASK_LOCATION_BM = "#Module: Tests.Basic.interview_template.Task\n"
@@ -186,6 +183,90 @@ def make_test(script, desc, directory, battery):
         logfile.write("Added new test to "+battery+" battery.\n")
         logfile.close()
 
+        return dir_name
+
+
+def _add_basic_test_module(test_directory, test, battery):
+    """
+
+
+    add_basic_test_module() -> None
+
+
+    Function adds new test to the specified battery to be available for testers
+
+    -- ``test`` must be the string name of the new test module
+    -- ``battery`` must be the string name of the battery to which the test
+        belongs; can be a new or existing battery
+    """
+
+    fpath = test_directory + _INIT_FILE
+    check_text = 'batteries["'+battery+'"]'
+    end_text = "]"
+    insert_marker = '# placeholder for new imports'
+    insert_text = "from . import "+test+"\n"
+
+    # Read in test_directory.__init__.py file as-is, line by line
+    file = open(fpath,"r")
+    init_lines = file.readlines()
+    file.close()
+
+    # Add new import to lines
+    init_lines = _add_import_to_lines(init_lines, insert_marker,
+                                      insert_text)
+
+    # Now open test_directory.__init__.py to write modifications
+    init = open(fpath,"w")
+
+    batt_found = False  # has the appropriate battery been found
+    line_added = False  # has the new test been added to the battery
+    for line in init_lines:
+        # check if it's time to add the test to a battery
+        if check_text in line:
+            batt_found = True
+
+            # check to see if this battery has only one entry,
+            #  append here if so
+            temp = line.split('=')
+            check_this = temp[1]
+            if end_text in check_this:
+                # guestimate the num of blanks from last line for good format
+                blanks = ' '*(len(line) - len(test))
+
+                new_line = temp[0]+"="+temp[1][:-2]+',\n'
+                init.write(new_line)
+                init.write(blanks+test+']\n')
+                line_added = True
+            else:
+                init.write(line)
+        elif batt_found and not line_added:
+            # check here for last entry in battery
+            if end_text in line:
+                # get correct number of blanks from last line for good format
+                blanks = ' '*(len(line) - len(line.strip(' ')))
+
+                idx = line.index(end_text)
+                new_end = line[idx:]
+
+                new_line = line[:idx]+',\n'
+                init.write(new_line)
+
+                new_line = blanks+test+new_end
+                init.write(new_line)
+                line_added = True
+            else:
+                init.write(line)
+        else:
+            # otherwise just a normal line, regurgitate it
+            init.write(line)
+
+    if not batt_found:
+        # We need to add a new battery
+        line = '\nbatteries["'+battery+'"] = ['+test+']\n'
+        init.write(line)
+
+    init.close()
+
 
 def _add_import_to_lines(file_lines, insert_marker, insert_text):
     """
@@ -275,112 +356,3 @@ def _file_copy_by_line_w_replace(old_file, new_file, rep_dict):
             new_text.write(line)
 
     new_text.close()
-
-
-def _add_basic_test_module(test_directory, test, battery):
-    """
-
-
-    add_basic_test_module() -> None
-
-
-    Function adds new test to the specified battery to be available for testers
-
-    -- ``test`` must be the string name of the new test module
-    -- ``battery`` must be the string name of the battery to which the test
-        belongs; can be a new or existing battery
-    """
-
-    fpath = test_directory + _INIT_FILE
-    check_text = 'batteries["'+battery+'"]'
-    end_text = "]"
-    insert_marker = '# placeholder for new imports'
-    insert_text = "from . import "+test+"\n"
-
-    # Read in test_directory.__init__.py file as-is, line by line
-    file = open(fpath,"r")
-    init_lines = file.readlines()
-    file.close()
-
-    # Add new import to lines
-    init_lines = _add_import_to_lines(init_lines, insert_marker,
-                                      insert_text)
-
-    # Now open test_directory.__init__.py to write modifications
-    init = open(fpath,"w")
-
-    batt_found = False  # has the appropriate battery been found
-    line_added = False  # has the new test been added to the battery
-    for line in init_lines:
-        # check if it's time to add the test to a battery
-        if check_text in line:
-            batt_found = True
-
-            # check to see if this battery has only one entry,
-            #  append here if so
-            temp = line.split('=')
-            check_this = temp[1]
-            if end_text in check_this:
-                # guestimate the num of blanks from last line for good format
-                blanks = ' '*(len(last_line) - len(test))
-
-                new_line = temp[0]+"="+temp[1][:-3]+'",\n'
-                init.write(new_line)
-                init.write(blanks+test+']\n')
-                line_added = True
-            else:
-                init.write(line)
-        elif batt_found and not line_added:
-            # check here for last entry in battery
-            if end_text in line:
-                # get correct number of blanks from last line for good format
-                blanks = ' '*(len(line) - len(line.strip(' ')))
-
-                idx = line.index(end_text)
-                new_end = line[idx:]
-
-                new_line = line[:idx]+',\n'
-                init.write(new_line)
-
-                new_line = blanks+test+new_end
-                init.write(new_line)
-                line_added = True
-            else:
-                init.write(line)
-        else:
-            # otherwise just a normal line, regurgitate it
-            init.write(line)
-
-        # save this line for use in formatting if needed
-        last_line = line
-
-    if not batt_found:
-        # We need to add a new battery
-        line = '\nbatteries["'+battery+'"] = ['+test+']\n'
-        init.write(line)
-
-    init.close()
-
-# # need to compile and import here, otherwise new module will
-# # not be included, will also reload later
-# compileall.compile_dir(TEST_PATH, maxlevels=20)
-# import tests
-#
-# # generate_standard using this framework
-# module = getattr(tests, directory)
-# imp.reload(module)  # gotta re-load it so we can use it
-#
-# t = getattr(module, dir_name)
-# generate_standard(_P, t, overwrite=False)
-# logfile.write("Standard generated for new test.\n")
-#
-# # run_test and confirm build passes
-# res = run_test(_P, t, log=True)
-# logfile.write("Test run and passed: "+str(res)+"\n")
-# logfile.write("See detailed results in diagnostics_log folder.\n")
-# logfile.close()
-#
-# print("New test created for script ("+script+") and stored in "
-#       "tests (" + path_check + ").")
-# print("See log file in test folder for details. Test passed: "
-#       + str(res))
