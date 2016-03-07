@@ -106,18 +106,24 @@ make_test = subparsers.add_parser(_MAKE_TEST,
 make_test.add_argument("-ls", "--list",
                        help="list all available batteries and tests",
                        action="store_true")
-make_test.add_argument("-m", "--make_test",
+
+# -m and -g cannot be called at the same time, assuming user would like to call
+# them on the same test, -g won't work due to import/compile issues with new
+# module, use -mg instead.
+meg = make_test.add_mutually_exclusive_group()
+
+meg.add_argument("-m", "--make_test",
                        help="make a new test from a script",
                        action="store_true")
-make_test.add_argument("-mg", "--make_test_and_generate_standard",
-                       help="make a new test from a script and then generate"
-                            " the standard",
-                       action="store_true")
-make_test.add_argument("-g", "--generate_standard", nargs=2,
+meg.add_argument("-g", "--generate_standard", nargs=2,
                        metavar=("BATTERY_DESIGNATION", "TEST_DESIGNATION"),
                        help="generate the standard for the specified test in "
                             "the specified battery, use -ls to get "
                             "designations")
+make_test.add_argument("-mg", "--make_test_and_generate_standard",
+                       help="make a new test from a script and then generate"
+                            " the standard",
+                       action="store_true")
 
 
 # Printing function for sub-command helps
