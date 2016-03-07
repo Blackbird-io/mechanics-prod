@@ -24,13 +24,13 @@ N/A
 COMMAND LINE OPTIONS:
 run_test              sub-command containing the following options:
 --all                 run all tests in all batteries
+--battery             run a specific battery, use -ls to get designations
 --list                list all available batteries and test
 --test                run a specific test, use -ls to get designations
---battery             run a specific battery, use -ls to get designations
 --verbose             print test output to screen instead of logging
---generate_standard   generate standard for the specified test
 
 make_test             sub-command containing the following options:
+--generate_standard   generate standard for the specified test
 --make_test           make a new test from a given script; asks user for
                       necessary inputs
 --make_test_and_generate_standard
@@ -95,25 +95,30 @@ run_test.add_argument("-ls", "--list",
 run_test.add_argument("-v", "--verbose",
                       help="print output to screen, do not log",
                       action="store_true")
-run_test.add_argument("-g", "--generate_standard",
-                      help="generate the standard for the specified test in "
-                           "the specified battery (use -b and -t options)",
-                      action="store_true")
 
 
 # make_test mode--------------------------------------------------------------
 make_test = subparsers.add_parser(_MAKE_TEST,
-                                 description="Sub-command for making tests and"
-                                             " generating standards.",
-                                 help="sub-command to access functionality for"
-                                      " making tests")
+                                  description="Sub-command for making tests "
+                                              "and generating standards.",
+                                  help="sub-command to access functionality "
+                                       "for making tests")
+make_test.add_argument("-ls", "--list",
+                       help="list all available batteries and tests",
+                       action="store_true")
 make_test.add_argument("-m", "--make_test",
-                      help="make a new test from a script",
-                      action="store_true")
+                       help="make a new test from a script",
+                       action="store_true")
 make_test.add_argument("-mg", "--make_test_and_generate_standard",
-                      help="make a new test from a script and then generate"
-                           " the standard",
-                      action="store_true")
+                       help="make a new test from a script and then generate"
+                            " the standard",
+                       action="store_true")
+make_test.add_argument("-g", "--generate_standard", nargs=2,
+                       metavar=("BATTERY_DESIGNATION", "TEST_DESIGNATION"),
+                       help="generate the standard for the specified test in "
+                            "the specified battery, use -ls to get "
+                            "designations")
+
 
 # Printing function for sub-command helps
 def _print_help(subpar, name):
@@ -133,12 +138,56 @@ def _print_help(subpar, name):
 
     print("""
 
-    *****************************************************************
-    *            Using testing_shell in %s mode:%s             *
-    *****************************************************************
+    *******************************************************************
+    *             Using testing_shell in %s mode:%s              *
+    *******************************************************************
 
     """ % (name, blanks))
     subpar.print_help()
+
+
+# Printing function for test and battery options
+def _list_options():
+    """
+
+
+    _list_options() -> None
+
+    Prints the list of all available tests and batteries..
+    """
+
+    list_dict = testing_tools.make_test_dicts()
+
+    print("""
+    *******************************************************************
+    *                      Available Batteries                        *
+    * Use -b with the given designation to select a specific battery. *
+    *******************************************************************
+    """)
+    for k in list_dict.keys():
+        print(k+': '+list_dict[k][0])
+
+    print("")
+
+    print("""
+    *******************************************************************
+    *                         Available Tests                         *
+    *  Use -t with two-letter designation to select a specific test.  *
+    * When selecting a specific test, battery must also be specified. *
+    *******************************************************************
+    """)
+    for k in list_dict.keys():
+        print("Tests in "+k+' Battery')
+        print("-----------------------------------")
+
+        test_dict_temp = list_dict[k][2]
+
+        for t in test_dict_temp.keys():
+            print(t+': '+test_dict_temp[t].name)
+
+        # add blank lines between batteries for clarity
+        print("")
+        print("")
 
 
 # Process user input
@@ -146,10 +195,10 @@ args = parser.parse_args()
 
 if args.mode is None:
     print("""
-    *****************************************************************
-    *         Welcome to the Command Line Engine Test Tool          *
-    *                                                               *
-    *****************************************************************
+    *******************************************************************
+    *          Welcome to the Command Line Engine Test Tool           *
+    *                                                                 *
+    *******************************************************************
     """)
     parser.print_help()
 
@@ -166,36 +215,7 @@ if args.mode == _RUN_TEST:
         _print_help(run_test, _RUN_TEST)
 
     if args.list:
-        print("""
-        *****************************************************************
-        *                     Available Batteries                       *
-        *  Use -b with the given designation to run a specific battery. *
-        *****************************************************************
-        """)
-        for k in batt_dict.keys():
-            print(k+': '+batt_dict[k][0])
-
-        print("")
-
-        print("""
-        *****************************************************************
-        *                        Available Tests                        *
-        *   Use -t with two-letter designation to run a specific test.  *
-        * When running a specific test, battery must also be specified. *
-        *****************************************************************
-        """)
-        for k in batt_dict.keys():
-            print("Tests in "+k+' Battery')
-            print("-----------------------------------")
-
-            test_dict = batt_dict[k][2]
-
-            for t in test_dict.keys():
-                print(t+': '+test_dict[t].name)
-
-            # add blank lines between batteries for clarity
-            print("")
-            print("")
+        _list_options()
         
     if args.verbose:
         log = False
@@ -220,33 +240,6 @@ if args.mode == _RUN_TEST:
 
             # add blank lines between batteries for clarity
             summary.extend(["", ""])
-
-    if args.generate_standard:
-        if args.battery:
-            test_dict = batt_dict[args.battery][2]
-            if args.test:
-                if args.test in test_dict.keys():
-                    # test exists within battery , so run it
-                    print("Generating standard for test "+args.test+" in " +
-                          args.battery+" battery...")
-                    tester.generate_standard(_P, test_dict[args.test])
-                    print("Standard has been generated for test " + args.test +
-                          " in " + args.battery + " battery.")
-                else:
-                    print("ERROR: Test does not exist in specified battery.")
-                    exit()
-            else:
-                print("ERROR: You must specify a test (-t %s) in order to "
-                      "generate a standard." % [s for s in test_dict.keys()])
-                exit()
-        else:
-            print("ERROR: You must specify a battery (-b %s) and test (-t) "
-                  "in order to generate the standard for a test." %
-                  [s for s in batt_dict.keys()])
-            exit()
-
-        # exit() now so tests don't run
-        exit()
 
     # Run all tests in battery if particular test not specified
     if args.battery and not args.test:
@@ -276,23 +269,27 @@ if args.mode == _RUN_TEST:
                 print("ERROR: Test does not exist in specified battery.")
                 exit()
         else:
-            print("ERROR: You must specify a battery (-b %s) in order to run a" +
+            print("ERROR: You must specify a battery (-b %s) in order to run a"
                   " specific test." % [s for s in batt_dict.keys()])
             exit()
 
     # Summarize test results
     if args.test or args.battery or args.all:
         print("""
-        *****************************************************************
-        *                         Test Results                          *
-        *****************************************************************
+        *******************************************************************
+        *                          Test Results                           *
+        *******************************************************************
         """)
         for l in summary:
             print(l)
 
 elif args.mode == _MAKE_TEST:
-    if not (args.make_test or args.make_test_and_generate_standard):
+    if not (args.make_test or args.make_test_and_generate_standard or
+            args.list or args.generate_standard):
         _print_help(make_test, _MAKE_TEST)
+
+    if args.list:
+        _list_options()
 
     if args.make_test or args.make_test_and_generate_standard:
         # Need to get arguments for test_maker():
@@ -417,6 +414,7 @@ elif args.mode == _MAKE_TEST:
 
         # test maker, test maker, make me a test:
         new_test = test_maker.make_test(script, desc, dir_use, battery)
+        print("Test has been created successfully.")
 
     if args.make_test_and_generate_standard:
         # Get necessary values for batch file
@@ -440,7 +438,7 @@ elif args.mode == _MAKE_TEST:
         bat_line_1 = "cd " + working_directory + "\n"
         batch.write(bat_line_1)
 
-        bat_line_2 = "%s testing_shell.py run_test -g -b %s -t %s" % \
+        bat_line_2 = "%s testing_shell.py make_test -g %s %s" % \
                      (python_exe, battery_desig, test_desig) + "\n"
         batch.write(bat_line_2)
         batch.close()
@@ -450,3 +448,27 @@ elif args.mode == _MAKE_TEST:
                              ("\%s" % _BATCH_FILE_NAME), shell=True)
 
         stdout, stderr = p.communicate()
+
+    if args.generate_standard:
+        battery = args.generate_standard[0]
+        test = args.generate_standard[1]
+
+        if battery in batt_dict.keys():
+            test_dict = batt_dict[battery][2]
+
+            if test in test_dict.keys():
+                # test exists within battery , so run it
+                print("Generating standard for test "+test+" in " +
+                      battery+" battery...")
+                tester.generate_standard(_P, test_dict[test])
+                print("Standard has been generated for test " + test +
+                      " in " + battery + " battery.")
+            else:
+                print("ERROR: You must specify a valid test (%s)." %
+                      [s for s in test_dict.keys()])
+                exit()
+        else:
+            print("ERROR: You must specify a valid battery (%s)." %
+                  [s for s in batt_dict.keys()])
+            exit()
+
