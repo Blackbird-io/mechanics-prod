@@ -240,8 +240,9 @@ if args.mode == _RUN_TEST:
                       "generate a standard." % [s for s in test_dict.keys()])
                 exit()
         else:
-            print("ERROR: You must specify a battery (-b %s) in order to run a" +
-                  " specific test." % [s for s in batt_dict.keys()])
+            print("ERROR: You must specify a battery (-b %s) and test (-t) "
+                  "in order to generate the standard for a test." %
+                  [s for s in batt_dict.keys()])
             exit()
 
         # exit() now so tests don't run
