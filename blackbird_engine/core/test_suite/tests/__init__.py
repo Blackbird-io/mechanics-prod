@@ -28,7 +28,6 @@ n/a
 
 
 #imports
-from . import new_test
 from . import basic
 from . import legacy
 from . import stateful
