@@ -491,7 +491,6 @@ class Driver(Tags):
             params.update(period.parameters)
 
         if parent:
-            parent.parameters.update(self.parameters)
             params.update(parent.parameters)
 
         params.update(self.parameters)
