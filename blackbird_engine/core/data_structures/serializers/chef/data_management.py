@@ -205,7 +205,6 @@ class DriverData:
         self.references = None
         self.conversion_map = None
         self.name = None
-        self.bb_value = None
         self.comment = None
 
 class SheetData:

@@ -73,7 +73,6 @@ def func(line, business_unit, data, driver_signature):
     rev = business_unit.financials.income.find_first("revenue")
 
     excel_template = "=IF({life[alive]}, {lines[revenue]} * (1-{parameters[active_gross_margin]}))"
-    bb_value = None
     cell_comment = ""
     references = dict()
     references["revenue"] = rev
@@ -85,7 +84,6 @@ def func(line, business_unit, data, driver_signature):
     if business_unit.life.alive and rev:
         COGS = rev.value * (1 - gross_margin)
         line.setValue(COGS, driver_signature)
-        bb_value = COGS
 
     # Return the calculation package.
-    return excel_template, bb_value, cell_comment, references
+    return excel_template, cell_comment, references

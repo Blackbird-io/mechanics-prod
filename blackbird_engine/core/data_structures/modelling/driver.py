@@ -389,8 +389,7 @@ class Driver(Tags):
                 else:
                     output = formula.func(line, bu, params, self.signature)
                     try:
-                        excel_template, bb_value, cell_comment,\
-                            references = output
+                        excel_template, cell_comment, references = output
                     except TypeError:
 
                         c = "\nFormula does not support Excel output."
@@ -415,7 +414,6 @@ class Driver(Tags):
                     data_cluster.references = references
                     data_cluster.name = formula.tags.name
                     data_cluster.comment = cell_comment
-                    data_cluster.bb_value = bb_value
 
                     line.xl.derived.calculations.append(data_cluster)
                 

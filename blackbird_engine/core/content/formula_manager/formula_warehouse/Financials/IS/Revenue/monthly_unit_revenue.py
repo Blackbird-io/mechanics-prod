@@ -66,7 +66,6 @@ def func(line, business_unit, data, driver_signature):
     """
     # Default Excel output
     excel_template = "={life[alive]} * {parameters[annual_rev_per_mature_unit]}/12"
-    bb_value = None
     cell_comment = ""
     line_references = dict()
     # Formula should build references dynamically at runtime, so that Chef
@@ -129,13 +128,11 @@ def func(line, business_unit, data, driver_signature):
 
         if stage_name == "maturity":
             line.setValue(monthly_revenue, driver_signature)
-            bb_value = monthly_revenue
         elif stage_name == "youth":
             growth_adjustment = (business_unit.life.percent /
                                  (stage_end - stage_start))
             adj_growth_revenue = growth_adjustment * monthly_revenue
             line.setValue(adj_growth_revenue, driver_signature)
-            bb_value = adj_growth_revenue
 
             xl_growth = "*{life[percent]}/("+xl_stage_end+"-"+xl_stage_start+")"
             excel_template += xl_growth
@@ -145,7 +142,6 @@ def func(line, business_unit, data, driver_signature):
                                   (stage_end - stage_start))
             adj_decline_revenue = decline_adjustment * monthly_revenue
             line.setValue(adj_decline_revenue, driver_signature)
-            bb_value = adj_decline_revenue
 
             xl_decline = "*(100-{life[percent]})/("+xl_stage_end+"-"+xl_stage_start+")"
             excel_template += xl_decline
@@ -195,4 +191,4 @@ def func(line, business_unit, data, driver_signature):
 
 
     # Always return excel_template, references
-    return excel_template, bb_value, cell_comment, line_references
+    return excel_template, cell_comment, line_references
