@@ -1,10 +1,10 @@
 #PROPRIETARY AND CONFIDENTIAL
 #Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
+#Copyright Blackbird Logical Applications, LLC 2016
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 #Blackbird Environment
-#Module: data_structures.serializers.eggcellent.bb_workbook
+#Module: data_structures.serializers.chef._chef_tools
 """
 
 Module defines workbook with custom native-Python data storage on each sheet.
@@ -38,6 +38,9 @@ import xlrd
 
 from .line_chef import CHEF_TESTING_DICT
 
+
+
+
 # Constants
 _VBS_PATH = r"C:\Blackbird\Engine\mechanics\chef_updates\blackbird_engine" + \
            r"\core\data_structures\serializers\chef"
@@ -56,6 +59,12 @@ def test_book(filename):
     """
 
     test_book -> None (writes a log file)
+
+    --``filename`` must be the string path for the file to check
+
+    Function checks formulas written to Excel against values calculated in the
+    Blackbird Engine. Function uses fuzzy equals (to the 0.001) to compare
+    numeric values.
 
     Note:
     A None in the Engine is declared equivalent to an Excel Zero for the
@@ -130,6 +139,16 @@ def test_book(filename):
 
 
 def write_run_temp_vbs_file(filename):
+    """
+
+    write_run_temp_vbs_file -> None
+
+    --``filename`` must be the string path for the file being checked
+
+    Function updates template VBScript with file being checked, opens file,
+    saves file, and closes file so that Excel will calculate formula values.
+    """
+
     # open and read original VBS file
     orig_path = _VBS_PATH + _ORIG_VBS_FILE
     orig_file = open(orig_path, mode='r')
@@ -165,6 +184,7 @@ def isclose(a, b, rel_tol = 1e-09, abs_tol=0.0):
     --``rel_tol`` is the relative allowable tolerance, taken as fraction of the
         larger of a and b
     --``abs_tol`` is the absolute allowable tolerance
+
     This method provides a means for comparing two numbers by "fuzzy equals",
     copied from documentation for math.isclose method in Py35
     """
