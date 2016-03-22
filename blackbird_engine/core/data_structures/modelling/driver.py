@@ -389,27 +389,34 @@ class Driver(Tags):
                 else:
                     output = formula.func(line, bu, params, self.signature)
                     try:
-                        excel_template, references = output
+                        excel_template, bb_value, cell_comment,\
+                            references = output
                     except TypeError:
 
                         c = "\nFormula does not support Excel output."
                         c += "\nName: %s" % formula.tags.name
                         c += "\nBBID: $s" % self.formula_bbid
                         c += "\n"
-                        
-                        raise bb_exceptions.ExcelPrepError(c)
 
-                    if references and not excel_template:
-                        c = "Formula returned a line reference dictionary"
-                        c += " but did not return a template to populate." 
-                        
-                        raise bb_exceptions.ExcelPrepError(c, references)
+                        raise bb_exceptions.ExcelPrepError(c)
+                    except ValueError:
+                        #missing value(s)
+
+                        c = "Formula did not return all required information"
+                        c += " for Excel output."
+                        c += "\nName: %s" % formula.tags.name
+                        c += "\nBBID: $s" % self.formula_bbid
+                        c += "\n"
+
+                        raise bb_exceptions.ExcelPrepError(c)
 
                     data_cluster = self.to_excel()
                     data_cluster.formula = excel_template
                     data_cluster.references = references
                     data_cluster.name = formula.tags.name
-                    
+                    data_cluster.comment = cell_comment
+                    data_cluster.bb_value = bb_value
+
                     line.xl.derived.calculations.append(data_cluster)
                 
                 # Each funcion is "disposable", so we explicitly delete the

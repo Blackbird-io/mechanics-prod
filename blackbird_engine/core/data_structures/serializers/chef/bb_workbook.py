@@ -31,7 +31,7 @@ import openpyxl as xlio
 
 from .data_management import SheetData
 
-
+from ._chef_tools import test_book
 
 # Constants
 # n/a
@@ -74,4 +74,9 @@ class BB_Workbook(xlio.Workbook):
 
         return sheet
 
-        
+    def save(self, filename):
+        # save workbook
+        xlio.Workbook.save(self, filename)
+
+        # test the workbook against engine values
+        test_book(filename)

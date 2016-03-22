@@ -94,7 +94,7 @@ class ModelChef:
         # book = self._create_annual_summary_tab(model, book)
         # book = self._create_dcf_tab(model, book)
         # book = self._create_ev_tab(model, book)
-                
+
         return book
 
     #*************************************************************************#

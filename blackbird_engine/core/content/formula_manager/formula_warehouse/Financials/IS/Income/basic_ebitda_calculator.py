@@ -86,6 +86,7 @@ def func(line, business_unit, data, driver_signature):
     ebitda = val(line_rev) - val(line_cost) - val(line_opex) - val(line_sga)
 
     excel_template = "+{lines[revenue]}-{lines[cost]}-{lines[opex]}-{lines[sga]}"
+    cell_comment = ""
     line_references = dict(
         revenue=line_rev, cost=line_cost, opex=line_opex, sga=line_sga
         )
@@ -101,6 +102,7 @@ def func(line, business_unit, data, driver_signature):
         line_references["da"] = line_da
     
     line.set_value(ebitda, driver_signature)
+    bb_value = ebitda
 
     # Always return calculation package
-    return excel_template, line_references
+    return excel_template, bb_value, cell_comment, line_references
