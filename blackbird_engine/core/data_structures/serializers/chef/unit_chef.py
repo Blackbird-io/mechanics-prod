@@ -203,7 +203,8 @@ class UnitChef:
             # Upgrade-S: Can pass col positions in for speed; downside is that
             #            signature gets ugly. Can move to kwargs to protect.
 
-        new_row = sheet.bb.current_row + 1
+        starting = sheet.bb.current_row or 0
+        new_row = starting + 1
         # TO DO: Could also use Workbook.max_row()
         
         for name in sorted(items):
