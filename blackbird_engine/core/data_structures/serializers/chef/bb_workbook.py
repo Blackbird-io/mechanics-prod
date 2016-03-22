@@ -29,9 +29,11 @@ BB_Workbook           workbook where each sheet has a SheetData record set
 # Imports
 import openpyxl as xlio
 
+from ._chef_tools import test_book
 from .data_management import SheetData
 
-from ._chef_tools import test_book
+
+
 
 # Constants
 # n/a
