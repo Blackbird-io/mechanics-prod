@@ -67,7 +67,6 @@ def func(line, business_unit, data, driver_signature):
     -- "base_annual_expense"
     """
     excel_template = "=IF({life[alive]}, {parameters[base_annual_expense]}/12)"
-    bb_value = None
     cell_comment = ""
     line_references = dict()
     
@@ -75,9 +74,8 @@ def func(line, business_unit, data, driver_signature):
         monthly_expense = data["base_annual_expense"]/12
         
         line.setValue(monthly_expense, driver_signature)
-        bb_value = monthly_expense
 
         line.tag("run_rate")
 
     # Always return calculation package
-    return excel_template, bb_value, cell_comment, line_references
+    return excel_template, cell_comment, line_references

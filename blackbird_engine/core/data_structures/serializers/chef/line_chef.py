@@ -473,7 +473,7 @@ class LineChef:
         c = "Formula name: " + driver_data.name + \
             "\nFormula string: " + driver_data.formula + \
             "\nComment: " + driver_data.comment + \
-            "\nBB Value: " + str(driver_data.bb_value)
+            "\nBB Value: " + str(line.value)
 
         a = "LineChef"
         calc_cell.comment = Comment(c, a)
@@ -481,7 +481,7 @@ class LineChef:
         # picked up here. Can now change line.xl.derived.final <--------------------------------------------incrementation is discouraged, right?
         line.xl.derived.ending = sheet.bb.current_row
         line.xl.derived.cell = calc_cell
-        CHEF_TESTING_DICT[calc_cell] = driver_data.bb_value
+        CHEF_TESTING_DICT[calc_cell] = line.value
 
         if set_labels:
             label = (indent * " ") + driver_data.name

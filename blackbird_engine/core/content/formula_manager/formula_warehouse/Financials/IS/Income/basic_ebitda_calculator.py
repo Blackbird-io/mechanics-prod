@@ -102,7 +102,6 @@ def func(line, business_unit, data, driver_signature):
         line_references["da"] = line_da
     
     line.set_value(ebitda, driver_signature)
-    bb_value = ebitda
 
     # Always return calculation package
-    return excel_template, bb_value, cell_comment, line_references
+    return excel_template, cell_comment, line_references
