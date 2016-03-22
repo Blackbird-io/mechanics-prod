@@ -29,7 +29,7 @@ LineChef              chop BB statements into dynamic Excel structures
 
 
 # Imports
-import openpyxl as excel_interface
+import openpyxl as xlio
 from openpyxl.comments import Comment
 
 from data_structures.modelling.line_item import LineItem
@@ -50,7 +50,7 @@ field_names = FieldNames()
 formula_templates = FormulaTemplates()
 type_codes = TypeCodes()
 
-get_column_letter = excel_interface.utils.get_column_letter
+get_column_letter = xlio.utils.get_column_letter
 
 # Classes
 class LineChef:
