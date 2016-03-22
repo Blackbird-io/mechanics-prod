@@ -470,9 +470,11 @@ class LineChef:
         calc_cell = sheet.cell(column=period_column, row=sheet.bb.current_row)
         calc_cell.set_explicit_value(formula, data_type=type_codes.FORMULA)
 
-        c = "Formula name: " + driver_data.name + "\nComment: "\
-                + driver_data.comment + "\nBB Value: " + \
-                str(driver_data.bb_value)
+        c = "Formula name: " + driver_data.name + \
+            "\nFormula string: " + driver_data.formula + \
+            "\nComment: " + driver_data.comment + \
+            "\nBB Value: " + str(driver_data.bb_value)
+
         a = "LineChef"
         calc_cell.comment = Comment(c, a)
         # If formula included a reference to the prior value of the line itself, it
