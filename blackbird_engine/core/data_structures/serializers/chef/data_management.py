@@ -205,6 +205,8 @@ class DriverData:
         self.references = None
         self.conversion_map = None
         self.name = None
+        self.bb_value = None
+        self.comment = None
 
 class SheetData:
     def __init__(self):
@@ -247,16 +249,4 @@ class SheetData:
 
         ## sheet can also have a .public and .private attrs
         ## each of which could be a dictionary of areas.
-        ## 
-
-
-
-
-        
-
-
-    
-
-        
-
-    
+        ##

@@ -68,6 +68,8 @@ def func(line, business_unit, data, driver_signature):
     
     """
     excel_template = None
+    bb_value = None
+    cell_comment = ""
     lines = dict()
     # Excel template should be a string compatible with the 3.x str.format()
     # method. The template will receive three dictionary arguments for
@@ -75,10 +77,18 @@ def func(line, business_unit, data, driver_signature):
     # coordinates that represent the line, parameter, or life attribute/event
     # applicable to the business_unit.
     #
+    # bb_value should be set to the BB engine value for the line item this
+    # formula is working on. this value is used for testing -- to compare the
+    # calculated Excel value to the value in the Engine and make sure they are
+    # the same.
+    #
+    # cell_comment is a string that will be added as an Excel comment for this
+    # cell. The string can be empty, but it MUST be passed.
+    #
     # At runtime, the function can locate whatever lines it deems significant
     # and drop them into the ``lines`` dictionary. Our Chef module will then
     # map these lines to their Excel coordinates at export time and build
     # links that reflect the relationship. 
     
     # Always return Excel calculation package
-    return excel_template, lines
+    return excel_template, bb_value, cell_comment, lines

@@ -69,6 +69,8 @@ def func(line, business_unit, data, driver_signature):
     -- "ref_year"    
     """
     excel_template = None
+    bb_value = None
+    cell_comment = ""
     references = dict()
 
     # NOTE: The block that follows used to compute IFFG bu.life.alive. Moving
@@ -93,9 +95,10 @@ def func(line, business_unit, data, driver_signature):
         monthly_expense = data["base_annual_expense"]/12 * inflation_multiplier
         
         line.setValue(monthly_expense, driver_signature)
+        bb_value = monthly_expense
         line.tag("inflation adjusted")
         im_tag = "inflation multiplier: %s" % round(inflation_multiplier,4)
         line.tag(im_tag)
 
     # Always return excel_template and references
-    return excel_template, references
+    return excel_template, bb_value, cell_comment, references

@@ -75,6 +75,8 @@ def func(line, business_unit, data, driver_signature):
     -- "max"                  |   ceiling value for line
     """
     excel_template = None
+    bb_value = None
+    cell_comment = ""
     line_references = dict()
     
     fins = business_unit.financials.income
@@ -108,6 +110,7 @@ def func(line, business_unit, data, driver_signature):
             excel_template = xl_ceiling % excel_template
 
         line.setValue(new_val, driver_signature)
+        bb_value = new_val
 
         line.tag("fixed expense")
         line.tag("estimated")
@@ -117,4 +120,4 @@ def func(line, business_unit, data, driver_signature):
             line.tag(*new_optional_tags, field = "opt")
     
     # Always return calculation package
-    return excel_template, line_references
+    return excel_template, bb_value, cell_comment, line_references

@@ -66,16 +66,18 @@ def func(line, business_unit, data, driver_signature):
     """
     # Default Excel output
     excel_template = "={life[alive]} * {parameters[annual_rev_per_mature_unit]}/12"
+    bb_value = None
+    cell_comment = ""
     line_references = dict()
     # Formula should build references dynamically at runtime, so that Chef
     # can use the objects themselves to locate cell coordinates.
-    
+
     bu = business_unit
-    
+
     # New (v.1.6.0) Life version analysis
     KEY_MATURITY = bu.life.KEY_MATURITY
     KEY_OLD_AGE = bu.life.KEY_OLD_AGE
-    
+
     stage_name = None
     stage_start = None
     stage_end = None
@@ -84,7 +86,7 @@ def func(line, business_unit, data, driver_signature):
     xl_stage_end = None
 
     ref_date = bu.life.ref_date
-    
+
     if bu.life.alive:
         stage_name = "youth"
         stage_start = 0
@@ -104,7 +106,7 @@ def func(line, business_unit, data, driver_signature):
             xl_stage_start = xl_stage_end
 ##            xl_stage_end = "+{life[PERCENT_OLD_AGE]}"
             xl_stage_end = str(stage_end)
-            
+
 
         if bu.life.events[KEY_OLD_AGE] <= ref_date:
             # Upgrade further to decline. Use old label so we can keep next
@@ -115,7 +117,7 @@ def func(line, business_unit, data, driver_signature):
 
             xl_stage_start = xl_stage_end
             xl_stage_end = "100"
-    
+
     # Old (pre v.1.6.0) application
     if stage_name is None:
         pass
@@ -124,24 +126,26 @@ def func(line, business_unit, data, driver_signature):
         monthly_revenue = annual_revenue / 12
 
 ##        excel_template = "={parameters[annual_rev_per_mature_unit]}/12"
-        
+
         if stage_name == "maturity":
             line.setValue(monthly_revenue, driver_signature)
-            
+            bb_value = monthly_revenue
         elif stage_name == "youth":
-            growth_adjustment = (business_unit.life.percent / 
+            growth_adjustment = (business_unit.life.percent /
                                  (stage_end - stage_start))
             adj_growth_revenue = growth_adjustment * monthly_revenue
             line.setValue(adj_growth_revenue, driver_signature)
+            bb_value = adj_growth_revenue
 
             xl_growth = "*{life[percent]}/("+xl_stage_end+"-"+xl_stage_start+")"
             excel_template += xl_growth
-            
+
         elif stage_name == "decline":
-            decline_adjustment = ((100 - business_unit.life.percent) / 
+            decline_adjustment = ((100 - business_unit.life.percent) /
                                   (stage_end - stage_start))
             adj_decline_revenue = decline_adjustment * monthly_revenue
             line.setValue(adj_decline_revenue, driver_signature)
+            bb_value = adj_decline_revenue
 
             xl_decline = "*(100-{life[percent]})/("+xl_stage_end+"-"+xl_stage_start+")"
             excel_template += xl_decline
@@ -161,19 +165,19 @@ def func(line, business_unit, data, driver_signature):
 ##    # other in steps.
 ##    #
 ##    # We block old template construction logic here.
-##    
+##
 ##    xl_birth = "{events[" + bu.life.KEY_BIRTH + "]}"
 ##    xl_maturity = "{events[" + KEY_MATURITY + "]}"
 ##    xl_old_age = "{events[" + KEY_OLD_AGE + "]}"
 ##    xl_death = "{events[" + bu.life.KEY_DEATH + "]}"
-##    
-##    alive_condition = "=IF({life[alive]}, %s)" 
+##
+##    alive_condition = "=IF({life[alive]}, %s)"
 ##    youth_condition = "IF(AND({life[ref_date]}<" + xl_maturity + "), %s, %s)"
 ##    # have to be born for unit to be alive
 ##
 ##    mature_condition = "IF(AND(" + xl_maturity
 ##    mature_condition += "<={life[ref_date]}, {life[ref_date]}<" + xl_old_age + ", %s, %s)"
-##    
+##
 ##    x_growth = "*ROUND({life[age]}/(" + xl_maturity + "-" + xl_birth + "), 0)*100"
 ##    x_decline = "*ROUND(({life[span]}-{life[age]})/(" + xl_death + "-" + xl_old_age + "),0)*100"
 ##
@@ -188,7 +192,7 @@ def func(line, business_unit, data, driver_signature):
 ##
 ##    excel_template = full
 ##    line_references = dict()
-    
+
 
     # Always return excel_template, references
-    return excel_template, line_references
+    return excel_template, bb_value, cell_comment, line_references

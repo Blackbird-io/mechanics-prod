@@ -1,0 +1,19 @@
+'This VBScript will open, save, and close an Excel file in order to calculate
+'the formulas contained therein.
+
+Option Explicit
+
+Dim xlApp, xlBook, xlSheet
+
+Set xlApp = GetObject("","Excel.Application")
+xlApp.Visible = True
+
+Set xlBook = xlApp.Workbooks.Open("FILENAME_PLACEHOLDER")
+xlBook.Save
+xlBook.Close
+
+Set xlSheet = Nothing
+Set xlBook = Nothing
+
+xlApp.Quit
+Set xlApp = Nothing
