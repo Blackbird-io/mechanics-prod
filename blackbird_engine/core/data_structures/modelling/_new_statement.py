@@ -678,6 +678,20 @@ class Statement(Tags, Equalities):
                     if external_line.value is not None:
                         if tConsolidated not in local_copy.allTags:
                             local_copy.tag(tConsolidated)
+
+                            # need to make sure Chef knows to consolidate this
+                            # source line (or its details) also
+                            if not external_line._details:
+                                local_copy.xl.consolidated.sources.\
+                                    append(external_line)
+                            else:
+                                for n, l in local_copy._details.items():
+                                    detail_to_append = external_line._details.\
+                                        get(n)
+
+                                    l.xl.consolidated.sources.\
+                                        append(detail_to_append)
+
                     # Pick up lines with None values, but don't tag them. We
                     # want to allow derive to write to these if necessary.
 
