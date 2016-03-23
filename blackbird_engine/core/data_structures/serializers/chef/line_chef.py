@@ -4,7 +4,7 @@
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 # Blackbird Environment
-# Module: data_structures.serializers.xl.line_chef
+# Module: data_structures.serializers.chef.line_chef
 """
 
 Module defines a class that represents arbitrarily rich BusinessUnit instances
@@ -14,8 +14,7 @@ Attribute             Description
 ====================  ==========================================================
 
 DATA:
-CHEF_TESTING_DICT     global dict; holds BB engine values to check against
-                      Excel values
+n/a
 
 FUNCTIONS:
 n/a
@@ -42,8 +41,7 @@ from .formulas import FormulaTemplates
 
 
 # Constants
-global CHEF_TESTING_DICT
-CHEF_TESTING_DICT = dict()
+# n/a
 
 # Module Globals
 field_names = FieldNames()
@@ -488,7 +486,6 @@ class LineChef:
         # picked up here. Can now change line.xl.derived.final <--------------------------------------------incrementation is discouraged, right?
         line.xl.derived.ending = sheet.bb.current_row
         line.xl.derived.cell = calc_cell
-        CHEF_TESTING_DICT[calc_cell] = line.value
 
         if set_labels:
             label = (indent * " ") + driver_data.name
