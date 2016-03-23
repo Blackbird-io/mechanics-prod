@@ -282,8 +282,8 @@ class LineChef:
             sources = line.xl.consolidated.sources.copy()
 
             required_rows = sheet.bb.consolidation_size
-
-            links_per_cell = len(sources) // required_rows
+            n_sources = len(sources)
+            links_per_cell = n_sources // required_rows
             links_per_cell = max(1, links_per_cell)
             # Make sure we include at least 1 link per cell.
 
@@ -292,11 +292,17 @@ class LineChef:
             sheet.bb.current_row += 1
             line.xl.consolidated.starting = sheet.bb.current_row
 
+            count = 0
             for rr in range(required_rows):
 
                 if sources:
                     batch_summation = ""
-                    for i in range(links_per_cell):
+                    if rr == required_rows-1:
+                        links_to_use = n_sources-count
+                    else:
+                        links_to_use = links_per_cell
+
+                    for i in range(links_to_use):
 
                         if sources:
                             source_line = sources.pop(0)
@@ -304,6 +310,7 @@ class LineChef:
                             source_cos = source_line.xl.get_coordinates()
                             link = link_template.format(coordinates=source_cos)
                             batch_summation += link
+                            count += 1
                         else:
                             break
 
