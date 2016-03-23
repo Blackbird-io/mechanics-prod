@@ -79,7 +79,7 @@ def test_book(filename):
     --``filename`` must be the string path for the file to check
 
     This is the driver function for checking Excel output.  Function delegates
-    to _write_run_temp_vbs_file and _check_bu.
+    to _write_run_temp_vbs_file and _check_bu to do most of the work.
 
     Function checks formulas and values written to Excel against values
     calculated and stored in the Blackbird Engine. Function uses fuzzy equals
@@ -117,7 +117,32 @@ def test_book(filename):
 def _check_bu(business_unit, workbook_in, log_ws):
     """
 
-    check_bu -> None (writes to log file)
+    _check_bu -> None (writes to log file)
+
+    --``business_unit`` must be an instance of BusinessUnit
+    --``workbook_in`` must be the Excel workbook (xlrd.Workbook type) to check
+    --``log_ws`` must be the Excel sheet for test log entries (openpyxl.Sheet
+        type)
+
+    Function walks through BusinessUnits and Statements and delegates to _check
+    _statement to do the bulk of the work.
+    """
+
+    # recursively walk through all business units
+    comps = business_unit.components.get_ordered()
+    for c in comps:
+        _check_bu(c, workbook_in, log_ws)
+
+    # walk through statements
+    for statement in business_unit.financials.ordered:
+        if statement:
+            _check_statement(statement, workbook_in, log_ws)
+
+
+def _check_statement(statement, workbook_in, log_ws):
+    """
+
+    _check_statement -> None (writes to log file)
 
     --``business_unit`` must be an instance of BusinessUnit
     --``workbook_in`` must be the Excel workbook (xlrd.Workbook type) to check
@@ -125,22 +150,13 @@ def _check_bu(business_unit, workbook_in, log_ws):
         type)
 
     Function recursively checks Excel output for all business units and writes
-    inconsistencies to log_ws.  Function uses fuzzy equals
-    (to the 0.001) to compare numeric values.
+    inconsistencies to log_ws.  Function uses fuzzy equals (to the 0.001) to
+    compare numeric values.
 
     Note:
     A None in the Engine is declared equivalent to an Excel Zero and Excel
     empty string for the purpose of this test.
     """
-
-    # recursively walk through all business units
-    comps = business_unit.components.get_ordered()
-    if comps:
-        for c in comps:
-            _check_bu(c, workbook_in, log_ws)
-
-    # walk through income statement
-    statement = business_unit.financials.income
     lines = statement.get_full_ordered()
 
     # walk through lineitems
@@ -199,7 +215,7 @@ def _write_run_temp_vbs_file(filename):
     """
 
 
-    write_run_temp_vbs_file -> None
+    _write_run_temp_vbs_file -> None
 
     --``filename`` must be the string path for the file being checked
 
