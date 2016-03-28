@@ -136,6 +136,33 @@ class DriverData:
         self.comment = None
 
 
+class Range:
+    """
+
+    Class for tracking starting and ending row.
+    ====================  =====================================================
+    Attribute             Description
+    ====================  =====================================================
+
+    DATA:
+    ending                None, CLASS attr
+    starting              starting row
+
+    FUNCTIONS:
+    n/a
+    ====================  =====================================================
+    """
+    ending = None
+    # To allow property below
+
+    def __init__(self, starting=None):
+
+        self.starting = starting
+
+    # May be starting should be a property, so when you change it, you move
+    # all values up or down. Should also get error if its < 1.
+
+
 class LineData(Range):
     """
 
@@ -296,33 +323,6 @@ class Lookup(Range):
         """
 
         self.by_name.update(source.by_name)
-
-
-class Range:
-    """
-
-    Class for tracking starting and ending row.
-    ====================  =====================================================
-    Attribute             Description
-    ====================  =====================================================
-
-    DATA:
-    ending                None, CLASS attr
-    starting              starting row
-
-    FUNCTIONS:
-    n/a
-    ====================  =====================================================
-    """
-    ending = None
-    # To allow property below
-
-    def __init__(self, starting=None):
-
-        self.starting = starting
-
-    # May be starting should be a property, so when you change it, you move
-    # all values up or down. Should also get error if its < 1.
 
 
 class RowData(dict):
