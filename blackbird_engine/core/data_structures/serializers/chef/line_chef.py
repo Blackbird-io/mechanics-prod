@@ -34,6 +34,8 @@ from openpyxl.comments import Comment
 
 from data_structures.modelling.line_item import LineItem
 
+from .chef_settings import COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING, \
+                           COMMENT_CUSTOM
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
@@ -439,13 +441,21 @@ class LineChef:
         calc_cell = sheet.cell(column=period_column, row=sheet.bb.current_row)
         calc_cell.set_explicit_value(formula, data_type=type_codes.FORMULA)
 
-        c = "Formula name: " + driver_data.name + \
-            "\nFormula string: " + driver_data.formula + \
-            "\nComment: " + driver_data.comment + \
-            "\nBB Value: " + str(line.value)
+        if set_labels and (COMMENT_FORMULA_NAME or COMMENT_FORMULA_STRING or
+                           COMMENT_CUSTOM):
+            c = ""
 
-        a = "LineChef"
-        calc_cell.comment = Comment(c, a)
+            if COMMENT_FORMULA_NAME:
+                c += "Formula name: " + driver_data.name + "\n"
+
+            if COMMENT_FORMULA_STRING:
+                c += "Formula string: " + driver_data.formula + "\n"
+
+            if COMMENT_CUSTOM:
+                c += "Comment: " + driver_data.comment + "\n"
+
+            a = "LineChef"
+            calc_cell.comment = Comment(c, a)
 
         # If formula included a reference to the prior value of the line
         # itself, it's picked up here. Can now change line.xl.derived.final
