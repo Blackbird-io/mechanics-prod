@@ -1,6 +1,6 @@
 #PROPRIETARY AND CONFIDENTIAL
 #Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
+#Copyright Blackbird Logical Applications, LLC 2016
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 #Blackbird Environment
@@ -8,9 +8,9 @@
 """
 
 Module defines workbook with custom native-Python data storage on each sheet.
-====================  ==========================================================
+====================  =========================================================
 Attribute             Description
-====================  ==========================================================
+====================  =========================================================
 
 DATA:
 n/a
@@ -20,7 +20,7 @@ n/a
 
 CLASSES:
 BB_Workbook           workbook where each sheet has a SheetData record set
-====================  ==========================================================
+====================  =========================================================
 """
 
 
@@ -57,6 +57,7 @@ class BB_Workbook(xlio.Workbook):
 
     FUNCTIONS:
     create_sheet()        returns sheet with a SheetData instance at sheet.bb
+    save()                saves workbook to file and runs test on contents
     ====================  ======================================================
     """ 
     def __init__(self, *pargs, **kwargs):
@@ -68,8 +69,11 @@ class BB_Workbook(xlio.Workbook):
 
         BB_WorkBook.create_sheet(name) -> Worksheet
 
+        --``name`` must be string name for new worksheet
+        --``index`` is the desired index at which to place the new worksheet
 
         Return worksheet with a SheetData record set at instance.bb.
+
         """
         sheet = xlio.Workbook.create_sheet(self, name, index=index)
         sheet.bb = SheetData()
@@ -77,6 +81,16 @@ class BB_Workbook(xlio.Workbook):
         return sheet
 
     def save(self, filename):
+        """
+
+
+        BB_WorkBook.save(filename) -> None
+
+        --``filename`` must be string path at which to save workbook
+
+        Method saves workbook to specified file and initiates test of file
+        contents.
+        """
         # save workbook
         xlio.Workbook.save(self, filename)
 

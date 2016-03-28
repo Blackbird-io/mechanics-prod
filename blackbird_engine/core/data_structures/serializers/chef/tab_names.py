@@ -1,16 +1,16 @@
 #PROPRIETARY AND CONFIDENTIAL
 #Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
+#Copyright Blackbird Logical Applications, LLC 2016
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 #Blackbird Environment
-#Module: data_structures.serializers.eggcellent.tab_names
+#Module: data_structures.serializers.chef.tab_names
 """
 
 Module defines a class that stores standard tab names
-====================  ==========================================================
+====================  =========================================================
 Attribute             Description
-====================  ==========================================================
+====================  =========================================================
 
 DATA:
 n/a
@@ -20,7 +20,7 @@ n/a
 
 CLASSES:
 TabNames              standard tab names for Blackbird workbooks
-====================  ==========================================================
+====================  =========================================================
 """
 
 

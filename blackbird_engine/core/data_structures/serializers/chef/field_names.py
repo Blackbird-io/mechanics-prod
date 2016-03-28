@@ -1,16 +1,16 @@
 #PROPRIETARY AND CONFIDENTIAL
 #Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
+#Copyright Blackbird Logical Applications, LLC 2016
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 #Blackbird Environment
-#Module: data_structures.serializers.eggcellent.field_names
+#Module: data_structures.serializers.chef.field_names
 """
 
 Module defines a class that stores standard row and column names.
-====================  ==========================================================
+====================  =========================================================
 Attribute             Description
-====================  ==========================================================
+====================  =========================================================
 
 DATA:
 n/a
@@ -20,7 +20,7 @@ n/a
 
 CLASSES:
 FieldNames            standard keys for column and row lookups
-====================  ==========================================================
+====================  =========================================================
 """
 
 
@@ -43,9 +43,9 @@ class FieldNames:
     """
 
     Class stores standard keys for row and column lookups within SheetData. 
-    ====================  ======================================================
+    ====================  =====================================================
     Attribute             Description
-    ====================  ======================================================
+    ====================  =====================================================
 
     DATA:
     BASE_CASE             "base_case"
@@ -54,9 +54,15 @@ class FieldNames:
     MASTER                "master"
     VALUES                "values"
 
+    REF_DATE              "ref_date"
+    AGE                   "age"
+    ALIVE                 "alive"
+    SPAN                  "span"
+    PERCENT               "percent"
+
     FUNCTIONS:
     n/a
-    ====================  ======================================================
+    ====================  =====================================================
     """
     # GENERAL
     
@@ -75,5 +81,3 @@ class FieldNames:
     ALIVE = "alive"
     SPAN = "span"
     PERCENT = "percent"
-    
-    

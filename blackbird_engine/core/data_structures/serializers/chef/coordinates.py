@@ -11,7 +11,7 @@ class Coordinates:
 
     @property
     def row(self):
-
+        pass
         # only set if > 0
 
     def get_dict(self, alpha_column=False):
