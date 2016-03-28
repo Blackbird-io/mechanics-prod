@@ -1,17 +1,18 @@
 #PROPRIETARY AND CONFIDENTIAL
 #Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
+#Copyright Blackbird Logical Applications, LLC 2016
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 #Blackbird Environment
-#Module: data_structures.serializers.eggcellent.type_codes
+#Module: data_structures.serializers.chef.data_types
 """
 
 Module defines a class that stores explicit data type codes compatible with the
-Excel cell.set_explicit_value(data_type) interface.
-====================  ==========================================================
+Excel cell.set_explicit_value(data_type) interface and explicit number format
+codes.
+====================  =========================================================
 Attribute             Description
-====================  ==========================================================
+====================  =========================================================
 
 DATA:
 n/a
@@ -21,7 +22,8 @@ n/a
 
 CLASSES:
 DataTypes             known cell data types
-====================  ==========================================================
+NumberFormats         formats for numbers
+====================  =========================================================
 """
 
 
@@ -44,24 +46,39 @@ class TypeCodes:
     """
 
     Class stores type strings known to the excel interface. 
-    ====================  ======================================================
+    ====================  =====================================================
     Attribute             Description
-    ====================  ======================================================
+    ====================  =====================================================
 
     DATA:
-    BOOL                  
+    BOOL                  type code for boolean value
     FORMULA               forces Excel to try and interpret string as a formula
-    FORMULA_CACHE_STRING
+    FORMULA_CACHE_STRING  type code for string value
+    NUMERIC               type code for numeric value
 
     FUNCTIONS:
     n/a
-    ====================  ======================================================
+    ====================  =====================================================
     """
     BOOL = "b"
     FORMULA = "f"
     FORMULA_CACHE_STRING = "str"
     NUMERIC = "n"
 
+
 class NumberFormats:
+    """
+
+    Class stores type strings for number formats.
+    ====================  =====================================================
+    Attribute             Description
+    ====================  =====================================================
+
+    DATA:
+    DATETIME              "yyyy-mm-dd"; format code for datetime
+
+    FUNCTIONS:
+    n/a
+    ====================  =====================================================
+    """
     DATETIME = "yyyy-mm-dd"
-    

@@ -7,7 +7,7 @@
 #Module: data_structures.serializers.chef._chef_tools
 """
 
-Module defines workbook with custom native-Python data storage on each sheet.
+Module defines functions that are tools for Chef module.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -53,7 +53,7 @@ _VBS_PATH = r"C:\Blackbird\Engine\mechanics\chef_updates\blackbird_engine" + \
 # n/a
 
 
-def is_close(a, b, rel_tol = 1e-09, abs_tol=0.0):
+def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
     """
 
 
@@ -64,8 +64,12 @@ def is_close(a, b, rel_tol = 1e-09, abs_tol=0.0):
         larger of a and b
     --``abs_tol`` is the absolute allowable tolerance
 
-    This method provides a means for comparing two numbers by "fuzzy equals",
-    copied from documentation for math.isclose method in Py35
+    This method provides a means for comparing two numbers by "fuzzy equals".
+    If the absolute difference between ``a`` and ``b`` is less than or equal to
+    the maximum of the specified relative tolerance and absolute tolerance,
+    method returns True.  This method was copied from documentation for
+    math.isclose() method in Python 3.5.
+
     """
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
@@ -113,6 +117,9 @@ def test_book(filename):
 
     log_wb.save(log_fnam)
 
+    #*************************************************************************#
+    #                          NON-PUBLIC METHODS                             #
+    #*************************************************************************#
 
 def _check_bu(business_unit, workbook_in, log_ws):
     """

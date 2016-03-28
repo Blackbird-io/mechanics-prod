@@ -1,7 +1,7 @@
 #PROPRIETARY AND CONFIDENTIAL
 #Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+#Copyright Blackbird Logical Applications, LLC 2016
+#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 #Blackbird Environment
 #Module: data_structures.modelling.business_unit
@@ -13,8 +13,10 @@ Attribute             Description
 ====================  ==========================================================
 
 DATA:
+n/a
 
 FUNCTIONS:
+n/a
 
 CLASSES:
 BusinessUnit          structured snapshot of a business at a given point in time
@@ -95,7 +97,7 @@ class BusinessUnit(History, Tags, Equalities):
     clear()               restore default attribute values
     fill_out()            integrates consolidate() and derive()
     kill()                make dead, optionally recursive
-    recalculate()         reste financials, compute again, repeat for future
+    recalculate()         reset financials, compute again, repeat for future
     reset_financials()    resets instance and (optionally) component financials
     set_analytics()       attaches an object to instance.analytics 
     set_financials()      attaches a Financials object from the right template

@@ -7,11 +7,11 @@
 # Module: data_structures.serializers.chef.line_chef
 """
 
-Module defines a class that represents arbitrarily rich BusinessUnit instances
-as a collection of linked Excel worksheets. 
-====================  ==========================================================
+Module defines LineChef class which converts Statement and LineItem objects
+into dynamic Excel format.
+====================  =========================================================
 Attribute             Description
-====================  ==========================================================
+====================  =========================================================
 
 DATA:
 n/a
@@ -20,8 +20,9 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-LineChef              chop BB statements into dynamic Excel structures
-====================  ==========================================================
+LineChef              class with methods to chop BB statements into dynamic
+                      Excel structures
+====================  =========================================================
 """
 
 
@@ -54,24 +55,44 @@ get_column_letter = xlio.utils.get_column_letter
 class LineChef:
     """
 
-    Objects that export models into Excel
+    Class packages Statement and LineItem objects into dynamic Excel workbook.
+    ====================  =====================================================
+    Attribute             Description
+    ====================  =====================================================
 
+    DATA:
+    n/a
+
+    FUNCTIONS:
+    chop_line()           returns Worksheet containing LineItem instances
+                          converted to dynamic Excel links
+    chop_statement()      returns Worksheet containing Statement instances
+                          converted to dynamic Excel links
+    ====================  =====================================================
     """
+
     def chop_line(self, *pargs, sheet, column, line, set_labels=True, indent=0):
         """
-        by the end of this routine, the line and all its details should have a
-        sheet assignment. that way, we can gather
 
-        Expects sheet to have current row SET UP
 
-        Routines deliver sheet with the current_row pointing to the last filled in cell.
+        LineChef.chop_line() -> Worksheet
 
-        Direct cell references make a lot of this logic way more transparent, at the expense
-        of making it a lot more dependent on the nature of the xlio Cell object.
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``column`` must be a column number reference
+        --``line`` must be an instance of LineItem
+        --``set_labels`` must be a boolean; True will set labels for line
+        --``indent`` is amount of indent
+
+        Method walks through LineItems and their details and converts them to
+        dynamic links in Excel cells.  Method adds consolidation and derivation
+        logic to cells.
+
+        Method relies on sheet.bb.current_row being up-to-date.
+
+        Routines deliver sheet with the current_row pointing to the last filled
+        in cell.
         """
 
-        # This could be a lot cleaner if we move it all to **kwargs. Then would only have to
-        # bump up the indent.
         self._add_consolidation_logic(
             sheet=sheet,
             column=column,
@@ -106,19 +127,21 @@ class LineChef:
                     column=column,
                     line=detail,
                     set_labels=set_labels,
-                    indent=sub_indent
-                    )
+                    indent=sub_indent)
 
                 link_template = formula_templates.ADD_COORDINATES
-                link = link_template.format(coordinates=detail.xl.get_coordinates())
+                link = link_template.format(
+                    coordinates=detail.xl.get_coordinates())
                 detail_summation += link
 
             else:
                 # Should group all the details here
-                sheet.bb.current_row +=1
+                sheet.bb.current_row += 1
 
-                subtotal_cell = sheet.cell(column=column, row=sheet.bb.current_row)
-                subtotal_cell.set_explicit_value(detail_summation, data_type=type_codes.FORMULA)
+                subtotal_cell = sheet.cell(column=column,
+                                           row=sheet.bb.current_row)
+                subtotal_cell.set_explicit_value(detail_summation,
+                                                 data_type=type_codes.FORMULA)
 
                 line.xl.detailed.ending = sheet.bb.current_row
                 line.xl.detailed.cell = subtotal_cell
@@ -128,8 +151,7 @@ class LineChef:
                     self._set_label(
                         sheet=sheet,
                         label=label,
-                        row=sheet.bb.current_row
-                        )
+                        row=sheet.bb.current_row)
 
         self._combine_segments(
             sheet=sheet,
@@ -137,45 +159,26 @@ class LineChef:
             line=line,
             set_labels=set_labels,
             indent=indent)
-        # Could also group here
 
         return sheet
 
+    def chop_statement(self, *pargs, sheet, column, statement,
+                       set_labels=True):
+        """
 
-        # If I toggle this logic a bit, I should be able to put all of the consolidation
-        # cells in one part of the sheet, and then the derivation logic elsewhere.
 
-        # This relies on:
-            # line.increment() tracking sources
-            # driver.workOnThis() collating data #<------------------------------------------------------------------------------------------------------CHECK WHAT THIS DOES!
+        LineChef.chop_statement() -> Worksheet
 
-    # formula.to_excel()-> string, dict;
-        # should move formulas to return row data, so the xl formula is less
-        # complicated
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``column`` must be a column number reference
+        --``statement`` must be an instance of Statement
+        --``set_labels`` must be a boolean; True will set labels for line
 
-    # could add to verification protocol: a map of coordinates to compute values!
-    # have to run verification later, because formulas NEVER eval in memory. You actually
-    # need to save the excel to get the result. Can put these things on the sheet. keyed by coordinates.
-    # coordinate object should hash into (x,y,z)
+        Method walks through Statement lines and delegates LineChef.chop_line()
+        to add them as dynamic links in Excel.
 
-    # Need to add basic / hardcoded value logic: <------------------------------------------------------------------------------------------------------------MUST!
-    # if not derived and not consolidated:
-    #  add_hard_coded() # but have to watch out for details?
-    #
-    # can be part of combine_segments()
-
-    # To Do:
-    # - group all details
-        # for grouping, i should move the indent to a level count. then i can
-        # set up levels and indent based on them.
-    # -
-
-    def chop_statement(self, *pargs, sheet, column, statement, set_labels=True):
-
-        # Relies on current column!
-
-        # Add a nice header row
-        # Add some white space
+        Method relies on sheet.bb.current_row being up-to-date.
+        """
 
         for line in statement.get_ordered():
 
@@ -184,95 +187,37 @@ class LineChef:
                 sheet=sheet,
                 column=column,
                 line=line,
-                set_labels=set_labels
-                )
+                set_labels=set_labels)
 
         return sheet
 
-    def _rows_to_coordinates(self, *pargs, lookup, column):
-        result = dict()
-        alpha_column = get_column_letter(column)
+    #*************************************************************************#
+    #                          NON-PUBLIC METHODS                             #
+    #*************************************************************************#
 
-        for k in lookup.by_name:
-            row = lookup.get_position(k)
-            result[k] = alpha_column + str(row)
-
-        return result
-
-    def _add_consolidation_logic_old(self, *pargs, sheet, column, line, set_labels=True, indent=0):
+    def _add_consolidation_logic(self, *pargs, sheet, column, line,
+                                 set_labels=True, indent=0):
         """
 
 
-        -> Worksheet
+        LineChef._add_consolidation_logic() -> Worksheet
 
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``column`` must be a column number reference
+        --``line`` must be an instance of LineItem
+        --``set_labels`` must be a boolean; True will set labels for line
+        --``indent`` is amount of indent
 
-        Expects line.xl.consolidated.sources to include full range of pointers to source lines
-        on children.
-        """
-        if not line.xl.consolidated.sources:
-            pass
-
-        else:
-            sheet.bb.current_row += 1
-            line.xl.consolidated.starting = sheet.bb.current_row
-
-            for source in line.xl.consolidated.sources:
-
-                link_cell = sheet.cell(column=column, row=sheet.bb.current_row)
-                source_coordinates = source.xl.get_coordinates()
-
-                link_template = formula_templates.LINK_TO_COORDINATES
-                link = link_template.format(coordinates=source_coordinates)
-                link_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
-
-                line.xl.consolidated.ending = sheet.bb.current_row
-                sheet.bb.current_row += 1
-
-            # Group the cells!! <--------------------------------------------------------------------------
-            # Add better labels
-
-            alpha_column = get_column_letter(column)
-            summation_params = {
-                "starting_row" : line.xl.consolidated.starting,
-                "ending_row" : line.xl.consolidated.ending,
-                "alpha_column" : alpha_column
-                }
-
-            summation = formula_templates.SUM_RANGE.format(**summation_params)
-            summation_cell = sheet.cell(column=column, row=sheet.bb.current_row)
-            summation_cell.set_explicit_value(summation, data_type=type_codes.FORMULA)
-
-            if set_labels:
-                label = line.name + ": consolidated results"
-                label = (indent * " ") + label
-                self._set_label(sheet=sheet, label=label, row=sheet.bb.current_row)
-
-            line.xl.consolidated.ending = sheet.bb.current_row
-
-        return sheet
-
-        # To Do:
-        # - group the cells
-        # - add labels
-
-    def _add_consolidation_logic(self, *pargs, sheet, column, line, set_labels=True, indent=0):
-        """
-
-
-        -> Worksheet
-
-
-        Expects line.xl.consolidated.sources to include full range of pointers to source lines
-        on children.
+        Expects line.xl.consolidated.sources to include full range of pointers
+        to source lines on children.
 
         Always stuffs consolidation into the same number of rows.
-        Derive can still cause staircasing if the line picks up details in the future it doesnt
-        have now.
+        Derive can still cause staircasing if the line picks up details in the
+        future that it doesn't have now.
 
-        # better without labels?
-
-        Will split consolidation logic into constant number of cells.
+        Returns Worksheet with consolidation logic added as Excel dynamic links
         """
+
         if not line.xl.consolidated.sources:
             pass
 
@@ -315,17 +260,17 @@ class LineChef:
                         # Inner loop will only run once if ``sources`` is empty
 
                     if batch_summation:
-                        batch_cell = sheet.cell(column=column, row=sheet.bb.current_row)
-                        batch_cell.set_explicit_value(batch_summation, data_type=type_codes.FORMULA)
+                        batch_cell = sheet.cell(column=column,
+                                                row=sheet.bb.current_row)
+                        batch_cell.set_explicit_value(batch_summation,
+                                                      data_type=
+                                                      type_codes.FORMULA)
 
                 # Move on to next row
                 line.xl.consolidated.ending = sheet.bb.current_row
                 sheet.bb.current_row += 1
 
-            # Group the cells!! <--------------------------------------------------------------------------
-            #   should also hide the cells (always, for consolidation).
-            # Add better labels
-
+            # Group the cells
             alpha_column = get_column_letter(column)
             summation_params = {
                 "starting_row" : line.xl.consolidated.starting,
@@ -334,27 +279,37 @@ class LineChef:
                 }
 
             summation = formula_templates.SUM_RANGE.format(**summation_params)
-            summation_cell = sheet.cell(column=column, row=sheet.bb.current_row)
-            summation_cell.set_explicit_value(summation, data_type=type_codes.FORMULA)
+            summation_cell = sheet.cell(column=column,
+                                        row=sheet.bb.current_row)
+            summation_cell.set_explicit_value(summation,
+                                              data_type=type_codes.FORMULA)
 
             if set_labels:
                 label = line.name + ": consolidated results"
                 label = (indent * " ") + label
-                self._set_label(sheet=sheet, label=label, row=sheet.bb.current_row)
+                self._set_label(sheet=sheet, label=label,
+                                row=sheet.bb.current_row)
 
             line.xl.consolidated.ending = sheet.bb.current_row
 
         return sheet
 
-
-    def _add_derivation_logic(self, *pargs, sheet, column, line, set_labels=True, indent=0):
+    def _add_derivation_logic(self, *pargs, sheet, column, line,
+                              set_labels=True, indent=0):
         """
 
-        -> Worksheet
+        LineChef._add_derivation_logic() -> Worksheet
 
-        Expects sheet current row to point to last filled cell.
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``column`` must be a column number reference
+        --``line`` must be an instance of LineItem
+        --``set_labels`` must be a boolean; True will set labels for line
+        --``indent`` is amount of indent
 
+        Delegates to LineChef._add_driver_calculation() to add driver logic
+        to dynamic links in Excel cells.
         """
+
         if not line.xl.derived.calculations:
             pass
 
@@ -369,8 +324,7 @@ class LineChef:
                     line=line,
                     driver_data=data_cluster,
                     set_labels=set_labels,
-                    indent=indent
-                    )
+                    indent=indent)
 
             else:
                 pass
@@ -381,19 +335,29 @@ class LineChef:
 
         return sheet
 
-    def _add_driver_calculation(self, *pargs, sheet, column, line, driver_data, set_labels=True, indent=0):
+    def _add_driver_calculation(self, *pargs, sheet, column, line, driver_data,
+                                set_labels=True, indent=0):
         """
 
 
-        -> Worksheet
+        LineChef._add_driver_calculation -> Worksheet
 
-        Will write to sheet current row
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``column`` must be a column number reference
+        --``line`` must be an instance of LineItem
+        --``driver_data`` must be a dictionary of driver_data info
+        --``set_labels`` must be a boolean; True will set labels for line
+        --``indent`` is amount of indent
+
+        Writes driver logic to Excel sheet. Will write to sheet.bb.current_row.
         """
+
         private_data = sheet.bb.parameters.copy()
-        # Set up a private range that's going to include both "shared" period & unit
-        # parameters from the column and "private" driver parameters.
+        # Set up a private range that's going to include both "shared" period &
+        # unit parameters from the column and "private" driver parameters.
 
-        label_column = sheet.bb.parameters.columns.get_position(field_names.LABELS)
+        label_column = sheet.bb.parameters.columns.get_position(
+                                                            field_names.LABELS)
         period_column = column
 
         for row_data in driver_data.rows:
@@ -412,7 +376,8 @@ class LineChef:
                     column=label_column
                     )
 
-            param_cell = sheet.cell(column=period_column, row=sheet.bb.current_row)
+            param_cell = sheet.cell(column=period_column,
+                                    row=sheet.bb.current_row)
             if isinstance(private_value, (list, set, dict, map)):
                 private_value = str(private_value)
                 # Capture mutable and multi-dimensional objects here. We need
@@ -420,12 +385,13 @@ class LineChef:
 
             param_cell.value = private_value
 
-            relative_position = sheet.bb.current_row - (private_data.rows.starting or 0)
+            relative_position = sheet.bb.current_row - \
+                                (private_data.rows.starting or 0)
             private_data.rows.by_name[private_label] = relative_position
             # ... In this particular case, we could map a specific cell
-            # (in memory) to the parameter. Unclear whether that's useful though,
-            # because we generally look up locations for lines, not parameters.
-            # And lines continue to span several rows.
+            # (in memory) to the parameter. Unclear whether that's useful
+            # though, because we generally look up locations for lines, not
+            # parameters. And lines continue to span several rows.
 
             sheet.bb.current_row += 1
             # Will add a blank row after all the columns
@@ -433,15 +399,15 @@ class LineChef:
         # Transform the range values from rows to coordinates
         param_coordinates = self._rows_to_coordinates(
             lookup=private_data.rows,
-            column=period_column
-            )
+            column=period_column)
 
         # Apply param:var conversions so formula can find its expected inputs
         for param_name, var_name in driver_data.conversion_map.items():
             param_coordinates[var_name] = param_coordinates[param_name]
 
         # Finally, format the formula as necessary
-        # (if references are a dict of objects, could map each obj to its coordinates)
+        # (if references are a dict of objects, could map each obj to its
+        #  coordinates)
         template = driver_data.formula
 
         line_coordinates = dict()
@@ -454,14 +420,12 @@ class LineChef:
 
         life_coordinates = self._rows_to_coordinates(
             lookup=sheet.bb.life.rows,
-            column=period_column
-            )
+            column=period_column)
         materials["life"] = life_coordinates
 
         event_coordinates = self._rows_to_coordinates(
             lookup=sheet.bb.events.rows,
-            column=period_column
-            )
+            column=period_column)
         materials["events"] = event_coordinates
 
         try:
@@ -482,8 +446,9 @@ class LineChef:
 
         a = "LineChef"
         calc_cell.comment = Comment(c, a)
-        # If formula included a reference to the prior value of the line itself, it
-        # picked up here. Can now change line.xl.derived.final <--------------------------------------------incrementation is discouraged, right?
+
+        # If formula included a reference to the prior value of the line
+        # itself, it's picked up here. Can now change line.xl.derived.final
         line.xl.derived.ending = sheet.bb.current_row
         line.xl.derived.cell = calc_cell
 
@@ -492,25 +457,21 @@ class LineChef:
             self._set_label(sheet=sheet, label=label, row=sheet.bb.current_row)
 
         return sheet
-        #<--------------------------------------------------------------------------------------formula should be able to deliver multiple rows
-        #that build on each other (for complex calculations): could have something like last_step as the variable in params that we keep
-        # changing
 
-        #<-------- should group each calculation like this
-        # TO DO:
-        # -- group each calculation
-        # -- add a nice header for the calculation (may be?)
-        #
-
-    def _combine_segments(self, *pargs, sheet, column, line, set_labels=True, indent=0):
+    def _combine_segments(self, *pargs, sheet, column, line, set_labels=True,
+                          indent=0):
         """
 
 
         LineChef._combine_segments() -> Worksheet
 
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``column`` must be a column number reference
+        --``line`` must be an instance of LineItem
+        --``set_labels`` must be a boolean; True will set labels for line
+        --``indent`` is amount of indent
 
         Adds the combination to the current row.
-
         """
         sheet.bb.current_row += 1
         cell = sheet.cell(column=column, row=sheet.bb.current_row)
@@ -524,7 +485,8 @@ class LineChef:
         segment_summation = self._sum_endpoints(rows=ends, column=column)
 
         if segment_summation:
-            cell.set_explicit_value(segment_summation, data_type=type_codes.FORMULA)
+            cell.set_explicit_value(segment_summation,
+                                    data_type=type_codes.FORMULA)
             label = indent*" " + LineItem.SUMMARY_PREFIX + line.name
 
         else:
@@ -539,16 +501,42 @@ class LineChef:
             self._set_label(label=label, sheet=sheet, row=sheet.bb.current_row)
 
         return sheet
-    # TO DO:
-    # - should move blank lines to master and drive them from there. logic may be
-    #   a better fit in derive().
 
-    def _set_label(self, *pargs, label, sheet, row, column=None, overwrite=False):
+    def _rows_to_coordinates(self, *pargs, lookup, column):
+        """
+
+
+        LineChef._rows_to_coordinates -> dict
+
+        --``lookup`` is a lookup table
+        --``column`` must be a column number reference
+
+        Method returns a dictionary of row name:row coordinate within the given
+        column.
+        """
+
+        result = dict()
+        alpha_column = get_column_letter(column)
+
+        for k in lookup.by_name:
+            row = lookup.get_position(k)
+            result[k] = alpha_column + str(row)
+
+        return result
+
+    def _set_label(self, *pargs, label, sheet, row, column=None,
+                   overwrite=False):
         """
 
 
         LineChef._set_label() -> Worksheet
 
+        --``label`` must be value to set as a cell label
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``row`` must be a row index where ``label`` should be written
+        --``column`` column index or None where ``label`` should be written
+        --``overwrite`` must be a boolean; True overwrites existing value,
+           if any; default is False
 
         Set (column, row) cell value to label. Throw exception if cell already
         has a different label, unless ``overwrite`` is True.
@@ -573,8 +561,8 @@ class LineChef:
 
                 raise Error(c)
 
-                # Check to make sure we are writing to the right row; if the label
-                # doesn't match, we are in trouble.
+                # Check to make sure we are writing to the right row; if the
+                # label doesn't match, we are in trouble.
 
         return sheet
 
@@ -584,9 +572,11 @@ class LineChef:
 
         LineChef._sum_endpoints() -> string
 
+        --``row`` must be a row index where ``label`` should be written
+        --``column`` column index or None where ``label`` should be written
 
         Return a summation of each of the rows in column. Expects rows to be a
-        collection of absolute row indeces.
+        collection of absolute row indices.
         """
         summation = ""
 

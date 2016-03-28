@@ -1,90 +1,88 @@
-#Data structures for managing excel interface
+#PROPRIETARY AND CONFIDENTIAL
+#Property of Blackbird Logical Applications, LLC
+#Copyright Blackbird Logical Applications, LLC 2016
+#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+
+#Blackbird Environment
+#Module: data_structures.serializers.chef.data_management
+"""
+
+Module defines data structure classes for managing excel interface.
+====================  =========================================================
+Attribute             Description
+====================  =========================================================
+
+DATA:
+n/a
+
+FUNCTIONS:
+n/a
+
+CLASSES:
+Area                  stores references to a specific area of cells in a
+                      worksheet
+DriverData            stores driver data for Excel conversion
+LineData              holds data for coordinating line location across multiple
+                      non-contiguous ranges of rows
+Lookup                holds look-up values relative to the starting point
+Range                 tracks starting and ending row
+RowData               holds row data in dictionary format
+SheetData             holds useful data for working with Worksheets
+UnitData              holds the Worksheet for a particular BusinessUnit
+====================  =========================================================
+"""
+
+
+
 
 # Imports
 import copy
 
 from .field_names import FieldNames
 
+
+
+
 # Module Globals
 # n/a
 
-class Range:
-    """
-
-    Uses absolute coordinates
-    """
-    ending = None
-    # To allow property below
-
-    def __init__(self, starting=None):
-        
-        self.starting = starting
-
-    # May be starting should be a property, so when you change it, you move
-    # all values up or down. Should also get error if its < 1. 
-
-class Lookup(Range):
-    """
-    values in the lookup are always relative to the starting point
-    """
-    def __init__(self, *pargs, **kwargs):
-        Range.__init__(self, *pargs, **kwargs)
-        self.by_name = dict()
-
-    @property
-    def ending(self):
-        result = None
-        
-        if self.by_name: 
-            starting_value = self.starting or 0
-            result = starting_value + max(self.by_name.values())
-
-        return result
-
-    def copy(self):
-        """
-
-        -> Lookup
-        
-        Return a deep copy
-        """
-        result = copy.copy(self)
-        result.by_name = self.by_name.copy()
-
-        return result
-        
-    def get_position(self, name):
-        first_position = self.starting or 0
-        result = first_position + self.by_name[name]
-        return result
-        # Return natural if starting is blank
-
-    def update(self, source):
-        """
-        -> None
-        """
-        self.by_name.update(source.by_name)
-        
-
+# Classes
 class Area:
     """
-    could also name this ``Field``
+
+    Class stores references to a specific area of cells in an Excel sheet.
+    ====================  =====================================================
+    Attribute             Description
+    ====================  =====================================================
+
+    DATA:
+    name                  str; name of the instance
+    parent                obj; pointer to parent object
+    rows                  instance of Lookup(); holds rows in Area
+    columns               instance of Lookup(); holds columns in Area
+
+    FUNCTIONS:
+    copy()                returns a deep copy of instance
+    update()              updates the coordinates of cells within instance
+    ====================  =====================================================
     """
-    
+
     def __init__(self, name=None):
         self.name = name
         self.parent = None
-        
+
         self.rows = Lookup()
         self.columns = Lookup()
 
     def copy(self):
         """
 
-        -> Area
 
-        Return deep copy
+        Area.copy() -> Area
+
+        Returns a deep copy of the instance.
         """
+
         result = copy.copy(self)
         result.rows = self.rows.copy()
         result.columns = self.columns.copy()
@@ -93,16 +91,74 @@ class Area:
 
     def update(self, source_area):
         """
-        -> None
+
+
+        Area.update() -> None
+
+        --``source_area`` must be instance of Area
+
+        Method updates instance.rows and instance.columns to match the
+        references in ``source_area``.
         """
+
         self.rows.update(source_area.rows)
         self.columns.update(source_area.columns)
-        
-class LineData(Range):
 
+
+class DriverData:
     """
-    For coordinating line location across multiple non-continguous
-    ranges of rows.
+
+    Class stores driver data for Excel conversion.
+    ====================  =====================================================
+    Attribute             Description
+    ====================  =====================================================
+
+    DATA:
+    rows                  list; contains RowData objects
+    formula               str; Excel formula template string
+    references            dict; objects keyed by string name
+    conversion_map        dict; formula arguments keyed by parameter names
+    name                  str; name of driver
+    comment               str; comment to include on cell where driver writes
+                          data
+
+    FUNCTIONS:
+    n/a
+    ====================  =====================================================
+    """
+
+    def __init__(self):
+        self.rows = []
+        self.formula = None
+        self.references = None
+        self.conversion_map = None
+        self.name = None
+        self.comment = None
+
+
+class LineData(Range):
+    """
+
+    Class for coordinating line location across multiple non-contiguous ranges
+    of rows.
+    ====================  =====================================================
+    Attribute             Description
+    ====================  =====================================================
+
+    DATA:
+    consolidated          instance of Range(); holds consolidation data
+                          (list of sources, cell, starting, ending)
+    derived               instance of Range(); holds derivation data (list of
+                          calculations, cell, starting, ending)
+    detailed              instance of Range(); holds detail data (cell,
+                          starting, ending)
+    sheet                 instance of Worksheet
+    cell                  instance of Cell
+
+    FUNCTIONS:
+    get_coordinates       returns Excel reference string of cell coordinates
+    set_sheet             sets instance ``sheet`` attribute
+    ====================  =====================================================
     """
 
     def __init__(self):
@@ -113,7 +169,7 @@ class LineData(Range):
         self.consolidated.sources = list()
         # List should contain pointers to source lines
         self.consolidated.cell = None
-        
+
         self.derived = Range()
         self.derived.calculations = list()
         # Each item should be a driver_data object
@@ -125,29 +181,18 @@ class LineData(Range):
         self.sheet = None
         self.cell = None
 
-##    def copy(self):
-##        result = copy.copy(self)       
-    
-    def get_coordinates_old(self, column):
-        """
-        -> tuple(int, int)
-
-        x (column), y (row)
-
-        # should return a dictionry of "sheet":, "row":, "column":
-        # shoudl return a formatted string {sheet}!{column}{row}
-        """
-        result = ""
-        if self.sheet:
-            result += sheet.title
-            result += "!"
-
-        result += get_column_letter(column)
-        result += str(self.ending)
-        
-        return result
-
     def get_coordinates(self, include_sheet=True):
+        """
+
+
+        LineData.get_coordinates() -> str
+
+        --``include_sheet`` must be a bool; whether or not to return the sheet
+            name as part of the coordinate set
+
+        Function returns the coordinates where the line item data was written
+        """
+
         result = None
         if not self.cell:
             raise ExcelPrepError
@@ -155,68 +200,198 @@ class LineData(Range):
         else:
             result = "'" + self.cell.parent.title + "'" + "!"
             result += self.cell.coordinate
-            
+
         return result
-        
-        # Each line must be able to deliver a full coordinate set, with
-        # sheet. Could add a ._set_sheet() method that goes through
-        # each line and sets the sheet pointer. Or could do something with
-        # like a shared pointer, though that's uglier. Let's just have
-        # a function. When we get the right sheet for that unit we, we
-        # _set_sheet() and then we can derive. Or can pass it in during the
-        # call somehow. But that requires the coordinator to know where to look
 
     def set_sheet(self, sheet):
+        """
+
+
+        SheetData.set_sheet() -> None
+
+        --``sheet`` must be an instance of Worksheet
+
+        Function sets instance.sheet
+        """
+
         self.sheet = sheet
 
-    
-        
-class UnitData:
-    def __init__(self, sheet=None):
-        self.sheet = sheet
 
-    def set_sheet(self, sheet):
-        self.sheet = sheet
-        
+class Lookup(Range):
+    """
+
+    Class for holding look-up values. Values in the lookup are always relative
+    to the starting point.
+    ====================  =====================================================
+    Attribute             Description
+    ====================  =====================================================
+
+    DATA:
+    by_name               dict; lookup table holding values keyed by name
+    ending                property; returns last row in range
+
+    FUNCTIONS:
+    copy()                returns a deep copy of the instance
+    get_position()        returns the relative position of an item
+    update()              updates by_name dictionary with supplied values
+    ====================  =====================================================
+    """
+
+    def __init__(self, *pargs, **kwargs):
+        Range.__init__(self, *pargs, **kwargs)
+        self.by_name = dict()
+
+    @property
+    def ending(self):
+        result = None
+
+        if self.by_name:
+            starting_value = self.starting or 0
+            result = starting_value + max(self.by_name.values())
+
+        return result
+
+    def copy(self):
+        """
+
+
+        Lookup.copy() -> Lookup
+
+        Function returns a deep copy of the instance.
+        """
+
+        result = copy.copy(self)
+        result.by_name = self.by_name.copy()
+
+        return result
+
+    def get_position(self, name):
+        """
+
+
+        Lookup.get_position() -> int
+
+        --``name`` must be a string
+
+        Function returns the relative position of an item within the lookup
+        area.
+        """
+
+        first_position = self.starting or 0
+        result = first_position + self.by_name[name]
+
+        return result
+        # Return natural if starting is blank
+
+    def update(self, source):
+        """
+
+
+        Lookup.update() -> None
+
+        --``source`` must be a dictionary containing key(name)-value pairs to
+            be added to or updated in the instance.by_name dict
+
+        Function calls instance.by_name.update() (dictionary method)
+        """
+
+        self.by_name.update(source.by_name)
+
+
+class Range:
+    """
+
+    Class for tracking starting and ending row.
+    ====================  =====================================================
+    Attribute             Description
+    ====================  =====================================================
+
+    DATA:
+    ending                None, CLASS attr
+    starting              starting row
+
+    FUNCTIONS:
+    n/a
+    ====================  =====================================================
+    """
+    ending = None
+    # To allow property below
+
+    def __init__(self, starting=None):
+
+        self.starting = starting
+
+    # May be starting should be a property, so when you change it, you move
+    # all values up or down. Should also get error if its < 1.
+
+
 class RowData(dict):
+    """
+
+    Class for holding row data in dictionary format.
+    ====================  =====================================================
+    Attribute             Description
+    ====================  =====================================================
+
+    DATA:
+    field_names           instance of FieldNames; CLASS attr
+
+    FUNCTIONS:
+    n/a
+    ====================  =====================================================
+    """
+
     field_names = FieldNames()
-    
+
     def __init__(self):
         self[self.field_names.VALUES] = None
         self[self.field_names.LABELS] = None
-        
-##        self[self.field_names.COMMENT] = None
-        # Comment always goes on the labels line?
-##        self[self.field_names.REFERENCES] = None
 
-        # Probably better to change this into a regular instance with attributes (.value, .label), etc.
-        # then have a .get_dict() method that delivers the instance dictionary.
-
-        # Would fit in better anyways. 
-
-class DriverData:
-    """
-    rows : list of RowData objects
-    references : dictionary of strings to objects, suite
-    """
-    def __init__(self):
-        self.rows = []
-        self.formula = None
-        self.references = None
-        self.conversion_map = None
-        self.name = None
-        self.comment = None
 
 class SheetData:
+    """
+
+    Class for holding useful data for working with Worksheets.
+    ====================  =====================================================
+    Attribute             Description
+    ====================  =====================================================
+
+    DATA:
+    general               instance of Area; represents whole sheet
+    current_row           int; holds index of the current row in the sheet
+    current_column        int; holds index of the current column in the sheet
+    consolidation_size    int; number of rows that consolidation area will take
+    sheet                 instance of Worksheet
+
+    FUNCTIONS:
+    add_area()
+    set_sheet()           method sets ``sheet`` attribute
+    ====================  =====================================================
+    """
+
     def __init__(self):
 
         self.general = Area()
         self.current_row = None
         self.current_column = None
         self.consolidation_size = None
+        self.sheet = None
         # Number of rows that consolidation area will take up
 
     def add_area(self, area_name, overwrite=False):
+        """
+
+
+        SheetData.set_sheet() -> Area or None
+
+        --``area_name`` must be the string name for a new area in the worksheet
+        --``overwrite`` must be a boolean; whether or not to overwrite if an
+            area with the same name already exists
+
+        Function adds a new Area to the instance as an attribute and returns
+        the Area.
+        """
+
         result = None
         if getattr(self, area_name, None):
 
@@ -234,18 +409,47 @@ class SheetData:
         return result
 
     def set_sheet(self, sheet):
+        """
+
+
+        SheetData.set_sheet() -> None
+
+        --``sheet`` must be an instance of Worksheet
+
+        Function sets instance.sheet
+        """
 
         self.sheet = sheet
 
-    # Alternative interface:
-        # def __init__(self):
-        #   Area.__init__(self)
-        #   self.current_row = None
-        #   self.current_column = None
-        #
-        ## then can add new subareas (time_line, params, etc)
-        ## so have a general and a specific
 
-        ## sheet can also have a .public and .private attrs
-        ## each of which could be a dictionary of areas.
-        ##
+class UnitData:
+    """
+
+    Class for holding the Worksheet for a particular business unit.
+    ====================  =====================================================
+    Attribute             Description
+    ====================  =====================================================
+
+    DATA:
+    sheet                 instance of Worksheet
+
+    FUNCTIONS:
+    set_sheet()           method sets ``sheet`` attr
+    ====================  =====================================================
+    """
+
+    def __init__(self, sheet=None):
+        self.sheet = sheet
+
+    def set_sheet(self, sheet):
+        """
+
+
+        UnitData.set_sheet() -> None
+
+        --``sheet`` must be an instance of Worksheet
+
+        Function sets instance.sheet
+        """
+
+        self.sheet = sheet
