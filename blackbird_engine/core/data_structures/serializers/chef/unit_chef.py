@@ -31,6 +31,7 @@ UnitChef              class containing methods to chop BusinessUnit into
 # Imports
 import openpyxl as xlio
 
+from .data_management import LineData
 from .data_types import TypeCodes, NumberFormats
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
@@ -266,16 +267,25 @@ class UnitChef:
         # Make sure the unit contains all relevant calculations by filling it
         # out. If BB already performed this action, call will be a no-op.
 
+        if unit.financials.ending is not None:
+            start_bal = self._load_balance(unit, sheet, column)
+
         for statement in unit.financials.ordered:
 
-            if statement:
+            if statement is not None:
+                # if statement is unit.financials.ending:
+                #     # insert load-balanced starting balance sheet here
+                #     line_chef.chop_statement(
+                #          sheet=sheet,
+                #          statement=new_start_bal,
+                #          column=column,
+                #          set_labels=set_labels)
 
                 line_chef.chop_statement(
                     sheet=sheet,
                     statement=statement,
                     column=column,
-                    set_labels=set_labels
-                    )
+                    set_labels=set_labels)
 
     def _add_life_analysis(self, sheet, unit, active_column, set_labels=True):
         """
@@ -365,7 +375,7 @@ class UnitChef:
         active_row += 1
 
         # 3. Add alive
-        life.rows.by_name[field_names.ALIVE]=active_row
+        life.rows.by_name[field_names.ALIVE] = active_row
         if set_labels:
             set_label(
                 label=field_names.ALIVE,
@@ -465,7 +475,8 @@ class UnitChef:
                 link_template = formula_templates.ADD_COORDINATES
                 link = link_template.format(coordinates=master_cell.coordinate)
 
-                active_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+                active_cell.set_explicit_value(link,
+                                               data_type=type_codes.FORMULA)
 
                 # Have to first set the active cell and THEN compare it to master
                 # because our Excel interface may use a setter that transforms
@@ -552,9 +563,11 @@ class UnitChef:
         Returns sheet with current row pointing to final param row
         """
         parameters = sheet.bb.parameters
-        period_column = sheet.bb.time_line.columns.get_position(unit.period.end)
+        period_column = sheet.bb.time_line.columns.get_position(
+                                                               unit.period.end)
         
-        existing_param_names = unit.parameters.keys() & parameters.rows.by_name.keys()
+        existing_param_names = unit.parameters.keys() & \
+                               parameters.rows.by_name.keys()
         new_param_names = unit.parameters.keys() - existing_param_names
         
         for param_name in existing_param_names:
@@ -644,7 +657,7 @@ class UnitChef:
         corner_row +=1
         
         corner_column = sheet.bb.parameters.columns.get_position(field_names.MASTER)
-        corner_column +=1
+        corner_column += 1
         
         corner_cell = sheet.cell(column=corner_column, row=corner_row)
         sheet.freeze_panes = corner_cell
@@ -724,3 +737,26 @@ class UnitChef:
         sheet = self._link_to_area(source, sheet, "parameters")
 
         return sheet
+
+    @staticmethod
+    def _load_balance(unit):
+
+        if unit.past is not None:
+            old_ending_balance = unit.past.financials.ending
+            new_start_bal = old_ending_balance.copy()
+
+            for line in new_start_bal.get_full_ordered():
+                old_line = old_ending_balance.find_first(line.name)
+
+                # clear other obligations
+                line.xl = LineData()
+                line.xl.reference.source = old_line
+
+        else:
+            new_start_bal = unit.financials.ending.copy()
+            for line in new_start_bal.get_full_ordered():
+                line.clear()
+                line.xl = LineData()
+
+        new_start_bal.name = "Starting Balance Sheet"
+        return new_start_bal

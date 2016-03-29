@@ -95,7 +95,18 @@ class LineChef:
         in cell.
         """
 
-        self._add_consolidation_logic(
+        # if line.xl.reference.source:
+        #
+        #     self._add_reference(
+        #         sheet=sheet,
+        #         column=column,
+        #         line=line,
+        #         set_labels=set_labels,
+        #         indent=indent
+        #         )
+        # else:
+
+        self._add_derivation_logic(
             sheet=sheet,
             column=column,
             line=line,
@@ -103,7 +114,7 @@ class LineChef:
             indent=indent
             )
 
-        self._add_derivation_logic(
+        self._add_consolidation_logic(
             sheet=sheet,
             column=column,
             line=line,
@@ -362,7 +373,8 @@ class LineChef:
                                                             field_names.LABELS)
         period_column = column
 
-        for row_data in driver_data.rows:
+        for row_data in sorted(driver_data.rows,
+                               key=lambda x: x[field_names.LABELS]):
 
             private_label = row_data[field_names.LABELS]
             private_value = row_data[field_names.VALUES]
@@ -465,6 +477,46 @@ class LineChef:
         if set_labels:
             label = (indent * " ") + driver_data.name
             self._set_label(sheet=sheet, label=label, row=sheet.bb.current_row)
+
+        return sheet
+
+    def _add_reference(self, *pargs, sheet, column, line,
+                              set_labels=True, indent=0):
+        """
+
+
+        LineChef._add_reference() -> Worksheet
+
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``column`` must be a column number reference
+        --``line`` must be an instance of LineItem
+        --``set_labels`` must be a boolean; True will set labels for line
+        --``indent`` is amount of indent
+
+        Adds a single cell reference to a new cell.
+        (e.g. new_cell.value = '=C18')
+        """
+        if not line.xl.reference.source:
+            pass
+
+        else:
+            sheet.bb.current_row += 1
+            cell = sheet.cell(column=column, row=sheet.bb.current_row)
+
+            ref_cell = line.xl.reference.source.xl.cell
+            excel_str = "="+line.xl.reference.source.xl.get_coordinates()
+
+            cell.set_explicit_value(excel_str, data_type=type_codes.FORMULA)
+
+            label = indent*" " + line.name
+
+            line.xl.ending = sheet.bb.current_row
+            line.xl.cell = cell
+            line.xl.reference.cell = ref_cell
+
+            if set_labels:
+                self._set_label(label=label, sheet=sheet,
+                                row=sheet.bb.current_row)
 
         return sheet
 
