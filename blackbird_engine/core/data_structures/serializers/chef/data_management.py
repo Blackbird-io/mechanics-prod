@@ -133,7 +133,7 @@ class DriverData:
         self.references = None
         self.conversion_map = None
         self.name = None
-        self.comment = None
+        self.comment = ""
 
 
 class Range:
@@ -205,6 +205,10 @@ class LineData(Range):
         self.detailed = Range()
         self.detailed.cell = None
 
+        self.reference = Range()
+        self.reference.source = None
+        self.reference.cell = None
+
         self.sheet = None
         self.cell = None
 
@@ -225,7 +229,9 @@ class LineData(Range):
             raise ExcelPrepError
 
         else:
-            result = "'" + self.cell.parent.title + "'" + "!"
+            result = ""
+            if include_sheet:
+                result += "'" + self.cell.parent.title + "'" + "!"
             result += self.cell.coordinate
 
         return result
