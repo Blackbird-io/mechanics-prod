@@ -338,8 +338,7 @@ class LineItem(Statement):
         if self._local_value and not self._details:
             self._bring_down_local_value()
 
-        line.setPartOf(self)
-        self._details[line.name] = line
+        Statement._bind_and_record(self,line)
 
     def _bring_down_local_value(self):
         """
