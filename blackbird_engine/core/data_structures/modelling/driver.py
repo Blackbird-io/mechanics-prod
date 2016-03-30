@@ -394,7 +394,7 @@ class Driver(Tags):
 
                         c = "\nFormula does not support Excel output."
                         c += "\nName: %s" % formula.tags.name
-                        c += "\nBBID: $s" % self.formula_bbid
+                        c += "\nBBID: %s" % self.formula_bbid
                         c += "\n"
 
                         raise bb_exceptions.ExcelPrepError(c)
@@ -404,7 +404,7 @@ class Driver(Tags):
                         c = "Formula did not return all required information"
                         c += " for Excel output."
                         c += "\nName: %s" % formula.tags.name
-                        c += "\nBBID: $s" % self.formula_bbid
+                        c += "\nBBID: %s" % self.formula_bbid
                         c += "\n"
 
                         raise bb_exceptions.ExcelPrepError(c)
