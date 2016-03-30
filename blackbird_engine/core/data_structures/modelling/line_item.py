@@ -321,6 +321,26 @@ class LineItem(Statement):
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
 
+    def _bind_and_record(self, line):
+        """
+
+
+        Statement._bind_and_record() -> None
+
+
+        Set instance as line parent, add line to details.
+        """
+
+        # We need to deal with the case where a line already has an assigned
+        # value, but is now being assigned a detail line.  We will add the
+        # existing value as an additional detail line with the currently
+        # assigned value
+        if self._local_value and not self._details:
+            self._bring_down_local_value()
+
+        line.setPartOf(self)
+        self._details[line.name] = line
+
     def _bring_down_local_value(self):
         """
 
@@ -333,23 +353,11 @@ class LineItem(Statement):
         """
         if self._local_value is None:
             pass
-
         else:
-            replica = self._get_replica()
             sig = self.SIGNATURE_FOR_REPLICA_MANAGEMENT
-                                          
-            if replica:
-                
-                starting_value = replica.value or 0
-                new_value = starting_value + self._local_value
-                # We know that instance has a non-None value, otherwise we
-                # would be in the no-op block.
-                replica.set_value(new_value, sig)
-                replica.inheritTagsFrom(self)
-
-            else:
-                self._make_replica()
-                # New replica will come with existing local value
+            self._make_replica()
+            # New replica will come with existing local value, add replica as
+            # detail
 
             self.set_value(None, sig, override=True)
 
@@ -372,8 +380,6 @@ class LineItem(Statement):
             result.append(simple)
         else:
             # Detailed view: when this line has details
-            self._bring_down_local_value()
-            
             header = printing_tools.format_as_line(self, header=True, left_tab=indent)
             result.append(header)
 
@@ -388,27 +394,15 @@ class LineItem(Statement):
             result.append(footer)
 
         return result
-    
-    def _get_replica(self):
-        """
-
-
-        LineItem._get_replica() -> LineItem or None
-
-
-        Get existing replica from details, return result (None if no replica). 
-        """
-        replica = self._details.get(self.name)
-        return replica
 
     def _make_replica(self):
         """
 
 
-        LineItem._make_replica() -> LineItem
+        LineItem._make_replica() -> None
 
 
-        Create a replica, add replica to details, return the replica. 
+        Create a replica, add replica to details
         """
         replica = Tags.copy(self, enforce_rules=False)
         # Start with a shallow copy that picks up all the tags, including ones
@@ -422,15 +416,10 @@ class LineItem(Statement):
         # Replicas don't have any details of their own. Can't run .clear() here
         # because instance and replica initially point to the same details dict.
         replica.tag(T_REPLICA)
-                                      
-        if replica._local_value != self._local_value:
-            comment = "At creation, replica should have the same value as instance."
-            raise bb_exceptions.IOPMechanicalError(c)
 
-        self.add_line(replica, position=0)
+        replica.position = 0
+        self._details[replica.name] = replica
         # Add replica in first position.
-
-        return replica
 
     def _sum_details(self):
         """
