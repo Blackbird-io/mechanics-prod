@@ -136,32 +136,10 @@ class LineItem(Statement):
         # Could be None
 
         if self._details:
-
-            total_details = self._sum_details()
-            if total_details is not None:
-
-                result = result or 0
-                result += total_details
+            result = self._sum_details()
 
         return result
 
-##    
-##        if not self._details:
-##            result = self._local_value
-##
-##        else:
-##            result = self._local_value
-##            total_details = self._sum_details()
-##            if total_details is not None:
-##                
-##                
-##            result = total_details + (self._local_value or 0)
-##            
-##        return result
-##        # bring down value would go in get strings?
-##        # or add line
-##        # 
-    
     def __str__(self):
         result = "\n".join(self._get_line_strings())
         result += "\n"
@@ -324,28 +302,14 @@ class LineItem(Statement):
             test = value + 1
             # Will throw exception if value doesn't support arithmetic
             
-        #
         new_value = value
         if new_value is None:
-
             self._local_value = new_value
 
         else:
-            
             if self._details:
-
-                replica = self._get_replica()
-                
-                if not replica:
-                    replica = self._make_replica()
-
-                replica_value = replica.value or 0
-                total_value = self.value or 0
-                detail_value = total_value - replica_value
-
-                new_replica_value = new_value - detail_value
-                replica.set_value(new_replica_value, signature)
-
+                m = "Cannot assign new value to a line with existing details."
+                raise PermissionError(m)
             else:
                 self._local_value = value
 

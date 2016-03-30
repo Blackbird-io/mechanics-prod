@@ -1212,20 +1212,33 @@ class BusinessUnit(History, Tags, Equalities):
 
                 if tags_to_omit & set(starting_line.allTags):
                     continue
-
                 else:
                     if starting_line.value is not None:
-                        
                         ending_line = ending_balance.find_first(starting_line.name)
-                        ending_line.set_value(starting_line.value, self._UPDATE_BALANCE_SIGNATURE)
 
-                # Theoretically find_first() could create problems if multiple lines in a
-                # balance sheet have the same details (ie short-term and long-term bonds).
-                # In practice, we are going through only the top-level items in the ending
-                # balance sheet, so the only conflict could arise if starting balance sheet
-                # somehow has only a detail like ending but not the top-level item to block
-                # it. That's basically impossible.
-    
+                        self._update_lines(starting_line, ending_line)
+
+    def _update_lines(self, start_line, end_line):
+        """
+
+
+        BusinessUnit._update_lines() -> None
+
+
+        Tool for BusinessUnit._update_balance().  Method recursively walks
+        through top-level LineItem details from the starting balance sheet
+        ``start_line`` and assigns their values to the matching line in the
+        ending balance sheet ``end_line``.
+        """
+        if start_line._details:
+            for name, line in start_line._details.items():
+                ending_line = end_line.find_first(line.name)
+
+                self._update_lines(line, ending_line)
+        else:
+            end_line.set_value(start_line.value,
+                               self._UPDATE_BALANCE_SIGNATURE)
+
     def _update_id(self, namespace, recur=True):
         """
 
