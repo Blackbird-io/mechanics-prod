@@ -302,7 +302,7 @@ def _add_import_to_lines(file_lines, insert_marker, insert_text):
     return file_lines
 
 
-def _add_module_to_tests(TEST_PATH, new_module):
+def _add_module_to_tests(test_path, new_module):
     """
 
 
@@ -315,7 +315,7 @@ def _add_module_to_tests(TEST_PATH, new_module):
     -- ``TEST_PATH`` must be a string path to the main test directory
     -- ``new_module`` must be the name of the newly created directory
     """
-    fpath = os.path.join(TEST_PATH, _INIT_FILE)
+    fpath = os.path.join(test_path, _INIT_FILE)
     insert_marker = '#imports'
     insert_text = "from . import "+new_module+"\n"
 
