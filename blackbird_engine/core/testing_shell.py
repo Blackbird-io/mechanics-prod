@@ -60,6 +60,7 @@ if __name__ == "__main__":
     THIS_FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 
     _BATCH_FILE_NAME = "generate_standard.bat"
+    _GENERATE_STANDARD = "generate_standard"
     _LEGAL_CHARS = "-_. %s%s" % (string.ascii_letters, string.digits)
     _MAKE_TEST = "make_test"
     _P = os.path.join(THIS_FILE_PATH, "test_suite")
@@ -76,21 +77,24 @@ if __name__ == "__main__":
                                                  "specified functionality.")
     subparsers = parser.add_subparsers(dest="mode")
 
-    # run_test mode---------------------------------------------------------------
+    # run_test mode------------------------------------------------------------
     run_test = subparsers.add_parser(_RUN_TEST,
-                                     description="Sub-command for running tests. "
-                                                 "Automatically logs and "
-                                                 "summarizes test results.",
-                                     help="sub-command to access functionality for"
-                                          " running tests")
+                                     description="Sub-command for running "
+                                                 "tests. Automatically logs "
+                                                 "and summarizes test "
+                                                 "results.",
+                                     help="sub-command to access functionality"
+                                          " for running tests")
+
     run_test.add_argument("-a", "--all", help="run all tests in all batteries",
                           action="store_true")
-    run_test.add_argument("-b", "--battery", type=str, choices=batt_dict.keys(),
+    run_test.add_argument("-b", "--battery", type=str,
+                          choices=batt_dict.keys(),
                           metavar='', help="run a specific battery, "
                                            "use -ls to get designations")
     run_test.add_argument("-t", "--test", type=str, metavar='',
-                          help="run a specific test within the specified battery, "
-                               "use -ls to get designations")
+                          help="run a specific test within the specified "
+                               "battery, use -ls to get designations")
     run_test.add_argument("-ls", "--list",
                           help="list all available batteries and tests",
                           action="store_true")
@@ -98,35 +102,31 @@ if __name__ == "__main__":
                           help="print output to screen, do not log",
                           action="store_true")
 
-
-    # make_test mode--------------------------------------------------------------
+    # make_test mode-----------------------------------------------------------
     make_test = subparsers.add_parser(_MAKE_TEST,
-                                      description="Sub-command for making tests "
-                                                  "and generating standards.",
-                                      help="sub-command to access functionality "
-                                           "for making tests")
-    make_test.add_argument("-ls", "--list",
-                           help="list all available batteries and tests",
-                           action="store_true")
+                                      description="Sub-command for making "
+                                                  "tests.",
+                                      help="sub-command to access "
+                                           "functionality for making tests")
 
-    # -m and -g cannot be called at the same time, assuming user would like to call
-    # them on the same test, -g won't work due to import/compile issues with new
-    # module, use -mg instead.
-    meg = make_test.add_mutually_exclusive_group()
+    # generate_standard mode---------------------------------------------------
+    gen_standard = subparsers.add_parser(_GENERATE_STANDARD,
+                                         description="Sub-command for "
+                                                     "generating standards "
+                                                     "for new tests.",
+                                         help="sub-command to access "
+                                              "functionality for generating "
+                                              "standards")
 
-    meg.add_argument("-m", "--make_test",
-                           help="make a new test from a script",
-                           action="store_true")
-    meg.add_argument("-g", "--generate_standard", nargs=2,
-                           metavar=("BATTERY_DESIGNATION", "TEST_DESIGNATION"),
-                           help="generate the standard for the specified test in "
-                                "the specified battery, use -ls to get "
-                                "designations")
-    make_test.add_argument("-mg", "--make_test_and_generate_standard",
-                           help="make a new test from a script and then generate"
-                                " the standard",
-                           action="store_true")
-
+    gen_standard.add_argument("-g", "--generate_standard", nargs=2,
+                              metavar=("BATTERY_DESIGNATION",
+                                       "TEST_DESIGNATION"),
+                              help="generate the standard for the specified "
+                                   "test in the specified battery, use -ls to"
+                                   " get designations")
+    gen_standard.add_argument("-ls", "--list",
+                              help="list all available batteries and tests",
+                              action="store_true")
 
     # Printing function for sub-command helps
     def _print_help(subpar, name):
@@ -216,6 +216,9 @@ if __name__ == "__main__":
         # also print help for args.mode -> make_test
         _print_help(make_test, _MAKE_TEST)
 
+        # also print help for args.mode -> generate_standard
+        _print_help(gen_standard, _GENERATE_STANDARD)
+
     #   Complete tasks based on options entered
     if args.mode == _RUN_TEST:
         if not (args.list or args.all or args.battery or args.test or args.list or
@@ -292,172 +295,136 @@ if __name__ == "__main__":
                 print(l)
 
     elif args.mode == _MAKE_TEST:
-        if not (args.make_test or args.make_test_and_generate_standard or
-                args.list or args.generate_standard):
-            _print_help(make_test, _MAKE_TEST)
+        # Need to get arguments for test_maker():
+        # script, desc, directory, battery
+
+        # Ask the user which script to use
+        script_list = testing_tools.get_script_list()
+        script_dict = dict(enumerate(script_list))
+
+        help_string = ["("+str(k)+") "+script_dict[k]
+                       for k in script_dict.keys()]
+
+        print("\nPlease select a script on which to base this test:\n")
+        for h in help_string:
+            print(h)
+
+        while True:
+            script_temp = input("\nPlease enter either the number or name of"
+                                " the script you wish to use:  ")
+            script_temp = script_temp.strip()
+
+            try:
+                int_script_temp = int(script_temp)
+            except ValueError:
+                int_script_temp = None
+
+            if int_script_temp is not None and int_script_temp in \
+                    script_dict.keys():
+                script = script_dict[int_script_temp]
+            elif script_temp in script_list:
+                script = script_temp
+            else:
+                # Validate selection
+                print("The selected script does not exist, please try again.")
+                continue
+
+            print("Script selected: "+script)
+            break
+
+        # Ask the user for the test description
+        while True:
+            desc_temp = input("\nPlease enter a test description:  ")
+            desc = desc_temp.strip()
+            if desc == "":
+                print("Test description required, please try again.")
+                continue
+            else:
+                print("Test description: "+desc)
+                break
+
+        # Ask the user for the directory where test should be stored
+        dir_list = testing_tools.get_dir_list()
+        print("\nThe following test directories already exist:\n")
+        for d in dir_list:
+            print(d)
+
+        while True:
+            dir_temp = input("\nPlease select the directory where the test"
+                             " should be stored; directory can be existing "
+                             "or new:  ")
+
+            # Need to check that dir name is valid for file name
+            dir_use = dir_temp.strip()
+
+            # Conservatively only allow dashes, dots, underscores, letters and
+            # numbers in filename. Omit other special characters.
+            if dir_use not in dir_list:
+                dir_use = ''.join(d for d in dir_use if d in _LEGAL_CHARS)
+
+            if dir_use == "":
+                print("Valid directory required, please try again.")
+                continue
+            else:
+                print("Test directory: "+dir_use)
+                break
+
+        # Ask the user for which battery the test belongs to
+        bat_mod_dict = testing_tools.get_bat_list()
+        if dir_use in bat_mod_dict.keys():
+            bat_list = bat_mod_dict[dir_use]
+
+            print("\nThe following test batteries already exist in this "
+                  "directory:\n")
+            for b in bat_list:
+                print(b)
+        else:
+            bat_list = []
+            print("\nThere are no existing batteries in this directory.\n")
+
+        while True:
+            bat_temp = input("\nPlease select the battery where the test "
+                             "should be stored; battery can be existing or"
+                             " new:  ")
+
+            # Need to check that dir name is valid for file name, battery name
+            # can be almost any chars, just not escape chars. Don't play
+            # defense for now, just make sure string is not empty or only space
+            battery = bat_temp.strip()
+
+            if battery == "":
+                print("Valid battery required, please try again.")
+                continue
+            elif battery in bat_mod_dict.values() and battery not in bat_list:
+                # Need to make sure new battery is not created that will
+                # conflict with existing battery in another module
+
+                # Get directory where battery exists
+                for k in bat_mod_dict.keys():
+                    if battery in bat_mod_dict[k]:
+                        check_dir = k
+                        break
+
+                print("The battery named %s exists in a different directory "
+                      "(%s). Creating another battery of that name in this"
+                      " directory will conflict with the existing battery. "
+                      "Please select a different battery or start over in %s "
+                      "using Ctrl+C." % (battery, check_dir, check_dir))
+                continue
+            else:
+                print("Test battery: "+battery)
+                break
+
+        # test maker, test maker, make me a test:
+        new_test = test_maker.make_test(script, desc, dir_use, battery)
+        print("Test has been created successfully.")
+
+    elif args.mode == _GENERATE_STANDARD:
+        if not (args.list or args.generate_standard):
+            _print_help(gen_standard, _GENERATE_STANDARD)
 
         if args.list:
             _list_options()
-
-        if args.make_test or args.make_test_and_generate_standard:
-            # Need to get arguments for test_maker():
-            # script, desc, directory, battery
-
-            # Ask the user which script to use
-            script_list = testing_tools.get_script_list()
-            script_dict = dict(enumerate(script_list))
-
-            help_string = ["("+str(k)+") "+script_dict[k]
-                           for k in script_dict.keys()]
-
-            print("\nPlease select a script on which to base this test:\n")
-            for h in help_string:
-                print(h)
-
-            while True:
-                script_temp = input("\nPlease enter either the number or name of"
-                                    " the script you wish to use:  ")
-                script_temp = script_temp.strip()
-
-                try:
-                    int_script_temp = int(script_temp)
-                except ValueError:
-                    int_script_temp = None
-
-                if int_script_temp is not None and int_script_temp in \
-                        script_dict.keys():
-                    script = script_dict[int_script_temp]
-                elif script_temp in script_list:
-                    script = script_temp
-                else:
-                    # Validate selection
-                    print("The selected script does not exist, please try again.")
-                    continue
-
-                print("Script selected: "+script)
-                break
-
-            # Ask the user for the test description
-            while True:
-                desc_temp = input("\nPlease enter a test description:  ")
-                desc = desc_temp.strip()
-                if desc == "":
-                    print("Test description required, please try again.")
-                    continue
-                else:
-                    print("Test description: "+desc)
-                    break
-
-            # Ask the user for the directory where test should be stored
-            dir_list = testing_tools.get_dir_list()
-            print("\nThe following test directories already exist:\n")
-            for d in dir_list:
-                print(d)
-
-            while True:
-                dir_temp = input("\nPlease select the directory where the test"
-                                 " should be stored; directory can be existing "
-                                 "or new:  ")
-
-                # Need to check that dir name is valid for file name
-                dir_use = dir_temp.strip()
-
-                # Conservatively only allow dashes, dots, underscores, letters and
-                # numbers in filename. Omit other special characters.
-                if dir_use not in dir_list:
-                    dir_use = ''.join(d for d in dir_use if d in _LEGAL_CHARS)
-
-                if dir_use == "":
-                    print("Valid directory required, please try again.")
-                    continue
-                else:
-                    print("Test directory: "+dir_use)
-                    break
-
-            # Ask the user for which battery the test belongs to
-            bat_mod_dict = testing_tools.get_bat_list()
-            if dir_use in bat_mod_dict.keys():
-                bat_list = bat_mod_dict[dir_use]
-
-                print("\nThe following test batteries already exist in this "
-                      "directory:\n")
-                for b in bat_list:
-                    print(b)
-            else:
-                bat_list = []
-                print("\nThere are no existing batteries in this directory.\n")
-
-            while True:
-                bat_temp = input("\nPlease select the battery where the test "
-                                 "should be stored; battery can be existing or"
-                                 " new:  ")
-
-                # Need to check that dir name is valid for file name, battery name
-                # can be almost any chars, just not escape chars. Don't play
-                # defense for now, just make sure string is not empty or only space
-                battery = bat_temp.strip()
-
-                if battery == "":
-                    print("Valid battery required, please try again.")
-                    continue
-                elif battery in bat_mod_dict.values() and battery not in bat_list:
-                    # Need to make sure new battery is not created that will
-                    # conflict with existing battery in another module
-
-                    # Get directory where battery exists
-                    for k in bat_mod_dict.keys():
-                        if battery in bat_mod_dict[k]:
-                            check_dir = k
-                            break
-
-                    print("The battery named %s exists in a different directory "
-                          "(%s). Creating another battery of that name in this"
-                          " directory will conflict with the existing battery. "
-                          "Please select a different battery or start over in %s "
-                          "using Ctrl+C." % (battery, check_dir, check_dir))
-                    continue
-                else:
-                    print("Test battery: "+battery)
-                    break
-
-            # test maker, test maker, make me a test:
-            new_test = test_maker.make_test(script, desc, dir_use, battery)
-            print("Test has been created successfully.")
-
-        if args.make_test_and_generate_standard:
-            # Get necessary values for batch file
-            working_directory = os.getcwd()
-            python_exe = sys.executable
-
-            # Get battery designation for test
-            battery_desig = testing_tools.get_battery_designation(battery)
-
-            # Get test designation for test
-            test_desig = testing_tools.get_test_designation(desc)
-
-            # Get test folder directory so we know where to store the bat file
-            test_folder_directory = os.path.join(working_directory,
-                                                 test_maker.TEST_PATH[1:],
-                                                 dir_use,
-                                                 new_test)
-
-            # Open and write batch file
-            batch_file_path = os.path.join(test_folder_directory,
-                                           _BATCH_FILE_NAME)
-            batch = open(batch_file_path,mode="x")
-
-            bat_line_1 = "cd " + working_directory + "\n"
-            batch.write(bat_line_1)
-
-            bat_line_2 = "%s testing_shell.py make_test -g %s %s" % \
-                         (python_exe, battery_desig, test_desig) + "\n"
-            batch.write(bat_line_2)
-            batch.close()
-
-            # Execute batch file
-            p = subprocess.Popen(batch_file_path, shell=True)
-
-            stdout, stderr = p.communicate()
 
         if args.generate_standard:
             battery = args.generate_standard[0]
