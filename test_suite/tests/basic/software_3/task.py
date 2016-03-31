@@ -4,11 +4,11 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Diagnostics
-#Module: Tests.Basic.retail_2.Task
+#Module: Tests.Basic.software_3.Task
 """
 Task Module
 
-SCRIPT: retail_2_ext
+SCRIPT: software_3_by_seat
 
 Run through scripted interview using only API interface, return last message,
 store string views of current period and company financials for comparison.
@@ -34,12 +34,13 @@ n/a
 
 
 #imports
-import Shell as Engine
+from blackbird_engine.core import Shell as Engine
 import simple_portal as Portal
 
 from tools import for_messages as message_tools
 
-from test_suite.scripts import retail_3_low_sga_five_new as seed
+from test_suite.scripts import software_3_by_seat as seed
+
 
 from collections import OrderedDict
 
@@ -56,13 +57,13 @@ def do():
 
     Task.do() -> dict()
 
-    
+
     NOTE: Task.do() must always return output.
 
     Output is usually a dictionary of data. Output can be any object that the
     Grader for this Test understands
 
-    Function runs through an interview script until Engine declares completion. 
+    Function runs through an interview script until Engine declares completion.
     """
     #
     c = ""
@@ -87,7 +88,7 @@ def do():
     Start with a blank portal message. Call Engine through the API interface for
     the next message. Use the Simple Portal to process the engine output. Repeat
     until Engine returns an end-interview message.
-    
+
     For any message, Portal will collect the user response (here, from the
     script), package the response into an API-spec PortalResponse object, and
     return a new, conforming message.
@@ -109,7 +110,7 @@ def do():
             msg_2 = Portal.process(msg_1)
             msg_0 = msg_2
             continue
-    
+
     c+= """
     loop = True
     while loop:
@@ -132,7 +133,7 @@ def do():
 
 
     Engine successfully concluded the interview and stored the final message
-    for grading. 
+    for grading.
 
     Test does not print final_message because it contains a long string for the
     serialized e_model.

@@ -4,46 +4,59 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Diagnostics
-#Module: Tests.Basic.API_Interview.Task
+#Module: Tests.Basic.interview_template.Task
 """
-Task for API_Interview
+Task Module
 
-Run through scripted interview using only API interface, return last message. 
+SCRIPT: TEMPLATE
 
+Run through scripted interview using only API interface, return last message,
+store string views of current period and company financials for comparison.
+
+NOTE: Test **discards** e-model prior to returning result.
+
+4-STEP QUICK USE GUIDE:
+
+1) REPLACE ``template_module`` in line 46 w actual answer module
+2) FILL IN a short, descriptive test name for __init__.name
+3) ADD the module package name to imports in the parent directory's __init__.py
+4) GENERATE standard file through Tester.generate_standard()
+
+That's it.
 ====================  ==========================================================
 Object                Description
 ====================  ==========================================================
 
 DATA:
 output                dict; populated on do()
-retail_script         dict; from Retail2_Raw.answers
+active_script         dict; from seed.answers
 
 FUNCTIONS:
 do()                  runs through interview, populates output
 
-CLASSES:
+CLASSES: 
 n/a
 ====================  ==========================================================
-
-#adding an extra comment line to make sure hg picks up changes
 """
 
 
 
 
 #imports
-import BBGlobalVariables as Globals
-import Shell as Engine
+from blackbird_engine.core import Shell as Engine
 import simple_portal as Portal
 
-from test_suite.scripts import Retail2_Raw
+from tools import for_messages as message_tools
+
+from test_suite.scripts import template_module as seed  # REPLACE WITH ACTUAL TO USE
+#<------------------------------------------------------------------------------
 
 
 
 
 #globals
 output = {}
-retail_script = Retail2_Raw.answers
+active_script = seed.answers
 
 #functions
 def do():
@@ -61,14 +74,12 @@ def do():
     Function runs through an interview script until Engine declares completion. 
     """
     #
-    #T17.01
-    #
     c = ""
-    c+= "Use script: \n%s\n" % retail_script
+    c+= "Use script: \n%s\n" % active_script
     print(c)
     #
-    Portal.set_script(retail_script)
-    c = """Portal.set_script(retail_script)"""
+    Portal.set_script(active_script)
+    c = """Portal.set_script(active_script)"""
     print(c)
     #
     msg_0 = Portal.starting_message
@@ -99,8 +110,8 @@ def do():
         msg_1 = Engine.process_interview(msg_0)
         msg_mqr = Engine.to_engine(msg_1)
         #
-        status = Globals.checkMessageStatus(msg_mqr)
-        if status == Globals.status_endSession:
+        status = message_tools.checkMessageStatus(msg_mqr)
+        if status == message_tools.status_endSession:
             final_message = msg_1
             break
         else:
@@ -114,8 +125,8 @@ def do():
         msg_1 = Engine.process_interview(msg_0)
         msg_mqr = Engine.to_engine(msg_1)
         #
-        status = Globals.checkMessageStatus(msg_mqr)
-        if status == Globals.status_endSession:
+        status = message_tools.checkMessageStatus(msg_mqr)
+        if status == message_tools.status_endSession:
             final_message = msg_1
             break
         else:
@@ -124,10 +135,11 @@ def do():
             continue
     """
     print(c)
-    output["T17.01"] = {}
-    output["T17.01"]["final message"] = final_message
+    output["1. final message"] = final_message
     #
     c = """
+
+
     Engine successfully concluded the interview and stored the final message
     for grading. 
 
@@ -135,13 +147,45 @@ def do():
     serialized e_model.
 
     Grader will individually evaluate whether the final message satisfies the
-    standard. 
+    standard.
     """
     print(c)
     #
+    c = """
+
+
+    Now store stateless string views of company financials for current period
+    and the current period iteself. Grader will compare these to standard too.
+
+    Pull both Blackbird objects from an engine-format conversion of the final
+    message.
+    """
+    print(c)
+    final_mqr = Engine.to_engine(final_message)
+    model = final_mqr[0]
+    current_period = model.time_line.current_period
+    company = current_period.content
+    output["2. current period"] = str(current_period)
+    output["3. company financials"] = str(company.financials)
     #
+    c = """
+
+
+    Discard PortalModel[``e_model``] to keep output compact.
+    """
+    print(c)
+    final_message["M"].pop("e_model")
+    #
+    #**************************************************************************
+    #                       PART II:  FORECASTING                              
+    #**************************************************************************
+    #
+    #**************************************************************************
+    #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> THE END <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    #**************************************************************************
     return output
     #
+    
     #
     #
 

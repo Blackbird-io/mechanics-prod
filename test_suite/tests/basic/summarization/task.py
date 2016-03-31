@@ -24,7 +24,7 @@ model should include interview
 import dill
 import os
 
-import Shell
+from blackbird_engine.core import Shell
 
 
 
