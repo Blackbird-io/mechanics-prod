@@ -8,9 +8,9 @@
 """
 
 Module provides command line testing tools for Blackbird Engine.
-====================  ==========================================================
+====================  =========================================================
 Object                Description
-====================  ==========================================================
+====================  =========================================================
 
 DATA:
 N/A
@@ -36,11 +36,12 @@ make_test             sub-command containing the following options:
 --make_test_and_generate_standard
                       runs make_test routine then makes a new process to
                       generate the standard for the new test
-====================  ==========================================================
+====================  =========================================================
 """
-
-
 if __name__ == "__main__":
+
+
+
 
     #imports:
     import argparse
@@ -59,7 +60,6 @@ if __name__ == "__main__":
     # Constants:
     THIS_FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 
-    _BATCH_FILE_NAME = "generate_standard.bat"
     _GENERATE_STANDARD = "generate_standard"
     _LEGAL_CHARS = "-_. %s%s" % (string.ascii_letters, string.digits)
     _MAKE_TEST = "make_test"
@@ -71,10 +71,12 @@ if __name__ == "__main__":
     batt_dict = testing_tools.make_test_dicts()
 
     # Get a parser and add subparsers
-    parser = argparse.ArgumentParser(description="Command line test functionality "
-                                                 "for engine.  Use sub-commands "
-                                                 "{run_test, make_test} to access "
-                                                 "specified functionality.")
+    parser = argparse.ArgumentParser(description="Command line test "
+                                                 "functionality for engine.  "
+                                                 "Use sub-commands "
+                                                 "{run_test, make_test} to "
+                                                 "access specified "
+                                                 "functionality.")
     subparsers = parser.add_subparsers(dest="mode")
 
     # run_test mode------------------------------------------------------------
@@ -197,7 +199,6 @@ if __name__ == "__main__":
             print("")
             print("")
 
-
     # Process user input
     args = parser.parse_args()
 
@@ -221,8 +222,8 @@ if __name__ == "__main__":
 
     #   Complete tasks based on options entered
     if args.mode == _RUN_TEST:
-        if not (args.list or args.all or args.battery or args.test or args.list or
-                args.verbose or args.generate_standard):
+        if not (args.list or args.all or args.battery or args.test or
+                args.list or args.verbose or args.generate_standard):
             _print_help(run_test, _RUN_TEST)
 
         if args.list:
@@ -280,8 +281,8 @@ if __name__ == "__main__":
                     print("ERROR: Test does not exist in specified battery.")
                     exit()
             else:
-                print("ERROR: You must specify a battery (-b %s) in order to run a"
-                      " specific test." % [s for s in batt_dict.keys()])
+                print("ERROR: You must specify a battery (-b %s) in order to "
+                      "run a specific test." % [s for s in batt_dict.keys()])
                 exit()
 
         # Summarize test results
@@ -448,7 +449,3 @@ if __name__ == "__main__":
                 print("ERROR: You must specify a valid battery (%s)." %
                       [s for s in batt_dict.keys()])
                 exit()
-
-else:
-    print("This module is meant only to be run from command line.  " +
-          "This module is not meant to be imported.")
