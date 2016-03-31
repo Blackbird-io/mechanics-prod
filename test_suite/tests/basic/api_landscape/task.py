@@ -35,7 +35,7 @@ n/a
 #imports
 import dill
 
-import Shell as Engine
+from blackbird_engine.core import Shell as Engine
 
 
 

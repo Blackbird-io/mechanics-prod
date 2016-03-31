@@ -34,12 +34,12 @@ n/a
 
 
 #imports
-import Shell as Engine
+from blackbird_engine.core import Shell as Engine
 import simple_portal as Portal
 
 from tools import for_messages as message_tools
 
-from test_suite.scripts import software_1_flat_fee as seed
+from test_suite.scripts import software_2_flat_fee_no_devs as seed
 
 
 from collections import OrderedDict

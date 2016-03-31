@@ -4,11 +4,11 @@
 #NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
 
 #Blackbird Diagnostics
-#Module: Tests.Basic.software_5.Task
+#Module: Tests.Basic.software_1.Task
 """
 Task Module
 
-SCRIPT: software_5_small_profit_no_bonus
+SCRIPT: software_1_flat_fee
 
 Run through scripted interview using only API interface, return last message,
 store string views of current period and company financials for comparison.
@@ -34,12 +34,12 @@ n/a
 
 
 #imports
-import Shell as Engine
+from blackbird_engine.core import Shell as Engine
 import simple_portal as Portal
 
 from tools import for_messages as message_tools
 
-from test_suite.scripts import software_5_small_profit_no_bonus as seed
+from test_suite.scripts import software_1_flat_fee as seed
 
 
 from collections import OrderedDict

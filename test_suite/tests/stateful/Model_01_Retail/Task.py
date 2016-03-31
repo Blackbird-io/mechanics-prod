@@ -16,7 +16,7 @@ output the final model
 
 """
 import dill
-import Shell
+from blackbird_engine.core import Shell
 
 from test_suite.scripts import Retail2_Raw
 
