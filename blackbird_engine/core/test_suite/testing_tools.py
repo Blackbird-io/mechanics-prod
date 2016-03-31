@@ -45,7 +45,7 @@ from test_suite import test_maker
 
 
 # Constants:
-DIR_SEARCH = r"test_suite\tests"
+DIR_SEARCH = os.path.join("test_suite", "tests")
 
 
 def get_bat_list():

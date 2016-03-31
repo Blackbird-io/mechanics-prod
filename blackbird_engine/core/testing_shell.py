@@ -62,7 +62,7 @@ if __name__ == "__main__":
     _BATCH_FILE_NAME = "generate_standard.bat"
     _LEGAL_CHARS = "-_. %s%s" % (string.ascii_letters, string.digits)
     _MAKE_TEST = "make_test"
-    _P = THIS_FILE_PATH + r"\test_suite\%s" % ""
+    _P = os.path.join(THIS_FILE_PATH, "test_suite")
     _PASS_FAIL = {True: "Passed", False: "Failed"}
     _RUN_TEST = "run_test"
 
@@ -435,12 +435,15 @@ if __name__ == "__main__":
             # Get test designation for test
             test_desig = testing_tools.get_test_designation(desc)
 
-            # Get test folder directory so we know where to store the batch file
-            test_folder_directory = working_directory + test_maker.TEST_PATH[1:] +\
-                                    (r"\%s" % dir_use) + (r"\%s" % new_test)
+            # Get test folder directory so we know where to store the bat file
+            test_folder_directory = os.path.join(working_directory,
+                                                 test_maker.TEST_PATH[1:],
+                                                 dir_use,
+                                                 new_test)
 
             # Open and write batch file
-            batch_file_path = test_folder_directory + (r"\%s" % _BATCH_FILE_NAME)
+            batch_file_path = os.path.join(test_folder_directory,
+                                           _BATCH_FILE_NAME)
             batch = open(batch_file_path,mode="x")
 
             bat_line_1 = "cd " + working_directory + "\n"
@@ -452,8 +455,7 @@ if __name__ == "__main__":
             batch.close()
 
             # Execute batch file
-            p = subprocess.Popen(test_folder_directory +
-                                 ("\%s" % _BATCH_FILE_NAME), shell=True)
+            p = subprocess.Popen(batch_file_path, shell=True)
 
             stdout, stderr = p.communicate()
 
