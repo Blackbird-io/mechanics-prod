@@ -45,7 +45,7 @@ from test_suite import test_maker
 
 
 # Constants:
-# N/A
+DIR_SEARCH = r"test_suite\tests"
 
 
 def get_bat_list():
@@ -104,12 +104,17 @@ def get_dir_list():
     """
 
     ls = [d[0] for d in os.walk(test_maker.TEST_PATH)]
+
     short_list = []
     for l in ls:
-        temp = l.split("\\")
-        if len(temp) >= 4:
-            if "__" not in temp[3]:
-                short_list.append(temp[3])
+        if DIR_SEARCH in l:
+            idx = l.find(DIR_SEARCH)
+            sub_l = l[idx:]
+
+            temp = sub_l.split("\\")
+            if len(temp) >= 3:
+                if "__" not in temp[2]:
+                    short_list.append(temp[2])
 
     dir_list = set(short_list)
 

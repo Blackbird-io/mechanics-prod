@@ -57,10 +57,12 @@ from test_suite import testing_tools
 
 
 # Constants:
+THIS_FILE_PATH = os.path.dirname(os.path.realpath(__file__))
+
 _BATCH_FILE_NAME = "generate_standard.bat"
 _LEGAL_CHARS = "-_. %s%s" % (string.ascii_letters, string.digits)
 _MAKE_TEST = "make_test"
-_P = r".\test_suite\%s" % ""
+_P = THIS_FILE_PATH + r"\test_suite\%s" % ""
 _PASS_FAIL = {True: "Passed", False: "Failed"}
 _RUN_TEST = "run_test"
 
@@ -477,4 +479,3 @@ elif args.mode == _MAKE_TEST:
             print("ERROR: You must specify a valid battery (%s)." %
                   [s for s in batt_dict.keys()])
             exit()
-
