@@ -38,11 +38,13 @@ from fnmatch import fnmatch
 
 
 # Constants
+THIS_FILE_PATH = os.path.dirname(os.path.realpath(__file__))
+
 LOG_FILE_NAME = r"\log.txt"
-MAIN_TEMPLATE_DIR = r".\test_suite\tests\templates"
-SCRIPT_DIR = r".\test_suite\scripts"
+MAIN_TEMPLATE_DIR = THIS_FILE_PATH + r"\tests\templates"
+SCRIPT_DIR = THIS_FILE_PATH + r"\scripts"
 TEMPLATE_DIR = MAIN_TEMPLATE_DIR + r"\_rev_test_template"
-TEST_PATH = r".\test_suite\tests"
+TEST_PATH = THIS_FILE_PATH + r"\tests"
 _GRADER_FILE = r"\grader.py"
 _INIT_FILE = r"\__init__.py"
 _TASK_FILE = r"\task.py"
