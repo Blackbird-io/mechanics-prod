@@ -1,10 +1,10 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2016
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
-#Blackbird Environment
-#Module: data_structures.serializers.chef.data_management
+# Blackbird Environment
+# Module: data_structures.serializers.chef.data_management
 """
 
 Module defines data structure classes for managing excel interface.
@@ -370,7 +370,7 @@ class SheetData:
     sheet                 instance of Worksheet
 
     FUNCTIONS:
-    add_area()
+    add_area()            method adds a new area to the worksheet
     set_sheet()           method sets ``sheet`` attribute
     ====================  =====================================================
     """

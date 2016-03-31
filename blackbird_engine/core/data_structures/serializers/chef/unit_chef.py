@@ -20,8 +20,8 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-UnitChef              class containing methods to chop BusinessUnit into
-                      dynamic Excel structure
+UnitChef              class containing methods to chop BusinessUnits into
+                      dynamic Excel structures
 ====================  =========================================================
 """
 

@@ -19,6 +19,9 @@ COMMENT_CUSTOM         bool; whether to include custom comment in cell comments
 
 FUNCTIONS:
 n/a
+
+CLASSES:
+n/a
 ====================  =========================================================
 """
 

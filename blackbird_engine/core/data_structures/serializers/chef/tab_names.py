@@ -1,10 +1,10 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2016
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
-#Blackbird Environment
-#Module: data_structures.serializers.chef.tab_names
+# Blackbird Environment
+# Module: data_structures.serializers.chef.tab_names
 """
 
 Module defines a class that stores standard tab names
@@ -57,4 +57,3 @@ class TabNames:
     """
     SCENARIOS = "Scenarios"
     TIME_LINE = "Timeline"
-    
