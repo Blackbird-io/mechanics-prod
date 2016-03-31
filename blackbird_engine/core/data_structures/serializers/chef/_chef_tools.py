@@ -1,10 +1,10 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2016
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
-#Blackbird Environment
-#Module: data_structures.serializers.chef._chef_tools
+# Blackbird Environment
+# Module: data_structures.serializers.chef._chef_tools
 """
 
 Module defines functions that are tools for Chef module.
@@ -59,7 +59,7 @@ def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
 
     is_close -> bool
 
-    --``a``, ``b`` are values to compare
+    --``a``, ``b`` are numeric values to compare
     --``rel_tol`` is the relative allowable tolerance, taken as fraction of the
         larger of a and b
     --``abs_tol`` is the absolute allowable tolerance
@@ -120,6 +120,7 @@ def test_book(filename):
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
+
 
 def _check_bu(business_unit, workbook_in, log_ws):
     """

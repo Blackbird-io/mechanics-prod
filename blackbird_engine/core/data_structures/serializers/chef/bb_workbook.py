@@ -1,10 +1,10 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2016
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
-#Blackbird Environment
-#Module: data_structures.serializers.eggcellent.bb_workbook
+# Blackbird Environment
+# Module: data_structures.serializers.chef.bb_workbook
 """
 
 Module defines workbook with custom native-Python data storage on each sheet.
@@ -71,6 +71,7 @@ class BB_Workbook(xlio.Workbook):
 
         --``name`` must be string name for new worksheet
         --``index`` is the desired index at which to place the new worksheet
+            within the workbook
 
         Return worksheet with a SheetData record set at instance.bb.
 
