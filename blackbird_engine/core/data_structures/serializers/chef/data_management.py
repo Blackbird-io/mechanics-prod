@@ -163,6 +163,27 @@ class Range:
     # all values up or down. Should also get error if its < 1.
 
 
+class Reference:
+    """
+
+    Class for reference line for cell.
+    ====================  =====================================================
+    Attribute             Description
+    ====================  =====================================================
+
+    DATA:
+    source                source LineItem to use a reference for cell value
+    cell                  pointer to cell containing source LineItem in Excel
+
+    FUNCTIONS:
+    n/a
+    ====================  =====================================================
+    """
+    def __init__(self):
+        self.source = None
+        self.cell = None
+
+
 class LineData(Range):
     """
 
@@ -205,9 +226,7 @@ class LineData(Range):
         self.detailed = Range()
         self.detailed.cell = None
 
-        self.reference = Range()
-        self.reference.source = None
-        self.reference.cell = None
+        self.reference = Reference()
 
         self.sheet = None
         self.cell = None

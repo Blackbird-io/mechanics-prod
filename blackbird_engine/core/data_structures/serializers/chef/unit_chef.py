@@ -83,7 +83,7 @@ class UnitChef:
 
     Methods generally leave current row pointing to their last completed
     (filled) row.
-    
+
     ====================  =====================================================
     Attribute             Description
     ====================  =====================================================
@@ -105,11 +105,11 @@ class UnitChef:
     """
     MAX_CONSOLIDATION_ROWS = 15
     MAX_LINKS_PER_CELL = 1
-    
+
     MAX_TITLE_CHARACTERS = 30
     SHOW_GRID_LINES = False
     ZOOM_SCALE = 80
-    
+
     def add_items_to_area(self, *pargs, sheet, area, items, active_column,
                           set_labels=True):
         """
@@ -238,14 +238,14 @@ class UnitChef:
         before_kids = len(book.worksheets)
         children = unit.components.get_ordered()
         # Spread children in order to ensure stable results across run times.
-        
-        for child in children:           
+
+        for child in children:
             self.chop_unit(book=book, unit=child)
 
         # Second, chop the parent
-        sheet = self._create_unit_sheet(book=book, unit=unit, index=before_kids)        
+        sheet = self._create_unit_sheet(book=book, unit=unit, index=before_kids)
         sheet = self._add_unit_life(sheet=sheet, unit=unit)
-        
+
         current = sheet.bb.time_line.columns.get_position(unit.period.end)
         self._add_financials(sheet=sheet, unit=unit, column=current)
 
@@ -267,19 +267,19 @@ class UnitChef:
         # Make sure the unit contains all relevant calculations by filling it
         # out. If BB already performed this action, call will be a no-op.
 
-        # if unit.financials.ending is not None:
-        #     start_bal = self._load_balance(unit)
+        if unit.financials.ending is not None:
+            new_start_bal = self._load_balance(unit)
 
         for statement in unit.financials.ordered:
 
             if statement is not None:
-                # if statement is unit.financials.ending:
-                #     # insert load-balanced starting balance sheet here
-                #     line_chef.chop_statement(
-                #          sheet=sheet,
-                #          statement=new_start_bal,
-                #          column=column,
-                #          set_labels=set_labels)
+                if statement is unit.financials.ending:
+                    # insert load-balanced starting balance sheet here
+                    line_chef.chop_statement(
+                         sheet=sheet,
+                         statement=new_start_bal,
+                         column=column,
+                         set_labels=set_labels)
 
                 line_chef.chop_statement(
                     sheet=sheet,
@@ -522,13 +522,13 @@ class UnitChef:
         if not active_column:
             active_column = sheet_data.time_line.columns.get_position(
                                                                unit.period.end)
-            
+
         if not getattr(sheet_data, "life", None):
             sheet.bb.add_area("life")
 
         if not getattr(sheet_data, "events", None):
             sheet.bb.add_area("events")
-        
+
         first_life_row = sheet.bb.current_row + 2
         first_event_row = first_life_row + 9
         # Leave nine rows for basic life layout
@@ -539,7 +539,7 @@ class UnitChef:
             unit=unit,
             active_column=active_column
             )
-        
+
         sheet.bb.current_row = first_life_row
         sheet = self._add_life_analysis(
             sheet=sheet,
@@ -549,8 +549,8 @@ class UnitChef:
             )
 
         sheet.bb.current_row = sheet.bb.events.rows.ending
-        
-        # Move current row down to the bottom (max_row() probably best here). 
+
+        # Move current row down to the bottom (max_row() probably best here).
         return sheet
 
     def _add_unit_params(self, *pargs, sheet, unit, set_labels=True):
@@ -565,13 +565,13 @@ class UnitChef:
         parameters = sheet.bb.parameters
         period_column = sheet.bb.time_line.columns.get_position(
                                                                unit.period.end)
-        
+
         existing_param_names = unit.parameters.keys() & \
                                parameters.rows.by_name.keys()
         new_param_names = unit.parameters.keys() - existing_param_names
-        
+
         for param_name in existing_param_names:
-            
+
             param_value = unit.parameters[param_name]
             existing_row = sheet.bb.parameters.rows.get_position(param_name)
 
@@ -592,9 +592,9 @@ class UnitChef:
             )
 
             # Always set labels for new items.
-            
+
         sheet.bb.current_row = parameters.rows.ending
-        return sheet    
+        return sheet
 
     def _create_unit_sheet(self, *pargs, book, unit, index):
         """
@@ -603,7 +603,7 @@ class UnitChef:
         UnitChef._create_unit_sheet() -> Worksheet
 
 
-        Returns sheet with current row pointing to last parameter row        
+        Returns sheet with current row pointing to last parameter row
         """
 
         name = unit.name
@@ -617,7 +617,7 @@ class UnitChef:
         name = name.translate(bad_char_table)
         name = name[:self.MAX_TITLE_CHARACTERS]
         # Replace forbidden characters, make sure name is within length limits
-        
+
         sheet = book.create_sheet(name, index)
         try:
             sheet.sheet_view.showGridLines = self.SHOW_GRID_LINES
@@ -628,14 +628,14 @@ class UnitChef:
             #
             # Re grid, see https://bitbucket.org/openpyxl/openpyxl/issues/199
             # Re zoom, see https://bitbucket.org/openpyxl/openpyxl/issues/262
-            
+
         except Exception:
-            pass      
-        
+            pass
+
         req_rows = len(unit.components.by_name) // self.MAX_LINKS_PER_CELL
         req_rows = min(req_rows, self.MAX_CONSOLIDATION_ROWS)
         req_rows = max(1, req_rows)
-        
+
         sheet.bb.consolidation_size = req_rows
         # Compute the amount of rows we will use for consolidation on this
         # sheet. In future periods, the number of kids may grow or shrink.
@@ -647,18 +647,18 @@ class UnitChef:
 
         # Hide sheets for units below a certain depth. The depth should be a #<---------------------------------------------------------------
         # Chef-level constant. Use ``sheet_state := "hidden"`` to implement.
-    
+
         self._link_to_time_line(book=book, sheet=sheet)
         self._add_unit_params(sheet=sheet, unit=unit)
         # At this point, sheet.bb.current_row will point to the last parameter.
 
         # Freeze panes:
         corner_row = sheet.bb.time_line.rows.ending
-        corner_row +=1
-        
+        corner_row += 1
+
         corner_column = sheet.bb.parameters.columns.get_position(field_names.MASTER)
         corner_column += 1
-        
+
         corner_cell = sheet.cell(column=corner_column, row=corner_row)
         sheet.freeze_panes = corner_cell
 
@@ -692,7 +692,7 @@ class UnitChef:
 
         local_area.update(source_area)
         coordinates = {"sheet": source_sheet.title}
-        
+
         for row in source_area.rows.by_name.values():
 
             source_row = (source_area.rows.starting or 0) + row
@@ -725,32 +725,40 @@ class UnitChef:
 
 
         UnitChef._link_to_time_line() -> Worksheet
-        
+
 
         Link sheet to book's time_line.
         Force keyword-entry for book and sheet to make sure we feed in the
         right arguments.
         """
         source = book.get_sheet_by_name(tab_names.TIME_LINE)
-        
+
         sheet = self._link_to_area(source, sheet, "time_line")
         sheet = self._link_to_area(source, sheet, "parameters")
 
         return sheet
 
-    @staticmethod
-    def _load_balance(unit):
+    def _load_balance(self, unit):
+        """
+
+
+        UnitChef._balance_lines() -> None
+
+
+        Tool for UnitChef._load_balance().  Method recursively walks
+        through top-level LineItem details from the starting balance sheet
+        ``start_line`` and sets them to reference the matching line in the
+        previous time period's ending balance sheet ``end_line``
+        """
 
         if unit.past is not None:
             old_ending_balance = unit.past.financials.ending
             new_start_bal = old_ending_balance.copy()
 
-            for line in new_start_bal.get_full_ordered():
-                old_line = old_ending_balance.find_first(line.name)
+            for name, start_line in new_start_bal._details.items():
+                old_line = old_ending_balance.find_first(name)
 
-                # clear other obligations
-                line.xl = LineData()
-                line.xl.reference.source = old_line
+                self._balance_lines(start_line, old_line)
 
         else:
             new_start_bal = unit.financials.ending.copy()
@@ -760,3 +768,24 @@ class UnitChef:
 
         new_start_bal.name = "Starting Balance Sheet"
         return new_start_bal
+
+    def _balance_lines(self, start_line, end_line):
+        """
+
+
+        UnitChef._balance_lines() -> None
+
+
+        Tool for UnitChef._load_balance().  Method recursively walks
+        through top-level LineItem details from the starting balance sheet
+        ``start_line`` and sets them to reference the matching line in the
+        previous time period's ending balance sheet ``end_line``
+        """
+        if start_line._details:
+            for name, line in start_line._details.items():
+                ending_line = end_line.find_first(line.name)
+
+                self._balance_lines(line, ending_line)
+        else:
+            start_line.xl = LineData()
+            start_line.xl.reference.source = end_line

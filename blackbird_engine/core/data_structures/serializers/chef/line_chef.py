@@ -95,16 +95,13 @@ class LineChef:
         in cell.
         """
 
-        # if line.xl.reference.source:
-        #
-        #     self._add_reference(
-        #         sheet=sheet,
-        #         column=column,
-        #         line=line,
-        #         set_labels=set_labels,
-        #         indent=indent
-        #         )
-        # else:
+        self._add_reference(
+            sheet=sheet,
+            column=column,
+            line=line,
+            set_labels=set_labels,
+            indent=indent
+            )
 
         self._add_derivation_logic(
             sheet=sheet,
@@ -166,12 +163,13 @@ class LineChef:
                         label=label,
                         row=sheet.bb.current_row)
 
-        self._combine_segments(
-            sheet=sheet,
-            column=column,
-            line=line,
-            set_labels=set_labels,
-            indent=indent)
+        if not line.xl.reference.source:
+            self._combine_segments(
+                sheet=sheet,
+                column=column,
+                line=line,
+                set_labels=set_labels,
+                indent=indent)
 
         return sheet
 
@@ -556,7 +554,6 @@ class LineChef:
             cell.set_explicit_value(segment_summation,
                                     data_type=type_codes.FORMULA)
             label = indent*" " + LineItem.SUMMARY_PREFIX + line.name
-
         else:
             # Blank or hard-coded line
             cell.value = line.value
