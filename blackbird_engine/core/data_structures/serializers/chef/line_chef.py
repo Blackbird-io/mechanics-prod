@@ -279,6 +279,9 @@ class LineChef:
                                                       data_type=
                                                       type_codes.FORMULA)
 
+                sheet.row_dimensions[sheet.bb.current_row].outlineLevel = 1
+                sheet.row_dimensions[sheet.bb.current_row].hidden = True
+
                 # Move on to next row
                 line.xl.consolidated.ending = sheet.bb.current_row
                 sheet.bb.current_row += 1
@@ -389,6 +392,9 @@ class LineChef:
                     row=sheet.bb.current_row,
                     column=label_column
                     )
+
+                sheet.row_dimensions[sheet.bb.current_row].outlineLevel = 1
+                sheet.row_dimensions[sheet.bb.current_row].hidden = True
 
             param_cell = sheet.cell(column=period_column,
                                     row=sheet.bb.current_row)

@@ -267,8 +267,8 @@ class UnitChef:
         # Make sure the unit contains all relevant calculations by filling it
         # out. If BB already performed this action, call will be a no-op.
 
-        if unit.financials.ending is not None:
-            start_bal = self._load_balance(unit, sheet, column)
+        # if unit.financials.ending is not None:
+        #     start_bal = self._load_balance(unit)
 
         for statement in unit.financials.ordered:
 
