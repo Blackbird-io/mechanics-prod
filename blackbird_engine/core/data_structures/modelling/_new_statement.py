@@ -674,10 +674,11 @@ class Statement(Tags, Equalities):
                 local_copy = external_line.copy(enforce_rules=False)
                 # Dont enforce rules to track old line.replicate() method
 
-                if consolidating:
-                    if external_line.value is not None:
-                        if tConsolidated not in local_copy.allTags:
-                            local_copy.tag(tConsolidated)
+                if external_line.consolidate is True:
+                    if consolidating:
+                        if external_line.value is not None:
+                            if tConsolidated not in local_copy.allTags:
+                                local_copy.tag(tConsolidated)
 
                             # need to make sure Chef knows to consolidate this
                             # source line (or its details) also
@@ -692,12 +693,14 @@ class Statement(Tags, Equalities):
                                     l.xl.consolidated.sources.\
                                         append(detail_to_append)
 
-                    # Pick up lines with None values, but don't tag them. We
-                    # want to allow derive to write to these if necessary.
+                        # Pick up lines with None values, but don't tag them. We
+                        # want to allow derive to write to these if necessary.
 
-                self.add_line(local_copy, local_copy.position)
-                # For speed, could potentially add all the lines and then fix
-                # positions once.
+                    self.add_line(local_copy, local_copy.position)
+                    # For speed, could potentially add all the lines and then fix
+                    # positions once.
+                else:
+                    pass
 
     def inheritTags(self, recur=True):
         """
