@@ -489,7 +489,10 @@ class Driver(Tags):
                                                  
         if period:
             params.update(period.parameters)
-        
+
+        if parent:
+            params.update(parent.parameters)
+
         params.update(self.parameters)
 
         converted = self._map_params_to_formula(params)
