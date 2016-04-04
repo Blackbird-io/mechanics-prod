@@ -48,6 +48,7 @@ from ._new_statement import Statement
 T_CONSOLIDATED = Tags.tagManager.catalog["consolidated"]
 T_REPLICA = Tags.tagManager.catalog["ddr"]
 
+
 # Classes
 class LineItem(Statement):
     """
@@ -71,6 +72,7 @@ class LineItem(Statement):
     ====================  ======================================================
 
     DATA:
+    consolidate           bool; whether or not to consolidate line item
     guide                 instance of Guide object
     log                   list of entries that modified local value
     value                 instance value
@@ -79,14 +81,16 @@ class LineItem(Statement):
     FUNCTIONS:
     clear()               if modification permitted, sets value to None
     copy()                returns a new line w copies of key attributes
+    set_consolidate()     sets private attribute _consolidate
     set_value()           sets value to input, records signature
     ====================  ======================================================
     """
-    keyAttributes = Statement.keyAttributes + ["value", "requiredTags", "optionalTags"]
+    keyAttributes = Statement.keyAttributes + ["value", "requiredTags",
+                                               "optionalTags"]
 
     # Make sure that equality analysis skips potentially circular pointers like
-    # .parentObject. Otherwise, comparing children could look to parent, which could
-    # look to child, and so on. 
+    # .parentObject. Otherwise, comparing children could look to parent, which
+    # could look to child, and so on.
     
     SIGNATURE_FOR_CREATION = "__init__"
     SIGNATURE_FOR_VALUE_RESET = "LineItem.resetValue"
@@ -111,6 +115,8 @@ class LineItem(Statement):
         self.guide = Guide()
         self.log = []
         self.position = None
+        self._consolidate = True
+
         if value is not None:
             # BU.consolidate() will NOT increment items with value==None. On the
             # other hand, BU.consolidate() will increment items with value == 0.
@@ -126,7 +132,14 @@ class LineItem(Statement):
     # out of the box. Otherwise, you might get a response that a line is "in"
     # a particular set that actually contains an instance with the
     # same value but very different details. 
-                                  
+
+    @property
+    def consolidate(self):
+        """
+        read-only property
+        """
+        return self._consolidate
+
     @property
     def value(self):
         """
@@ -188,7 +201,8 @@ class LineItem(Statement):
         
         new_line.guide = copy.deepcopy(self.guide)
         new_line.log = self.log[:]
-        
+        new_line.set_consolidate(self._consolidate)
+
         new_line.xl = xl_mgmt.LineData()
 
         return new_line
@@ -246,7 +260,7 @@ class LineItem(Statement):
                 
                 self.set_value(new_value, signature)
             
-                if consolidating:
+                if consolidating and self._consolidate is True:
                     self.inheritTagsFrom(matching_line)
                     self.tag(T_CONSOLIDATED)
 
@@ -271,6 +285,25 @@ class LineItem(Statement):
     # But you can also do the same thing by adding unique lines to the parent
     # that won't overlap with those of the children and running the computation
     # there.
+
+    def set_consolidate(self, val):
+        """
+
+
+        LineItem.set_consolidate() -> None
+
+
+        --``val`` must be a boolean (True or False)
+
+        Method for explicitly setting self._consolidate.
+        """
+        if val is True:
+            self._consolidate = True
+        elif val is False:
+            self._consolidate = False
+        else:
+            msg = "lineitem._consolidate can only be set to a boolean value"
+            raise(TypeError(msg))
 
     def setValue(self, value, signature,
                  overrideValueManagement=False):
