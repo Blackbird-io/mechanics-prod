@@ -47,8 +47,6 @@ if __name__ == "__main__":
     import argparse
     import os
     import string
-    import subprocess
-    import sys
 
     from test_suite import test_maker
     from test_suite import tester
@@ -223,7 +221,7 @@ if __name__ == "__main__":
     #   Complete tasks based on options entered
     if args.mode == _RUN_TEST:
         if not (args.list or args.all or args.battery or args.test or
-                args.list or args.verbose or args.generate_standard):
+                args.verbose):
             _print_help(run_test, _RUN_TEST)
 
         if args.list:
