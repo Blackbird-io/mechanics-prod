@@ -74,7 +74,7 @@ sub_folder = os.path.normpath(sub_folder)
 if sub_folder not in sys.path:
     sys.path.append(sub_folder)
 
-sub_folder = os.path.join("..", "..", "Testing", "testing")
+sub_folder = os.path.join("..", "..", "test_suite_updates", "testing")
 sub_folder = os.path.normpath(sub_folder)
 if sub_folder not in sys.path:
     sys.path.append(sub_folder)
