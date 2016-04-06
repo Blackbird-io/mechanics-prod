@@ -34,7 +34,7 @@ import uuid
 import bb_exceptions
 import bb_settings
 
-from content import color_manager as ColorManager
+import color_manager as ColorManager
 from tools import for_messages as message_tools
 
 from .bbid import ID

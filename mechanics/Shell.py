@@ -63,7 +63,18 @@ c = "CWD: \n%s\n" % os.getcwd()
 print(c)
 c = "Python Path (via sys): \n%s\n" % sys.path
 print(c)
-sub_folder = r"blackbird_engine/core"
+
+sub_folder = os.path.join("..", "..", "Mechanics", "mechanics")
+sub_folder = os.path.normpath(sub_folder)
+if sub_folder not in sys.path:
+    sys.path.append(sub_folder)
+
+sub_folder = os.path.join("..", "..", "Content", "content")
+sub_folder = os.path.normpath(sub_folder)
+if sub_folder not in sys.path:
+    sys.path.append(sub_folder)
+
+sub_folder = os.path.join("..", "..", "Testing", "testing")
 sub_folder = os.path.normpath(sub_folder)
 if sub_folder not in sys.path:
     sys.path.append(sub_folder)
@@ -74,7 +85,7 @@ if sub_folder not in sys.path:
 import bb_exceptions
 import simple_portal as portal
 
-from content import question_manager as QuestionManager
+import question_manager as QuestionManager
 from data_structures.modelling.model import Model as EngineModel
 from data_structures.portal.portal_model import PortalModel
 from data_structures.system.messenger import Messenger
