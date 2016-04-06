@@ -29,7 +29,7 @@ Yenta                 selects best fitting topic to analyze an object
 
 
 # Imports
-import content.topic_manager as TopicManager
+import topic_manager as TopicManager
 
 from tools.for_tag_operations import build_basic_profile, build_combo_profile
 
