@@ -6,8 +6,11 @@ syntax: glob
 #Any file with a .pyc extension in the folders
 **.pyc
 
-#All done. 
+#All __pycache__ directories
+__pycache__
 
 db.sqlite3
 .idea
 .elasticbeanstalk
+
+#All done. 
