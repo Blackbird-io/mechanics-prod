@@ -64,23 +64,14 @@ print(c)
 c = "Python Path (via sys): \n%s\n" % sys.path
 print(c)
 
-sub_folder = os.path.join("..", "..", "Mechanics", "mechanics")
-sub_folder = os.path.normpath(sub_folder)
-if sub_folder not in sys.path:
-    sys.path.append(sub_folder)
+cwd = os.getcwd()
+temp_path = os.path.join(cwd, "..")
+use_path = os.path.normpath(temp_path)
 
-sub_folder = os.path.join("..", "..", "Content", "content")
-sub_folder = os.path.normpath(sub_folder)
-if sub_folder not in sys.path:
-    sys.path.append(sub_folder)
+if use_path not in sys.path:
+    sys.path.append(use_path)
 
-sub_folder = os.path.join("..", "..", "test_suite_updates", "testing")
-sub_folder = os.path.normpath(sub_folder)
-if sub_folder not in sys.path:
-    sys.path.append(sub_folder)
-
-
-
+import config
 
 import bb_exceptions
 import simple_portal as portal
