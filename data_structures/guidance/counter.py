@@ -72,7 +72,7 @@ class Counter:
             if new_val < self.cut_off:
                 self.current = new_val
             else:
-                self.current = cut_off
+                self.current = self.cut_off
         else:
             self.current = new_val
 
