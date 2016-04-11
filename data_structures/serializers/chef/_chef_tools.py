@@ -43,8 +43,7 @@ import Shell
 _ORIG_VBS_FILE = r"\open_save_close_excel_model.vbs"
 _TEMP_VBS_FILE = r"\open_save_close_excel_model_TEMP.vbs"
 _VBS_FILENAME_BOOKMARK = "FILENAME_PLACEHOLDER"
-_VBS_PATH = r"C:\Blackbird\Engine\mechanics\chef_updates\blackbird_engine" + \
-           r"\core\data_structures\serializers\chef"
+_VBS_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # Module Globals
 # n/a
