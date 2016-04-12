@@ -29,7 +29,7 @@ BB_Workbook           workbook where each sheet has a SheetData record set
 # Imports
 import openpyxl as xlio
 
-from ._chef_tools import test_book
+from ._chef_tools import test_book, collapse_groups
 from .data_management import SheetData
 
 
@@ -89,11 +89,23 @@ class BB_Workbook(xlio.Workbook):
 
         --``filename`` must be string path at which to save workbook
 
-        Method saves workbook to specified file and initiates test of file
-        contents.
+        Method saves workbook to specified file and uses VBScript to prettily
+        collapse row and column groups.
         """
         # save workbook
         xlio.Workbook.save(self, filename)
+        collapse_groups(filename)
 
+    @staticmethod
+    def test(filename):
+        """
+
+
+        BB_WorkBook.test(filename) -> None
+
+        --``filename`` must be string path at which to save workbook
+
+        Method initiates test of file contents against the model in memory.
+        """
         # test the workbook against engine values
         test_book(filename)
