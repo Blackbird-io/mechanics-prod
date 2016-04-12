@@ -73,9 +73,6 @@ class LineChef:
     ====================  =====================================================
     """
 
-    def __init__(self):
-        self._outline_level = 0
-
     def chop_line(self, *pargs, sheet, column, line, set_labels=True, indent=0):
         """
 
@@ -124,20 +121,22 @@ class LineChef:
 
         details = line.get_ordered()
         if details:
-            self._outline_level += 1
             sheet.bb.current_row += 1
 
             # Should have the header here instead
-            sheet.row_dimensions[sheet.bb.current_row].outline_level = \
-                self._outline_level
+            sheet.bb.outline_level += 1
+            self._group_lines(sheet)
+            
             sub_indent = indent + LineItem.TAB_WIDTH
             detail_summation = ""
 
             for detail in details:
 
                 sheet.bb.current_row += 1
-                sheet.row_dimensions[sheet.bb.current_row].outline_level = \
-                    self._outline_level + 1
+
+                sheet.bb.outline_level += 1
+                self._group_lines(sheet)
+                sheet.bb.outline_level -= 1
 
                 self.chop_line(
                     sheet=sheet,
@@ -163,8 +162,7 @@ class LineChef:
                 line.xl.detailed.ending = sheet.bb.current_row
                 line.xl.detailed.cell = subtotal_cell
 
-                sheet.row_dimensions[sheet.bb.current_row].outline_level = \
-                    self._outline_level
+                self._group_lines(sheet)
 
                 if set_labels:
                     label = indent*" " + line.name + ": details"
@@ -173,7 +171,7 @@ class LineChef:
                         label=label,
                         row=sheet.bb.current_row)
 
-            self._outline_level -= 1
+            sheet.bb.outline_level -= 1
 
         if not line.xl.reference.source:
             self._combine_segments(
@@ -185,8 +183,7 @@ class LineChef:
 
         return sheet
 
-    def chop_statement(self, *pargs, sheet, column, statement,
-                       set_labels=True):
+    def chop_statement(self, *pargs, sheet, column, statement, set_labels=True):
         """
 
 
@@ -246,8 +243,6 @@ class LineChef:
             pass
 
         else:
-            self._outline_level += 1
-
             sources = line.xl.consolidated.sources.copy()
 
             required_rows = sheet.bb.consolidation_size
@@ -259,6 +254,8 @@ class LineChef:
             link_template = formula_templates.ADD_COORDINATES
 
             sheet.bb.current_row += 1
+            sheet.bb.outline_level += 1
+
             line.xl.consolidated.starting = sheet.bb.current_row
 
             count = 0
@@ -292,9 +289,7 @@ class LineChef:
                                                       data_type=
                                                       type_codes.FORMULA)
 
-                sheet.row_dimensions[sheet.bb.current_row].outline_level = \
-                    self._outline_level
-                # sheet.row_dimensions[sheet.bb.current_row].hidden = True
+                self._group_lines(sheet)
 
                 # Move on to next row
                 line.xl.consolidated.ending = sheet.bb.current_row
@@ -321,9 +316,9 @@ class LineChef:
                                 row=sheet.bb.current_row)
 
             line.xl.consolidated.ending = sheet.bb.current_row
-            sheet.row_dimensions[sheet.bb.current_row].outline_level = self._outline_level
+            self._group_lines(sheet)
 
-            self._outline_level -= 1
+            sheet.bb.outline_level -= 1
 
         return sheet
 
@@ -351,8 +346,7 @@ class LineChef:
             for data_cluster in line.xl.derived.calculations:
 
                 sheet.bb.current_row += 1
-                sheet.row_dimensions[sheet.bb.current_row].outline_level = \
-                    self._outline_level
+                self._group_lines(sheet)
 
                 self._add_driver_calculation(
                     sheet=sheet,
@@ -387,7 +381,7 @@ class LineChef:
 
         Writes driver logic to Excel sheet. Will write to sheet.bb.current_row.
         """
-        self._outline_level += 1
+        sheet.bb.outline_level += 1
 
         private_data = sheet.bb.parameters.copy()
         # Set up a private range that's going to include both "shared" period &
@@ -413,8 +407,7 @@ class LineChef:
                     column=label_column
                     )
 
-            sheet.row_dimensions[sheet.bb.current_row].outline_level = \
-                self._outline_level
+            self._group_lines(sheet)
 
             param_cell = sheet.cell(column=period_column,
                                     row=sheet.bb.current_row)
@@ -500,13 +493,13 @@ class LineChef:
         line.xl.derived.ending = sheet.bb.current_row
         line.xl.derived.cell = calc_cell
 
-        sheet.row_dimensions[sheet.bb.current_row].outline_level = self._outline_level
+        self._group_lines(sheet)
 
         if set_labels:
             label = (indent * " ") + driver_data.name
             self._set_label(sheet=sheet, label=label, row=sheet.bb.current_row)
 
-        self._outline_level -= 1
+        sheet.bb.outline_level -= 1
 
         return sheet
 
@@ -588,12 +581,26 @@ class LineChef:
         line.xl.ending = sheet.bb.current_row
         line.xl.cell = cell
 
-        sheet.row_dimensions[sheet.bb.current_row].outline_level = self._outline_level
+        self._group_lines(sheet)
 
         if set_labels:
             self._set_label(label=label, sheet=sheet, row=sheet.bb.current_row)
 
         return sheet
+
+    @staticmethod
+    def _group_lines(sheet):
+        """
+
+
+        LineChef._group_lines() -> None
+
+        --``sheet`` must be an instance of openpyxl Worksheet
+
+        Tell Excel to group lines and collapse
+        """
+        row = sheet.bb.current_row
+        sheet.row_dimensions[row].outline_level = sheet.bb.outline_level
 
     def _rows_to_coordinates(self, *pargs, lookup, column):
         """
