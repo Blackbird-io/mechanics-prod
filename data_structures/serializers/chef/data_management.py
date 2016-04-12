@@ -386,6 +386,7 @@ class SheetData:
     current_row           int; holds index of the current row in the sheet
     current_column        int; holds index of the current column in the sheet
     consolidation_size    int; number of rows that consolidation area will take
+    outline_level         int; holds the outline level for row grouping
     sheet                 instance of Worksheet
 
     FUNCTIONS:
@@ -400,6 +401,7 @@ class SheetData:
         self.current_row = None
         self.current_column = None
         self.consolidation_size = None
+        self.outline_level = 0
         self.sheet = None
         # Number of rows that consolidation area will take up
 
