@@ -16,6 +16,7 @@ DATA:
 n/a
 
 FUNCTIONS:
+collapse_groups       function opens an Excel file and collapses all groups
 is_close              function for fuzzy equals between numeric values
 test_book             function tests values calculated in Excel against those
                       calculated within the Blackbird Engine
@@ -40,8 +41,8 @@ import Shell
 
 
 # Constants
-_ORIG_VBS_FILE = r"\open_save_close_excel_model.vbs"
-_TEMP_VBS_FILE = r"\open_save_close_excel_model_TEMP.vbs"
+_ORIG_VBS_FILE = "open_save_close_excel_model.vbs"
+_COLLAPSE_GROUPS_VBS_FILE = "excel_collapse_pretty_rows.vbs"
 _VBS_FILENAME_BOOKMARK = "FILENAME_PLACEHOLDER"
 _VBS_PATH = os.path.dirname(os.path.realpath(__file__))
 
@@ -50,6 +51,20 @@ _VBS_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # Classes
 # n/a
+
+
+def collapse_groups(filename):
+    """
+
+
+    collapse_groups -> None
+
+    --``filename`` must be the string path for the file to check
+
+    This function opens an Excel file, collapses all columns and rows, saves,
+    and closes the file.
+    """
+    _write_run_temp_vbs_file(filename, _COLLAPSE_GROUPS_VBS_FILE)
 
 
 def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
@@ -92,7 +107,7 @@ def test_book(filename):
     A None in the Engine is declared equivalent to an Excel Zero for the
     purpose of this test.
     """
-    _write_run_temp_vbs_file(filename)
+    _write_run_temp_vbs_file(filename, _ORIG_VBS_FILE)
 
     # now open workbook and retrieve relevant cells to compare to dict
     wb = xlrd.open_workbook(filename=filename)
@@ -218,7 +233,7 @@ def _check_statement(statement, workbook_in, log_ws):
             log_ws.append(qa_list)
 
 
-def _write_run_temp_vbs_file(filename):
+def _write_run_temp_vbs_file(filename, vbs_file):
     """
 
 
@@ -231,13 +246,14 @@ def _write_run_temp_vbs_file(filename):
     """
 
     # open and read original VBS file
-    orig_path = _VBS_PATH + _ORIG_VBS_FILE
+    orig_path = os.path.join(_VBS_PATH, vbs_file)
     orig_file = open(orig_path, mode='r')
     orig_lines = orig_file.readlines()
     orig_file.close()
 
     # write temporary VBS file with correct filepath
-    temp_path = _VBS_PATH + _TEMP_VBS_FILE
+    temp_fnam = vbs_file[:-4]+"_temp.vbs"
+    temp_path = os.path.join(_VBS_PATH, temp_fnam)
     temp_file = open(temp_path, mode='w')
 
     for line in orig_lines:
