@@ -213,7 +213,7 @@ class BusinessUnit(History, Tags, Equalities):
         box = "\n".join(lines)
         return box
 
-    def add_component(self, bu, update_id=True):
+    def add_component(self, bu, update_id=True, register_in_period=True):
         """
 
 
@@ -231,21 +231,33 @@ class BusinessUnit(History, Tags, Equalities):
         someone inserts a business unit from one model into another without
         updating the business unit's bbid).
 
-        Method raises IDCollisionError if the period's directory already
-        contains the new business unit's bbid.
+        If register_in_period is true, method raises IDCollisionError if the
+        period's directory already contains the new business unit's bbid.
 
         If all id verification steps go smoothly, method delegates insertion
-        down to Components.add_item().       
+        down to Components.add_item().
+
+        Usage Scenarios:
+
+        Adding a newly created ChildBU:
+            ParentBU.add_component(ChildBU, True, True)
+        Transferring a ChildBU from one parent to another:
+            ParentBU2.add_component(ChildBU, False, False)
+        Transferring a ChildBU to a ParentBU in a different period
+            ParentBU3.add_component(ChildBU, False, True)
+
         """
         bu.summary = None
         bu.valuation = None
-        # Step 1: update lifecylce with the right dates for unit and components
+        # Step 1: update lifecycle with the right dates for unit and components
         bu._fit_to_period(self.period, recur=True)
+
         # Step 2: optionally update ids.
         if update_id:
             bu._update_id(namespace=self.id.bbid, recur=True)
-        # Step 3: Register the the units. Will raise errors on collisions. 
-        bu._register_in_period(recur=True, overwrite=False)
+        # Step 3: Register the the units. Will raise errors on collisions.
+        if register_in_period:
+            bu._register_in_period(recur=True, overwrite=False)
         self.components.add_item(bu)
     
     def addDriver(self, newDriver, *otherKeys):
