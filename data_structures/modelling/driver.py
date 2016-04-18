@@ -30,6 +30,8 @@ Driver                objects that modify lineitems from inside business units
 import copy
 import time
 
+from collections import OrderedDict
+
 import bb_exceptions
 import bb_settings
 
@@ -388,32 +390,20 @@ class Driver(Tags):
 
                 else:
                     output = formula.func(line, bu, params, self.signature)
-                    try:
-                        excel_template, cell_comment, references = output
-                    except TypeError:
 
-                        c = "\nFormula does not support Excel output."
-                        c += "\nName: %s" % formula.tags.name
-                        c += "\nBBID: %s" % self.formula_bbid
-                        c += "\n"
-
-                        raise bb_exceptions.ExcelPrepError(c)
-                    except ValueError:
-                        #missing value(s)
-
+                    if not output.steps:
                         c = "Formula did not return all required information"
-                        c += " for Excel output."
                         c += "\nName: %s" % formula.tags.name
                         c += "\nBBID: %s" % self.formula_bbid
-                        c += "\n"
+                        c += "\nExcel formula template missing!"
 
                         raise bb_exceptions.ExcelPrepError(c)
 
                     data_cluster = self.to_excel()
-                    data_cluster.formula = excel_template
-                    data_cluster.references = references
+                    data_cluster.references = output.references
                     data_cluster.name = formula.tags.name
-                    data_cluster.comment = cell_comment
+                    data_cluster.comment = output.comment
+                    data_cluster.formula = output.steps
 
                     line.xl.derived.calculations.append(data_cluster)
                 
@@ -475,6 +465,7 @@ class Driver(Tags):
         """
         if parent is None:
             parent = self.parentObject
+
         period = None
         time_line = None
         

@@ -40,6 +40,7 @@ from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
 
+from bb_exceptions import ExcelPrepError
 
 
 
@@ -441,8 +442,6 @@ class LineChef:
         # Finally, format the formula as necessary
         # (if references are a dict of objects, could map each obj to its
         #  coordinates)
-        template = driver_data.formula
-
         line_coordinates = dict()
         for k, obj in driver_data.references.items():
             line_coordinates[k] = obj.xl.get_coordinates()
@@ -460,44 +459,60 @@ class LineChef:
             lookup=sheet.bb.events.rows,
             column=period_column)
         materials["events"] = event_coordinates
+        materials["steps"] = dict()
 
-        try:
-            formula = template.format(**materials)
-            # Formulas should deliver templates with the {lines} key.
-        except Exception as X:
-            print("Name:     ", driver_data.name)
-            print("Template: ", driver_data.formula)
-            raise ExcelPrepError
+        n_items = len(driver_data.formula.items())
+        count = 0
+        for key, template in driver_data.formula.items():
+            count += 1
 
-        calc_cell = sheet.cell(column=period_column, row=sheet.bb.current_row)
-        calc_cell.set_explicit_value(formula, data_type=type_codes.FORMULA)
+            try:
+                formula = template.format(**materials)
+            except Exception as X:
+                print("Name:     ", driver_data.name)
+                print("Template: ", driver_data.formula)
+                raise ExcelPrepError
 
-        if set_labels and (COMMENT_FORMULA_NAME or COMMENT_FORMULA_STRING or
-                           COMMENT_CUSTOM):
-            c = ""
+            calc_cell = sheet.cell(column=period_column,
+                                   row=sheet.bb.current_row)
+            calc_cell.set_explicit_value(formula, data_type=type_codes.FORMULA)
 
-            if COMMENT_FORMULA_NAME:
-                c += "Formula name: " + driver_data.name + "\n"
+            # add current step to materials dictionary
+            materials["steps"][key] = calc_cell.coordinate
 
-            if COMMENT_FORMULA_STRING:
-                c += "Formula string: " + driver_data.formula + "\n"
+            if set_labels and (COMMENT_FORMULA_NAME or
+                               COMMENT_FORMULA_STRING or
+                               COMMENT_CUSTOM):
+                c = ""
 
-            if COMMENT_CUSTOM:
-                c += "Comment: " + driver_data.comment + "\n"
+                if COMMENT_FORMULA_NAME:
+                    c += "Formula name: " + driver_data.name + "\n"
 
-            a = "LineChef"
-            calc_cell.comment = Comment(c, a)
+                if COMMENT_FORMULA_STRING:
+                    c += "Formula string: " + template + "\n"
 
-        # If formula included a reference to the prior value of the line
-        # itself, it's picked up here. Can now change line.xl.derived.final
-        line.xl.derived.ending = sheet.bb.current_row
-        line.xl.derived.cell = calc_cell
+                if COMMENT_CUSTOM:
+                    c += "Comment: " + driver_data.comment + "\n"
 
-        self._group_lines(sheet)
+                a = "LineChef"
+                calc_cell.comment = Comment(c, a)
 
-        if set_labels:
-            label = (indent * " ") + driver_data.name
-            self._set_label(sheet=sheet, label=label, row=sheet.bb.current_row)
+            # If formula included a reference to the prior value of the line
+            # itself, it's picked up here. Can now change line.xl.derived.final
+            line.xl.derived.ending = sheet.bb.current_row
+            line.xl.derived.cell = calc_cell
+
+            self._group_lines(sheet)
+
+            if set_labels:
+                label = (indent * " ") + key # driver_data.name
+                self._set_label(sheet=sheet, label=label,
+                                row=sheet.bb.current_row)
+
+            # we don't want a blank row between the calc cell and the summary
+            # cell
+            if count < n_items:
+                sheet.bb.current_row += 1
 
         sheet.bb.outline_level -= 1
 

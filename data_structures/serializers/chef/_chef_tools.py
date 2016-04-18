@@ -88,7 +88,7 @@ def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 
-def test_book(filename):
+def test_book(model, filename):
     """
 
 
@@ -124,7 +124,6 @@ def test_book(filename):
     log_ws.append(qa_list)
 
     # get model and walk through time periods, bu's, statements, lines
-    model = Shell.supervisor.MR.messageIn[0]
     for t in model.time_line.values():
         if t.content:
             _check_bu(t.content, wb, log_ws)
@@ -179,6 +178,7 @@ def _check_statement(statement, workbook_in, log_ws):
     A None in the Engine is declared equivalent to an Excel Zero and Excel
     empty string for the purpose of this test.
     """
+
     lines = statement.get_full_ordered()
 
     # walk through lineitems
@@ -225,6 +225,7 @@ def _check_statement(statement, workbook_in, log_ws):
                 temp = line.xl.cell.comment.text.split("\n")
                 temp = temp[0].split(":")
                 formula = temp[1].strip()
+                # FIX THIS TO GET FORMULA IN A SANE WAY
             else:
                 formula = line.name
 
@@ -265,8 +266,7 @@ def _write_run_temp_vbs_file(filename, vbs_file):
     temp_file.close()
 
     # run the VBS file
-    p = subprocess.Popen(temp_path, shell=True)
-    stdout, stderr = p.communicate()
+    os.system(temp_path)
 
     # delete the temporary VBS file
     os.remove(temp_path)
