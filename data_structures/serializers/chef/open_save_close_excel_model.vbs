@@ -3,23 +3,17 @@
 
 Option Explicit
 
-Dim xlApp, xlBook
-Dim i
+Dim xlApp, xlBook, xlSheet
 
 Set xlApp = GetObject("","Excel.Application")
-xlApp.Visible = True
+xlApp.Visible = False
 
 Set xlBook = xlApp.Workbooks.Open("FILENAME_PLACEHOLDER")
 xlBook.Save
 xlBook.Close
 
-For i = 1 to xlBook.Worksheets.Count
-    Dim ActiveSheet: ActiveSheet = xlBook.Worksheets(i)
-    ActiveSheet.Outline.ShowLevels RowLevels:=1, ColumnLevels:=1
-Next
-
+Set xlSheet = Nothing
 Set xlBook = Nothing
-Set i = Nothing
 
 xlApp.Quit
 Set xlApp = Nothing

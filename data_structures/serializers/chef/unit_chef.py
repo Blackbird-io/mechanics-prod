@@ -195,7 +195,7 @@ class UnitChef:
         # 2.1.   set up the unit sheet and spread params
         sheet = self._create_unit_sheet(book=book, unit=unit, index=before_kids)
         for snapshot in unit:
-            sheet.bb.current_unit = sheet.bb.time_line.rows.ending
+            sheet.bb.current_row = sheet.bb.parameters.rows.ending
             self._add_unit_params(sheet=sheet, unit=snapshot)
 
         # 2.2.   spread life
@@ -563,8 +563,9 @@ class UnitChef:
         Returns sheet with current row pointing to final param row
         """
         parameters = sheet.bb.parameters
-        period_column = sheet.bb.time_line.columns.get_position(
-                                                               unit.period.end)
+        time_line = sheet.bb.time_line
+
+        period_column = sheet.bb.time_line.columns.get_position(unit.period.end)
 
         existing_param_names = unit.parameters.keys() & \
                                parameters.rows.by_name.keys()
@@ -582,6 +583,12 @@ class UnitChef:
         new_params = dict()
         for k in new_param_names:
             new_params[k] = unit.parameters[k]
+
+        ending_row = parameters.rows.ending or 0
+        if ending_row > 0:
+            sheet.bb.current_row = parameters.rows.ending
+        else:
+            sheet.bb.current_row = time_line.rows.ending
 
         self.add_items_to_area(
             sheet=sheet,

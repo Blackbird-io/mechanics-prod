@@ -352,9 +352,10 @@ class Landscape(dict, Step):
             result[field] = {"lo":padding,"hi":padding}
             try:
                 span = sorted(self[field].keys())
+
                 result[field]["lo"] = span[0]
                 result[field]["hi"] = span[-1]
-            except AttributeError:
+            except (AttributeError, IndexError) as e:
                 pass
         return result
     

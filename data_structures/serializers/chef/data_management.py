@@ -26,6 +26,7 @@ LineData              holds data for coordinating line location across multiple
                       non-contiguous ranges of rows
 Lookup                holds look-up values relative to the starting point
 Range                 tracks starting and ending row
+Reference             holds reference to a specific line item/cell
 RowData               holds row data in dictionary format
 SheetData             holds useful data for working with Worksheets
 UnitData              holds the Worksheet for a particular BusinessUnit
@@ -37,6 +38,8 @@ UnitData              holds the Worksheet for a particular BusinessUnit
 
 # Imports
 import copy
+
+from bb_exceptions import ExcelPrepError
 
 from .field_names import FieldNames
 
@@ -246,7 +249,6 @@ class LineData(Range):
         result = None
         if not self.cell:
             raise ExcelPrepError
-
         else:
             result = ""
             if include_sheet:
@@ -330,6 +332,7 @@ class Lookup(Range):
         """
 
         first_position = self.starting or 0
+
         result = first_position + self.by_name[name]
 
         return result

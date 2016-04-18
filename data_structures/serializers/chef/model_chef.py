@@ -147,6 +147,8 @@ class ModelChef:
 
         area = my_tab.bb.general
 
+        # area = my_tab.bb.general
+
         area.columns.by_name[field_names.LABELS] = label_column
         area.columns.by_name[field_names.VALUES] = in_effect_column
         area.columns.by_name[field_names.BASE_CASE] = base_case_column
@@ -177,7 +179,7 @@ class ModelChef:
             # formulas instead of strings
 
             current_row += 1
-    
+
         return my_tab
 
         # TO DO:
@@ -241,10 +243,10 @@ class ModelChef:
         source_value_column = scenarios_area.columns.\
             get_position(field_names.VALUES)
 
-        for param_name in scenarios.bb.general.rows.by_name:
+        for param_name in scenarios_area.rows.by_name:
             # We can build the page in any order here
 
-            row_number = scenarios.bb.general.rows.get_position(param_name)
+            row_number = scenarios_area.rows.get_position(param_name)
             # Get the correct relative position
             
             source_coordinates = external_coordinates.copy()
@@ -262,10 +264,11 @@ class ModelChef:
             
             cos = source_coordinates.copy()
             cos["alpha_column"] = get_column_letter(source_label_column)
+
             link = formula_templates.ADD_CELL_FROM_SHEET.format(**cos)
             label_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
 
-            # Master cell should link to the active value 
+            # Master cell should link to the active value
             master_cell = my_tab.cell(column=local_master_column,
                                       row=active_row)
 
@@ -296,19 +299,24 @@ class ModelChef:
             header_cell.value = period.end
 
             # 1. Pulling the master values for each parameter.
-
-            for param_row in my_tab.bb.parameters.rows.by_name.values():
+            existing_params = dict()
+            for k in my_tab.bb.parameters.rows.by_name.keys():
                 # May write the column in undefined order
+                param_row = my_tab.bb.parameters.rows.by_name[k]
 
                 param_cell = my_tab.cell(column=active_column, row=param_row)
 
                 link_template = formula_templates.ADD_CELL
+
                 cos = dict(alpha_column=alpha_master_column, row=param_row)
                 link = link_template.format(**cos)
                 
                 param_cell.set_explicit_value(link,
                                               data_type=type_codes.FORMULA)
 
+                existing_params[k] = link
+
+                my_tab.bb.current_row += 1
             # 2. Overwrite links with hard-coded values where the period
             #    specifies them. Add period-specific parameters.
 
@@ -318,8 +326,7 @@ class ModelChef:
             # New parameters are specific to the period. We don't have a row
             # for them on the sheet yet, so we'll add them later.
 
-            for spec_name in existing_param_names:                
-
+            for spec_name in existing_param_names:
                 spec_value = period.parameters[spec_name]
                     
                 param_row = parameters.rows.get_position(spec_name)                
@@ -336,6 +343,7 @@ class ModelChef:
                 items=new_params,
                 active_column=active_column
                 )
+
             # Upgrade-S: For speed, can supply master and label column indices
             # to the add_items() routine.
             

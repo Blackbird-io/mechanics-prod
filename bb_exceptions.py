@@ -127,4 +127,6 @@ class IDNamespaceError(IDError):
     """
     content = "Object UUID not in the object's namespace UUID."
 
-
+class ExcelPrepError(BlackbirdError):
+    #used to alert missing bookmarks
+    pass

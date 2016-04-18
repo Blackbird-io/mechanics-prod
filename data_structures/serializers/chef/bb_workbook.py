@@ -94,10 +94,11 @@ class BB_Workbook(xlio.Workbook):
         """
         # save workbook
         xlio.Workbook.save(self, filename)
+
         collapse_groups(filename)
 
     @staticmethod
-    def test(filename):
+    def test(model, filename):
         """
 
 
@@ -108,4 +109,4 @@ class BB_Workbook(xlio.Workbook):
         Method initiates test of file contents against the model in memory.
         """
         # test the workbook against engine values
-        test_book(filename)
+        test_book(model, filename)
