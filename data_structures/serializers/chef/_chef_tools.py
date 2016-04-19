@@ -32,7 +32,6 @@ n/a
 # Imports
 import openpyxl as xlio
 import os
-import subprocess
 import xlrd
 
 import Shell
@@ -221,11 +220,10 @@ def _check_statement(statement, workbook_in, log_ws):
         if same is True:
             pass
         else:
-            if line.xl.cell.comment:
-                temp = line.xl.cell.comment.text.split("\n")
-                temp = temp[0].split(":")
-                formula = temp[1].strip()
-                # FIX THIS TO GET FORMULA IN A SANE WAY
+            if line.xl.derived.calculations:
+                calcs = line.xl.derived.calculations
+                formula_names = [c.name for c in calcs]
+                formula = ','.join(formula_names)
             else:
                 formula = line.name
 
