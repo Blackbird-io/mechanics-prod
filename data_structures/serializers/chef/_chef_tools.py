@@ -93,7 +93,9 @@ def test_book(model, filename):
 
     test_book -> None (writes a log file)
 
-    --``filename`` must be the string path for the file to check
+    --``model`` must be a Chef-chopped Blackbird engine model
+    --``filename`` must be string path at which the workbook for the
+        chopped model has been saved.
 
     This is the driver function for checking Excel output.  Function delegates
     to _write_run_temp_vbs_file and _check_bu to do most of the work.
