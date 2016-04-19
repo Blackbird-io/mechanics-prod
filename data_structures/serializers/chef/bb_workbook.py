@@ -104,7 +104,9 @@ class BB_Workbook(xlio.Workbook):
 
         BB_WorkBook.test(filename) -> None
 
-        --``filename`` must be string path at which to save workbook
+        --``model`` must be a Chef-chopped Blackbird engine model
+        --``filename`` must be string path at which the workbook for the
+            chopped model has been saved.
 
         Method initiates test of file contents against the model in memory.
         """
