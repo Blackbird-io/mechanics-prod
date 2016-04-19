@@ -1198,7 +1198,7 @@ class BusinessUnit(History, Tags, Equalities):
         """
         tags_to_omit = set(tagsToOmit)
         tags_to_omit.add(tConsolidated)
-        
+
         starting_balance = self.financials.starting
         ending_balance = self.financials.ending
 
@@ -1215,10 +1215,9 @@ class BusinessUnit(History, Tags, Equalities):
                 else:
                     if starting_line.value is not None:
                         ending_line = ending_balance.find_first(starting_line.name)
-
                         self._update_lines(starting_line, ending_line)
 
-    def _update_lines(self, start_line, end_line):
+    def _update_lines(self, start_line, end_line, *tagsToOmit):
         """
 
 
@@ -1230,14 +1229,20 @@ class BusinessUnit(History, Tags, Equalities):
         ``start_line`` and assigns their values to the matching line in the
         ending balance sheet ``end_line``.
         """
+        tags_to_omit = set(tagsToOmit)
+        tags_to_omit.add(tConsolidated)
+
         if start_line._details:
             for name, line in start_line._details.items():
                 ending_line = end_line.find_first(line.name)
 
                 self._update_lines(line, ending_line)
         else:
-            end_line.set_value(start_line.value,
-                               self._UPDATE_BALANCE_SIGNATURE)
+            if tags_to_omit & set(end_line.allTags):
+                pass
+            else:
+                end_line.set_value(start_line.value,
+                                   self._UPDATE_BALANCE_SIGNATURE)
 
     def _update_id(self, namespace, recur=True):
         """
@@ -1256,17 +1261,4 @@ class BusinessUnit(History, Tags, Equalities):
         # the namespace for all downstream components. 
         if recur:
             for unit in self.components.values():
-                    unit._update_id(namespace=self.id.bbid, recur=True)
-
-
-        
-        
-
-        
-                    
-
-    
-        
-        
-
-    
+                unit._update_id(namespace=self.id.bbid, recur=True)
