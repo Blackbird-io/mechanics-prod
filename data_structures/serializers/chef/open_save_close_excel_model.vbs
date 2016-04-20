@@ -12,7 +12,6 @@ Set xlBook = xlApp.Workbooks.Open("FILENAME_PLACEHOLDER")
 xlBook.Save
 xlBook.Close
 
-Set xlSheet = Nothing
 Set xlBook = Nothing
 
 xlApp.Quit
