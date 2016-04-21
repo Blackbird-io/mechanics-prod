@@ -333,7 +333,11 @@ class Lookup(Range):
 
         first_position = self.starting or 0
 
-        result = first_position + self.by_name[name]
+        try:
+            result = first_position + self.by_name[name]
+        except KeyError:
+            import pdb
+            pdb.set_trace()
 
         return result
         # Return natural if starting is blank
@@ -406,6 +410,7 @@ class SheetData:
         self.consolidation_size = None
         self.outline_level = 0
         self.sheet = None
+        self.area_names = ['general']
         # Number of rows that consolidation area will take up
 
     def add_area(self, area_name, overwrite=False):
@@ -435,6 +440,7 @@ class SheetData:
             new_area.parent = self
 
             result = new_area
+            self.area_names.append(area_name)
 
         return result
 
