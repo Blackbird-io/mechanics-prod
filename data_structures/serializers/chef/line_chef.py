@@ -34,6 +34,8 @@ from openpyxl.comments import Comment
 
 from data_structures.modelling.line_item import LineItem
 
+from .cell_styles import CellStyles
+
 from .chef_settings import COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING, \
                            COMMENT_CUSTOM
 from .data_types import TypeCodes
@@ -51,6 +53,7 @@ from bb_exceptions import ExcelPrepError
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
 type_codes = TypeCodes()
+cell_styles = CellStyles()
 
 get_column_letter = xlio.utils.get_column_letter
 
@@ -147,8 +150,9 @@ class LineChef:
                     indent=sub_indent)
 
                 link_template = formula_templates.ADD_COORDINATES
-                link = link_template.format(
-                    coordinates=detail.xl.get_coordinates())
+
+                cos = detail.xl.get_coordinates()
+                link = link_template.format(coordinates=cos)
                 detail_summation += link
 
             else:
@@ -181,6 +185,8 @@ class LineChef:
                 line=line,
                 set_labels=set_labels,
                 indent=indent)
+
+        cell_styles.format_line(line)
 
         return sheet
 
@@ -312,6 +318,8 @@ class LineChef:
                                         row=sheet.bb.current_row)
             summation_cell.set_explicit_value(summation,
                                               data_type=type_codes.FORMULA)
+
+            line.xl.consolidated.cell = summation_cell
 
             if set_labels:
                 label = line.name + ": consolidated results"
@@ -590,10 +598,13 @@ class LineChef:
         if segment_summation:
             cell.set_explicit_value(segment_summation,
                                     data_type=type_codes.FORMULA)
+
             label = indent*" " + LineItem.SUMMARY_PREFIX + line.name
         else:
             # Blank or hard-coded line
             cell.value = line.value
+            cell_styles.format_hardcoded(cell)
+
             label = indent*" " + line.name
 
         line.xl.ending = sheet.bb.current_row
