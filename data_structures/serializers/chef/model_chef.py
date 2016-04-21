@@ -139,11 +139,11 @@ class ModelChef:
         # A          |  B      | C             | D     | E
         # param names|  blank  | active values | blank | blackbird values
 
-        starting_row = 1
+        starting_row = 2
 
-        label_column = 1
-        in_effect_column = 3
-        base_case_column = 5
+        label_column = 2
+        in_effect_column = 4
+        base_case_column = 6
 
         area = my_tab.bb.general
 
@@ -221,8 +221,8 @@ class ModelChef:
         time_line = my_tab.bb.add_area("time_line")
 
         # Pick starting positions
-        local_labels_column = 1
-        local_master_column = 3
+        local_labels_column = 2
+        local_master_column = 4
 
         alpha_master_column = get_column_letter(local_master_column)
         
@@ -299,6 +299,7 @@ class ModelChef:
             header_cell.value = period.end
 
             # 1. Pulling the master values for each parameter.
+            my_tab.bb.current_row += 1
             existing_params = dict()
             for k in my_tab.bb.parameters.rows.by_name.keys():
                 # May write the column in undefined order

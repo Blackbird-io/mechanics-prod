@@ -31,6 +31,8 @@ UnitChef              class containing methods to chop BusinessUnits into
 # Imports
 import openpyxl as xlio
 
+from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font
+
 from .data_management import LineData
 from .data_types import TypeCodes, NumberFormats
 from .field_names import FieldNames
@@ -195,18 +197,18 @@ class UnitChef:
         # 2.1.   set up the unit sheet and spread params
         sheet = self._create_unit_sheet(book=book, unit=unit, index=before_kids)
         for snapshot in unit:
-            sheet.bb.current_row = sheet.bb.parameters.rows.ending
             self._add_unit_params(sheet=sheet, unit=snapshot)
 
         # 2.2.   spread life
+        sheet.bb.current_row += 1
         sheet = self._add_unit_life(sheet=sheet, unit=unit)
         for snapshot in unit:
-            sheet.bb.current_row = sheet.bb.parameters.rows.ending
+            sheet.bb.current_row = sheet.bb.parameters.rows.ending + 1
             self._add_unit_life(sheet=sheet, unit=snapshot, set_labels=False)
 
         # 2.3.  spread fins
         current = sheet.bb.time_line.columns.get_position(unit.period.end)
-        self._add_financials(sheet=sheet, unit=unit, column=current)
+        fins_dict = self._add_financials(sheet=sheet, unit=unit, column=current)
 
         for snapshot in unit:
 
@@ -218,6 +220,21 @@ class UnitChef:
 
             # Should make sure rows align here from one period to the next.
             # Main problem lies in consolidation logic.
+
+        # 2.4 add area and statement labels and formatting
+        areas_exclude = set(("general", "time_line"))
+        areas = set(sheet.bb.area_names)
+        areas = areas - areas_exclude
+        for name in areas:
+            area = getattr(sheet.bb, name)
+            if not area.rows.by_name:
+                continue
+
+            row_num = min(area.rows.by_name.values()) - 1
+            self._label_area(sheet, name, row_num)
+
+        for statement, row in fins_dict.items():
+            self._label_area(sheet, statement, row)
 
         return sheet
 
@@ -259,10 +276,12 @@ class UnitChef:
     def _add_financials(self, *pargs, sheet, unit, column, set_labels=True):
         """
 
-        UnitChef._add_financials() -> Worksheet
+        UnitChef._add_financials() -> dict
 
-        Method adds financials to worksheet and returns the updated worksheet.
+        Method adds financials to worksheet and returns a dictionary of the
+        statements added to the worksheet and their starting rows
         """
+        fins_dict = dict()
         unit.fill_out()
         # Make sure the unit contains all relevant calculations by filling it
         # out. If BB already performed this action, call will be a no-op.
@@ -271,21 +290,30 @@ class UnitChef:
             new_start_bal = self._load_balance(unit)
 
         for statement in unit.financials.ordered:
-
+            sheet.bb.current_row += 1
             if statement is not None:
                 if statement is unit.financials.ending:
                     # insert load-balanced starting balance sheet here
+                    statement_row = sheet.bb.current_row + 1
+                    fins_dict["Starting Balance Sheet"] = statement_row
+
                     line_chef.chop_statement(
                          sheet=sheet,
                          statement=new_start_bal,
                          column=column,
                          set_labels=set_labels)
+                    sheet.bb.current_row += 1
+
+                statement_row = sheet.bb.current_row + 1
+                fins_dict[statement.name] = statement_row
 
                 line_chef.chop_statement(
                     sheet=sheet,
                     statement=statement,
                     column=column,
                     set_labels=set_labels)
+
+        return fins_dict
 
     def _add_life_analysis(self, sheet, unit, active_column, set_labels=True):
         """
@@ -652,9 +680,8 @@ class UnitChef:
 
         unit.xl.set_sheet(sheet)
 
-        # Hide sheets for units below a certain depth. The depth should be a #<---------------------------------------------------------------
+        # Hide sheets for units below a certain depth. The depth should be a
         # Chef-level constant. Use ``sheet_state := "hidden"`` to implement.
-
         self._link_to_time_line(book=book, sheet=sheet)
         self._add_unit_params(sheet=sheet, unit=unit)
         # At this point, sheet.bb.current_row will point to the last parameter.
@@ -671,6 +698,33 @@ class UnitChef:
 
         # Return sheet
         return sheet
+
+    @staticmethod
+    def _label_area(sheet, label, row_num):
+        """
+
+        UnitChef._label_area -> None
+
+        --``sheet`` is an instance of openpyxl.worksheet
+        --``label`` is a the string name of the area to label
+        --``row_num`` is the row number where the label should be inserted
+
+
+        """
+        side = Side(border_style='double')
+
+        cell_cos = 'A%s' % row_num
+        cell = sheet[cell_cos]
+        cell.font = Font(bold=True)
+        cell.set_explicit_value(label.title(),
+                                data_type=type_codes.FORMULA_CACHE_STRING)
+
+        rows = sheet.iter_rows(row_offset=row_num-1)
+        row = rows.__next__()
+        for cell in row:
+            border = Border(top=cell.border.top)
+            border.top = side
+            cell.border = border
 
     def _link_to_area(self, source_sheet, local_sheet, area_name, group=False,
                       keep_format=True):
