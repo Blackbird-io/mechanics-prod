@@ -332,12 +332,7 @@ class Lookup(Range):
         """
 
         first_position = self.starting or 0
-
-        try:
-            result = first_position + self.by_name[name]
-        except KeyError:
-            import pdb
-            pdb.set_trace()
+        result = first_position + self.by_name[name]
 
         return result
         # Return natural if starting is blank
