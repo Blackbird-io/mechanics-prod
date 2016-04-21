@@ -211,6 +211,9 @@ class LineChef:
                 line=line,
                 set_labels=set_labels)
 
+        if len(statement.get_ordered()) == 0:
+            sheet.bb.current_row += 1
+
         return sheet
 
     #*************************************************************************#
