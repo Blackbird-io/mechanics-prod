@@ -31,7 +31,7 @@ UnitChef              class containing methods to chop BusinessUnits into
 # Imports
 import openpyxl as xlio
 
-from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font
+from openpyxl.styles import Border, Side, Font
 
 from .data_management import LineData
 from .data_types import TypeCodes, NumberFormats
