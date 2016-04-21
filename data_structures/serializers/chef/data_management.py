@@ -233,6 +233,7 @@ class LineData(Range):
 
         self.sheet = None
         self.cell = None
+        self.number_format = None
 
     def get_coordinates(self, include_sheet=True):
         """

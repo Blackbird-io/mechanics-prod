@@ -170,6 +170,8 @@ class LineItem(Statement):
         ``force`` is True. 
         """
         if self.checkTouch() or force:
+            num_format = self.xl.number_format
+            consolidate = self.consolidate
             if self._details:
                 self._bring_down_local_value()
                 if recur:
@@ -179,7 +181,11 @@ class LineItem(Statement):
             self.set_value(None, sig, override=True)
 
             self.xl = xl_mgmt.LineData()
-            # Start with a clean slate for Excel tracking
+            self.xl.number_format = num_format
+            self.set_consolidate(consolidate)
+
+            # Start with a clean slate for Excel tracking, except for
+            # number format
             
         else:
             comment = "Unable to clear value from line."
@@ -204,6 +210,7 @@ class LineItem(Statement):
         new_line.set_consolidate(self._consolidate)
 
         new_line.xl = xl_mgmt.LineData()
+        new_line.xl.number_format = self.xl.number_format
 
         return new_line
 
@@ -445,6 +452,9 @@ class LineItem(Statement):
         # entire financials unit could lose a special processing trigger.
         
         replica._details = dict()
+        replica.xl.number_format = self.xl.number_format
+        replica.set_consolidate(self._consolidate)
+
         # Replicas don't have any details of their own. Can't run .clear() here
         # because instance and replica initially point to the same details dict.
         replica.tag(T_REPLICA)
