@@ -616,7 +616,7 @@ class UnitChef:
         if ending_row > 0:
             sheet.bb.current_row = parameters.rows.ending
         else:
-            sheet.bb.current_row = time_line.rows.ending
+            sheet.bb.current_row = time_line.rows.ending + 1
 
         self.add_items_to_area(
             sheet=sheet,
