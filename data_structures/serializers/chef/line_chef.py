@@ -50,10 +50,10 @@ from bb_exceptions import ExcelPrepError
 # n/a
 
 # Module Globals
+cell_styles = CellStyles()
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
 type_codes = TypeCodes()
-cell_styles = CellStyles()
 
 get_column_letter = xlio.utils.get_column_letter
 
@@ -423,6 +423,10 @@ class LineChef:
 
             param_cell = sheet.cell(column=period_column,
                                     row=sheet.bb.current_row)
+
+            cell_styles.format_parameter(param_cell)
+            cell_styles.format_hardcoded(param_cell)
+
             if isinstance(private_value, (list, set, dict, map)):
                 private_value = str(private_value)
                 # Capture mutable and multi-dimensional objects here. We need
@@ -508,6 +512,7 @@ class LineChef:
                 a = "LineChef"
                 calc_cell.comment = Comment(c, a)
 
+            cell_styles.format_calculation(calc_cell)
             # If formula included a reference to the prior value of the line
             # itself, it's picked up here. Can now change line.xl.derived.final
             line.xl.derived.ending = sheet.bb.current_row

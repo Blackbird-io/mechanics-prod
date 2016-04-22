@@ -29,19 +29,20 @@ CellStyles            standard styles for worksheet cells
 # Imports
 import openpyxl as xlio
 
-from openpyxl.styles import Border, Side, Font, numbers
-from openpyxl.styles.colors import RED, BLACK, BLUE
+from openpyxl.styles import Border, Side, Font, Alignment
 
-
+from .data_types import NumberFormats
+from .data_types import TypeCodes
 
 
 # Constants
-# n/a
+HARDCODED_COLOR = '2d5986'
+CALCULATION_COLOR = '707070'
 
 # Module Globals
-DEFAULT_DATE_FORMAT = numbers.FORMAT_DATE_YYYYMMDD2
-DEFAULT_LINE_FORMAT = numbers.FORMAT_CURRENCY_USD_SIMPLE
-DEFAULT_PARAMETER_FORMAT = numbers.FORMAT_GENERAL
+number_formats = NumberFormats()
+type_codes = TypeCodes()
+
 
 # Classes
 class CellStyles:
@@ -62,8 +63,18 @@ class CellStyles:
 
     @staticmethod
     def format_line(line):
+        """
 
-        use_format = line.xl.number_format or DEFAULT_LINE_FORMAT
+
+        CellStyles.format_line -> None
+
+        --``line`` is an instance of LineItem
+
+        Format cells written to for the provided line to conform with Chef
+        standard.
+        """
+
+        use_format = line.xl.number_format or number_formats.DEFAULT_LINE_FORMAT
 
         if line.xl.derived.cell:
             line.xl.derived.cell.number_format = use_format
@@ -76,28 +87,91 @@ class CellStyles:
 
         if line.xl.cell:
             line.xl.cell.number_format = use_format
+            line.xl.cell.font = Font(bold=True)
 
     @staticmethod
     def format_hardcoded(cell):
-        font = Font(color=BLUE)
+        """
+
+
+        CellStyles.format_hardcoded -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Format cells containing hardcoded values to conform with Chef standard.
+        """
+
+        font = Font(color=HARDCODED_COLOR)
         cell.font = font
 
     @staticmethod
     def format_calculation(cell):
-        pass
+        """
+
+
+        CellStyles.format_calculation -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Format cells containing calculations to conform with Chef standard.
+        """
+        # font = Font(italic=True, color=CALCULATION_COLOR)
+        # cell.font = font
+
+        cell.number_format = number_formats.DEFAULT_PARAMETER_FORMAT
 
     @staticmethod
     def format_parameter(cell):
-        pass
+        """
 
-    @staticmethod
-    def format_accounting(cell):
-        cell.number_format = DEFAULT_LINE_FORMAT
+
+        CellStyles.format_parameter -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Format cells containing parameters to conform with Chef standard.
+        """
+        cell.number_format = number_formats.DEFAULT_PARAMETER_FORMAT
+        cell.alignment = Alignment(horizontal='right')
 
     @staticmethod
     def format_date(cell):
-        cell.number_format = DEFAULT_DATE_FORMAT
+        """
+
+
+        CellStyles.format_date -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Format cells containing dates to conform with Chef standard.
+        """
+
+        cell.number_format = number_formats.DEFAULT_DATE_FORMAT
 
     @staticmethod
-    def format_area_label(cell):
-        pass
+    def format_area_label(sheet, label, row_num):
+        """
+
+
+        CellStyles.format_area_label -> None
+
+        --``sheet`` is an instance of openpyxl.worksheet
+        --``label`` is a the string name of the area to label
+        --``row_num`` is the row number where the label should be inserted
+
+        Format area/statement label and dividing border
+        """
+        side = Side(border_style='double')
+
+        cell_cos = 'A%s' % row_num
+        cell = sheet[cell_cos]
+        cell.font = Font(bold=True)
+        cell.set_explicit_value(label.title(),
+                                data_type=type_codes.FORMULA_CACHE_STRING)
+
+        rows = sheet.iter_rows(row_offset=row_num-1)
+        row = rows.__next__()
+        for cell in row:
+            border = Border(top=cell.border.top)
+            border.top = side
+            cell.border = border
