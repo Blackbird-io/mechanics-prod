@@ -33,11 +33,13 @@ import openpyxl as xlio
 
 from openpyxl.styles import Border, Side, Font
 
+from . import chef_settings
 from .cell_styles import CellStyles
 from .data_management import LineData
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
+from .sheet_style import SheetStyle
 from .tab_names import TabNames
 
 from .line_chef import LineChef
@@ -63,6 +65,7 @@ bad_char_table = {ord(c):REPLACEMENT_CHAR for c in _INVALID_CHARS}
 cell_styles = CellStyles()
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
+sheet_style = SheetStyle()
 tab_names = TabNames()
 type_codes = TypeCodes()
 
@@ -110,8 +113,6 @@ class UnitChef:
     MAX_LINKS_PER_CELL = 1
 
     MAX_TITLE_CHARACTERS = 30
-    SHOW_GRID_LINES = False
-    ZOOM_SCALE = 80
 
     def add_items_to_area(self, *pargs, sheet, area, items, active_column,
                           set_labels=True, format_func=None, hardcoded=False):
@@ -134,6 +135,8 @@ class UnitChef:
         parameters = sheet.bb.parameters
         label_column = parameters.columns.get_position(field_names.LABELS)
         master_column = parameters.columns.get_position(field_names.MASTER)
+
+        sheet_style.set_column_width(sheet, master_column)
 
         starting = sheet.bb.current_row or 0
         new_row = starting + 1
@@ -231,17 +234,8 @@ class UnitChef:
             # Should make sure rows align here from one period to the next.
             # Main problem lies in consolidation logic.
 
-        # 2.4 add area and statement labels and formatting
-        areas_exclude = set(("general", "time_line"))
-        areas = set(sheet.bb.area_names)
-        areas = areas - areas_exclude
-        for name in areas:
-            area = getattr(sheet.bb, name)
-            if not area.rows.by_name:
-                continue
-
-            row_num = min(area.rows.by_name.values()) - 1
-            cell_styles.format_area_label(sheet, name, row_num)
+        # 2.4 add area and statement labels and sheet formatting
+        sheet_style.style_sheet(sheet)
 
         for statement, row in fins_dict.items():
             cell_styles.format_area_label(sheet, statement, row)
@@ -682,18 +676,6 @@ class UnitChef:
         # Replace forbidden characters, make sure name is within length limits
 
         sheet = book.create_sheet(name, index)
-        try:
-            sheet.sheet_view.showGridLines = self.SHOW_GRID_LINES
-            sheet.sheet_view.zoomScale = self.ZOOM_SCALE
-
-            # Try semi-experimental formatting. Unclear whether openpyxl fully
-            # supports these features.
-            #
-            # Re grid, see https://bitbucket.org/openpyxl/openpyxl/issues/199
-            # Re zoom, see https://bitbucket.org/openpyxl/openpyxl/issues/262
-
-        except Exception:
-            pass
 
         req_rows = len(unit.components.by_name) // self.MAX_LINKS_PER_CELL
         req_rows = min(req_rows, self.MAX_CONSOLIDATION_ROWS)
@@ -796,6 +778,10 @@ class UnitChef:
         source = book.get_sheet_by_name(tab_names.TIME_LINE)
 
         sheet = self._link_to_area(source, sheet, "time_line")
+
+        for column in sheet.bb.time_line.columns.by_name.values():
+            sheet_style.set_column_width(sheet, column)
+
         sheet = self._link_to_area(source, sheet, "parameters")
 
         return sheet
