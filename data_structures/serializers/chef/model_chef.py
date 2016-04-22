@@ -40,8 +40,8 @@ from .cell_styles import  CellStyles
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
+from .sheet_style import SheetStyle
 from .tab_names import TabNames
-
 from .unit_chef import UnitChef
 
 
@@ -54,9 +54,9 @@ from .unit_chef import UnitChef
 cell_styles = CellStyles()
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
+sheet_style = SheetStyle()
 tab_names = TabNames()
 type_codes = TypeCodes()
-
 unit_chef = UnitChef()
 
 get_column_letter = xlio.utils.get_column_letter
@@ -147,9 +147,10 @@ class ModelChef:
         in_effect_column = 4
         base_case_column = 6
 
-        area = my_tab.bb.general
+        sheet_style.set_column_width(my_tab, in_effect_column)
+        sheet_style.set_column_width(my_tab, base_case_column)
 
-        # area = my_tab.bb.general
+        area = my_tab.bb.add_area("parameters")
 
         area.columns.by_name[field_names.LABELS] = label_column
         area.columns.by_name[field_names.VALUES] = in_effect_column
@@ -185,6 +186,8 @@ class ModelChef:
 
             current_row += 1
 
+        sheet_style.style_sheet(my_tab)
+
         return my_tab
 
         # TO DO:
@@ -218,7 +221,7 @@ class ModelChef:
         Method expects book to include a completed scenarios sheet. 
         """        
         scenarios = book[tab_names.SCENARIOS]
-        scenarios_area = scenarios.bb.general
+        scenarios_area = scenarios.bb.parameters
         
         my_tab = book.create_sheet(tab_names.TIME_LINE)
 
@@ -228,6 +231,7 @@ class ModelChef:
         # Pick starting positions
         local_labels_column = 2
         local_master_column = 4
+        sheet_style.set_column_width(my_tab, local_master_column)
 
         alpha_master_column = get_column_letter(local_master_column)
         
@@ -297,6 +301,8 @@ class ModelChef:
 
             my_tab.bb.time_line.columns.by_name[period.end] = active_column
             parameters.columns.by_name[period.end] = active_column
+
+            sheet_style.set_column_width(my_tab, active_column)
             # Need this to make sure the parameters Area looks as wide as the
             # timeline. Otherwise, other routines may think that the params
             # area is only one column wide.
@@ -360,5 +366,7 @@ class ModelChef:
             # to the add_items() routine.
             
             active_column += 1
+
+        sheet_style.style_sheet(my_tab)
 
         return my_tab
