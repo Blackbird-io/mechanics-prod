@@ -33,8 +33,9 @@ import openpyxl as xlio
 
 from openpyxl.styles import Border, Side, Font
 
+from .cell_styles import CellStyles
 from .data_management import LineData
-from .data_types import TypeCodes, NumberFormats
+from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
 from .tab_names import TabNames
@@ -59,9 +60,9 @@ REPLACEMENT_CHAR = None
 bad_char_table = {ord(c):REPLACEMENT_CHAR for c in _INVALID_CHARS}
 # May be this should be on the UnitChef class itself
 
+cell_styles = CellStyles()
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
-number_formats = NumberFormats()
 tab_names = TabNames()
 type_codes = TypeCodes()
 
@@ -113,7 +114,7 @@ class UnitChef:
     ZOOM_SCALE = 80
 
     def add_items_to_area(self, *pargs, sheet, area, items, active_column,
-                          set_labels=True):
+                          set_labels=True, format_func=None, hardcoded=False):
         """
 
 
@@ -124,7 +125,7 @@ class UnitChef:
         --``items`` must be a dictionary of items to add
         --``active_column`` must be current column index
         --``set_labels`` must be a boolean; whether or not to label row
-
+        --``format_func`` is a function to use on cells for formatting
         Method adds names to Area in sorted order.  Method starts work after
         the current row and expects sheet to come with parameters unless you
         specify the label and master column.
@@ -156,9 +157,18 @@ class UnitChef:
 
             # Link the period to the master
             current_cell = sheet.cell(column=active_column, row=new_row)
-            link = formula_templates.ADD_COORDINATES
-            link = link.format(coordinates=master_cell.coordinate)
-            current_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+            if hardcoded:
+                current_cell.value = value
+                cell_styles.format_hardcoded(current_cell)
+                cell_styles.format_hardcoded(master_cell)
+            else:
+                link = formula_templates.ADD_COORDINATES
+                link = link.format(coordinates=master_cell.coordinate)
+                current_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+
+            if format_func:
+                format_func(master_cell)
+                format_func(current_cell)
 
             sheet.bb.current_row = new_row
             new_row += 1
@@ -231,10 +241,10 @@ class UnitChef:
                 continue
 
             row_num = min(area.rows.by_name.values()) - 1
-            self._label_area(sheet, name, row_num)
+            cell_styles.format_area_label(sheet, name, row_num)
 
         for statement, row in fins_dict.items():
-            self._label_area(sheet, statement, row)
+            cell_styles.format_area_label(sheet, statement, row)
 
         return sheet
 
@@ -349,6 +359,10 @@ class UnitChef:
             row=events.rows.get_position(common_events.KEY_CONCEPTION)
             )
 
+        cell_styles.format_date(birth)
+        cell_styles.format_date(death)
+        cell_styles.format_date(conception)
+
         cells = dict()
         cells["birth"] = birth
         cells["death"] = death
@@ -365,15 +379,17 @@ class UnitChef:
                 )
 
         ref_date = sheet.cell(column=active_column, row=active_row)
+        cell_styles.format_date(ref_date)
 
         time_line = sheet.cell(column=active_column, row=time_line_row)
+        cell_styles.format_date(time_line)
 
         cells["ref_date"] = ref_date
         formula = fs.LINK_TO_COORDINATES.format(
             coordinates=time_line.coordinate)
 
         ref_date.value = formula
-        ref_date.number_format = number_formats.DATETIME
+
         del formula
         # Make sure each cell gets its own formula by deleting F after use.
 
@@ -391,6 +407,7 @@ class UnitChef:
                 )
 
         age = sheet.cell(column=active_column, row=active_row)
+        cell_styles.format_parameter(age)
 
         cells["age"] = age
         cos = {k:v.coordinate for k,v in cells.items()}
@@ -413,6 +430,7 @@ class UnitChef:
                 )
 
         alive = sheet.cell(column=active_column, row=active_row)
+        cell_styles.format_parameter(alive)
 
         cells["alive"] = alive
         cos["alive"] = alive.coordinate
@@ -436,6 +454,7 @@ class UnitChef:
                 )
 
         span = sheet.cell(column=active_column, row=active_row)
+        cell_styles.format_parameter(span)
 
         cells[field_names.SPAN] = span
         cos[field_names.SPAN] = span.coordinate
@@ -494,6 +513,7 @@ class UnitChef:
 
             master_cell = sheet.cell(column=master_column, row=existing_row)
             active_cell = sheet.cell(column=active_column, row=existing_row)
+            cell_styles.format_date(master_cell)
 
             event_date = unit.life.events[name]
 
@@ -506,6 +526,9 @@ class UnitChef:
                 active_cell.set_explicit_value(link,
                                                data_type=type_codes.FORMULA)
 
+                cell_styles.format_date(active_cell)
+
+
                 # Have to first set the active cell and THEN compare it to master
                 # because our Excel interface may use a setter that transforms
                 # values. So:
@@ -517,6 +540,7 @@ class UnitChef:
                 # because cell value setter changed x into a representation that
                 # plays better with spreadsheets.
 
+
         # Now add
         new_events = dict()
         for name in new_names:
@@ -526,7 +550,8 @@ class UnitChef:
             sheet=sheet,
             area=events,
             items=new_events,
-            active_column=active_column
+            active_column=active_column,
+            format_func=cell_styles.format_date
             )
         # Method will update current row to the last filled position.
 
@@ -548,8 +573,8 @@ class UnitChef:
         active_column = column
 
         if not active_column:
-            active_column = sheet_data.time_line.columns.get_position(
-                                                               unit.period.end)
+            end = unit.period.end
+            active_column = sheet_data.time_line.columns.get_position(end)
 
         if not getattr(sheet_data, "life", None):
             sheet.bb.add_area("life")
@@ -606,7 +631,8 @@ class UnitChef:
 
             data_cell = sheet.cell(column=period_column, row=existing_row)
             data_cell.value = param_value
-            # should format the cell in blue or whatever for hardcoded
+            cell_styles.format_parameter(data_cell)
+            cell_styles.format_hardcoded(data_cell)
 
         new_params = dict()
         for k in new_param_names:
@@ -623,7 +649,9 @@ class UnitChef:
             area=parameters,
             items=new_params,
             active_column=period_column,
-            set_labels=True
+            set_labels=True,
+            format_func=cell_styles.format_parameter,
+            hardcoded=True
             )
 
             # Always set labels for new items.
@@ -698,33 +726,6 @@ class UnitChef:
 
         # Return sheet
         return sheet
-
-    @staticmethod
-    def _label_area(sheet, label, row_num):
-        """
-
-        UnitChef._label_area -> None
-
-        --``sheet`` is an instance of openpyxl.worksheet
-        --``label`` is a the string name of the area to label
-        --``row_num`` is the row number where the label should be inserted
-
-
-        """
-        side = Side(border_style='double')
-
-        cell_cos = 'A%s' % row_num
-        cell = sheet[cell_cos]
-        cell.font = Font(bold=True)
-        cell.set_explicit_value(label.title(),
-                                data_type=type_codes.FORMULA_CACHE_STRING)
-
-        rows = sheet.iter_rows(row_offset=row_num-1)
-        row = rows.__next__()
-        for cell in row:
-            border = Border(top=cell.border.top)
-            border.top = side
-            cell.border = border
 
     def _link_to_area(self, source_sheet, local_sheet, area_name, group=False,
                       keep_format=True):

@@ -30,8 +30,9 @@ NumberFormats         formats for numbers
 
 
 # Imports
-# n/a
+from openpyxl.styles import numbers
 
+from .chef_settings import PARAM_DECIMAL_POINTS
 
 
 
@@ -81,4 +82,10 @@ class NumberFormats:
     n/a
     ====================  =====================================================
     """
-    DATETIME = "yyyy-mm-dd"
+    DEFAULT_DATE_FORMAT = numbers.FORMAT_DATE_YYYYMMDD2
+    DEFAULT_LINE_FORMAT = numbers.FORMAT_CURRENCY_USD_SIMPLE
+
+    DEFAULT_PARAMETER_FORMAT = "#,##0"
+    if PARAM_DECIMAL_POINTS > 0:
+        DEFAULT_PARAMETER_FORMAT += "."
+        DEFAULT_PARAMETER_FORMAT += "0"*PARAM_DECIMAL_POINTS

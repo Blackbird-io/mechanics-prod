@@ -36,6 +36,7 @@ import openpyxl as xlio
 
 from .bb_workbook import BB_Workbook as Workbook
 
+from .cell_styles import  CellStyles
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
@@ -50,6 +51,7 @@ from .unit_chef import UnitChef
 # n/a
 
 # Module Globals
+cell_styles = CellStyles()
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
 tab_names = TabNames()
@@ -178,6 +180,9 @@ class ModelChef:
             # nesting, we use the explicit call to tell Excel to read them as
             # formulas instead of strings
 
+            cell_styles.format_parameter(in_effect_cell)
+            cell_styles.format_parameter(base_case_cell)
+
             current_row += 1
 
         return my_tab
@@ -276,6 +281,7 @@ class ModelChef:
             cos["alpha_column"] = get_column_letter(source_value_column)
             link = formula_templates.ADD_CELL_FROM_SHEET.format(**cos)
             master_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+            cell_styles.format_parameter(master_cell)
 
         # Second, build a column for each period. Pull values from our local
         # master column and overwrite them if necessary with direct values.        
@@ -297,6 +303,7 @@ class ModelChef:
             
             header_cell = my_tab.cell(column=active_column, row=header_row)
             header_cell.value = period.end
+            cell_styles.format_date(header_cell)
 
             # 1. Pulling the master values for each parameter.
             my_tab.bb.current_row += 1
@@ -306,6 +313,7 @@ class ModelChef:
                 param_row = my_tab.bb.parameters.rows.by_name[k]
 
                 param_cell = my_tab.cell(column=active_column, row=param_row)
+                cell_styles.format_parameter(param_cell)
 
                 link_template = formula_templates.ADD_CELL
 
@@ -314,6 +322,7 @@ class ModelChef:
                 
                 param_cell.set_explicit_value(link,
                                               data_type=type_codes.FORMULA)
+                cell_styles.format_parameter(param_cell)
 
                 existing_params[k] = link
 
@@ -333,6 +342,7 @@ class ModelChef:
                 param_row = parameters.rows.get_position(spec_name)                
                 param_cell = my_tab.cell(column=active_column, row=param_row)
                 param_cell.value = spec_value
+                cell_styles.format_parameter(param_cell)
 
             new_params = dict()
             for k in new_param_names:
@@ -342,7 +352,8 @@ class ModelChef:
                 sheet=my_tab,
                 area=my_tab.bb.parameters,
                 items=new_params,
-                active_column=active_column
+                active_column=active_column,
+                format_func=cell_styles.format_parameter
                 )
 
             # Upgrade-S: For speed, can supply master and label column indices
