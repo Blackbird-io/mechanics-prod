@@ -85,6 +85,7 @@ class DrContainer(Components):
     get_drivers()         returns a list of drivers associated with a tag
     get_ordered()         returns a list of all drivers sorted by bbid
     inheritTags()         inherits tags from a list of all drivers in instance
+    remove_driver()       remove a driver from this driver container
     setPartOf()           sets parentObject for instance **and** drivers
     ====================  ======================================================
     """
@@ -389,6 +390,25 @@ class DrContainer(Components):
             self.inheritTagsFrom(dr, recur)
         # In tag inheritance, order is significant. Want to inherit tags in the
         # same order every time. 
+
+    def remove_driver(self, line_name_key):
+        """
+
+
+        DrContainer.remove_driver(line_name_key) -> None
+
+
+        Method removes all drivers with specified line_name_key.
+        Note that DrContainer's dictionary keys are all line names,
+        which come from Driver.workConditions['line_name']
+        """
+        dr_list = self.get_drivers(line_name_key)
+        for dr in dr_list:
+            # Remove from dr_directory dictionary
+            bbid = dr.id.bbid
+            del(self.dr_directory[bbid])
+            # Remove from DrContainer dictionary
+            del(self[line_name_key])
 
     def setPartOf(self, parentObj, recur=True):
         """
