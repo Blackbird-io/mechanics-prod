@@ -32,6 +32,7 @@ import datetime
 import bb_settings
 
 from data_structures.modelling.business_unit import BusinessUnit
+from data_structures.modelling.line_item import LineItem
 from data_structures.modelling.model import Model
 from data_structures.system.messenger import Messenger
 
@@ -39,7 +40,9 @@ from data_structures.system.messenger import Messenger
 
 
 #globals
-#n/a
+intro_line = LineItem("introduction")
+intro_line.tag("start", "configuration")
+intro_line.guide.quality.set_standard(2)
     
 #classes
 class Starter:
@@ -102,6 +105,7 @@ class Starter:
         company = BusinessUnit(model.name)
         model.time_line.current_period.set_content(company)
         model.target = model.time_line.current_period.content
+        model.target.stage.focal_point = intro_line.copy()
 
         message = (model, None, None)
 
