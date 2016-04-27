@@ -41,10 +41,6 @@ from .outline import Outline
 
 
 #globals
-intro_line = LineItem("introduction")
-intro_line.tag("start",
-               "configuration")
-intro_line.guide.quality.set_standard(2)
 quality_rule = completion_rules.check_quality_only
 
 #classes
@@ -75,7 +71,7 @@ class InterviewTracker(Outline):
     def __init__(self):
         Outline.__init__(self, "interview")
         self.completion_rule = quality_rule
-        self.focal_point = intro_line.copy()
+        self.focal_point = None
         self.progress = 0
         self.protocol_key = 1
         self.track_progress = True
