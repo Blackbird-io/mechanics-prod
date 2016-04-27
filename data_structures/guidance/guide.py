@@ -42,8 +42,8 @@ from .selection_tracker import SelectionTracker
 class Guide:
     """
 
-    This class provides an instrumentation cluster for objects that may serve as
-    a focal point for MatchMaker.
+    This class provides an instrumentation cluster for objects that may serve
+    as a focal point for MatchMaker.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -59,7 +59,7 @@ class Guide:
     
     
     FUNCTIONS:
-    reset()               reruns __init__ on self
+    reset()               resets state attributes of instance
     ====================  ======================================================
     """
     HIGHEST_PERMITTED_PRIORITY = 5
@@ -82,4 +82,7 @@ class Guide:
         """
         G.reset() -> None
         """
-        Guide.__init__(self)
+        self.complete = False
+        self.quality.reset()
+        self.selection.reset()
+        self.attention.reset()

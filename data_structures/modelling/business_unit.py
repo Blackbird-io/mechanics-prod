@@ -382,6 +382,12 @@ class BusinessUnit(History, Tags, Equalities):
         result.summary = BusinessSummary()
         result.valuation = CompanyValue()
 
+        result._stage = None
+        result.used = set()
+
+        r_interview = self.interview.copy()
+        result.interview = r_interview
+
         return result
                                 
     def recalculate(self, adjust_future=True):
