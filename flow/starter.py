@@ -31,6 +31,7 @@ import datetime
 
 import bb_settings
 
+from data_structures.modelling.business_unit import BusinessUnit
 from data_structures.modelling.model import Model
 from data_structures.system.messenger import Messenger
 
@@ -97,14 +98,16 @@ class Starter:
         #officially ``start`` the model so that it never comes back here;
         #otherwise, starter.process() will destroy all existing model data.
         model.time_line.build(ref_date)
-        #
+
+        top_level = BusinessUnit(model.name)
+        model.time_line.current_period.set_content(top_level)
+        model.target = model.time_line.current_period.content
+
         message = (model, None, None)
-        #
+
         return message
-        #
+
         #SessionController will pass this message to an analyst, which will use Yenta
         #to select the best intro topic. As is, all models start with the same intro
         #topic, but in the future, the introduction can be customized by geography
         #or business type (based on sign-up code, for example). 
-        
-        
