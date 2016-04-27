@@ -75,7 +75,7 @@ class InterviewTracker(Outline):
     def __init__(self):
         Outline.__init__(self, "interview")
         self.completion_rule = quality_rule
-        self.focal_point = None # intro_line.copy()
+        self.focal_point = intro_line.copy()
         self.progress = 0
         self.protocol_key = 1
         self.track_progress = True
