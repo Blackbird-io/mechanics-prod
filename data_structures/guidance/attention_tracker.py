@@ -60,7 +60,8 @@ class AttentionTracker(Counter):
 
     FUNCTIONS:
     clear_asked()         sets asked to 0
-    count_asked()         increments asked by 1 
+    count_asked()         increments asked by 1
+    reset()               resets state attributes of instance
     set_allowance()       sets allowance
     ====================  ======================================================
     """
@@ -91,3 +92,7 @@ class AttentionTracker(Counter):
         ATr.set_allowance(allowance) -> None
         """
         self.allowance = allowance
+
+    def reset(self):
+        Counter.reset(self)
+        self.asked = 0
