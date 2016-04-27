@@ -1,7 +1,7 @@
 #PROPRIETARY AND CONFIDENTIAL
 #Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2014
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+#Copyright Blackbird Logical Applications, LLC 2016
+#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 #Blackbird Environment
 #Module: data_structures.guidance.interview_tracker
@@ -29,8 +29,9 @@ InterviewTracker      plan and monitor machine-user interview
 #imports
 import bb_exceptions
 
-from data_structures.modelling.line_item import LineItem
 from flow import completion_rules
+
+from data_structures.modelling.line_item import LineItem
 
 from .outline import Outline
 
@@ -98,23 +99,3 @@ class InterviewTracker(Outline):
             new_p = p
         new_p = int(new_p)
         self.progress = new_p
-
-    def set_focal_point_to_next(self):
-
-        fp = self.focal_point
-
-        found = False
-        for line in self.path.get_ordered():
-            if found:
-                self.focal_point = line
-                break
-            if line == fp:
-                line.guide.complete = True
-                found = True
-        else:
-            self.guide.complete = True
-            self.focal_point = None
-
-
-
-

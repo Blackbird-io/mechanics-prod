@@ -379,7 +379,7 @@ class Topic:
         mark["timestamp"] = time.time()
         model = self.MR.activeModel
         model.transcribe(mark)
-        model.used.add(self.id.bbid)
+        model.target.used.add(self.id.bbid)
         
     def wrap_scenario(self, Q):
         """

@@ -28,16 +28,12 @@ BusinessUnit          structured snapshot of a business at a given point in time
 
 # Imports
 import copy
-import datetime
-import time
 
 import bb_exceptions
 import bb_settings
 
 from data_structures.guidance.guide import Guide
-from data_structures.modelling._new_statement import Statement
 from data_structures.guidance.interview_tracker import InterviewTracker
-from data_structures.guidance.link import Link
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
@@ -47,7 +43,6 @@ from data_structures.valuation.company_value import CompanyValue
 from . import common_events
 
 from .components import Components
-from .driver import Driver
 from .dr_container import DrContainer
 from .equalities import Equalities
 from .financials import Financials
@@ -86,12 +81,15 @@ class BusinessUnit(History, Tags, Equalities):
     financials            instance of Financials object
     guide                 instance of Guide object
     id                    instance of ID object
+    interview             instance of InterviewTracker object
     life                  instance of Life object
     location              placeholder for location functionality
     parameters            flexible storage for data that shapes unit performance
     size                  int; number of real-life equivalents obj represents
-    type                  str or None; unit's in-model type (e.g., "team")
+    stage                 property; returns non-public stage or interview
     summary               None or BusinessSummary; investment summary
+    type                  str or None; unit's in-model type (e.g., "team")
+    used                  set; contains BBIDs of used Topics
     valuation             None or CompanyValue; market view on unit
     
     FUNCTIONS:
@@ -139,9 +137,10 @@ class BusinessUnit(History, Tags, Equalities):
         
         self.guide = Guide()
         self.interview = InterviewTracker()
-        self.id = ID()
         self._stage = None
         self.used = set()
+
+        self.id = ID()
         # Get the id functionality but do NOT assign a bbid yet
         
         self.life = LifeCycle()
@@ -178,20 +177,6 @@ class BusinessUnit(History, Tags, Equalities):
         result = self._stage
         if not result:
             result = self.interview
-            parent_bu = self.parentObject
-
-            if result.focal_point and parent_bu:
-                parent_bu = parent_bu.parentObject
-
-                if result.focal_point.guide.complete and type(parent_bu) is BusinessUnit:
-                    # return to parent business unit
-                    new_line = Link(parent_bu)
-
-                    new_path = Statement()
-                    new_path.add_top_line(new_line)
-
-                    result.set_path(new_path)
-                    result.focal_point = new_line
 
         return result
 
@@ -1182,8 +1167,7 @@ class BusinessUnit(History, Tags, Equalities):
         Register yourself and optionally your components, by type and by id
         return id_directory, ty_directory
         """
-        import pdb
-        pdb.set_trace()
+
         #return a dict of bbid:unit
         id_directory = dict()
         ty_directory = dict()

@@ -47,7 +47,7 @@ class Step(Tags, PrintAsLine):
 
     Class for tracking logical steps. Has the tags and guide interface of
     LineItem but doesn't commit to a numeric value. Pretty lightweight and
-    flexible. mo.
+    flexible.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
