@@ -253,7 +253,7 @@ class Yenta():
         if not pool:
             pool = self.TM.local_catalog.by_id.keys()
         #
-        pool = set(pool) - model.used
+        pool = set(pool) - model.target.used
         pool = sorted(pool)
         #sort pool into list to maintain stable evaluation order and results
         #
@@ -435,7 +435,7 @@ class Yenta():
         chosen_bbid = None
         chosen_topic = None
         #
-        fp = model.stage.focal_point
+        fp = model.target.stage.focal_point
         fp.guide.selection.increment(1)
         #
         eligibles = self.find_eligible(fp, model)

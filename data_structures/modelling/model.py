@@ -34,8 +34,6 @@ import dill
 import bb_exceptions
 import bb_settings
 
-from data_structures.guidance.link import Link
-from data_structures.modelling._new_statement import Statement
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
 
@@ -89,15 +87,14 @@ class Model(Tags):
 
     DATA:
     id                    instance of ID object, carries bbid for model 
-    interview             instance of an InterviewTracker object 
+    interview             property; points to target BusinessUnit.interview
     portal_data           dict; stores data from Portal related to the instance
-    stage                 P; pointer to either interview or defined _stage
     started               bool; property, tracks whether engine has begun work
     summary               P; pointer to current period summary
+    target                P; pointer to target BusinessUnit
     taxonomy              dict with tree of unit templates
     time_line             list of TimePeriod objects
     transcript            list of entries that tracks Engine processing
-    used                  set of bbids for used topics
     valuation             P; pointer to current period valuation
 
     FUNCTIONS:
@@ -121,55 +118,15 @@ class Model(Tags):
         self.transcript = []
         self.time_line = TimeLine()
         self.time_line.id.set_namespace(self.id.bbid)
-        self.target = None # target is BU from which to get path and interview info
+        self.target = None
+        # target is BU from which to get path and interview info, default
+        # points to top-level business unit/company
 
-    #DYNAMIC ATTRIBUTES
-    @property
-    def used(self):
-        return self.target.used
-
+    # DYNAMIC ATTRIBUTES
     @property
     def interview(self):
         return self.target.interview
 
-    @property
-    def stage(self):
-        """
-
-
-        **property**
-
-
-        When instance._stage points to a True object, property returns the
-        object. Otherwise property returns model.interview.
-
-        Since the default value for instance._path is None, property starts out
-        with a ``pass-through``, backwards-compatible value. 
-        
-        Setter sets _stage to value.
-
-        Deleter sets _stage to None to restore default pass-through state.
-        """
-        result = self.target.stage
-
-        if type(result.focal_point) is Link:
-            old_target = self.target
-
-            self.target = result.focal_point.target
-            result = self.stage
-
-            old_target.interview.set_focal_point_to_next()
-
-        return result
-
-    @stage.setter
-    def stage(self, value):
-        self.target.stage = value
-
-    @stage.deleter
-    def stage(self):
-        self.target.stage = None
-   
     @property
     def started(self):
         """

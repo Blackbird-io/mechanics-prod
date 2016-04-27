@@ -99,8 +99,8 @@ class Starter:
         #otherwise, starter.process() will destroy all existing model data.
         model.time_line.build(ref_date)
 
-        top_level = BusinessUnit(model.name)
-        model.time_line.current_period.set_content(top_level)
+        company = BusinessUnit(model.name)
+        model.time_line.current_period.set_content(company)
         model.target = model.time_line.current_period.content
 
         message = (model, None, None)

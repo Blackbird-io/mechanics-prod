@@ -90,10 +90,10 @@ class Analyst:
     
 
         For **end_session messages only**, method checks if ``stage`` is
-        complete. If it is, returns message as-is. Otherwise, sets model.stage
-        to the argument, gets an interviewer to pick out a focal point on that
-        stgage, and then returns the resulting message so that other routines
-        can continue work.
+        complete. If it is, returns message as-is. Otherwise, sets
+        model.target.stage to the argument, gets an interviewer to pick out a
+        focal point on that stage, and then returns the resulting message so
+        that other routines can continue work.
 
         This method contemplates that interviewer will send back a (M,_,_)
         message on the new stage, but **does not** require it to do so. So the
@@ -107,7 +107,7 @@ class Analyst:
                 pass
             else:
                 model = message[0]
-                model.stage = stage
+                model.target.stage = stage
                 message = (model, None, None)
                 message = larry_king.process(message)
                 #make sure message comes out with a focal point
