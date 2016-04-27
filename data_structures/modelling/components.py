@@ -62,7 +62,7 @@ class Components(dict, Tags, Equalities):
     keyAttributes         list; CLASS; keep empty to follow standard dict logic
 
     FUNCTIONS:
-    add_item()             adds an object to self, keyed under obj's bbid
+    add_item()            adds an object to self, keyed under obj's bbid
     clearInheritedTags()  runs Tags method and then repeats for each component
     copy()                returns deep copy of instance and contents
     extrapolate_to()      delegates Tags.extrapolate_to()
@@ -75,6 +75,7 @@ class Components(dict, Tags, Equalities):
     get_tagged()          return a dict of units with tags
     inheritTags()         runs default routine, then inherits from all comps
     refresh_names()       clear and rebuild name-to-bbid dictionary
+    remove_item()         remove an item from components
     ====================  ======================================================
     """
     #
@@ -622,5 +623,23 @@ class Components(dict, Tags, Equalities):
                 self.by_name[bu.name] = bu.id.bbid
             else:
                 continue
-        #
-                
+
+    def remove_item(self, bbid):
+        """
+
+
+        Components.remove_item(bbid) -> BusinessUnit()
+
+
+        Method removes an item from the components dictionary given it's bbid.
+        Method then updates the by_name dictionary, and setPartOf -> None.
+        Method returns the removed item (usually a BU)
+        For Drivers, use Dr_Container.remove_driver() instead
+        """
+        bu = self.pop(bbid)
+        bu.setPartOf(None)
+        if bu.name:
+            self.by_name.pop(bu.name)
+
+        return bu
+

@@ -28,6 +28,7 @@ Financials            a StatementBundle with income, cash, balance and others.
 
 # Imports
 import bb_settings
+import copy
 
 from .statements import Overview, Income, CashFlow, BalanceSheet
 from .statement_bundle import StatementBundle
@@ -58,7 +59,7 @@ class Financials(StatementBundle):
     ledger                placeholder for object general ledger
 
     FUNCTIONS:
-    n/a
+    copy                  return deep copy
     ====================  ======================================================
     """
     ORDER = ("overview", "income", "cash", "ending", "ledger")
@@ -113,6 +114,30 @@ class Financials(StatementBundle):
         result += border
 
         return result        
-        
 
+    def copy(self, enforce_rules=True):
+        """
+
+
+        Financials.copy() -> Financials
+
+
+        Return a deep copy of instance.
+
+        Method starts with a shallow copy and then substitutes deep copies
+        for the values of each attribute in instance.ORDER
+        """
+        new_instance = copy.copy(self)
+
+        self.ORDER = ("overview", "income", "cash", "starting", "ending", "ledger")
+
+        for name in self.ORDER:
+            own_statement = getattr(self, name, None)
+            if own_statement is not None:
+                new_statement = own_statement.copy(enforce_rules)
+                setattr(new_instance, name, new_statement)
+
+        del self.ORDER
+
+        return new_instance
     
