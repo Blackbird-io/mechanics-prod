@@ -98,4 +98,23 @@ class InterviewTracker(Outline):
             new_p = p
         new_p = int(new_p)
         self.progress = new_p
-        
+
+    def set_focal_point_to_next(self):
+
+        fp = self.focal_point
+
+        found = False
+        for line in self.path.get_ordered():
+            if found:
+                self.focal_point = line
+                break
+            if line == fp:
+                line.guide.complete = True
+                found = True
+        else:
+            self.guide.complete = True
+            self.focal_point = None
+
+
+
+

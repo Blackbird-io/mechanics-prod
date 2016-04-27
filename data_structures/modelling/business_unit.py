@@ -35,6 +35,9 @@ import bb_exceptions
 import bb_settings
 
 from data_structures.guidance.guide import Guide
+from data_structures.modelling._new_statement import Statement
+from data_structures.guidance.interview_tracker import InterviewTracker
+from data_structures.guidance.link import Link
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
@@ -135,7 +138,10 @@ class BusinessUnit(History, Tags, Equalities):
         self.set_financials(fins)
         
         self.guide = Guide()
+        self.interview = InterviewTracker()
         self.id = ID()
+        self._stage = None
+        self.used = set()
         # Get the id functionality but do NOT assign a bbid yet
         
         self.life = LifeCycle()
@@ -150,6 +156,52 @@ class BusinessUnit(History, Tags, Equalities):
         self.valuation = CompanyValue()
 
         self.xl = xl_mgmt.UnitData()
+
+    @property
+    def stage(self):
+        """
+
+
+        **property**
+
+
+        When instance._stage points to a True object, property returns the
+        object. Otherwise property returns model.interview.
+
+        Since the default value for instance._path is None, property starts out
+        with a ``pass-through``, backwards-compatible value.
+
+        Setter sets _stage to value.
+
+        Deleter sets _stage to None to restore default pass-through state.
+        """
+        result = self._stage
+        if not result:
+            result = self.interview
+            parent_bu = self.parentObject
+
+            if result.focal_point and parent_bu:
+                parent_bu = parent_bu.parentObject
+
+                if result.focal_point.guide.complete and type(parent_bu) is BusinessUnit:
+                    # return to parent business unit
+                    new_line = Link(parent_bu)
+
+                    new_path = Statement()
+                    new_path.add_top_line(new_line)
+
+                    result.set_path(new_path)
+                    result.focal_point = new_line
+
+        return result
+
+    @stage.setter
+    def stage(self, value):
+        self._stage = value
+
+    @stage.deleter
+    def stage(self):
+        self._stage = None
 
     @property
     def type(self):
@@ -174,9 +226,10 @@ class BusinessUnit(History, Tags, Equalities):
         old_type = self.type
         self._type = value
         #
-        if self.period:
+        if self.period and old_type:
             old_entry = self.period.ty_directory.get(old_type)
             old_entry.remove(self.id.bbid)
+
             new_entry = self.period.ty_directory.setdefault(value, set())
             new_entry.add(self.id.bbid)
             # Entries are sets of bbids for units that belong to that type
@@ -1126,9 +1179,11 @@ class BusinessUnit(History, Tags, Equalities):
         BusinessUnit._build_directory() -> (id_directory, ty_directory)
         
 
-        Register instanceyourself and optionally your components, by type and by id
+        Register yourself and optionally your components, by type and by id
         return id_directory, ty_directory
         """
+        import pdb
+        pdb.set_trace()
         #return a dict of bbid:unit
         id_directory = dict()
         ty_directory = dict()

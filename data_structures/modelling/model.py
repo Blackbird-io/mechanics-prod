@@ -33,9 +33,9 @@ import dill
 
 import bb_exceptions
 import bb_settings
-import openpyxl as excel_interface
 
-from data_structures.guidance.interview_tracker import InterviewTracker
+from data_structures.guidance.link import Link
+from data_structures.modelling._new_statement import Statement
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
 
@@ -110,23 +110,28 @@ class Model(Tags):
     string for more information.
     """    
     def __init__(self, name):
-        Tags.__init__(self,name)
-        self._stage = None
+        Tags.__init__(self, name)
         self._started = False
         #
         self.id = ID()
         self.id.assign(name)
         # Models carry uuids in the origin namespace.
-        self.interview = InterviewTracker()
         self.portal_data = dict()
         self.taxonomy = dict()
         self.transcript = []
         self.time_line = TimeLine()
-        self.used = set()
-        #
         self.time_line.id.set_namespace(self.id.bbid)
+        self.target = None # target is BU from which to get path and interview info
 
     #DYNAMIC ATTRIBUTES
+    @property
+    def used(self):
+        return self.target.used
+
+    @property
+    def interview(self):
+        return self.target.interview
+
     @property
     def stage(self):
         """
@@ -145,18 +150,25 @@ class Model(Tags):
 
         Deleter sets _stage to None to restore default pass-through state.
         """
-        result = self._stage
-        if not result:
-            result = self.interview
+        result = self.target.stage
+
+        if type(result.focal_point) is Link:
+            old_target = self.target
+
+            self.target = result.focal_point.target
+            result = self.stage
+
+            old_target.interview.set_focal_point_to_next()
+
         return result
 
     @stage.setter
     def stage(self, value):
-        self._stage = value
+        self.target.stage = value
 
     @stage.deleter
     def stage(self):
-        self._stage = None
+        self.target.stage = None
    
     @property
     def started(self):
@@ -185,9 +197,9 @@ class Model(Tags):
         #
         company = self.time_line.current_period.content
         if company:
-            #catch periods with empty content
+            # catch periods with empty content
             result = company.summary
-        #
+
         return result
 
     @summary.setter
