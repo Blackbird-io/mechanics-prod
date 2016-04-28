@@ -219,15 +219,15 @@ class Interviewer:
         priority. 
         """
         levels = dict()
-        for item in container:
+        for item in container.get_full_ordered():
             if not item.guide.priority.current:
-                #skip 0-priority items
+                # skip 0-priority items
                 continue
             else:
                 p = item.guide.priority.current
                 peer_level = levels.setdefault(p, Level())
                 peer_level.append(item)
-        #
+
         return levels
 
     def prioritize_single(self, container):
@@ -250,9 +250,9 @@ class Interviewer:
         levels = dict()
         single_level = Level()
         levels[Guide.HIGHEST_PERMITTED_PRIORITY] = single_level
-        for item in container:
+        for item in container.get_full_ordered():
             if not item.guide.priority.current:
-                #skip 0-priority items
+                # skip 0-priority items
                 continue
             else:
                 single_level.append(item)
@@ -409,9 +409,8 @@ class Interviewer:
         #picks out first open one
         #
         path = model.target.stage.path
-        ordered = path.get_full_ordered()
 
-        model.target.stage.levels = self.prioritize_multi(ordered)
+        model.target.stage.levels = self.prioritize_multi(path)
 
         fp = self.focus(model, selection_rules.for_quality)
 
