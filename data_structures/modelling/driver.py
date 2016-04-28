@@ -410,6 +410,7 @@ class Driver(Tags):
                 
             else:
                 c = "Driver cannot work on the specified LineItem."
+                print("Line:", line.name, " WC:", self.workConditions)
                 raise bb_exceptions.BBAnalyticalError(c)
         else:
             pass
