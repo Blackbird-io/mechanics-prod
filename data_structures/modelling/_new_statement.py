@@ -613,7 +613,10 @@ class Statement(Tags, Equalities):
         """
         result = list()
         for line in self.get_ordered():
-            if line._details:
+            if getattr(line, '_details', None):
+                # this allows Step objects (and others not having details) to
+                # be held by statement, co-mingled with LineItems, primarily
+                # for the purpose of the path
                 result.append(line)
                 increment = line.get_full_ordered()
                 result.extend(increment)
