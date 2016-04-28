@@ -97,15 +97,23 @@ class Starter:
             #user_context
         else:
             model = Model(bb_settings.DEFAULT_MODEL_NAME)
-        model.start()
-        #officially ``start`` the model so that it never comes back here;
-        #otherwise, starter.process() will destroy all existing model data.
-        model.time_line.build(ref_date)
 
-        company = BusinessUnit(model.name)
-        model.time_line.current_period.set_content(company)
-        model.target = model.time_line.current_period.content
-        model.target.stage.focal_point = intro_line.copy()
+        model.start()
+
+        # officially ``start`` the model so that it never comes back here;
+        # otherwise, starter.process() will destroy all existing model data.
+        if not model.time_line.current_period:
+            model.time_line.build(ref_date)
+
+        if not model.time_line.current_period.content:
+            company = BusinessUnit(model.name)
+            model.time_line.current_period.set_content(company)
+            model.target = model.time_line.current_period.content
+
+        if not model.target.stage.focal_point:
+            model.target.stage.set_path()
+            model.target.stage.path.append(intro_line.copy())
+            model.target.stage.focal_point = intro_line.copy()
 
         message = (model, None, None)
 
