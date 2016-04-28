@@ -110,8 +110,10 @@ class Starter:
             model.time_line.current_period.set_content(company)
             model.target = model.time_line.current_period.content
 
-        if not model.target.stage.focal_point:
+        if not model.target.stage.path:
             model.target.stage.set_path()
+
+        if not model.target.stage.focal_point:
             model.target.stage.path.append(intro_line.copy())
             model.target.stage.focal_point = intro_line.copy()
 
