@@ -39,7 +39,7 @@ from data_structures.system.tags import Tags
 from data_structures.serializers.chef import data_management as xl_mgmt
 
 from .equalities import Equalities
-from ._new_statement import Statement
+from .statement import Statement
 
 
 

@@ -32,7 +32,7 @@ import time
 
 from .step import Step
 
-from ..modelling._new_statement import Statement
+from ..modelling.statement import Statement
 
 
 
