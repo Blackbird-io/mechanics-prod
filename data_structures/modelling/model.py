@@ -36,6 +36,7 @@ import bb_settings
 import openpyxl as excel_interface
 
 from data_structures.guidance.interview_tracker import InterviewTracker
+from data_structures.modelling.scenarios import Scenarios
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
 
@@ -119,6 +120,7 @@ class Model(Tags):
         # Models carry uuids in the origin namespace.
         self.interview = InterviewTracker()
         self.portal_data = dict()
+        self.scenarios = Scenarios()
         self.taxonomy = dict()
         self.transcript = []
         self.time_line = TimeLine()

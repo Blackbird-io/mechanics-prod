@@ -34,6 +34,8 @@ ModelChef             chop Blackbird Engine model into a dynamic Excel workbook
 # Imports
 import openpyxl as xlio
 
+from openpyxl.worksheet.datavalidation import DataValidation
+
 from .bb_workbook import BB_Workbook as Workbook
 
 from .cell_styles import  CellStyles
@@ -141,11 +143,12 @@ class ModelChef:
         # A          |  B      | C             | D     | E
         # param names|  blank  | active values | blank | blackbird values
 
-        starting_row = 2
+        starting_row = 3
 
         label_column = 2
         in_effect_column = 4
-        base_case_column = 6
+        custom_column = 6
+        base_case_column = 8
 
         sheet_style.set_column_width(my_tab, in_effect_column)
         sheet_style.set_column_width(my_tab, base_case_column)
@@ -154,37 +157,112 @@ class ModelChef:
 
         area.columns.by_name[field_names.LABELS] = label_column
         area.columns.by_name[field_names.VALUES] = in_effect_column
+        area.columns.by_name[field_names.CUSTOM_CASE] = custom_column
         area.columns.by_name[field_names.BASE_CASE] = base_case_column
 
         current_row = starting_row
-        
-        for param_name in sorted(model.time_line.parameters):
+
+        area.rows.by_name["column_labels"] = current_row
+
+        # Make label cells and drop-down selector
+        cell_styles.format_scenario_selector_cells(my_tab,
+                                                   label_column,
+                                                   in_effect_column,
+                                                   current_row)
+
+        options = ["Custom"]
+        for o in model.scenarios.get_keys():
+            options.append(o.title())
+
+        options = ','.join(options)
+        dv = DataValidation(type="list",
+                            formula1='"%s"' % options,
+                            allow_blank=False)
+
+        # Optionally set a custom error message
+        dv.error ='Your entry is not in the list'
+        dv.errorTitle = 'Invalid Entry'
+
+        # Optionally set a custom prompt message
+        dv.prompt = 'Please select from the list'
+        dv.promptTitle = 'List Selection'
+
+        my_tab.add_data_validation(dv)
+
+        selector_cell = my_tab.cell(column=in_effect_column, row=current_row)
+        selector_cell.value = "Base"
+        dv.add(selector_cell)
+
+        # Make scenario label cells
+        custom_cell = my_tab.cell(column=custom_column, row=current_row)
+        custom_cell.value = "Custom"
+        cell_styles.format_scenario_label(custom_cell)
+
+        for i, s in enumerate(model.scenarios.get_keys()):
+            scen_cell = my_tab.cell(column=base_case_column+i, row=current_row)
+            scen_cell.value = s.title()
+            cell_styles.format_scenario_label(scen_cell)
+
+        title_row = current_row
+
+        # insert blank row
+        current_row += 2
+
+        # storing scenario values in model.time_line is obsolete now, transfer
+        # existing values to model.scenarios
+        model.scenarios.update_base(model.time_line.parameters)
+        ref_row = 3
+        for param_name in sorted(model.scenarios.base.keys()):
             # Sort to make sure we display the parameters in stable order,
             # otherwise order could vary from chop to chop on the same model.
 
             label_cell = my_tab.cell(column=label_column, row=current_row)
+            label_cell.value = param_name
+
             area.rows.by_name[param_name] = current_row
+
+            case_cell = my_tab.cell(column=custom_column,
+                                    row=current_row)
+            case_cell.value = model.scenarios.base[param_name]
+            cell_styles.format_parameter(case_cell)
+
+            # Loop through scenarios and add values
+            for i, s in enumerate(model.scenarios.get_keys()):
+                case_cell = my_tab.cell(column=base_case_column+i,
+                                        row=current_row)
+                case_cell.value = model.scenarios[s].get(param_name, '')
+                cell_styles.format_parameter(case_cell)
+
+            start_cos = custom_cell.coordinate
+            end_cos = case_cell.coordinate
+
+            link = "=HLOOKUP(%s,%s:%s,%s,FALSE)" % (selector_cell.coordinate,
+                                                    start_cos,
+                                                    end_cos,
+                                                    ref_row)
 
             in_effect_cell = my_tab.cell(column=in_effect_column,
                                          row=current_row)
-            base_case_cell = my_tab.cell(column=base_case_column,
-                                         row=current_row)
-                        
-            label_cell.value = param_name
-            base_case_cell.value = model.time_line.parameters[param_name]
-
-            link = formula_templates.ADD_COORDINATES
-            link = link.format(coordinates=base_case_cell.coordinate)
-            in_effect_cell.set_explicit_value(link,
-                                              data_type=type_codes.FORMULA)
-            # Since our formulas start with a "+" instead of "=" to allow easy
-            # nesting, we use the explicit call to tell Excel to read them as
-            # formulas instead of strings
-
+            in_effect_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
             cell_styles.format_parameter(in_effect_cell)
-            cell_styles.format_parameter(base_case_cell)
 
             current_row += 1
+            ref_row += 1
+
+        # Add cell outline formatting for Scenarios cells here
+        cell_styles.format_thin_border_group(my_tab,
+                                             custom_column,
+                                             custom_column,
+                                             title_row,
+                                             current_row-1)
+        cell_styles.format_thin_border_group(my_tab,
+                                             base_case_column,
+                                             base_case_column+i,
+                                             title_row,
+                                             current_row-1)
+
+        for c in range(1,base_case_column+i):
+            sheet_style.set_column_width(my_tab, c)
 
         sheet_style.style_sheet(my_tab)
 
@@ -287,6 +365,7 @@ class ModelChef:
             master_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
             cell_styles.format_parameter(master_cell)
 
+        my_tab.bb.current_row = active_row
         # Second, build a column for each period. Pull values from our local
         # master column and overwrite them if necessary with direct values.        
         
@@ -332,7 +411,6 @@ class ModelChef:
 
                 existing_params[k] = link
 
-                my_tab.bb.current_row += 1
             # 2. Overwrite links with hard-coded values where the period
             #    specifies them. Add period-specific parameters.
 
