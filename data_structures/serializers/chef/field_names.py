@@ -49,6 +49,7 @@ class FieldNames:
 
     DATA:
     BASE_CASE             "base_case"
+    CUSTOM_CASE           "custom_case"
 
     LABELS                "labels"
     MASTER                "master"
@@ -73,6 +74,7 @@ class FieldNames:
     # SCENARIOS
 
     BASE_CASE = "base_case"
+    CUSTOM_CASE = "custom_case"
 
     # LIFE
 

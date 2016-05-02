@@ -29,7 +29,8 @@ CellStyles            standard styles for worksheet cells
 # Imports
 import openpyxl as xlio
 
-from openpyxl.styles import Border, Side, Font, Alignment
+from openpyxl.styles import Border, Side, Font, Alignment,PatternFill
+from openpyxl.styles.colors import WHITE, BLACK
 
 from .data_types import NumberFormats
 from .data_types import TypeCodes
@@ -174,4 +175,151 @@ class CellStyles:
         for cell in row:
             border = Border(top=cell.border.top)
             border.top = side
+            cell.border = border
+
+    @staticmethod
+    def format_scenario_label(cell):
+        cell.alignment = Alignment(horizontal='center')
+        cell.font = Font(color=WHITE)
+        cell.fill = PatternFill(start_color=BLACK,
+                                end_color=BLACK,
+                                fill_type='solid')
+
+    @staticmethod
+    def format_scenario_selector_cells(sheet, label_col, selector_col, row):
+        side = Side(border_style='thick')
+
+        # Left label cell
+        left_cell = sheet.cell(column=label_col, row=row)
+        border = Border(left=left_cell.border.left,
+                        top=left_cell.border.top,
+                        bottom=left_cell.border.bottom)
+        border.left = side
+        border.top = side
+        border.bottom = side
+        left_cell.border = border
+        left_cell.font = Font(bold=True)
+        left_cell.value = "Active Scenario:"
+
+        # Blank middle cell
+        blank_cell = sheet.cell(column=label_col+1, row=row)
+        border = Border(top=blank_cell.border.top,
+                        bottom=blank_cell.border.bottom)
+        border.top = side
+        border.bottom = side
+        blank_cell.border = border
+
+        # Rightmost cell where selector lives
+        right_cell = sheet.cell(column=selector_col, row=row)
+        border = Border(right=right_cell.border.right,
+                        top=right_cell.border.top,
+                        bottom=right_cell.border.bottom)
+        border.right = side
+        border.top = side
+        border.bottom = side
+        right_cell.border = border
+        right_cell.alignment = Alignment(horizontal='center')
+
+    @staticmethod
+    def format_thin_border_group(sheet, st_col, ed_col, st_row, ed_row):
+        side = Side(border_style='thin')
+
+        # SET TOP BORDER
+        row = st_row
+        for c in range(st_col, ed_col+1):
+            cell = sheet.cell(column=c, row=row)
+            border = Border(top=cell.border.top)
+            border.top = side
+            cell.border = border
+        
+        # SET LEFT BORDER
+        col = st_col
+        for r in range(st_row, ed_row+1):
+            cell = sheet.cell(column=col, row=r)
+            border = Border(left=cell.border.left)
+            border.left = side
+            cell.border = border
+
+        # SET RIGHT BORDER
+        col = ed_col
+        if st_col != ed_col:
+            for r in range(st_row, ed_row+1):
+                cell = sheet.cell(column=col, row=r)
+                border = Border(right=cell.border.right)
+                border.right = side
+                cell.border = border
+        else:
+            for r in range(st_row, ed_row+1):
+                cell = sheet.cell(column=col, row=r)
+                border = Border(right=cell.border.right,
+                                left=cell.border.left)
+                border.left = side
+                border.right = side
+                cell.border = border
+
+        # SET BOTTOM BORDER
+        row = ed_row
+        if st_row != ed_row:
+            for c in range(st_col, ed_col+1):
+                cell = sheet.cell(column=c, row=row)
+                border = Border(bottom=cell.border.bottom)
+                border.bottom = side
+                cell.border = border
+        else:
+            for c in range(st_col, ed_col+1):
+                cell = sheet.cell(column=c, row=row)
+                border = Border(bottom=cell.border.bottom,
+                                top=cell.border.top)
+                border.top = side
+                border.bottom = side
+                cell.border = border
+
+        if st_col != ed_col:
+            # SET UPPER-LEFT CORNER BORDER
+            cell = sheet.cell(column=st_col, row=st_row)
+            border = Border(top=cell.border.top, left=cell.border.left)
+            border.top = side
+            border.left = side
+            cell.border = border
+
+            # SET UPPER-RIGHT CORNER BORDER
+            cell = sheet.cell(column=ed_col, row=st_row)
+            border = Border(top=cell.border.top, right=cell.border.right)
+            border.top = side
+            border.right = side
+            cell.border = border
+
+            # SET LOWER-LEFT CORNER BORDER
+            cell = sheet.cell(column=st_col, row=ed_row)
+            border = Border(bottom=cell.border.bottom, left=cell.border.left)
+            border.bottom = side
+            border.left = side
+            cell.border = border
+
+            # SET LOWER-RIGHT CORNER BORDER
+            cell = sheet.cell(column=ed_col, row=ed_row)
+            border = Border(bottom=cell.border.bottom, right=cell.border.right)
+            border.bottom = side
+            border.right = side
+            cell.border = border
+
+        else:
+            # SET TOP CELL BORDER
+            cell = sheet.cell(column=st_col, row=st_row)
+            border = Border(top=cell.border.top,
+                            left=cell.border.left,
+                            right=cell.border.right)
+            border.top = side
+            border.left = side
+            border.right = side
+            cell.border = border
+
+            # SET BOTTOM CELL BORDER
+            cell = sheet.cell(column=st_col, row=ed_row)
+            border = Border(bottom=cell.border.bottom,
+                            left=cell.border.left,
+                            right=cell.border.right)
+            border.bottom = side
+            border.left = side
+            border.right = side
             cell.border = border
