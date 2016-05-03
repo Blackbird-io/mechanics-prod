@@ -276,7 +276,7 @@ def set_script(new_script):
 #                            NON-PUBLIC FUNCTIONS                             #
 #*****************************************************************************#
 
-def _get_scripted_response(rich_element, question_name, position):
+def _get_scripted_response(rich_element, position, response_array):
     """
 
 
@@ -286,9 +286,9 @@ def _get_scripted_response(rich_element, question_name, position):
     Return response to element from script. Search by caption first; if no
     element matches, pull response by position.
     """
+
     scripted_response = None
-    response_array = script[question_name]
-    
+
     k_caption = "main_caption"
     k_response = "response"
     # Store keys in vars to avoid silently passing over typos with dict.get()
@@ -334,7 +334,7 @@ def _print_progress_bar(progress):
     print(pr_indicator)
     print(border)
 
-def _respond_to_element(element, question_name, position):
+def _respond_to_element(element, question_name, position, response_array=None):
     """
 
 
@@ -359,8 +359,8 @@ def _respond_to_element(element, question_name, position):
         try:
             # First, get the raw response string
             if script:
-                user_answer = _get_scripted_response(element, question_name, position)
-##                user_answer = script[question_name][element_index]["response"]
+                user_answer = _get_scripted_response(element, position,
+                                                     response_array)
                 ux_w_answer = UX + user_answer
                 print(ux_w_answer)
             else:
@@ -483,8 +483,18 @@ def _respond_to_message(message):
                         element_header = "\t(Input Element #%s)" % i
                         print(element_header.expandtabs(indent))
                     print(rich_element.__str__().expandtabs(element_indent))
-                    #
-                    element_response = _respond_to_element(rich_element, name, i)
+
+                    # GET RESPONSE ARRAY HERE
+                    response_arr = None
+                    if script:
+                        try:
+                            response_arr = script[(prompt, comment,
+                                                   array_caption)]
+                        except KeyError:
+                            response_arr = script[name]
+
+                    element_response = _respond_to_element(rich_element, name,
+                                                           i, response_arr)
                     newR.append(element_response)
                     #
                     if conditional:
