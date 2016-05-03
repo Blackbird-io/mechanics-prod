@@ -34,10 +34,9 @@ ModelChef             chop Blackbird Engine model into a dynamic Excel workbook
 # Imports
 import openpyxl as xlio
 
-from openpyxl.worksheet.datavalidation import DataValidation
-
 from .bb_workbook import BB_Workbook as Workbook
 
+from ._chef_tools import add_scenario_selector
 from .cell_styles import  CellStyles
 from .data_types import TypeCodes
 from .field_names import FieldNames
@@ -162,36 +161,10 @@ class ModelChef:
 
         current_row = starting_row
 
-        area.rows.by_name["column_labels"] = current_row
+        area.rows.by_name["active_scenario"] = current_row
 
-        # Make label cells and drop-down selector
-        cell_styles.format_scenario_selector_cells(my_tab,
-                                                   label_column,
-                                                   in_effect_column,
-                                                   current_row)
-
-        options = ["Custom"]
-        for o in model.scenarios.get_keys():
-            options.append(o.title())
-
-        options = ','.join(options)
-        dv = DataValidation(type="list",
-                            formula1='"%s"' % options,
-                            allow_blank=False)
-
-        # Optionally set a custom error message
-        dv.error ='Your entry is not in the list'
-        dv.errorTitle = 'Invalid Entry'
-
-        # Optionally set a custom prompt message
-        dv.prompt = 'Please select from the list'
-        dv.promptTitle = 'List Selection'
-
-        my_tab.add_data_validation(dv)
-
-        selector_cell = my_tab.cell(column=in_effect_column, row=current_row)
-        selector_cell.value = "Base"
-        dv.add(selector_cell)
+        add_scenario_selector(my_tab, label_column, current_row, model=model)
+        selector_cell = my_tab.cell(row=current_row, column=in_effect_column)
 
         # Make scenario label cells
         custom_cell = my_tab.cell(column=custom_column, row=current_row)
@@ -255,6 +228,7 @@ class ModelChef:
                                              custom_column,
                                              title_row,
                                              current_row-1)
+
         cell_styles.format_thin_border_group(my_tab,
                                              base_case_column,
                                              base_case_column+i,
@@ -391,7 +365,7 @@ class ModelChef:
             cell_styles.format_date(header_cell)
 
             # 1. Pulling the master values for each parameter.
-            my_tab.bb.current_row += 1
+            my_tab.bb.current_row += 2
             existing_params = dict()
             for k in my_tab.bb.parameters.rows.by_name.keys():
                 # May write the column in undefined order
@@ -444,6 +418,10 @@ class ModelChef:
             # to the add_items() routine.
             
             active_column += 1
+
+        # Add selection cell
+        selector_row = my_tab.bb.parameters.rows.by_name["active_scenario"]
+        add_scenario_selector(my_tab, local_labels_column, selector_row)
 
         sheet_style.style_sheet(my_tab)
 

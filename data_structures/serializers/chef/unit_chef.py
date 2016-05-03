@@ -46,6 +46,7 @@ from .line_chef import LineChef
 
 from ...modelling import common_events
 
+from ._chef_tools import add_scenario_selector
 
 
 
@@ -239,6 +240,12 @@ class UnitChef:
 
         for statement, row in fins_dict.items():
             cell_styles.format_area_label(sheet, statement, row)
+
+        # 2.5 add selector cell
+        selector_row = sheet.bb.parameters.rows.by_name["active_scenario"]
+        label_column = sheet.bb.parameters.columns.by_name[field_names.LABELS]
+        add_scenario_selector(sheet, label_column, selector_row)
+
 
         return sheet
 
