@@ -33,8 +33,17 @@ n/a
 import openpyxl as xlio
 import os
 import xlrd
+import win32com.client as win32
+import win32process
+import win32gui
+import win32api
+import win32con
+import time
 
 import Shell
+
+from openpyxl.worksheet.datavalidation import DataValidation
+from .cell_styles import CellStyles
 
 
 
@@ -45,12 +54,137 @@ _COLLAPSE_GROUPS_VBS_FILE = "excel_collapse_pretty_rows.vbs"
 _VBS_FILENAME_BOOKMARK = "FILENAME_PLACEHOLDER"
 _VBS_PATH = os.path.dirname(os.path.realpath(__file__))
 
+SELECTION_OPTIONS = list()
+cell_styles = CellStyles()
+
 # Module Globals
 # n/a
 
 # Classes
 # n/a
 
+
+
+
+def add_links_to_selectors(filename, sources_dict):
+
+    """
+    take a dict of sheet_name:cell_coord (sources_dict)
+
+    whole_set = set(sources_dict.keys())
+
+    for sheet in whole_set:
+        write macro to sheet
+        link cell to cells in all other_sheets
+        other_sheets = whole_set - set(sheet)
+
+        get cell address in other_sheets using sources_dict
+    """
+
+    xl = win32.gencache.EnsureDispatch('Excel.Application')
+    xl.Visible = False
+
+    ss = xl.Workbooks.Open(filename)
+
+    all_sheets = set(sources_dict.keys())
+    for sheet in all_sheets:
+        macro_code = []
+        cos = sources_dict[sheet][1]
+        col = cos[0]
+        row = cos[1]
+        line = '    If Target.Address = "$%s$%s" Then' % (col, row)
+        macro_code.append(line)
+
+        line = '        Application.EnableEvents = False'
+        macro_code.append(line)
+
+        other_sheets = all_sheets - set(sheet)
+        for o in other_sheets:
+            name = sources_dict[o][0]
+            cos = sources_dict[o][1]
+            col = cos[0]
+            row = cos[1]
+            line = '        ThisWorkbook.Sheets("%s").Range("$%s$%s").Value = Target.Value' % (name, col, row)
+            macro_code.append(line)
+
+        line = '        Application.EnableEvents = True'
+        macro_code.append(line)
+
+        line = '    End If'
+        macro_code.append(line)
+
+        comp = ss.VBProject.VBComponents(sheet)
+        module = comp.CodeModule
+        line_num = module.CreateEventProc("Change", "Worksheet")
+
+        for i, line in enumerate(macro_code):
+            module.InsertLines(line_num+i+1, line)
+
+    newfile = filename[0:-4] + "xlsm"
+    ss.SaveAs(newfile, FileFormat=52)
+
+    ss.Close()
+    del ss
+
+    xl.Quit()
+    close_excel_by_force(xl)
+    del xl
+
+    # delete original file
+    os.remove(filename)
+
+
+def close_excel_by_force(excel):
+    # Get the window's process id's
+    hwnd = excel.Hwnd
+    t, p = win32process.GetWindowThreadProcessId(hwnd)
+    # Ask window nicely to close
+    win32gui.PostMessage(hwnd, win32con.WM_CLOSE, 0, 0)
+    # Allow some time for app to close
+    time.sleep(10)
+    # If the application didn't close, force close
+    try:
+        handle = win32api.OpenProcess(win32con.PROCESS_TERMINATE, 0, p)
+        if handle:
+            win32api.TerminateProcess(handle, 0)
+            win32api.CloseHandle(handle)
+    except:
+        pass
+
+
+def add_scenario_selector(sheet, column, row, model=None):
+    select_column = column + 2
+
+    if model:
+        SELECTION_OPTIONS.append("Custom")
+        for o in model.scenarios.get_keys():
+            SELECTION_OPTIONS.append(o.title())
+
+    options = ','.join(SELECTION_OPTIONS)
+    dv = DataValidation(type="list",
+                        formula1='"%s"' % options,
+                        allow_blank=False)
+
+    # Optionally set a custom error message
+    dv.error ='Your entry is not in the list'
+    dv.errorTitle = 'Invalid Entry'
+
+    # Optionally set a custom prompt message
+    dv.prompt = 'Please select from the list'
+    dv.promptTitle = 'List Selection'
+
+    sheet.add_data_validation(dv)
+
+    selector_cell = sheet.cell(column=select_column, row=row)
+    selector_cell.value = "Base"
+    dv.add(selector_cell)
+    sheet.bb.scenario_selector = selector_cell.coordinate
+
+    # Make label cells and drop-down selector
+    cell_styles.format_scenario_selector_cells(sheet,
+                                               column,
+                                               select_column,
+                                               row)
 
 def collapse_groups(filename):
     """
@@ -108,7 +242,7 @@ def test_book(model, filename):
     A None in the Engine is declared equivalent to an Excel Zero for the
     purpose of this test.
     """
-    _write_run_temp_vbs_file(filename, _ORIG_VBS_FILE)
+    # _write_run_temp_vbs_file(filename, _ORIG_VBS_FILE)
 
     # now open workbook and retrieve relevant cells to compare to dict
     wb = xlrd.open_workbook(filename=filename)

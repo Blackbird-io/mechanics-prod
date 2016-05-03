@@ -390,6 +390,7 @@ class SheetData:
     current_column        int; holds index of the current column in the sheet
     consolidation_size    int; number of rows that consolidation area will take
     outline_level         int; holds the outline level for row grouping
+    scenario_selector     str; holds string coordinates of selector cell
     sheet                 instance of Worksheet
 
     FUNCTIONS:
@@ -407,6 +408,7 @@ class SheetData:
         self.outline_level = 0
         self.sheet = None
         self.area_names = ['general']
+        self.scenario_selector = None
         # Number of rows that consolidation area will take up
 
     def add_area(self, area_name, overwrite=False):

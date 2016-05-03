@@ -29,7 +29,7 @@ BB_Workbook           workbook where each sheet has a SheetData record set
 # Imports
 import openpyxl as xlio
 
-from ._chef_tools import test_book, collapse_groups
+from ._chef_tools import test_book, collapse_groups, add_links_to_selectors
 from .data_management import SheetData
 
 
@@ -97,6 +97,10 @@ class BB_Workbook(xlio.Workbook):
 
         collapse_groups(filename)
 
+        sources_dict = self.get_sources_dict()
+        add_links_to_selectors(filename, sources_dict)
+
+
     @staticmethod
     def test(model, filename):
         """
@@ -112,3 +116,18 @@ class BB_Workbook(xlio.Workbook):
         """
         # test the workbook against engine values
         test_book(model, filename)
+
+    def get_sources_dict(self):
+        """
+
+        """
+        sources_dict = dict()
+        for sheet in self.worksheets:
+            if getattr(sheet, 'bb', None):
+                if sheet.bb.scenario_selector:
+                    idx = int(self.get_index(sheet))+1
+                    sheet_num = "Sheet%s" % idx
+                    sources_dict[sheet_num] = (sheet.title,
+                                               sheet.bb.scenario_selector)
+
+        return sources_dict
