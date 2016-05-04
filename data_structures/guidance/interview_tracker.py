@@ -32,7 +32,7 @@ import bb_exceptions
 
 from flow import completion_rules
 
-from data_structures.modelling.line_item import LineItem
+from data_structures.guidance.guide import Guide
 from data_structures.modelling.link import Link
 
 from .outline import Outline
@@ -113,20 +113,22 @@ class InterviewTracker(Outline):
         Current status of all counters is reset to zero. Focal point is set to
         None.
         """
-        result = copy.deepcopy(self)
+        result = InterviewTracker()
 
-        result.progress = 0
-        result.focal_point = None
+        result.completion_rule = self.completion_rule
+        result.guide = Guide(priority=self.guide.priority.current,
+                             quality=self.guide.quality.standard)
+        result.set_path()
 
-        result.guide.reset()
-
-        if result.path:
-            for step in result.path.get_full_ordered():
-                step.guide.reset()
+        if self.path:
+            for step in self.path.get_full_ordered():
+                new_step = copy.copy(step)
+                new_step.guide = Guide(priority=step.guide.priority.current,
+                                       quality=step.guide.quality.standard)
 
                 # don't allow implicit copy of Link objects, break Link by
-                # setting Link.target = None
-                if isinstance(step, Link):
-                    step.target = None
+                # setting Link.target = bb_exceptions.LinkError
+                if isinstance(new_step, Link):
+                    new_step.target = bb_exceptions.LinkError
 
         return result

@@ -77,4 +77,3 @@ class QualityTracker(Counter):
         values or None. 
         """
         self.standard = standard
-
