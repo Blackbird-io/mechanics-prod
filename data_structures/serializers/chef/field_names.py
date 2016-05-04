@@ -78,6 +78,7 @@ class FieldNames:
     CUSTOM_CASE = "custom_case"
 
     CUSTOM = "Custom"
+    BASE = "Base"
 
     # LIFE
 
