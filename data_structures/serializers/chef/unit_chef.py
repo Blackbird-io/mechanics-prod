@@ -42,11 +42,11 @@ from .formulas import FormulaTemplates
 from .sheet_style import SheetStyle
 from .tab_names import TabNames
 
+from ._chef_tools import add_scenario_selector
 from .line_chef import LineChef
 
-from ...modelling import common_events
+from data_structures.modelling import common_events
 
-from ._chef_tools import add_scenario_selector
 
 
 
@@ -244,7 +244,8 @@ class UnitChef:
         # 2.5 add selector cell
         selector_row = sheet.bb.parameters.rows.by_name["active_scenario"]
         label_column = sheet.bb.parameters.columns.by_name[field_names.LABELS]
-        add_scenario_selector(sheet, label_column, selector_row)
+        add_scenario_selector(sheet, label_column, selector_row,
+                              book.scenario_names)
 
 
         return sheet

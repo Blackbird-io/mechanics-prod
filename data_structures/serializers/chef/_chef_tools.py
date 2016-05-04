@@ -16,6 +16,9 @@ DATA:
 n/a
 
 FUNCTIONS:
+add_links_to_selectors function adds VB macros to link cells in sheets
+add_scenario_selector function adds a scenario selector cell to the sheet
+close_excel_by_force  function closes Excel application by force
 collapse_groups       function opens an Excel file and collapses all groups
 is_close              function for fuzzy equals between numeric values
 test_book             function tests values calculated in Excel against those
@@ -32,17 +35,16 @@ n/a
 # Imports
 import openpyxl as xlio
 import os
-import xlrd
-import win32com.client as win32
-import win32process
-import win32gui
-import win32api
-import win32con
 import time
-
-import Shell
+import win32api
+import win32com.client as win32
+import win32con
+import win32gui
+import win32process
+import xlrd
 
 from openpyxl.worksheet.datavalidation import DataValidation
+
 from .cell_styles import CellStyles
 
 
@@ -54,33 +56,27 @@ _COLLAPSE_GROUPS_VBS_FILE = "excel_collapse_pretty_rows.vbs"
 _VBS_FILENAME_BOOKMARK = "FILENAME_PLACEHOLDER"
 _VBS_PATH = os.path.dirname(os.path.realpath(__file__))
 
-SELECTION_OPTIONS = list()
-cell_styles = CellStyles()
-
 # Module Globals
-# n/a
+cell_styles = CellStyles()
 
 # Classes
 # n/a
 
 
-
-
 def add_links_to_selectors(filename, sources_dict):
-
-    """
-    take a dict of sheet_name:cell_coord (sources_dict)
-
-    whole_set = set(sources_dict.keys())
-
-    for sheet in whole_set:
-        write macro to sheet
-        link cell to cells in all other_sheets
-        other_sheets = whole_set - set(sheet)
-
-        get cell address in other_sheets using sources_dict
     """
 
+
+    add_links_to_selectors() -> None
+
+    --``filename`` is the xlsx file (Chef chopped) to work on
+    --``sources_dict`` is a dictionary containing the Excel sheet names and
+       selector cell coordinates to link
+
+    Method adds VB code to a completed Chef workbook to link scenario
+    selection cells together to allow universal scenario change from any
+    sheet in the workbook.
+    """
     xl = win32.gencache.EnsureDispatch('Excel.Application')
     xl.Visible = False
 
@@ -121,46 +117,36 @@ def add_links_to_selectors(filename, sources_dict):
             module.InsertLines(line_num+i+1, line)
 
     newfile = filename[0:-4] + "xlsm"
-    ss.SaveAs(newfile, FileFormat=52)
 
+    xl.DisplayAlerts = False
+    ss.SaveAs(newfile, FileFormat=52)
     ss.Close()
-    del ss
 
     xl.Quit()
     close_excel_by_force(xl)
-    del xl
 
     # delete original file
     os.remove(filename)
 
 
-def close_excel_by_force(excel):
-    # Get the window's process id's
-    hwnd = excel.Hwnd
-    t, p = win32process.GetWindowThreadProcessId(hwnd)
-    # Ask window nicely to close
-    win32gui.PostMessage(hwnd, win32con.WM_CLOSE, 0, 0)
-    # Allow some time for app to close
-    time.sleep(10)
-    # If the application didn't close, force close
-    try:
-        handle = win32api.OpenProcess(win32con.PROCESS_TERMINATE, 0, p)
-        if handle:
-            win32api.TerminateProcess(handle, 0)
-            win32api.CloseHandle(handle)
-    except:
-        pass
+def add_scenario_selector(sheet, column, row, selections):
+    """
 
 
-def add_scenario_selector(sheet, column, row, model=None):
+    add_scenario_selector() -> None
+
+    --``filename`` is the xlsx file (Chef chopped) to work on
+    --``sources_dict`` is a dictionary containing the Excel sheet names and
+       selector cell coordinates to link
+
+    Method adds VB code to a completed Chef workbook to link scenario
+    selection cells together to allow universal scenario change from any
+    sheet in the workbook.
+    """
+
     select_column = column + 2
 
-    if model:
-        SELECTION_OPTIONS.append("Custom")
-        for o in model.scenarios.get_keys():
-            SELECTION_OPTIONS.append(o.title())
-
-    options = ','.join(SELECTION_OPTIONS)
+    options = ','.join(selections)
     dv = DataValidation(type="list",
                         formula1='"%s"' % options,
                         allow_blank=False)
@@ -185,6 +171,40 @@ def add_scenario_selector(sheet, column, row, model=None):
                                                column,
                                                select_column,
                                                row)
+
+
+def close_excel_by_force(excel):
+    """
+
+
+    close_excel_by_force() -> None
+
+    --``excel`` must be an Excel Application instance
+
+    Method closes all Excel instances by brute force. No other way to close
+    out all lingering threads.
+    Source: http://stackoverflow.com/questions/10221150/cant-close-excel-completely-using-win32com-on-python
+    """
+
+    # Get the window's process id's
+    hwnd = excel.Hwnd
+    t, p = win32process.GetWindowThreadProcessId(hwnd)
+
+    # Ask window nicely to close
+    win32gui.PostMessage(hwnd, win32con.WM_CLOSE, 0, 0)
+
+    # Allow some time for app to close
+    time.sleep(4)
+
+    # If the application didn't close, force close
+    try:
+        handle = win32api.OpenProcess(win32con.PROCESS_TERMINATE, 0, p)
+        if handle:
+            win32api.TerminateProcess(handle, 0)
+            win32api.CloseHandle(handle)
+    except:
+        pass
+
 
 def collapse_groups(filename):
     """
@@ -242,7 +262,6 @@ def test_book(model, filename):
     A None in the Engine is declared equivalent to an Excel Zero for the
     purpose of this test.
     """
-    # _write_run_temp_vbs_file(filename, _ORIG_VBS_FILE)
 
     # now open workbook and retrieve relevant cells to compare to dict
     wb = xlrd.open_workbook(filename=filename)

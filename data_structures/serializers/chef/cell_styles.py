@@ -27,13 +27,13 @@ CellStyles            standard styles for worksheet cells
 
 
 # Imports
-import openpyxl as xlio
-
-from openpyxl.styles import Border, Side, Font, Alignment,PatternFill
+from openpyxl.styles import Border, Side, Font, Alignment, PatternFill
 from openpyxl.styles.colors import WHITE, BLACK
 
 from .data_types import NumberFormats
 from .data_types import TypeCodes
+
+
 
 
 # Constants
@@ -43,7 +43,6 @@ CALCULATION_COLOR = '707070'
 # Module Globals
 number_formats = NumberFormats()
 type_codes = TypeCodes()
-
 
 # Classes
 class CellStyles:
@@ -58,96 +57,17 @@ class CellStyles:
     n/a
 
     FUNCTIONS:
-    n/a
+    format_area_label()   format label cell and row for sheet Areas
+    format_calculation()  format text in cells containing calculations
+    format_date()         format number in cells containing dates
+    format_hardcoded()    format font in hardcoded cells
+    format_line()         format text in line item cells
+    format_parameter()    format number in parameter cells
+    format_scenario_label()  format scenario label cells (black with white text)
+    format_scenario_selector_cell() format scenario selector cells
+    format_thin_border_group()  add thin border around group of cells
     ====================  =====================================================
     """
-
-    @staticmethod
-    def format_line(line):
-        """
-
-
-        CellStyles.format_line -> None
-
-        --``line`` is an instance of LineItem
-
-        Format cells written to for the provided line to conform with Chef
-        standard.
-        """
-
-        use_format = line.xl.number_format or number_formats.DEFAULT_LINE_FORMAT
-
-        if line.xl.derived.cell:
-            line.xl.derived.cell.number_format = use_format
-
-        if line.xl.consolidated.cell:
-            line.xl.consolidated.cell.number_format = use_format
-
-        if line.xl.detailed.cell:
-            line.xl.detailed.cell.number_format = use_format
-
-        if line.xl.cell:
-            line.xl.cell.number_format = use_format
-            line.xl.cell.font = Font(bold=True)
-
-    @staticmethod
-    def format_hardcoded(cell):
-        """
-
-
-        CellStyles.format_hardcoded -> None
-
-        --``cell`` is an instance of openpyxl cell class
-
-        Format cells containing hardcoded values to conform with Chef standard.
-        """
-
-        font = Font(color=HARDCODED_COLOR)
-        cell.font = font
-
-    @staticmethod
-    def format_calculation(cell):
-        """
-
-
-        CellStyles.format_calculation -> None
-
-        --``cell`` is an instance of openpyxl cell class
-
-        Format cells containing calculations to conform with Chef standard.
-        """
-        # font = Font(italic=True, color=CALCULATION_COLOR)
-        # cell.font = font
-
-        cell.number_format = number_formats.DEFAULT_PARAMETER_FORMAT
-
-    @staticmethod
-    def format_parameter(cell):
-        """
-
-
-        CellStyles.format_parameter -> None
-
-        --``cell`` is an instance of openpyxl cell class
-
-        Format cells containing parameters to conform with Chef standard.
-        """
-        cell.number_format = number_formats.DEFAULT_PARAMETER_FORMAT
-        cell.alignment = Alignment(horizontal='right')
-
-    @staticmethod
-    def format_date(cell):
-        """
-
-
-        CellStyles.format_date -> None
-
-        --``cell`` is an instance of openpyxl cell class
-
-        Format cells containing dates to conform with Chef standard.
-        """
-
-        cell.number_format = number_formats.DEFAULT_DATE_FORMAT
 
     @staticmethod
     def format_area_label(sheet, label, row_num):
@@ -178,7 +98,103 @@ class CellStyles:
             cell.border = border
 
     @staticmethod
+    def format_calculation(cell):
+        """
+
+
+        CellStyles.format_calculation -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Format cells containing calculations to conform with Chef standard.
+        """
+        # font = Font(italic=True, color=CALCULATION_COLOR)
+        # cell.font = font
+
+        cell.number_format = number_formats.DEFAULT_PARAMETER_FORMAT
+
+    @staticmethod
+    def format_date(cell):
+        """
+
+
+        CellStyles.format_date -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Format cells containing dates to conform with Chef standard.
+        """
+
+        cell.number_format = number_formats.DEFAULT_DATE_FORMAT
+
+    @staticmethod
+    def format_hardcoded(cell):
+        """
+
+
+        CellStyles.format_hardcoded -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Format cells containing hardcoded values to conform with Chef standard.
+        """
+
+        font = Font(color=HARDCODED_COLOR)
+        cell.font = font
+
+    @staticmethod
+    def format_line(line):
+        """
+
+
+        CellStyles.format_line -> None
+
+        --``line`` is an instance of LineItem
+
+        Format cells written to for the provided line to conform with Chef
+        standard.
+        """
+
+        use_format = line.xl.number_format or number_formats.DEFAULT_LINE_FORMAT
+
+        if line.xl.derived.cell:
+            line.xl.derived.cell.number_format = use_format
+
+        if line.xl.consolidated.cell:
+            line.xl.consolidated.cell.number_format = use_format
+
+        if line.xl.detailed.cell:
+            line.xl.detailed.cell.number_format = use_format
+
+        if line.xl.cell:
+            line.xl.cell.number_format = use_format
+            line.xl.cell.font = Font(bold=True)
+
+    @staticmethod
+    def format_parameter(cell):
+        """
+
+
+        CellStyles.format_parameter -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Format cells containing parameters to conform with Chef standard.
+        """
+        cell.number_format = number_formats.DEFAULT_PARAMETER_FORMAT
+        cell.alignment = Alignment(horizontal='right')
+
+    @staticmethod
     def format_scenario_label(cell):
+        """
+
+
+        CellStyles.format_scenario_label -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Format cells containing scenario column labels on Scenario tab.
+        """
         cell.alignment = Alignment(horizontal='center')
         cell.font = Font(color=WHITE)
         cell.fill = PatternFill(start_color=BLACK,
@@ -187,6 +203,20 @@ class CellStyles:
 
     @staticmethod
     def format_scenario_selector_cells(sheet, label_col, selector_col, row):
+        """
+
+
+        CellStyles.format_scenario_selector_cells -> None
+
+        --``sheet`` is an instance of openpyxl worksheet class
+        --``label_col`` is the column number where the scenario selector label
+            lives
+        --``selector_col`` is the column number where the scenario selector
+            cell lives
+        --``row`` is the row where the scenario selector cells live
+
+        Format cells containing scenario selection label and selector.
+        """
         side = Side(border_style='thick')
 
         # Left label cell
@@ -222,6 +252,20 @@ class CellStyles:
 
     @staticmethod
     def format_thin_border_group(sheet, st_col, ed_col, st_row, ed_row):
+        """
+
+
+        CellStyles.format_thin_border_group -> None
+
+        --``sheet`` is an instance of openpyxl worksheet class
+        --``st_col`` is the starting column in the group
+        --``ed_col`` is the ending column in the group
+        --``st_row`` is the starting row in the group
+        --``ed_row`` is the ending row in the group
+
+        Draws thin border around group of cells defined by starting and ending
+        rows and columns.
+        """
         side = Side(border_style='thin')
 
         # SET TOP BORDER
