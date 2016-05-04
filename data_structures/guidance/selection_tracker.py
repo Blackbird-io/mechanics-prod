@@ -100,9 +100,3 @@ class SelectionTracker(Counter):
         Method sets instance.eligible to argument
         """
         self.eligible = known_eligibles
-
-    def reset(self):
-        Counter.reset(self)
-        self.finished_catalog = False
-        self.eligible = []
-        self.used = []
