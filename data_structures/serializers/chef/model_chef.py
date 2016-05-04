@@ -163,7 +163,12 @@ class ModelChef:
 
         area.rows.by_name["active_scenario"] = current_row
 
-        add_scenario_selector(my_tab, label_column, current_row, model=model)
+        book.scenario_names = ["Custom"]
+        for k in model.scenarios.get_keys():
+            book.scenario_names.append(k.title())
+
+        add_scenario_selector(my_tab, label_column, current_row,
+                              book.scenario_names)
         selector_cell = my_tab.cell(row=current_row, column=in_effect_column)
 
         # Make scenario label cells
@@ -175,6 +180,9 @@ class ModelChef:
             scen_cell = my_tab.cell(column=base_case_column+i, row=current_row)
             scen_cell.value = s.title()
             cell_styles.format_scenario_label(scen_cell)
+            if i > 0:
+                # add columns for other cases to area
+                area.columns.by_name[s.lower()+"_case"] = base_case_column+i
 
         title_row = current_row
 
@@ -235,24 +243,12 @@ class ModelChef:
                                              title_row,
                                              current_row-1)
 
-        for c in range(1,base_case_column+i):
+        for c in range(1, area.columns.ending+1):
             sheet_style.set_column_width(my_tab, c)
 
         sheet_style.style_sheet(my_tab)
 
         return my_tab
-
-        # TO DO:
-        # - print every scenario in model.scenarios("base","bad","good",etc.)
-        # - add headers to the columns (to specify what they are)
-        # - hide grid lines
-        # - add formatting
-        # - add the selector function for user input so can see own assumptions
-        #   and bb side by side, with only the active choice feeding into
-        #   in_effect column.
-        # - potentially add a widget on each page that allows you to toggle the
-        #   scenarios (so you can keep looking wherever you were looking and
-        #   see how it plays out).
 
     @staticmethod
     def _create_time_line_tab(book, model):
@@ -421,7 +417,8 @@ class ModelChef:
 
         # Add selection cell
         selector_row = my_tab.bb.parameters.rows.by_name["active_scenario"]
-        add_scenario_selector(my_tab, local_labels_column, selector_row)
+        add_scenario_selector(my_tab, local_labels_column, selector_row,
+                              book.scenario_names)
 
         sheet_style.style_sheet(my_tab)
 

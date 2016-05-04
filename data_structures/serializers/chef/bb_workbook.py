@@ -29,7 +29,7 @@ BB_Workbook           workbook where each sheet has a SheetData record set
 # Imports
 import openpyxl as xlio
 
-from ._chef_tools import test_book, collapse_groups, add_links_to_selectors
+from ._chef_tools import add_links_to_selectors, collapse_groups, test_book
 from .data_management import SheetData
 
 
@@ -53,15 +53,17 @@ class BB_Workbook(xlio.Workbook):
     ====================  ======================================================
 
     DATA:
-    n/a
+    scenario_names        None or list; holds names of scenarios in workbook
 
     FUNCTIONS:
     create_sheet()        returns sheet with a SheetData instance at sheet.bb
     save()                saves workbook to file and runs test on contents
+    test()                test workbook against model
     ====================  ======================================================
     """ 
     def __init__(self, *pargs, **kwargs):
         xlio.Workbook.__init__(self, *pargs, **kwargs)
+        self.scenario_names = None
 
     def create_sheet(self, name, index=None):
         """
@@ -97,9 +99,8 @@ class BB_Workbook(xlio.Workbook):
 
         collapse_groups(filename)
 
-        sources_dict = self.get_sources_dict()
+        sources_dict = self._get_sources_dict()
         add_links_to_selectors(filename, sources_dict)
-
 
     @staticmethod
     def test(model, filename):
@@ -117,9 +118,18 @@ class BB_Workbook(xlio.Workbook):
         # test the workbook against engine values
         test_book(model, filename)
 
-    def get_sources_dict(self):
+    #*************************************************************************#
+    #                          NON-PUBLIC METHODS                             #
+    #*************************************************************************#
+
+    def _get_sources_dict(self):
         """
 
+
+        BB_Workbook._get_sources_dict(self) -> dict
+
+        Method compiles dictionary of worksheet names and cell addresses where
+        scenario selector cells live.
         """
         sources_dict = dict()
         for sheet in self.worksheets:
