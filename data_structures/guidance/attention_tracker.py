@@ -92,7 +92,3 @@ class AttentionTracker(Counter):
         ATr.set_allowance(allowance) -> None
         """
         self.allowance = allowance
-
-    def reset(self):
-        Counter.reset(self)
-        self.asked = 0
