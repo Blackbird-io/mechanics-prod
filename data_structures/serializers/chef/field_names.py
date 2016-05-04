@@ -73,8 +73,11 @@ class FieldNames:
 
     # SCENARIOS
 
+    ACTIVE_SCENARIO = "active_scenario"
     BASE_CASE = "base_case"
     CUSTOM_CASE = "custom_case"
+
+    CUSTOM = "Custom"
 
     # LIFE
 
@@ -83,3 +86,8 @@ class FieldNames:
     ALIVE = "alive"
     SPAN = "span"
     PERCENT = "percent"
+
+    # STANDARD AREAS
+    TIMELINE = "time_line"
+    PARAMETERS = "parameters"
+    GENERAL = "general"

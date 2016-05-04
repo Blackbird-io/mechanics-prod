@@ -242,11 +242,10 @@ class UnitChef:
             cell_styles.format_area_label(sheet, statement, row)
 
         # 2.5 add selector cell
-        selector_row = sheet.bb.parameters.rows.by_name["active_scenario"]
+        selector_row = sheet.bb.parameters.rows.by_name[field_names.ACTIVE_SCENARIO]
         label_column = sheet.bb.parameters.columns.by_name[field_names.LABELS]
         add_scenario_selector(sheet, label_column, selector_row,
                               book.scenario_names)
-
 
         return sheet
 
@@ -785,12 +784,12 @@ class UnitChef:
         """
         source = book.get_sheet_by_name(tab_names.TIME_LINE)
 
-        sheet = self._link_to_area(source, sheet, "time_line")
+        sheet = self._link_to_area(source, sheet, field_names.TIMELINE)
 
         for column in sheet.bb.time_line.columns.by_name.values():
             sheet_style.set_column_width(sheet, column)
 
-        sheet = self._link_to_area(source, sheet, "parameters")
+        sheet = self._link_to_area(source, sheet, field_names.PARAMETERS)
 
         return sheet
 
