@@ -152,7 +152,7 @@ class ModelChef:
         sheet_style.set_column_width(my_tab, in_effect_column)
         sheet_style.set_column_width(my_tab, base_case_column)
 
-        area = my_tab.bb.add_area("parameters")
+        area = my_tab.bb.add_area(field_names.PARAMETERS)
 
         area.columns.by_name[field_names.LABELS] = label_column
         area.columns.by_name[field_names.VALUES] = in_effect_column
@@ -161,9 +161,9 @@ class ModelChef:
 
         current_row = starting_row
 
-        area.rows.by_name["active_scenario"] = current_row
+        area.rows.by_name[field_names.ACTIVE_SCENARIO] = current_row
 
-        book.scenario_names = ["Custom"]
+        book.scenario_names = [field_names.CUSTOM]
         for k in model.scenarios.get_keys():
             book.scenario_names.append(k.title())
 
@@ -173,7 +173,7 @@ class ModelChef:
 
         # Make scenario label cells
         custom_cell = my_tab.cell(column=custom_column, row=current_row)
-        custom_cell.value = "Custom"
+        custom_cell.value = field_names.CUSTOM
         cell_styles.format_scenario_label(custom_cell)
 
         for i, s in enumerate(model.scenarios.get_keys()):
@@ -205,7 +205,7 @@ class ModelChef:
             case_cell = my_tab.cell(column=custom_column,
                                     row=current_row)
             case_cell.value = model.scenarios.base[param_name]
-            cell_styles.format_parameter(case_cell)
+            cell_styles.format_hardcoded(case_cell)
 
             # Loop through scenarios and add values
             for i, s in enumerate(model.scenarios.get_keys()):
@@ -217,10 +217,11 @@ class ModelChef:
             start_cos = custom_cell.coordinate
             end_cos = case_cell.coordinate
 
-            link = "=HLOOKUP(%s,%s:%s,%s,FALSE)" % (selector_cell.coordinate,
-                                                    start_cos,
-                                                    end_cos,
-                                                    ref_row)
+            link_template = formula_templates.HLOOKUP
+            link = link_template.format(ref_coords=selector_cell.coordinate,
+                                        start_coords=start_cos,
+                                        end_coords=end_cos,
+                                        ref_row=ref_row)
 
             in_effect_cell = my_tab.cell(column=in_effect_column,
                                          row=current_row)
@@ -273,8 +274,8 @@ class ModelChef:
         
         my_tab = book.create_sheet(tab_names.TIME_LINE)
 
-        parameters = my_tab.bb.add_area("parameters")
-        time_line = my_tab.bb.add_area("time_line")
+        parameters = my_tab.bb.add_area(field_names.PARAMETERS)
+        time_line = my_tab.bb.add_area(field_names.TIMELINE)
 
         # Pick starting positions
         local_labels_column = 2
@@ -416,7 +417,7 @@ class ModelChef:
             active_column += 1
 
         # Add selection cell
-        selector_row = my_tab.bb.parameters.rows.by_name["active_scenario"]
+        selector_row = my_tab.bb.parameters.rows.by_name[field_names.ACTIVE_SCENARIO]
         add_scenario_selector(my_tab, local_labels_column, selector_row,
                               book.scenario_names)
 

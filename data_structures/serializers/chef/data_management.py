@@ -47,7 +47,7 @@ from .field_names import FieldNames
 
 
 # Module Globals
-# n/a
+field_names = FieldNames()
 
 # Classes
 class Area:
@@ -407,7 +407,7 @@ class SheetData:
         self.consolidation_size = None
         self.outline_level = 0
         self.sheet = None
-        self.area_names = ['general']
+        self.area_names = [field_names.GENERAL]
         self.scenario_selector = None
         # Number of rows that consolidation area will take up
 

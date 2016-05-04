@@ -463,7 +463,7 @@ class LineChef:
 
         materials = dict()
         materials["lines"] = line_coordinates
-        materials["parameters"] = param_coordinates
+        materials[field_names.PARAMETERS] = param_coordinates
 
         life_coordinates = self._rows_to_coordinates(
             lookup=sheet.bb.life.rows,
