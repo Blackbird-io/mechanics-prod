@@ -30,7 +30,9 @@ BB_Workbook           workbook where each sheet has a SheetData record set
 import openpyxl as xlio
 
 from ._chef_tools import add_links_to_selectors, collapse_groups, test_book
+from .chef_settings import DEFAULT_SCENARIOS
 from .data_management import SheetData
+from .field_names import FieldNames
 
 
 
@@ -39,7 +41,7 @@ from .data_management import SheetData
 # n/a
 
 # Module Globals
-# n/a
+field_names = FieldNames()
 
 # Classes
 class BB_Workbook(xlio.Workbook):
@@ -101,6 +103,23 @@ class BB_Workbook(xlio.Workbook):
 
         sources_dict = self._get_sources_dict()
         add_links_to_selectors(filename, sources_dict)
+
+    def set_scenario_names(self, model):
+        """
+
+
+        BB_Workbook.set_scenario_names() -> None
+
+        --``model`` must be a Blackbird Engine model
+
+        Sets instance.scenario_names list.
+        """
+        self.scenario_names = [field_names.CUSTOM, field_names.BASE]
+        self.scenario_names.extend(DEFAULT_SCENARIOS)
+
+        for k in sorted(model.scenarios.keys()):
+            if k not in self.scenario_names:
+                self.scenario_names.append(k.title())
 
     @staticmethod
     def test(model, filename):

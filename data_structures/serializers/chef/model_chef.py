@@ -37,7 +37,8 @@ import openpyxl as xlio
 from .bb_workbook import BB_Workbook as Workbook
 
 from ._chef_tools import add_scenario_selector
-from .cell_styles import  CellStyles
+from .cell_styles import CellStyles
+from .chef_settings import DEFAULT_SCENARIOS
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
@@ -125,8 +126,7 @@ class ModelChef:
 
         return book
 
-    @staticmethod
-    def _create_scenarios_tab(book, model):
+    def _create_scenarios_tab(self, book, model):
         """
 
 
@@ -163,9 +163,8 @@ class ModelChef:
 
         area.rows.by_name[field_names.ACTIVE_SCENARIO] = current_row
 
-        book.scenario_names = [field_names.CUSTOM]
-        for k in model.scenarios.get_keys():
-            book.scenario_names.append(k.title())
+        book.set_scenario_names(model)
+        scenario_columns = book.scenario_names[1:]
 
         add_scenario_selector(my_tab, label_column, current_row,
                               book.scenario_names)
@@ -176,7 +175,7 @@ class ModelChef:
         custom_cell.value = field_names.CUSTOM
         cell_styles.format_scenario_label(custom_cell)
 
-        for i, s in enumerate(model.scenarios.get_keys()):
+        for i, s in enumerate(scenario_columns):
             scen_cell = my_tab.cell(column=base_case_column+i, row=current_row)
             scen_cell.value = s.title()
             cell_styles.format_scenario_label(scen_cell)
@@ -191,9 +190,14 @@ class ModelChef:
 
         # storing scenario values in model.time_line is obsolete now, transfer
         # existing values to model.scenarios
-        model.scenarios.update_base(model.time_line.parameters)
+        base = model.time_line.parameters
         ref_row = 3
-        for param_name in sorted(model.scenarios.base.keys()):
+
+        all_scenarios = dict()
+        all_scenarios[field_names.BASE] = base
+        all_scenarios.update(model.scenarios)
+
+        for param_name in sorted(base.keys()):
             # Sort to make sure we display the parameters in stable order,
             # otherwise order could vary from chop to chop on the same model.
 
@@ -204,14 +208,14 @@ class ModelChef:
 
             case_cell = my_tab.cell(column=custom_column,
                                     row=current_row)
-            case_cell.value = model.scenarios.base[param_name]
+            case_cell.value = base[param_name]
             cell_styles.format_hardcoded(case_cell)
 
             # Loop through scenarios and add values
-            for i, s in enumerate(model.scenarios.get_keys()):
+            for i, s in enumerate(scenario_columns):
                 case_cell = my_tab.cell(column=base_case_column+i,
                                         row=current_row)
-                case_cell.value = model.scenarios[s].get(param_name, '')
+                case_cell.value = all_scenarios[s].get(param_name, '')
                 cell_styles.format_parameter(case_cell)
 
             start_cos = custom_cell.coordinate
