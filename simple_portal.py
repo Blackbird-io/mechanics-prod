@@ -488,8 +488,7 @@ def _respond_to_message(message):
                     response_arr = None
                     if script:
                         try:
-                            response_arr = script[(prompt, comment,
-                                                   array_caption)]
+                            response_arr = script[Q["prompt"]]
                         except KeyError:
                             response_arr = script[name]
 
