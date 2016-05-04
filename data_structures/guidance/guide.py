@@ -82,7 +82,4 @@ class Guide:
         """
         G.reset() -> None
         """
-        self.complete = False
-        self.quality.reset()
-        self.selection.reset()
-        self.attention.reset()
+        Guide.__init__(self)
