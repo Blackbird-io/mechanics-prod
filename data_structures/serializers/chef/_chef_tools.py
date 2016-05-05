@@ -218,6 +218,21 @@ def collapse_groups(filename):
     _write_run_temp_vbs_file(filename, _COLLAPSE_GROUPS_VBS_FILE)
 
 
+def group_lines(sheet,row=None):
+    """
+
+
+    group_lines() -> None
+
+
+    --``sheet`` must be an instance of openpyxl Worksheet
+
+    """
+    if not row:
+        row = sheet.bb.current_row
+
+    sheet.row_dimensions[row].outline_level = sheet.bb.outline_level
+
 def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
     """
 
