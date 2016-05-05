@@ -37,7 +37,7 @@ from .data_types import TypeCodes
 
 
 # Constants
-HARDCODED_COLOR = '2d5986'
+HARDCODED_COLOR = '1f5993'
 CALCULATION_COLOR = '707070'
 
 # Module Globals
