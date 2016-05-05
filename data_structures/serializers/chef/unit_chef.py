@@ -158,17 +158,14 @@ class UnitChef:
             # Add the master value (from this period)
             master_cell = sheet.cell(column=master_column, row=new_row)
             master_cell.value = value
+            cell_styles.format_parameter(master_cell)
 
             # Link the period to the master
             current_cell = sheet.cell(column=active_column, row=new_row)
-            if hardcoded:
-                current_cell.value = value
-                cell_styles.format_hardcoded(current_cell)
-                cell_styles.format_hardcoded(master_cell)
-            else:
-                link = formula_templates.ADD_COORDINATES
-                link = link.format(coordinates=master_cell.coordinate)
-                current_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+            link = formula_templates.ADD_COORDINATES
+            link = link.format(coordinates=master_cell.coordinate)
+            current_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+            cell_styles.format_parameter(current_cell)
 
             if format_func:
                 format_func(master_cell)
@@ -626,14 +623,30 @@ class UnitChef:
         new_param_names = unit.parameters.keys() - existing_param_names
 
         for param_name in existing_param_names:
-
-            param_value = unit.parameters[param_name]
             existing_row = sheet.bb.parameters.rows.get_position(param_name)
 
+            master_column_num = sheet.bb.parameters.columns.get_position(field_names.MASTER)
+            master_column = get_column_letter(master_column_num)
+            master_value = sheet.cell(row=existing_row,
+                                      column=master_column_num).value
+
             data_cell = sheet.cell(column=period_column, row=existing_row)
-            data_cell.value = param_value
-            cell_styles.format_parameter(data_cell)
-            cell_styles.format_hardcoded(data_cell)
+
+            try:
+                period_value = unit.parameters[param_name]
+            except KeyError:
+                period_value = master_value
+
+            if period_value == master_value:
+                link_template = formula_templates.ADD_CELL
+                link = link_template.format(alpha_column=master_column,
+                                            row=existing_row)
+                data_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+                cell_styles.format_parameter(data_cell)
+            else:
+                data_cell.value = period_value
+                cell_styles.format_parameter(data_cell)
+                cell_styles.format_hardcoded(data_cell)
 
         new_params = dict()
         for k in new_param_names:
@@ -651,8 +664,7 @@ class UnitChef:
             items=new_params,
             active_column=period_column,
             set_labels=True,
-            format_func=cell_styles.format_parameter,
-            hardcoded=True
+            hardcoded=False
             )
 
             # Always set labels for new items.

@@ -51,7 +51,6 @@ from .cell_styles import CellStyles
 
 
 # Constants
-_ORIG_VBS_FILE = "open_save_close_excel_model.vbs"
 _COLLAPSE_GROUPS_VBS_FILE = "excel_collapse_pretty_rows.vbs"
 _VBS_FILENAME_BOOKMARK = "FILENAME_PLACEHOLDER"
 _VBS_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -127,6 +126,8 @@ def add_links_to_selectors(filename, sources_dict):
 
     # delete original file
     os.remove(filename)
+
+    return newfile
 
 
 def add_scenario_selector(sheet, column, row, selections):
@@ -419,7 +420,8 @@ def _write_run_temp_vbs_file(filename, vbs_file):
     temp_file.close()
 
     # run the VBS file
-    os.system(temp_path)
+    run_path = '"'+temp_path+'"'
+    os.system(run_path)
 
     # delete the temporary VBS file
     os.remove(temp_path)

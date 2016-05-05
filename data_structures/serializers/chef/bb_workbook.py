@@ -99,10 +99,11 @@ class BB_Workbook(xlio.Workbook):
         # save workbook
         xlio.Workbook.save(self, filename)
 
+        sources_dict = self._get_sources_dict()
+        filename = add_links_to_selectors(filename, sources_dict)
+
         collapse_groups(filename)
 
-        sources_dict = self._get_sources_dict()
-        add_links_to_selectors(filename, sources_dict)
 
     def set_scenario_names(self, model):
         """
