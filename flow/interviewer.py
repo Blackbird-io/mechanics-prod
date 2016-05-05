@@ -52,7 +52,7 @@ from .level import Level
 
 
 # Constants
-#n/a
+# n/a
 
 ##attention tracking: 
 ## - model has to keep fixed attention budget
@@ -116,6 +116,7 @@ class Interviewer:
     def __init__(self):
         self.MR = Messenger()
         self._default_protocol = 1
+        self._levels = dict()
 
     @property
     def default_protocol(self):
@@ -154,7 +155,7 @@ class Interviewer:
         Method expects ``selector`` to be a callable that accepts two arguments
         (level and model) and returns an object suitable for focus.
         
-        Method expects model.stage.levels to contain a dictionary of priority
+        Method expects self._levels to contain a dictionary of priority
         level objects keyed by priority. Method walks through the levels from
         most to least important.
 
@@ -164,10 +165,9 @@ class Interviewer:
         as complete and moves on to the next one.
         """
         fp = None
-        levels = model.stage.levels
-        priorities = sorted(levels.keys(), reverse = True)
+        priorities = sorted(self._levels.keys(), reverse = True)
         for priority in priorities:
-            level = levels[priority]
+            level = self._levels[priority]
             if level.guide.complete:
                 continue
             else:
@@ -307,7 +307,12 @@ class Interviewer:
         else:
             self.set_progress(model)   
             new_mqr = self.wrap_point(model)
-        #
+
+        # set self._levels back to None to maintain statelessness
+        # NEVER cache to self._levels in Interviewer, levels was once an
+        # attribute of Outline (where levels could be cached), but is no more.
+        self._levels = dict()
+
         return new_mqr
     
     def r_attention_budget(self, model):
@@ -325,7 +330,7 @@ class Interviewer:
         """
         #tries to allocate attention ratably
         path = model.stage.path
-        model.stage.levels = self.prioritize_multi(path)
+        self._levels = self.prioritize_multi(path)
         fp = self.focus(model, selection_rules.for_attentive_breadth)
         #
         return fp
@@ -345,7 +350,7 @@ class Interviewer:
         """
         #like p1, but stops working when there is no more attention available
         path = model.stage.path
-        model.stage.levels = self.prioritize_multi(path)
+        self._levels = self.prioritize_multi(path)
         fp = self.focus(model, selection_rules.for_attentive_depth)
         #
         return fp
@@ -363,7 +368,7 @@ class Interviewer:
         Method treats all objects with defined priority as equally important. 
         """ 
         path = model.stage.path
-        model.stage.levels = self.prioritize_single(path)
+        self._levels = self.prioritize_single(path)
         fp = self.focus(model, selection_rules.for_quality)
         #
         return fp
@@ -385,7 +390,7 @@ class Interviewer:
         #
         path = model.stage.path
         ordered = path.get_full_ordered()
-        model.stage.levels = self.prioritize_multi(ordered)        
+        self._levels = self.prioritize_multi(ordered)
         fp = self.focus(model, selection_rules.for_quality)
         #
         return fp
