@@ -30,6 +30,7 @@ CellStyles            standard styles for worksheet cells
 from openpyxl.styles import Border, Side, Font, Alignment, PatternFill
 from openpyxl.styles.colors import WHITE, BLACK
 
+from .chef_settings import AREA_BORDER
 from .data_types import NumberFormats
 from .data_types import TypeCodes
 
@@ -90,12 +91,13 @@ class CellStyles:
         cell.set_explicit_value(label.title(),
                                 data_type=type_codes.FORMULA_CACHE_STRING)
 
-        rows = sheet.iter_rows(row_offset=row_num-1)
-        row = rows.__next__()
-        for cell in row:
-            border = Border(top=cell.border.top)
-            border.top = side
-            cell.border = border
+        if AREA_BORDER:
+            rows = sheet.iter_rows(row_offset=row_num-1)
+            row = rows.__next__()
+            for cell in row:
+                border = Border(top=cell.border.top)
+                border.top = side
+                cell.border = border
 
     @staticmethod
     def format_calculation(cell):

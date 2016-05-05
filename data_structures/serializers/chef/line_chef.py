@@ -34,8 +34,8 @@ from openpyxl.comments import Comment
 
 from data_structures.modelling.line_item import LineItem
 
+from ._chef_tools import group_lines
 from .cell_styles import CellStyles
-
 from .chef_settings import COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING, \
                            COMMENT_CUSTOM, BLANK_BETWEEN_TOP_LINES
 from .data_types import TypeCodes
@@ -634,9 +634,9 @@ class LineChef:
         --``sheet`` must be an instance of openpyxl Worksheet
 
         Tell Excel to group lines and collapse
+        Delegates to method from _chef_tools
         """
-        row = sheet.bb.current_row
-        sheet.row_dimensions[row].outline_level = sheet.bb.outline_level
+        group_lines(sheet)
 
     def _rows_to_coordinates(self, *pargs, lookup, column):
         """

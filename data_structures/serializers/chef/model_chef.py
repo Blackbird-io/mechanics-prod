@@ -366,7 +366,7 @@ class ModelChef:
             cell_styles.format_date(header_cell)
 
             # 1. Pulling the master values for each parameter.
-            my_tab.bb.current_row += 2
+            # my_tab.bb.current_row += 2
             existing_params = dict()
             for k in my_tab.bb.parameters.rows.by_name.keys():
                 # May write the column in undefined order
@@ -407,6 +407,7 @@ class ModelChef:
             for k in new_param_names:
                 new_params[k] = period.parameters[k]
 
+            my_tab.bb.current_row = parameters.rows.ending
             unit_chef.add_items_to_area(
                 sheet=my_tab,
                 area=my_tab.bb.parameters,

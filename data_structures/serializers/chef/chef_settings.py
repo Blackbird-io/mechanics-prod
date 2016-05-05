@@ -45,4 +45,6 @@ PARAM_DECIMAL_POINTS = 2
 
 DEFAULT_SCENARIOS = ["Terrible", "Bad", "Good", "Awesome"]
 
+# APPEARANCE
+AREA_BORDER = False
 BLANK_BETWEEN_TOP_LINES = True
