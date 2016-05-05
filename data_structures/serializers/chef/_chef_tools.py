@@ -194,9 +194,6 @@ def close_excel_by_force(excel):
     # Ask window nicely to close
     win32gui.PostMessage(hwnd, win32con.WM_CLOSE, 0, 0)
 
-    # Allow some time for app to close
-    time.sleep(4)
-
     # If the application didn't close, force close
     try:
         handle = win32api.OpenProcess(win32con.PROCESS_TERMINATE, 0, p)
@@ -407,8 +404,15 @@ def _write_run_temp_vbs_file(filename, vbs_file):
     orig_file.close()
 
     # write temporary VBS file with correct filepath
-    temp_fnam = vbs_file[:-4]+"_temp.vbs"
-    temp_path = os.path.join(_VBS_PATH, temp_fnam)
+    i = 0
+    while True:
+        temp_fnam = vbs_file[:-4]+"_temp_%s.vbs" % i
+        temp_path = os.path.join(_VBS_PATH, temp_fnam)
+        if os.path.isfile(temp_path):
+            i += 1
+        else:
+            break
+
     temp_file = open(temp_path, mode='w')
 
     for line in orig_lines:

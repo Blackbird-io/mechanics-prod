@@ -37,7 +37,7 @@ from data_structures.modelling.line_item import LineItem
 from .cell_styles import CellStyles
 
 from .chef_settings import COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING, \
-                           COMMENT_CUSTOM
+                           COMMENT_CUSTOM, BLANK_BETWEEN_TOP_LINES
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
@@ -112,7 +112,7 @@ class LineChef:
             column=column,
             line=line,
             set_labels=set_labels,
-            indent=indent
+            indent=indent + LineItem.TAB_WIDTH
             )
 
         self._add_consolidation_logic(
@@ -206,10 +206,12 @@ class LineChef:
 
         Method relies on sheet.bb.current_row being up-to-date.
         """
+        if not BLANK_BETWEEN_TOP_LINES:
+            sheet.bb.current_row += 1
 
         for line in statement.get_ordered():
-
-            sheet.bb.current_row += 1
+            if BLANK_BETWEEN_TOP_LINES:
+                sheet.bb.current_row += 1
 
             self.chop_line(
                 sheet=sheet,
@@ -511,6 +513,7 @@ class LineChef:
 
                 a = "LineChef"
                 calc_cell.comment = Comment(c, a)
+                # calc_cell.comment.parent.offset(period_column, sheet.bb.current_row)
 
             cell_styles.format_calculation(calc_cell)
             # If formula included a reference to the prior value of the line
