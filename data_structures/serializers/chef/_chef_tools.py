@@ -20,6 +20,7 @@ add_links_to_selectors function adds VB macros to link cells in sheets
 add_scenario_selector function adds a scenario selector cell to the sheet
 close_excel_by_force  function closes Excel application by force
 collapse_groups       function opens an Excel file and collapses all groups
+group_lines           function adds row to outline group for pretty collapsing
 is_close              function for fuzzy equals between numeric values
 test_book             function tests values calculated in Excel against those
                       calculated within the Blackbird Engine
@@ -218,7 +219,7 @@ def collapse_groups(filename):
     _write_run_temp_vbs_file(filename, _COLLAPSE_GROUPS_VBS_FILE)
 
 
-def group_lines(sheet,row=None):
+def group_lines(sheet, row=None):
     """
 
 
@@ -227,11 +228,13 @@ def group_lines(sheet,row=None):
 
     --``sheet`` must be an instance of openpyxl Worksheet
 
+    Group lines in sheet to outline level specified by sheet data
     """
     if not row:
         row = sheet.bb.current_row
 
     sheet.row_dimensions[row].outline_level = sheet.bb.outline_level
+
 
 def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
     """

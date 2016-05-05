@@ -13,9 +13,16 @@ Attribute             Description
 ====================  =========================================================
 
 DATA:
+COMMENT_CUSTOM         bool; whether to include custom comment in cell comments
 COMMENT_FORMULA_NAME   bool; whether to include formula names in cell comments
 COMMENT_FORMULA_STRING bool; whether to include formula string in cell comments
-COMMENT_CUSTOM         bool; whether to include custom comment in cell comments
+
+DEFAULT_SCENARIOS      list; scenarios to automatically include on model
+
+AREA_BORDER            bool; whether to add a border around sheet Areas
+BLANK_BETWEEN_TOP_LINES bool; whether to include a blank line between top lines
+COLUMN_WIDTH           float; Excel column width
+PARAM_DECIMAL_POINTS   int; number of decimal points to include for parameters
 
 FUNCTIONS:
 n/a
@@ -35,16 +42,17 @@ n/a
 
 
 # Constants
-COLUMN_WIDTH = 16.71
 
+# COMMENTS
 COMMENT_FORMULA_NAME = True
 COMMENT_FORMULA_STRING = True
 COMMENT_CUSTOM = True
 
-PARAM_DECIMAL_POINTS = 2
-
+# SCENARIOS
 DEFAULT_SCENARIOS = ["Terrible", "Bad", "Good", "Awesome"]
 
-# APPEARANCE
+# FORMATTING
 AREA_BORDER = False
 BLANK_BETWEEN_TOP_LINES = True
+COLUMN_WIDTH = 16.71
+PARAM_DECIMAL_POINTS = 2
