@@ -378,6 +378,7 @@ class Topic:
         mark["scenario_name"] = scene_name
         mark["timestamp"] = time.time()
         model = self.MR.activeModel
+        mark["target_bu"] = model.target.name
         model.transcribe(mark)
         model.target.used.add(self.id.bbid)
         
