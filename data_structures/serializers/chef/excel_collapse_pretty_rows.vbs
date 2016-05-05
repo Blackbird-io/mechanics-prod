@@ -4,7 +4,7 @@
 Option Explicit
 
 Dim xlApp, xlBook
-Dim ws, i, c, l
+Dim ws, i, c
 
 Set xlApp = GetObject("","Excel.Application")
 xlApp.Visible = False

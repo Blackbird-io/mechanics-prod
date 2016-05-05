@@ -513,7 +513,6 @@ class LineChef:
 
                 a = "LineChef"
                 calc_cell.comment = Comment(c, a)
-                # calc_cell.comment.parent.offset(period_column, sheet.bb.current_row)
 
             cell_styles.format_calculation(calc_cell)
             # If formula included a reference to the prior value of the line
