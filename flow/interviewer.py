@@ -410,12 +410,11 @@ class Interviewer:
 
         This routine provides intuitive analysis patterns for most models.
         """
-        #prioritizes items into different levels
-        #picks out first open one
-        #
-        path = model.target.stage.path
+        # prioritizes items into different levels
+        # picks out first open one
 
-        self._levels = self.prioritize_multi(ordered)
+        path = model.target.stage.path
+        self._levels = self.prioritize_multi(path)
 
         fp = self.focus(model, selection_rules.for_quality)
 
