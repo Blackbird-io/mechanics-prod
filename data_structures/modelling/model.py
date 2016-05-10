@@ -34,10 +34,11 @@ import dill
 import bb_exceptions
 import bb_settings
 
+from .time_line import TimeLine
+
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
-
-from .time_line import TimeLine
+from data_structures.serializers.chef.chef_settings import DEFAULT_SCENARIOS
 
 
 
@@ -118,9 +119,15 @@ class Model(Tags):
         self.transcript = []
         self.time_line = TimeLine()
         self.time_line.id.set_namespace(self.id.bbid)
+
+        self.scenarios = dict()
+        for s in DEFAULT_SCENARIOS:
+            self.scenarios[s] = dict()
+        
         self.target = None
         # target is BU from which to get path and interview info, default
         # points to top-level business unit/company
+
 
     # DYNAMIC ATTRIBUTES
     @property
