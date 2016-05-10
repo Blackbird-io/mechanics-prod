@@ -33,7 +33,6 @@ import openpyxl as xlio
 
 from openpyxl.styles import Border, Side, Font
 
-from . import chef_settings
 from .cell_styles import CellStyles
 from .data_management import LineData
 from .data_types import TypeCodes
@@ -42,9 +41,10 @@ from .formulas import FormulaTemplates
 from .sheet_style import SheetStyle
 from .tab_names import TabNames
 
+from ._chef_tools import add_scenario_selector, group_lines
 from .line_chef import LineChef
 
-from ...modelling import common_events
+from data_structures.modelling import common_events
 
 
 
@@ -142,7 +142,6 @@ class UnitChef:
         new_row = starting + 1
 
         for name in sorted(items):
-
             value = items[name]
 
             # Register the new row
@@ -157,23 +156,21 @@ class UnitChef:
             # Add the master value (from this period)
             master_cell = sheet.cell(column=master_column, row=new_row)
             master_cell.value = value
+            cell_styles.format_parameter(master_cell)
 
             # Link the period to the master
             current_cell = sheet.cell(column=active_column, row=new_row)
-            if hardcoded:
-                current_cell.value = value
-                cell_styles.format_hardcoded(current_cell)
-                cell_styles.format_hardcoded(master_cell)
-            else:
-                link = formula_templates.ADD_COORDINATES
-                link = link.format(coordinates=master_cell.coordinate)
-                current_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+            link = formula_templates.ADD_COORDINATES
+            link = link.format(coordinates=master_cell.coordinate)
+            current_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+            cell_styles.format_parameter(current_cell)
 
             if format_func:
                 format_func(master_cell)
                 format_func(current_cell)
 
             sheet.bb.current_row = new_row
+            group_lines(sheet)
             new_row += 1
 
         return sheet
@@ -209,6 +206,7 @@ class UnitChef:
 
         # 2.1.   set up the unit sheet and spread params
         sheet = self._create_unit_sheet(book=book, unit=unit, index=before_kids)
+        sheet.bb.outline_level += 1
         for snapshot in unit:
             self._add_unit_params(sheet=sheet, unit=snapshot)
 
@@ -218,6 +216,8 @@ class UnitChef:
         for snapshot in unit:
             sheet.bb.current_row = sheet.bb.parameters.rows.ending + 1
             self._add_unit_life(sheet=sheet, unit=snapshot, set_labels=False)
+
+        sheet.bb.outline_level -= 1
 
         # 2.3.  spread fins
         current = sheet.bb.time_line.columns.get_position(unit.period.end)
@@ -239,6 +239,18 @@ class UnitChef:
 
         for statement, row in fins_dict.items():
             cell_styles.format_area_label(sheet, statement, row)
+
+        # 2.5 add selector cell
+        selector_row = sheet.bb.parameters.rows.by_name[field_names.ACTIVE_SCENARIO]
+        label_column = sheet.bb.parameters.columns.by_name[field_names.LABELS]
+        add_scenario_selector(sheet, label_column, selector_row,
+                              book.scenario_names)
+
+        sheet.bb.outline_level = 1
+        group_lines(sheet, row=selector_row+1)
+
+        sheet.bb.outline_level = 0
+        group_lines(sheet, row=selector_row)
 
         return sheet
 
@@ -374,6 +386,7 @@ class UnitChef:
 
         ref_date = sheet.cell(column=active_column, row=active_row)
         cell_styles.format_date(ref_date)
+        group_lines(sheet, row=active_row)
 
         time_line = sheet.cell(column=active_column, row=time_line_row)
         cell_styles.format_date(time_line)
@@ -388,6 +401,7 @@ class UnitChef:
         # Make sure each cell gets its own formula by deleting F after use.
 
         # Move down two rows (to leave one blank)
+        group_lines(sheet, row=active_row+1)
         active_row += 2
 
         # 2. Add age
@@ -402,6 +416,8 @@ class UnitChef:
 
         age = sheet.cell(column=active_column, row=active_row)
         cell_styles.format_parameter(age)
+        group_lines(sheet, row=active_row)
+
 
         cells["age"] = age
         cos = {k:v.coordinate for k,v in cells.items()}
@@ -425,6 +441,8 @@ class UnitChef:
 
         alive = sheet.cell(column=active_column, row=active_row)
         cell_styles.format_parameter(alive)
+        group_lines(sheet, row=active_row)
+
 
         cells["alive"] = alive
         cos["alive"] = alive.coordinate
@@ -449,6 +467,7 @@ class UnitChef:
 
         span = sheet.cell(column=active_column, row=active_row)
         cell_styles.format_parameter(span)
+        group_lines(sheet, row=active_row)
 
         cells[field_names.SPAN] = span
         cos[field_names.SPAN] = span.coordinate
@@ -476,6 +495,8 @@ class UnitChef:
         formula = fs.COMPUTE_AGE_IN_PERCENT.format(**cos)
 
         percent.set_explicit_value(formula, data_type=type_codes.FORMULA)
+
+        group_lines(sheet, row=active_row)
 
         # Return sheet
         return sheet
@@ -512,6 +533,9 @@ class UnitChef:
             event_date = unit.life.events[name]
 
             active_cell.value = event_date
+
+            group_lines(sheet, existing_row)
+
             if master_cell.value == active_cell.value:
 
                 link_template = formula_templates.ADD_COORDINATES
@@ -576,8 +600,8 @@ class UnitChef:
         if not getattr(sheet_data, "events", None):
             sheet.bb.add_area("events")
 
-        first_life_row = sheet.bb.current_row + 2
-        first_event_row = first_life_row + 9
+        first_life_row = sheet.bb.current_row + 1
+        first_event_row = first_life_row + 8
         # Leave nine rows for basic life layout
 
         sheet.bb.current_row = first_event_row
@@ -619,14 +643,32 @@ class UnitChef:
         new_param_names = unit.parameters.keys() - existing_param_names
 
         for param_name in existing_param_names:
-
-            param_value = unit.parameters[param_name]
             existing_row = sheet.bb.parameters.rows.get_position(param_name)
 
+            master_column_num = sheet.bb.parameters.columns.get_position(field_names.MASTER)
+            master_column = get_column_letter(master_column_num)
+            master_value = sheet.cell(row=existing_row,
+                                      column=master_column_num).value
+
             data_cell = sheet.cell(column=period_column, row=existing_row)
-            data_cell.value = param_value
-            cell_styles.format_parameter(data_cell)
-            cell_styles.format_hardcoded(data_cell)
+
+            try:
+                period_value = unit.parameters[param_name]
+            except KeyError:
+                period_value = master_value
+
+            if period_value == master_value:
+                link_template = formula_templates.ADD_CELL
+                link = link_template.format(alpha_column=master_column,
+                                            row=existing_row)
+                data_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+                cell_styles.format_parameter(data_cell)
+            else:
+                data_cell.value = period_value
+                cell_styles.format_parameter(data_cell)
+                cell_styles.format_hardcoded(data_cell)
+
+            group_lines(sheet, row=existing_row)
 
         new_params = dict()
         for k in new_param_names:
@@ -644,8 +686,7 @@ class UnitChef:
             items=new_params,
             active_column=period_column,
             set_labels=True,
-            format_func=cell_styles.format_parameter,
-            hardcoded=True
+            hardcoded=False
             )
 
             # Always set labels for new items.
@@ -692,8 +733,10 @@ class UnitChef:
 
         # Hide sheets for units below a certain depth. The depth should be a
         # Chef-level constant. Use ``sheet_state := "hidden"`` to implement.
+        sheet.bb.outline_level += 1
         self._link_to_time_line(book=book, sheet=sheet)
         self._add_unit_params(sheet=sheet, unit=unit)
+        sheet.bb.outline_level -= 1
         # At this point, sheet.bb.current_row will point to the last parameter.
 
         # Freeze panes:
@@ -738,26 +781,31 @@ class UnitChef:
         coordinates = {"sheet": source_sheet.title}
 
         for row in source_area.rows.by_name.values():
-
             source_row = (source_area.rows.starting or 0) + row
             local_row = (local_area.rows.starting or 0) + row
+
+            if group:
+                group_lines(local_sheet, row=local_row)
 
             for column in source_area.columns.by_name.values():
 
                 source_column = (source_area.columns.starting or 0) + column
                 local_column = (local_area.columns.starting or 0) + column
 
-                local_cell = local_sheet.cell(column=local_column, row=local_row)
+                local_cell = local_sheet.cell(column=local_column,
+                                              row=local_row)
 
                 cos = coordinates.copy()
                 cos["row"] = source_row
                 cos["alpha_column"] = get_column_letter(source_column)
 
                 link = formula_templates.LINK_TO_CELL_ON_SHEET.format(**cos)
-                local_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+                local_cell.set_explicit_value(link,
+                                              data_type=type_codes.FORMULA)
 
                 if keep_format:
-                    source_cell = source_sheet.cell(column=source_column, row=source_row)
+                    source_cell = source_sheet.cell(column=source_column,
+                                                    row=source_row)
                     local_cell.number_format = source_cell.number_format
 
             local_sheet.bb.current_row = local_row
@@ -777,12 +825,13 @@ class UnitChef:
         """
         source = book.get_sheet_by_name(tab_names.TIME_LINE)
 
-        sheet = self._link_to_area(source, sheet, "time_line")
+        sheet = self._link_to_area(source, sheet, field_names.TIMELINE)
 
         for column in sheet.bb.time_line.columns.by_name.values():
             sheet_style.set_column_width(sheet, column)
 
-        sheet = self._link_to_area(source, sheet, "parameters")
+        sheet = self._link_to_area(source, sheet, field_names.PARAMETERS,
+                                   group=True)
 
         return sheet
 
