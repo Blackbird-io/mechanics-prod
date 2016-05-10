@@ -116,7 +116,7 @@ def add_links_to_selectors(filename, sources_dict):
         for i, line in enumerate(macro_code):
             module.InsertLines(line_num+i+1, line)
 
-    newfile = filename[0:-4] + "xlsm"
+    newfile = check_filename_ext(filename, "xlsm")
 
     xl.DisplayAlerts = False
     ss.SaveAs(newfile, FileFormat=52)
@@ -173,6 +173,20 @@ def add_scenario_selector(sheet, column, row, selections):
                                                column,
                                                select_column,
                                                row)
+
+
+def check_filename_ext(filename, ext):
+
+    temp = filename.strip().split('.')
+    check_ext = temp[-1]
+
+    if check_ext == ext:
+        result = filename
+    else:
+        base = filename[0:-len(check_ext)]
+        result = base + ext
+
+    return result
 
 
 def close_excel_by_force(excel):
