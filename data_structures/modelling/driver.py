@@ -404,7 +404,7 @@ class Driver(Tags):
 
                     line.xl.derived.calculations.append(data_cluster)
                 
-                # Each funcion is "disposable", so we explicitly delete the
+                # Each function is "disposable", so we explicitly delete the
                 # pointer after each use.
                 del formula
                 
