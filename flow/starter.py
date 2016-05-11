@@ -31,6 +31,8 @@ import datetime
 
 import bb_settings
 
+from data_structures.modelling.business_unit import BusinessUnit
+from data_structures.modelling.line_item import LineItem
 from data_structures.modelling.model import Model
 from data_structures.system.messenger import Messenger
 
@@ -38,7 +40,9 @@ from data_structures.system.messenger import Messenger
 
 
 #globals
-#n/a
+intro_line = LineItem("introduction")
+intro_line.tag("start", "configuration")
+intro_line.guide.quality.set_standard(2)
     
 #classes
 class Starter:
@@ -93,18 +97,31 @@ class Starter:
             #user_context
         else:
             model = Model(bb_settings.DEFAULT_MODEL_NAME)
+
         model.start()
-        #officially ``start`` the model so that it never comes back here;
-        #otherwise, starter.process() will destroy all existing model data.
-        model.time_line.build(ref_date)
-        #
+
+        # officially ``start`` the model so that it never comes back here;
+        # otherwise, starter.process() will destroy all existing model data.
+        if not model.time_line.current_period:
+            model.time_line.build(ref_date)
+
+        if not model.time_line.current_period.content:
+            company = BusinessUnit(model.name)
+            model.time_line.current_period.set_content(company)
+            model.target = model.time_line.current_period.content
+
+        if not model.target.stage.path:
+            model.target.stage.set_path()
+
+        if not model.target.stage.focal_point:
+            model.target.stage.path.append(intro_line.copy())
+            model.target.stage.focal_point = intro_line.copy()
+
         message = (model, None, None)
-        #
+
         return message
-        #
+
         #SessionController will pass this message to an analyst, which will use Yenta
         #to select the best intro topic. As is, all models start with the same intro
         #topic, but in the future, the introduction can be customized by geography
         #or business type (based on sign-up code, for example). 
-        
-        

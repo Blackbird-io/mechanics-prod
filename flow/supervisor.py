@@ -171,7 +171,7 @@ def update_valuation(model):
 
     Function gets an analyst to process valuation for the current period.
     """
-    model.stage = model.valuation
+    model.target.stage = model.valuation
     #
     message = (model, None, None)
     warren_buffet = Analyst()

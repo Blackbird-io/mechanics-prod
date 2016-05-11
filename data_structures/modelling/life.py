@@ -119,8 +119,8 @@ class Life(Equalities):
 
     GESTATION             timedelta, 365 days by default
     LIFE_SPAN             timedelta, 50 years by default
-    PERCENT_MATURITY      int; where maturity begins, < OLD_AGE_PERCENT
-    PERCENT_OLD_AGE       int; point where old age begins, should be < 100
+    PERCENT_MATURITY      int; where maturity begins, range [0, OLD_AGE_PERCENT)
+    PERCENT_OLD_AGE       int; point where old age begins, range [0, 100]
     
     age                   timedelta; ref_date minus birth
     alive                 bool; True if ref_date in [birth, death)
@@ -425,7 +425,7 @@ class Life(Equalities):
         Life.set_percent_maturity() -> None
 
 
-        Set custom maturity trigger as percent of life. Expects float in [0,1].
+        Set custom maturity trigger as percent of life. Expects float in [0,100]
         """
         self.PERCENT_MATURITY = value
 
@@ -436,7 +436,7 @@ class Life(Equalities):
         Life.set_percent_old_age() -> None
 
 
-        Set custom old age trigger as percent of life. Expects float in [0,1].
+        Set custom old age trigger as percent of life. Expects float in [0,100]
         """
         self.PERCENT_OLD_AGE = value
 

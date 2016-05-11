@@ -31,6 +31,7 @@ import openpyxl as xlio
 
 from .cell_styles import CellStyles
 from .chef_settings import COLUMN_WIDTH
+from .field_names import FieldNames
 
 # Constants
 SHOW_GRID_LINES = False
@@ -38,6 +39,7 @@ ZOOM_SCALE = 80
 
 # Module Globals
 cell_styles = CellStyles()
+field_names = FieldNames()
 get_column_letter = xlio.utils.get_column_letter
 
 # Classes
@@ -65,7 +67,7 @@ class SheetStyle:
 
     @staticmethod
     def label_areas(sheet):
-        areas_exclude = set(("general", "time_line"))
+        areas_exclude = set((field_names.GENERAL, field_names.TIMELINE))
         areas = set(sheet.bb.area_names)
         areas = areas - areas_exclude
 

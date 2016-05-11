@@ -38,8 +38,10 @@ Interviewer           selects focal point for Blackbird analysis
 # Imports
 import bb_exceptions
 
-from data_structures.system.messenger import Messenger
 from data_structures.guidance.guide import Guide
+from data_structures.modelling.business_unit import BusinessUnit
+from data_structures.modelling.link import Link
+from data_structures.system.messenger import Messenger
 
 from tools import for_messages as message_tools
 
@@ -52,7 +54,7 @@ from .level import Level
 
 
 # Constants
-#n/a
+# n/a
 
 ##attention tracking: 
 ## - model has to keep fixed attention budget
@@ -116,6 +118,7 @@ class Interviewer:
     def __init__(self):
         self.MR = Messenger()
         self._default_protocol = 1
+        self._levels = dict()
 
     @property
     def default_protocol(self):
@@ -154,7 +157,7 @@ class Interviewer:
         Method expects ``selector`` to be a callable that accepts two arguments
         (level and model) and returns an object suitable for focus.
         
-        Method expects model.stage.levels to contain a dictionary of priority
+        Method expects self._levels to contain a dictionary of priority
         level objects keyed by priority. Method walks through the levels from
         most to least important.
 
@@ -164,10 +167,9 @@ class Interviewer:
         as complete and moves on to the next one.
         """
         fp = None
-        levels = model.stage.levels
-        priorities = sorted(levels.keys(), reverse = True)
+        priorities = sorted(self._levels.keys(), reverse = True)
         for priority in priorities:
-            level = levels[priority]
+            level = self._levels[priority]
             if level.guide.complete:
                 continue
             else:
@@ -177,7 +179,29 @@ class Interviewer:
                 else:
                     level.guide.complete = True
                     continue
-        #
+
+        # Check here to see if fp is a Link(), and if so:
+        if isinstance(fp, Link):
+            fp.guide.complete = True
+            fp.guide.quality.increment()
+            model.target = fp.target
+
+            mqr = self.process((model, None, None))
+            fp = mqr[0].target.stage.focal_point
+
+        # Check here to see if fp is None (path complete for stage), and if so:
+        if fp is None:
+            parent_bu = model.target.parentObject
+
+            if parent_bu:
+                parent_bu = parent_bu.parentObject
+
+                if isinstance(parent_bu, BusinessUnit):
+                    model.target = parent_bu
+
+                    mqr = self.process((model, None, None))
+                    fp = mqr[0].target.stage.focal_point
+
         return fp
         
     def prioritize_multi(self, container):
@@ -195,15 +219,15 @@ class Interviewer:
         priority. 
         """
         levels = dict()
-        for item in container:
+        for item in container.get_full_ordered():
             if not item.guide.priority.current:
-                #skip 0-priority items
+                # skip 0-priority items
                 continue
             else:
                 p = item.guide.priority.current
                 peer_level = levels.setdefault(p, Level())
                 peer_level.append(item)
-        #
+
         return levels
 
     def prioritize_single(self, container):
@@ -226,9 +250,9 @@ class Interviewer:
         levels = dict()
         single_level = Level()
         levels[Guide.HIGHEST_PERMITTED_PRIORITY] = single_level
-        for item in container:
+        for item in container.get_full_ordered():
             if not item.guide.priority.current:
-                #skip 0-priority items
+                # skip 0-priority items
                 continue
             else:
                 single_level.append(item)
@@ -266,12 +290,13 @@ class Interviewer:
         model = self.MR.activeModel
         #
         #check known focal point
-        old_fp = model.stage.focal_point
-        known_rule = model.stage.completion_rule
+        old_fp = model.target.stage.focal_point
+        known_rule = model.target.stage.completion_rule
         #
-        protocol_key = model.stage.protocol_key
+        protocol_key = model.target.stage.protocol_key
         routine = None
         #
+
         if known_rule:
             if known_rule(old_fp):
                 pass
@@ -295,19 +320,24 @@ class Interviewer:
             fp = routine(self, model)
         if not fp:
             #double-check before concluding without a focal point
-            model.stage.clear_cache()
+            model.target.stage.clear_cache()
             fp = routine(self, model)
             #if protocol routine doesnt find a focal point, reset cache and
             #try again. dont want to finish prematurely.
         #
-        model.stage.set_focal_point(fp)
+        model.target.stage.set_focal_point(fp)
         #
         if not fp:
             new_mqr = self.wrap_interview(model)
         else:
             self.set_progress(model)   
             new_mqr = self.wrap_point(model)
-        #
+
+        # set self._levels back to None to maintain statelessness
+        # NEVER cache to self._levels in Interviewer, levels was once an
+        # attribute of Outline (where levels could be cached), but is no more.
+        self._levels = dict()
+
         return new_mqr
     
     def r_attention_budget(self, model):
@@ -324,8 +354,8 @@ class Interviewer:
         time, at the expense of depth. 
         """
         #tries to allocate attention ratably
-        path = model.stage.path
-        model.stage.levels = self.prioritize_multi(path)
+        path = model.target.stage.path
+        self._levels = self.prioritize_multi(path)
         fp = self.focus(model, selection_rules.for_attentive_breadth)
         #
         return fp
@@ -344,8 +374,8 @@ class Interviewer:
         feels identical to r_prioritized(),
         """
         #like p1, but stops working when there is no more attention available
-        path = model.stage.path
-        model.stage.levels = self.prioritize_multi(path)
+        path = model.target.stage.path
+        self._levels = self.prioritize_multi(path)
         fp = self.focus(model, selection_rules.for_attentive_depth)
         #
         return fp
@@ -362,8 +392,8 @@ class Interviewer:
 
         Method treats all objects with defined priority as equally important. 
         """ 
-        path = model.stage.path
-        model.stage.levels = self.prioritize_single(path)
+        path = model.target.stage.path
+        self._levels = self.prioritize_single(path)
         fp = self.focus(model, selection_rules.for_quality)
         #
         return fp
@@ -380,14 +410,14 @@ class Interviewer:
 
         This routine provides intuitive analysis patterns for most models.
         """
-        #prioritizes items into different levels
-        #picks out first open one
-        #
-        path = model.stage.path
-        ordered = path.get_full_ordered()
-        model.stage.levels = self.prioritize_multi(ordered)        
+        # prioritizes items into different levels
+        # picks out first open one
+
+        path = model.target.stage.path
+        self._levels = self.prioritize_multi(path)
+
         fp = self.focus(model, selection_rules.for_quality)
-        #
+
         return fp
     
     def set_progress(self, model):
@@ -407,9 +437,9 @@ class Interviewer:
         live outside a given model, method performs no-op when it cannot
         establish relative position.        
         """
-        if model.stage.track_progress:
-            fp = model.stage.focal_point
-            path = model.stage.path
+        if model.target.stage.track_progress:
+            fp = model.target.stage.focal_point
+            path = model.target.stage.path
             if path:
                 try:
                     steps = path.get_ordered()
@@ -417,7 +447,7 @@ class Interviewer:
                     new_progress = i/len(steps)
                     new_progress = new_progress * 100
                     new_progress = round(new_progress)
-                    model.stage.set_progress(new_progress)
+                    model.target.stage.set_progress(new_progress)
                 except ValueError:
                     #external focal point, do nothing            
                     pass
@@ -437,8 +467,8 @@ class Interviewer:
         q = self.MR.activeQuestion
         r = stop
         #
-        model.stage.guide.complete = True
-        print(model.stage)
+        model.target.stage.guide.complete = True
+        print(model.target.stage)
         #
         self.MR.generateMessage(m, q, r)
         new_mqr = self.MR.messageOut

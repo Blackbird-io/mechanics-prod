@@ -130,3 +130,6 @@ class IDNamespaceError(IDError):
 class ExcelPrepError(BlackbirdError):
     #used to alert missing bookmarks
     pass
+
+class LinkError(BlackbirdError):
+    content = "This Link has been intentionally broken during a path copy."

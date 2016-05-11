@@ -58,6 +58,7 @@ class SelectionTracker(Counter):
     FUNCTIONS:
     record_dry_run()      sets finished_catalog to True
     record_used_topic()   adds topic bbid to used list
+    reset()               resets state attributes of instance
     set_eligibles         sets eligible to argument
     ====================  ======================================================
     """
