@@ -29,8 +29,10 @@ BB_Workbook           workbook where each sheet has a SheetData record set
 # Imports
 import openpyxl as xlio
 
-from ._chef_tools import test_book, collapse_groups
+from ._chef_tools import add_links_to_selectors, collapse_groups, test_book
+from .chef_settings import DEFAULT_SCENARIOS
 from .data_management import SheetData
+from .field_names import FieldNames
 
 
 
@@ -39,7 +41,7 @@ from .data_management import SheetData
 # n/a
 
 # Module Globals
-# n/a
+field_names = FieldNames()
 
 # Classes
 class BB_Workbook(xlio.Workbook):
@@ -53,15 +55,17 @@ class BB_Workbook(xlio.Workbook):
     ====================  ======================================================
 
     DATA:
-    n/a
+    scenario_names        None or list; holds names of scenarios in workbook
 
     FUNCTIONS:
     create_sheet()        returns sheet with a SheetData instance at sheet.bb
     save()                saves workbook to file and runs test on contents
+    test()                test workbook against model
     ====================  ======================================================
     """ 
     def __init__(self, *pargs, **kwargs):
         xlio.Workbook.__init__(self, *pargs, **kwargs)
+        self.scenario_names = None
 
     def create_sheet(self, name, index=None):
         """
@@ -95,7 +99,28 @@ class BB_Workbook(xlio.Workbook):
         # save workbook
         xlio.Workbook.save(self, filename)
 
+        sources_dict = self._get_sources_dict()
+        filename = add_links_to_selectors(filename, sources_dict)
+
         collapse_groups(filename)
+
+
+    def set_scenario_names(self, model):
+        """
+
+
+        BB_Workbook.set_scenario_names() -> None
+
+        --``model`` must be a Blackbird Engine model
+
+        Sets instance.scenario_names list.
+        """
+        self.scenario_names = [field_names.CUSTOM, field_names.BASE]
+        self.scenario_names.extend(DEFAULT_SCENARIOS)
+
+        for k in sorted(model.scenarios.keys()):
+            if k not in self.scenario_names:
+                self.scenario_names.append(k.title())
 
     @staticmethod
     def test(model, filename):
@@ -112,3 +137,27 @@ class BB_Workbook(xlio.Workbook):
         """
         # test the workbook against engine values
         test_book(model, filename)
+
+    #*************************************************************************#
+    #                          NON-PUBLIC METHODS                             #
+    #*************************************************************************#
+
+    def _get_sources_dict(self):
+        """
+
+
+        BB_Workbook._get_sources_dict(self) -> dict
+
+        Method compiles dictionary of worksheet names and cell addresses where
+        scenario selector cells live.
+        """
+        sources_dict = dict()
+        for sheet in self.worksheets:
+            if getattr(sheet, 'bb', None):
+                if sheet.bb.scenario_selector:
+                    idx = int(self.get_index(sheet))+1
+                    sheet_num = "Sheet%s" % idx
+                    sources_dict[sheet_num] = (sheet.title,
+                                               sheet.bb.scenario_selector)
+
+        return sources_dict
