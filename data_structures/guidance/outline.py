@@ -32,7 +32,7 @@ import time
 
 from .step import Step
 
-from ..modelling._ordinal_statement import Statement
+from ..modelling.statement import Statement
 
 
 
@@ -59,8 +59,7 @@ class Outline(Step):
     attention_budget            integer representing total attention resources
     completion_rule             pointer to function that checks completion
     focal_point                 criterion for MatchMaker's selection
-    levels                      dict or None; priority groups of items in path
-    protocol_key                num; which interview protocol should apply 
+    protocol_key                num; which interview protocol should apply
     track_progress              bool; whether inst supports progress tracking
     work_space                  unmanaged scrap paper for Topic or other state
     
@@ -78,7 +77,6 @@ class Outline(Step):
         self.attention_budget = None
         self.completion_rule = None
         self.focal_point = None
-        self.levels = None
         self.path = None
         self.protocol_key = 0
         self.track_progress = False
@@ -96,7 +94,6 @@ class Outline(Step):
         """
         self.completion_rule = None
         self.focal_point = None
-        self.levels = None
 
     def set_attention_budget(self,aB):
         """

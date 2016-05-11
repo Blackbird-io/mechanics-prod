@@ -60,6 +60,8 @@ class FormulaTemplates:
     LINK_TO_CELL_ON_SHEET  "={sheet}!{alpha_column}{row}"
     LINK_TO_COORDINATES    "={coordinates}"
 
+    HLOOKUP                "=HLOOKUP({ref_coords},{start_coords}:{end_coords},{ref_row},False)"
+
     COMPUTE_AGE_IN_DAYS    "=IF({birth}, {ref_date}-{birth})"
     COMPUTE_AGE_IN_PERCENT "=IF({span}, ROUND({age}/{span}*100,0))"
     COMPUTE_SPAN_IN_DAYS   "=IF({death}, {death}-{birth})"
@@ -82,6 +84,9 @@ class FormulaTemplates:
 
     LINK_TO_CELL_ON_SHEET = "={sheet}!{alpha_column}{row}"
     LINK_TO_COORDINATES = "={coordinates}"
+
+    HLOOKUP = "=HLOOKUP({ref_coords},{start_coords}:{end_coords},{ref_row}" \
+              ",FALSE)"
 
     # LIFE
 

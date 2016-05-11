@@ -1,5 +1,5 @@
 
-from .._new_statement import Statement
+from ..statement import Statement
 
 class IncomeStatement(Statement):
     def __init__(self):

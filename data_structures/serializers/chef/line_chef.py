@@ -34,10 +34,10 @@ from openpyxl.comments import Comment
 
 from data_structures.modelling.line_item import LineItem
 
+from ._chef_tools import group_lines
 from .cell_styles import CellStyles
-
 from .chef_settings import COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING, \
-                           COMMENT_CUSTOM
+                           COMMENT_CUSTOM, BLANK_BETWEEN_TOP_LINES
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
@@ -112,7 +112,7 @@ class LineChef:
             column=column,
             line=line,
             set_labels=set_labels,
-            indent=indent
+            indent=indent + LineItem.TAB_WIDTH
             )
 
         self._add_consolidation_logic(
@@ -206,10 +206,12 @@ class LineChef:
 
         Method relies on sheet.bb.current_row being up-to-date.
         """
+        if not BLANK_BETWEEN_TOP_LINES:
+            sheet.bb.current_row += 1
 
         for line in statement.get_ordered():
-
-            sheet.bb.current_row += 1
+            if BLANK_BETWEEN_TOP_LINES:
+                sheet.bb.current_row += 1
 
             self.chop_line(
                 sheet=sheet,
@@ -463,7 +465,7 @@ class LineChef:
 
         materials = dict()
         materials["lines"] = line_coordinates
-        materials["parameters"] = param_coordinates
+        materials[field_names.PARAMETERS] = param_coordinates
 
         life_coordinates = self._rows_to_coordinates(
             lookup=sheet.bb.life.rows,
@@ -632,9 +634,9 @@ class LineChef:
         --``sheet`` must be an instance of openpyxl Worksheet
 
         Tell Excel to group lines and collapse
+        Delegates to method from _chef_tools
         """
-        row = sheet.bb.current_row
-        sheet.row_dimensions[row].outline_level = sheet.bb.outline_level
+        group_lines(sheet)
 
     def _rows_to_coordinates(self, *pargs, lookup, column):
         """

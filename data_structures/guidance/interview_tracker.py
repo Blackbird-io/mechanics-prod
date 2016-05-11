@@ -1,7 +1,7 @@
 #PROPRIETARY AND CONFIDENTIAL
 #Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2014
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+#Copyright Blackbird Logical Applications, LLC 2016
+#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 #Blackbird Environment
 #Module: data_structures.guidance.interview_tracker
@@ -27,10 +27,13 @@ InterviewTracker      plan and monitor machine-user interview
 
 
 #imports
+import copy
 import bb_exceptions
 
-from data_structures.modelling.line_item import LineItem
 from flow import completion_rules
+
+from data_structures.guidance.guide import Guide
+from data_structures.modelling.link import Link
 
 from .outline import Outline
 
@@ -38,10 +41,6 @@ from .outline import Outline
 
 
 #globals
-intro_line = LineItem("introduction")
-intro_line.tag("start",
-               "configuration")
-intro_line.guide.quality.set_standard(2)
 quality_rule = completion_rules.check_quality_only
 
 #classes
@@ -65,13 +64,14 @@ class InterviewTracker(Outline):
     track_progress              True
     
     FUNCTIONS:
+    copy()                      return copy of the instance with state reset
     set_progress()              set progress to higher of current or new,0<=p<=1
     ==========================  ================================================
     """
     def __init__(self):
         Outline.__init__(self, "interview")
         self.completion_rule = quality_rule
-        self.focal_point = intro_line.copy()
+        self.focal_point = None
         self.progress = 0
         self.protocol_key = 1
         self.track_progress = True
@@ -98,4 +98,37 @@ class InterviewTracker(Outline):
             new_p = p
         new_p = int(new_p)
         self.progress = new_p
-        
+
+    def copy(self):
+        """
+
+
+        InterviewTracker.copy() -> InterviewTracker
+
+
+        Method makes a copy of the instance, preserving the path, priority
+        level, quality standard, available attention, and selection cut-off of
+        itself and all items along its path. Links in path are set to None.
+
+        Current status of all counters is reset to zero. Focal point is set to
+        None.
+        """
+        result = InterviewTracker()
+
+        result.completion_rule = self.completion_rule
+        result.guide = Guide(priority=self.guide.priority.current,
+                             quality=self.guide.quality.standard)
+        result.set_path()
+
+        if self.path:
+            for step in self.path.get_full_ordered():
+                new_step = copy.copy(step)
+                new_step.guide = Guide(priority=step.guide.priority.current,
+                                       quality=step.guide.quality.standard)
+
+                # don't allow implicit copy of Link objects, break Link by
+                # setting Link.target = bb_exceptions.LinkError
+                if isinstance(new_step, Link):
+                    new_step.target = bb_exceptions.LinkError
+
+        return result
