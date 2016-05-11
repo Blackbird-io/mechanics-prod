@@ -29,7 +29,8 @@ BB_Workbook           workbook where each sheet has a SheetData record set
 # Imports
 import openpyxl as xlio
 
-from ._chef_tools import add_links_to_selectors, collapse_groups, test_book
+from ._chef_tools import add_links_to_selectors, collapse_groups, test_book, \
+    check_filename_ext
 from .chef_settings import DEFAULT_SCENARIOS
 from .data_management import SheetData
 from .field_names import FieldNames
@@ -91,19 +92,19 @@ class BB_Workbook(xlio.Workbook):
 
         BB_WorkBook.save(filename) -> None
 
-        --``filename`` must be string path at which to save workbook
+        --``filename`` must be string path at which to save workbook (".xlsx")
 
         Method saves workbook to specified file and uses VBScript to prettily
         collapse row and column groups.
         """
         # save workbook
+        filename = check_filename_ext(filename, 'xlsx')
         xlio.Workbook.save(self, filename)
 
         sources_dict = self._get_sources_dict()
         filename = add_links_to_selectors(filename, sources_dict)
 
         collapse_groups(filename)
-
 
     def set_scenario_names(self, model):
         """
