@@ -90,6 +90,7 @@ class Model(Tags):
     id                    instance of ID object, carries bbid for model 
     interview             property; points to target BusinessUnit.interview
     portal_data           dict; stores data from Portal related to the instance
+    stage                 property; points to target BusinessUnit.stage
     started               bool; property, tracks whether engine has begun work
     summary               P; pointer to current period summary
     target                P; pointer to target BusinessUnit
@@ -133,6 +134,10 @@ class Model(Tags):
     @property
     def interview(self):
         return self.target.interview
+
+    @property
+    def stage(self):
+        return self.target.stage
 
     @property
     def started(self):
