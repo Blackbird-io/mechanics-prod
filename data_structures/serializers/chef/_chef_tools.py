@@ -34,15 +34,19 @@ n/a
 
 
 # Imports
+from .chef_settings import SCENARIO_SELECTORS
+
 import openpyxl as xlio
 import os
-import time
-import win32api
-import win32com.client as win32
-import win32con
-import win32gui
-import win32process
 import xlrd
+
+if SCENARIO_SELECTORS:
+    import win32api
+    import win32com.client as win32
+    import win32con
+    import win32gui
+    import win32process
+
 
 from openpyxl.worksheet.datavalidation import DataValidation
 
@@ -116,10 +120,11 @@ def add_links_to_selectors(filename, sources_dict):
         for i, line in enumerate(macro_code):
             module.InsertLines(line_num+i+1, line)
 
-    newfile = check_filename_ext(filename, "xlsm")
-
     xl.DisplayAlerts = False
+
+    newfile = check_filename_ext(filename, "xlsm")
     ss.SaveAs(newfile, FileFormat=52)
+
     ss.Close()
 
     xl.Quit()
@@ -187,6 +192,7 @@ def check_filename_ext(filename, ext):
         result = base + ext
 
     return result
+    # return filename
 
 
 def close_excel_by_force(excel):

@@ -95,6 +95,7 @@ class ReadyForPortal(Schema):
         from_engine() to compact the seed into an instance of the bottom class,
         and then delivers a dictionary tracking the instance.
         """
+        # seed = None
         if seed:
             prelim = self.from_engine(seed)
         else:
