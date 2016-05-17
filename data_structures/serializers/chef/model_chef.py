@@ -38,7 +38,7 @@ from .bb_workbook import BB_Workbook as Workbook
 
 from ._chef_tools import add_scenario_selector
 from .cell_styles import CellStyles
-from .chef_settings import DEFAULT_SCENARIOS
+from .chef_settings import SCENARIO_SELECTORS
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
@@ -422,9 +422,10 @@ class ModelChef:
             active_column += 1
 
         # Add selection cell
-        selector_row = my_tab.bb.parameters.rows.by_name[field_names.ACTIVE_SCENARIO]
-        add_scenario_selector(my_tab, local_labels_column, selector_row,
-                              book.scenario_names)
+        if SCENARIO_SELECTORS:
+            selector_row = my_tab.bb.parameters.rows.by_name[field_names.ACTIVE_SCENARIO]
+            add_scenario_selector(my_tab, local_labels_column, selector_row,
+                                  book.scenario_names)
 
         sheet_style.style_sheet(my_tab)
 

@@ -31,18 +31,16 @@ UnitChef              class containing methods to chop BusinessUnits into
 # Imports
 import openpyxl as xlio
 
-from openpyxl.styles import Border, Side, Font
-
+from ._chef_tools import add_scenario_selector, group_lines
+from .chef_settings import SCENARIO_SELECTORS
 from .cell_styles import CellStyles
 from .data_management import LineData
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
+from .line_chef import LineChef
 from .sheet_style import SheetStyle
 from .tab_names import TabNames
-
-from ._chef_tools import add_scenario_selector, group_lines
-from .line_chef import LineChef
 
 from data_structures.modelling import common_events
 
@@ -242,9 +240,10 @@ class UnitChef:
 
         # 2.5 add selector cell
         selector_row = sheet.bb.parameters.rows.by_name[field_names.ACTIVE_SCENARIO]
-        label_column = sheet.bb.parameters.columns.by_name[field_names.LABELS]
-        add_scenario_selector(sheet, label_column, selector_row,
-                              book.scenario_names)
+        if SCENARIO_SELECTORS:
+            label_column = sheet.bb.parameters.columns.by_name[field_names.LABELS]
+            add_scenario_selector(sheet, label_column, selector_row,
+                                  book.scenario_names)
 
         sheet.bb.outline_level = 1
         group_lines(sheet, row=selector_row+1)
