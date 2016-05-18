@@ -34,7 +34,7 @@ from datetime import date
 
 
 # Constants
-DEBUG_MODE = False
+DEBUG_MODE = True
 DEFAULT_MODEL_NAME = "Blank Blackbird Model"
 PREP_FOR_EXCEL = True
 # Toggles whether drivers and formulas package their work into Excel-oriented
