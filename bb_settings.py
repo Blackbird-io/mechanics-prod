@@ -66,7 +66,7 @@ user_correction = 0.10
 
 #Calendar
 t0 = date(2015, 6, 16)
-fix_ref_date = False
+fix_ref_date = True #False
 #whether models always start on the same date; keep True for testing
 days_in_month = 30
 days_in_year = 365
