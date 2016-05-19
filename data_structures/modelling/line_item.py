@@ -48,7 +48,6 @@ from .statement import Statement
 T_CONSOLIDATED = Tags.tagManager.catalog["consolidated"]
 T_REPLICA = Tags.tagManager.catalog["ddr"]
 
-
 # Classes
 class LineItem(Statement):
     """
@@ -74,6 +73,7 @@ class LineItem(Statement):
     DATA:
     consolidate           bool; whether or not to consolidate line item
     guide                 instance of Guide object
+    hardcoded             bool; if True, set_value() or clear() will not operate
     log                   list of entries that modified local value
     value                 instance value
     xl                    instance of LineData record set
@@ -82,6 +82,7 @@ class LineItem(Statement):
     clear()               if modification permitted, sets value to None
     copy()                returns a new line w copies of key attributes
     set_consolidate()     sets private attribute _consolidate
+    set_hardcoded()       sets private attribute _hardcoded
     set_value()           sets value to input, records signature
     ====================  ======================================================
     """
@@ -116,6 +117,7 @@ class LineItem(Statement):
         self.log = []
         self.position = None
         self._consolidate = True
+        self._hardcoded = False
 
         if value is not None:
             # BU.consolidate() will NOT increment items with value==None. On the
@@ -136,9 +138,18 @@ class LineItem(Statement):
     @property
     def consolidate(self):
         """
-        read-only property
+        read-only property. Default value is True
+        If False, line.value will not consolidate up to parent business units.
         """
         return self._consolidate
+
+    @property
+    def hardcoded(self):
+        """
+        read-only property. Default value is False
+        If True, set_value() and clear() will have no operation
+        """
+        return self._hardcoded
 
     @property
     def value(self):
@@ -167,8 +178,11 @@ class LineItem(Statement):
 
         Clear value from instance and optionally details (if ``recur`` is True).
         If instance fails Tags.checkTouch(), will throw exception unless
-        ``force`` is True. 
+        ``force`` is True. No operation if _hardcoded is True
         """
+        if self.hardcoded:
+            return
+
         if self.checkTouch() or force:
             num_format = self.xl.number_format
             consolidate = self.consolidate
@@ -188,7 +202,7 @@ class LineItem(Statement):
             # number format
             
         else:
-            comment = "Unable to clear value from line."
+            c = "Unable to clear value from line."
             raise bb_exceptions.BBAnalyticalError(c, self)
             
     def copy(self, enforce_rules=True):
@@ -208,6 +222,7 @@ class LineItem(Statement):
         new_line.guide = copy.deepcopy(self.guide)
         new_line.log = self.log[:]
         new_line.set_consolidate(self._consolidate)
+        new_line.set_hardcoded(self._hardcoded)
 
         new_line.xl = xl_mgmt.LineData()
         new_line.xl.number_format = self.xl.number_format
@@ -293,6 +308,25 @@ class LineItem(Statement):
     # that won't overlap with those of the children and running the computation
     # there.
 
+    def set_hardcoded(self, val):
+        """
+
+
+        LineItem.set_hardcoded() -> None
+
+
+        --``val`` must be a boolean (True or False)
+
+        Method for explicitly setting self._hardcoded.
+        """
+        if val is True:
+            self._hardcoded = True
+        elif val is False:
+            self._hardcoded = False
+        else:
+            msg = "lineitem._hardcoded can only be set to a boolean value"
+            raise(TypeError(msg))
+
     def set_consolidate(self, val):
         """
 
@@ -336,8 +370,11 @@ class LineItem(Statement):
 
 
         Set line value, add entry to log. Value must be numeric unless
-        ``override`` is True. 
+        ``override`` is True. No operation if _hardcoded is True
         """
+        if self.hardcoded:
+            return
+
         if not override:
             test = value + 1
             # Will throw exception if value doesn't support arithmetic

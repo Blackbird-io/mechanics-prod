@@ -1199,9 +1199,10 @@ class BusinessUnit(History, Tags, Equalities):
                 
             #update the directory for each unit in self
             pass
-        if self.id.bbid in directory:
+        if self.id.bbid in id_directory:
             if not overwrite:
-                raise Error
+                c = "Can not overwrite existing bbid"
+                raise bb_exceptions.BBAnalyticalError(c)
             
         id_directory[self.id.bbid] = self
         this_type = ty_directory.setdefault(self.type, set())
@@ -1269,10 +1270,9 @@ class BusinessUnit(History, Tags, Equalities):
 
                 if tags_to_omit & set(starting_line.allTags):
                     continue
-                else:
-                    if starting_line.value is not None:
-                        ending_line = ending_balance.find_first(starting_line.name)
-                        self._update_lines(starting_line, ending_line)
+                elif starting_line.value is not None:
+                    ending_line = ending_balance.find_first(starting_line.name)
+                    self._update_lines(starting_line, ending_line)
 
     def _update_lines(self, start_line, end_line, *tagsToOmit):
         """
@@ -1297,7 +1297,7 @@ class BusinessUnit(History, Tags, Equalities):
         else:
             if tags_to_omit & set(end_line.allTags):
                 pass
-            else:
+            elif start_line.value is not None:
                 end_line.set_value(start_line.value,
                                    self._UPDATE_BALANCE_SIGNATURE)
 
