@@ -118,7 +118,7 @@ class ChoiceInput(GenericInput):
                 #if allow_other, last item can be freeform
             else:
                 selections = proposed_response
-            external = set(self.entries) - set(selections)
+            external = set(selections) - set(self.entries)
             if external:
                 result = False
                 #selections must be items from entries
