@@ -8,7 +8,7 @@
 """
 
 Module defines a class that represents arbitrarily rich BusinessUnit instances
-as a collection of linked Excel worksheets. 
+as a collection of linked Excel worksheets.
 ====================  =========================================================
 Attribute             Description
 ====================  =========================================================
@@ -301,9 +301,6 @@ class UnitChef:
         # Make sure the unit contains all relevant calculations by filling it
         # out. If BB already performed this action, call will be a no-op.
 
-        if unit.financials.ending is not None:
-            new_start_bal = self._load_balance(unit)
-
         for statement in unit.financials.ordered:
             sheet.bb.current_row += 1
             if statement is not None:
@@ -312,9 +309,10 @@ class UnitChef:
                     statement_row = sheet.bb.current_row + 1
                     fins_dict["Starting Balance Sheet"] = statement_row
 
+                    start_bal = self._load_balance(unit)
                     line_chef.chop_statement(
                          sheet=sheet,
-                         statement=new_start_bal,
+                         statement=start_bal,
                          column=column,
                          set_labels=set_labels)
                     sheet.bb.current_row += 1
@@ -849,21 +847,27 @@ class UnitChef:
 
         if unit.past is not None:
             old_ending_balance = unit.past.financials.ending
-            new_start_bal = old_ending_balance.copy()
+            start_bal = old_ending_balance.copy()
 
-            for name, start_line in new_start_bal._details.items():
+            for name, start_line in start_bal._details.items():
                 old_line = old_ending_balance.find_first(name)
 
                 self._balance_lines(start_line, old_line)
 
         else:
-            new_start_bal = unit.financials.ending.copy()
-            for line in new_start_bal.get_full_ordered():
-                line.clear()
-                line.xl = LineData()
+            # We want starting balance and ending balance have the same
+            # structure of lines. Newly added lines will have a None value.
+            start_bal = unit.financials.starting
+            end_bal = unit.financials.ending.copy()
+            start_bal_length = len(start_bal.get_full_ordered())
+            end_bal_length = len(end_bal.get_full_ordered())
+            if end_bal_length > start_bal_length:
+                end_bal.reset()
+                end_bal.increment(start_bal)  # Keep existing starting values.
+                start_bal = end_bal
 
-        new_start_bal.name = "Starting Balance Sheet"
-        return new_start_bal
+        start_bal.name = "Starting Balance Sheet"
+        return start_bal
 
     def _balance_lines(self, start_line, end_line):
         """
@@ -884,4 +888,5 @@ class UnitChef:
                 self._balance_lines(line, ending_line)
         else:
             start_line.xl = LineData()
-            start_line.xl.reference.source = end_line
+            if end_line.xl.cell:
+                start_line.xl.reference.source = end_line
