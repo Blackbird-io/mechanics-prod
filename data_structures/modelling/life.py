@@ -262,6 +262,7 @@ class Life(Equalities):
 
         Quotient of age over span, multiplied by 100 and rounded to integer.
         """
+        result = None
         if self.span is not None:
             result = (self.age/self.span) * 100
             result = round(result)
