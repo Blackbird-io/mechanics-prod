@@ -635,6 +635,40 @@ class BusinessUnit(History, Tags, Equalities):
         # Reset financials here because we just connected a new starting balance
         # sheet.
 
+    def set_history2(self, history, clear_future=True, recur=True):
+        """
+
+
+        BusinessUnit.set_history() -> None
+
+
+        Set history for instance; repeat for components (by bbid) if recur is
+        True.
+        """
+        if history is None:
+            history = self.copy()
+            history.clear()
+            # Check if clear eliminates components. It shouldnt
+
+        History.set_history(self, history, clear_future=False)
+        # clear_future:=True to preserve forward linkages, so you can
+        # step back and make a new period every time
+        
+
+                            
+        # Use dedicated logic to handle recursion. 
+        if recur:
+            for bbid, unit in self.components.items():
+                mini_history = history.components[bbid]
+                unit.set_history(mini_history)
+
+        self.reset_financials(recur=False)
+        # Reset financials here because we just connected a new starting balance
+        # sheet. Recur is false on the financials reset because we explicitly do
+        # so. 
+
+        
+
     def synchronize(self, recur=True):
         """
 
@@ -1019,9 +1053,11 @@ class BusinessUnit(History, Tags, Equalities):
         else:
             life = "n/a"
         data["LIFE"] = life
-        
-        data["EVENT"] = self.life.get_latest()[0][:data_width]
-        # Pick out the event name, trim to data width. 
+
+        event_name = self.life.get_latest()[0]
+        event_name = event_name or "n/a"
+        # Choose empty string if life has no events yet
+        data["EVENT"] = event_name[:data_width]
         
         unit_type = str(self.type)[:data_width]
         data["TYPE"] = unit_type.upper()
@@ -1048,56 +1084,58 @@ class BusinessUnit(History, Tags, Equalities):
         #
         #add a bottom border symmetrical to the top
         lines.append(top_border)
-        #
-        #post-processing (dashed lines for units scheduled to open in the
-        #future, x's for units that have already closed)
         
-        if self.life.ref_date < date_of_birth:
-            #
-            alt_width = int(box_width / 2) + 1
-            alt_border = (top_element + alt_element) * alt_width
-            alt_border = alt_border[:(box_width - 2)]
-            alt_border = alt_corner + alt_border + alt_corner
-            #
-            core_lines = lines[1:-1]
-            for i in range(0, len(core_lines), 2):
-                line = core_lines[i]
-                core_symbols = line[1:-1]
-                line = alt_element + core_symbols + alt_element
-                core_lines[i] = line
-            #
-            lines = [alt_border] + core_lines + [alt_border]
-        #
-        date_of_death = self.life.events.get(self.life.KEY_DEATH)
-        if self.life.ref_date > date_of_death:
-            #
-            alt_lines = []
-            line_count = len(lines)
-            down_start = int((box_width - line_count)/2)
-            #X is line_count lines wide
-            up_start = down_start + line_count
-            #
-            for i in range(line_count):
+        # Post-processing (dashed lines for units scheduled to open in the
+        # future, x's for units that have already closed)
+
+        if self.life.ref_date:
+            if self.life.ref_date < date_of_birth:
                 #
-                #replace the character at (down_start + i) with "\"
-                #replace the character at (up_start - i) with "/"
+                alt_width = int(box_width / 2) + 1
+                alt_border = (top_element + alt_element) * alt_width
+                alt_border = alt_border[:(box_width - 2)]
+                alt_border = alt_corner + alt_border + alt_corner
                 #
-                line = lines[i]
+                core_lines = lines[1:-1]
+                for i in range(0, len(core_lines), 2):
+                    line = core_lines[i]
+                    core_symbols = line[1:-1]
+                    line = alt_element + core_symbols + alt_element
+                    core_lines[i] = line
                 #
-                down_pos = (down_start + i)
-                seg_a = line[: (down_pos)]
-                seg_b = line[(down_pos + 1):]
-                line = seg_a + "\\" + seg_b
+                lines = [alt_border] + core_lines + [alt_border]
+        
+            date_of_death = self.life.events.get(self.life.KEY_DEATH)
+            
+            if self.life.ref_date > date_of_death:
                 #
-                up_pos = (up_start - i)
-                seg_a = line[:(up_pos)]
-                seg_b = line[(up_pos + 1):]
-                line = seg_a + "/" + seg_b
-                line = line.casefold()
+                alt_lines = []
+                line_count = len(lines)
+                down_start = int((box_width - line_count)/2)
+                #X is line_count lines wide
+                up_start = down_start + line_count
                 #
-                alt_lines.append(line)
-            lines = alt_lines
-        #
+                for i in range(line_count):
+                    #
+                    #replace the character at (down_start + i) with "\"
+                    #replace the character at (up_start - i) with "/"
+                    #
+                    line = lines[i]
+                    #
+                    down_pos = (down_start + i)
+                    seg_a = line[: (down_pos)]
+                    seg_b = line[(down_pos + 1):]
+                    line = seg_a + "\\" + seg_b
+                    #
+                    up_pos = (up_start - i)
+                    seg_a = line[:(up_pos)]
+                    seg_b = line[(up_pos + 1):]
+                    line = seg_a + "/" + seg_b
+                    line = line.casefold()
+                    #
+                    alt_lines.append(line)
+                lines = alt_lines
+        
         return lines    
 
     def _load_balance(self):
