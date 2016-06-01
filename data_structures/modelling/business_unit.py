@@ -1088,7 +1088,7 @@ class BusinessUnit(History, Tags, Equalities):
         # Post-processing (dashed lines for units scheduled to open in the
         # future, x's for units that have already closed)
 
-        if self.life.ref_date:
+        if self.life.ref_date and date_of_birth:
             if self.life.ref_date < date_of_birth:
                 #
                 alt_width = int(box_width / 2) + 1
@@ -1105,16 +1105,16 @@ class BusinessUnit(History, Tags, Equalities):
                 #
                 lines = [alt_border] + core_lines + [alt_border]
         
-            date_of_death = self.life.events.get(self.life.KEY_DEATH)
-            
+        date_of_death = self.life.events.get(self.life.KEY_DEATH)
+        if self.life.ref_date and date_of_death:
             if self.life.ref_date > date_of_death:
-                #
+                
                 alt_lines = []
                 line_count = len(lines)
                 down_start = int((box_width - line_count)/2)
                 #X is line_count lines wide
                 up_start = down_start + line_count
-                #
+                
                 for i in range(line_count):
                     #
                     #replace the character at (down_start + i) with "\"
