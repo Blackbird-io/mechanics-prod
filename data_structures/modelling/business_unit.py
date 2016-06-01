@@ -635,7 +635,7 @@ class BusinessUnit(History, Tags, Equalities):
         # Reset financials here because we just connected a new starting balance
         # sheet.
 
-    def set_history2(self, history, clear_future=True, recur=True):
+    def make_past(self, history=None, clear_future=True, recur=True):
         """
 
 
@@ -651,23 +651,28 @@ class BusinessUnit(History, Tags, Equalities):
             # Check if clear eliminates components. It shouldnt
 
         History.set_history(self, history, clear_future=False)
-        # clear_future:=True to preserve forward linkages, so you can
-        # step back and make a new period every time
-        
+        # This is probably unnecessary. Should just be self.history.past = x. Then
+        # no reliance on the external recursion. 
 
-                            
-        # Use dedicated logic to handle recursion. 
-        if recur:
-            for bbid, unit in self.components.items():
-                mini_history = history.components[bbid]
-                unit.set_history(mini_history)
+        # Now do the time-period association
+        history._fit_to_period(self.period.past, recur=False)
+        history._register_in_period(recur=False, overwrite=True)
+        # Explicitly overwrite any prior versions of self
+
+        pool = self.components.values()
+        if bb_settings.DEBUG_MODE:
+            pool = self.components.get_ordered()
+            # Use stable order to simplify debugging
+
+        for child in pool:
+            child.make_past()
+            # Mandatory recursion. If past changes for parent, it must also
+            # change for children.
 
         self.reset_financials(recur=False)
         # Reset financials here because we just connected a new starting balance
         # sheet. Recur is false on the financials reset because we explicitly do
         # so. 
-
-        
 
     def synchronize(self, recur=True):
         """
