@@ -79,7 +79,7 @@ class Financials(StatementBundle):
 
         if getattr(self, "parentObject", None):
 
-            header = "Financial statements for " + str(self.parentObject.name)
+            header = "Financial statements for " + str(self.parentObject.tags.name)
             header = header.center(bb_settings.SCREEN_WIDTH)
             header += "\n\n"
 

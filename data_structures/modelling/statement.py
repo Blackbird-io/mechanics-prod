@@ -149,7 +149,7 @@ class Statement(Equalities):
 
         result = "\n"
 
-        header = str(self.name).upper()
+        header = str(self.tags.name).upper()
         header = header.center(bb_settings.SCREEN_WIDTH)
         result += header
         result += "\n\n"
@@ -661,7 +661,7 @@ class Statement(Equalities):
         Set instance as line parent, add line to details.
         """
         line.setPartOf(self)
-        self._details[line.name] = line
+        self._details[line.tags.name] = line
 
     def _inspect_line_for_insertion(self, line):
         """
@@ -672,11 +672,11 @@ class Statement(Equalities):
 
         Will throw exception if Line if you can't insert line into instance.
         """
-        if not line.name:
+        if not line.tags.name:
             c = "Cannot add nameless lines."
             raise bb_exceptions.BBAnalyticalError(c)
 
-        if line.name in self._details:
+        if line.tags.name in self._details:
             c = "Implicit overwrites prohibited."
             raise bb_exceptions.BBAnalyticalError(c)
 
@@ -736,7 +736,7 @@ class Statement(Equalities):
 
         for position in sorted(by_position):
             lines = by_position[position]
-            lines = sorted(lines, lambda x: x.name)
+            lines = sorted(lines, lambda x: x.tags.name)
             ordered.extend(lines)
 
         # Now can assign positions

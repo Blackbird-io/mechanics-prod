@@ -790,7 +790,7 @@ class BusinessUnit(History, Equalities):
         Compute the value of a line using drivers stored in the instance.
         """
         
-        key = line.name.casefold()
+        key = line.tags.name.casefold()
         if key in self.drivers:
 
 ##            line.clear()
@@ -908,7 +908,7 @@ class BusinessUnit(History, Equalities):
                   "COMPS"]
         ##data
         data = {}
-        unit_name = str(self.name)
+        unit_name = str(self.tags.name)
         if len(unit_name) > data_width:
             #abbreviate unit name if its too long
             unit_name_parts = unit_name.split()
@@ -1080,8 +1080,8 @@ class BusinessUnit(History, Equalities):
                 c2 = "the same bbid as this unit. \n"
                 c3 = "unit id:         %s\n" % self.id.bbid
                 c4 = "known unit name: %s\n"
-                c4 = c4 % self.period.bu_directory[self.id.bbid].name
-                c5 = "new unit name:   %s\n\n" % self.name
+                c4 = c4 % self.period.bu_directory[self.id.bbid].tags.name
+                c5 = "new unit name:   %s\n\n" % self.tags.name
                 print(self.period.bu_directory)
                 c = c1+c2+c3+c4+c5
                 raise bb_exceptions.IDCollisionError(c)
@@ -1191,7 +1191,7 @@ class BusinessUnit(History, Equalities):
                     continue
                 else:
                     if starting_line.value is not None:
-                        ending_line = ending_balance.find_first(starting_line.name)
+                        ending_line = ending_balance.find_first(starting_line.tags.name)
                         self._update_lines(starting_line, ending_line)
 
     def _update_lines(self, start_line, end_line, *tagsToOmit):
@@ -1211,7 +1211,7 @@ class BusinessUnit(History, Equalities):
 
         if start_line._details:
             for name, line in start_line._details.items():
-                ending_line = end_line.find_first(line.name)
+                ending_line = end_line.find_first(line.tags.name)
 
                 self._update_lines(line, ending_line)
         else:
@@ -1233,7 +1233,7 @@ class BusinessUnit(History, Equalities):
         instance bbid namespace.
         """
         self.id.set_namespace(namespace)
-        self.id.assign(self.name)
+        self.id.assign(self.tags.name)
         # This unit now has an id in the namespace. Now pass our bbid down as
         # the namespace for all downstream components. 
         if recur:

@@ -152,8 +152,8 @@ class Components(dict, Equalities):
             raise bb_exceptions.IDError(c)
         bu.setPartOf(self)
         self[bu.id.bbid] = bu
-        if bu.name:
-            self.by_name[bu.name] = bu.id.bbid
+        if bu.tags.name:
+            self.by_name[bu.tags.name] = bu.id.bbid
 
     def clearInheritedTags(self, recur = False):
         """
@@ -522,8 +522,8 @@ class Components(dict, Equalities):
         """   
         self.by_name.clear()
         for bu in self.values():
-            if bu.name:
-                self.by_name[bu.name] = bu.id.bbid
+            if bu.tags.name:
+                self.by_name[bu.tags.name] = bu.id.bbid
             else:
                 continue
 
@@ -541,8 +541,8 @@ class Components(dict, Equalities):
         """
         bu = self.pop(bbid)
         bu.setPartOf(None)
-        if bu.name:
-            self.by_name.pop(bu.name)
+        if bu.tags.name:
+            self.by_name.pop(bu.tags.name)
 
         return bu
 

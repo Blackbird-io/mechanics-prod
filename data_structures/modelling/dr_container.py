@@ -153,7 +153,7 @@ class DrContainer(Components):
                 c += "\n position %s already exists for key ``%s``"
                 c = c % (new_driver.position, decased_key)
                 c += "\n unable to insert driver ``%s``"
-                c = c % new_driver.name
+                c = c % new_driver.tags.name
                 #
                 for num, item in enumerate(self.items()):
                     print(num, " ", item, "\n")
