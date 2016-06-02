@@ -72,8 +72,8 @@ class Step(PrintAsLine):
         
     def pre_format(self, **kargs):
         #custom formatting logic
-        if self.name:
-            kargs["name"] = self.name
+        if self.tags.name:
+            kargs["name"] = self.tags.name
         self.formatted = printing_tools.format_completed(self, **kargs)
         
         

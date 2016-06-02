@@ -519,7 +519,7 @@ class Driver:
         satisfied for all lineItems.
         """
         #must be careful not to split strings (names) into letters with set()
-        if not set(self.workConditions["name"]).issubset([targetLineItem.name]+[None]):
+        if not set(self.workConditions["name"]).issubset([targetLineItem.tags.name]+[None]):
             return False
         else:
             if not set(self.workConditions["partOf"]).issubset([targetLineItem.partOf]+[None]):

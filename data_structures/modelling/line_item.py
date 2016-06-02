@@ -436,7 +436,7 @@ class LineItem(Statement):
         replica.tag(T_REPLICA)
 
         replica.position = 0
-        self._details[replica.name] = replica
+        self._details[replica.tags.name] = replica
         # Add replica in first position.
 
     def _sum_details(self):

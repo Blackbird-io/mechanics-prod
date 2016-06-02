@@ -106,7 +106,7 @@ class Starter:
             model.time_line.build(ref_date)
 
         if not model.time_line.current_period.content:
-            company = BusinessUnit(model.name)
+            company = BusinessUnit(model.tags.name)
             model.time_line.current_period.set_content(company)
             model.target = model.time_line.current_period.content
 
