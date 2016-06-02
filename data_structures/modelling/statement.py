@@ -607,7 +607,7 @@ class Statement(Tags, Equalities):
         for line in self.get_ordered():
             # Go through lines in fixed order to make sure that we pick up
             # tags in the same sequence.
-            self.inheritTagsFrom(line)
+            self.tags.inheritTagsFrom(line.tags)
 
     def reset(self):
         """
