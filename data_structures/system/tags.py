@@ -56,7 +56,6 @@ dropDownReplicaTag = tag_manager.catalog["ddr"]
 
 # classes
 # NOTE: Class variables set at the bottom of the module (after class definition)
-
 class Tags:
     """
 
@@ -162,7 +161,6 @@ class Tags:
     copyTagsTo()          changes target tags to a copy of self tags
     copyTagsTo_rules_on() applies tags while following tagManager.rules
     copyTagsTo_rules_off()  applies tags while ignoring tagManager.rules
-    extrapolate_to()      generates a copy of target w updated tags
     ex_to_default()       returns a Tags.copy()
     ex_to_special()       creates a Tags.copy(), adds source tags
     inheritTags()         inherits tags from every attribute named in tagSources
@@ -194,6 +192,29 @@ class Tags:
     # descendant classes like BusinessUnit does not block their class-level
     # tagSources. Alternatively, would have to add tagSources as instance-level
     # data in the child classes.
+
+    def __init__(self, name=None, parentObject=None):
+        self._inheritedTags = []
+        self._optionalTags = []
+        self.relationship = Relationship(self)
+        self.requiredTags = [None, None]
+
+        # self.name is requiredTags[0] and self.partOf is requiredTags[1] so
+        # list should have minimum length of 2; actual values set through
+        # methods
+
+        self.setName(name)
+        if parentObject:
+            self.setPartOf(parentObject)
+
+    @property
+    def parentObject(self):
+        return self.relationship.parent
+
+    @property
+    def partOf(self):
+        self.requiredTags[1] = self.relationship.part_of
+        return self.relationship.part_of
 
     @classmethod
     def disconnect(cls):
@@ -291,27 +312,6 @@ class Tags:
         of triggers for special extrapolation.
         """
         cls.spec_tags = sts
-
-    def __init__(self, name=None, parentObject=None):
-        self._inheritedTags = []
-        self._optionalTags = []
-        self.relationship = Relationship(self)
-        self.requiredTags = [None, None]
-        # self.name is requiredTags[0] and self.partOf is requiredTags[1] so list
-        # should have minimum length of 2; actual values set through methods
-        #
-        self.setName(name)
-        if parentObject:
-            self.setPartOf(parentObject)
-
-    @property
-    def parentObject(self):
-        return self.relationship.parent
-
-    @property
-    def partOf(self):
-        self.requiredTags[1] = self.relationship.part_of
-        return self.relationship.part_of
 
     class dyn_OptTManager:
         """
@@ -582,61 +582,6 @@ class Tags:
         # preserve **target** name, partOf, supplement w seed req tags
         target._optionalTags = self._optionalTags[:]
         target._inheritedTags = self._inheritedTags[:]
-
-    def extrapolate_to(self, target):
-        """
-
-
-        Tags.extrapolate_to(target) -> obj
-
-
-        Method provides basic selection logic and standard interface for
-        extrapolation.
-
-        Extrapolation is the process of defining an object's state at a point in
-        time from (i) the same object's state at a prior point in time (the seed
-        object) and (ii) optionally, the object's **prior** state at the target
-        point in time (the target object).
-
-        This Method delegates all actual extrapolation work to instance
-        subroutines. The subroutines are either Tags methods or any redefinition
-        thereof at a descendant class level. Method returns subroutine output.
-
-        Method runs target.inheritTags() before selecting a subroutine.
-
-        Default subroutine:
-           instance.ex_to_default(target)
-
-        Alternative subroutine (for targets with a tag in Tags.spec_tags):
-           instance.ex_to_special(target)
-
-        Most objects specify their own, type-specific extrapolation rules.
-        Extrapolation routines can be a simple copy for time-insensitive objects
-        with no contents, or they can be complex attribute-by-attribute assembly
-        processes.
-        """
-        # always returns a new object
-        result = None
-        target.inheritTags(recur=True)
-        if self.checkOrdinary(target):
-            result = self.ex_to_default(target)
-        else:
-            result = self.ex_to_special(target)
-        return result
-
-    def ex_to_default(self, target):
-        """
-
-
-        Tags.ex_to_default(target) -> object
-
-
-        Method provides most basic extrapolation routine. Method returns a
-        self.copy(enforce_rules = True) of the target. Points to Tags.copy()
-        or a lower-level .copy() definition.
-        """
-        result = self.copy(enforce_rules=True)
-        return result
 
     def ex_to_special(self, target, mode="at"):
         """

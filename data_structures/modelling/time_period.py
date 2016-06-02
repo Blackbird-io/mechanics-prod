@@ -86,7 +86,6 @@ class TimePeriod(History, Tags):
     copy()                returns new TimePeriod with a copy of content
     extrapolate_to()      updates inheritance then delegates to Tags
     ex_to_default()       creates result from seed, sets to target start/end
-    ex_to_special()       starts w target copy, new content is seed.ex(target)
     get_units()           return list of units from bbid pool
     get_lowest_units()    return list of units w/o components from bbid pool
     register()            conform and register unit
@@ -167,8 +166,7 @@ class TimePeriod(History, Tags):
         """
         self.inheritTags(recur=True)
         target.inheritTags(recur=True)
-        result = Tags.extrapolate_to(self, target)
-        # Tags method will delegate to appropriate class-specific subroutine.
+        result = self.ex_to_default(target)
 
         if result.end > self.end:
             result.set_history(self, clear_future=True, recur=True)
@@ -222,7 +220,7 @@ class TimePeriod(History, Tags):
         # container-level data structures; Tags.copy() only creates new tag lists
         
         result = Tags.ex_to_special(result, target, mode="at")
-        # Updates result with target tags. We use "at" mode to pick up all tags. 
+        # Updates result with target tags. We use "at" mode to pick up all tags.
         
         # Step 2: configure and fill container
         result.start = copy.copy(target.start)
@@ -234,56 +232,6 @@ class TimePeriod(History, Tags):
     
         # Step 3: return container
         return result        
-        
-    def ex_to_special(self, target):
-        """
-
-
-        TimePeriod.ex_to_special(target) -> TimePeriod
-
-
-        Method used for extrapolation when seed content must pick up special
-        attributes from target. 
-
-        NOTE: Method assumes that both seed and target have up-to-date inherited
-        tags. It is up to user to deliver accordingly.
-
-        Method creates a shell from seed, has that shell inherit target tags and
-        time points. Method then sets the result content to a new object
-        extrapolated from seed to target.
-
-        NOTE2: For best results, may want to clear and re-inherit tags on result
-        after method returns it. 
-        """
-        #
-        #step 1: make container
-        seed = self
-        alt_seed = copy.copy(seed)
-        #alt_target and target have identical attributes (alt_a is t_a)
-        alt_seed.clear()
-        #leave out the complicated stuff
-        result = alt_seed.copy(enforce_rules = True)
-        #use class-specific copy to create independent objects for any important
-        #container-level data structures; Tags.copy() only creates new tag lists 
-        #
-        #supress rule enforcement because result and target are conceptually the
-        #same object.
-        result = Tags.ex_to_special(target,result,mode = "at")
-        #updates result with those target tags it doesnt have already. "at" mode
-        #picks up all tags from target. other attributes stay identical because
-        #Tags uses a shallow copy.
-        
-        # Configure and fill container
-        result.start = copy.copy(target.start)
-        result.end = copy.copy(target.end)
-        
-        bu_seed = seed.content 
-        bu_target = target.content
-        bu_new = bu_seed.extrapolate_to(bu_target)
-        result.set_content(bu_new, updateID=False)
-        
-        # Return container
-        return result
 
     def get_units(self, pool):
         """
