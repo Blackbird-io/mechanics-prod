@@ -94,8 +94,6 @@ class LineItem(Statement):
     
     SIGNATURE_FOR_CREATION = "__init__"
     SIGNATURE_FOR_VALUE_RESET = "LineItem.resetValue"
-    SIGNATURE_FOR_DEFAULT_EXTRAPOLATION = "LineItem.ex_to_default"
-    SIGNATURE_FOR_SPECIAL_EXTRAPOLATION = "LineItem.ex_to_special"
     SIGNATURE_FOR_REPLICA_MANAGEMENT = "Bringing down value."
     SIGNATURE_FOR_INCREMENTATION = "Incremented "
 
@@ -214,28 +212,6 @@ class LineItem(Statement):
 
         return new_line
 
-    def extrapolate_to(self, target):
-        """
-
-
-        LineItem.extrapolate_to() -> LineItem
-
-
-        Method extrapolates instance characteristics to target and returns a
-        new object that combines both.
-
-        NOTE: Method delegates all work to Tags.extrapolate_to (standard
-        subroutine selection logic).
-        """
-        result = Tags.extrapolate_to(self, target)
-        return result
-
-        # We include this feature only to show that delegation takes place
-        # explicitly. Real work runs through .copy() for default process
-        # and through statement logic for the more complex versions. A Line
-        # only differs from Statement by its log and local value, and .copy()
-        # picks up both.
-      
     def increment(self, matching_line, signature=None, consolidating=False):
         """
 
