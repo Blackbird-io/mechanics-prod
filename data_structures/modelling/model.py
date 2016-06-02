@@ -47,7 +47,7 @@ from data_structures.serializers.chef.chef_settings import DEFAULT_SCENARIOS
 # n/a
 
 # classes
-class Model(Tags):
+class Model:
     """
 
     This class provides a form of a standard time model of business performance.
@@ -109,7 +109,7 @@ class Model(Tags):
     string for more information.
     """    
     def __init__(self, name):
-        Tags.__init__(self, name)
+        self.tags = Tags(name)
         self._started = False
         #
         self.id = ID()

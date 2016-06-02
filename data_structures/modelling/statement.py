@@ -49,7 +49,7 @@ doNotTouchTag = Tags.tagManager.catalog["do_not_touch"]
 tConsolidated = Tags.tagManager.catalog["consolidated"]
 
 # Classes
-class Statement(Tags, Equalities):
+class Statement(Equalities):
     """
 
     A Statement is a container that supports fast lookup and ordered views.
@@ -110,7 +110,7 @@ class Statement(Tags, Equalities):
     # Should rename this comparable_attributes
 
     def __init__(self, name=None, spacing=100):
-        Tags.__init__(self, name=name)
+        self.tags = Tags(name)
         self._details = dict()
 
         if spacing < 1:

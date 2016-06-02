@@ -46,7 +46,7 @@ from .parameters import Parameters
 # n/a
 
 # Classes
-class Driver(Tags):
+class Driver:
     """
 
     Drivers apply formulas to business units.
@@ -141,8 +141,6 @@ class Driver(Tags):
         cls._FM = new_FM
         
     def __init__(self, signature=None):
-        Tags.__init__(self)        
-        
         self.active = True
         self.conversion_table = dict()
         self.parameters = Parameters()
@@ -157,6 +155,7 @@ class Driver(Tags):
         # order in which drivers apply to a line.
 
         self.signature = signature
+        self.tags = Tags()
 
         self.workConditions = {}
         self.workConditions["name"] = ["FAIL"]

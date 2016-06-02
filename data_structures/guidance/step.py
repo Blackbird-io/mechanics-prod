@@ -42,7 +42,7 @@ from data_structures.system.tags import Tags
 #n/a
 
 #classes
-class Step(Tags, PrintAsLine):
+class Step(PrintAsLine):
     """
 
     Class for tracking logical steps. Has the tags and guide interface of
@@ -65,11 +65,10 @@ class Step(Tags, PrintAsLine):
     def __init__(self, name=None,
                  priority=DEFAULT_PRIORITY_LEVEL,
                  quality=DEFAULT_QUALITY_REQUIREMENT):
-        Tags.__init__(self)
         PrintAsLine.__init__(self)
-        #
+
         self.guide = Guide(priority, quality)
-        self.setName(name)
+        self.tags = Tags(name)
         
     def pre_format(self, **kargs):
         #custom formatting logic
