@@ -164,8 +164,8 @@ class TimePeriod(History, Tags):
         Method updates tags on seed and target and then passes them to standard
         Tags.extrapolate_to() selection logic. 
         """
-        self.inheritTags(recur=True)
-        target.inheritTags(recur=True)
+        self.tags.inheritTags(recur=True)
+        target.tags.inheritTags(recur=True)
         result = self.ex_to_default(target)
 
         if result.end > self.end:

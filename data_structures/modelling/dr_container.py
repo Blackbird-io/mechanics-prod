@@ -173,7 +173,7 @@ class DrContainer(Components):
         Method runs Tags.clearInheritedTags() on the instance, then has the
         instance , then clears inherited tags 
         """
-        self.tags.clearInheritedTags()
+        self.tags.clearInheritedTags(recur)
         for dr in self.dr_directory.items():
             dr.clearInheritedTags(recur)
             
@@ -260,9 +260,9 @@ class DrContainer(Components):
         Method runs Tags.inheritTags() on the instance, then has the instance
         inherit tags directly from every driver it contains (via .getOrdered()).
         """
-        Tags.inheritTags(self, recur)
+        self.tags.inheritTags(recur)
         for dr in self.get_ordered():
-            self.inheritTagsFrom(dr, recur)
+            self.tags.inheritTagsFrom(dr.tags, recur)
         # In tag inheritance, order is significant. Want to inherit tags in the
         # same order every time. 
 

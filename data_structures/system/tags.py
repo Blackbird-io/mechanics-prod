@@ -636,9 +636,6 @@ class Tags:
         support a Tags interface.
         """
         for attr in self.tagSources:
-            import pdb
-            pdb.set_trace()
-
             source = getattr(self, attr)
             if source:
                 if recur:

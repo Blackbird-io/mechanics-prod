@@ -155,7 +155,7 @@ class Components(dict, Tags, Equalities):
         if bu.name:
             self.by_name[bu.name] = bu.id.bbid
 
-    def clearInheritedTags(self, recur=False):
+    def clearInheritedTags(self, recur = False):
         """
 
 
@@ -306,12 +306,12 @@ class Components(dict, Tags, Equalities):
         If ``recur`` == True, method asks each component to inheritTags() on its
         own before using that component as a source for the instance. 
         """
-        Tags.inheritTags(self,recur)
+        self.tags.inheritTags(recur)
         for bu in self.getOrdered():
             if bu:
                 if recur:
-                    bu.inheritTags()
-                self.inheritTagsFrom(bu)
+                    bu.tags.inheritTags()
+                self.tags.inheritTagsFrom(bu.tags)
 
     def _get_pretty_lines(self):
         """
