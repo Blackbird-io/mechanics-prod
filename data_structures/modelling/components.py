@@ -155,7 +155,7 @@ class Components(dict, Tags, Equalities):
         if bu.name:
             self.by_name[bu.name] = bu.id.bbid
 
-    def clearInheritedTags(self,recur = False):
+    def clearInheritedTags(self, recur=False):
         """
 
 
@@ -165,12 +165,12 @@ class Components(dict, Tags, Equalities):
         Method runs Tags.clearInheritedTags(). If recur == True, method then
         clears inherited tags for every component in self.getOrdered(). 
         """
-        Tags.clearInheritedTags(self,recur)
+        self.tags.clearInheritedTags()
         if recur:
             for C in self.getOrdered():
-                C.clearInheritedTags(recur = True)
+                C.clearInheritedTags(recur=True)
 
-    def copy(self,enforce_rules = True):
+    def copy(self, enforce_rules=True):
         """
 
 

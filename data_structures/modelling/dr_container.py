@@ -173,7 +173,7 @@ class DrContainer(Components):
         Method runs Tags.clearInheritedTags() on the instance, then has the
         instance , then clears inherited tags 
         """
-        Tags.clearInheritedTags(self,recur)
+        self.tags.clearInheritedTags()
         for dr in self.dr_directory.items():
             dr.clearInheritedTags(recur)
             
