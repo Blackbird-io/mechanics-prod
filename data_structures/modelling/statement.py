@@ -467,7 +467,7 @@ class Statement(Equalities):
         have difficulty putting them back.
 
         The best way to reinsert an item you accidentally removed is to find
-        its parent using detail.parentObject and insert the item directly back.
+        its parent using detail.tags.parentObject and insert the item directly back.
         """
         result = None
 

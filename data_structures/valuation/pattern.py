@@ -124,7 +124,7 @@ class Pattern(dict, LineItem):
         Method:
         1) sets instance[attrName] to obj
         2) sets instance.attrName to obj
-        3) sets obj.parentObject to self
+        3) sets obj.tags.parentObject to self
         4) appends a function to self._o_functions that always returns
         self[attrName]
 

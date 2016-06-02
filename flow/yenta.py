@@ -222,7 +222,7 @@ class Yenta():
         to each bbid in pool from the topic catalog. Method then checks:
 
         (1) whether the topic's tags include each of the tags required by target
-           (excluding target.partOf); and
+           (excluding target.tags.partOf); and
         (2) whether the **target's** tags include each of the tags required by
             topic, if any.
 
@@ -237,7 +237,7 @@ class Yenta():
         each topic) to instance.trace.
         """
         eligibles = []
-        targ_criterion = set(target.requiredTags) - {target.partOf}
+        targ_criterion = set(target.tags.requiredTags) - {target.tags.partOf}
         targ_criterion = targ_criterion - {None}
         #
         #UPGRADE-F: Can make selection process more open-ended by also removing

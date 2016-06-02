@@ -119,7 +119,7 @@ class DrContainer(Components):
 
         NOTE: Method will overwrite old versions of a driver with new versions.
         """
-        if not self.parentObject:
+        if not self.tags.parentObject:
             c = "Cannot add driver. DrContainer does not have a parent object."
             raise bb_exceptions.IOPMechanicalError(c)
         
@@ -130,7 +130,7 @@ class DrContainer(Components):
         # Could prohibit implicit overwrites, but would be cumbersome. Would
         # have to check whether a bbid is already in a given key's set.
 
-        new_driver.setPartOf(self.parentObject)
+        new_driver.setPartOf(self.tags.parentObject)
         # Drivers point to business unit as a parent object.
         self.dr_directory[new_driver.id.bbid] = new_driver
 
