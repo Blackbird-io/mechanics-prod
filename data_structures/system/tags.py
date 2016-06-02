@@ -583,7 +583,7 @@ class Tags:
         target._optionalTags = self._optionalTags[:]
         target._inheritedTags = self._inheritedTags[:]
 
-    def ex_to_special(self, target, mode="at"):
+    def extrapolate_to(self, target, mode="at"):
         """
 
 
@@ -602,6 +602,8 @@ class Tags:
         The optional ``mode`` argument describes the set of rules Tags.tag()
         applies when moving target tags to result.
         """
+        target.inheritTags(recur=True)
+
         seed = self
         result = Tags.copy(seed, enforce_rules=True)
         # maintain all tags on seed
@@ -615,8 +617,8 @@ class Tags:
             res_tags = set(r_res_tags)
             new_tags = targ_tags - res_tags
             new_tags = sorted(new_tags)
-            # sort the new tags into a stable order to ensure consistency across
-            # runtime
+            # sort the new tags into a stable order to ensure consistency
+            # across runtime
             result.tag(*new_tags, field=attr, mode=mode)
         return result
 

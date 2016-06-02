@@ -219,7 +219,7 @@ class TimePeriod(History, Tags):
         # Use class-specific copy to create independent objects for any important
         # container-level data structures; Tags.copy() only creates new tag lists
         
-        result = Tags.ex_to_special(result, target, mode="at")
+        result = Tags.extrapolate_to(result, target, mode="at")
         # Updates result with target tags. We use "at" mode to pick up all tags.
         
         # Step 2: configure and fill container
