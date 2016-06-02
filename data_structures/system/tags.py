@@ -407,7 +407,7 @@ class Tags:
         if not target:
             target = self
         result = False
-        if set(self.spec_tags) & set(target.allTags) == set():
+        if set(self.spec_tags) & set(target.tags.allTags) == set():
             result = True
         return result
 
@@ -433,7 +433,7 @@ class Tags:
         if not target:
             target = self
         result = False
-        if set(self.hands_off) & set(target.allTags) == set():
+        if set(self.hands_off) & set(target.tags.allTags) == set():
             result = True
         return result
 

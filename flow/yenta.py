@@ -210,7 +210,7 @@ class Yenta():
 
 
         Method returns a list of bbids for topics that are eligible for use on
-        target. Method expects target to have an .allTags attribute and a
+        target. Method expects target to have an .tags.allTags attribute and a
         properly configured .guide object.
 
         The ``pool`` argument takes a list of bbids to review. If pool is None,
@@ -298,7 +298,7 @@ class Yenta():
         Method returns a list of bbids for topics that scored highest against
         target.
 
-        ``target`` must have an .allTags attribute.
+        ``target`` must have an .tags.allTags attribute.
         ``candidates`` must be an iterable container of bbids.
 
         For each bbid, method pulls the topic from the catalog and counts how
@@ -359,7 +359,7 @@ class Yenta():
             #
             match = criteria & build_basic_profile(topic)
             raw_score = len(match)
-            rel_score = raw_score/len(topic.tags.allTags)
+            rel_score = raw_score/len(topic.tags.tags.allTags)
             #
             self.scores[bbid] = [raw_score, rel_score]
             #save state on Yenta instance so subsequent routines can access

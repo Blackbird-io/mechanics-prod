@@ -510,7 +510,7 @@ class Driver(Tags):
 
         To satisfy the allTags condition, an object must carry each tag in
         instance.workConditions["allTags"] (ie, instance.wC[allTags] must be
-        a subset of target.allTags). 
+        a subset of target.tags.allTags).
 
         NOTE: driver.workConditions keys may include None as values to indicate
         absence of a constraint. Accordingly, match is evaluated against
@@ -526,7 +526,7 @@ class Driver(Tags):
             if not set(self.workConditions["partOf"]).issubset([targetLineItem.partOf]+[None]):
                 return False
             else:
-                if not set(self.workConditions["allTags"]).issubset(targetLineItem.allTags + [None]):
+                if not set(self.workConditions["allTags"]).issubset(targetLineItem.tags.allTags + [None]):
                     return False
                 else:
                     return True
