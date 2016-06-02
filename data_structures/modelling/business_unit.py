@@ -774,7 +774,7 @@ class BusinessUnit(History, Tags, Equalities):
             if statement is not None:
                 
                 for line in statement.get_ordered():    
-                    if tags_to_omit & set(line.allTags):
+                    if tags_to_omit & set(line.tags.allTags):
                         continue
                         
                     else:
@@ -804,7 +804,7 @@ class BusinessUnit(History, Tags, Equalities):
             
             for detail in line.get_ordered():
                 
-                if T_REPLICA in detail.allTags:
+                if T_REPLICA in detail.tags.allTags:
                     continue
                     # Skip replicas to make sure we apply the driver only once
                     # A replica should never have any details
@@ -1187,7 +1187,7 @@ class BusinessUnit(History, Tags, Equalities):
             
             for name, starting_line in starting_balance._details.items():
 
-                if tags_to_omit & set(starting_line.allTags):
+                if tags_to_omit & set(starting_line.tags.allTags):
                     continue
                 else:
                     if starting_line.value is not None:
@@ -1215,7 +1215,7 @@ class BusinessUnit(History, Tags, Equalities):
 
                 self._update_lines(line, ending_line)
         else:
-            if tags_to_omit & set(end_line.allTags):
+            if tags_to_omit & set(end_line.tags.allTags):
                 pass
             else:
                 end_line.set_value(start_line.value,

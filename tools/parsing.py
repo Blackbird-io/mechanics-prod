@@ -81,7 +81,7 @@ def locateByTag(container, *targetTags):
     criteria = set(targetTags)
     location = None
     for item in container:
-        if criteria.issubset(set(item.allTags)):
+        if criteria.issubset(set(item.tags.allTags)):
             location = container.index(item)
             break
         else:
@@ -101,7 +101,7 @@ def findByTag(container, *targetTags):
         criteria.add(tag.casefold())
     result = None
     for item in container:
-        if criteria.issubset(set(item.allTags)):
+        if criteria.issubset(set(item.tags.allTags)):
             result = item
             break
         else:
@@ -120,7 +120,7 @@ def excludeByTag(container, *badTags):
     #keep original objects in container cause need to return them
     #use slice of WIP because its length may change
     for item in WIP[:]:
-        applicableBadTags = set(badTags) & set(item.allTags)
+        applicableBadTags = set(badTags) & set(item.tags.allTags)
         #intersection between the item's tags and badtags
         if not applicableBadTags == set():
             #if any tags in badTags are also in item's tags
@@ -137,7 +137,7 @@ def includeByTag(container, *goodTags):
     #empty container
     #all ancillary container features preserved
     for item in container:
-        if set(goodTags).issubset(item.allTags):
+        if set(goodTags).issubset(item.tags.allTags):
             WIP.append(item)
         else:
             continue
