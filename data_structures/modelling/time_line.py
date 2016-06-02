@@ -492,7 +492,7 @@ class TimeLine(dict):
         period.id.set_namespace(model_namespace)
         # Period has only a pointer to the Model.namespace_id; periods dont have
         # their own bbids.
-        period.setPartOf(self)
+        period.tags.setPartOf(self)
         
         return period
     

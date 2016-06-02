@@ -137,7 +137,7 @@ class Pattern(dict, LineItem):
         self[attrName] = obj
         setattr(self,attrName,obj)
         try:
-            obj.setPartOf(self)
+            obj.tags.setPartOf(self)
         except Exception:
             pass
         self.o_keys.append(attrName)

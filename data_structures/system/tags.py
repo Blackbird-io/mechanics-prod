@@ -205,7 +205,7 @@ class Tags:
 
         self.tags.setName(name)
         if parentObject:
-            self.setPartOf(parentObject)
+            self.tags.setPartOf(parentObject)
 
     @property
     def parentObject(self):
