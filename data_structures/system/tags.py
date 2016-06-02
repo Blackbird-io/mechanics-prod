@@ -91,24 +91,24 @@ class Tags:
 
     If a Tags object specifies a parentObject, the instance will
     **always** overwrite reqTags[1] with the parent's name. The partOf property
-    will allow direct changes to .partOf, but immediately "forget" them
+    will allow direct changes to .tags.partOf, but immediately "forget" them
     following a call to the attribute. To permanently alter the value of
-    .partOf, set .parentObject to None.
+    .tags.partOf, set .tags.parentObject to None.
 
     NOTE: Direct changes to requiredTags[:2] (instance-level state for ``name``
     ``partOf``) are not recommended.
 
-    Instance.partOf may not be especially informative on it's own, since the
+    Instance.tags.partOf may not be especially informative on it's own, since the
     container object (``parentObject``) may not have a name attribute. Even if
     the container does have a name attribute, it may be difficult to locate by
     using that attribute. For that reason, instance.relationship.parent
     stores a pointer to the parent object directly.  This can also be accessed
-    (for backwards-compatibility's sake) through the instance.parentObject
+    (for backwards-compatibility's sake) through the instance.tags.parentObject
     property.
 
-    NOTE: instance.relationship.parent (instance.parentObject) may be an object
+    NOTE: instance.relationship.parent (instance.tags.parentObject) may be an object
     OTHER THAN THE DIRECT CONTAINER of the instance. For example, in standard
-    usage, a BusinessUnit will store Drivers in self.Drivers. The .parentObject
+    usage, a BusinessUnit will store Drivers in self.Drivers. The .tags.parentObject
     attribute for each driver in such a case would be set to the BusinessUnit,
     not BusinessUnit.Drivers. The higher-level hook providers the Driver with
     easy access to BU.financials and any other attributes it may need for
@@ -199,11 +199,11 @@ class Tags:
         self.relationship = Relationship(self)
         self.requiredTags = [None, None]
 
-        # self.name is requiredTags[0] and self.partOf is requiredTags[1] so
+        # self.name is requiredTags[0] and self.tags.partOf is requiredTags[1] so
         # list should have minimum length of 2; actual values set through
         # methods
 
-        self.setName(name)
+        self.tags.setName(name)
         if parentObject:
             self.setPartOf(parentObject)
 
@@ -355,12 +355,12 @@ class Tags:
     class dyn_SpecTManager:
         """
 
-        Descriptor class that returns values for instance.name and instance.partOf.
+        Descriptor class that returns values for instance.name and instance.tags.partOf.
         Descriptor also writes new values to requiredTags at the appropriate index.
         On deletion, replaces the special tags with None objects in requiredTags.
 
-        For .partOf gets, the descriptor first checks if the caller has a
-        .parentObject. If so, the descriptor updates caller.requiredTags[1] with the
+        For .tags.partOf gets, the descriptor first checks if the caller has a
+        .tags.parentObject. If so, the descriptor updates caller.requiredTags[1] with the
         parentObject's name. The descriptor assumes name is None if the parentObject
         is missing the attribute. In all scenarios, the descriptor then returns
         whatever is in requiredTags[1].
@@ -700,7 +700,7 @@ class Tags:
         """
 
 
-        T.setName(newName) -> None
+        T.tags.setName(newName) -> None
 
 
         Method for setting the name of an object.

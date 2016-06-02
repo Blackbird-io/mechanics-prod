@@ -254,7 +254,7 @@ class Driver:
         Original object copies tags to result using Tags.copyTagsTo(), so method
         will enforce tag rules when specified.
 
-        Result.parentObject points to the same object as original because the
+        Result.tags.parentObject points to the same object as original because the
         default shallow copy runs on the ``parentObject`` attribute.
 
         NOTE: Result points to same object as original on ``id`` and
@@ -376,7 +376,7 @@ class Driver:
                 formula = self._FM.local_catalog.issue(self.formula_bbid)
                 # formula_catalog.issue() only performs dict retrieval and
                 # return for key.
-                bu = self.parentObject
+                bu = self.tags.parentObject
 
                 params = self._build_params()
                 
@@ -460,7 +460,7 @@ class Driver:
         the original and converted keys.
         """
         if parent is None:
-            parent = self.parentObject
+            parent = self.tags.parentObject
 
         period = None
         time_line = None
@@ -469,7 +469,7 @@ class Driver:
             period = parent.period
             
         if period:
-            time_line = period.parentObject
+            time_line = period.tags.parentObject
         
         # Specific parameters trump general ones. Start with time_line, then
         # update for period (more specific) and driver (even more specific).
@@ -522,7 +522,7 @@ class Driver:
         if not set(self.workConditions["name"]).issubset([targetLineItem.tags.name]+[None]):
             return False
         else:
-            if not set(self.workConditions["partOf"]).issubset([targetLineItem.partOf]+[None]):
+            if not set(self.workConditions["partOf"]).issubset([targetLineItem.tags.partOf]+[None]):
                 return False
             else:
                 if not set(self.workConditions["allTags"]).issubset(targetLineItem.tags.allTags + [None]):

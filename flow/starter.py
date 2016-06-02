@@ -92,7 +92,7 @@ class Starter:
             model_name = model.portal_data["business_name"]
             if not model_name:
                 model_name = bb_settings.DEFAULT_MODEL_NAME
-            model.setName(model_name)
+            model.tags.setName(model_name)
             #starter can also do configuration from other parts of
             #user_context
         else:

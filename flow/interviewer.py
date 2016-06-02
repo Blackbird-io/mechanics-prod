@@ -191,10 +191,10 @@ class Interviewer:
 
         # Check here to see if fp is None (path complete for stage), and if so:
         if fp is None:
-            parent_bu = model.target.parentObject
+            parent_bu = model.target.tags.parentObject
 
             if parent_bu:
-                parent_bu = parent_bu.parentObject
+                parent_bu = parent_bu.tags.parentObject
 
                 if isinstance(parent_bu, BusinessUnit):
                     model.target = parent_bu

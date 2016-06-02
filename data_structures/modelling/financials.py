@@ -79,17 +79,17 @@ class Financials(StatementBundle):
 
         if getattr(self, "parentObject", None):
 
-            header = "Financial statements for " + str(self.parentObject.tags.name)
+            header = "Financial statements for " + str(self.tags.parentObject.tags.name)
             header = header.center(bb_settings.SCREEN_WIDTH)
             header += "\n\n"
 
-            starting = "Period starting: " + str(self.parentObject.period.starting)
+            starting = "Period starting: " + str(self.tags.parentObject.period.starting)
             starting = starting.center(bb_settings.SCREEN_WIDTH)
             starting += "\n"
 
             header += starting
 
-            ending =  "Period ending:   " + str(self.parentObject.period.ending)
+            ending =  "Period ending:   " + str(self.tags.parentObject.period.ending)
             ending = ending.center(bb_settings.SCREEN_WIDTH)
             ending += "\n"
 
