@@ -333,7 +333,7 @@ class Statement(Tags, Equalities):
         Method runs Tags.clearInheritedTags() on instance. If ``recur`` is True,
         does the same for every line in instance.
         """
-        Tags.clearInheritedTags(self, recur)
+        self.tags.clearInheritedTags()
         if recur:
             if bb_settings.DEBUG_MODE:
                 pool = self.get_ordered()

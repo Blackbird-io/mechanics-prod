@@ -437,7 +437,7 @@ class Tags:
             result = True
         return result
 
-    def clearInheritedTags(self, recur=False):
+    def clearInheritedTags(self):
         """
 
 
@@ -450,10 +450,6 @@ class Tags:
         every attribute in instance.tagSources.
         """
         self._inheritedTags = []
-        if recur:
-            for attr in self.tagSources:
-                obj = getattr(self, attr)
-                obj.clearInheritedTags(recur=True)
 
     def copy(self, enforce_rules=True):
         """
@@ -641,6 +637,9 @@ class Tags:
         support a Tags interface.
         """
         for attr in self.tagSources:
+            import pdb
+            pdb.set_trace()
+
             source = getattr(self, attr)
             if source:
                 if recur:
