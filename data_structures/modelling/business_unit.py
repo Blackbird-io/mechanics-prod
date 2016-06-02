@@ -344,8 +344,8 @@ class BusinessUnit(History, Equalities):
         
         """
         blank_bu = BusinessUnit(name=self.name)
-        for attr in self.tagSources:
-            blank_attr = getattr(blank_bu,attr)
+        for attr in self.tags.tagSources:
+            blank_attr = getattr(blank_bu, attr)
             setattr(self, attr, blank_attr)
     
     def copy(self, enforce_rules=True):
