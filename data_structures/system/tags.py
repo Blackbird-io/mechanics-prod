@@ -462,8 +462,7 @@ class Tags:
         True, copy follows ``out`` rules.
         """
         result = copy.copy(self)
-
-        Tags.copyTagsTo(self, result, enforce_rules)
+        self.tags.copyTagsTo(result, enforce_rules)
 
         return result
 
