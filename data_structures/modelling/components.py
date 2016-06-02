@@ -44,7 +44,7 @@ from .equalities import Equalities
 #n/a
 
 #classes
-class Components(dict, Tags, Equalities):
+class Components(dict, Equalities):
     """
 
     The Components class defines a container that stores BusinessUnit objects
@@ -89,9 +89,9 @@ class Components(dict, Tags, Equalities):
         
     def __init__(self,name = "Components"):
         dict.__init__(self)
-        Tags.__init__(self, name)
         Equalities.__init__(self)
         self.by_name = dict()
+        self.tags = Tags(name)
 
     def __eq__(self, comparator, trace = False, tab_width = 4):
         """

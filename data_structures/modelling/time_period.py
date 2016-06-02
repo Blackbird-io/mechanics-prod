@@ -48,7 +48,7 @@ from .history import History
 # n/a
 
 # Classes
-class TimePeriod(History, Tags):
+class TimePeriod(History):
     """
 
     TimePeriod objects represent periods of time and store a snapshot of some
@@ -95,7 +95,8 @@ class TimePeriod(History, Tags):
     def __init__(self, start_date, end_date, content=None):
         
         History.__init__(self, recursive_attribute="content")
-        Tags.__init__(self)
+
+        self.tags = Tags()
 
         self.start = start_date
         self.end = end_date

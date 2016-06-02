@@ -64,7 +64,7 @@ tHardCoded = Tags.tagManager.catalog["hard"]
 T_REPLICA = Tags.tagManager.catalog["ddr"]
 
 # Classes   
-class BusinessUnit(History, Tags, Equalities):
+class BusinessUnit(History, Equalities):
     """
    
     Object describes a group of business activity. A business unit can be a
@@ -121,8 +121,8 @@ class BusinessUnit(History, Tags, Equalities):
     def __init__(self, name, fins=None):
 
         History.__init__(self)
-        Tags.__init__(self, name)
-        
+
+        self.tags = Tags(name)
         self._type = None
         
         self.components = None
