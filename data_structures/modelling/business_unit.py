@@ -511,7 +511,7 @@ class BusinessUnit(History, Equalities):
         Method sets instance.analytics to passed-in argument, sets analytics
         object to point to instance as its parent. 
         """
-        atx.setPartOf(self)
+        atx.tags.setPartOf(self)
         self.valuation = atx
 
     def set_financials(self, fins=None):
@@ -530,7 +530,7 @@ class BusinessUnit(History, Equalities):
         """
         if fins is None:
             fins = Financials()
-##        fins.setPartOf(self)
+##        fins.tags.setPartOf(self)
         self.financials = fins
 
     def set_history(self, history, clear_future=True, recur=True):
@@ -1143,7 +1143,7 @@ class BusinessUnit(History, Equalities):
         """
         if not comps:
             comps = Components()
-        comps.setPartOf(self)
+        comps.tags.setPartOf(self)
         self.components = comps
         
     def _set_drivers(self, dr_c=None):
@@ -1159,7 +1159,7 @@ class BusinessUnit(History, Equalities):
         """
         if not dr_c:
             dr_c = DrContainer()
-        dr_c.setPartOf(self, recur = True)
+        dr_c.tags.setPartOf(self, recur = True)
         self.drivers = dr_c
 
     def _update_balance(self, *tagsToOmit):

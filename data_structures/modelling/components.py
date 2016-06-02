@@ -150,7 +150,7 @@ class Components(dict, Equalities):
         if not bu.id.bbid:
             c = "Cannot add a component that does not have a valid bbid."
             raise bb_exceptions.IDError(c)
-        bu.setPartOf(self)
+        bu.tags.setPartOf(self)
         self[bu.id.bbid] = bu
         if bu.tags.name:
             self.by_name[bu.tags.name] = bu.id.bbid
@@ -540,7 +540,7 @@ class Components(dict, Equalities):
         For Drivers, use Dr_Container.remove_driver() instead
         """
         bu = self.pop(bbid)
-        bu.setPartOf(None)
+        bu.tags.setPartOf(None)
         if bu.tags.name:
             self.by_name.pop(bu.tags.name)
 

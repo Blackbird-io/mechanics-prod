@@ -130,7 +130,7 @@ class DrContainer(Components):
         # Could prohibit implicit overwrites, but would be cumbersome. Would
         # have to check whether a bbid is already in a given key's set.
 
-        new_driver.setPartOf(self.tags.parentObject)
+        new_driver.tags.setPartOf(self.tags.parentObject)
         # Drivers point to business unit as a parent object.
         self.dr_directory[new_driver.id.bbid] = new_driver
 
@@ -289,13 +289,13 @@ class DrContainer(Components):
         """
 
 
-        DrContainer.setPartOf(parentObj,recur = True) -> None
+        DrContainer.tags.setPartOf(parentObj,recur = True) -> None
 
 
         Method runs Tags.setPartOf() on the instance, and, if ``recur`` is True,
         all drivers in the instance. 
         """
-        Tags.setPartOf(self,parentObj)
+        self.tags.setPartOf(parentObj)
         if recur:
             for dr in self.dr_directory.values():
-                dr.setPartOf(parentObj)
+                dr.tags.setPartOf(parentObj)

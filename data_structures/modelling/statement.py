@@ -660,7 +660,7 @@ class Statement(Equalities):
 
         Set instance as line parent, add line to details.
         """
-        line.setPartOf(self)
+        line.tags.setPartOf(self)
         self._details[line.tags.name] = line
 
     def _inspect_line_for_insertion(self, line):
