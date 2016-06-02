@@ -578,7 +578,7 @@ class Statement(Equalities):
                     if consolidating:
                         if external_line.value is not None:
                             if tConsolidated not in local_copy.tags.allTags:
-                                local_copy.tag(tConsolidated)
+                                local_copy.tags.tag(tConsolidated)
 
                             # Pick up lines with None values, but don't tag
                             # them. We want to allow derive to write to these

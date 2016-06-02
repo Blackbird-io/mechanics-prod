@@ -245,7 +245,7 @@ class LineItem(Statement):
             
                 if consolidating and self._consolidate is True:
                     self.tags.inheritTagsFrom(matching_line.tags)
-                    self.tag(T_CONSOLIDATED)
+                    self.tags.tag(T_CONSOLIDATED)
 
                     self.xl.consolidated.sources.append(matching_line)
 
@@ -433,7 +433,7 @@ class LineItem(Statement):
 
         # Replicas don't have any details of their own. Can't run .clear() here
         # because instance and replica initially point to the same details dict.
-        replica.tag(T_REPLICA)
+        replica.tags.tag(T_REPLICA)
 
         replica.position = 0
         self._details[replica.tags.name] = replica

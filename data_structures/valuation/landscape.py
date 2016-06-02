@@ -324,7 +324,7 @@ class Landscape(dict, Step):
         surface = self[field]
         result = pricing_tools.forecast(surface, ask)
 ##        try:
-##            result.tag("extrapolated")
+##            result.tags.tag("extrapolated")
 ##        except AttributeError:
 ##            pass
         if self.keep_forecasts:

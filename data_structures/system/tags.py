@@ -548,14 +548,14 @@ class Tags:
                         # only add rules-based tags if the rules says its ok
                     if rules[t]["out"].cotag:
                         cotags = rules[t]["out"].cotag
-                        target.tag(cotags, field=t_field, mode="at")
-                        # need to use Tags.tag() in case cotags have to get
+                        target.tags.tag(cotags, field=t_field, mode="at")
+                        # need to use Tags.tags.tag() in case cotags have to get
                         # registed or lead to more cotags. mode is "at" because
                         # the tag that requires cotags is on the lineitem already
                         # (ie, "at" the same object).
                     if rules[t]["out"].detag:
                         for lessT in rules[t]["out"].detag:
-                            target.unTag(lessT)
+                            target.tags.unTag(lessT)
                 else:
                     # t does not have a rule
                     new_tags.append(t)
@@ -594,7 +594,7 @@ class Tags:
         Method does not look at target.requiredTags[:2]. Method applies target
         tags in sorted() order.
 
-        The optional ``mode`` argument describes the set of rules Tags.tag()
+        The optional ``mode`` argument describes the set of rules Tags.tags.tag()
         applies when moving target tags to result.
         """
         target.inheritTags(recur=True)
@@ -614,7 +614,7 @@ class Tags:
             new_tags = sorted(new_tags)
             # sort the new tags into a stable order to ensure consistency
             # across runtime
-            result.tag(*new_tags, field=attr, mode=mode)
+            result.tags.tag(*new_tags, field=attr, mode=mode)
         return result
 
     def inheritTags(self, recur=True):
@@ -678,7 +678,7 @@ class Tags:
         # turn sourceTags into a sorted list to make sure tags are always added
         # in the same order; otherwise, pseudo-random order of tags in a set
         # wrecks HAVOC on comparisons
-        self.tag(*sourceTags, field="inh", mode="up")
+        self.tags.tag(*sourceTags, field="inh", mode="up")
         # NOTE: can preserve order by expanding dni and go through tags one by
         # one. dni = set(dni)+set(self.allTags). if tag in dni: pass, else tag()
 
@@ -756,7 +756,7 @@ class Tags:
         """
 
 
-        Tags.tag( *newTags[,
+        Tags.tags.tag( *newTags[,
                   field = "opt"[,
                   mode = "at"[,
                   permit_duplicates = False]]]) -> None
@@ -792,7 +792,7 @@ class Tags:
 
         Rule[x].detag rules apply only to tags "behind" them. As such, the
         impact of detag rules varies based on the state of an object's tags
-        at the time Tags.tag() encounters the detag trigger. Tags.tag() applies
+        at the time Tags.tags.tag() encounters the detag trigger. Tags.tags.tag() applies
         detag rules as soon as it encounters their trigger tag. At that time,
         the instance may not have all of the tags the creator of the detag rule
         expects it to have. For example, the instance could be inheriting tags
@@ -841,10 +841,10 @@ class Tags:
                         real_thing.append(tag)
                     if rule.cotag:
                         for moreT in rule.cotag:
-                            self.tag(moreT, field, mode)
+                            self.tags.tag(moreT, field, mode)
                     if rule.detag:
                         for lessT in rule.untag:
-                            self.unTag(tag)
+                            self.tags.unTag(tag)
                             # untags are dependent on tags already in place
                             # those tags may vary due to sorting
                             # should generally disallow & require manual
