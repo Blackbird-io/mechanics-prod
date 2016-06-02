@@ -187,7 +187,7 @@ class LineItem(Statement):
             
         else:
             comment = "Unable to clear value from line."
-            raise bb_exceptions.BBAnalyticalError(c, self)
+            raise bb_exceptions.BBAnalyticalError(comment, self)
             
     def copy(self, enforce_rules=True):
         """
