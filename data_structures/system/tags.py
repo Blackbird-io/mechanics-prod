@@ -199,13 +199,13 @@ class Tags:
         self.relationship = Relationship(self)
         self.requiredTags = [None, None]
 
-        # self.name is requiredTags[0] and self.tags.partOf is requiredTags[1] so
+        # self.name is requiredTags[0] and self.partOf is requiredTags[1] so
         # list should have minimum length of 2; actual values set through
         # methods
 
-        self.tags.setName(name)
+        self.setName(name)
         if parentObject:
-            self.tags.setPartOf(parentObject)
+            self.setPartOf(parentObject)
 
     @property
     def parentObject(self):
@@ -462,7 +462,7 @@ class Tags:
         True, copy follows ``out`` rules.
         """
         result = copy.copy(self)
-        self.tags.copyTagsTo(result, enforce_rules)
+        self.copyTagsTo(result, enforce_rules)
 
         return result
 
@@ -678,7 +678,7 @@ class Tags:
         # turn sourceTags into a sorted list to make sure tags are always added
         # in the same order; otherwise, pseudo-random order of tags in a set
         # wrecks HAVOC on comparisons
-        self.tags.tag(*sourceTags, field="inh", mode="up")
+        self.tag(*sourceTags, field="inh", mode="up")
         # NOTE: can preserve order by expanding dni and go through tags one by
         # one. dni = set(dni)+set(self.allTags). if tag in dni: pass, else tag()
 
@@ -841,10 +841,10 @@ class Tags:
                         real_thing.append(tag)
                     if rule.cotag:
                         for moreT in rule.cotag:
-                            self.tags.tag(moreT, field, mode)
+                            self.tag(moreT, field, mode)
                     if rule.detag:
                         for lessT in rule.untag:
-                            self.tags.unTag(tag)
+                            self.unTag(tag)
                             # untags are dependent on tags already in place
                             # those tags may vary due to sorting
                             # should generally disallow & require manual
