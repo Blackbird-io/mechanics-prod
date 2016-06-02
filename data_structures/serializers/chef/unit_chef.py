@@ -855,7 +855,7 @@ class UnitChef:
                 self._balance_lines(start_line, old_line)
 
         else:
-            # We want starting balance and ending balance have the same
+            # We want starting balance and ending balance to have the same
             # structure of lines. Newly added lines will have a None value.
             start_bal = unit.financials.starting
             end_bal = unit.financials.ending.copy()
