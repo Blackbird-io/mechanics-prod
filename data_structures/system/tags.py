@@ -35,7 +35,7 @@ import bb_exceptions
 
 from tag_manager import loaded_tagManager as tag_manager
 from tools.parsing import deCase
-from .relationship import Relationship
+from .relationships import Relationships
 
 # globals
 m_spacer_opt = tag_manager.catalog["BLACKBIRDSTAMP"] + "end own optionalTags"
@@ -101,12 +101,12 @@ class Tags:
     Instance.tags.partOf may not be especially informative on it's own, since the
     container object (``parentObject``) may not have a name attribute. Even if
     the container does have a name attribute, it may be difficult to locate by
-    using that attribute. For that reason, instance.relationship.parent
+    using that attribute. For that reason, instance.relationships.parent
     stores a pointer to the parent object directly.  This can also be accessed
     (for backwards-compatibility's sake) through the instance.tags.parentObject
     property.
 
-    NOTE: instance.relationship.parent (instance.tags.parentObject) may be an object
+    NOTE: instance.relationships.parent (instance.tags.parentObject) may be an object
     OTHER THAN THE DIRECT CONTAINER of the instance. For example, in standard
     usage, a BusinessUnit will store Drivers in self.Drivers. The .tags.parentObject
     attribute for each driver in such a case would be set to the BusinessUnit,
@@ -135,12 +135,12 @@ class Tags:
     hands_off             list; CLASS, tags that prohibit any modification
     name                  name of instance, dynamic, value of requiredTags[0]
     optionalTags          list; dynamic, returns _optionalTags + _inheritedTags
-    relationship          obj; CLASS, instance of Relationship class
+    relationships          obj; CLASS, instance of Relationship class
                           (has attributes parent_object and part_of)
     parentObject          OBSOLETE; property; delegates to
-                          relationship.parent for gets
+                          relationships.parent for gets
     partOf                OBSOLETE; property; sets requiredTags[1] =
-                          relationship.part_of and returns relationship.part_of
+                          relationships.part_of and returns relationships.part_of
     reg_req               bool; CLASS, if False won't apply tags not in catalog
     requiredTags          list; tags required for matching
     spacer_req            string; CLASS, separates req tags from optional in all
@@ -170,7 +170,7 @@ class Tags:
     registerTag()         registers tag in tag catalog
     setTagManager()       CLASS; sets pointer to tag manager
     setName()             sets instance.reqTags[0]
-    setPartOf()           delegates to relationship.set_part_of() to set
+    setPartOf()           delegates to relationships.set_part_of() to set
                           part_of, parent_object, and requiredTags[1]
     tag()                 adds tag to object, if parameters allow
     unTag()               removes all instances of tag from object
@@ -196,7 +196,7 @@ class Tags:
     def __init__(self, name=None, parentObject=None):
         self._inheritedTags = []
         self._optionalTags = []
-        self.relationship = Relationship(self)
+        self.relationships = Relationships(self)
         self.requiredTags = [None, None]
 
         # self.name is requiredTags[0] and self.partOf is requiredTags[1] so
@@ -209,12 +209,12 @@ class Tags:
 
     @property
     def parentObject(self):
-        return self.relationship.parent
+        return self.relationships.parent
 
     @property
     def partOf(self):
-        self.requiredTags[1] = self.relationship.part_of
-        return self.relationship.part_of
+        self.requiredTags[1] = self.relationships.part_of
+        return self.relationships.part_of
 
     @classmethod
     def disconnect(cls):
@@ -485,13 +485,13 @@ class Tags:
         circular references.
 
         NOTE3: Method delegates to Relationship class to provide a copy for
-        that attribute. relationship.parent is preserved. Probably this should
+        that attribute. relationships.parent is preserved. Probably this should
         be in Tags.copy, but it can't be currently--Driver class uses
         Tags.copyTagsTo to copy itself (a direct call), which bypasses
         Tags.copy.  Without modifying Driver (and possibly other classes),
-        adding the code for dealing with the relationship class had to go here.
+        adding the code for dealing with the relationships class had to go here.
         """
-        target.relationship = self.relationship.copy()
+        target.relationships = self.relationships.copy()
 
         if self.tagManager.rules:
             self.copyTagsTo_rules_on(target)
@@ -734,7 +734,7 @@ class Tags:
         Tags.setPartOf(parentObject) -> None
 
         This method sets an instance's Relationship.parent attribute and also
-        sets instance.requiredTags[1] = relationship.parent.name OR None
+        sets instance.requiredTags[1] = relationships.parent.name OR None
 
         If the parentObject provided to the method has a name,
         instance.requiredTags[1] is set to the same value.
@@ -743,10 +743,10 @@ class Tags:
         instance.requiredTags[1] to None.
 
         In both cases, method delegates to Relationship class to set
-        instance.relationship.parent to point to the actual parentObject.
+        instance.relationships.parent to point to the actual parentObject.
         """
-        self.relationship.set_parent(parentObject)
-        self.requiredTags[1] = self.relationship.part_of
+        self.relationships.set_parent(parentObject)
+        self.requiredTags[1] = self.relationships.part_of
 
     def tag(self,
             *newTags,
