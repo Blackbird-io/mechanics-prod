@@ -251,7 +251,7 @@ class BusinessUnit(History, Tags, Equalities):
         box = "\n".join(lines)
         return box
 
-    def add_component(self, bu, update_id=True, register_in_period=True):
+    def add_component(self, bu, update_id=True, register_in_period=True, overwrite=False):
         """
 
 
@@ -295,7 +295,7 @@ class BusinessUnit(History, Tags, Equalities):
             bu._update_id(namespace=self.id.bbid, recur=True)
         # Step 3: Register the the units. Will raise errors on collisions.
         if register_in_period:
-            bu._register_in_period(recur=True, overwrite=False)
+            bu._register_in_period(recur=True, overwrite=overwrite)
         self.components.add_item(bu)
     
     def addDriver(self, newDriver, *otherKeys):
@@ -726,7 +726,8 @@ class BusinessUnit(History, Tags, Equalities):
         # Now do the time-period association
         younger_me._fit_to_period(self.period.past, recur=False)
         younger_me._register_in_period(recur=False, overwrite=True)
- 
+        # I want to do the registration once, after I have built the full family
+        # tree for the past. Only at the top node. And then do so with recurrence.
 
         kids = self.components.values()
         if bb_settings.DEBUG_MODE:
@@ -737,7 +738,13 @@ class BusinessUnit(History, Tags, Equalities):
         if kids:
             for child in kids:
                 child.make_past(overwrite=overwrite)
-                younger_me.add_component(child.past, update_id=False)
+                younger_me.add_component(
+                    child.past,
+                    update_id=False,
+                    overwrite=True
+                    # The meaning of `overwrite` here has different meaning
+                    # than enclosing scope                    
+                    )
                 # Have to configure younger_me in the right period before
                 # adding children
         
