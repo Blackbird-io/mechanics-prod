@@ -751,7 +751,22 @@ class BusinessUnit(History, Tags, Equalities):
         self.reset_financials(recur=False)
         # Reset financials here because we just connected a new starting balance
         # sheet. All the recursion in the routine takes place in the explicit
-        # block above, so set recur=False here. 
+        # block above, so set recur=False here.
+
+    def better_logic_for_past(self):
+        if self.past:
+            raise PermissionException
+        
+        younger = self.copy()
+        younger.reset_financials()
+
+        younger._fit_to_period(self.period.past)
+        younger._register_in_period()
+
+        # younger has copies of all components
+
+        self.set_history(younger, clear_future=False)
+        # Should just work        
 
     def synchronize(self, recur=True):
         """
