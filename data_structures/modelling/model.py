@@ -37,7 +37,7 @@ import bb_settings
 from .time_line import TimeLine
 
 from data_structures.system.bbid import ID
-from data_structures.system.tags import Tags
+from data_structures.system.tags_mixin import Tags_MixIn
 from data_structures.serializers.chef.chef_settings import DEFAULT_SCENARIOS
 
 
@@ -47,7 +47,7 @@ from data_structures.serializers.chef.chef_settings import DEFAULT_SCENARIOS
 # n/a
 
 # classes
-class Model:
+class Model(Tags_MixIn):
     """
 
     This class provides a form of a standard time model of business performance.
@@ -109,7 +109,8 @@ class Model:
     string for more information.
     """    
     def __init__(self, name):
-        self.tags = Tags(name)
+        Tags_MixIn.__init__(self, name)
+
         self._started = False
         #
         self.id = ID()

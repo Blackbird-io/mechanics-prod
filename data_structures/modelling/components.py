@@ -33,7 +33,7 @@ import time
 import bb_exceptions
 import tools.for_tag_operations
 
-from data_structures.system.tags import Tags
+from data_structures.system.tags_mixin import Tags_MixIn
 
 from .equalities import Equalities
 
@@ -44,7 +44,7 @@ from .equalities import Equalities
 #n/a
 
 #classes
-class Components(dict, Equalities):
+class Components(dict, Tags_MixIn, Equalities):
     """
 
     The Components class defines a container that stores BusinessUnit objects
@@ -87,11 +87,11 @@ class Components(dict, Equalities):
     #keyAttributes should remain an explicit empty list to maintain dictionary
     #comparison logic
         
-    def __init__(self,name = "Components"):
+    def __init__(self, name="Components"):
         dict.__init__(self)
+        Tags_MixIn.__init__(self, name)
         Equalities.__init__(self)
         self.by_name = dict()
-        self.tags = Tags(name)
 
     def __eq__(self, comparator, trace = False, tab_width = 4):
         """

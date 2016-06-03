@@ -34,7 +34,7 @@ import bb_settings
 
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
-from data_structures.system.tags import Tags
+from data_structures.system.tags_mixin import Tags_MixIn
 import formula_manager as FormulaManager
 
 from .parameters import Parameters
@@ -46,7 +46,7 @@ from .parameters import Parameters
 # n/a
 
 # Classes
-class Driver:
+class Driver(Tags_MixIn):
     """
 
     Drivers apply formulas to business units.
@@ -141,6 +141,8 @@ class Driver:
         cls._FM = new_FM
         
     def __init__(self, signature=None):
+        Tags_MixIn.__init__(self)
+
         self.active = True
         self.conversion_table = dict()
         self.parameters = Parameters()
@@ -155,7 +157,6 @@ class Driver:
         # order in which drivers apply to a line.
 
         self.signature = signature
-        self.tags = Tags()
 
         self.workConditions = {}
         self.workConditions["name"] = ["FAIL"]

@@ -33,7 +33,7 @@ import tools.for_printing as printing_tools
 
 from data_structures.guidance.guide import Guide
 from data_structures.system.print_as_line import PrintAsLine
-from data_structures.system.tags import Tags
+from data_structures.system.tags_mixin import Tags_MixIn
 
 
 
@@ -42,7 +42,7 @@ from data_structures.system.tags import Tags
 #n/a
 
 #classes
-class Step(PrintAsLine):
+class Step(PrintAsLine, Tags_MixIn):
     """
 
     Class for tracking logical steps. Has the tags and guide interface of
@@ -66,10 +66,10 @@ class Step(PrintAsLine):
                  priority=DEFAULT_PRIORITY_LEVEL,
                  quality=DEFAULT_QUALITY_REQUIREMENT):
         PrintAsLine.__init__(self)
+        Tags_MixIn.__init__(self, name)
 
         self.guide = Guide(priority, quality)
-        self.tags = Tags(name)
-        
+
     def pre_format(self, **kargs):
         #custom formatting logic
         if self.tags.name:

@@ -32,7 +32,7 @@ import copy
 
 import bb_exceptions
 
-from data_structures.system.tags import Tags
+from data_structures.system.tags_mixin import Tags_MixIn
 
 from .components import Components
 from .driver import Driver
@@ -44,7 +44,7 @@ from .driver import Driver
 #n/a
 
 #classes
-class DrContainer(Components):
+class DrContainer(Components, Tags_MixIn):
     """ 
 
     The DrContainer class provides organization and storage for drivers that
@@ -89,8 +89,10 @@ class DrContainer(Components):
     ====================  ======================================================
     """
     
-    def __init__(self,name = "DrContainer"):
-        Components.__init__(self,name)
+    def __init__(self, name="DrContainer"):
+        Components.__init__(self, name)
+        Tags_MixIn.__init__(self, name)
+
         self[None] = set()
         self.dr_blank = Driver()
         self.dr_directory = {}        

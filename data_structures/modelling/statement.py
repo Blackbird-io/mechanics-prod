@@ -33,6 +33,7 @@ import bb_exceptions
 import bb_settings
 
 from data_structures.system.tags import Tags
+from data_structures.system.tags_mixin import Tags_MixIn
 from .equalities import Equalities
 
 
@@ -49,7 +50,7 @@ doNotTouchTag = Tags.tagManager.catalog["do_not_touch"]
 tConsolidated = Tags.tagManager.catalog["consolidated"]
 
 # Classes
-class Statement(Equalities):
+class Statement(Equalities, Tags_MixIn):
     """
 
     A Statement is a container that supports fast lookup and ordered views.
@@ -110,7 +111,8 @@ class Statement(Equalities):
     # Should rename this comparable_attributes
 
     def __init__(self, name=None, spacing=100):
-        self.tags = Tags(name)
+        Tags_MixIn.__init__(self, name)
+
         self._details = dict()
 
         if spacing < 1:
