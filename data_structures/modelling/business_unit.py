@@ -635,7 +635,7 @@ class BusinessUnit(History, Tags, Equalities):
         # Reset financials here because we just connected a new starting balance
         # sheet.
 
-    def make_past(self, younger_me=None, clear_future=True, recur=True):
+    def make_past_old(self, recur=True):
         """
 
 
@@ -645,10 +645,16 @@ class BusinessUnit(History, Tags, Equalities):
         Set history for instance; repeat for components (by bbid) if recur is
         True.
         """
-        if younger_me is None:
-            younger_me = self.copy()
-            younger_me.clear()
-            # `past` is a blank shell with a matching bbid
+        if self.past:
+            if overwrite:
+                pass
+            else:            
+                raise CustomException
+                # Throw an exception if unit.past is defined? Right now will implicitly overwrite
+        
+        younger_me = self.copy()
+        younger_me.clear()
+        # `younger_me` is a blank shell with a matching bbid
           
         History.set_history(self, younger_me, clear_future=False)
         # Link the past to the present. Use clear_future=False to preserve link
@@ -669,6 +675,76 @@ class BusinessUnit(History, Tags, Equalities):
             # Mandatory recursion. If past changes for parent, it must also
             # change for children.
 
+            # Right now, none of the children's past will point to the parent's past
+
+            # May be I should start recursion at the bottom 
+
+            # If you do c1.make_past(), c2.make_past(), will NOT connect their parent
+            # Could add this feature
+            # if c1.parent, go to self.period.past, find self by id in period.past,
+            # make sure c2.past is part of c1. of course, doing so could lead to implicit overwrites
+            # (in case parent somehow already had a child). so should throw exception ...
+
+
+        self.reset_financials(recur=False)
+        # Reset financials here because we just connected a new starting balance
+        # sheet. All the recursion in the routine takes place in the explicit
+        # block above, so set recur=False here. 
+
+    def make_past(self, overwrite=False):
+        """
+
+
+        BusinessUnit.set_history() -> None
+
+
+        Set history for instance; repeat for components (by bbid) if recur is
+        True.
+        """
+        
+        if self.past:
+            if overwrite:
+                pass
+            else:
+                c = "Past already exists. Overwrite must be explicit."
+                raise CustomException
+
+        kids = self.components.values()
+        if bb_settings.DEBUG_MODE:
+            kids = self.components.get_ordered()
+            # Use stable order to simplify debugging
+
+        if kids:
+            for child in kids:
+                child.make_past(overwrite=overwrite)
+                # Want to throw exceptions as soon as possible, before we start
+                # creating objects.
+
+        # Create a blank past for yourself. For units at bottom of the tree,
+        # logic starts here.
+        younger_me = self.copy()
+        younger_me.clear()
+        # `younger_me` is a blank unit with a matching bbid
+        younger_me.parentObject = None
+        # We intentionally make younger_me look like an orphan. We do this
+        # **now** (while younger_me still lives in same period as self) to
+        # avoid creating any garbage pseudo-parents in the past.       
+          
+        History.set_history(self, younger_me, clear_future=False)
+        # Link the past to the present. Use clear_future=False to preserve link
+        # between present and future.
+
+        # Now do the time-period association
+        younger_me._fit_to_period(self.period.past, recur=False)
+        younger_me._register_in_period(recur=False, overwrite=True)
+ 
+        # Now, connect the orphan children's pasts to my past
+        if kids:
+            for child in kids:
+                younger_me.add_component(child.past, update_id=False)
+                # Have to configure younger_me in the right period before
+                # adding children
+        
         self.reset_financials(recur=False)
         # Reset financials here because we just connected a new starting balance
         # sheet. All the recursion in the routine takes place in the explicit
