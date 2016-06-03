@@ -345,7 +345,7 @@ class BusinessUnit(History, Tags, Equalities):
         """
         blank_bu = BusinessUnit(name=self.name)
         for attr in self.tagSources:
-            blank_attr = getattr(blank_bu,attr)
+            blank_attr = getattr(blank_bu, attr)
             setattr(self, attr, blank_attr)
     
     def copy(self, enforce_rules=True):
@@ -635,7 +635,7 @@ class BusinessUnit(History, Tags, Equalities):
         # Reset financials here because we just connected a new starting balance
         # sheet.
 
-    def make_past(self, history=None, clear_future=True, recur=True):
+    def make_past(self, younger_me=None, clear_future=True, recur=True):
         """
 
 
@@ -645,20 +645,20 @@ class BusinessUnit(History, Tags, Equalities):
         Set history for instance; repeat for components (by bbid) if recur is
         True.
         """
-        if history is None:
-            history = self.copy()
-            history.clear()
-            # Check if clear eliminates components. It shouldnt
-
-        History.set_history(self, history, clear_future=False)
-        # This is probably unnecessary. Should just be self.history.past = x. Then
-        # no reliance on the external recursion. 
+        if younger_me is None:
+            younger_me = self.copy()
+            younger_me.clear()
+            # `past` is a blank shell with a matching bbid
+          
+        History.set_history(self, younger_me, clear_future=False)
+        # Link the past to the present. Use clear_future=False to preserve link
+        # between present and future.
 
         # Now do the time-period association
-        history._fit_to_period(self.period.past, recur=False)
-        history._register_in_period(recur=False, overwrite=True)
+        younger_me._fit_to_period(self.period.past, recur=False)
+        younger_me._register_in_period(recur=False, overwrite=True)
         # Explicitly overwrite any prior versions of self
-
+ 
         pool = self.components.values()
         if bb_settings.DEBUG_MODE:
             pool = self.components.get_ordered()
@@ -671,8 +671,8 @@ class BusinessUnit(History, Tags, Equalities):
 
         self.reset_financials(recur=False)
         # Reset financials here because we just connected a new starting balance
-        # sheet. Recur is false on the financials reset because we explicitly do
-        # so. 
+        # sheet. All the recursion in the routine takes place in the explicit
+        # block above, so set recur=False here. 
 
     def synchronize(self, recur=True):
         """
