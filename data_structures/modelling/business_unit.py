@@ -709,17 +709,6 @@ class BusinessUnit(History, Tags, Equalities):
                 c = "Past already exists. Overwrite must be explicit."
                 raise CustomException
 
-        kids = self.components.values()
-        if bb_settings.DEBUG_MODE:
-            kids = self.components.get_ordered()
-            # Use stable order to simplify debugging
-
-        if kids:
-            for child in kids:
-                child.make_past(overwrite=overwrite)
-                # Want to throw exceptions as soon as possible, before we start
-                # creating objects.
-
         # Create a blank past for yourself. For units at bottom of the tree,
         # logic starts here.
         younger_me = self.copy()
@@ -738,9 +727,16 @@ class BusinessUnit(History, Tags, Equalities):
         younger_me._fit_to_period(self.period.past, recur=False)
         younger_me._register_in_period(recur=False, overwrite=True)
  
+
+        kids = self.components.values()
+        if bb_settings.DEBUG_MODE:
+            kids = self.components.get_ordered()
+            # Use stable order to simplify debugging
+            
         # Now, connect the orphan children's pasts to my past
         if kids:
             for child in kids:
+                child.make_past(overwrite=overwrite)
                 younger_me.add_component(child.past, update_id=False)
                 # Have to configure younger_me in the right period before
                 # adding children
