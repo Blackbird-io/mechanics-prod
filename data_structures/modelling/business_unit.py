@@ -37,6 +37,7 @@ from data_structures.guidance.interview_tracker import InterviewTracker
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
+from data_structures.system.tags_mixin import Tags_MixIn
 from data_structures.valuation.business_summary import BusinessSummary
 from data_structures.valuation.company_value import CompanyValue
 
@@ -64,7 +65,7 @@ tHardCoded = Tags.tagManager.catalog["hard"]
 T_REPLICA = Tags.tagManager.catalog["ddr"]
 
 # Classes   
-class BusinessUnit(History, Equalities):
+class BusinessUnit(History, Equalities, Tags_MixIn):
     """
    
     Object describes a group of business activity. A business unit can be a
@@ -121,8 +122,8 @@ class BusinessUnit(History, Equalities):
     def __init__(self, name, fins=None):
 
         History.__init__(self)
+        Tags_MixIn.__init__(self, name)
 
-        self.tags = Tags(name)
         self._type = None
         
         self.components = None

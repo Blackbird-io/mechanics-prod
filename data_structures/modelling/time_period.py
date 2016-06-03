@@ -36,7 +36,7 @@ import bb_exceptions
 import bb_settings
 
 from data_structures.system.bbid import ID
-from data_structures.system.tags import Tags
+from data_structures.system.tags_mixin import Tags_MixIn
 
 from .parameters import Parameters
 from .history import History
@@ -48,7 +48,7 @@ from .history import History
 # n/a
 
 # Classes
-class TimePeriod(History):
+class TimePeriod(History, Tags_MixIn):
     """
 
     TimePeriod objects represent periods of time and store a snapshot of some
@@ -95,8 +95,7 @@ class TimePeriod(History):
     def __init__(self, start_date, end_date, content=None):
         
         History.__init__(self, recursive_attribute="content")
-
-        self.tags = Tags()
+        Tags_MixIn.__init__(self)
 
         self.start = start_date
         self.end = end_date
