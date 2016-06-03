@@ -127,14 +127,14 @@ class Tags:
 
     DATA:
     _inheritedTags        list; stores tags instance inherited from other objs
-    _optionalTags         list; tags applied to instance
-    allTags               list; dynamic, returns requiredTags+optionalTags
+    _optional             list; tags applied to instance
+    all                   list; dynamic, returns requiredTags+optionalTags
     autoRegister          bool; CLASS attr, whether tag() should add to catalog
     tagManager            obj; CLASS pointer to tagManager object
     connected             bool; CLASS, True if connected to a tagManager
     hands_off             list; CLASS, tags that prohibit any modification
     name                  name of instance, dynamic, value of requiredTags[0]
-    optionalTags          list; dynamic, returns _optionalTags + _inheritedTags
+    optional              list; dynamic, returns _optionalTags + _inheritedTags
     relationships          obj; CLASS, instance of Relationship class
                           (has attributes parent_object and part_of)
     parentObject          OBSOLETE; property; delegates to
@@ -195,9 +195,9 @@ class Tags:
 
     def __init__(self, name=None, parentObject=None):
         self._inheritedTags = []
-        self._optionalTags = []
+        self._optional = []
         self.relationships = Relationships(self)
-        self.requiredTags = [None, None]
+        self.required = [None, None]
 
         # self.name is requiredTags[0] and self.partOf is requiredTags[1] so
         # list should have minimum length of 2; actual values set through
@@ -213,7 +213,7 @@ class Tags:
 
     @property
     def partOf(self):
-        self.requiredTags[1] = self.relationships.part_of
+        self.required[1] = self.relationships.part_of
         return self.relationships.part_of
 
     @classmethod
@@ -322,7 +322,7 @@ class Tags:
         """
 
         def __get__(self, instance, owner):
-            oTags = instance._optionalTags + [instance.spacer_opt]
+            oTags = instance._optional + [instance.spacer_opt]
             oTags = oTags + instance._inheritedTags
             return oTags
 
@@ -331,7 +331,7 @@ class Tags:
             raise bb_exceptions.ManagedAttributeError(c)
 
     # dynamic class attribute:
-    optionalTags = dyn_OptTManager()
+    optional = dyn_OptTManager()
 
     class dyn_AllTManager:
         """
@@ -341,8 +341,8 @@ class Tags:
         """
 
         def __get__(self, instance, owner):
-            allTags = instance.requiredTags + [instance.spacer_req]
-            allTags = allTags + instance.optionalTags
+            allTags = instance.required + [instance.spacer_req]
+            allTags = allTags + instance.optional
             return allTags
 
         def __set__(self, instance, value):
@@ -350,7 +350,7 @@ class Tags:
             raise bb_exceptions.ManagedAttributeError(c)
 
     # allTags is a Tags class attribute managed by the descriptor above
-    allTags = dyn_AllTManager()
+    all = dyn_AllTManager()
 
     class dyn_SpecTManager:
         """
@@ -360,7 +360,7 @@ class Tags:
         On deletion, replaces the special tags with None objects in requiredTags.
 
         For .tags.partOf gets, the descriptor first checks if the caller has a
-        .tags.parentObject. If so, the descriptor updates caller.requiredTags[1] with the
+        .tags.parentObject. If so, the descriptor updates caller.required[1] with the
         parentObject's name. The descriptor assumes name is None if the parentObject
         is missing the attribute. In all scenarios, the descriptor then returns
         whatever is in requiredTags[1].
@@ -371,18 +371,18 @@ class Tags:
 
         def __get__(self, instance, owner):
             if self.target == "name":
-                return instance.requiredTags[0]
+                return instance.required[0]
 
         def __set__(self, instance, value):
             if self.target == "name":
-                instance.requiredTags[0] = value
+                instance.required[0] = value
 
         def __delete__(self, instance):
             if self.target == "name":
-                instance.requiredTags[0] = None
+                instance.required[0] = None
 
     # Tags.name is a dynamic class attribute linked to
-    # self.requiredTags and managed by the descriptor above
+    # self.required and managed by the descriptor above
     name = dyn_SpecTManager(targetAttribute="name")
 
     def checkOrdinary(self, target=None):
@@ -407,7 +407,7 @@ class Tags:
         if not target:
             target = self
         result = False
-        if set(self.spec_tags) & set(target.allTags) == set():
+        if set(self.spec_tags) & set(target.all) == set():
             result = True
         return result
 
@@ -433,7 +433,7 @@ class Tags:
         if not target:
             target = self
         result = False
-        if set(self.hands_off) & set(target.allTags) == set():
+        if set(self.hands_off) & set(target.all) == set():
             result = True
         return result
 
@@ -509,18 +509,18 @@ class Tags:
 
         Method replaces all tag attributes on target with copies of the
         respective attribute on the calling instance. Method follows tag rules
-        where specified. Method preserves target.requiredTags[:2] (``name`` and
+        where specified. Method preserves target.required[:2] (``name`` and
         ``partOf``).
 
         NOTE2: Method may loop indefinitely if tagManager.rules contains
         circular references.
         """
-        fields = ["requiredTags", "_optionalTags", "_inheritedTags"]
+        fields = ["required", "_optional", "_inheritedTags"]
         rules = self.tagManager.rules
         for attr in fields:
             t_field = None
             source_tags = getattr(self, attr)
-            if attr == "requiredTags":
+            if attr == "required":
                 t_field = "req"
                 source_tags = source_tags[2:]
                 preserve = getattr(target, attr)[:2]
@@ -536,7 +536,7 @@ class Tags:
             # called as part of Tags.copy)
             #
             new_tags = getattr(target, attr)
-            if attr == "requiredTags":
+            if attr == "required":
                 new_tags.extend(preserve)
                 # preserve target name, partOf
             #
@@ -571,11 +571,11 @@ class Tags:
 
         Method replaces all tag attributes on target with copies of the
         respective attribute on the calling instance. Method preserves
-        target.requiredTags[:2] (``name`` and ``partOf``).
+        target.required[:2] (``name`` and ``partOf``).
         """
-        target.requiredTags = target.requiredTags[:2] + self.requiredTags[2:]
+        target.required = target.required[:2] + self.required[2:]
         # preserve **target** name, partOf, supplement w seed req tags
-        target._optionalTags = self._optionalTags[:]
+        target._optional = self._optional[:]
         target._inheritedTags = self._inheritedTags[:]
 
     def extrapolate_to(self, target, mode="at"):
@@ -589,9 +589,9 @@ class Tags:
         returns a shallow copy of the seed (caller) instance. The seed tags,
         after passing through rules, provides the template. The method
         then adds new tags from target one field at a time (new items in
-        target._optionalTags go on result._optionalTags).
+        target._optional go on result._optional).
 
-        Method does not look at target.requiredTags[:2]. Method applies target
+        Method does not look at target.required[:2]. Method applies target
         tags in sorted() order.
 
         The optional ``mode`` argument describes the set of rules Tags.tags.tag()
@@ -602,10 +602,10 @@ class Tags:
         seed = self
         result = Tags.copy(seed, enforce_rules=True)
         # maintain all tags on seed
-        fields = ["requiredTags", "_optionalTags", "_inheritedTags"]
+        fields = ["required", "_optional", "_inheritedTags"]
         for attr in fields:
             targ_tags = getattr(target, attr)
-            if attr == "requiredTags":
+            if attr == "required":
                 targ_tags = targ_tags[2:]
             targ_tags = set(targ_tags)
             r_res_tags = getattr(result, attr)
@@ -650,7 +650,7 @@ class Tags:
 
 
         Method adds tags found on the source to self as inherited tags. Method
-        skips source.requiredTags[:2] (name and partOf).
+        skips source.required[:2] (name and partOf).
 
         The method will not copy ``doNotInherit`` tags. By default, if
         doNotInherit is blank, method will strip out doNotTouchTag and
@@ -666,12 +666,12 @@ class Tags:
 
         This method evaluates tags as casefolded objects to the extent possible.
         """
-        sourceTags = source.requiredTags[2:] + source.optionalTags[:]
+        sourceTags = source.required[2:] + source.optional[:]
         dni = [doNotTouchTag, dropDownReplicaTag]
         if doNotInherit != tuple():
             dni = doNotInherit
         if noDuplicates:
-            sourceTags = set(sourceTags) - set(self.allTags)
+            sourceTags = set(sourceTags) - set(self.all)
         # source tags is now **unordered**
         sourceTags = sourceTags - set(dni)
         sourceTags = sorted(sourceTags)
@@ -680,7 +680,7 @@ class Tags:
         # wrecks HAVOC on comparisons
         self.tag(*sourceTags, field="inh", mode="up")
         # NOTE: can preserve order by expanding dni and go through tags one by
-        # one. dni = set(dni)+set(self.allTags). if tag in dni: pass, else tag()
+        # one. dni = set(dni)+set(self.all). if tag in dni: pass, else tag()
 
     def registerTag(self, tag):
         """
@@ -706,7 +706,7 @@ class Tags:
         Method for setting the name of an object.
 
         The name specified via this method is set as the object's name attribute
-        and recorded in object.requiredTags[0].
+        and recorded in object.required[0].
 
         All "names" in the Blackbird environment are required tags.
         If a suitor object specifies a name condition, a target object must have
@@ -734,19 +734,19 @@ class Tags:
         Tags.setPartOf(parentObject) -> None
 
         This method sets an instance's Relationship.parent attribute and also
-        sets instance.requiredTags[1] = relationships.parent.name OR None
+        sets instance.required[1] = relationships.parent.name OR None
 
         If the parentObject provided to the method has a name,
-        instance.requiredTags[1] is set to the same value.
+        instance.required[1] is set to the same value.
 
         If the parentObject does not have a name, method sets
-        instance.requiredTags[1] to None.
+        instance.required[1] to None.
 
         In both cases, method delegates to Relationship class to set
         instance.relationships.parent to point to the actual parentObject.
         """
         self.relationships.set_parent(parentObject)
-        self.requiredTags[1] = self.relationships.part_of
+        self.required[1] = self.relationships.part_of
 
     def tag(self,
             *newTags,
@@ -767,8 +767,8 @@ class Tags:
         NOTE: Method automatically **decases** all tags.
 
         The ``field`` argument regulates tag placement on the instance:
-        -- "req" means last position of instance.requiredTags
-        -- "opt" [ default ] means last position of instance._optionalTags
+        -- "req" means last position of instance.required
+        -- "opt" [ default ] means last position of instance._optional
         -- "inh" means last position of instance._inheritedTags
 
         Tags should generally be optional. When in doubt, add more tags.
@@ -804,11 +804,11 @@ class Tags:
 
         """
         attrs = {}
-        attrs["r"] = attrs["req"] = attrs["required"] = "requiredTags"
-        attrs["o"] = attrs["opt"] = attrs["optional"] = "_optionalTags"
+        attrs["r"] = attrs["req"] = attrs["required"] = "required"
+        attrs["o"] = attrs["opt"] = attrs["optional"] = "_optional"
         attrs["i"] = attrs["inh"] = attrs["inherited"] = "_inheritedTags"
-        attrs[0] = attrs["requiredTags"] = attrs["r"]
-        attrs[1] = attrs["_optionalTags"] = attrs["o"]
+        attrs[0] = attrs["required"] = attrs["r"]
+        attrs[1] = attrs["_optional"] = attrs["o"]
         attrs[2] = attrs["_inheritedTags"] = attrs["i"]
         #
         real_thing = getattr(self, attrs[field])
@@ -879,19 +879,19 @@ class Tags:
         # have to nest the recursive call in the if statements, otherwise method
         # will loop indefinitely. that is, only call the method again if the
         # badTag was already found once and removed
-        if badTag in self.requiredTags[:2]:
-            location = self.requiredTags.index(badTag)
-            self.requiredTags[location] = None
+        if badTag in self.required[:2]:
+            location = self.required.index(badTag)
+            self.required[location] = None
             self.unTag(badTag)
         else:
             pass
-        if badTag in self.requiredTags[2:]:
-            self.requiredTags.remove(badTag)
+        if badTag in self.required[2:]:
+            self.required.remove(badTag)
             self.unTag(badTag)
         else:
             pass
-        if badTag in self._optionalTags:
-            self._optionalTags.remove(badTag)
+        if badTag in self._optional:
+            self._optional.remove(badTag)
             self.unTag(badTag)
         else:
             pass

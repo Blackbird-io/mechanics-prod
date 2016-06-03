@@ -555,7 +555,7 @@ class Statement(Equalities):
         for name, external_line in pool:
             # ORDER SHOULD NOT MATTER HERE
 
-            if set(tagsToOmit) & set(external_line.tags.allTags):
+            if set(tagsToOmit) & set(external_line.tags.all):
                 continue
 
             # If we get here, the line has survived screening. We now have two
@@ -578,7 +578,7 @@ class Statement(Equalities):
                 if external_line.consolidate is True:
                     if consolidating:
                         if external_line.value is not None:
-                            if tConsolidated not in local_copy.tags.allTags:
+                            if tConsolidated not in local_copy.tags.all:
                                 local_copy.tags.tag(tConsolidated)
 
                             # Pick up lines with None values, but don't tag

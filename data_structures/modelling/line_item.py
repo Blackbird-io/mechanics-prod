@@ -85,8 +85,8 @@ class LineItem(Statement):
     set_value()           sets value to input, records signature
     ====================  ======================================================
     """
-    keyAttributes = Statement.keyAttributes + ["value", "tags.requiredTags",
-                                               "tags.optionalTags"]
+    keyAttributes = Statement.keyAttributes + ["value", "tags.required",
+                                               "tags.optional"]
 
     # Make sure that equality analysis skips potentially circular pointers like
     # .tags.parentObject. Otherwise, comparing children could look to parent, which
