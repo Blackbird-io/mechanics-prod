@@ -359,7 +359,7 @@ class Yenta():
             #
             match = criteria & build_basic_profile(topic)
             raw_score = len(match)
-            rel_score = raw_score/len(topic.tags.tags.allTags)
+            rel_score = raw_score/len(topic.tags.allTags)
             #
             self.scores[bbid] = [raw_score, rel_score]
             #save state on Yenta instance so subsequent routines can access

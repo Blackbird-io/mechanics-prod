@@ -90,11 +90,10 @@ class Relationship:
 
     @property
     def part_of(self):
-        if getattr(self.parent, "name", None):
-            par_name = deCase(self.parent.tags.name)
-        else:
-            #  parent doesn't have a name attribute or its name is None
-            par_name = None
+        par_name = None
+        if getattr(self.parent, "tags", None):
+            if getattr(self.parent.tags, "name", None):
+                par_name = deCase(self.parent.tags.name)
 
         return par_name
 

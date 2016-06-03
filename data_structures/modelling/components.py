@@ -181,7 +181,8 @@ class Components(dict, Equalities):
         shell. Method then sets result.by_name to a blank dictionary and adds a
         copy of each unit in the instance to the result. 
         """
-        result = Tags.copy(self, enforce_rules=True)
+        result = copy.copy(self)
+        result.tags = self.tags.copy(enforce_rules)
         #
         #customize container
         result.clear()

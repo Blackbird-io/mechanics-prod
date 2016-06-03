@@ -143,7 +143,8 @@ class TimePeriod(History):
         Method returns a new TimePeriod object whose content is a class-specific
         copy of the caller content. 
         """
-        result = Tags.copy(self, enforce_rules)
+        result = copy.copy(self)
+        result.tags = self.tags.copy(enforce_rules)
         result.start = copy.copy(self.start)
         result.end = copy.copy(self.end)
         if self.content:

@@ -266,7 +266,7 @@ class Driver:
         NOTE2: Result points to the original conversion table.
         """
         result = copy.copy(self)
-        self.tags.copyTagsTo(self, result.tags, enforce_rules)
+        result.tags = self.tags.copy(enforce_rules)
         result.parameters = copy.deepcopy(self.parameters)
         result.workConditions = copy.deepcopy(self.workConditions)
         return result

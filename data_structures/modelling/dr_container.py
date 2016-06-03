@@ -194,7 +194,8 @@ class DrContainer(Components):
         """
         #
         # Make container
-        result = Tags.copy(self, enforce_rules)
+        result = copy.copy(self)
+        result.tags = self.tags.copy(enforce_rules)
         result.clear()
         result.dr_directory = {}
         # Make a clean empty dictionary for new directory
