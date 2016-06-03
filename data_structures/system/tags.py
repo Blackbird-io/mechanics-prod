@@ -126,7 +126,7 @@ class Tags:
     ====================  ======================================================
 
     DATA:
-    _inheritedTags        list; stores tags instance inherited from other objs
+   ._inherited        list; stores tags instance inherited from other objs
     _optional             list; tags applied to instance
     all                   list; dynamic, returns requiredTags+optionalTags
     autoRegister          bool; CLASS attr, whether tag() should add to catalog
@@ -134,7 +134,7 @@ class Tags:
     connected             bool; CLASS, True if connected to a tagManager
     hands_off             list; CLASS, tags that prohibit any modification
     name                  name of instance, dynamic, value of requiredTags[0]
-    optional              list; dynamic, returns _optionalTags + _inheritedTags
+    optional              list; dynamic, returns _optionalTags +._inherited
     relationships          obj; CLASS, instance of Relationship class
                           (has attributes parent_object and part_of)
     parentObject          OBSOLETE; property; delegates to
@@ -194,7 +194,7 @@ class Tags:
     # data in the child classes.
 
     def __init__(self, name=None, parentObject=None):
-        self._inheritedTags = []
+        self._inherited = []
         self._optional = []
         self.relationships = Relationships(self)
         self.required = [None, None]
@@ -323,7 +323,7 @@ class Tags:
 
         def __get__(self, instance, owner):
             oTags = instance._optional + [instance.spacer_opt]
-            oTags = oTags + instance._inheritedTags
+            oTags = oTags + instance._inherited
             return oTags
 
         def __set__(self, instance, value):
@@ -444,12 +444,12 @@ class Tags:
         Tags.clearInheritedTags() -> None
 
 
-        Method sets instance._inheritedTags to an empty list.
+        Method sets instance._inherited to an empty list.
 
         If ``recur`` is True, method calls clearInheritedTags(recur=True) on
         every attribute in instance.tagSources.
         """
-        self._inheritedTags = []
+        self._inherited = []
 
     def copy(self, enforce_rules=True):
         """
@@ -515,7 +515,7 @@ class Tags:
         NOTE2: Method may loop indefinitely if tagManager.rules contains
         circular references.
         """
-        fields = ["required", "_optional", "_inheritedTags"]
+        fields = ["required", "_optional", "_inherited"]
         rules = self.tagManager.rules
         for attr in fields:
             t_field = None
@@ -526,7 +526,7 @@ class Tags:
                 preserve = getattr(target, attr)[:2]
                 # Upgrade-S: can do a direct call instead of getattr
             else:
-                if attr == "._inheritedTags":
+                if attr == "._inherited":
                     t_field = "inh"
             check_tags = set(source_tags) & set(rules.keys())
             #
@@ -576,7 +576,7 @@ class Tags:
         target.required = target.required[:2] + self.required[2:]
         # preserve **target** name, partOf, supplement w seed req tags
         target._optional = self._optional[:]
-        target._inheritedTags = self._inheritedTags[:]
+        target._inherited = self._inherited[:]
 
     def extrapolate_to(self, target, mode="at"):
         """
@@ -597,12 +597,12 @@ class Tags:
         The optional ``mode`` argument describes the set of rules Tags.tags.tag()
         applies when moving target tags to result.
         """
-        target.inheritTags(recur=True)
+        target.inherit(recur=True)
 
         seed = self
         result = Tags.copy(seed, enforce_rules=True)
         # maintain all tags on seed
-        fields = ["required", "_optional", "_inheritedTags"]
+        fields = ["required", "_optional", "_inherited"]
         for attr in fields:
             targ_tags = getattr(target, attr)
             if attr == "required":
@@ -617,14 +617,14 @@ class Tags:
             result.tag(*new_tags, field=attr, mode=mode)
         return result
 
-    def inheritTags(self, recur=True):
+    def inherit(self, recur=True):
         """
 
 
-        T.inheritTags() -> None
+        T.inherit() -> None
 
 
-        Method runs instance.inheritTagsFrom() every object whose attribute
+        Method runs instance.inheritFrom() every object whose attribute
         name is stored in tagSources.
 
         If ``recur`` == True, method runs inheritTags() on every source object
@@ -639,14 +639,14 @@ class Tags:
             source = getattr(self, attr)
             if source:
                 if recur:
-                    source.inheritTags(recur=True)
-                self.inheritTagsFrom(source)
+                    source.inherit(recur=True)
+                self.inheritFrom(source)
 
-    def inheritTagsFrom(self, source, *doNotInherit, noDuplicates=True):
+    def inheritFrom(self, source, *doNotInherit, noDuplicates=True):
         """
 
 
-        Tags.inheritTagsFrom() -> None
+        Tags.inheritFrom() -> None
 
 
         Method adds tags found on the source to self as inherited tags. Method
@@ -769,7 +769,7 @@ class Tags:
         The ``field`` argument regulates tag placement on the instance:
         -- "req" means last position of instance.required
         -- "opt" [ default ] means last position of instance._optional
-        -- "inh" means last position of instance._inheritedTags
+        -- "inh" means last position of instance._inherited
 
         Tags should generally be optional. When in doubt, add more tags.
 
@@ -806,10 +806,10 @@ class Tags:
         attrs = {}
         attrs["r"] = attrs["req"] = attrs["required"] = "required"
         attrs["o"] = attrs["opt"] = attrs["optional"] = "_optional"
-        attrs["i"] = attrs["inh"] = attrs["inherited"] = "_inheritedTags"
+        attrs["i"] = attrs["inh"] = attrs["inherited"] = "_inherited"
         attrs[0] = attrs["required"] = attrs["r"]
         attrs[1] = attrs["_optional"] = attrs["o"]
-        attrs[2] = attrs["_inheritedTags"] = attrs["i"]
+        attrs[2] = attrs["_inherited"] = attrs["i"]
         #
         real_thing = getattr(self, attrs[field])
         #
@@ -874,7 +874,7 @@ class Tags:
         removing the first iteration of the badTag to check for any others.
 
         If ``checkInherited`` == True, method will remove the badTag from the
-        instance's ._inheritedTags.
+        instance's ._inherited.
         """
         # have to nest the recursive call in the if statements, otherwise method
         # will loop indefinitely. that is, only call the method again if the
@@ -896,8 +896,8 @@ class Tags:
         else:
             pass
         if checkInherited:
-            if badTag in self._inheritedTags:
-                self._inheritedTags.remove(badTag)
+            if badTag in self._inherited:
+                self._inherited.remove(badTag)
                 self.unTag(badTag)
             else:
                 pass
