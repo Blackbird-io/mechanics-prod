@@ -253,22 +253,6 @@ class DrContainer(Components, Tags_MixIn):
             result.append(dr)
         return result
 
-    def inheritTags(self, recur=True):
-        """
-
-
-        DrContainer.inheritTags([recur = True]) -> None
-
-
-        Method runs Tags.inheritTags() on the instance, then has the instance
-        inherit tags directly from every driver it contains (via .getOrdered()).
-        """
-        self.tags.inheritTags(recur)
-        for dr in self.get_ordered():
-            self.tags.inheritTagsFrom(dr.tags, recur)
-        # In tag inheritance, order is significant. Want to inherit tags in the
-        # same order every time. 
-
     def remove_driver(self, line_name_key):
         """
 

@@ -287,33 +287,6 @@ class Components(dict, Tags_MixIn, Equalities):
         #
         return result
     
-    def inheritTags(self, recur = True):
-        """
-
-
-        Components.inheritTags([recur = True]) -> None
-
-
-        Method provides a Components-specific form of tag inheritance compatible
-        with the general inheritance interface.
-
-        Method first runs Tags.inheritTags() on the instance. This step should
-        generally should be a no-op because Components objects leave tagSources
-        blank by default.
-
-        Method then goes through every component in self.getOrdered() and
-        inherits that component's tags.
-
-        If ``recur`` == True, method asks each component to inheritTags() on its
-        own before using that component as a source for the instance. 
-        """
-        self.tags.inheritTags(recur)
-        for bu in self.getOrdered():
-            if bu:
-                if recur:
-                    bu.tags.inheritTags()
-                self.tags.inheritTagsFrom(bu.tags)
-
     def _get_pretty_lines(self):
         """
 

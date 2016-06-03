@@ -598,20 +598,6 @@ class Statement(Equalities, Tags_MixIn):
                 else:
                     pass
 
-    def inheritTags(self, recur=True):
-        """
-
-
-        Statement.inheritTags() -> None
-
-
-        Method inherits tags from details in fixed order.
-        """
-        for line in self.get_ordered():
-            # Go through lines in fixed order to make sure that we pick up
-            # tags in the same sequence.
-            self.tags.inheritTagsFrom(line.tags)
-
     def reset(self):
         """
 
