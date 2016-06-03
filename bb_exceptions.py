@@ -1,11 +1,11 @@
 #BB Exceptions Module
 
-#Custom Exception objects: 
-class BlackbirdError(Exception): 
+#Custom Exception objects:
+class BlackbirdError(Exception):
     #parent class for all custom errors defined for the Blackbird Environment
     pass
 
-class BookMarkError(BlackbirdError): 
+class BookMarkError(BlackbirdError):
     #used to alert missing bookmarks
     pass
 
@@ -87,7 +87,7 @@ class TopicOperationError(BBAnalyticalError):
 
 class CatalogError(BBAnalyticalError):
     """
-    Exception raised if a catalog finds a structural issue. 
+    Exception raised if a catalog finds a structural issue.
     """
     pass
 
@@ -101,7 +101,7 @@ class TagRegistrationError(CatalogError):
     """
     """
     content = "Tag already registered"
-    
+
 class ProcessError(IOPMechanicalError):
     content = "Improper process flow w/in BB environment."
 
@@ -133,3 +133,10 @@ class ExcelPrepError(BlackbirdError):
 
 class LinkError(BlackbirdError):
     content = "This Link has been intentionally broken during a path copy."
+
+class ExternalDataError(BlackbirdError):
+    """
+    Exception class for outside data connectivity.
+    """
+    pass
+
