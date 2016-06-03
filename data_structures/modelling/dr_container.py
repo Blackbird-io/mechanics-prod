@@ -105,7 +105,7 @@ class DrContainer(Components):
         Method creates sets of bbids for drivers associated with a specific tag.
         
         Method registers the driver's bbid under the driver's
-        workConditons["name"] and ["allTags"] keys. Method will skip
+        workConditons["name"] and ["all"] keys. Method will skip
         registration for a workConditions key if that workCondition is empty
         (e.g, ``[None]``) or equivalent to that of the dummy blank driver on the
         instance. Method then also registers the driver under every key provided

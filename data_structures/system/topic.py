@@ -150,7 +150,7 @@ class Topic:
         tag already exists. 
         """
         self.work_plan[line_name] = contribution
-        if line_name not in self.tags.allTags:
+        if line_name not in self.tags.all:
             self.tags.tag(line_name)
 
     def choose_scenario(self):

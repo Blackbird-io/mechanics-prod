@@ -50,7 +50,7 @@ def build_basic_profile(target):
     Return set of all tags on target, with None stripped out. 
     """
     try:
-        criteria = set(target.tags.allTags)
+        criteria = set(target.tags.all)
     except AttributeError:
         raise
     criteria = criteria - {None}
@@ -85,18 +85,18 @@ def build_combo_profile(target, model):
         grandpa = None
 
     parent_tags = getattr(parent, "tags", None)
-    tags_up_one = getattr(parent_tags, "allTags", [])
+    tags_up_one = getattr(parent_tags, "all", [])
 
     grandpa_tags = getattr(grandpa, "tags", None)
-    tags_up_two = getattr(grandpa_tags, "allTags", [])
+    tags_up_two = getattr(grandpa_tags, "all", [])
 
     try:
-        criteria = set(target.tags.allTags)
+        criteria = set(target.tags.all)
     except AttributeError:
         raise
 
     criteria = criteria | set(tags_up_one) | set(tags_up_two)
-    criteria = criteria | set(model.tags.allTags)
+    criteria = criteria | set(model.tags.all)
     criteria = criteria - {None}
     #
     return criteria

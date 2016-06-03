@@ -160,7 +160,7 @@ class Driver:
         self.workConditions = {}
         self.workConditions["name"] = ["FAIL"]
         self.workConditions["partOf"] = ["FAIL"]
-        self.workConditions["allTags"] = ["FAIL"]
+        self.workConditions["all"] = ["FAIL"]
         # We set condition values to a default that must be overwritten to make
         # sure default configuration doesnt apply to every lineItem.
 
@@ -319,7 +319,7 @@ class Driver:
                 
         self.workConditions["name"]=names
         self.workConditions["partOf"]=parts
-        self.workConditions["allTags"]=tags
+        self.workConditions["all"]=tags
 
     def validate(self, check_data=True, parent=None):
         """
@@ -508,8 +508,8 @@ class Driver:
         False.
 
         To satisfy the allTags condition, an object must carry each tag in
-        instance.workConditions["allTags"] (ie, instance.wC[allTags] must be
-        a subset of target.tags.allTags).
+        instance.workConditions["all"] (ie, instance.wC[allTags] must be
+        a subset of target.tags.all).
 
         NOTE: driver.workConditions keys may include None as values to indicate
         absence of a constraint. Accordingly, match is evaluated against
@@ -525,7 +525,7 @@ class Driver:
             if not set(self.workConditions["partOf"]).issubset([targetLineItem.tags.partOf]+[None]):
                 return False
             else:
-                if not set(self.workConditions["allTags"]).issubset(targetLineItem.tags.allTags + [None]):
+                if not set(self.workConditions["all"]).issubset(targetLineItem.tags.all + [None]):
                     return False
                 else:
                     return True
