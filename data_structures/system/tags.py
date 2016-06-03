@@ -407,7 +407,7 @@ class Tags:
         if not target:
             target = self
         result = False
-        if set(self.spec_tags) & set(target.tags.allTags) == set():
+        if set(self.spec_tags) & set(target.allTags) == set():
             result = True
         return result
 
@@ -433,7 +433,7 @@ class Tags:
         if not target:
             target = self
         result = False
-        if set(self.hands_off) & set(target.tags.allTags) == set():
+        if set(self.hands_off) & set(target.allTags) == set():
             result = True
         return result
 
@@ -548,14 +548,14 @@ class Tags:
                         # only add rules-based tags if the rules says its ok
                     if rules[t]["out"].cotag:
                         cotags = rules[t]["out"].cotag
-                        target.tags.tag(cotags, field=t_field, mode="at")
+                        target.tag(cotags, field=t_field, mode="at")
                         # need to use Tags.tags.tag() in case cotags have to get
                         # registed or lead to more cotags. mode is "at" because
                         # the tag that requires cotags is on the lineitem already
                         # (ie, "at" the same object).
                     if rules[t]["out"].detag:
                         for lessT in rules[t]["out"].detag:
-                            target.tags.unTag(lessT)
+                            target.unTag(lessT)
                 else:
                     # t does not have a rule
                     new_tags.append(t)
@@ -614,7 +614,7 @@ class Tags:
             new_tags = sorted(new_tags)
             # sort the new tags into a stable order to ensure consistency
             # across runtime
-            result.tags.tag(*new_tags, field=attr, mode=mode)
+            result.tag(*new_tags, field=attr, mode=mode)
         return result
 
     def inheritTags(self, recur=True):
@@ -756,7 +756,7 @@ class Tags:
         """
 
 
-        Tags.tags.tag( *newTags[,
+        Tags.tag( *newTags[,
                   field = "opt"[,
                   mode = "at"[,
                   permit_duplicates = False]]]) -> None
@@ -792,7 +792,7 @@ class Tags:
 
         Rule[x].detag rules apply only to tags "behind" them. As such, the
         impact of detag rules varies based on the state of an object's tags
-        at the time Tags.tags.tag() encounters the detag trigger. Tags.tags.tag() applies
+        at the time Tags.tag() encounters the detag trigger. Tags.tag() applies
         detag rules as soon as it encounters their trigger tag. At that time,
         the instance may not have all of the tags the creator of the detag rule
         expects it to have. For example, the instance could be inheriting tags

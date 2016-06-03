@@ -85,18 +85,21 @@ def format_as_line(obj,
     dot = "."
     blank = " "
     header_mark = ":"
-    #
-    #where args are blank, check for obj data
+
+    # where args are blank, check for obj data
     if name is None:
-        name = getattr(obj, "name", None)
+        name = None
+        if getattr(obj, "tags", None):
+            name = getattr(obj.tags, "name", None)
+
     if value is None:
         if not header:
             value = getattr(obj, "value", None)
-    #add a trailing space to any nonempty prefix
+    # add a trailing space to any nonempty prefix
     if not prefix == "":
-        prefix = prefix + " "
-    #
-    #format value
+        prefix += " "
+
+    # format value
     try:
         value = "%.2F" % value
     except (TypeError,ValueError):

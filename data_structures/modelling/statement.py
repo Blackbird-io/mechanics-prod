@@ -353,7 +353,8 @@ class Statement(Equalities):
         Method returns a deep copy of the instance and any details. If
         ``enforce_rules`` is True, copy will conform to ``out`` rules.
         """
-        result = Tags.copy(self, enforce_rules)
+        result = copy.copy(self)
+        result.tags = self.tags.copy(enforce_rules)
         # Tags.copy returns a shallow copy of the instance w deep copies
         # of the instance tag attributes.
         result._details = dict()

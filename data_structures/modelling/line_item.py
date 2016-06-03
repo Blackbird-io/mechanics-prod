@@ -85,8 +85,8 @@ class LineItem(Statement):
     set_value()           sets value to input, records signature
     ====================  ======================================================
     """
-    keyAttributes = Statement.keyAttributes + ["value", "requiredTags",
-                                               "optionalTags"]
+    keyAttributes = Statement.keyAttributes + ["value", "tags.requiredTags",
+                                               "tags.optionalTags"]
 
     # Make sure that equality analysis skips potentially circular pointers like
     # .tags.parentObject. Otherwise, comparing children could look to parent, which
@@ -167,7 +167,7 @@ class LineItem(Statement):
         If instance fails Tags.checkTouch(), will throw exception unless
         ``force`` is True. 
         """
-        if self.checkTouch() or force:
+        if self.tags.checkTouch() or force:
             num_format = self.xl.number_format
             consolidate = self.consolidate
             if self._details:
@@ -419,7 +419,8 @@ class LineItem(Statement):
 
         Create a replica, add replica to details
         """
-        replica = Tags.copy(self, enforce_rules=False)
+        replica = copy.copy(self)
+        replica.tags = self.tags.copy(enforce_rules=False)
         # Start with a shallow copy that picks up all the tags, including ones
         # like "hardcoded" or "do not touch" that don't normally go ``out``. If
         # enforce_rules is True, these would not transfer to the replica because

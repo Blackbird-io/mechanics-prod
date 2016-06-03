@@ -224,7 +224,9 @@ def stripCase(obj,attr = "allTags"):
     """
     caseLess = []
     if attr:
-        material = getattr(obj,attr,None)
+        material = getattr(obj, attr, None)
+        if material is None:
+            material = getattr(obj.tags, attr, None)
     else:
         material = obj
     for o in material:

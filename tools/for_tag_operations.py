@@ -31,7 +31,7 @@ n/a
 
 
 #imports
-#n/a
+# n/a
 
 
 
@@ -52,7 +52,7 @@ def build_basic_profile(target):
     try:
         criteria = set(target.tags.allTags)
     except AttributeError:
-        criteria = set(target.tags.tags.allTags)
+        raise
     criteria = criteria - {None}
     #
     return criteria
@@ -72,16 +72,29 @@ def build_combo_profile(target, model):
     object, or a BusinessUnit. 
     """
     #
-    parent = getattr(target, "parentObject", None)
-    grandpa = getattr(parent, "parentObject", None)
-    #
-    tags_up_one = getattr(parent, "allTags", [])
-    tags_up_two = getattr(grandpa, "allTags", [])
-    #
+    parent_tags = getattr(target, "tags", None)
+    if parent_tags:
+        parent = getattr(parent_tags, "parentObject")
+    else:
+        parent = None
+
+    grandpa_tags = getattr(parent, "tags", None)
+    if grandpa_tags:
+        grandpa = getattr(grandpa_tags, "parentObject")
+    else:
+        grandpa = None
+
+    parent_tags = getattr(parent, "tags", None)
+    tags_up_one = getattr(parent_tags, "allTags", [])
+
+    grandpa_tags = getattr(grandpa, "tags", None)
+    tags_up_two = getattr(grandpa_tags, "allTags", [])
+
     try:
         criteria = set(target.tags.allTags)
     except AttributeError:
-        criteria = set(target.tags.tags.allTags)
+        raise
+
     criteria = criteria | set(tags_up_one) | set(tags_up_two)
     criteria = criteria | set(model.tags.allTags)
     criteria = criteria - {None}
@@ -131,7 +144,3 @@ def get_product_names(model, question):
     ####should be in interview tools
    ##return a list of product names, top to bottom by size, that fits
    ##the input_element array; only runs when model is tagged "real names"
-
-
-
-    

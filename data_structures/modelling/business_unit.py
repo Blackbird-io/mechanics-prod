@@ -343,7 +343,7 @@ class BusinessUnit(History, Equalities):
         **NOTE: clear() will permanently delete data**
         
         """
-        blank_bu = BusinessUnit(name=self.name)
+        blank_bu = BusinessUnit(name=self.tags.name)
         for attr in self.tags.tagSources:
             blank_attr = getattr(blank_bu, attr)
             setattr(self, attr, blank_attr)
@@ -373,8 +373,9 @@ class BusinessUnit(History, Equalities):
         all return deep copies of the object and its contents. See their
         respective class documenation for mode detail.
         """
-        result = Tags.copy(self, enforce_rules)
-        # Start with a basic shallow copy
+        result = copy.copy(self)
+        result.tags = self.tags.copy(enforce_rules)
+        # Start with a basic shallow copy, then add tags
         #
         r_comps = self.components.copy(enforce_rules)
         result._set_components(r_comps)
@@ -1159,7 +1160,7 @@ class BusinessUnit(History, Equalities):
         """
         if not dr_c:
             dr_c = DrContainer()
-        dr_c.tags.setPartOf(self, recur = True)
+        dr_c.setPartOf(self, recur=True)
         self.drivers = dr_c
 
     def _update_balance(self, *tagsToOmit):

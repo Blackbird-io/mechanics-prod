@@ -32,6 +32,7 @@ import copy
 
 from .statements import Overview, Income, CashFlow, BalanceSheet
 from .statement_bundle import StatementBundle
+from .equalities import Equalities
 
 
 
@@ -77,7 +78,7 @@ class Financials(StatementBundle):
         
         result = "\n"
 
-        if getattr(self, "parentObject", None):
+        if Equalities.multi_getattr(self, "tags.parentObject", None):
 
             header = "Financial statements for " + str(self.tags.parentObject.tags.name)
             header = header.center(bb_settings.SCREEN_WIDTH)
