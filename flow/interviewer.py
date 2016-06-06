@@ -191,10 +191,10 @@ class Interviewer:
 
         # Check here to see if fp is None (path complete for stage), and if so:
         if fp is None:
-            parent_bu = model.target.tags.parentObject
+            parent_bu = model.target.relationships.parent
 
             if parent_bu:
-                parent_bu = parent_bu.tags.parentObject
+                parent_bu = parent_bu.relationships.parent
 
                 if isinstance(parent_bu, BusinessUnit):
                     model.target = parent_bu
@@ -295,7 +295,6 @@ class Interviewer:
         #
         protocol_key = model.target.stage.protocol_key
         routine = None
-        #
 
         if known_rule:
             if known_rule(old_fp):

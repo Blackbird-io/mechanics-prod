@@ -71,11 +71,11 @@ class Equalities:
     __eq__ may cause infinite loops.
 
     For example, to compare two objects with a ``parentObject`` attribute,
-    Eq.__eq__() evaluates A.tags.parentObject == B.tags.parentObject. If ``parentObject``
+    Eq.__eq__() evaluates A.relationships.parent == B.relationships.parent. If ``parentObject``
     in either A or B overloads __eq__ using this Equalities class, the A.__eq__
     evaluation will run parentObject.__eq__. To the extent parentObject is a
     list or other container, parentObject.__eq__ will cycle through each item in
-    said container. If A is in the container, A.tags.parentObject.__eq__ will then
+    said container. If A is in the container, A.relationships.parent.__eq__ will then
     call A.__eq__, closing the loop. Other loop forms are possible too.
 
     ====================  ======================================================

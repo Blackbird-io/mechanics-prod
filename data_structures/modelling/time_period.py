@@ -36,7 +36,8 @@ import bb_exceptions
 import bb_settings
 
 from data_structures.system.bbid import ID
-from data_structures.system.tags_mixin import Tags_MixIn
+from data_structures.system.relationships import Relationships
+from data_structures.system.tags_mixin import TagsMixIn
 
 from .parameters import Parameters
 from .history import History
@@ -48,7 +49,7 @@ from .history import History
 # n/a
 
 # Classes
-class TimePeriod(History, Tags_MixIn):
+class TimePeriod(History, TagsMixIn):
     """
 
     TimePeriod objects represent periods of time and store a snapshot of some
@@ -95,7 +96,7 @@ class TimePeriod(History, Tags_MixIn):
     def __init__(self, start_date, end_date, content=None):
         
         History.__init__(self, recursive_attribute="content")
-        Tags_MixIn.__init__(self)
+        TagsMixIn.__init__(self)
 
         self.start = start_date
         self.end = end_date
@@ -106,6 +107,7 @@ class TimePeriod(History, Tags_MixIn):
         self.content = content
         self.id = ID()
         self.parameters = Parameters()
+        self.relationships = Relationships(self)
 
         # The current approach to indexing units within a period assumes that
         # Blackbird will rarely remove existing units from a model. both
@@ -144,6 +146,7 @@ class TimePeriod(History, Tags_MixIn):
         """
         result = copy.copy(self)
         result.tags = self.tags.copy(enforce_rules)
+        result.relationships = self.relationships.copy()
         result.start = copy.copy(self.start)
         result.end = copy.copy(self.end)
         if self.content:
