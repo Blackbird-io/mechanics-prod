@@ -33,7 +33,8 @@ import time
 import bb_exceptions
 import tools.for_tag_operations
 
-from data_structures.system.tags_mixin import Tags_MixIn
+from data_structures.system.relationships import Relationships
+from data_structures.system.tags_mixin import TagsMixIn
 
 from .equalities import Equalities
 
@@ -44,7 +45,7 @@ from .equalities import Equalities
 #n/a
 
 #classes
-class Components(dict, Tags_MixIn, Equalities):
+class Components(dict, TagsMixIn, Equalities):
     """
 
     The Components class defines a container that stores BusinessUnit objects
@@ -89,9 +90,10 @@ class Components(dict, Tags_MixIn, Equalities):
         
     def __init__(self, name="Components"):
         dict.__init__(self)
-        Tags_MixIn.__init__(self, name)
+        TagsMixIn.__init__(self, name)
         Equalities.__init__(self)
         self.by_name = dict()
+        self.relationships = Relationships(self)
 
     def __eq__(self, comparator, trace = False, tab_width = 4):
         """
@@ -150,7 +152,7 @@ class Components(dict, Tags_MixIn, Equalities):
         if not bu.id.bbid:
             c = "Cannot add a component that does not have a valid bbid."
             raise bb_exceptions.IDError(c)
-        bu.tags.setPartOf(self)
+        bu.relationships.set_parent(self)
         self[bu.id.bbid] = bu
         if bu.tags.name:
             self.by_name[bu.tags.name] = bu.id.bbid
@@ -183,6 +185,7 @@ class Components(dict, Tags_MixIn, Equalities):
         """
         result = copy.copy(self)
         result.tags = self.tags.copy(enforce_rules)
+        result.relationships = self.relationships.copy()
         #
         #customize container
         result.clear()
@@ -514,7 +517,7 @@ class Components(dict, Tags_MixIn, Equalities):
         For Drivers, use Dr_Container.remove_driver() instead
         """
         bu = self.pop(bbid)
-        bu.tags.setPartOf(None)
+        bu.relationships.set_parent(None)
         if bu.tags.name:
             self.by_name.pop(bu.tags.name)
 

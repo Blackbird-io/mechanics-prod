@@ -35,7 +35,6 @@ import bb_exceptions
 
 from tag_manager import loaded_tagManager as tag_manager
 from tools.parsing import deCase
-from .relationships import Relationships
 
 # globals
 m_spacer_opt = tag_manager.catalog["BLACKBIRDSTAMP"] + "end own optionalTags"
@@ -91,24 +90,24 @@ class Tags:
 
     If a Tags object specifies a parentObject, the instance will
     **always** overwrite reqTags[1] with the parent's name. The partOf property
-    will allow direct changes to .tags.partOf, but immediately "forget" them
+    will allow direct changes to .relationships.part_of, but immediately "forget" them
     following a call to the attribute. To permanently alter the value of
-    .tags.partOf, set .tags.parentObject to None.
+    .relationships.part_of, set .relationships.parent to None.
 
     NOTE: Direct changes to requiredTags[:2] (instance-level state for ``name``
     ``partOf``) are not recommended.
 
-    Instance.tags.partOf may not be especially informative on it's own, since the
+    Instance.relationships.part_of may not be especially informative on it's own, since the
     container object (``parentObject``) may not have a name attribute. Even if
     the container does have a name attribute, it may be difficult to locate by
     using that attribute. For that reason, instance.relationships.parent
     stores a pointer to the parent object directly.  This can also be accessed
-    (for backwards-compatibility's sake) through the instance.tags.parentObject
+    (for backwards-compatibility's sake) through the instance.relationships.parent
     property.
 
-    NOTE: instance.relationships.parent (instance.tags.parentObject) may be an object
+    NOTE: instance.relationships.parent (instance.relationships.parent) may be an object
     OTHER THAN THE DIRECT CONTAINER of the instance. For example, in standard
-    usage, a BusinessUnit will store Drivers in self.Drivers. The .tags.parentObject
+    usage, a BusinessUnit will store Drivers in self.Drivers. The .relationships.parent
     attribute for each driver in such a case would be set to the BusinessUnit,
     not BusinessUnit.Drivers. The higher-level hook providers the Driver with
     easy access to BU.financials and any other attributes it may need for
@@ -135,14 +134,8 @@ class Tags:
     hands_off             list; CLASS, tags that prohibit any modification
     name                  name of instance, dynamic, value of requiredTags[0]
     optional              list; dynamic, returns _optionalTags +._inherited
-    relationships          obj; CLASS, instance of Relationship class
-                          (has attributes parent_object and part_of)
-    parentObject          OBSOLETE; property; delegates to
-                          relationships.parent for gets
-    partOf                OBSOLETE; property; sets requiredTags[1] =
-                          relationships.part_of and returns relationships.part_of
     reg_req               bool; CLASS, if False won't apply tags not in catalog
-    requiredTags          list; tags required for matching
+    required              list; tags required for matching
     spacer_req            string; CLASS, separates req tags from optional in all
     spacer_opt            string; CLASS, separates _opt from _inh tags in opt
     spec_tags             list; CLASS, tags that trigger special extrapolation
@@ -170,8 +163,6 @@ class Tags:
     registerTag()         registers tag in tag catalog
     setTagManager()       CLASS; sets pointer to tag manager
     setName()             sets instance.reqTags[0]
-    setPartOf()           delegates to relationships.set_part_of() to set
-                          part_of, parent_object, and requiredTags[1]
     tag()                 adds tag to object, if parameters allow
     unTag()               removes all instances of tag from object
     ====================  ======================================================
@@ -193,28 +184,15 @@ class Tags:
     # tagSources. Alternatively, would have to add tagSources as instance-level
     # data in the child classes.
 
-    def __init__(self, name=None, parentObject=None):
+    def __init__(self, name=None):
         self._inherited = []
         self._optional = []
-        self.relationships = Relationships(self)
         self.required = [None, None]
 
         # self.name is requiredTags[0] and self.partOf is requiredTags[1] so
         # list should have minimum length of 2; actual values set through
         # methods
-
         self.setName(name)
-        if parentObject:
-            self.setPartOf(parentObject)
-
-    @property
-    def parentObject(self):
-        return self.relationships.parent
-
-    @property
-    def partOf(self):
-        self.required[1] = self.relationships.part_of
-        return self.relationships.part_of
 
     @classmethod
     def disconnect(cls):
@@ -355,12 +333,12 @@ class Tags:
     class dyn_SpecTManager:
         """
 
-        Descriptor class that returns values for instance.name and instance.tags.partOf.
+        Descriptor class that returns values for instance.name and instance.relationships.part_of.
         Descriptor also writes new values to requiredTags at the appropriate index.
         On deletion, replaces the special tags with None objects in requiredTags.
 
-        For .tags.partOf gets, the descriptor first checks if the caller has a
-        .tags.parentObject. If so, the descriptor updates caller.required[1] with the
+        For .relationships.part_of gets, the descriptor first checks if the caller has a
+        .relationships.parent. If so, the descriptor updates caller.required[1] with the
         parentObject's name. The descriptor assumes name is None if the parentObject
         is missing the attribute. In all scenarios, the descriptor then returns
         whatever is in requiredTags[1].
@@ -491,8 +469,6 @@ class Tags:
         Tags.copy.  Without modifying Driver (and possibly other classes),
         adding the code for dealing with the relationships class had to go here.
         """
-        target.relationships = self.relationships.copy()
-
         if self.tagManager.rules:
             self.copyTagsTo_rules_on(target)
         else:
@@ -727,26 +703,6 @@ class Tags:
         None object. Deleting a name similarly sets requiredTags[0] to None.
         """
         self.name = deCase(newName)
-
-    def setPartOf(self, parentObject):
-        """
-
-        Tags.setPartOf(parentObject) -> None
-
-        This method sets an instance's Relationship.parent attribute and also
-        sets instance.required[1] = relationships.parent.name OR None
-
-        If the parentObject provided to the method has a name,
-        instance.required[1] is set to the same value.
-
-        If the parentObject does not have a name, method sets
-        instance.required[1] to None.
-
-        In both cases, method delegates to Relationship class to set
-        instance.relationships.parent to point to the actual parentObject.
-        """
-        self.relationships.set_parent(parentObject)
-        self.required[1] = self.relationships.part_of
 
     def tag(self,
             *newTags,

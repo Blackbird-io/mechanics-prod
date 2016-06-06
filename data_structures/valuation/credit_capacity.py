@@ -75,7 +75,7 @@ class CreditCapacity(Step):
         self.lev_loans = Landscape("leveraged loans")
         #bonds and converts should be a landscape in the future
         for obj in [self.asset_backed, self.lev_loans]:
-            obj.tags.setPartOf(self)
+            obj.relationships.set_parent(self)
 
     def combine(self):
         """

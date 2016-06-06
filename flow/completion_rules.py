@@ -53,14 +53,15 @@ def check_quality_only(item):
     fail.
     """
     complete = False
+
     if item.guide.selection.finished_catalog:
         complete = True
     if not complete:
         standard = item.guide.quality.standard
         if item.guide.quality.current >= standard:
-            complete = True    
+            complete = True
     item.guide.complete = complete
-    #
+
     return complete
 
 def check_quality_or_attention(item):

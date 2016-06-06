@@ -72,15 +72,15 @@ def build_combo_profile(target, model):
     object, or a BusinessUnit. 
     """
     #
-    parent_tags = getattr(target, "tags", None)
-    if parent_tags:
-        parent = getattr(parent_tags, "parentObject")
+    parent_rels = getattr(target, "relationships", None)
+    if parent_rels:
+        parent = getattr(parent_rels, "parent")
     else:
         parent = None
 
-    grandpa_tags = getattr(parent, "tags", None)
-    if grandpa_tags:
-        grandpa = getattr(grandpa_tags, "parentObject")
+    grandpa_rels = getattr(parent, "relationships", None)
+    if grandpa_rels:
+        grandpa = getattr(grandpa_rels, "parent")
     else:
         grandpa = None
 

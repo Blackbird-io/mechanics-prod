@@ -93,4 +93,4 @@ class BookMark(LineItem):
         """
         if newName:
             newName = self.bmPrefix + newName
-        Tags.tags.setName(self,newName)
+        Tags.setName(self.tags,newName)

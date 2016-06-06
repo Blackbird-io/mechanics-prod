@@ -36,8 +36,9 @@ from data_structures.guidance.guide import Guide
 from data_structures.guidance.interview_tracker import InterviewTracker
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
+from data_structures.system.relationships import Relationships
 from data_structures.system.tags import Tags
-from data_structures.system.tags_mixin import Tags_MixIn
+from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.valuation.business_summary import BusinessSummary
 from data_structures.valuation.company_value import CompanyValue
 
@@ -65,7 +66,7 @@ tHardCoded = Tags.tagManager.catalog["hard"]
 T_REPLICA = Tags.tagManager.catalog["ddr"]
 
 # Classes   
-class BusinessUnit(History, Equalities, Tags_MixIn):
+class BusinessUnit(History, Equalities, TagsMixIn):
     """
    
     Object describes a group of business activity. A business unit can be a
@@ -112,8 +113,8 @@ class BusinessUnit(History, Equalities, Tags_MixIn):
                             "filled",
                             "guide",
                             "id",
-                            "parentObject",
-                            "partOf"]
+                            "parent",
+                            "part_of"]
     
     tagSources = ["components", "drivers", "financials"]
     
@@ -122,7 +123,7 @@ class BusinessUnit(History, Equalities, Tags_MixIn):
     def __init__(self, name, fins=None):
 
         History.__init__(self)
-        Tags_MixIn.__init__(self, name)
+        TagsMixIn.__init__(self, name)
 
         self._type = None
         
@@ -148,6 +149,7 @@ class BusinessUnit(History, Equalities, Tags_MixIn):
         self.location = None
         self.parameters = Parameters()
         self.period = None
+        self.relationships = Relationships(self)
         # May want to change period to a property, so that a set to new value
         # will always cause the unit to rerun registration. 
 
@@ -376,6 +378,7 @@ class BusinessUnit(History, Equalities, Tags_MixIn):
         """
         result = copy.copy(self)
         result.tags = self.tags.copy(enforce_rules)
+        result.relationships = self.relationships.copy()
         # Start with a basic shallow copy, then add tags
         #
         r_comps = self.components.copy(enforce_rules)
@@ -513,7 +516,7 @@ class BusinessUnit(History, Equalities, Tags_MixIn):
         Method sets instance.analytics to passed-in argument, sets analytics
         object to point to instance as its parent. 
         """
-        atx.tags.setPartOf(self)
+        atx.relationships.set_parent(self)
         self.valuation = atx
 
     def set_financials(self, fins=None):
@@ -532,7 +535,7 @@ class BusinessUnit(History, Equalities, Tags_MixIn):
         """
         if fins is None:
             fins = Financials()
-##        fins.tags.setPartOf(self)
+##        fins.relationships.set_parent(self)
         self.financials = fins
 
     def set_history(self, history, clear_future=True, recur=True):
@@ -794,8 +797,6 @@ class BusinessUnit(History, Equalities, Tags_MixIn):
         
         key = line.tags.name.casefold()
         if key in self.drivers:
-
-##            line.clear()
             matching_drivers = self.drivers.get_drivers(key)
 
             for driver in matching_drivers:
@@ -1145,7 +1146,7 @@ class BusinessUnit(History, Equalities, Tags_MixIn):
         """
         if not comps:
             comps = Components()
-        comps.tags.setPartOf(self)
+        comps.relationships.set_parent(self)
         self.components = comps
         
     def _set_drivers(self, dr_c=None):

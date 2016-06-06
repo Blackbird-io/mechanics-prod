@@ -32,7 +32,7 @@ import copy
 
 import bb_exceptions
 
-from data_structures.system.tags_mixin import Tags_MixIn
+from data_structures.system.tags_mixin import TagsMixIn
 
 from .components import Components
 from .driver import Driver
@@ -44,7 +44,7 @@ from .driver import Driver
 #n/a
 
 #classes
-class DrContainer(Components, Tags_MixIn):
+class DrContainer(Components, TagsMixIn):
     """ 
 
     The DrContainer class provides organization and storage for drivers that
@@ -91,7 +91,7 @@ class DrContainer(Components, Tags_MixIn):
     
     def __init__(self, name="DrContainer"):
         Components.__init__(self, name)
-        Tags_MixIn.__init__(self, name)
+        TagsMixIn.__init__(self, name)
 
         self[None] = set()
         self.dr_blank = Driver()
@@ -121,7 +121,7 @@ class DrContainer(Components, Tags_MixIn):
 
         NOTE: Method will overwrite old versions of a driver with new versions.
         """
-        if not self.tags.parentObject:
+        if not self.relationships.parent:
             c = "Cannot add driver. DrContainer does not have a parent object."
             raise bb_exceptions.IOPMechanicalError(c)
         
@@ -132,7 +132,7 @@ class DrContainer(Components, Tags_MixIn):
         # Could prohibit implicit overwrites, but would be cumbersome. Would
         # have to check whether a bbid is already in a given key's set.
 
-        new_driver.tags.setPartOf(self.tags.parentObject)
+        new_driver.relationships.set_parent(self.relationships.parent)
         # Drivers point to business unit as a parent object.
         self.dr_directory[new_driver.id.bbid] = new_driver
 
@@ -198,6 +198,7 @@ class DrContainer(Components, Tags_MixIn):
         # Make container
         result = copy.copy(self)
         result.tags = self.tags.copy(enforce_rules)
+        result.relationships = self.relationships.copy()
         result.clear()
         result.dr_directory = {}
         # Make a clean empty dictionary for new directory
@@ -276,13 +277,13 @@ class DrContainer(Components, Tags_MixIn):
         """
 
 
-        DrContainer.tags.setPartOf(parentObj,recur = True) -> None
+        DrContainer.relationships.set_parent(parentObj,recur = True) -> None
 
 
         Method runs Tags.setPartOf() on the instance, and, if ``recur`` is True,
         all drivers in the instance. 
         """
-        self.tags.setPartOf(parentObj)
+        self.relationships.set_parent(parentObj)
         if recur:
             for dr in self.dr_directory.values():
-                dr.tags.setPartOf(parentObj)
+                dr.relationships.set_parent(parentObj)

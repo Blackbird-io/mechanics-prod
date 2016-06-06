@@ -34,7 +34,8 @@ import bb_settings
 
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
-from data_structures.system.tags_mixin import Tags_MixIn
+from data_structures.system.relationships import Relationships
+from data_structures.system.tags_mixin import TagsMixIn
 import formula_manager as FormulaManager
 
 from .parameters import Parameters
@@ -46,7 +47,7 @@ from .parameters import Parameters
 # n/a
 
 # Classes
-class Driver(Tags_MixIn):
+class Driver(TagsMixIn):
     """
 
     Drivers apply formulas to business units.
@@ -141,13 +142,14 @@ class Driver(Tags_MixIn):
         cls._FM = new_FM
         
     def __init__(self, signature=None):
-        Tags_MixIn.__init__(self)
+        TagsMixIn.__init__(self)
 
         self.active = True
         self.conversion_table = dict()
         self.parameters = Parameters()
         self.formula_bbid = None
         self.id = ID()
+        self.relationships = Relationships(self)
         # TopicManager will assign a specific uuid to the driver when
         # during topic catalog configuration. Each Driver gets an id within the
         # namespace of its defining topic.
@@ -255,7 +257,7 @@ class Driver(Tags_MixIn):
         Original object copies tags to result using Tags.copyTagsTo(), so method
         will enforce tag rules when specified.
 
-        Result.tags.parentObject points to the same object as original because the
+        Result.relationships.parent points to the same object as original because the
         default shallow copy runs on the ``parentObject`` attribute.
 
         NOTE: Result points to same object as original on ``id`` and
@@ -268,6 +270,7 @@ class Driver(Tags_MixIn):
         """
         result = copy.copy(self)
         result.tags = self.tags.copy(enforce_rules)
+        result.relationships = self.relationships.copy()
         result.parameters = copy.deepcopy(self.parameters)
         result.workConditions = copy.deepcopy(self.workConditions)
         return result
@@ -377,7 +380,7 @@ class Driver(Tags_MixIn):
                 formula = self._FM.local_catalog.issue(self.formula_bbid)
                 # formula_catalog.issue() only performs dict retrieval and
                 # return for key.
-                bu = self.tags.parentObject
+                bu = self.relationships.parent
 
                 params = self._build_params()
                 
@@ -461,7 +464,7 @@ class Driver(Tags_MixIn):
         the original and converted keys.
         """
         if parent is None:
-            parent = self.tags.parentObject
+            parent = self.relationships.parent
 
         period = None
         time_line = None
@@ -470,7 +473,7 @@ class Driver(Tags_MixIn):
             period = parent.period
             
         if period:
-            time_line = period.tags.parentObject
+            time_line = period.relationships.parent
         
         # Specific parameters trump general ones. Start with time_line, then
         # update for period (more specific) and driver (even more specific).
@@ -523,7 +526,7 @@ class Driver(Tags_MixIn):
         if not set(self.workConditions["name"]).issubset([targetLineItem.tags.name]+[None]):
             return False
         else:
-            if not set(self.workConditions["partOf"]).issubset([targetLineItem.tags.partOf]+[None]):
+            if not set(self.workConditions["partOf"]).issubset([targetLineItem.relationships.part_of]+[None]):
                 return False
             else:
                 if not set(self.workConditions["all"]).issubset(targetLineItem.tags.all + [None]):

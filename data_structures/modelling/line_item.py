@@ -89,7 +89,7 @@ class LineItem(Statement):
                                                "tags.optional"]
 
     # Make sure that equality analysis skips potentially circular pointers like
-    # .tags.parentObject. Otherwise, comparing children could look to parent, which
+    # .relationships.parent. Otherwise, comparing children could look to parent, which
     # could look to child, and so on.
     
     SIGNATURE_FOR_CREATION = "__init__"

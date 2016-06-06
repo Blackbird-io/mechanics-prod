@@ -32,8 +32,9 @@ import copy
 import bb_exceptions
 import bb_settings
 
+from data_structures.system.relationships import Relationships
 from data_structures.system.tags import Tags
-from data_structures.system.tags_mixin import Tags_MixIn
+from data_structures.system.tags_mixin import TagsMixIn
 from .equalities import Equalities
 
 
@@ -50,7 +51,7 @@ doNotTouchTag = Tags.tagManager.catalog["do_not_touch"]
 tConsolidated = Tags.tagManager.catalog["consolidated"]
 
 # Classes
-class Statement(Equalities, Tags_MixIn):
+class Statement(Equalities, TagsMixIn):
     """
 
     A Statement is a container that supports fast lookup and ordered views.
@@ -111,9 +112,10 @@ class Statement(Equalities, Tags_MixIn):
     # Should rename this comparable_attributes
 
     def __init__(self, name=None, spacing=100):
-        Tags_MixIn.__init__(self, name)
+        TagsMixIn.__init__(self, name)
 
         self._details = dict()
+        self.relationships = Relationships(self)
 
         if spacing < 1:
             raise error
@@ -357,6 +359,7 @@ class Statement(Equalities, Tags_MixIn):
         """
         result = copy.copy(self)
         result.tags = self.tags.copy(enforce_rules)
+        result.relationships = self.relationships.copy()
         # Tags.copy returns a shallow copy of the instance w deep copies
         # of the instance tag attributes.
         result._details = dict()
@@ -470,7 +473,7 @@ class Statement(Equalities, Tags_MixIn):
         have difficulty putting them back.
 
         The best way to reinsert an item you accidentally removed is to find
-        its parent using detail.tags.parentObject and insert the item directly back.
+        its parent using detail.relationships.parent and insert the item directly back.
         """
         result = None
 
@@ -649,7 +652,7 @@ class Statement(Equalities, Tags_MixIn):
 
         Set instance as line parent, add line to details.
         """
-        line.tags.setPartOf(self)
+        line.relationships.set_parent(self)
         self._details[line.tags.name] = line
 
     def _inspect_line_for_insertion(self, line):

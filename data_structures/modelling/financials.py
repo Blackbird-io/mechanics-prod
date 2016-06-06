@@ -78,19 +78,19 @@ class Financials(StatementBundle):
         
         result = "\n"
 
-        if Equalities.multi_getattr(self, "tags.parentObject", None):
+        if Equalities.multi_getattr(self, "relationships.parent", None):
 
-            header = "Financial statements for " + str(self.tags.parentObject.tags.name)
+            header = "Financial statements for " + str(self.relationships.parent.tags.name)
             header = header.center(bb_settings.SCREEN_WIDTH)
             header += "\n\n"
 
-            starting = "Period starting: " + str(self.tags.parentObject.period.starting)
+            starting = "Period starting: " + str(self.relationships.parent.period.starting)
             starting = starting.center(bb_settings.SCREEN_WIDTH)
             starting += "\n"
 
             header += starting
 
-            ending =  "Period ending:   " + str(self.tags.parentObject.period.ending)
+            ending =  "Period ending:   " + str(self.relationships.parent.period.ending)
             ending = ending.center(bb_settings.SCREEN_WIDTH)
             ending += "\n"
 

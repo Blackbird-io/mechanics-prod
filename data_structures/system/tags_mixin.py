@@ -20,7 +20,7 @@ FUNCTIONS:
 N/A
 
 CLASSES:
-Tags_MixIn            mix-in class for Tags as component
+TagsMixIn            mix-in class for Tags as component
 ====================  ==========================================================
 """
 
@@ -37,7 +37,7 @@ from .tags import Tags
 # n/a
 
 # Classes
-class Tags_MixIn:
+class TagsMixIn:
     """
     This class is meant to be used as a mix-in for classes requiring tags
     functionality.  Class includes a "name" shortcut to tags.name

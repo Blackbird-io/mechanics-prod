@@ -124,7 +124,7 @@ class Pattern(dict, LineItem):
         Method:
         1) sets instance[attrName] to obj
         2) sets instance.attrName to obj
-        3) sets obj.tags.parentObject to self
+        3) sets obj.relationships.parent to self
         4) appends a function to self._o_functions that always returns
         self[attrName]
 
@@ -137,7 +137,7 @@ class Pattern(dict, LineItem):
         self[attrName] = obj
         setattr(self,attrName,obj)
         try:
-            obj.tags.setPartOf(self)
+            obj.relationships.set_parent(self)
         except Exception:
             pass
         self.o_keys.append(attrName)
