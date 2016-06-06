@@ -177,9 +177,7 @@ class LineItem(Statement):
 
 
         Clear value from instance and optionally details (if ``recur`` is True).
-
-        Throw BBPermissionError if instance is hardcoded. If ``force`` is True,
-        override this restriction.
+        No-op if line is hardcoded, unless ``force`` is True.
         """
         if self.hardcoded and not force:
             pass
