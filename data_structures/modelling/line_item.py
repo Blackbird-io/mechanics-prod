@@ -349,7 +349,7 @@ class LineItem(Statement):
         else:
             if self._details:
                 m = "Cannot assign new value to a line with existing details."
-                raise PermissionError(m)
+                raise bb_exceptions.BBPermissionError(m)
             else:
                 self._local_value = value
 
