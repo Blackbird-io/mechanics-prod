@@ -177,13 +177,11 @@ class LineItem(Statement):
 
 
         Clear value from instance and optionally details (if ``recur`` is True).
-        If instance fails Tags.checkTouch(), will throw exception unless
-        ``force`` is True. No operation if _hardcoded is True
-        """
-        if self.hardcoded:
-            return
 
-        if self.checkTouch() or force:
+        Throw BBPermissionError if instance is hardcoded. If ``force`` is True,
+        override this restriction.
+        """
+        if force or not self.hardcoded:
             num_format = self.xl.number_format
             consolidate = self.consolidate
             if self._details:
@@ -203,7 +201,7 @@ class LineItem(Statement):
             
         else:
             c = "Unable to clear value from line."
-            raise bb_exceptions.BBAnalyticalError(c, self)
+            raise bb_exceptions.BBPermissionError(c, self)
             
     def copy(self, enforce_rules=True):
         """
@@ -308,25 +306,6 @@ class LineItem(Statement):
     # that won't overlap with those of the children and running the computation
     # there.
 
-    def set_hardcoded(self, val):
-        """
-
-
-        LineItem.set_hardcoded() -> None
-
-
-        --``val`` must be a boolean (True or False)
-
-        Method for explicitly setting self._hardcoded.
-        """
-        if val is True:
-            self._hardcoded = True
-        elif val is False:
-            self._hardcoded = False
-        else:
-            msg = "lineitem._hardcoded can only be set to a boolean value"
-            raise(TypeError(msg))
-
     def set_consolidate(self, val):
         """
 
@@ -344,6 +323,25 @@ class LineItem(Statement):
             self._consolidate = False
         else:
             msg = "lineitem._consolidate can only be set to a boolean value"
+            raise(TypeError(msg))
+
+    def set_hardcoded(self, val):
+        """
+
+
+        LineItem.set_hardcoded() -> None
+
+
+        --``val`` must be a boolean (True or False)
+
+        Method for explicitly setting self._hardcoded.
+        """
+        if val is True:
+            self._hardcoded = True
+        elif val is False:
+            self._hardcoded = False
+        else:
+            msg = "lineitem._hardcoded can only be set to a boolean value"
             raise(TypeError(msg))
 
     def setValue(self, value, signature,
@@ -369,15 +367,20 @@ class LineItem(Statement):
         Line.set_value() -> None
 
 
-        Set line value, add entry to log. Value must be numeric unless
-        ``override`` is True. No operation if _hardcoded is True
-        """
-        if self.hardcoded:
-            return
+        Set line value, add entry to log. Value must be numeric.
 
+        Will throw BBPermissionError if line is hardcoded.
+
+        If ``override`` is True, skip type check for value and hardcoded
+        control.
+        """
         if not override:
             test = value + 1
             # Will throw exception if value doesn't support arithmetic
+
+            if self.hardcoded:
+                c = "Line is hardcoded. Cannot write."
+                raise bb_exceptions.BBPermissionError
             
         new_value = value
         if new_value is None:
@@ -392,7 +395,6 @@ class LineItem(Statement):
 
         log_entry = (signature, time.time(), value)
         self.log.append(log_entry)
-            
             
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
