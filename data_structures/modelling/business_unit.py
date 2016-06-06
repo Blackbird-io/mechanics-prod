@@ -691,7 +691,7 @@ class BusinessUnit(History, Tags, Equalities):
         # sheet. All the recursion in the routine takes place in the explicit
         # block above, so set recur=False here. 
 
-    def make_past(self, overwrite=False):
+    def make_past_old_2(self, overwrite=False):
         """
 
 
@@ -753,7 +753,20 @@ class BusinessUnit(History, Tags, Equalities):
         # sheet. All the recursion in the routine takes place in the explicit
         # block above, so set recur=False here.
 
-    def better_logic_for_past(self):
+    def make_past(self):
+        """
+
+
+        BusinessUnit.make_past() -> None
+
+        
+        Creates instance.past. Will throw PermissionError if instance.past
+        is already defined.
+
+        Routine operates by making an instance copy, fitting the copy to the
+        n-1 period (located at instance.period.past), and then recursively
+        linking all of the instance components to their younger selves.
+        """
         if self.past:
             raise PermissionException
         
@@ -762,11 +775,10 @@ class BusinessUnit(History, Tags, Equalities):
 
         younger._fit_to_period(self.period.past)
         younger._register_in_period()
-
-        # younger has copies of all components
+        # younger includes all components
 
         self.set_history(younger, clear_future=False)
-        # Should just work        
+        # connect all components to their younger selves
 
     def synchronize(self, recur=True):
         """
