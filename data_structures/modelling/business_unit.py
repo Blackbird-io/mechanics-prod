@@ -753,22 +753,28 @@ class BusinessUnit(History, Tags, Equalities):
         # sheet. All the recursion in the routine takes place in the explicit
         # block above, so set recur=False here.
 
-    def make_past(self):
+    def make_past(self, overwrite=False):
         """
 
 
         BusinessUnit.make_past() -> None
 
         
-        Creates instance.past. Will throw PermissionError if instance.past
-        is already defined.
+        --``overwrite``: if True, will replace existing instance.past
+        
+        Create a past for instance.
 
         Routine operates by making an instance copy, fitting the copy to the
         n-1 period (located at instance.period.past), and then recursively
         linking all of the instance components to their younger selves.
         """
         if self.past:
-            raise PermissionException
+            if overwrite:
+                pass
+            else:
+                c = "Instance already defines past. "
+                c += "Implicit overwrites prohibited."
+                raise bb_exceptions.BBPermissionError(c)
         
         younger = self.copy()
         younger.reset_financials()
