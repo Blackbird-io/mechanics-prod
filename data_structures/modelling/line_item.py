@@ -181,7 +181,9 @@ class LineItem(Statement):
         Throw BBPermissionError if instance is hardcoded. If ``force`` is True,
         override this restriction.
         """
-        if force or not self.hardcoded:
+        if self.hardcoded and not force:
+            pass
+        else:
             num_format = self.xl.number_format
             consolidate = self.consolidate
             if self._details:
@@ -195,13 +197,8 @@ class LineItem(Statement):
             self.xl = xl_mgmt.LineData()
             self.xl.number_format = num_format
             self.set_consolidate(consolidate)
-
             # Start with a clean slate for Excel tracking, except for
             # number format
-            
-        else:
-            c = "Unable to clear value from line."
-            raise bb_exceptions.BBPermissionError(c, self)
             
     def copy(self, enforce_rules=True):
         """
@@ -380,7 +377,7 @@ class LineItem(Statement):
 
             if self.hardcoded:
                 c = "Line is hardcoded. Cannot write."
-                raise bb_exceptions.BBPermissionError
+                raise bb_exceptions.BBPermissionError(c, self)
             
         new_value = value
         if new_value is None:
