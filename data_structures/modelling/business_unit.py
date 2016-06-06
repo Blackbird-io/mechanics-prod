@@ -98,6 +98,7 @@ class BusinessUnit(History, Tags, Equalities):
     clear()               restore default attribute values
     fill_out()            integrates consolidate() and derive()
     kill()                make dead, optionally recursive
+    make_past()           put a younger version of unit in prior period
     recalculate()         reset financials, compute again, repeat for future
     reset_financials()    resets instance and (optionally) component financials
     set_analytics()       attaches an object to instance.analytics 
@@ -251,7 +252,7 @@ class BusinessUnit(History, Tags, Equalities):
         box = "\n".join(lines)
         return box
 
-    def add_component(self, bu, update_id=True, register_in_period=True):
+    def add_component(self, bu, update_id=True, register_in_period=True, overwrite=False):
         """
 
 
@@ -295,7 +296,7 @@ class BusinessUnit(History, Tags, Equalities):
             bu._update_id(namespace=self.id.bbid, recur=True)
         # Step 3: Register the the units. Will raise errors on collisions.
         if register_in_period:
-            bu._register_in_period(recur=True, overwrite=False)
+            bu._register_in_period(recur=True, overwrite=overwrite)
         self.components.add_item(bu)
     
     def addDriver(self, newDriver, *otherKeys):
@@ -345,7 +346,7 @@ class BusinessUnit(History, Tags, Equalities):
         """
         blank_bu = BusinessUnit(name=self.name)
         for attr in self.tagSources:
-            blank_attr = getattr(blank_bu,attr)
+            blank_attr = getattr(blank_bu, attr)
             setattr(self, attr, blank_attr)
     
     def copy(self, enforce_rules=True):
@@ -556,6 +557,39 @@ class BusinessUnit(History, Tags, Equalities):
         if recur:
             for unit in self.components.values():
                 unit.kill(date, recur)
+
+    def make_past(self, overwrite=False):
+        """
+
+
+        BusinessUnit.make_past() -> None
+
+        
+        --``overwrite``: if True, will replace existing instance.past
+        
+        Create a past for instance.
+
+        Routine operates by making an instance copy, fitting the copy to the
+        n-1 period (located at instance.period.past), and then recursively
+        linking all of the instance components to their younger selves.
+        """
+        if self.past:
+            if overwrite:
+                pass
+            else:
+                c = "Instance already defines past. "
+                c += "Implicit overwrites prohibited."
+                raise bb_exceptions.BBPermissionError(c)
+        
+        younger = self.copy()
+        younger.reset_financials()
+
+        younger._fit_to_period(self.period.past)
+        younger._register_in_period()
+        # younger includes all components
+
+        self.set_history(younger, clear_future=False)
+        # connect all components to their younger selves
 
     def reset_financials(self, recur=True):
         """
@@ -1019,9 +1053,11 @@ class BusinessUnit(History, Tags, Equalities):
         else:
             life = "n/a"
         data["LIFE"] = life
-        
-        data["EVENT"] = self.life.get_latest()[0][:data_width]
-        # Pick out the event name, trim to data width. 
+
+        event_name = self.life.get_latest()[0]
+        event_name = event_name or "n/a"
+        # Choose empty string if life has no events yet
+        data["EVENT"] = event_name[:data_width]
         
         unit_type = str(self.type)[:data_width]
         data["TYPE"] = unit_type.upper()
@@ -1048,56 +1084,58 @@ class BusinessUnit(History, Tags, Equalities):
         #
         #add a bottom border symmetrical to the top
         lines.append(top_border)
-        #
-        #post-processing (dashed lines for units scheduled to open in the
-        #future, x's for units that have already closed)
         
-        if self.life.ref_date < date_of_birth:
-            #
-            alt_width = int(box_width / 2) + 1
-            alt_border = (top_element + alt_element) * alt_width
-            alt_border = alt_border[:(box_width - 2)]
-            alt_border = alt_corner + alt_border + alt_corner
-            #
-            core_lines = lines[1:-1]
-            for i in range(0, len(core_lines), 2):
-                line = core_lines[i]
-                core_symbols = line[1:-1]
-                line = alt_element + core_symbols + alt_element
-                core_lines[i] = line
-            #
-            lines = [alt_border] + core_lines + [alt_border]
-        #
+        # Post-processing (dashed lines for units scheduled to open in the
+        # future, x's for units that have already closed)
+
+        if self.life.ref_date and date_of_birth:
+            if self.life.ref_date < date_of_birth:
+                #
+                alt_width = int(box_width / 2) + 1
+                alt_border = (top_element + alt_element) * alt_width
+                alt_border = alt_border[:(box_width - 2)]
+                alt_border = alt_corner + alt_border + alt_corner
+                #
+                core_lines = lines[1:-1]
+                for i in range(0, len(core_lines), 2):
+                    line = core_lines[i]
+                    core_symbols = line[1:-1]
+                    line = alt_element + core_symbols + alt_element
+                    core_lines[i] = line
+                #
+                lines = [alt_border] + core_lines + [alt_border]
+        
         date_of_death = self.life.events.get(self.life.KEY_DEATH)
-        if self.life.ref_date > date_of_death:
-            #
-            alt_lines = []
-            line_count = len(lines)
-            down_start = int((box_width - line_count)/2)
-            #X is line_count lines wide
-            up_start = down_start + line_count
-            #
-            for i in range(line_count):
-                #
-                #replace the character at (down_start + i) with "\"
-                #replace the character at (up_start - i) with "/"
-                #
-                line = lines[i]
-                #
-                down_pos = (down_start + i)
-                seg_a = line[: (down_pos)]
-                seg_b = line[(down_pos + 1):]
-                line = seg_a + "\\" + seg_b
-                #
-                up_pos = (up_start - i)
-                seg_a = line[:(up_pos)]
-                seg_b = line[(up_pos + 1):]
-                line = seg_a + "/" + seg_b
-                line = line.casefold()
-                #
-                alt_lines.append(line)
-            lines = alt_lines
-        #
+        if self.life.ref_date and date_of_death:
+            if self.life.ref_date > date_of_death:
+                
+                alt_lines = []
+                line_count = len(lines)
+                down_start = int((box_width - line_count)/2)
+                #X is line_count lines wide
+                up_start = down_start + line_count
+                
+                for i in range(line_count):
+                    #
+                    #replace the character at (down_start + i) with "\"
+                    #replace the character at (up_start - i) with "/"
+                    #
+                    line = lines[i]
+                    #
+                    down_pos = (down_start + i)
+                    seg_a = line[: (down_pos)]
+                    seg_b = line[(down_pos + 1):]
+                    line = seg_a + "\\" + seg_b
+                    #
+                    up_pos = (up_start - i)
+                    seg_a = line[:(up_pos)]
+                    seg_b = line[(up_pos + 1):]
+                    line = seg_a + "/" + seg_b
+                    line = line.casefold()
+                    #
+                    alt_lines.append(line)
+                lines = alt_lines
+        
         return lines    
 
     def _load_balance(self):
