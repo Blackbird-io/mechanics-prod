@@ -571,8 +571,13 @@ class TimeLine(dict):
         space = " "
         #
         underscore = "_"
-        bu_lines = self.current_period.content._get_pretty_lines()
-        bu_width = len(bu_lines[0])
+        bu_lines = list()
+        if self.current_period.content:
+            bu_lines = self.current_period.content._get_pretty_lines()
+        bu_width = 20
+        # default width should be a setting (probably same as bu view)
+        if bu_lines:
+            bu_width = len(bu_lines[0])
         bu_height = len(bu_lines)
         sep_width = len(sep)
         column_width = bu_width + cushion * 2 + sep_width
