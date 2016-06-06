@@ -98,6 +98,7 @@ class BusinessUnit(History, Tags, Equalities):
     clear()               restore default attribute values
     fill_out()            integrates consolidate() and derive()
     kill()                make dead, optionally recursive
+    make_past()           put a younger version of unit in prior period
     recalculate()         reset financials, compute again, repeat for future
     reset_financials()    resets instance and (optionally) component financials
     set_analytics()       attaches an object to instance.analytics 
@@ -557,6 +558,39 @@ class BusinessUnit(History, Tags, Equalities):
             for unit in self.components.values():
                 unit.kill(date, recur)
 
+    def make_past(self, overwrite=False):
+        """
+
+
+        BusinessUnit.make_past() -> None
+
+        
+        --``overwrite``: if True, will replace existing instance.past
+        
+        Create a past for instance.
+
+        Routine operates by making an instance copy, fitting the copy to the
+        n-1 period (located at instance.period.past), and then recursively
+        linking all of the instance components to their younger selves.
+        """
+        if self.past:
+            if overwrite:
+                pass
+            else:
+                c = "Instance already defines past. "
+                c += "Implicit overwrites prohibited."
+                raise bb_exceptions.BBPermissionError(c)
+        
+        younger = self.copy()
+        younger.reset_financials()
+
+        younger._fit_to_period(self.period.past)
+        younger._register_in_period()
+        # younger includes all components
+
+        self.set_history(younger, clear_future=False)
+        # connect all components to their younger selves
+
     def reset_financials(self, recur=True):
         """
 
@@ -634,39 +668,6 @@ class BusinessUnit(History, Tags, Equalities):
         self.reset_financials(recur=False)
         # Reset financials here because we just connected a new starting balance
         # sheet.
-
-    def make_past(self, overwrite=False):
-        """
-
-
-        BusinessUnit.make_past() -> None
-
-        
-        --``overwrite``: if True, will replace existing instance.past
-        
-        Create a past for instance.
-
-        Routine operates by making an instance copy, fitting the copy to the
-        n-1 period (located at instance.period.past), and then recursively
-        linking all of the instance components to their younger selves.
-        """
-        if self.past:
-            if overwrite:
-                pass
-            else:
-                c = "Instance already defines past. "
-                c += "Implicit overwrites prohibited."
-                raise bb_exceptions.BBPermissionError(c)
-        
-        younger = self.copy()
-        younger.reset_financials()
-
-        younger._fit_to_period(self.period.past)
-        younger._register_in_period()
-        # younger includes all components
-
-        self.set_history(younger, clear_future=False)
-        # connect all components to their younger selves
 
     def synchronize(self, recur=True):
         """
