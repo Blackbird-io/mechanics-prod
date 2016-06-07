@@ -29,29 +29,20 @@ Tags                  mix-in class that provides tagging, naming, and belonging
 ====================  ==========================================================
 """
 
+
+
+
 # imports
 import copy
 import bb_exceptions
 
-from tag_manager import loaded_tagManager as tag_manager
 from tools.parsing import deCase
 
+
+
+
 # globals
-m_spacer_opt = tag_manager.catalog["BLACKBIRDSTAMP"] + "end own optionalTags"
-m_spacer_req = tag_manager.catalog["BLACKBIRDSTAMP"] + "endRequiredTags"
-special_tags = [tag_manager.catalog["special_ex"],
-                tag_manager.catalog["special_ex"].casefold(),
-                tag_manager.catalog["hardcoded"],
-                tag_manager.catalog["hardcoded"].casefold(),
-                tag_manager.catalog["do not touch"],
-                tag_manager.catalog["do not touch"].casefold()]
-m_hands_off = [tag_manager.catalog["do not touch"],
-               tag_manager.catalog["do not touch"].casefold()]
-m_hands_off = set(m_hands_off)
-
-doNotTouchTag = tag_manager.catalog["do_not_touch"]
-dropDownReplicaTag = tag_manager.catalog["ddr"]
-
+# n/a
 
 # classes
 # NOTE: Class variables set at the bottom of the module (after class definition)
@@ -169,14 +160,9 @@ class Tags:
     """
     # class attributes:
     # irrelevantAttributes = ["parentObject"]
-    autoRegister = True
-    tagManager = None
-    connected = False
-    hands_off = None
-    reg_req = False
-    spacer_opt = m_spacer_opt
-    spacer_req = m_spacer_req
-    spec_tags = None
+    BLACKBIRD_STAMP = "|BB|"
+    spacer_opt = BLACKBIRD_STAMP+"endOwnOptionalTags"
+    spacer_req = BLACKBIRD_STAMP+"endRequiredTags"
     tagSources = []
 
     # tagSources must be a class attribute to make sure running Tags.__init__ on
@@ -193,103 +179,6 @@ class Tags:
         # list should have minimum length of 2; actual values set through
         # methods
         self.setName(name)
-
-    @classmethod
-    def disconnect(cls):
-        """
-
-
-        Tags.disconnect() -> obj
-
-
-        CLASS METHOD
-
-        Disconnects class attributes that point at module objects. Simplifies
-        serialization.
-
-        Method returns the object that Tags.tagManager pointed to prior to call and
-        toggles Tags.connected to False.
-
-        Attributes set to None:
-        -- Tags.tagManager
-        """
-        old_man = cls.tagManager
-        cls.tagManager = None
-        cls.connected = False
-        return old_man
-
-    @classmethod
-    def reg_req_off(cls):
-        """
-
-
-        Tags.reg_req_off -> None
-
-
-        CLASS METHOD
-
-        Method sets class.reg_req to False.
-        """
-        cls.reg_req = False
-
-    @classmethod
-    def reg_req_on(cls):
-        """
-
-
-        Tags.reg_req_on -> None
-
-
-        CLASS METHOD
-
-        Method sets class.reg_req to True.
-        """
-        cls.reg_req = True
-
-    @classmethod
-    def setTagManager(cls, ct):
-        """
-
-
-        Tags.setTagManager(ct) -> None
-
-
-        CLASS METHOD
-
-        Method sets pointer for class attribute ``tagManager`` and toggles
-        Tags.connected to True.
-        """
-        cls.tagManager = ct
-        cls.connected = True
-
-    @classmethod
-    def setHandsOff(cls, tho):
-        """
-
-
-        Tags.setHandsOff(tho) -> None
-
-
-        CLASS METHOD
-
-        Method sets class value for hands_off to specified list of tags.
-        """
-        cls.hands_off = tho
-
-    @classmethod
-    def setSpecialTags(cls, sts):
-        """
-
-
-        Tags.setSpecialTags(sts) -> None
-
-
-        CLASS METHOD
-
-        Method sets Tags.spec_tags to argument. ``spec_tags`` serves as the list
-        of triggers for special extrapolation.
-        """
-        cls.spec_tags = sts
 
     class dyn_OptTManager:
         """
@@ -363,58 +252,6 @@ class Tags:
     # self.required and managed by the descriptor above
     name = dyn_SpecTManager(targetAttribute="name")
 
-    def checkOrdinary(self, target=None):
-        """
-
-
-        Tags.checkOrdinary([target = None]) -> bool
-
-
-        Returns True if target is ordinary, False if it has any tags in
-        instance.spec_tags.
-
-        If ``target`` is left blank, method runs test on self.
-
-        NOTE: Method compares target against **caller's** spec_tags.
-
-        Tags objects use checkOrdinary() to select the appropriate type of
-        extrapolate (or other) processing for a target object. By using the
-        caller instance's attribute as the standard, method allows objects to
-        evaluate targets with missing or outdated spec_tags.
-        """
-        if not target:
-            target = self
-        result = False
-        if set(self.spec_tags) & set(target.all) == set():
-            result = True
-        return result
-
-    def checkTouch(self, target=None):
-        """
-
-
-        Tags.checkTouch([target = None]) -> bool
-
-
-        Method returns True if target does not have any tags stored in
-        instance.hands_off (e.g., do_not_touch), False otherwise.
-
-        If ``target`` is left blank, method runs test on self.
-
-        NOTE: Method compares target against **caller's** hands_off.
-
-        Tags objects use checkTouch() to select the appropriate type of
-        extrapolate (or other) processing for a target object. By using the
-        caller instance's attribute as the standard, method allows objects to
-        evaluate targets with missing or outdated hands_off lists.
-        """
-        if not target:
-            target = self
-        result = False
-        if set(self.hands_off) & set(target.all) == set():
-            result = True
-        return result
-
     def clearInheritedTags(self):
         """
 
@@ -429,26 +266,26 @@ class Tags:
         """
         self._inherited = []
 
-    def copy(self, enforce_rules=True):
+    def copy(self):
         """
 
 
-        Tags.copy([enforce_rules = True]) -> obj
+        Tags.copy([ = True]) -> obj
 
 
-        Method returns a shallow copy of the instance. If ``enforce_rules`` is
+        Method returns a shallow copy of the instance. If ```` is
         True, copy follows ``out`` rules.
         """
         result = copy.copy(self)
-        self.copyTagsTo(result, enforce_rules)
+        self.copyTagsTo(result)
 
         return result
 
-    def copyTagsTo(self, target, enforce_rules=True):
+    def copyTagsTo(self, target):
         """
 
 
-        Tags.copyTagsTo(target[, enforce_rules = True]) -> None
+        Tags.copyTagsTo(target[,  = True]) -> None
 
         NOTE: Method changes target **in place**.
 
@@ -456,7 +293,7 @@ class Tags:
         Method delegates all actual work to either copyTagsTo_rules_on or
         copyTagsTo_rules_off.
 
-        If ``enforce_rules`` == True, method follows the ``out`` rules of
+        If ```` == True, method follows the ``out`` rules of
         inheritance for each tag.
 
         NOTE2: Method may loop indefinitely if tagManager.rules contains
@@ -469,30 +306,7 @@ class Tags:
         Tags.copy.  Without modifying Driver (and possibly other classes),
         adding the code for dealing with the relationships class had to go here.
         """
-        if self.tagManager.rules:
-            self.copyTagsTo_rules_on(target)
-        else:
-            self.copyTagsTo_rules_off(target)
-
-    def copyTagsTo_rules_on(self, target):
-        """
-
-
-        Tags.copyTagsTo_rules_on(target) -> None
-
-
-        NOTE: Method changes target **in place**.
-
-        Method replaces all tag attributes on target with copies of the
-        respective attribute on the calling instance. Method follows tag rules
-        where specified. Method preserves target.required[:2] (``name`` and
-        ``partOf``).
-
-        NOTE2: Method may loop indefinitely if tagManager.rules contains
-        circular references.
-        """
         fields = ["required", "_optional", "_inherited"]
-        rules = self.tagManager.rules
         for attr in fields:
             t_field = None
             source_tags = getattr(self, attr)
@@ -504,7 +318,7 @@ class Tags:
             else:
                 if attr == "._inherited":
                     t_field = "inh"
-            check_tags = set(source_tags) & set(rules.keys())
+            check_tags = set(source_tags)
             #
             setattr(target, attr, [])
             # make independent blank lists for the target to make sure method
@@ -517,44 +331,9 @@ class Tags:
                 # preserve target name, partOf
             #
             for t in source_tags:
-                if t in check_tags:
-                    # t has a rule
-                    if rules[t]["out"].place:
-                        new_tags.append(t)
-                        # only add rules-based tags if the rules says its ok
-                    if rules[t]["out"].cotag:
-                        cotags = rules[t]["out"].cotag
-                        target.tag(cotags, field=t_field, mode="at")
-                        # need to use Tags.tags.tag() in case cotags have to get
-                        # registed or lead to more cotags. mode is "at" because
-                        # the tag that requires cotags is on the lineitem already
-                        # (ie, "at" the same object).
-                    if rules[t]["out"].detag:
-                        for lessT in rules[t]["out"].detag:
-                            target.unTag(lessT)
-                else:
-                    # t does not have a rule
-                    new_tags.append(t)
+                new_tags.append(t)
 
-    def copyTagsTo_rules_off(self, target):
-        """
-
-
-        Tags.copyTagsTo_rules_on(target) -> None
-
-
-        NOTE: Method changes target **in place**.
-
-        Method replaces all tag attributes on target with copies of the
-        respective attribute on the calling instance. Method preserves
-        target.required[:2] (``name`` and ``partOf``).
-        """
-        target.required = target.required[:2] + self.required[2:]
-        # preserve **target** name, partOf, supplement w seed req tags
-        target._optional = self._optional[:]
-        target._inherited = self._inherited[:]
-
-    def extrapolate_to(self, target, mode="at"):
+    def extrapolate_to(self, target):
         """
 
 
@@ -576,7 +355,7 @@ class Tags:
         target.inherit(recur=True)
 
         seed = self
-        result = Tags.copy(seed, enforce_rules=True)
+        result = Tags.copy(seed)
         # maintain all tags on seed
         fields = ["required", "_optional", "_inherited"]
         for attr in fields:
@@ -590,7 +369,7 @@ class Tags:
             new_tags = sorted(new_tags)
             # sort the new tags into a stable order to ensure consistency
             # across runtime
-            result.tag(*new_tags, field=attr, mode=mode)
+            result.tag(*new_tags, field=attr)
         return result
 
     def inherit(self, recur=True):
@@ -618,7 +397,7 @@ class Tags:
                     source.inherit(recur=True)
                 self.inheritFrom(source)
 
-    def inheritFrom(self, source, *doNotInherit, noDuplicates=True):
+    def inheritFrom(self, source, noDuplicates=True):
         """
 
 
@@ -643,34 +422,20 @@ class Tags:
         This method evaluates tags as casefolded objects to the extent possible.
         """
         sourceTags = source.required[2:] + source.optional[:]
-        dni = [doNotTouchTag, dropDownReplicaTag]
-        if doNotInherit != tuple():
-            dni = doNotInherit
+        # dni = [doNotTouchTag, dropDownReplicaTag]
+        # if doNotInherit != tuple():
+        #     dni = doNotInherit
         if noDuplicates:
             sourceTags = set(sourceTags) - set(self.all)
         # source tags is now **unordered**
-        sourceTags = sourceTags - set(dni)
+        sourceTags = sourceTags
         sourceTags = sorted(sourceTags)
         # turn sourceTags into a sorted list to make sure tags are always added
         # in the same order; otherwise, pseudo-random order of tags in a set
         # wrecks HAVOC on comparisons
-        self.tag(*sourceTags, field="inh", mode="up")
+        self.tag(*sourceTags, field="inh")
         # NOTE: can preserve order by expanding dni and go through tags one by
         # one. dni = set(dni)+set(self.all). if tag in dni: pass, else tag()
-
-    def registerTag(self, tag):
-        """
-
-
-        Tags.registerTag(tag) -> None
-
-
-        Method registers cased and caseless versions of the tag in the tag
-        catalog. Delegates all processing to tagManager.
-        """
-        alt = deCase(tag)
-        self.tagManager.registerTag(tag)
-        self.tagManager.registerTag(alt)
 
     def setName(self, newName):
         """
@@ -704,17 +469,12 @@ class Tags:
         """
         self.name = deCase(newName)
 
-    def tag(self,
-            *newTags,
-            field="opt",
-            mode="at",
-            permit_duplicates=False):
+    def tag(self, *newTags, field="opt", permit_duplicates=False):
         """
 
 
         Tags.tag( *newTags[,
                   field = "opt"[,
-                  mode = "at"[,
                   permit_duplicates = False]]]) -> None
 
 
@@ -770,51 +530,12 @@ class Tags:
         real_thing = getattr(self, attrs[field])
         #
         for tag in newTags:
-            #
-            #
             # NOTE: automatically decase tags!
             tag = deCase(tag)
-            #
+
             # filter out duplicates if necessary
-            if permit_duplicates:
-                pass
-            else:
-                if tag in real_thing:
-                    continue
-                    #
-            registered = False
-            if self.tagManager:
-                if tag in self.tagManager.catalog.keys():
-                    registered = True
-            if registered:
-                # processing for registered tags
-                if tag not in self.tagManager.rules.keys():
-                    real_thing.append(tag)
-                    # plain vanilla tag
-                else:
-                    rule = self.tagManager.rules[tag][mode]
-                    if rule.place:
-                        real_thing.append(tag)
-                    if rule.cotag:
-                        for moreT in rule.cotag:
-                            self.tag(moreT, field, mode)
-                    if rule.detag:
-                        for lessT in rule.untag:
-                            self.unTag(tag)
-                            # untags are dependent on tags already in place
-                            # those tags may vary due to sorting
-                            # should generally disallow & require manual
-            else:
-                # processing for unregistered tags
-                if self.reg_req == True:
-                    c = "'%s' is not a registered tag. " % tag
-                    c = c + "Registration required for tagging."
-                    raise bb_exceptions.TagRegistrationError(c)
-                else:
-                    if self.tagManager and self.autoRegister:
-                        self.registerTag(tag)
-                    # tag not registered, but that's ok, just append it
-                    real_thing.append(tag)
+            if tag not in real_thing or permit_duplicates:
+                real_thing.append(tag)
 
     def unTag(self, badTag, checkInherited=True):
         """
@@ -839,28 +560,16 @@ class Tags:
             location = self.required.index(badTag)
             self.required[location] = None
             self.unTag(badTag)
-        else:
-            pass
+
         if badTag in self.required[2:]:
             self.required.remove(badTag)
             self.unTag(badTag)
-        else:
-            pass
+
         if badTag in self._optional:
             self._optional.remove(badTag)
             self.unTag(badTag)
-        else:
-            pass
+
         if checkInherited:
             if badTag in self._inherited:
                 self._inherited.remove(badTag)
                 self.unTag(badTag)
-            else:
-                pass
-        else:
-            pass
-
-
-Tags.setHandsOff(m_hands_off)
-Tags.setSpecialTags(special_tags)
-Tags.setTagManager(tag_manager)

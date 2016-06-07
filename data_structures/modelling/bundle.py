@@ -93,7 +93,7 @@ class Bundle:
         #
         return result
 
-    def copy(self, enforce_rules=True):
+    def copy(self):
         """
 
 
@@ -110,7 +110,7 @@ class Bundle:
         for name in self.ORDER:
             own_statement = getattr(self, name, None)
             if own_statement is not None:
-                new_statement = own_statement.copy(enforce_rules)
+                new_statement = own_statement.copy()
                 setattr(new_instance, name, new_statement)
             
         return new_instance

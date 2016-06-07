@@ -179,11 +179,11 @@ class DrContainer(Components, TagsMixIn):
         for dr in self.dr_directory.items():
             dr.clearInheritedTags(recur)
             
-    def copy(self, enforce_rules=True):
+    def copy(self):
         """
 
 
-        DrContainer.copy([enforce_rules = True]) -> DrContainer
+        DrContainer.copy([]) -> DrContainer
 
 
         Method returns a new DrContainer instance. The items in the copy
@@ -191,27 +191,27 @@ class DrContainer(Components, TagsMixIn):
         original. The drivers in the copy directory are copies of the drivers in
         the original directory.
 
-        ``enforce_rules`` toggles whether driver copies in the copy.dr_directory
+        ```` toggles whether driver copies in the copy.dr_directory
         comply with any applicable tag rules. 
         """
         #
         # Make container
         result = copy.copy(self)
-        result.tags = self.tags.copy(enforce_rules)
+        result.tags = self.tags.copy()
         result.relationships = self.relationships.copy()
         result.clear()
         result.dr_directory = {}
         # Make a clean empty dictionary for new directory
         #
         # Configure and fill the container
-        result.dr_blank = self.dr_blank.copy(enforce_rules=False)
+        result.dr_blank = self.dr_blank.copy()
         
         for (k, position_dict) in self.items():
             result[k] = position_dict.copy()
             # Set-specific copy; new set of same bbids
 
         for (bbid,dr) in self.dr_directory.items():
-            result.dr_directory[bbid] = dr.copy(enforce_rules)
+            result.dr_directory[bbid] = dr.copy()
         #
         # Return 
         return result

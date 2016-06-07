@@ -59,11 +59,7 @@ from .parameters import Parameters
 # n/a
 
 # Globals
-# Tags class carries a pointer to the tag manager; access individual tags
-# through that pointer
-tConsolidated = Tags.tagManager.catalog["consolidated"]
-tHardCoded = Tags.tagManager.catalog["hard"]
-T_REPLICA = Tags.tagManager.catalog["ddr"]
+# n/a
 
 # Classes   
 class BusinessUnit(History, Equalities, TagsMixIn):
@@ -351,7 +347,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
             blank_attr = getattr(blank_bu, attr)
             setattr(self, attr, blank_attr)
     
-    def copy(self, enforce_rules=True):
+    def copy(self):
         """
 
 
@@ -377,17 +373,17 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         respective class documenation for mode detail.
         """
         result = copy.copy(self)
-        result.tags = self.tags.copy(enforce_rules)
+        result.tags = self.tags.copy()
         result.relationships = self.relationships.copy()
         # Start with a basic shallow copy, then add tags
         #
-        r_comps = self.components.copy(enforce_rules)
+        r_comps = self.components.copy()
         result._set_components(r_comps)
         
-        r_drivers = self.drivers.copy(enforce_rules)
+        r_drivers = self.drivers.copy()
         result._set_drivers(r_drivers)
 
-        r_fins = self.financials.copy(enforce_rules)
+        r_fins = self.financials.copy()
         result.set_financials(r_fins)
 
         result.guide = copy.deepcopy(self.guide)
@@ -767,7 +763,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         
         NOTE: ALWAYS RUN BusinessUnit.consolidate() BEFORE BusinessUnit.Derive()
         """
-        tags_to_omit = set(tagsToOmit) | {tConsolidated, tHardCoded}
+        tags_to_omit = set(tagsToOmit)
         #need to change tagging rules above to make sure BU.consolidate() tags
         #lines appropriately. also need to make sure that inheritTagsFrom() does---------------------------------------------------------------
         #not pick up blockingTags
@@ -807,7 +803,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
             
             for detail in line.get_ordered():
                 
-                if T_REPLICA in detail.tags.all:
+                if detail.replica:
                     continue
                     # Skip replicas to make sure we apply the driver only once
                     # A replica should never have any details
@@ -1177,7 +1173,6 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         overwrite these values. 
         """
         tags_to_omit = set(tagsToOmit)
-        tags_to_omit.add(tConsolidated)
 
         starting_balance = self.financials.starting
         ending_balance = self.financials.ending
@@ -1210,7 +1205,6 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         ending balance sheet ``end_line``.
         """
         tags_to_omit = set(tagsToOmit)
-        tags_to_omit.add(tConsolidated)
 
         if start_line._details:
             for name, line in start_line._details.items():

@@ -116,7 +116,7 @@ class Financials(StatementBundle):
 
         return result        
 
-    def copy(self, enforce_rules=True):
+    def copy(self):
         """
 
 
@@ -135,7 +135,7 @@ class Financials(StatementBundle):
         for name in self.ORDER:
             own_statement = getattr(self, name, None)
             if own_statement is not None:
-                new_statement = own_statement.copy(enforce_rules)
+                new_statement = own_statement.copy()
                 setattr(new_instance, name, new_statement)
 
         del self.ORDER

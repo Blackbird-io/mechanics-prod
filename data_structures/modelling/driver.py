@@ -241,7 +241,7 @@ class Driver(TagsMixIn):
         
         self._set_formula(formula)
         
-    def copy(self, enforce_rules=True):
+    def copy(self):
         """
 
 
@@ -269,7 +269,7 @@ class Driver(TagsMixIn):
         NOTE2: Result points to the original conversion table.
         """
         result = copy.copy(self)
-        result.tags = self.tags.copy(enforce_rules)
+        result.tags = self.tags.copy()
         result.relationships = self.relationships.copy()
         result.parameters = copy.deepcopy(self.parameters)
         result.workConditions = copy.deepcopy(self.workConditions)
