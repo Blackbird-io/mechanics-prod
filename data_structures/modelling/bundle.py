@@ -143,7 +143,7 @@ class Bundle:
                 routine = getattr(statement, action)
                 routine(*kargs, **pargs)
 
-    def summarize(self, *tagsToOmit):
+    def summarize(self):
         """
 
 
@@ -152,7 +152,7 @@ class Bundle:
 
         Summarize each defined statement.
         """
-        self.run_on_all("summarize", *tagsToOmit)
+        self.run_on_all("summarize")
             
     #<------------------------------------------------------------------------need to inherit tags from statements?   
     

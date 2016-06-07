@@ -418,16 +418,16 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         if adjust_future and self.future:
             self.future.recalculate(adjust_future=True)
 
-    def fillOut(self, *tagsToOmit):
+    def fillOut(self):
         """
 
         **OBSOLETE**
 
         Legacy interface for fill_out().
         """
-        return self.fill_out(*tagsToOmit)
+        return self.fill_out()
     
-    def fill_out(self, *tagsToOmit):
+    def fill_out(self):
         """
 
 
@@ -449,10 +449,10 @@ class BusinessUnit(History, Equalities, TagsMixIn):
             return
         else:
             self._load_balance()
-            self._consolidate(*tagsToOmit)
-            self._update_balance(*tagsToOmit)
+            self._consolidate()
+            self._update_balance()
             # Sets ending balance lines to starting values by default
-            self._derive(*tagsToOmit)
+            self._derive()
             # Derive() will overwrite ending balance sheet where appropriate
             
             self.filled = True
@@ -575,7 +575,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#    
 
-    def _consolidate(self, *tagsToOmit, trace=False):
+    def _consolidate(self, trace=False):
         """
 
 
@@ -593,9 +593,9 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         for unit in pool:
             
             if unit.life.conceived:
-                self._consolidate_unit(unit, *tagsToOmit)
+                self._consolidate_unit(unit)
         
-    def _consolidate_unit(self, sub, *tagsToOmit):
+    def _consolidate_unit(self, sub):
         """
 
 
@@ -603,9 +603,6 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         
 
         -- ``sub`` should be a BusinessUnit object
-           
-        -- ``tagsToOmit`` is a tuple of tags; method will ignore sub lines with
-           any of these tags
            
         The Blackbird environment contemplates that BusinessUnits (``parents``)  #<------------------------------------------------update doc string
         may contain multiple component BusinessUnits (``subs``). This method
@@ -727,10 +724,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         Method uses Financials.spotGenerally() to locate the appropriate
         position for a replica. 
         """
-        # Step 1: Prep
-        tagsToOmit = set(tagsToOmit) #<---------------------------------------------------------------------------------------------------------should be on statement?
-
-        # Step 2: Actual consolidation
+        # Step Only: Actual consolidation
         sub.fill_out()
 
         for attr_name in sub.financials.ORDER:
@@ -738,9 +732,9 @@ class BusinessUnit(History, Equalities, TagsMixIn):
             
             if child_statement:
                 parent_statement = getattr(self.financials, attr_name)
-                parent_statement.increment(child_statement, *tagsToOmit, consolidating=True)
+                parent_statement.increment(child_statement, consolidating=True)
 
-    def _derive(self, *tagsToOmit, spread=False, sheet=None):
+    def _derive(self, spread=False, sheet=None):
         """
 
 
@@ -763,7 +757,6 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         
         NOTE: ALWAYS RUN BusinessUnit.consolidate() BEFORE BusinessUnit.Derive()
         """
-        tags_to_omit = set(tagsToOmit)
         #need to change tagging rules above to make sure BU.consolidate() tags
         #lines appropriately. also need to make sure that inheritTagsFrom() does---------------------------------------------------------------
         #not pick up blockingTags
@@ -773,13 +766,8 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         
         for statement in self.financials.ordered:
             if statement is not None:
-                
                 for line in statement.get_ordered():    
-                    if tags_to_omit & set(line.tags.all):
-                        continue
-                        
-                    else:
-                        self._derive_line(line)
+                    self._derive_line(line)
 
     def _derive_line(self, line):
         """
@@ -1161,7 +1149,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         dr_c.setPartOf(self, recur=True)
         self.drivers = dr_c
 
-    def _update_balance(self, *tagsToOmit):
+    def _update_balance(self):
         """
 
 
@@ -1172,7 +1160,6 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         Ignore lines that we have already consolidated. Derive() can later
         overwrite these values. 
         """
-        tags_to_omit = set(tagsToOmit)
 
         starting_balance = self.financials.starting
         ending_balance = self.financials.ending
@@ -1185,14 +1172,14 @@ class BusinessUnit(History, Equalities, TagsMixIn):
             
             for name, starting_line in starting_balance._details.items():
 
-                if tags_to_omit & set(starting_line.tags.all):
+                if starting_line.consolidated:
                     continue
                 else:
                     if starting_line.value is not None:
                         ending_line = ending_balance.find_first(starting_line.tags.name)
                         self._update_lines(starting_line, ending_line)
 
-    def _update_lines(self, start_line, end_line, *tagsToOmit):
+    def _update_lines(self, start_line, end_line):
         """
 
 
@@ -1204,7 +1191,6 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         ``start_line`` and assigns their values to the matching line in the
         ending balance sheet ``end_line``.
         """
-        tags_to_omit = set(tagsToOmit)
 
         if start_line._details:
             for name, line in start_line._details.items():
@@ -1212,7 +1198,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
                 self._update_lines(line, ending_line)
         else:
-            if tags_to_omit & set(end_line.tags.all):
+            if end_line.consolidated:
                 pass
             else:
                 end_line.set_value(start_line.value,
