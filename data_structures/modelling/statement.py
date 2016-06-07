@@ -544,7 +544,7 @@ class Statement(Equalities, TagsMixIn):
         result = sorted(self._details.values(), key=lambda line: line.position)
         return result
 
-    def increment(self, matching_statement, *tagsToOmit, consolidating=False):
+    def increment(self, matching_statement, consolidating=False):
         """
 
 
@@ -566,9 +566,6 @@ class Statement(Equalities, TagsMixIn):
         for name, external_line in pool:
             # ORDER SHOULD NOT MATTER HERE
 
-            if set(tagsToOmit) & set(external_line.tags.all):
-                continue
-
             # If we get here, the line has survived screening. We now have two
             # ways to add its information to the instance. Option A, is to
             # increment the value on a matching line. Option B is to copy the
@@ -586,7 +583,7 @@ class Statement(Equalities, TagsMixIn):
                 local_copy = external_line.copy()
                 # Dont enforce rules to track old line.replicate() method
 
-                if external_line.consolidate is True:
+                if external_line.consolidate:
                     if consolidating:
                         if external_line.value is not None:
                             if not local_copy.consolidated:
