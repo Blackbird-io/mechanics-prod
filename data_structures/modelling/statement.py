@@ -44,11 +44,7 @@ from .equalities import Equalities
 # n/a
 
 # Globals
-# Tags class carries a pointer to the tag manager; access individual tags
-# through that pointer
-builtInTag = Tags.tagManager.catalog["built_in"]
-doNotTouchTag = Tags.tagManager.catalog["do_not_touch"]
-tConsolidated = Tags.tagManager.catalog["consolidated"]
+# n/a
 
 # Classes
 class Statement(Equalities, TagsMixIn):
@@ -114,6 +110,7 @@ class Statement(Equalities, TagsMixIn):
     def __init__(self, name=None, spacing=100):
         TagsMixIn.__init__(self, name)
 
+        self._consolidated = False
         self._details = dict()
         self.relationships = Relationships(self)
 
@@ -171,6 +168,13 @@ class Statement(Equalities, TagsMixIn):
         result += "\n\n"
 
         return result
+
+    @property
+    def consolidated(self):
+        """
+        read-only property
+        """
+        return self._consolidated
 
     def add_line(self, new_line, position=None):
         """
@@ -347,7 +351,7 @@ class Statement(Equalities, TagsMixIn):
             for line in pool:
                 line.clearInheritedTags(recur)
 
-    def copy(self, enforce_rules=True):
+    def copy(self):
         """
 
 
@@ -355,11 +359,13 @@ class Statement(Equalities, TagsMixIn):
 
 
         Method returns a deep copy of the instance and any details. If
-        ``enforce_rules`` is True, copy will conform to ``out`` rules.
+        ```` is True, copy will conform to ``out`` rules.
         """
         result = copy.copy(self)
-        result.tags = self.tags.copy(enforce_rules)
+        result.tags = self.tags.copy()
         result.relationships = self.relationships.copy()
+        result.set_consolidated(False)
+
         # Tags.copy returns a shallow copy of the instance w deep copies
         # of the instance tag attributes.
         result._details = dict()
@@ -371,7 +377,7 @@ class Statement(Equalities, TagsMixIn):
             pool = self._details.values()
 
         for own_line in pool:
-            new_line = own_line.copy(enforce_rules)
+            new_line = own_line.copy()
             result.add_line(new_line, position=own_line.position)
             # Preserve relative order
 
@@ -577,14 +583,14 @@ class Statement(Equalities, TagsMixIn):
 
             else:
                 # Option B
-                local_copy = external_line.copy(enforce_rules=False)
+                local_copy = external_line.copy()
                 # Dont enforce rules to track old line.replicate() method
 
                 if external_line.consolidate is True:
                     if consolidating:
                         if external_line.value is not None:
-                            if tConsolidated not in local_copy.tags.all:
-                                local_copy.tags.tag(tConsolidated)
+                            if not local_copy.consolidated:
+                                local_copy.set_consolidated(True)
 
                             # Pick up lines with None values, but don't tag
                             # them. We want to allow derive to write to these
@@ -600,6 +606,23 @@ class Statement(Equalities, TagsMixIn):
                     # positions once.
                 else:
                     pass
+
+    def set_consolidated(self, val):
+        """
+
+
+        LineItem.set_consolidate() -> None
+
+
+        --``val`` must be a boolean (True or False)
+
+        Method for explicitly setting self._consolidate.
+        """
+        if isinstance(val, bool):
+            self._consolidated = val
+        else:
+            msg = "statement._consolidated can only be set to a boolean value"
+            raise(TypeError(msg))
 
     def reset(self):
         """

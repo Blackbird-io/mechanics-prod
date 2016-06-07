@@ -42,9 +42,7 @@ from .line_item import LineItem
 #globals
 #Tags class carries a pointer to the tag manager; access individual tags
 #through that pointer
-BLACKBIRDSTAMP = Tags.tagManager.catalog["bb"]
-bookMarkTag = Tags.tagManager.catalog["bm"]
-skipTag = Tags.tagManager.catalog["skip"]
+BLACKBIRDSTAMP = Tags.BLACKBIRD_STAMP
 
 #classes
 class BookMark(LineItem):
@@ -69,12 +67,11 @@ class BookMark(LineItem):
     setName()             method sets instance name w "|BB|" prefix
     ====================  ======================================================
     """
-    bmTags = [bookMarkTag,skipTag]
     bmPrefix = BLACKBIRDSTAMP
     
     def __init__(self, bmName = None, *tags):
         LineItem.__init__(self)
-        self.tags.tag(*self.bmTags)
+        # self.tags.tag(*self.bmTags)
         self.tags.tag(BLACKBIRDSTAMP)
         if bmName:
             self.tags.setName(bmName)

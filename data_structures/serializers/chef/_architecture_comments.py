@@ -263,80 +263,80 @@ PROBLEM:
 Have to write an explanation that references can only point to lines
 """
 # Expected interface
-
-class Workbook:
-    def __init__(self):
-        pass
-    
-    def create_sheet(name):
-        """
-        -> Worksheet
-        """
-        # Sample logic:
-        
-##        result = Worksheet(name)
-##        result.parent = self
-##        self._sheets[name] = result
-##        
-##        return result
-        pass
-
-    def __getitem__(self, name):
-        """
-
-        -> Worksheet
-        """
-        return self._sheets[name]
-
-    def get_sheet_by_name(self, name):
-        return self._sheets[name]
-
-class Worksheet:
-
-    def __init__(self, name):
-        self.parent = None
-        # Points to book
-        
-        self.title = name
-        
-    def cell(column, row):
-        """
-        -> returns Cell with column and row
-        """
-        pass
-
-class Cell
-    def __init__(self):
-        self.parent = None
-        # Points to sheet
-
-        self.value = None
-        # Raw value
-
-    @property
-    def coordinate(self):
-        pass
-        # Returns alphanumeric coordinates
-
-    @property
-    def row(self):
-        pass
-        # Returns integer row
-
-    @property
-    def column(self):
-        pass
-        # Returns alphabetical column
-
-    def set_explicit_value(value, data_type=None):
-        """
-        Coerce type
-        """
-        self.value = value
-        self._data_type = data_type
-    
-
-        
-
-
-                
+#
+# class Workbook:
+#     def __init__(self):
+#         pass
+#
+#     def create_sheet(name):
+#         """
+#         -> Worksheet
+#         """
+#         # Sample logic:
+#
+# ##        result = Worksheet(name)
+# ##        result.parent = self
+# ##        self._sheets[name] = result
+# ##
+# ##        return result
+#         pass
+#
+#     def __getitem__(self, name):
+#         """
+#
+#         -> Worksheet
+#         """
+#         return self._sheets[name]
+#
+#     def get_sheet_by_name(self, name):
+#         return self._sheets[name]
+#
+# class Worksheet:
+#
+#     def __init__(self, name):
+#         self.parent = None
+#         # Points to book
+#
+#         self.title = name
+#
+#     def cell(column, row):
+#         """
+#         -> returns Cell with column and row
+#         """
+#         pass
+#
+# class Cell
+#     def __init__(self):
+#         self.parent = None
+#         # Points to sheet
+#
+#         self.value = None
+#         # Raw value
+#
+#     @property
+#     def coordinate(self):
+#         pass
+#         # Returns alphanumeric coordinates
+#
+#     @property
+#     def row(self):
+#         pass
+#         # Returns integer row
+#
+#     @property
+#     def column(self):
+#         pass
+#         # Returns alphabetical column
+#
+#     def set_explicit_value(value, data_type=None):
+#         """
+#         Coerce type
+#         """
+#         self.value = value
+#         self._data_type = data_type
+#
+#
+#
+#
+#
+#

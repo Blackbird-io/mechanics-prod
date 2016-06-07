@@ -372,7 +372,7 @@ class FullQuestion:
         result.context = copy.deepcopy(self.context)
         result.id = copy.deepcopy(self.id)
         result.input_array = copy.deepcopy(self.input_array)
-        result.tags = self.tags.copy(enforce_rules = False)
+        result.tags = self.tags.copy()
         return result
 
     def set_condition(self, binary_spec):

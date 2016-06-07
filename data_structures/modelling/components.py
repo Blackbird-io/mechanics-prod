@@ -172,7 +172,7 @@ class Components(dict, TagsMixIn, Equalities):
             for C in self.getOrdered():
                 C.clearInheritedTags(recur=True)
 
-    def copy(self, enforce_rules=True):
+    def copy(self):
         """
 
 
@@ -184,7 +184,7 @@ class Components(dict, TagsMixIn, Equalities):
         copy of each unit in the instance to the result. 
         """
         result = copy.copy(self)
-        result.tags = self.tags.copy(enforce_rules)
+        result.tags = self.tags.copy()
         result.relationships = self.relationships.copy()
         #
         #customize container
@@ -193,7 +193,7 @@ class Components(dict, TagsMixIn, Equalities):
         #
         #fill container (automatically add names)
         for C in self.getOrdered():
-            rC = C.copy(enforce_rules)
+            rC = C.copy()
             result.add_item(rC)
         return result
 

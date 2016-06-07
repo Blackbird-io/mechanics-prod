@@ -35,19 +35,15 @@ import bb_exceptions
 import tools.for_printing as printing_tools
 
 from data_structures.guidance.guide import Guide
-from data_structures.system.tags import Tags
 from data_structures.serializers.chef import data_management as xl_mgmt
 
-from .equalities import Equalities
 from .statement import Statement
 
 
 
 
 # Constants
-T_CONSOLIDATED = Tags.tagManager.catalog["consolidated"]
-T_REPLICA = Tags.tagManager.catalog["ddr"]
-
+# n/a
 
 # Classes
 class LineItem(Statement):
@@ -114,6 +110,8 @@ class LineItem(Statement):
         self.log = []
         self.position = None
         self._consolidate = True
+        self._replica = False
+        self._do_not_touch = False
 
         if value is not None:
             # BU.consolidate() will NOT increment items with value==None. On the
@@ -137,6 +135,20 @@ class LineItem(Statement):
         read-only property
         """
         return self._consolidate
+
+    @property
+    def do_not_touch(self):
+        """
+        read-only property
+        """
+        return self._do_not_touch
+
+    @property
+    def replica(self):
+        """
+        read-only property
+        """
+        return self._replica
 
     @property
     def value(self):
@@ -167,7 +179,7 @@ class LineItem(Statement):
         If instance fails Tags.checkTouch(), will throw exception unless
         ``force`` is True. 
         """
-        if self.tags.checkTouch() or force:
+        if force is True or self.do_not_touch is False:
             num_format = self.xl.number_format
             consolidate = self.consolidate
             if self._details:
@@ -181,7 +193,6 @@ class LineItem(Statement):
             self.xl = xl_mgmt.LineData()
             self.xl.number_format = num_format
             self.set_consolidate(consolidate)
-
             # Start with a clean slate for Excel tracking, except for
             # number format
             
@@ -189,23 +200,24 @@ class LineItem(Statement):
             comment = "Unable to clear value from line."
             raise bb_exceptions.BBAnalyticalError(comment, self)
             
-    def copy(self, enforce_rules=True):
+    def copy(self):
         """
 
 
         Line.copy() -> Line
 
 
-        Return a deep copy of the instance and its details. If enforce_rules is
+        Return a deep copy of the instance and its details. If  is
         True, copy conforms to ``out`` rules.
         """
-        new_line = Statement.copy(self, enforce_rules)
+        new_line = Statement.copy(self)
         # Shallow copy, should pick up _local_value as is, and then create
         # independent containers for tags. 
         
         new_line.guide = copy.deepcopy(self.guide)
         new_line.log = self.log[:]
         new_line.set_consolidate(self._consolidate)
+        new_line.set_do_not_touch(self._do_not_touch)
 
         new_line.xl = xl_mgmt.LineData()
         new_line.xl.number_format = self.xl.number_format
@@ -245,7 +257,7 @@ class LineItem(Statement):
             
                 if consolidating and self._consolidate is True:
                     self.tags.inheritFrom(matching_line.tags)
-                    self.tags.tag(T_CONSOLIDATED)
+                    self.set_consolidated(True)
 
                     self.xl.consolidated.sources.append(matching_line)
 
@@ -280,12 +292,27 @@ class LineItem(Statement):
 
         Method for explicitly setting self._consolidate.
         """
-        if val is True:
-            self._consolidate = True
-        elif val is False:
-            self._consolidate = False
+        if isinstance(val, bool):
+            self._consolidate = val
         else:
             msg = "lineitem._consolidate can only be set to a boolean value"
+            raise(TypeError(msg))
+
+    def set_do_not_touch(self, val):
+        """
+
+
+        LineItem.set_consolidate() -> None
+
+
+        --``val`` must be a boolean (True or False)
+
+        Method for explicitly setting self._consolidate.
+        """
+        if isinstance(val, bool):
+            self._do_not_touch = val
+        else:
+            msg = "lineitem._do_not_touch can only be set to a boolean value"
             raise(TypeError(msg))
 
     def setValue(self, value, signature,
@@ -420,10 +447,10 @@ class LineItem(Statement):
         Create a replica, add replica to details
         """
         replica = copy.copy(self)
-        replica.tags = self.tags.copy(enforce_rules=False)
+        replica.tags = self.tags.copy()
         # Start with a shallow copy that picks up all the tags, including ones
         # like "hardcoded" or "do not touch" that don't normally go ``out``. If
-        # enforce_rules is True, these would not transfer to the replica because
+        #  is True, these would not transfer to the replica because
         # the copy counts as an "out" move. Then, if the original value was to
         # somehow get reset to None, the lineitem could get behind and the
         # entire financials unit could lose a special processing trigger.
@@ -434,7 +461,7 @@ class LineItem(Statement):
 
         # Replicas don't have any details of their own. Can't run .clear() here
         # because instance and replica initially point to the same details dict.
-        replica.tags.tag(T_REPLICA)
+        replica._replica = True
 
         replica.position = 0
         self._details[replica.tags.name] = replica

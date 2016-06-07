@@ -134,7 +134,7 @@ class TimePeriod(History, TagsMixIn):
         self.content = None
         self._reset_directories()
         
-    def copy(self, enforce_rules=True):
+    def copy(self):
         """
 
 
@@ -145,12 +145,12 @@ class TimePeriod(History, TagsMixIn):
         copy of the caller content. 
         """
         result = copy.copy(self)
-        result.tags = self.tags.copy(enforce_rules)
+        result.tags = self.tags.copy()
         result.relationships = self.relationships.copy()
         result.start = copy.copy(self.start)
         result.end = copy.copy(self.end)
         if self.content:
-            new_content = self.content.copy(enforce_rules)
+            new_content = self.content.copy()
             result.set_content(new_content, updateID=False)
         #same id namespace (old model)
         #
@@ -219,11 +219,11 @@ class TimePeriod(History, TagsMixIn):
         # stuff.
         alt_seed.clear()
         
-        result = alt_seed.copy(enforce_rules=True)
+        result = alt_seed.copy()
         # Use class-specific copy to create independent objects for any important
         # container-level data structures; Tags.copy() only creates new tag lists
         
-        result.tags = result.tags.extrapolate_to(target.tags, mode="at")
+        result.tags = result.tags.extrapolate_to(target.tags)
         # Updates result with target tags. We use "at" mode to pick up all tags.
         
         # Step 2: configure and fill container
@@ -231,7 +231,7 @@ class TimePeriod(History, TagsMixIn):
         result.end = copy.copy(target.end)
         
         if seed.content:
-            new_content = seed.content.copy(enforce_rules=True)
+            new_content = seed.content.copy()
             result.set_content(new_content, updateID=False)
     
         # Step 3: return container
