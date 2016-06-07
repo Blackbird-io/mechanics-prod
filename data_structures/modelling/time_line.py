@@ -63,7 +63,7 @@ class TimeLine(dict):
     id                    instance of PlatformComponents.ID class, for interface
     master                TimePeriod; unit templates that fall outside of time
     parameters            Parameters object, specifies shared parameters
-    
+
     FUNCTIONS:
     build()               populates instance with adjacent time periods
     clear()               delete content from past and future periods
@@ -75,12 +75,12 @@ class TimeLine(dict):
     get_ordered()         returns list of periods ordered by end point
     link()                connect adjacent periods
     revert_current()      go back to the prior current period
-    update_current()      updates current_period for reference or actual date    
+    update_current()      updates current_period for reference or actual date
     ====================  ======================================================
     """
     DEFAULT_PERIODS_FORWARD = 36
     DEFAULT_PERIODS_BACK = 36
-    
+
     def __init__(self):
         dict.__init__(self)
         self._current_period = None
@@ -123,7 +123,7 @@ class TimeLine(dict):
 
         Method concatenates each line in ``lines``, adds a new-line character at
         the end, and returns a string ready for printing. If ``lines`` is None,
-        method calls pretty_print() on instance. 
+        method calls pretty_print() on instance.
         """
         if not lines:
             lines = self._make_pretty_strings()
@@ -139,7 +139,7 @@ class TimeLine(dict):
 
 
         Method configures period and records it in the instance under the
-        period's end_date. 
+        period's end_date.
         """
         period = self._configure_period(period)
         self[period.end] = period
@@ -158,18 +158,18 @@ class TimeLine(dict):
         points. The chain is ``fwd`` periods long into the future and ``back``
         periods long into the past.
 
-        Method expects ``ref_date`` to be a datetime.date object. 
+        Method expects ``ref_date`` to be a datetime.date object.
 
         Method sets instance.current_period to the period covering the reference
-        date. Method also sets master to a copy of the current period. 
+        date. Method also sets master to a copy of the current period.
         """
         if not ref_date:
             ref_date = date.today()
         ref_month = ref_date.month
         ref_year = ref_date.year
-        
+
         current_start_date = date(ref_year, ref_month, 1)
-        
+
         # Make reference period
         fwd_start_date = self._get_fwd_start_date(ref_date)
         current_end_date = fwd_start_date - timedelta(1)
@@ -181,7 +181,7 @@ class TimeLine(dict):
         self.master = current_period.copy()
 
         # Now make the chain
-        back_end_date = current_start_date - timedelta(1)        
+        back_end_date = current_start_date - timedelta(1)
         # Save known starting point for back chain build before fwd changes it.
 
         # Make fwd chain
@@ -194,8 +194,8 @@ class TimeLine(dict):
                 self.add_period(fwd_period)
                 #
                 #first line picks up last value in function scope, so loop
-                #should be closed. 
-        
+                #should be closed.
+
         # Make back chain
         for i in range(back):
                 curr_end_date = back_end_date
@@ -207,8 +207,8 @@ class TimeLine(dict):
                 #
                 #close loop:
                 back_end_date = curr_start_date - timedelta(1)
-        
-        # Now link all of the periods. 
+
+        # Now link all of the periods.
         self.link()
 
         # All set.
@@ -229,8 +229,8 @@ class TimeLine(dict):
             period.clear()
         #<-----------------------------------------------------------------have to dereference history
             # have to do so recursively, to make sure that none of the objects retain their external
-            # pointers. 
-        
+            # pointers.
+
     def clear_future(self, seed=None):
         """
 
@@ -244,7 +244,7 @@ class TimeLine(dict):
         past, present, future = self.get_segments(seed.end)
         for date in future:
             self[date].clear()
-        
+
     def extrapolate(self, seed=None):
         """
 
@@ -257,7 +257,7 @@ class TimeLine(dict):
         if seed is None:
             seed = self.current_period
         seed_date = seed.end
-        
+
         past, present, future = self.get_segments(seed_date)
         self.extrapolate_dates(seed, future)
 
@@ -271,7 +271,7 @@ class TimeLine(dict):
 
         Backwards extrapolation is obsolete.
         Legacy interface for TimeLine.extrapolate()
-        """        
+        """
         return self.extrapolate(seed)
 
     def extrapolate_dates(self, seed, dates, backward=False):
@@ -283,7 +283,7 @@ class TimeLine(dict):
 
         Method extrapolates seed to the first date in dates, then sequentially
         extrapolates remaining dates from each other.
-        
+
         Method expects ``seed`` to be an instance of TimePeriod. Seed can be
         external to the caller TimeLine.
 
@@ -305,10 +305,10 @@ class TimeLine(dict):
         if backward:
             dates = dates[::-1]
             # Reverse order, so go from newest to oldest
-        
+
         for i in range(len(dates)):
 
-            date = dates[i]                
+            date = dates[i]
             # With default arguments, start work at the period immediately
             # prior to the current period
 
@@ -317,7 +317,7 @@ class TimeLine(dict):
             # extrapolate_to() always does work on an external object and leaves
             # the target untouched. Manually swap the old period for the new
             # period.
-            
+
             if i == 0:
                 updated_period = self._configure_period(updated_period)
 
@@ -331,7 +331,7 @@ class TimeLine(dict):
                 # Subsequent iterations of the loop will start w periods that are
                 # already in the model, so method can leave their namespace id
                 # configuration as is.
-    
+
             self[date] = updated_period
             seed = updated_period
 
@@ -343,7 +343,7 @@ class TimeLine(dict):
         Legacy interface for TimeLine.extrapolate()
         """
         return self.extrapolate(seed)
-        
+
     def find_period(self, query):
         """
 
@@ -353,14 +353,14 @@ class TimeLine(dict):
 
         Method returns a time period that includes query. ``query`` can be a
         POSIX timestamp (int or float), datetime.date object, or string in
-        "YYYY-MM-DD" format. 
+        "YYYY-MM-DD" format.
         """
         result = None
         end_date = None
         q_date = None
         if isinstance(query, date):
             q_date = query
-        else:            
+        else:
             try:
                 q_date = date.fromtimestamp(query)
             except TypeError:
@@ -381,7 +381,7 @@ class TimeLine(dict):
         Method returns a list of the past, present, and future segments of the
         instance, with respect to the ref_date. If ``ref_date`` is None, method
         counts current period as the present.
-        
+
         output[0] = list of keys for periods before ref_date
         output[1] = list of ref period (len output[1] == 1)
         output[2] = list of keys for periods after ref_date
@@ -390,22 +390,22 @@ class TimeLine(dict):
         #
         if not ref_date:
             ref_date = self.current_period.end
-        ref_end = self._get_ref_end_date(ref_date)    
+        ref_end = self._get_ref_end_date(ref_date)
         #
         dates = sorted(self.keys())
         ref_spot = dates.index(ref_end)
         future_dates = dates[(ref_spot + 1 ): ]
         past_dates = dates[:ref_spot]
         result = [past_dates, [ref_end], future_dates]
-        return result        
-    
+        return result
+
     def get_ordered(self):
         """
 
 
         TimeLine.getOrdered() -> list
 
-        
+
         Method returns list of periods in instance, ordered from earliest to
         latest endpoint.
         """
@@ -413,7 +413,7 @@ class TimeLine(dict):
         for end_date in sorted(self.keys()):
             period = self[end_date]
             result.append(period)
-            
+
         return result
 
     def getOrdered(self):
@@ -424,7 +424,7 @@ class TimeLine(dict):
         Legacy interface for TimeLine.get_ordered()
         """
         return self.get_ordered()
-    
+
     def link(self):
         """
 
@@ -439,7 +439,7 @@ class TimeLine(dict):
 
         for i in range(len(dates) - 1):
             # Iterate until the second-to-last date
-            
+
             date_0 = dates[i]
             date_1 = dates[i+1]
 
@@ -447,7 +447,7 @@ class TimeLine(dict):
             period_1 = self[date_1]
 
             period_1.set_history(period_0)
-            
+
     def revert_current(self):
         """
 
@@ -458,7 +458,7 @@ class TimeLine(dict):
         Method reverts instance.current_period to preceding value.
         """
         self.current_period = self._old_current_period
-        
+
     def update_current(self, ref_date=None):
         """
 
@@ -467,13 +467,13 @@ class TimeLine(dict):
 
 
         Method sets instance.current_period to whichever period contains the
-        ref_date. If ``ref_date`` == None, method uses current system time. 
+        ref_date. If ``ref_date`` == None, method uses current system time.
         """
         if not ref_date:
             ref_date = date.today()
         ref_period = self.find_period(ref_date)
-        self.current_period = ref_period        
-        
+        self.current_period = ref_period
+
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
@@ -486,16 +486,16 @@ class TimeLine(dict):
 
 
         Method sets period's namespace id to that of the TimeLine, then returns
-        period. 
+        period.
         """
         model_namespace = self.id.namespace
         period.id.set_namespace(model_namespace)
-        # Period has only a pointer to the Model.namespace_id; periods dont have
+        # Period has only a pointer to the Model.namespace_id; periods don't have
         # their own bbids.
         period.setPartOf(self)
-        
+
         return period
-    
+
     def _get_fwd_start_date(self, ref_date):
         """
 
@@ -503,7 +503,7 @@ class TimeLine(dict):
         TimeLine.get_fwd_start_date() -> datetime.date
 
 
-        Method returns the starting date of the next month. 
+        Method returns the starting date of the next month.
         """
         result = None
         ref_day = ref_date.day
@@ -513,7 +513,7 @@ class TimeLine(dict):
             result = date(ref_year+1,1,1)
         else:
             result = date(ref_year,ref_month+1,1)
-        return result   
+        return result
 
     def _get_ref_end_date(self, ref_date):
         """
@@ -529,7 +529,7 @@ class TimeLine(dict):
         ref_end_date = fwd_start_date - timedelta(1)
         result = ref_end_date
         return result
-    
+
     def _make_pretty_strings(self, dates=None, sep="<<", border="-", hook=True):
         """
 
@@ -541,23 +541,23 @@ class TimeLine(dict):
         new-line characters.
 
         When printed in order, the strings illustrate the instance contents for
-        each date in ``dates``. Illustration follows the form: 
+        each date in ``dates``. Illustration follows the form:
 
-        
+
         Row Label       Graphic
         ------------------------------------------------------------------------
         top_pad	        	  __________________
         top_brdr  	---------|------------------|---------------------------
-        calendar	PERIOD: <|   2015-06-01    <|   2015-07-01  <<    . . . 
+        calendar	PERIOD: <|   2015-06-01    <|   2015-07-01  <<    . . .
         bot_brdr	---------|---------}--------|---------------------------
-        hanger		         |         |        | 
+        hanger		         |         |        |
         bu_line	        	 | +==============+ |
         bu_line		         | |              | |
         bu_line	        	 | |  BU CONTENT  | |
         bu_line		         | |     . . .    | |
-        bu_line	        	 | |              | |   
+        bu_line	        	 | |              | |
         bu_line		         | +==============+ |
-        bot_pad	        	 |__________________|        
+        bot_pad	        	 |__________________|
         \n
         """
         clean_lines = []
@@ -581,7 +581,7 @@ class TimeLine(dict):
         #
         #the first column stays constant from row to row: it's just the lead,
         #plus borders and white space. make all the strings once, then use them
-        #for each row. 
+        #for each row.
         #
         c0_width = len(lead) + cushion + sep_width
         #
@@ -631,7 +631,7 @@ class TimeLine(dict):
                 post_processing = False
                 if end_date == self.current_period.end:
                     post_processing = True
-                #                
+                #
                 top_pad = space * column_width
                 top_brdr = border * column_width
                 calendar = end_date.isoformat().center(column_width - sep_width)
@@ -678,10 +678,10 @@ class TimeLine(dict):
                 clean_lines.append(flat_line)
             else:
                 clean_lines.append("")
-                #add a blank line after every row               
+                #add a blank line after every row
         #
         return clean_lines
-        
-    
-    
-    
+
+
+
+

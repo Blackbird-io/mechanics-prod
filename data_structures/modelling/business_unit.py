@@ -63,10 +63,10 @@ tConsolidated = Tags.tagManager.catalog["consolidated"]
 tHardCoded = Tags.tagManager.catalog["hard"]
 T_REPLICA = Tags.tagManager.catalog["ddr"]
 
-# Classes   
+# Classes
 class BusinessUnit(History, Tags, Equalities):
     """
-   
+
     Object describes a group of business activity. A business unit can be a
     store, a region, a product, a team, a relationship (or many relationships),
     etcetera.
@@ -91,16 +91,16 @@ class BusinessUnit(History, Tags, Equalities):
     type                  str or None; unit's in-model type (e.g., "team")
     used                  set; contains BBIDs of used Topics
     valuation             None or CompanyValue; market view on unit
-    
+
     FUNCTIONS:
     add_component()       adds unit to instance components
-    add_driver()          registers a driver 
+    add_driver()          registers a driver
     clear()               restore default attribute values
     fill_out()            integrates consolidate() and derive()
     kill()                make dead, optionally recursive
     recalculate()         reset financials, compute again, repeat for future
     reset_financials()    resets instance and (optionally) component financials
-    set_analytics()       attaches an object to instance.analytics 
+    set_analytics()       attaches an object to instance.analytics
     set_financials()      attaches a Financials object from the right template
     set_history()         connect instance to older snapshot, optionally recur
     synchronize()         set components to same life, optionally recursive
@@ -113,28 +113,28 @@ class BusinessUnit(History, Tags, Equalities):
                             "id",
                             "parentObject",
                             "partOf"]
-    
+
     tagSources = ["components", "drivers", "financials"]
-    
+
     _UPDATE_BALANCE_SIGNATURE = "Update balance"
-        
+
     def __init__(self, name, fins=None):
 
         History.__init__(self)
         Tags.__init__(self, name)
-        
+
         self._type = None
-        
+
         self.components = None
         self._set_components()
-        
+
         self.drivers = None
         self._set_drivers()
 
         self.filled = False
-        
+
         self.set_financials(fins)
-        
+
         self.guide = Guide()
         self.interview = InterviewTracker()
         self._stage = None
@@ -142,13 +142,13 @@ class BusinessUnit(History, Tags, Equalities):
 
         self.id = ID()
         # Get the id functionality but do NOT assign a bbid yet
-        
+
         self.life = LifeCycle()
         self.location = None
         self.parameters = Parameters()
         self.period = None
         # May want to change period to a property, so that a set to new value
-        # will always cause the unit to rerun registration. 
+        # will always cause the unit to rerun registration.
 
         self.size = 1
         self.summary = BusinessSummary()
@@ -199,7 +199,7 @@ class BusinessUnit(History, Tags, Equalities):
         Getter returns instance._type.
 
         Setter registers instance bbid under the new value key and removes old
-        registration (when instance.period is defined). 
+        registration (when instance.period is defined).
 
         Deletion prohibited.
         """
@@ -224,7 +224,7 @@ class BusinessUnit(History, Tags, Equalities):
         c = "``type`` is a property; delete prohibited. to represent generic "
         c += "unit, set to None instead."
         raise bb_exceptions.ManagedAttributeError(c)
-        
+
     def __hash__(self):
         return self.id.__hash__()
 
@@ -237,17 +237,17 @@ class BusinessUnit(History, Tags, Equalities):
 
         Method concatenates each line in ``lines``, adds a new-line character at
         the end, and returns a string ready for printing. If ``lines`` is None,
-        method calls _get_pretty_lines() on instance. 
+        method calls _get_pretty_lines() on instance.
         """
         # Get string list, slap a new-line at the end of every line and return
         # a string with all the lines joined together.
         if not lines:
             lines = self._get_pretty_lines()
-            
+
         # Add empty strings for header and footer padding
         lines.insert(0, "")
         lines.append("")
-        
+
         box = "\n".join(lines)
         return box
 
@@ -293,11 +293,11 @@ class BusinessUnit(History, Tags, Equalities):
         # Step 2: optionally update ids.
         if update_id:
             bu._update_id(namespace=self.id.bbid, recur=True)
-        # Step 3: Register the the units. Will raise errors on collisions.
+        # Step 3: Register the units. Will raise errors on collisions.
         if register_in_period:
             bu._register_in_period(recur=True, overwrite=False)
         self.components.add_item(bu)
-    
+
     def addDriver(self, newDriver, *otherKeys):
         """
 
@@ -306,7 +306,7 @@ class BusinessUnit(History, Tags, Equalities):
         Legacy interface for add_driver().
         """
         return self.add_driver(newDriver, *otherKeys)
-        
+
     def add_driver(self, newDriver, *otherKeys):
         """
 
@@ -320,7 +320,7 @@ class BusinessUnit(History, Tags, Equalities):
         newDriver.validate(parent=self)
         # Validation call will throw DefinitionError if driver does not have
         # sufficient data to run in this instance at the time of insertion.
-        
+
         # Topics may inject drivers into business units at time A with the
         # intent that these drivers work only at some future time B (when their
         # work conditions or other logic has been satisfied). Time B may be
@@ -329,7 +329,7 @@ class BusinessUnit(History, Tags, Equalities):
         # of the required formula parameters at the time the Topic runs.
 
         self.drivers.add_item(newDriver, *otherKeys)
-                  
+
     def clear(self):
         """
 
@@ -341,13 +341,13 @@ class BusinessUnit(History, Tags, Equalities):
         __init__ values.
 
         **NOTE: clear() will permanently delete data**
-        
+
         """
         blank_bu = BusinessUnit(name=self.name)
         for attr in self.tagSources:
             blank_attr = getattr(blank_bu,attr)
             setattr(self, attr, blank_attr)
-    
+
     def copy(self, enforce_rules=True):
         """
 
@@ -378,7 +378,7 @@ class BusinessUnit(History, Tags, Equalities):
         #
         r_comps = self.components.copy(enforce_rules)
         result._set_components(r_comps)
-        
+
         r_drivers = self.drivers.copy(enforce_rules)
         result._set_drivers(r_drivers)
 
@@ -401,7 +401,7 @@ class BusinessUnit(History, Tags, Equalities):
         result.interview = r_interview
 
         return result
-                                
+
     def recalculate(self, adjust_future=True):
         """
 
@@ -410,13 +410,13 @@ class BusinessUnit(History, Tags, Equalities):
 
 
         Recalculate instance finanicals. If ``adjust_future`` is True, will
-        repeat for all future snapshots. 
+        repeat for all future snapshots.
         """
         self.reset_financials()
         self.fill_out()
         if adjust_future and self.future:
             self.future.recalculate(adjust_future=True)
-        
+
     def extrapolate_to(self, target):
         """
 
@@ -435,9 +435,9 @@ class BusinessUnit(History, Tags, Equalities):
         Therefore, these objects will **not** inherit any more
         specialized subclass methods. In the event future versions descend
         BusinessUnit or other objects from specialized subclasses of Tags, can
-        fix by removing express delegation and relying on built-in Python MRO. 
+        fix by removing express delegation and relying on built-in Python MRO.
         """
-        result = Tags.extrapolate_to(self, target)   
+        result = Tags.extrapolate_to(self, target)
         return result
 
         #have to set history before filling out financials, because they depend
@@ -447,14 +447,14 @@ class BusinessUnit(History, Tags, Equalities):
         #   ex_to_default(self):
         #       result = Tags.ex_to(self, target)
         #       result.set_history(self) #can include reset_financials() here
-        
+
         #       if result.parent is None:
         #          result.fill_out()
-    
+
     def ex_to_special(self, target, reverse=False):
         """
 
-       
+
         BusinessUnit.ex_to_special() -> BU
 
 
@@ -465,7 +465,7 @@ class BusinessUnit(History, Tags, Equalities):
         seed.tagSources, new unit inherits either (i) by default, a new object
         extrapolated from the seed and target attributes of the same name, or
         (ii) an unenforced copy of the target attribute, if that attribute does
-        not permit modification. 
+        not permit modification.
         """
         # Step 1: make container
         seed = self
@@ -473,7 +473,7 @@ class BusinessUnit(History, Tags, Equalities):
         alt_seed.clear()
         # Zero out the recursive attributes; a different part of the method works
         # on those
-        
+
         result = alt_seed.copy(enforce_rules=True)
         # Class-specific copy that picks up any class-specific data
 
@@ -481,9 +481,9 @@ class BusinessUnit(History, Tags, Equalities):
         # Updates result with those target tags it doesnt have already. "at" mode
         # picks up all tags from target. other attributes stay identical because
         # Tags uses a shallow copy.
-        
+
         # Step 2: fill container
-        
+
         for attr in self.tagSources:
             o_seed = getattr(self, attr)
             o_targ = getattr(target, attr)
@@ -505,7 +505,7 @@ class BusinessUnit(History, Tags, Equalities):
         Legacy interface for fill_out().
         """
         return self.fill_out(*tagsToOmit)
-    
+
     def fill_out(self, *tagsToOmit):
         """
 
@@ -516,10 +516,10 @@ class BusinessUnit(History, Tags, Equalities):
         Will no-op if instance.filled is True. Otherwise, will first sync
         instance balance sheet, then consolidate, and finally derive. At
         conclusion, method sets instance.filled to True to make sure that
-        subsequent calls do not increment existing values. 
+        subsequent calls do not increment existing values.
 
         NOTE: consolidate() blocks derive() on the same lineitem.
-        
+
         Once a non-None value is written into a Lineitem at one component,
         BusinessUnit.derive() will never run again for that LineItem, either at
         that component or any parent or ancestor of that component.
@@ -533,9 +533,9 @@ class BusinessUnit(History, Tags, Equalities):
             # Sets ending balance lines to starting values by default
             self._derive(*tagsToOmit)
             # Derive() will overwrite ending balance sheet where appropriate
-            
+
             self.filled = True
-            
+
     def kill(self, date=None, recur=True):
         """
 
@@ -573,14 +573,14 @@ class BusinessUnit(History, Tags, Equalities):
         if recur:
 
             pool = self.components.values()
-            
+
             if bb_settings.DEBUG_MODE:
                 pool = self.components.getOrdered()
                 # Use stable order to simplify debugging
-                
+
             for bu in pool:
                 bu.reset_financials(recur)
-                
+
     def set_analytics(self, atx):
         """
 
@@ -589,7 +589,7 @@ class BusinessUnit(History, Tags, Equalities):
 
 
         Method sets instance.analytics to passed-in argument, sets analytics
-        object to point to instance as its parent. 
+        object to point to instance as its parent.
         """
         atx.setPartOf(self)
         self.valuation = atx
@@ -606,7 +606,7 @@ class BusinessUnit(History, Tags, Equalities):
 
         Method will set instance financials to ``fins``, if caller specifies
         ``fins``. Otherwise, method will set financials to a new Financials
-        instance. 
+        instance.
         """
         if fins is None:
             fins = Financials()
@@ -625,7 +625,7 @@ class BusinessUnit(History, Tags, Equalities):
         """
         History.set_history(self, history, clear_future=clear_future)
 
-        # Use dedicated logic to handle recursion. 
+        # Use dedicated logic to handle recursion.
         if recur:
             for bbid, unit in self.components.items():
                 mini_history = history.components[bbid]
@@ -652,7 +652,7 @@ class BusinessUnit(History, Tags, Equalities):
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
-    #*************************************************************************#    
+    #*************************************************************************#
 
     def _consolidate(self, *tagsToOmit, trace=False):
         """
@@ -668,34 +668,34 @@ class BusinessUnit(History, Tags, Equalities):
         # Need stable order to make sure we pick up peer lines from units in
         # the same order. Otherwise, their order might switch and financials
         # would look different (even though the bottom line would be the same).
-            
+
         for unit in pool:
-            
+
             if unit.life.conceived:
                 self._consolidate_unit(unit, *tagsToOmit)
-        
+
     def _consolidate_unit(self, sub, *tagsToOmit):
         """
 
 
         BusinessUnit.consolidate_unit() -> None
-        
+
 
         -- ``sub`` should be a BusinessUnit object
-           
+
         -- ``tagsToOmit`` is a tuple of tags; method will ignore sub lines with
            any of these tags
-           
+
         The Blackbird environment contemplates that BusinessUnits (``parents``)  #<------------------------------------------------update doc string
         may contain multiple component BusinessUnits (``subs``). This method
         consolidates the financials of one sub into the caller instance
         (parent).
 
         The parent does NOT have to include sub in the parent's components for
-        this method to run. 
+        this method to run.
 
         Method first fills out the sub, then integrates each line in sub's
-        financials into parent financials. 
+        financials into parent financials.
 
 
 
@@ -705,23 +705,23 @@ class BusinessUnit(History, Tags, Equalities):
         STAGE 1: Check if the sub is alive.
         ************************************************************************
 
-        Method performs no-op if sub is not alive. 
+        Method performs no-op if sub is not alive.
 
         ************************************************************************
         STAGE 2: Check if the sub LineItem is "informative".
         ************************************************************************
         For a living sub, method steps through each line in sub financials to
-        check if the line is ``informative``. 
+        check if the line is ``informative``.
 
         ``Informative`` sub LineItems are those that provide insight into the
         meaningful structural or financial profile of the sub. Informative lines
         satisfy at least one of the following conditions:
-        
-            i)   the LineItem has a non-None name 
+
+            i)   the LineItem has a non-None name
             ii)  the LineItem has a non-None value
             iii) the LineItem's allTags list is distinct from the default value
             ([None,None,<spacer>])
-            
+
         Informative LineItems that satisfy condition (i) are ``named``
         LineItems. Informative LineItems that do not satisfy condition (i) but
         do satisfy condition (ii) or (iii) are ``unnamed.``
@@ -732,10 +732,10 @@ class BusinessUnit(History, Tags, Equalities):
 
         By default, tagsToOmit include summaryTag and bookMarkTag. That is,
         bookmarks and summaries are per se uninformative and do not increment
-        symmetric parent lineitems.         
+        symmetric parent lineitems.
 
         This method integrates some of the data from each informative sub line
-        into parent's financials. Method skips uninformative sub lines. 
+        into parent's financials. Method skips uninformative sub lines.
 
         ************************************************************************
         STAGE 3: Increment named LineItems that have symmetric names.
@@ -745,23 +745,23 @@ class BusinessUnit(History, Tags, Equalities):
 
         Specifically, for a given named sub lineitem, this method finds the
         **first** line in parent financials with the same name.
-        
+
         Next, method increments the parent line by the sub line value, if the
         sub line has a specified (non-None value). Method skips sub lines with
         None values even if they are named.<-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------absorb tags?
 
-        A signature from this method blocks drivers from modifying a line. 
-        
+        A signature from this method blocks drivers from modifying a line.
+
         NOTE1: consolidate() **will** sign a parent line when a sub line
-        specifies a value of 0, 0.00, decimal.Decimal(0), etc. 
+        specifies a value of 0, 0.00, decimal.Decimal(0), etc.
 
         That is, setting a lineitem's value to 0 instead of None prevents
         drivers from modifying that lineitem. In the Blackbird environment, 0 is
-        affirmative information. Only None signals the absence of information. 
+        affirmative information. Only None signals the absence of information.
 
         NOTE2: Only named sub LineItems are eligible for incrementation
         treatment, and only if their names are symmetric to a parent object.
-        
+
         Named LineItems required a non-None value for LineItem.name. Therefore,
         a sub LineItem with .name == None will NOT increment a parent LineItem
         with a .name == None.
@@ -780,7 +780,7 @@ class BusinessUnit(History, Tags, Equalities):
         lines to a combination of (i) their sub_position and the first 3 tags on
         the sub line. As a result, unnnamed lines from one component should not
         increment the value of parent lines with identical tags.
-        
+
         [UPGRADE-F: TAG-RICH EVO: may require sub lineitems to increment parent
         lineitems with matching or sub.superset tags]
 
@@ -789,7 +789,7 @@ class BusinessUnit(History, Tags, Equalities):
         ************************************************************************
 
         Method places replica lines in parent financials to maintain relative
-        position of the line against other items in sub financials. 
+        position of the line against other items in sub financials.
 
         Example:
 
@@ -800,11 +800,11 @@ class BusinessUnit(History, Tags, Equalities):
 
         By contrast, the following order of
         parent lines would violate the relative position of sub L3 and L4:
-        
+
         [L1, ..., L2, ... L4,L3].
-        
+
         Method uses Financials.spotGenerally() to locate the appropriate
-        position for a replica. 
+        position for a replica.
         """
         # Step 1: Prep
         tagsToOmit = set(tagsToOmit) #<---------------------------------------------------------------------------------------------------------should be on statement?
@@ -814,7 +814,7 @@ class BusinessUnit(History, Tags, Equalities):
 
         for attr_name in sub.financials.ORDER:
             child_statement = getattr(sub.financials, attr_name)
-            
+
             if child_statement:
                 parent_statement = getattr(self.financials, attr_name)
                 parent_statement.increment(child_statement, *tagsToOmit, consolidating=True)
@@ -839,7 +839,7 @@ class BusinessUnit(History, Tags, Equalities):
         instance.drivers. If and only if the drivers dictionary for the line is
         empty, derive() will check if any unassigned (BU.drivers[None]) drivers
         match the line.
-        
+
         NOTE: ALWAYS RUN BusinessUnit.consolidate() BEFORE BusinessUnit.Derive()
         """
         tags_to_omit = set(tagsToOmit) | {tConsolidated, tHardCoded}
@@ -848,15 +848,15 @@ class BusinessUnit(History, Tags, Equalities):
         #not pick up blockingTags
 
         # We never derive the starting balance sheet. Accordingly,
-        # financials.ordered does not include ``starting``. 
-        
+        # financials.ordered does not include ``starting``.
+
         for statement in self.financials.ordered:
             if statement is not None:
-                
-                for line in statement.get_ordered():    
+
+                for line in statement.get_ordered():
                     if tags_to_omit & set(line.allTags):
                         continue
-                        
+
                     else:
                         self._derive_line(line)
 
@@ -869,7 +869,7 @@ class BusinessUnit(History, Tags, Equalities):
 
         Compute the value of a line using drivers stored in the instance.
         """
-        
+
         key = line.name.casefold()
         if key in self.drivers:
 
@@ -878,27 +878,27 @@ class BusinessUnit(History, Tags, Equalities):
 
             for driver in matching_drivers:
                 driver.workOnThis(line)
-                
-        # Repeat for any details            
+
+        # Repeat for any details
         if line._details:
-            
+
             for detail in line.get_ordered():
-                
+
                 if T_REPLICA in detail.allTags:
                     continue
                     # Skip replicas to make sure we apply the driver only once
                     # A replica should never have any details
                 else:
                     self._derive_line(detail)
-        
-                
+
+
     def _fit_to_period(self, time_period, recur=True):
         """
 
 
         BusinessUnit._fit_to_period() -> None
 
-        
+
         Set pointer to timeperiod and synchronize ref date to period end date.
         If ``recur`` == True, repeat for all components.
         """
@@ -924,13 +924,13 @@ class BusinessUnit(History, Tags, Equalities):
         new-line character).
 
         Box format (live units):
-      
+
         +=====================+
         | NAME  : Baltimore-4 |
         | ID    : ...x65-0b78 |
         | DOB   :  2015-04-01 |
         | LIFE  :         43% |
-        | STAGE :      MATURE |   
+        | STAGE :      MATURE |
         | TYPE  :         OPS |
         | FILL  :        True |
         | COMPS :          45 |
@@ -943,25 +943,25 @@ class BusinessUnit(History, Tags, Equalities):
         | id    \ .../65-0b78 |
         | dob   :\ 2/15-04-01 |
         | life  : \/      43% |
-        | stage : /\   MATURE |   
+        | stage : /\   MATURE |
         | type  :/  \     OPS |
         | fill  /    \   True |
         | comps/:     \    45 |
         +=====/========\======+
 
         Box format (unborn units):
-      
+
         ?  = = = = = = = = =  ?
         | NAME  : Baltimore-4 |
-          ID    : ...x65-0b78  
+          ID    : ...x65-0b78
         | DOB   :  2015-04-01 |
-          LIFE  :         43%  
-        | STAGE :      MATURE |   
-          TYPE  :         OPS  
+          LIFE  :         43%
+        | STAGE :      MATURE |
+          TYPE  :         OPS
         | FILL  :        True |
-          COMPS :          45 
+          COMPS :          45
         ?  = = = = = = = = =  ?
-        
+
         """
         reg_corner = "+"
         alt_corner = "?"
@@ -1012,24 +1012,24 @@ class BusinessUnit(History, Tags, Equalities):
         else:
             dob = "n/a"
         data["DOB"] = dob
-        
+
         if self.life.percent is not None:
             life = int(self.life.percent)
             life = str(life) + r"%"
         else:
             life = "n/a"
         data["LIFE"] = life
-        
+
         data["EVENT"] = self.life.get_latest()[0][:data_width]
-        # Pick out the event name, trim to data width. 
-        
+        # Pick out the event name, trim to data width.
+
         unit_type = str(self.type)[:data_width]
         data["TYPE"] = unit_type.upper()
-        
+
         data["FILL"] = str(self.filled)
-        
+
         data["COMPS"] = str(len(self.components.get_living()))
-        
+
         data["SIZE"] = str(self.size)[:data_width]
         #
         ##assemble the real thing
@@ -1051,7 +1051,7 @@ class BusinessUnit(History, Tags, Equalities):
         #
         #post-processing (dashed lines for units scheduled to open in the
         #future, x's for units that have already closed)
-        
+
         if self.life.ref_date < date_of_birth:
             #
             alt_width = int(box_width / 2) + 1
@@ -1098,7 +1098,7 @@ class BusinessUnit(History, Tags, Equalities):
                 alt_lines.append(line)
             lines = alt_lines
         #
-        return lines    
+        return lines
 
     def _load_balance(self):
         """
@@ -1119,13 +1119,13 @@ class BusinessUnit(History, Tags, Equalities):
 
         ending_balance.increment(starting_balance, consolidating=False)
         ending_balance.reset()
-        # Our goal is to pick up shape, so clear values. 
+        # Our goal is to pick up shape, so clear values.
 
         # By default, the ending balance sheet should look the same as the
         # starting one. Here, we copy the starting structure and zero out
         # the values. We will fill in the values later through
         # consolidate(), update_balance(), and derive().
-        
+
     def _register_in_period(self, recur=True, overwrite=True):
         """
 
@@ -1146,14 +1146,14 @@ class BusinessUnit(History, Tags, Equalities):
         any of the caller's children have an overlap, the error will appear only
         when the recursion gets to them. As a result, by the time the error
         occurs, some higher-level or sibling components may have already updated
-        the period's directory.        
+        the period's directory.
         """
         # UPGRADE-S: Can fix the partial-overwrite problem by refactoring this
         # routine into 2 pieces. build_dir(recur=True) would walk the tree and
         # return a clean dict. update_dir(overwrite=bool) would compare that
         # dict with the existing directory and raise an error if there is
         # an overlap. Also carries a speed benefit, cause only compare once.
-        
+
         if not overwrite:
             if self.id.bbid in self.period.bu_directory:
                 c1 = "TimePeriod.bu_directory already contains an object with "
@@ -1165,7 +1165,7 @@ class BusinessUnit(History, Tags, Equalities):
                 print(self.period.bu_directory)
                 c = c1+c2+c3+c4+c5
                 raise bb_exceptions.IDCollisionError(c)
-            
+
         # Check for collisions first, then register if none arise.
         self.period.bu_directory[self.id.bbid] = self
         brethren = self.period.ty_directory.setdefault(self.type, set())
@@ -1180,7 +1180,7 @@ class BusinessUnit(History, Tags, Equalities):
 
 
         BusinessUnit._build_directory() -> (id_directory, ty_directory)
-        
+
 
         Register yourself and optionally your components, by type and by id
         return id_directory, ty_directory
@@ -1196,17 +1196,17 @@ class BusinessUnit(History, Tags, Equalities):
                 lower_ty = lower_level[1]
                 id_directory.update(lower_ids)
                 ty_directory.update(lower_ty)
-                
+
             #update the directory for each unit in self
             pass
         if self.id.bbid in directory:
             if not overwrite:
                 raise Error
-            
+
         id_directory[self.id.bbid] = self
         this_type = ty_directory.setdefault(self.type, set())
         this_type.add(self.id.bbid)
-      
+
         return id_directory, ty_directory
         # unfinished <--------------------------------------------------------------------------------------------
 
@@ -1225,7 +1225,7 @@ class BusinessUnit(History, Tags, Equalities):
             comps = Components()
         comps.setPartOf(self)
         self.components = comps
-        
+
     def _set_drivers(self, dr_c=None):
         """
 
@@ -1248,10 +1248,10 @@ class BusinessUnit(History, Tags, Equalities):
 
         BusinessUnit._update_balance() -> None
 
-        
+
         Populate blank lines in the ending balance sheet with starting values.
         Ignore lines that we have already consolidated. Derive() can later
-        overwrite these values. 
+        overwrite these values.
         """
         tags_to_omit = set(tagsToOmit)
         tags_to_omit.add(tConsolidated)
@@ -1261,10 +1261,10 @@ class BusinessUnit(History, Tags, Equalities):
 
         # Method expects balance sheet to come with accurate tables. We first
         # build the table in load_balance(). We then run consolidate(), which
-        # will automatically update the tables if it changes the statement. 
-        
+        # will automatically update the tables if it changes the statement.
+
         if starting_balance and ending_balance:
-            
+
             for name, starting_line in starting_balance._details.items():
 
                 if tags_to_omit & set(starting_line.allTags):
@@ -1315,7 +1315,7 @@ class BusinessUnit(History, Tags, Equalities):
         self.id.set_namespace(namespace)
         self.id.assign(self.name)
         # This unit now has an id in the namespace. Now pass our bbid down as
-        # the namespace for all downstream components. 
+        # the namespace for all downstream components.
         if recur:
             for unit in self.components.values():
                 unit._update_id(namespace=self.id.bbid, recur=True)
