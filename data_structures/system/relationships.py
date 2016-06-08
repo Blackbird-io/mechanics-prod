@@ -1,10 +1,10 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2016
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
-#Blackbird Environment
-#Module: data_structures.system.relationship
+# Blackbird Environment
+# Module: data_structures.system.relationship
 """
 
 Module defines Relationship class and provides certain related functions.
@@ -49,9 +49,10 @@ class Relationships:
     ====================  ======================================================
 
     DATA:
-    owner                 property; returns _owner of Relationship instance
-    parent                property; returns _parent of instance's owner
-    part_of               property; returns the name of parent or None
+    level                 property; describes the object's recurrence depth
+    owner                 property; pointer to object that instance describes
+    parent                property; pointer to parent of owner
+    part_of               property; name of parent or None
 
     FUNCTIONS:
     copy()                returns a copy of the object, preserving the parent
@@ -103,6 +104,8 @@ class Relationships:
 
         Relationship.set_parent -> None
 
+        --``parent`` is any object
+
         Sets _parent non-public attribute to parent object
         """
         self._parent = parent
@@ -111,7 +114,7 @@ class Relationships:
         """
 
 
-        Relationship.copy -> obj
+        Relationship.copy() -> obj
 
         Returns a new Relationship object with _parent attribute preserved
         """

@@ -82,10 +82,8 @@ class BusinessUnit(History, Equalities, TagsMixIn):
     interview             instance of InterviewTracker object
     life                  instance of Life object
     location              placeholder for location functionality
-    name                  name property from Tags class
     parameters            flexible storage for data that shapes unit performance
     relationships         instance of Relationships class
-    tags                  instance of Tags class
     size                  int; number of real-life equivalents obj represents
     stage                 property; returns non-public stage or interview
     summary               None or BusinessSummary; investment summary
@@ -146,9 +144,9 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         self.location = None
         self.parameters = Parameters()
         self.period = None
-        self.relationships = Relationships(self)
         # May want to change period to a property, so that a set to new value
-        # will always cause the unit to rerun registration. 
+        # will always cause the unit to rerun registration.
+        self.relationships = Relationships(self)
 
         self.size = 1
         self.summary = BusinessSummary()

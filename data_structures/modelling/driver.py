@@ -112,10 +112,8 @@ class Driver(TagsMixIn):
     data                  dict; place holder for driver-specific data
     id                    instance of ID
     formula_bbid          bbid for formula that Driver applies
-    name                  name property from Tags class
     position              int; from 0 to 100
     relationships         instance of Relationships class
-    tags                  instance of Tags class
     signature             string; how the driver signs lines it modifies
     workConditions        dict; criteria for objects driver will process
 
