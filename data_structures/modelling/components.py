@@ -1,10 +1,10 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
-#Blackbird Environment
-#Module: data_structures.modelling.components
+# Blackbird Environment
+# Module: data_structures.modelling.components
 """
 
 Module defines Components class, a container for business units. 
@@ -33,7 +33,8 @@ import time
 import bb_exceptions
 import tools.for_tag_operations
 
-from data_structures.system.tags import Tags
+from data_structures.system.relationships import Relationships
+from data_structures.system.tags_mixin import TagsMixIn
 
 from .equalities import Equalities
 
@@ -44,7 +45,7 @@ from .equalities import Equalities
 #n/a
 
 #classes
-class Components(dict, Tags, Equalities):
+class Components(dict, TagsMixIn, Equalities):
     """
 
     The Components class defines a container that stores BusinessUnit objects
@@ -60,20 +61,16 @@ class Components(dict, Tags, Equalities):
     DATA:
     by_name               dict; keys are unit names, values are unit bbids
     keyAttributes         list; CLASS; keep empty to follow standard dict logic
+    relationships         instance of Relationships class
 
     FUNCTIONS:
     add_item()            adds an object to self, keyed under obj's bbid
-    clearInheritedTags()  runs Tags method and then repeats for each component
     copy()                returns deep copy of instance and contents
-    extrapolate_to()      delegates Tags.extrapolate_to()
-    ex_to_default()       delegates to Tags.ex_to_default, which runs on copy()
-    ex_to_special()       makes a shell, fills with items from seed & target
     find_bbid()           return bbid that contains a known string
     get_living()          returns a bbid:bu dict of all bus that are alive
     getOrdered()          legacy interface for get_ordered() 
     get_ordered()         returns a list of values, ordered by key
     get_tagged()          return a dict of units with tags
-    inheritTags()         runs default routine, then inherits from all comps
     refresh_names()       clear and rebuild name-to-bbid dictionary
     remove_item()         remove an item from components
     ====================  ======================================================
@@ -85,16 +82,16 @@ class Components(dict, Tags, Equalities):
     #obstacles to semantically meaningful implementation.
     #
 
-    #
     keyAttributes = []
     #keyAttributes should remain an explicit empty list to maintain dictionary
     #comparison logic
         
-    def __init__(self,name = "Components"):
+    def __init__(self, name="Components"):
         dict.__init__(self)
-        Tags.__init__(self, name)
+        TagsMixIn.__init__(self, name)
         Equalities.__init__(self)
         self.by_name = dict()
+        self.relationships = Relationships(self)
 
     def __eq__(self, comparator, trace = False, tab_width = 4):
         """
@@ -153,27 +150,12 @@ class Components(dict, Tags, Equalities):
         if not bu.id.bbid:
             c = "Cannot add a component that does not have a valid bbid."
             raise bb_exceptions.IDError(c)
-        bu.setPartOf(self)
+        bu.relationships.set_parent(self)
         self[bu.id.bbid] = bu
-        if bu.name:
-            self.by_name[bu.name] = bu.id.bbid
+        if bu.tags.name:
+            self.by_name[bu.tags.name] = bu.id.bbid
 
-    def clearInheritedTags(self,recur = False):
-        """
-
-
-        Components.clearInheritedTags([recur = False]) -> None
-
-
-        Method runs Tags.clearInheritedTags(). If recur == True, method then
-        clears inherited tags for every component in self.getOrdered(). 
-        """
-        Tags.clearInheritedTags(self,recur)
-        if recur:
-            for C in self.getOrdered():
-                C.clearInheritedTags(recur = True)
-
-    def copy(self,enforce_rules = True):
+    def copy(self):
         """
 
 
@@ -184,7 +166,9 @@ class Components(dict, Tags, Equalities):
         shell. Method then sets result.by_name to a blank dictionary and adds a
         copy of each unit in the instance to the result. 
         """
-        result = Tags.copy(self, enforce_rules=True)
+        result = copy.copy(self)
+        result.tags = self.tags.copy()
+        result.relationships = self.relationships.copy()
         #
         #customize container
         result.clear()
@@ -192,102 +176,8 @@ class Components(dict, Tags, Equalities):
         #
         #fill container (automatically add names)
         for C in self.getOrdered():
-            rC = C.copy(enforce_rules)
+            rC = C.copy()
             result.add_item(rC)
-        return result
-
-    def extrapolate_to(self,target):
-        """
-
-
-        Components.extrapolate_to(target) -> Components
-
-
-        Method returns a new Components object that combines seed and target
-        characteristics. Method delegates all work to Tags.extrapolate_to().
-        """
-        result = Tags.extrapolate_to(self,target)
-        return result
-
-    def ex_to_default(self,target):
-        """
-
-
-        Components.ex_to_default(target) -> Components
-
-
-        Method returns a new Components object based primarily on the seed
-        instance. Delegates work to Tags.ex_to_default().
-        """
-        result = Tags.ex_to_default(self,target)
-        return result
-
-    def ex_to_special(self,target):
-        """
-
-
-        Components.ex_to_special(target) -> Components
-
-
-        Method returns a new Components object that combines seed and target
-        characteristics.
-
-        First, method generates an empty Components shell. The shell is a
-        rules-enforced Tages.copy() of the seed instance that receives any
-        extra tags from the target instance as well.
-
-        Second, the method fills the shell with items from both seed and target.
-        If an item appears in both (both seed and target have the same uuid
-        key), the method extrapolates the seed item onto the target. Method
-        copies shared items if they prohibited modification. Method then copies
-        all seed- or target-specific items. 
-        """
-        #
-        #step 1: make the container
-        result = None
-        #create shallow copies of seed and target to run tag and container
-        #attribute inheritance without copying all of the contents
-        alt_seed = copy.copy(self)
-        #plain vanilla copy 
-        alt_seed.clear()
-        #empty Components instance, but with all the tags and other data
-        result = alt_seed.copy(enforce_rules = True)
-        result = Tags.ex_to_special(result,target,mode= "at")
-        #updates result with those target tags it doesnt have already. "at" mode
-        #picks up all tags from target. other attributes stay identical because
-        #Tags uses a shallow copy.
-        #
-        #step 2: fill the container
-        k_seed = set(seed.keys())
-        k_target = set(target.keys())
-        k_common = k_seed & k_target
-        k_only_seed = k_seed - k_common
-        k_only_target = k_target - k_common
-        for k in k_only_seed:
-            c_seed = seed[k]
-            c_new = c_seed.copy(enforce_rules = True)
-            result.add_item(c_new)
-        for k in k_only_target:
-            c_target = target[k]
-            if self.checkOrdinary(c_target):
-                continue
-            else:
-                #only add special items from target.
-                c_new = c_target.copy(enforce_rules = False)
-                result.add_item(c_new)
-        for k in k_common:
-            c_seed = seed[k]
-            c_target = target[k]
-            c_new = None
-            if c_target.checkTouch():
-                c_new = c_seed.extrapolate_to(c_target)
-            else:
-                c_new = c_target.copy(enforce_rules = False)
-                #no "conceptual" movement, original and copy stay in the same
-                #level in the same time period. 
-            result.add_item(c_new)
-        #
-        #return result
         return result
 
     def find_bbid(self, snippet):
@@ -383,33 +273,6 @@ class Components(dict, Tags, Equalities):
         #
         return result
     
-    def inheritTags(self, recur = True):
-        """
-
-
-        Components.inheritTags([recur = True]) -> None
-
-
-        Method provides a Components-specific form of tag inheritance compatible
-        with the general inheritance interface.
-
-        Method first runs Tags.inheritTags() on the instance. This step should
-        generally should be a no-op because Components objects leave tagSources
-        blank by default.
-
-        Method then goes through every component in self.getOrdered() and
-        inherits that component's tags.
-
-        If ``recur`` == True, method asks each component to inheritTags() on its
-        own before using that component as a source for the instance. 
-        """
-        Tags.inheritTags(self,recur)
-        for bu in self.getOrdered():
-            if bu:
-                if recur:
-                    bu.inheritTags()
-                self.inheritTagsFrom(bu)
-
     def _get_pretty_lines(self):
         """
 
@@ -453,32 +316,29 @@ class Components(dict, Tags, Equalities):
         #group print is 3 rows (one for each bunch), plus the group header.
         #
         for i in range(group_count):
-            #
             group_lines = []
-            #
+
             group_start = i * group_size
             group_end = (i + 1) * group_size - 1
-            #
+
             filled_group_hdr = group_header % (group_start, group_end)
             group_lines.append(filled_group_hdr)
-            #
-            #process the bunches; j is the index in the ordered list of units
-            #
+
+            # process the bunches; j is the index in the ordered list of units
             j = group_start
             while j < group_end:
-                #
-                bunch = units[ j : (j + bunch_size) ]
-                #
+                bunch = units[j:(j + bunch_size)]
+
                 bunch_lines = []
-                #
+
                 boxes = []
                 for unit in bunch:
                     unit_box = unit._get_pretty_lines()
                     boxes.append(unit_box)
                 if i == 0:
                     box_width = len(boxes[0][0])
-                    #set box width once, to the first line of the first unit
-                    #
+                    # set box width once, to the first line of the first unit
+
                 filled_bunch_hdr = None
                 filled_unit_hdrs = []
                 for k in range(j, (j + bunch_size)):
@@ -489,59 +349,58 @@ class Components(dict, Tags, Equalities):
                 filled_bunch_hdr = unit_spacer.join(filled_unit_hdrs)
                 filled_bunch_hdr = "\t" + filled_bunch_hdr
                 bunch_lines.append(filled_bunch_hdr)                
-                #
-                #boxes now contains 3 lists of strings. the lists are all the
-                #same length because each unit prints in the same format. zip
-                #all those lists together into tuples of (line1a, line1b,
-                #line1c), (line2a, line2b, line2c), etc.
-                #
+
+                # boxes now contains 3 lists of strings. the lists are all the
+                # same length because each unit prints in the same format. zip
+                # all those lists together into tuples of (line1a, line1b,
+                # line1c), (line2a, line2b, line2c), etc.
+
                 zipped_boxes = zip(*boxes)
-                #
+
                 for triplet in zipped_boxes:
                     line = unit_spacer.join(triplet)
                     line = "\t" + line
                     bunch_lines.append(line)
-                #
+
                 bunch_lines.append(bunch_footer)
-                #add a footer string after each bunch; footer can be empty
-                #
+                # add a footer string after each bunch; footer can be empty
+
                 group_lines.extend(bunch_lines)
-                #row is over, move to the next 3 units. unit index goes up by 3.
+                # row is over, move to the next 3 units. unit index goes up by 3.
                 j = j + bunch_size
-            #
-            #loop is over, add the group lines and a group footer to main lines.
+
+            # loop is over, add the group lines and a group footer to main lines.
             main_lines.extend(group_lines)
             main_lines.append(group_footer)
-        #
-        #finished all the groups; now go through the tail
-        #HAVE TO MANUALLY ADD A TAIL HEADER
+
+        # finished all the groups; now go through the tail
+        # HAVE TO MANUALLY ADD A TAIL HEADER
         filled_tail_hdr = group_header % ((unit_count - tail_count),
                                           (unit_count - 1))
         main_lines.append(filled_tail_hdr)
         if tail_count != 0:
-            #
             tail_lines = []
-            #
+
             bunch_count = tail_count // bunch_size
             tail_start = unit_count - tail_count
             stub_count = tail_count % bunch_size
-            #
+
             j = tail_start
             for i in range(bunch_count):
-                #build each bunch-row, extend tail_lines; then add the final
-                #stub row
+                # build each bunch-row, extend tail_lines; then add the final
+                # stub row
                 bunch = units[j : (j + bunch_size)]
-                #
+
                 bunch_lines = []
-                #
+
                 boxes = []
                 for unit in bunch:
                     unit_box = unit._get_pretty_lines()
                     boxes.append(unit_box)
                 if not box_width:
                     box_width = len(boxes[0][0])
-                    #set box_width in case tail is the only group
-                #
+                    # set box_width in case tail is the only group
+
                 filled_bunch_hdr = None
                 filled_unit_hdrs = []
                 for k in range(j, (j + bunch_size)):
@@ -551,37 +410,37 @@ class Components(dict, Tags, Equalities):
                 filled_bunch_hdr = unit_spacer.join(filled_unit_hdrs)
                 filled_bunch_hdr = "\t" + filled_bunch_hdr
                 bunch_lines.append(filled_bunch_hdr)                
-                #
-                #boxes now contains 3 lists of strings. the lists are all the
-                #same length because each unit prints in the same format. zip
-                #all those lists together into tuples of (line1a, line1b,
-                #line1c), (line2a, line2b, line2c), etc.
-                #
+
+                # boxes now contains 3 lists of strings. the lists are all the
+                # same length because each unit prints in the same format. zip
+                # all those lists together into tuples of (line1a, line1b,
+                # line1c), (line2a, line2b, line2c), etc.
+
                 zipped_boxes = zip(*boxes)
-                #
+
                 for triplet in zipped_boxes:
                     line = unit_spacer.join(triplet)
                     line = "\t" + line
                     bunch_lines.append(line)
                 #
                 bunch_lines.append(bunch_footer)
-                #add a footer string after each bunch; footer can be empty
-                #
+                # add a footer string after each bunch; footer can be empty
+
                 main_lines.extend(bunch_lines)
-                #row is over, move to the next 3 units. unit index goes up by 3.
+                # row is over, move to the next 3 units. unit index goes up by 3.
                 j = j + bunch_size
-            #
-            #finally, manually append the tail_stub row
+
+            # finally, manually append the tail_stub row
             stub_lines = []
             bunch = units[(stub_count * -1):]
             boxes = []
             for unit in bunch:
                 unit_box = unit._get_pretty_lines()
                 boxes.append(unit_box)
-            #
+
             if not box_width:
                 box_width = len(boxes[0][0])
-                #set box_width in case the tail stub is the only row
+                # set box_width in case the tail stub is the only row
             filled_bunch_hdr = None
             filled_unit_hdrs = []
             for k in range(j, (j + stub_count)):
@@ -591,20 +450,20 @@ class Components(dict, Tags, Equalities):
             filled_bunch_hdr = unit_spacer.join(filled_unit_hdrs)
             filled_bunch_hdr = "\t" + filled_bunch_hdr
             stub_lines.append(filled_bunch_hdr)
-            #
+
             zipped_boxes = zip(*boxes)
-            #
+
             for triplet in zipped_boxes:
                 line = unit_spacer.join(triplet)
                 line = "\t" + line
                 stub_lines.append(line)
-            #
+
             stub_lines.append(bunch_footer)
             main_lines.extend(stub_lines)
-            #
+
         main_lines.append(group_footer)
         main_lines.append(group_footer)
-        #
+
         return main_lines            
 
     def refresh_names(self):
@@ -619,8 +478,8 @@ class Components(dict, Tags, Equalities):
         """   
         self.by_name.clear()
         for bu in self.values():
-            if bu.name:
-                self.by_name[bu.name] = bu.id.bbid
+            if bu.tags.name:
+                self.by_name[bu.tags.name] = bu.id.bbid
             else:
                 continue
 
@@ -637,9 +496,8 @@ class Components(dict, Tags, Equalities):
         For Drivers, use Dr_Container.remove_driver() instead
         """
         bu = self.pop(bbid)
-        bu.setPartOf(None)
-        if bu.name:
-            self.by_name.pop(bu.name)
+        bu.relationships.set_parent(None)
+        if bu.tags.name:
+            self.by_name.pop(bu.tags.name)
 
         return bu
-

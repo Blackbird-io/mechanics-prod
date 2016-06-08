@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: data_structures.modelling.formula
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: data_structures.modelling.formula
 """
 
 Module defines Formula class. Formula objects provide a lattice for holding and
@@ -51,7 +50,7 @@ class Formula:
     func                  placeholder for formula function from content module
     id                    instance of Platform.ID.ID class
     source                relative path of conent module that described obj
-    tags                  instance of Platform.Tags.Tags class
+    tags                  instance of Platform.Tags class
 
     FUNCTIONS:
     n/a

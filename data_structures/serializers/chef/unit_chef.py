@@ -320,7 +320,7 @@ class UnitChef:
                     sheet.bb.current_row += 1
 
                 statement_row = sheet.bb.current_row + 1
-                fins_dict[statement.name] = statement_row
+                fins_dict[statement.tags.name] = statement_row
 
                 line_chef.chop_statement(
                     sheet=sheet,
@@ -703,7 +703,7 @@ class UnitChef:
         Returns sheet with current row pointing to last parameter row
         """
 
-        name = unit.name
+        name = unit.tags.name
         if name in book:
             rev_name = name + " ..." + str(unit.id.bbid)[-8: ]
             name = rev_name
@@ -862,7 +862,7 @@ class UnitChef:
                 line.clear()
                 line.xl = LineData()
 
-        new_start_bal.name = "Starting Balance Sheet"
+        new_start_bal.tags.name = "Starting Balance Sheet"
         return new_start_bal
 
     def _balance_lines(self, start_line, end_line):
@@ -879,7 +879,7 @@ class UnitChef:
         """
         if start_line._details:
             for name, line in start_line._details.items():
-                ending_line = end_line.find_first(line.name)
+                ending_line = end_line.find_first(line.tags.name)
 
                 self._balance_lines(line, ending_line)
         else:

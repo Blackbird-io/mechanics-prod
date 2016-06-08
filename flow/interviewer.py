@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: flow.interviewer
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: flow.interviewer
 
 """
 
@@ -191,10 +190,10 @@ class Interviewer:
 
         # Check here to see if fp is None (path complete for stage), and if so:
         if fp is None:
-            parent_bu = model.target.parentObject
+            parent_bu = model.target.relationships.parent
 
             if parent_bu:
-                parent_bu = parent_bu.parentObject
+                parent_bu = parent_bu.relationships.parent
 
                 if isinstance(parent_bu, BusinessUnit):
                     model.target = parent_bu
@@ -295,7 +294,6 @@ class Interviewer:
         #
         protocol_key = model.target.stage.protocol_key
         routine = None
-        #
 
         if known_rule:
             if known_rule(old_fp):

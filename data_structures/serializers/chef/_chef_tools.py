@@ -416,7 +416,7 @@ def _check_statement(statement, workbook_in, log_ws):
                 formula_names = [c.name for c in calcs]
                 formula = ','.join(formula_names)
             else:
-                formula = line.name
+                formula = line.tags.name
 
             qa_list = [line.xl.cell.parent.title, line.xl.cell.coordinate,
                        line.value, cell.value, formula]

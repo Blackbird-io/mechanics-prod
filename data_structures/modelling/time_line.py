@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: data_structures.modelling.time_line
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: data_structures.modelling.time_line
 """
 
 Module defines TimeLine class. TimeLines are dictionaries of time periods with
@@ -492,7 +491,7 @@ class TimeLine(dict):
         period.id.set_namespace(model_namespace)
         # Period has only a pointer to the Model.namespace_id; periods dont have
         # their own bbids.
-        period.setPartOf(self)
+        period.relationships.set_parent(self)
         
         return period
     

@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: data_structures.system.topic
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: data_structures.system.topic
 """
 
 Module defines Topic class, the basic unit of person-like analysis that the
@@ -150,7 +149,7 @@ class Topic:
         tag already exists. 
         """
         self.work_plan[line_name] = contribution
-        if line_name not in self.tags.allTags:
+        if line_name not in self.tags.all:
             self.tags.tag(line_name)
 
     def choose_scenario(self):
@@ -378,7 +377,7 @@ class Topic:
         mark["scenario_name"] = scene_name
         mark["timestamp"] = time.time()
         model = self.MR.activeModel
-        mark["target_bu"] = model.target.name
+        mark["target_bu"] = model.target.tags.name
         model.transcribe(mark)
         model.target.used.add(self.id.bbid)
         

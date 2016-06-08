@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: data_structures.modelling.statement
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: data_structures.modelling.statement
 """
 
 Module defines Statement, a container for lines.
@@ -32,7 +31,9 @@ import copy
 import bb_exceptions
 import bb_settings
 
+from data_structures.system.relationships import Relationships
 from data_structures.system.tags import Tags
+from data_structures.system.tags_mixin import TagsMixIn
 from .equalities import Equalities
 
 
@@ -42,14 +43,10 @@ from .equalities import Equalities
 # n/a
 
 # Globals
-# Tags class carries a pointer to the tag manager; access individual tags
-# through that pointer
-builtInTag = Tags.tagManager.catalog["built_in"]
-doNotTouchTag = Tags.tagManager.catalog["do_not_touch"]
-tConsolidated = Tags.tagManager.catalog["consolidated"]
+# n/a
 
 # Classes
-class Statement(Tags, Equalities):
+class Statement(Equalities, TagsMixIn):
     """
 
     A Statement is a container that supports fast lookup and ordered views.
@@ -92,6 +89,8 @@ class Statement(Tags, Equalities):
 
     DATA:
     POSITION_SPACING      default distance between positions
+    consolidated          whether Statement has been consolidated
+    relationships         instance of Relationships class
 
     FUNCTIONS:
     add_line()            add line to instance
@@ -104,14 +103,18 @@ class Statement(Tags, Equalities):
     get_full_ordered()    return recursive list of details
     increment()           add data from another statement
     reset()               clear values
+    set_consolidated()    sets value of non-public variable _consolidated
     ====================  ======================================================
     """
     keyAttributes = ["_details"]
     # Should rename this comparable_attributes
 
     def __init__(self, name=None, spacing=100):
-        Tags.__init__(self, name=name)
+        TagsMixIn.__init__(self, name)
+
+        self._consolidated = False
         self._details = dict()
+        self.relationships = Relationships(self)
 
         if spacing < 1:
             raise error
@@ -149,7 +152,7 @@ class Statement(Tags, Equalities):
 
         result = "\n"
 
-        header = str(self.name).upper()
+        header = str(self.tags.name).upper()
         header = header.center(bb_settings.SCREEN_WIDTH)
         result += header
         result += "\n\n"
@@ -167,6 +170,13 @@ class Statement(Tags, Equalities):
         result += "\n\n"
 
         return result
+
+    @property
+    def consolidated(self):
+        """
+        read-only property
+        """
+        return self._consolidated
 
     def add_line(self, new_line, position=None):
         """
@@ -323,27 +333,7 @@ class Statement(Tags, Equalities):
 
         self._bind_and_record(line)
 
-    def clearInheritedTags(self, recur=True):
-        """
-
-
-        Statement.clearInheritedTags() -> None
-
-
-        Method runs Tags.clearInheritedTags() on instance. If ``recur`` is True,
-        does the same for every line in instance.
-        """
-        Tags.clearInheritedTags(self, recur)
-        if recur:
-            if bb_settings.DEBUG_MODE:
-                pool = self.get_ordered()
-            else:
-                pool = self._details.values()
-
-            for line in pool:
-                line.clearInheritedTags(recur)
-
-    def copy(self, enforce_rules=True):
+    def copy(self):
         """
 
 
@@ -351,9 +341,13 @@ class Statement(Tags, Equalities):
 
 
         Method returns a deep copy of the instance and any details. If
-        ``enforce_rules`` is True, copy will conform to ``out`` rules.
+        ```` is True, copy will conform to ``out`` rules.
         """
-        result = Tags.copy(self, enforce_rules)
+        result = copy.copy(self)
+        result.tags = self.tags.copy()
+        result.relationships = self.relationships.copy()
+        result.set_consolidated(False)
+
         # Tags.copy returns a shallow copy of the instance w deep copies
         # of the instance tag attributes.
         result._details = dict()
@@ -365,114 +359,10 @@ class Statement(Tags, Equalities):
             pool = self._details.values()
 
         for own_line in pool:
-            new_line = own_line.copy(enforce_rules)
+            new_line = own_line.copy()
             result.add_line(new_line, position=own_line.position)
             # Preserve relative order
 
-        return result
-
-##    def extrapolate_to(self,target):
-##        """
-##
-##
-##        Fins.extrapolate_to(target) -> Fins
-##
-##
-##        Method returns new Financials object. Delegates all work to
-##        Tags.extrapolate_to().
-##        """
-##        return Tags.extrapolate_to(self,target)
-
-    def ex_to_special(self, target):
-        """
-
-
-        Statement.ex_to_special() -> Statement
-
-
-        Method returns new Statement object, runs custom logic.
-
-        First, make a container by creating a shallow copy of seed instance,
-        clearing out any contents, clearing out that shell's inherited tags,
-        and applying the non-inherited tags from the target to that shell.
-
-        Second, fill the shell with lineitems.
-         -- Step through seed instance
-         -- If a line is in both seed and target, extrapolate seed line to
-            target line to get a new line for result. If target LineItem is
-            hands-off, use a copy of the target line.
-         -- If a line is only in seed, add the line.copy(enforce_rules = True)
-            of that line to result.
-         -- If a line is only in target, add a copy to result if it's special;
-            skip otherwise.
-
-        Third, return result.
-        """
-        # Conceptually, we are merging seed and target. Because seed carries
-        # new, revised information, we implement all of its changes. We then
-        # pick up any additional information (content) the target may carry
-        # and add it to the result.
-        #
-        # When seed and target carry the same data, we try to merge their
-        # versions (ie work recursively through their details). We take seed
-        # data in the event of conflict. The one exception occurs when target
-        # tags its data as special, in which case we ignore seed changes.
-
-        # Step 1: Make a container
-        tags_to_omit = []
-        seed = self
-        alt_seed = copy.copy(seed)
-        alt_seed._details = dict()
-        # Create an empty version of the instance.
-        alt_seed.clearInheritedTags()
-
-        result = alt_seed.copy(enforce_rules=True)
-        # Copy container data according to all the rules.
-
-        result = Tags.ex_to_special(result, target, mode="at")
-        # Updates result with tags from target. We use "at" mode to pick up
-        # all of the tags. This method should not affect other container
-        # attributes.
-
-        # Step 2: Fill the container
-        if bb_settings.DEBUG_MODE:
-            pool = self._get_ordered_items_debug()
-        else:
-            pool = self._details.items()
-
-        for name, own_line in pool:
-            target_line = target._details.get(name)
-
-            if target_line:
-
-                if target_line.checkTouch():
-                    result_line = own_line.extrapolate_to(target_line)
-
-                else:
-                    result_line = target_line.copy(enforce_rules=False)
-
-            else:
-                result_line = own_line.copy(enforce_rules=True)
-
-            result.add_line(result_line, position=result_line.position)
-
-        if bb_settings.DEBUG_MODE:
-            pool = target._get_ordered_items_debug()
-        else:
-            pool = target._details.items()
-
-        for name, target_line in pool:
-
-            if name in result._details:
-                continue
-            else:
-                if self.checkOrdinary(target_line):
-                    continue
-                else:
-                    result_line = target_line.copy(enforce_rules=False)
-                    result.add_line(result_line, position=result_line.position)
-
-        # Step 3: Return result
         return result
 
     def extend(self, lines):
@@ -571,7 +461,7 @@ class Statement(Tags, Equalities):
         have difficulty putting them back.
 
         The best way to reinsert an item you accidentally removed is to find
-        its parent using detail.parentObject and insert the item directly back.
+        its parent using detail.relationships.parent and insert the item directly back.
         """
         result = None
 
@@ -636,7 +526,7 @@ class Statement(Tags, Equalities):
         result = sorted(self._details.values(), key=lambda line: line.position)
         return result
 
-    def increment(self, matching_statement, *tagsToOmit, consolidating=False):
+    def increment(self, matching_statement, consolidating=False):
         """
 
 
@@ -658,9 +548,6 @@ class Statement(Tags, Equalities):
         for name, external_line in pool:
             # ORDER SHOULD NOT MATTER HERE
 
-            if set(tagsToOmit) & set(external_line.allTags):
-                continue
-
             # If we get here, the line has survived screening. We now have two
             # ways to add its information to the instance. Option A, is to
             # increment the value on a matching line. Option B is to copy the
@@ -675,14 +562,14 @@ class Statement(Tags, Equalities):
 
             else:
                 # Option B
-                local_copy = external_line.copy(enforce_rules=False)
+                local_copy = external_line.copy()
                 # Dont enforce rules to track old line.replicate() method
 
-                if external_line.consolidate is True:
+                if external_line.consolidate:
                     if consolidating:
                         if external_line.value is not None:
-                            if tConsolidated not in local_copy.allTags:
-                                local_copy.tag(tConsolidated)
+                            if not local_copy.consolidated:
+                                local_copy.set_consolidated(True)
 
                             # Pick up lines with None values, but don't tag
                             # them. We want to allow derive to write to these
@@ -699,19 +586,22 @@ class Statement(Tags, Equalities):
                 else:
                     pass
 
-    def inheritTags(self, recur=True):
+    def set_consolidated(self, val):
         """
 
 
-        Statement.inheritTags() -> None
+        LineItem.set_consolidate() -> None
 
 
-        Method inherits tags from details in fixed order.
+        --``val`` must be a boolean (True or False)
+
+        Method for explicitly setting self._consolidate.
         """
-        for line in self.get_ordered():
-            # Go through lines in fixed order to make sure that we pick up
-            # tags in the same sequence.
-            self.inheritTagsFrom(line)
+        if isinstance(val, bool):
+            self._consolidated = val
+        else:
+            msg = "statement._consolidated can only be set to a boolean value"
+            raise(TypeError(msg))
 
     def reset(self):
         """
@@ -764,8 +654,8 @@ class Statement(Tags, Equalities):
 
         Set instance as line parent, add line to details.
         """
-        line.setPartOf(self)
-        self._details[line.name] = line
+        line.relationships.set_parent(self)
+        self._details[line.tags.name] = line
 
     def _inspect_line_for_insertion(self, line):
         """
@@ -776,11 +666,11 @@ class Statement(Tags, Equalities):
 
         Will throw exception if Line if you can't insert line into instance.
         """
-        if not line.name:
+        if not line.tags.name:
             c = "Cannot add nameless lines."
             raise bb_exceptions.BBAnalyticalError(c)
 
-        if line.name in self._details:
+        if line.tags.name in self._details:
             c = "Implicit overwrites prohibited."
             raise bb_exceptions.BBAnalyticalError(c)
 
@@ -840,7 +730,7 @@ class Statement(Tags, Equalities):
 
         for position in sorted(by_position):
             lines = by_position[position]
-            lines = sorted(lines, lambda x: x.name)
+            lines = sorted(lines, lambda x: x.tags.name)
             ordered.extend(lines)
 
         # Now can assign positions

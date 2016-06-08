@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: data_structures.valuation.company_value
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: data_structures.valuation.company_value
 """
 
 Module defines a standard storage format for information about the market value
@@ -65,7 +64,7 @@ class CompanyValue(Outline):
         self.ev = EnterpriseValue()
         #
         self.set_path()
-        self.tag("valuation", field = "req")
+        self.tags.tag("valuation", field = "req")
 
     def set_path(self):
         """

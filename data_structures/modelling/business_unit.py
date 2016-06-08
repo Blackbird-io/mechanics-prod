@@ -36,7 +36,9 @@ from data_structures.guidance.guide import Guide
 from data_structures.guidance.interview_tracker import InterviewTracker
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
+from data_structures.system.relationships import Relationships
 from data_structures.system.tags import Tags
+from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.valuation.business_summary import BusinessSummary
 from data_structures.valuation.company_value import CompanyValue
 
@@ -57,14 +59,10 @@ from .parameters import Parameters
 # n/a
 
 # Globals
-# Tags class carries a pointer to the tag manager; access individual tags
-# through that pointer
-tConsolidated = Tags.tagManager.catalog["consolidated"]
-tHardCoded = Tags.tagManager.catalog["hard"]
-T_REPLICA = Tags.tagManager.catalog["ddr"]
+# n/a
 
 # Classes   
-class BusinessUnit(History, Tags, Equalities):
+class BusinessUnit(History, Equalities, TagsMixIn):
     """
    
     Object describes a group of business activity. A business unit can be a
@@ -85,6 +83,7 @@ class BusinessUnit(History, Tags, Equalities):
     life                  instance of Life object
     location              placeholder for location functionality
     parameters            flexible storage for data that shapes unit performance
+    relationships         instance of Relationships class
     size                  int; number of real-life equivalents obj represents
     stage                 property; returns non-public stage or interview
     summary               None or BusinessSummary; investment summary
@@ -108,22 +107,20 @@ class BusinessUnit(History, Tags, Equalities):
     ====================  ======================================================
     """
 
-    irrelevantAttributes = ["allTags",
+    irrelevantAttributes = ["all",
                             "filled",
                             "guide",
                             "id",
-                            "parentObject",
-                            "partOf"]
-    
-    tagSources = ["components", "drivers", "financials"]
-    
+                            "parent",
+                            "part_of"]
+
     _UPDATE_BALANCE_SIGNATURE = "Update balance"
         
     def __init__(self, name, fins=None):
 
         History.__init__(self)
-        Tags.__init__(self, name)
-        
+        TagsMixIn.__init__(self, name)
+
         self._type = None
         
         self.components = None
@@ -149,7 +146,8 @@ class BusinessUnit(History, Tags, Equalities):
         self.parameters = Parameters()
         self.period = None
         # May want to change period to a property, so that a set to new value
-        # will always cause the unit to rerun registration. 
+        # will always cause the unit to rerun registration.
+        self.relationships = Relationships(self)
 
         self.size = 1
         self.summary = BusinessSummary()
@@ -330,26 +328,8 @@ class BusinessUnit(History, Tags, Equalities):
         # of the required formula parameters at the time the Topic runs.
 
         self.drivers.add_item(newDriver, *otherKeys)
-                  
-    def clear(self):
-        """
 
-
-        BusinessUnit.clear() -> None
-
-
-        Method sets attributes in instance.tagSources to their default
-        __init__ values.
-
-        **NOTE: clear() will permanently delete data**
-        
-        """
-        blank_bu = BusinessUnit(name=self.name)
-        for attr in self.tagSources:
-            blank_attr = getattr(blank_bu, attr)
-            setattr(self, attr, blank_attr)
-    
-    def copy(self, enforce_rules=True):
+    def copy(self):
         """
 
 
@@ -374,16 +354,18 @@ class BusinessUnit(History, Tags, Equalities):
         all return deep copies of the object and its contents. See their
         respective class documenation for mode detail.
         """
-        result = Tags.copy(self, enforce_rules)
-        # Start with a basic shallow copy
+        result = copy.copy(self)
+        result.tags = self.tags.copy()
+        result.relationships = self.relationships.copy()
+        # Start with a basic shallow copy, then add tags
         #
-        r_comps = self.components.copy(enforce_rules)
+        r_comps = self.components.copy()
         result._set_components(r_comps)
         
-        r_drivers = self.drivers.copy(enforce_rules)
+        r_drivers = self.drivers.copy()
         result._set_drivers(r_drivers)
 
-        r_fins = self.financials.copy(enforce_rules)
+        r_fins = self.financials.copy()
         result.set_financials(r_fins)
 
         result.guide = copy.deepcopy(self.guide)
@@ -417,97 +399,17 @@ class BusinessUnit(History, Tags, Equalities):
         self.fill_out()
         if adjust_future and self.future:
             self.future.recalculate(adjust_future=True)
-        
-    def extrapolate_to(self, target):
-        """
 
-
-        BusinessUnit.extrapolate_to() -> BU
-
-
-        Returns a new business unit that combines seed and target
-        attributes. Method delegates all work to Tags.extrapolate_to() selection
-        logic.
-
-        NOTE: BusinessUnit and several objects that form its attributes
-        expressly delegate some or all of their extrapolation functionality to
-        the Tags module.
-
-        Therefore, these objects will **not** inherit any more
-        specialized subclass methods. In the event future versions descend
-        BusinessUnit or other objects from specialized subclasses of Tags, can
-        fix by removing express delegation and relying on built-in Python MRO. 
-        """
-        result = Tags.extrapolate_to(self, target)   
-        return result
-
-        #have to set history before filling out financials, because they depend
-        # on prior balance sheet.
-
-        # now, if i forget about the backwards extrapolation, i can do:
-        #   ex_to_default(self):
-        #       result = Tags.ex_to(self, target)
-        #       result.set_history(self) #can include reset_financials() here
-        
-        #       if result.parent is None:
-        #          result.fill_out()
-    
-    def ex_to_special(self, target, reverse=False):
-        """
-
-       
-        BusinessUnit.ex_to_special() -> BU
-
-
-        Method returns a new business unit that contains a blend of seed
-        (caller) and target attributes.
-
-        New unit starts as a copy of caller. Then, for each attribute in
-        seed.tagSources, new unit inherits either (i) by default, a new object
-        extrapolated from the seed and target attributes of the same name, or
-        (ii) an unenforced copy of the target attribute, if that attribute does
-        not permit modification. 
-        """
-        # Step 1: make container
-        seed = self
-        alt_seed = copy.copy(self)
-        alt_seed.clear()
-        # Zero out the recursive attributes; a different part of the method works
-        # on those
-        
-        result = alt_seed.copy(enforce_rules=True)
-        # Class-specific copy that picks up any class-specific data
-
-        result = Tags.ex_to_special(result, target, mode="at")
-        # Updates result with those target tags it doesnt have already. "at" mode
-        # picks up all tags from target. other attributes stay identical because
-        # Tags uses a shallow copy.
-        
-        # Step 2: fill container
-        
-        for attr in self.tagSources:
-            o_seed = getattr(self, attr)
-            o_targ = getattr(target, attr)
-            if self.checkTouch(o_targ):
-                o_res = o_seed.extrapolate_to(o_targ)
-            else:
-                o_res = o_targ.copy(enforce_rules=False)
-                #if can't touch an attribute, copy the target wholesale
-            setattr(result,attr,o_res)
-
-        # Step 3: return container
-        return result
-
-    def fillOut(self, *tagsToOmit):
+    def fillOut(self):
         """
 
         **OBSOLETE**
 
         Legacy interface for fill_out().
         """
-        return self.fill_out(*tagsToOmit)
+        return self.fill_out()
     
-    def fill_out(self, *tagsToOmit):
+    def fill_out(self):
         """
 
 
@@ -529,10 +431,10 @@ class BusinessUnit(History, Tags, Equalities):
             return
         else:
             self._load_balance()
-            self._consolidate(*tagsToOmit)
-            self._update_balance(*tagsToOmit)
+            self._consolidate()
+            self._update_balance()
             # Sets ending balance lines to starting values by default
-            self._derive(*tagsToOmit)
+            self._derive()
             # Derive() will overwrite ending balance sheet where appropriate
             
             self.filled = True
@@ -625,7 +527,7 @@ class BusinessUnit(History, Tags, Equalities):
         Method sets instance.analytics to passed-in argument, sets analytics
         object to point to instance as its parent. 
         """
-        atx.setPartOf(self)
+        atx.relationships.set_parent(self)
         self.valuation = atx
 
     def set_financials(self, fins=None):
@@ -644,7 +546,7 @@ class BusinessUnit(History, Tags, Equalities):
         """
         if fins is None:
             fins = Financials()
-##        fins.setPartOf(self)
+
         self.financials = fins
 
     def set_history(self, history, clear_future=True, recur=True):
@@ -688,7 +590,7 @@ class BusinessUnit(History, Tags, Equalities):
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#    
 
-    def _consolidate(self, *tagsToOmit, trace=False):
+    def _consolidate(self, trace=False):
         """
 
 
@@ -706,9 +608,9 @@ class BusinessUnit(History, Tags, Equalities):
         for unit in pool:
             
             if unit.life.conceived:
-                self._consolidate_unit(unit, *tagsToOmit)
+                self._consolidate_unit(unit)
         
-    def _consolidate_unit(self, sub, *tagsToOmit):
+    def _consolidate_unit(self, sub):
         """
 
 
@@ -716,9 +618,6 @@ class BusinessUnit(History, Tags, Equalities):
         
 
         -- ``sub`` should be a BusinessUnit object
-           
-        -- ``tagsToOmit`` is a tuple of tags; method will ignore sub lines with
-           any of these tags
            
         The Blackbird environment contemplates that BusinessUnits (``parents``)  #<------------------------------------------------update doc string
         may contain multiple component BusinessUnits (``subs``). This method
@@ -840,10 +739,7 @@ class BusinessUnit(History, Tags, Equalities):
         Method uses Financials.spotGenerally() to locate the appropriate
         position for a replica. 
         """
-        # Step 1: Prep
-        tagsToOmit = set(tagsToOmit) #<---------------------------------------------------------------------------------------------------------should be on statement?
-
-        # Step 2: Actual consolidation
+        # Step Only: Actual consolidation
         sub.fill_out()
 
         for attr_name in sub.financials.ORDER:
@@ -851,9 +747,9 @@ class BusinessUnit(History, Tags, Equalities):
             
             if child_statement:
                 parent_statement = getattr(self.financials, attr_name)
-                parent_statement.increment(child_statement, *tagsToOmit, consolidating=True)
+                parent_statement.increment(child_statement, consolidating=True)
 
-    def _derive(self, *tagsToOmit, spread=False, sheet=None):
+    def _derive(self, spread=False, sheet=None):
         """
 
 
@@ -876,7 +772,6 @@ class BusinessUnit(History, Tags, Equalities):
         
         NOTE: ALWAYS RUN BusinessUnit.consolidate() BEFORE BusinessUnit.Derive()
         """
-        tags_to_omit = set(tagsToOmit) | {tConsolidated, tHardCoded}
         #need to change tagging rules above to make sure BU.consolidate() tags
         #lines appropriately. also need to make sure that inheritTagsFrom() does---------------------------------------------------------------
         #not pick up blockingTags
@@ -886,13 +781,8 @@ class BusinessUnit(History, Tags, Equalities):
         
         for statement in self.financials.ordered:
             if statement is not None:
-                
                 for line in statement.get_ordered():    
-                    if tags_to_omit & set(line.allTags):
-                        continue
-                        
-                    else:
-                        self._derive_line(line)
+                    self._derive_line(line)
 
     def _derive_line(self, line):
         """
@@ -904,10 +794,8 @@ class BusinessUnit(History, Tags, Equalities):
         Compute the value of a line using drivers stored in the instance.
         """
         
-        key = line.name.casefold()
+        key = line.tags.name.casefold()
         if key in self.drivers:
-
-##            line.clear()
             matching_drivers = self.drivers.get_drivers(key)
 
             for driver in matching_drivers:
@@ -918,7 +806,7 @@ class BusinessUnit(History, Tags, Equalities):
             
             for detail in line.get_ordered():
                 
-                if T_REPLICA in detail.allTags:
+                if detail.replica:
                     continue
                     # Skip replicas to make sure we apply the driver only once
                     # A replica should never have any details
@@ -1022,7 +910,7 @@ class BusinessUnit(History, Tags, Equalities):
                   "COMPS"]
         ##data
         data = {}
-        unit_name = str(self.name)
+        unit_name = str(self.tags.name)
         if len(unit_name) > data_width:
             #abbreviate unit name if its too long
             unit_name_parts = unit_name.split()
@@ -1198,8 +1086,8 @@ class BusinessUnit(History, Tags, Equalities):
                 c2 = "the same bbid as this unit. \n"
                 c3 = "unit id:         %s\n" % self.id.bbid
                 c4 = "known unit name: %s\n"
-                c4 = c4 % self.period.bu_directory[self.id.bbid].name
-                c5 = "new unit name:   %s\n\n" % self.name
+                c4 = c4 % self.period.bu_directory[self.id.bbid].tags.name
+                c5 = "new unit name:   %s\n\n" % self.tags.name
                 print(self.period.bu_directory)
                 c = c1+c2+c3+c4+c5
                 raise bb_exceptions.IDCollisionError(c)
@@ -1262,7 +1150,7 @@ class BusinessUnit(History, Tags, Equalities):
         """
         if not comps:
             comps = Components()
-        comps.setPartOf(self)
+        comps.relationships.set_parent(self)
         self.components = comps
         
     def _set_drivers(self, dr_c=None):
@@ -1278,10 +1166,10 @@ class BusinessUnit(History, Tags, Equalities):
         """
         if not dr_c:
             dr_c = DrContainer()
-        dr_c.setPartOf(self, recur = True)
+        dr_c.setPartOf(self, recur=True)
         self.drivers = dr_c
 
-    def _update_balance(self, *tagsToOmit):
+    def _update_balance(self):
         """
 
 
@@ -1292,8 +1180,6 @@ class BusinessUnit(History, Tags, Equalities):
         Ignore lines that we have already consolidated. Derive() can later
         overwrite these values. 
         """
-        tags_to_omit = set(tagsToOmit)
-        tags_to_omit.add(tConsolidated)
 
         starting_balance = self.financials.starting
         ending_balance = self.financials.ending
@@ -1306,13 +1192,13 @@ class BusinessUnit(History, Tags, Equalities):
             
             for name, starting_line in starting_balance._details.items():
 
-                if tags_to_omit & set(starting_line.allTags):
+                if starting_line.consolidated:
                     continue
                 elif starting_line.value is not None:
-                    ending_line = ending_balance.find_first(starting_line.name)
+                        ending_line = ending_balance.find_first(starting_line.tags.name)
                     self._update_lines(starting_line, ending_line)
 
-    def _update_lines(self, start_line, end_line, *tagsToOmit):
+    def _update_lines(self, start_line, end_line):
         """
 
 
@@ -1324,16 +1210,14 @@ class BusinessUnit(History, Tags, Equalities):
         ``start_line`` and assigns their values to the matching line in the
         ending balance sheet ``end_line``.
         """
-        tags_to_omit = set(tagsToOmit)
-        tags_to_omit.add(tConsolidated)
 
         if start_line._details:
             for name, line in start_line._details.items():
-                ending_line = end_line.find_first(line.name)
+                ending_line = end_line.find_first(line.tags.name)
 
                 self._update_lines(line, ending_line)
         else:
-            if tags_to_omit & set(end_line.allTags):
+            if end_line.consolidated:
                 pass
             elif start_line.value is not None:
                 end_line.set_value(start_line.value,
@@ -1351,7 +1235,7 @@ class BusinessUnit(History, Tags, Equalities):
         instance bbid namespace.
         """
         self.id.set_namespace(namespace)
-        self.id.assign(self.name)
+        self.id.assign(self.tags.name)
         # This unit now has an id in the namespace. Now pass our bbid down as
         # the namespace for all downstream components. 
         if recur:
