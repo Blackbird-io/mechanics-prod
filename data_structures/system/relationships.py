@@ -73,7 +73,7 @@ class Relationships:
         # check to see that owner and parent are of same type before assigning
         # level, otherwise leave level as None.  If owner/parent of same type,
         # and parent does not yet have a level, assign zero
-        if isinstance(self._parent, type(self._owner)):
+        if isinstance(self._owner, type(self._parent)):
             if self._parent.relationship.level is None:
                 self._parent.relationship._level = 0
 
