@@ -89,15 +89,6 @@ class Relationships:
     def parent(self):
         return self._parent
 
-    @property
-    def part_of(self):
-        par_name = None
-        if getattr(self.parent, "tags", None):
-            if getattr(self.parent.tags, "name", None):
-                par_name = deCase(self.parent.tags.name)
-
-        return par_name
-
     def set_parent(self, parent):
         """
 
