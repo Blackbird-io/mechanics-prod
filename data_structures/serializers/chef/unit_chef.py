@@ -844,7 +844,8 @@ class UnitChef:
 
         --``start_line`` line of bu.finansials.starting for new period
         --``ending_line`` line of bu.finansials.ending for past period, with
-        Excel cells already set.
+            Excel cells already set
+
         Tool for UnitChef._cell_link().  Method recursively walks
         through top-level LineItem details from the starting balance sheet
         ``start_line`` and sets them to reference the matching line in the
@@ -868,7 +869,8 @@ class UnitChef:
 
         --``unit`` is the new period unit
         --``start_bal`` copy of unit.financials.starting, to be displayed on the
-        Excel sheet.
+            Excel sheet
+
         Link cell formulas for starting financials to previous period's
         cells, if such exist.
         """
@@ -883,12 +885,12 @@ class UnitChef:
         """
 
 
-        UnitChef._sort_bypreference() -> list
+        UnitChef._sort_bypreference() -> list (of items' keys)
 
         --``items`` is any dict
-        --``preference_order`` any iterable giving the sorted order of items
-        items' keys which are not in preference_order will be tacked on at the
-        end in sorted order.
+        --``preference_order`` any iterable giving the sorted order of items;
+            items' keys which are not in preference_order will be tacked on at
+            the end in sorted order
         """
         result = []
 
