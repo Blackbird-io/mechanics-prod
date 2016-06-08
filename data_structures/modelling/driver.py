@@ -528,7 +528,12 @@ class Driver(TagsMixIn):
         if not set(self.workConditions["name"]).issubset([targetLineItem.tags.name]+[None]):
             return False
         else:
-            if not set(self.workConditions["partOf"]).issubset([targetLineItem.relationships.part_of]+[None]):
+            try:
+                part_of = targetLineItem.relationships.parent.name
+            except AttributeError:
+                part_of = None
+
+            if not set(self.workConditions["partOf"]).issubset([part_of]+[None]):
                 return False
             else:
                 if not set(self.workConditions["all"]).issubset(targetLineItem.tags.all + [None]):
