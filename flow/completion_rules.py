@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: flow.completion_rules
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: flow.completion_rules
 
 """
 
@@ -53,14 +52,15 @@ def check_quality_only(item):
     fail.
     """
     complete = False
+
     if item.guide.selection.finished_catalog:
         complete = True
     if not complete:
         standard = item.guide.quality.standard
         if item.guide.quality.current >= standard:
-            complete = True    
+            complete = True
     item.guide.complete = complete
-    #
+
     return complete
 
 def check_quality_or_attention(item):

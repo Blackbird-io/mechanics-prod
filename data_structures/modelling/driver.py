@@ -34,7 +34,8 @@ import bb_settings
 
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
-from data_structures.system.tags import Tags
+from data_structures.system.relationships import Relationships
+from data_structures.system.tags_mixin import TagsMixIn
 import formula_manager as FormulaManager
 
 from .parameters import Parameters
@@ -46,7 +47,7 @@ from .parameters import Parameters
 # n/a
 
 # Classes
-class Driver(Tags):
+class Driver(TagsMixIn):
     """
 
     Drivers apply formulas to business units.
@@ -112,6 +113,7 @@ class Driver(Tags):
     id                    instance of ID
     formula_bbid          bbid for formula that Driver applies
     position              int; from 0 to 100
+    relationships         instance of Relationships class
     signature             string; how the driver signs lines it modifies
     workConditions        dict; criteria for objects driver will process
 
@@ -141,13 +143,14 @@ class Driver(Tags):
         cls._FM = new_FM
         
     def __init__(self, signature=None):
-        Tags.__init__(self)        
-        
+        TagsMixIn.__init__(self)
+
         self.active = True
         self.conversion_table = dict()
         self.parameters = Parameters()
         self.formula_bbid = None
         self.id = ID()
+        self.relationships = Relationships(self)
         # TopicManager will assign a specific uuid to the driver when
         # during topic catalog configuration. Each Driver gets an id within the
         # namespace of its defining topic.
@@ -161,7 +164,7 @@ class Driver(Tags):
         self.workConditions = {}
         self.workConditions["name"] = ["FAIL"]
         self.workConditions["partOf"] = ["FAIL"]
-        self.workConditions["allTags"] = ["FAIL"]
+        self.workConditions["all"] = ["FAIL"]
         # We set condition values to a default that must be overwritten to make
         # sure default configuration doesnt apply to every lineItem.
 
@@ -239,7 +242,7 @@ class Driver(Tags):
         
         self._set_formula(formula)
         
-    def copy(self, enforce_rules=True):
+    def copy(self):
         """
 
 
@@ -252,10 +255,10 @@ class Driver(Tags):
         -- parameters
         -- workConditions
 
-        Original object copies tags to result using Tags.copyTagsTo(), so method
+        Original object copies tags to result using Tags._copy_tags_to(), so method
         will enforce tag rules when specified.
 
-        Result.parentObject points to the same object as original because the
+        Result.relationships.parent points to the same object as original because the
         default shallow copy runs on the ``parentObject`` attribute.
 
         NOTE: Result points to same object as original on ``id`` and
@@ -267,7 +270,8 @@ class Driver(Tags):
         NOTE2: Result points to the original conversion table.
         """
         result = copy.copy(self)
-        Tags.copyTagsTo(self, result, enforce_rules)
+        result.tags = self.tags.copy()
+        result.relationships = self.relationships.copy()
         result.parameters = copy.deepcopy(self.parameters)
         result.workConditions = copy.deepcopy(self.workConditions)
         return result
@@ -320,7 +324,7 @@ class Driver(Tags):
                 
         self.workConditions["name"]=names
         self.workConditions["partOf"]=parts
-        self.workConditions["allTags"]=tags
+        self.workConditions["all"]=tags
 
     def validate(self, check_data=True, parent=None):
         """
@@ -377,7 +381,7 @@ class Driver(Tags):
                 formula = self._FM.local_catalog.issue(self.formula_bbid)
                 # formula_catalog.issue() only performs dict retrieval and
                 # return for key.
-                bu = self.parentObject
+                bu = self.relationships.parent
 
                 params = self._build_params()
                 
@@ -404,12 +408,13 @@ class Driver(Tags):
 
                     line.xl.derived.calculations.append(data_cluster)
                 
-                # Each funcion is "disposable", so we explicitly delete the
+                # Each function is "disposable", so we explicitly delete the
                 # pointer after each use.
                 del formula
                 
             else:
                 c = "Driver cannot work on the specified LineItem."
+                print("Line:", line.name, " WC:", self.workConditions)
                 raise bb_exceptions.BBAnalyticalError(c)
         else:
             pass
@@ -461,7 +466,7 @@ class Driver(Tags):
         the original and converted keys.
         """
         if parent is None:
-            parent = self.parentObject
+            parent = self.relationships.parent
 
         period = None
         time_line = None
@@ -470,7 +475,7 @@ class Driver(Tags):
             period = parent.period
             
         if period:
-            time_line = period.parentObject
+            time_line = period.relationships.parent
         
         # Specific parameters trump general ones. Start with time_line, then
         # update for period (more specific) and driver (even more specific).
@@ -509,8 +514,8 @@ class Driver(Tags):
         False.
 
         To satisfy the allTags condition, an object must carry each tag in
-        instance.workConditions["allTags"] (ie, instance.wC[allTags] must be
-        a subset of target.allTags). 
+        instance.workConditions["all"] (ie, instance.wC[allTags] must be
+        a subset of target.tags.all).
 
         NOTE: driver.workConditions keys may include None as values to indicate
         absence of a constraint. Accordingly, match is evaluated against
@@ -520,13 +525,18 @@ class Driver(Tags):
         satisfied for all lineItems.
         """
         #must be careful not to split strings (names) into letters with set()
-        if not set(self.workConditions["name"]).issubset([targetLineItem.name]+[None]):
+        if not set(self.workConditions["name"]).issubset([targetLineItem.tags.name]+[None]):
             return False
         else:
-            if not set(self.workConditions["partOf"]).issubset([targetLineItem.partOf]+[None]):
+            try:
+                part_of = targetLineItem.relationships.parent.name
+            except AttributeError:
+                part_of = None
+
+            if not set(self.workConditions["partOf"]).issubset([part_of]+[None]):
                 return False
             else:
-                if not set(self.workConditions["allTags"]).issubset(targetLineItem.allTags + [None]):
+                if not set(self.workConditions["all"]).issubset(targetLineItem.tags.all + [None]):
                     return False
                 else:
                     return True

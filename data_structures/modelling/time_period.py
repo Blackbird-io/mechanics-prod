@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: data_structures.modelling.time_period
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: data_structures.modelling.time_period
 """
 
 Module defines TimePeriod class.
@@ -36,7 +35,8 @@ import bb_exceptions
 import bb_settings
 
 from data_structures.system.bbid import ID
-from data_structures.system.tags import Tags
+from data_structures.system.relationships import Relationships
+from data_structures.system.tags_mixin import TagsMixIn
 
 from .parameters import Parameters
 from .history import History
@@ -48,7 +48,7 @@ from .history import History
 # n/a
 
 # Classes
-class TimePeriod(History, Tags):
+class TimePeriod(History, TagsMixIn):
     """
 
     TimePeriod objects represent periods of time and store a snapshot of some
@@ -77,6 +77,7 @@ class TimePeriod(History, Tags):
     id                    instance of ID class
     length                float; seconds between start and end
     parameters            Parameters object, specifies shared parameters
+    relationships         instance of Relationships class
     start                 datetime.date; first date in period.
     ty_directory          dict; keys are strings, values are sets of bbids
     
@@ -86,7 +87,6 @@ class TimePeriod(History, Tags):
     copy()                returns new TimePeriod with a copy of content
     extrapolate_to()      updates inheritance then delegates to Tags
     ex_to_default()       creates result from seed, sets to target start/end
-    ex_to_special()       starts w target copy, new content is seed.ex(target)
     get_units()           return list of units from bbid pool
     get_lowest_units()    return list of units w/o components from bbid pool
     register()            conform and register unit
@@ -96,7 +96,7 @@ class TimePeriod(History, Tags):
     def __init__(self, start_date, end_date, content=None):
         
         History.__init__(self, recursive_attribute="content")
-        Tags.__init__(self)
+        TagsMixIn.__init__(self)
 
         self.start = start_date
         self.end = end_date
@@ -107,6 +107,7 @@ class TimePeriod(History, Tags):
         self.content = content
         self.id = ID()
         self.parameters = Parameters()
+        self.relationships = Relationships(self)
 
         # The current approach to indexing units within a period assumes that
         # Blackbird will rarely remove existing units from a model. both
@@ -133,7 +134,7 @@ class TimePeriod(History, Tags):
         self.content = None
         self._reset_directories()
         
-    def copy(self, enforce_rules=True):
+    def copy(self):
         """
 
 
@@ -143,11 +144,13 @@ class TimePeriod(History, Tags):
         Method returns a new TimePeriod object whose content is a class-specific
         copy of the caller content. 
         """
-        result = Tags.copy(self, enforce_rules)
+        result = copy.copy(self)
+        result.tags = self.tags.copy()
+        result.relationships = self.relationships.copy()
         result.start = copy.copy(self.start)
         result.end = copy.copy(self.end)
         if self.content:
-            new_content = self.content.copy(enforce_rules)
+            new_content = self.content.copy()
             result.set_content(new_content, updateID=False)
         #same id namespace (old model)
         #
@@ -165,10 +168,8 @@ class TimePeriod(History, Tags):
         Method updates tags on seed and target and then passes them to standard
         Tags.extrapolate_to() selection logic. 
         """
-        self.inheritTags(recur=True)
-        target.inheritTags(recur=True)
-        result = Tags.extrapolate_to(self, target)
-        # Tags method will delegate to appropriate class-specific subroutine.
+
+        result = self.ex_to_default(target)
 
         if result.end > self.end:
             result.set_history(self, clear_future=True, recur=True)
@@ -217,73 +218,23 @@ class TimePeriod(History, Tags):
         # stuff.
         alt_seed.clear()
         
-        result = alt_seed.copy(enforce_rules=True)
+        result = alt_seed.copy()
         # Use class-specific copy to create independent objects for any important
         # container-level data structures; Tags.copy() only creates new tag lists
         
-        result = Tags.ex_to_special(result, target, mode="at")
-        # Updates result with target tags. We use "at" mode to pick up all tags. 
+        result.tags = result.tags.extrapolate_to(target.tags)
+        # Updates result with target tags. We use "at" mode to pick up all tags.
         
         # Step 2: configure and fill container
         result.start = copy.copy(target.start)
         result.end = copy.copy(target.end)
         
         if seed.content:
-            new_content = seed.content.copy(enforce_rules=True)
+            new_content = seed.content.copy()
             result.set_content(new_content, updateID=False)
     
         # Step 3: return container
         return result        
-        
-    def ex_to_special(self, target):
-        """
-
-
-        TimePeriod.ex_to_special(target) -> TimePeriod
-
-
-        Method used for extrapolation when seed content must pick up special
-        attributes from target. 
-
-        NOTE: Method assumes that both seed and target have up-to-date inherited
-        tags. It is up to user to deliver accordingly.
-
-        Method creates a shell from seed, has that shell inherit target tags and
-        time points. Method then sets the result content to a new object
-        extrapolated from seed to target.
-
-        NOTE2: For best results, may want to clear and re-inherit tags on result
-        after method returns it. 
-        """
-        #
-        #step 1: make container
-        seed = self
-        alt_seed = copy.copy(seed)
-        #alt_target and target have identical attributes (alt_a is t_a)
-        alt_seed.clear()
-        #leave out the complicated stuff
-        result = alt_seed.copy(enforce_rules = True)
-        #use class-specific copy to create independent objects for any important
-        #container-level data structures; Tags.copy() only creates new tag lists 
-        #
-        #supress rule enforcement because result and target are conceptually the
-        #same object.
-        result = Tags.ex_to_special(target,result,mode = "at")
-        #updates result with those target tags it doesnt have already. "at" mode
-        #picks up all tags from target. other attributes stay identical because
-        #Tags uses a shallow copy.
-        
-        # Configure and fill container
-        result.start = copy.copy(target.start)
-        result.end = copy.copy(target.end)
-        
-        bu_seed = seed.content 
-        bu_target = target.content
-        bu_new = bu_seed.extrapolate_to(bu_target)
-        result.set_content(bu_new, updateID=False)
-        
-        # Return container
-        return result
 
     def get_units(self, pool):
         """

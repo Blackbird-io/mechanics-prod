@@ -31,7 +31,7 @@ n/a
 
 
 #imports
-#n/a
+# n/a
 
 
 
@@ -50,9 +50,9 @@ def build_basic_profile(target):
     Return set of all tags on target, with None stripped out. 
     """
     try:
-        criteria = set(target.allTags)
+        criteria = set(target.tags.all)
     except AttributeError:
-        criteria = set(target.tags.allTags)
+        raise
     criteria = criteria - {None}
     #
     return criteria
@@ -72,18 +72,31 @@ def build_combo_profile(target, model):
     object, or a BusinessUnit. 
     """
     #
-    parent = getattr(target, "parentObject", None)
-    grandpa = getattr(parent, "parentObject", None)
-    #
-    tags_up_one = getattr(parent, "allTags", [])
-    tags_up_two = getattr(grandpa, "allTags", [])
-    #
+    parent_rels = getattr(target, "relationships", None)
+    if parent_rels:
+        parent = getattr(parent_rels, "parent")
+    else:
+        parent = None
+
+    grandpa_rels = getattr(parent, "relationships", None)
+    if grandpa_rels:
+        grandpa = getattr(grandpa_rels, "parent")
+    else:
+        grandpa = None
+
+    parent_tags = getattr(parent, "tags", None)
+    tags_up_one = getattr(parent_tags, "all", [])
+
+    grandpa_tags = getattr(grandpa, "tags", None)
+    tags_up_two = getattr(grandpa_tags, "all", [])
+
     try:
-        criteria = set(target.allTags)
+        criteria = set(target.tags.all)
     except AttributeError:
-        criteria = set(target.tags.allTags)
+        raise
+
     criteria = criteria | set(tags_up_one) | set(tags_up_two)
-    criteria = criteria | set(model.allTags)
+    criteria = criteria | set(model.tags.all)
     criteria = criteria - {None}
     #
     return criteria
@@ -131,7 +144,3 @@ def get_product_names(model, question):
     ####should be in interview tools
    ##return a list of product names, top to bottom by size, that fits
    ##the input_element array; only runs when model is tagged "real names"
-
-
-
-    

@@ -33,7 +33,8 @@ import tools.for_printing as printing_tools
 
 from data_structures.guidance.guide import Guide
 from data_structures.system.print_as_line import PrintAsLine
-from data_structures.system.tags import Tags
+from data_structures.system.relationships import Relationships
+from data_structures.system.tags_mixin import TagsMixIn
 
 
 
@@ -42,7 +43,7 @@ from data_structures.system.tags import Tags
 #n/a
 
 #classes
-class Step(Tags, PrintAsLine):
+class Step(PrintAsLine, TagsMixIn):
     """
 
     Class for tracking logical steps. Has the tags and guide interface of
@@ -54,6 +55,7 @@ class Step(Tags, PrintAsLine):
 
     DATA:
     guide                 instance of Guide
+    relationships         instance of Relationships class
 
     FUNCTIONS:
     pre_format()          sets instance.formatted to a line with a checkbox
@@ -65,16 +67,16 @@ class Step(Tags, PrintAsLine):
     def __init__(self, name=None,
                  priority=DEFAULT_PRIORITY_LEVEL,
                  quality=DEFAULT_QUALITY_REQUIREMENT):
-        Tags.__init__(self)
         PrintAsLine.__init__(self)
-        #
+        TagsMixIn.__init__(self, name)
+
         self.guide = Guide(priority, quality)
-        self.setName(name)
-        
+        self.relationships = Relationships(self)
+
     def pre_format(self, **kargs):
         #custom formatting logic
-        if self.name:
-            kargs["name"] = self.name
+        if self.tags.name:
+            kargs["name"] = self.tags.name
         self.formatted = printing_tools.format_completed(self, **kargs)
         
         

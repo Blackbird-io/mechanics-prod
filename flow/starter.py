@@ -41,7 +41,7 @@ from data_structures.system.messenger import Messenger
 
 #globals
 intro_line = LineItem("introduction")
-intro_line.tag("start", "configuration")
+intro_line.tags.tag("start", "configuration")
 intro_line.guide.quality.set_standard(2)
     
 #classes
@@ -92,7 +92,7 @@ class Starter:
             model_name = model.portal_data["business_name"]
             if not model_name:
                 model_name = bb_settings.DEFAULT_MODEL_NAME
-            model.setName(model_name)
+            model.tags.set_name(model_name)
             #starter can also do configuration from other parts of
             #user_context
         else:
@@ -106,7 +106,7 @@ class Starter:
             model.time_line.build(ref_date)
 
         if not model.time_line.current_period.content:
-            company = BusinessUnit(model.name)
+            company = BusinessUnit(model.tags.name)
             model.time_line.current_period.set_content(company)
             model.target = model.time_line.current_period.content
 
