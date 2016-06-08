@@ -256,7 +256,7 @@ class LineItem(Statement):
             
                 if consolidating and self._consolidate is True:
                     self.tags.inherit_from(matching_line.tags)
-                    self.set_consolidated(True)
+                    self._consolidated = True
 
                     self.xl.consolidated.sources.append(matching_line)
 

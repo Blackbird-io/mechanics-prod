@@ -1192,7 +1192,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
             
             for name, starting_line in starting_balance._details.items():
 
-                if starting_line.consolidated:
+                if starting_line.has_been_consolidated:
                     continue
                 elif starting_line.value is not None:
                     ending_line = ending_balance.find_first(starting_line.name)
@@ -1217,7 +1217,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
                 self._update_lines(line, ending_line)
         else:
-            if end_line.consolidated:
+            if end_line.has_been_consolidated:
                 pass
             elif start_line.value is not None:
                 end_line.set_value(start_line.value,
