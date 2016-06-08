@@ -76,10 +76,7 @@ class DrContainer(Components, TagsMixIn):
     DATA:
     dr_blank              empty Driver() object for checking driver registration
     dr_directory          dictionary of bbid:driver objects
-    name                  name property from Tags class
-    relationships         instance of Relationships class
-    tags                  instance of Tags class
-    
+
     FUNCTIONS:
     add_item()             adds bbid for applicable tags, object to directory
     copy()                returns a deep copy of self and all keys and drivers

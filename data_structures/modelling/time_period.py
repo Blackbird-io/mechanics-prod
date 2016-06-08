@@ -76,10 +76,8 @@ class TimePeriod(History, TagsMixIn):
     end                   datetime.date; last date in period 
     id                    instance of ID class
     length                float; seconds between start and end
-    name                  name property from Tags class
     parameters            Parameters object, specifies shared parameters
     relationships         instance of Relationships class
-    tags                  instance of Tags class
     start                 datetime.date; first date in period.
     ty_directory          dict; keys are strings, values are sets of bbids
     

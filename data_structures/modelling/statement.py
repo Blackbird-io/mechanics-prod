@@ -90,9 +90,7 @@ class Statement(Equalities, TagsMixIn):
     DATA:
     POSITION_SPACING      default distance between positions
     consolidated          whether Statement has been consolidated
-    name                  name property from Tags class
     relationships         instance of Relationships class
-    tags                  instance of Tags class
 
     FUNCTIONS:
     add_line()            add line to instance

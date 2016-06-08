@@ -70,9 +70,6 @@ class LineItem(Statement):
     consolidate           bool; whether or not to consolidate line item
     guide                 instance of Guide object
     log                   list of entries that modified local value
-    name                  name property from Tags class
-    relationships         instance of Relationships class
-    tags                  instance of Tags class
     value                 instance value
     xl                    instance of LineData record set
     

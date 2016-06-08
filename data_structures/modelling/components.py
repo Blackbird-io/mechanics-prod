@@ -61,9 +61,7 @@ class Components(dict, TagsMixIn, Equalities):
     DATA:
     by_name               dict; keys are unit names, values are unit bbids
     keyAttributes         list; CLASS; keep empty to follow standard dict logic
-    name                  name property from Tags class
     relationships         instance of Relationships class
-    tags                  instance of Tags class
 
     FUNCTIONS:
     add_item()            adds an object to self, keyed under obj's bbid

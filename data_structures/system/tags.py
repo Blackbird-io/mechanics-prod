@@ -20,7 +20,7 @@ FUNCTIONS:
 N/A
 
 CLASSES:
-Tags                  mix-in class that provides tagging, naming, and belonging
+Tags                  composition class that provides tagging and naming
 ====================  =========================================================
 """
 
@@ -57,31 +57,21 @@ class Tags:
     New tags are added to the optional list by default. Removing a tag from an
     object removes it from both required and optional lists simultaneously.
 
-    Each Tags object has one special tag: ``name``.
-
-    "name" tag:
-    Dynamic attributes of each Tags object. Special tag should be modified
-    through its respective attribute (Tags.name) or associated methods.
-
-    The "name" tag is stored in required[0]; the object's name is the value
-    of required[0].
+    Each Tags object has one special tag: ``name``. ``name`` is a property of
+    each Tags object. The ``name`` tag is stored in required[0]; the object's
+    name is the value of required[0]. ``name`` can be set through the
+    ``set_name()`` method.
 
     NOTE: Direct changes to required[0] (instance-level state for ``name``) are
     not recommended.
-
-    For ``name``, the dynamicSpecialTagManager descriptor routes gets and sets
-    of the attribute to the right slot in ``required``. The descriptor also
-    transforms deletions of ``name`` attribute to None value in the proper
-    position of ``required``.
-
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
-    all                   list; dynamic, returns requiredTags+optionalTags
-    name                  name of instance, dynamic, value of requiredTags[0]
-    optional              list; dynamic, returns _optionalTags
+    all                   list; dynamic, returns Tags.required + Tags.optional
+    name                  name of instance, dynamic, value of Tags.required[0]
+    optional              list; dynamic, returns _optional
     required              list; tags required for matching
     spacer_req            string; CLASS, separates req tags from optional in all
     spacer_opt            string; CLASS, separates _opt from _inh tags in opt
@@ -104,9 +94,13 @@ class Tags:
         self._optional = []
         self.required = [None]
 
-        # self.name is requiredTags[0] so list should have minimum length of 1;
+        # self.name is Tags.required[0] so list should have minimum length of 1;
         # actual values set through methods
         self.set_name(name)
+
+    @property
+    def name(self):
+        return self.required[0]
 
     class _dyn_OptTManager:
         """
@@ -121,7 +115,7 @@ class Tags:
             return oTags
 
         def __set__(self, instance, value):
-            c = "Direct write to ``optionalTags`` prohibited."
+            c = "Direct write to ``Tags.optional`` prohibited."
             raise bb_exceptions.ManagedAttributeError(c)
 
     # dynamic class attribute:
@@ -146,40 +140,14 @@ class Tags:
     # allTags is a Tags class attribute managed by the descriptor above
     all = _dyn_AllTManager()
 
-    class _dyn_SpecTManager:
-        """
-
-        Descriptor class that handles ``name`` attribute.
-        """
-
-        def __init__(self, targetAttribute):
-            self.target = targetAttribute
-
-        def __get__(self, instance, owner):
-            if self.target == "name":
-                return instance.required[0]
-
-        def __set__(self, instance, value):
-            if self.target == "name":
-                instance.required[0] = value
-
-        def __delete__(self, instance):
-            if self.target == "name":
-                instance.required[0] = None
-
-    # Tags.name is a dynamic class attribute linked to
-    # self.required and managed by the descriptor above
-    name = _dyn_SpecTManager(targetAttribute="name")
-
     def copy(self):
         """
 
 
-        Tags.copy([ = True]) -> obj
+        Tags.copy() -> obj
 
 
-        Method returns a shallow copy of the instance. If ```` is
-        True, copy follows ``out`` rules.
+        Method returns a shallow copy of the instance.
         """
         result = copy.copy(self)
         self._copy_tags_to(result)
@@ -190,20 +158,17 @@ class Tags:
         """
 
 
-        Tags.ex_to_special(target[, mode = "at"]) -> obj
+        Tags.extrapolate_to(target) -> obj
 
+        --``target`` is another instance of Tags
 
         Method provides a way to cross-pollinate tags between objects. Method
-        returns a shallow copy of the seed (caller) instance. The seed tags,
-        after passing through rules, provides the template. The method
-        then adds new tags from target one field at a time (new items in
-        target._optional go on result._optional).
+        returns a shallow copy of the seed (caller) instance. The seed tags
+        provide the template. The method then adds new tags from target, one
+        field at a time (new items in target._optional go on result._optional).
 
         Method does not look at target.required[0]. Method applies target
         tags in sorted() order.
-
-        The optional ``mode`` argument describes the set of rules Tags.tags.tag()
-        applies when moving target tags to result.
         """
         seed = self
         result = Tags.copy(seed)
@@ -231,7 +196,7 @@ class Tags:
 
 
         Method adds tags found on the source to self as inherited tags. Method
-        skips source.required[0] (name and partOf).
+        skips source.required[0] (name).
 
         If ``noDuplicates`` is True, method will not copy any source tags that
         the instance already carries. In this mode, a SINGLE existing tag will
@@ -259,50 +224,45 @@ class Tags:
         """
 
 
-        T.tags.set_name(newName) -> None
-
+        Tags.set_name(newName) -> None
 
         Method for setting the name of an object.
 
-        The name specified via this method is set as the object's name attribute
-        and recorded in object.required[0].
+        The name specified via this method is recorded in object.required[0].
 
         All "names" in the Blackbird environment are required tags.
-        If a suitor object specifies a name condition, a target object must have
-        an identical name to be a match.
+        If a suitor object specifies a name condition, a target object must
+        have an identical name to be a match.
 
         Names are distinct from other required tags in that within a given
         container, names should generally be unique. That is, a given container
         object should generally contain one object with a specific name. By
         contrast, a container object may contain multiple objects with identical
         other required (required[1:]). The decision of whether to follow
-        the unique name policy is left to higher-level objects. Common
-        exceptions include Financials objects, which create replicas with
-        identical names to manage certain records.
+        the unique name policy is left to higher-level objects.
 
-        Names are stored in the first position of required and managed
-        through the dynamicSpecialTagManager descriptor. Names are optional. If
-        no name is specified, the required[0] position will be filled with a
-        None object. Deleting a name similarly sets required[0] to None.
+        Names are stored in the first position of object.required and are
+        retrieved through the object.name property. Names are optional. If
+        no name is specified, the object.required[0] position will be filled
+        with a None object.
         """
-        self.name = deCase(newName)
+        self.required[0] = deCase(newName)
 
     def tag(self, *newTags, field="opt", permit_duplicates=False):
         """
 
 
-        Tags.tag( *newTags[,
-                  field = "opt"[,
-                  permit_duplicates = False]]]) -> None
+        Tags.tag() -> None
 
-
-        Method appends tags to an instance.
-
-        NOTE 1: Method automatically **decases** all tags.
+        --``*newTags`` is a list of tags to include on the instance
 
         The ``field`` argument regulates tag placement on the instance:
         -- "req" means last position of instance.required
         -- "opt" [ default ] means last position of instance._optional
+
+        --``permit_duplicates`` bool, whether or not to permit duplicate tags
+
+        NOTE: Method automatically **decases** all tags.
 
         Tags should generally be optional. When in doubt, add more tags.
 
