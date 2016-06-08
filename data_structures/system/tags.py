@@ -1,7 +1,7 @@
 # PROPRIETARY AND CONFIDENTIAL
 # Property of Blackbird Logical Applications, LLC
-# Copyright Blackbird Logical Applications, LLC 2015
-# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 # Blackbird Environment
 # Module: data_structures.system.tags
@@ -9,24 +9,19 @@
 
 Module defines Tags class and provides certain related functions.
 
-**NOTE: Class variables set at end of module (after class definition)**
-
-====================  ==========================================================
+====================  =========================================================
 Attribute             Description
-====================  ==========================================================
+====================  =========================================================
 
 DATA:
-m_spacer_opt          string for Tags.spacer_opt
-m_spacer_req          string for Tags.spacer_req
-special_tags          list of special extrapolation triggers
-m_hands_off           list of tags that prohibit modification altogether
+N/A
 
 FUNCTIONS:
-deCase()              local rebinding for Tools.Parsing.deCase
+N/A
 
 CLASSES:
 Tags                  mix-in class that provides tagging, naming, and belonging
-====================  ==========================================================
+====================  =========================================================
 """
 
 
@@ -45,7 +40,6 @@ from tools.parsing import deCase
 # n/a
 
 # classes
-# NOTE: Class variables set at the bottom of the module (after class definition)
 class Tags:
     """
 
@@ -63,124 +57,61 @@ class Tags:
     New tags are added to the optional list by default. Removing a tag from an
     object removes it from both required and optional lists simultaneously.
 
-    Each Tags object has two special tags: ``name`` and ``partOf``.
+    Each Tags object has one special tag: ``name``.
 
     "name" tag:
     Dynamic attributes of each Tags object. Special tag should be modified
     through its respective attribute (Tags.name) or associated methods.
 
-    "partOf" tag:
-    partOf is a property of tags that accesses the Tags.Relationship attribute
-    "part_of". The partOf property will automatically set
-    requiredTags[1] = parentObject name when called by get and return the same
-    value (requiredTags[1]).
+    The "name" tag is stored in required[0]; the object's name is the value
+    of required[0].
 
-    The "name" tag is stored in requiredTags[0]; the object's name is the value
-    of requiredTags[0]. The "partOf" tag is stored in requiredTags[1] and
-    references the name of the parentObject.
+    NOTE: Direct changes to required[0] (instance-level state for ``name``) are
+    not recommended.
 
-    If a Tags object specifies a parentObject, the instance will
-    **always** overwrite reqTags[1] with the parent's name. The partOf property
-    will allow direct changes to .relationships.part_of, but immediately "forget" them
-    following a call to the attribute. To permanently alter the value of
-    .relationships.part_of, set .relationships.parent to None.
-
-    NOTE: Direct changes to requiredTags[:2] (instance-level state for ``name``
-    ``partOf``) are not recommended.
-
-    Instance.relationships.part_of may not be especially informative on it's own, since the
-    container object (``parentObject``) may not have a name attribute. Even if
-    the container does have a name attribute, it may be difficult to locate by
-    using that attribute. For that reason, instance.relationships.parent
-    stores a pointer to the parent object directly.  This can also be accessed
-    (for backwards-compatibility's sake) through the instance.relationships.parent
-    property.
-
-    NOTE: instance.relationships.parent (instance.relationships.parent) may be an object
-    OTHER THAN THE DIRECT CONTAINER of the instance. For example, in standard
-    usage, a BusinessUnit will store Drivers in self.Drivers. The .relationships.parent
-    attribute for each driver in such a case would be set to the BusinessUnit,
-    not BusinessUnit.Drivers. The higher-level hook providers the Driver with
-    easy access to BU.financials and any other attributes it may need for
-    computation. A hook to BusinessUnit.Drivers would not effectively
-    accomplish that goal.
-
-    For both ``name`` and ``partOf``, the dynamicSpecialTagManager descriptor
-    and property (respectively) route gets and sets of the attribute to the
-    right slot in requiredTags. The descriptor and property also transform
-    deletions of ``name`` and ``partOf`` attributes to None values in the
-    proper positions of requiredTags.
+    For ``name``, the dynamicSpecialTagManager descriptor routes gets and sets
+    of the attribute to the right slot in ``required``. The descriptor also
+    transforms deletions of ``name`` attribute to None value in the proper
+    position of ``required``.
 
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
-   ._inherited        list; stores tags instance inherited from other objs
-    _optional             list; tags applied to instance
     all                   list; dynamic, returns requiredTags+optionalTags
-    autoRegister          bool; CLASS attr, whether tag() should add to catalog
-    tagManager            obj; CLASS pointer to tagManager object
-    connected             bool; CLASS, True if connected to a tagManager
-    hands_off             list; CLASS, tags that prohibit any modification
     name                  name of instance, dynamic, value of requiredTags[0]
-    optional              list; dynamic, returns _optionalTags +._inherited
-    reg_req               bool; CLASS, if False won't apply tags not in catalog
+    optional              list; dynamic, returns _optionalTags
     required              list; tags required for matching
     spacer_req            string; CLASS, separates req tags from optional in all
     spacer_opt            string; CLASS, separates _opt from _inh tags in opt
-    spec_tags             list; CLASS, tags that trigger special extrapolation
-    tagSources            list; CLASS, attributes from which obj inherits tags
-
+    tag_sources            list; attributes from which obj inherits tags
 
     FUNCTIONS:
-    disconnect            CLASS METHOD: unhooks Tag objects from tagManager
-    class dyn_OptTManager descriptor for ``optionalTags``
-    class dyn_AllTManager descriptor for ``allTags``
-    class dyn_SpecTManager  descrptor for ``name`` and ``partOf``
-    checkOrdinary()       returns True iff target has no spec_tags
-    checkTouch()          returns True iff target has no hands_off tags
-    clearInheritedTags()  sets ._inh to an empty list
     copy()                returns a copy of an object with own tag lists
-    copyTagsTo()          changes target tags to a copy of self tags
-    copyTagsTo_rules_on() applies tags while following tagManager.rules
-    copyTagsTo_rules_off()  applies tags while ignoring tagManager.rules
-    ex_to_default()       returns a Tags.copy()
-    ex_to_special()       creates a Tags.copy(), adds source tags
-    inheritTags()         inherits tags from every attribute named in tagSources
-    inheritTagsFrom()     adds tags on a different object to instance
-    reg_req_on()          sets class to require tag registration before tagging
-    reg_req_off()         sets class to permit unregistered tagging
-    registerTag()         registers tag in tag catalog
-    setTagManager()       CLASS; sets pointer to tag manager
-    setName()             sets instance.reqTags[0]
+    extrapolate_to()      returns a Tags.copy()
+    inherit()             inherits tags from every attribute named in tagSources
+    inherit_from()        adds tags on a different object to instance
+    set_name()            sets instance.reqTags[0]
     tag()                 adds tag to object, if parameters allow
-    unTag()               removes all instances of tag from object
+    untag()               removes all instances of tag from object
     ====================  ======================================================
     """
     # class attributes:
-    # irrelevantAttributes = ["parentObject"]
     BLACKBIRD_STAMP = "|BB|"
     spacer_opt = BLACKBIRD_STAMP+"endOwnOptionalTags"
     spacer_req = BLACKBIRD_STAMP+"endRequiredTags"
-    tagSources = []
-
-    # tagSources must be a class attribute to make sure running Tags.__init__ on
-    # descendant classes like BusinessUnit does not block their class-level
-    # tagSources. Alternatively, would have to add tagSources as instance-level
-    # data in the child classes.
 
     def __init__(self, name=None):
-        self._inherited = []
         self._optional = []
-        self.required = [None, None]
+        self.required = [None]
+        self.tag_sources = []
 
-        # self.name is requiredTags[0] and self.partOf is requiredTags[1] so
-        # list should have minimum length of 2; actual values set through
-        # methods
-        self.setName(name)
+        # self.name is requiredTags[0] so list should have minimum length of 1;
+        # actual values set through methods
+        self.set_name(name)
 
-    class dyn_OptTManager:
+    class _dyn_OptTManager:
         """
 
         Descriptor class that compiles and returns a list of optional tags on an
@@ -190,7 +121,7 @@ class Tags:
 
         def __get__(self, instance, owner):
             oTags = instance._optional + [instance.spacer_opt]
-            oTags = oTags + instance._inherited
+            oTags = oTags
             return oTags
 
         def __set__(self, instance, value):
@@ -198,9 +129,9 @@ class Tags:
             raise bb_exceptions.ManagedAttributeError(c)
 
     # dynamic class attribute:
-    optional = dyn_OptTManager()
+    optional = _dyn_OptTManager()
 
-    class dyn_AllTManager:
+    class _dyn_AllTManager:
         """
 
         Descriptor class that compiles and returns a list of all tags on an
@@ -217,20 +148,12 @@ class Tags:
             raise bb_exceptions.ManagedAttributeError(c)
 
     # allTags is a Tags class attribute managed by the descriptor above
-    all = dyn_AllTManager()
+    all = _dyn_AllTManager()
 
-    class dyn_SpecTManager:
+    class _dyn_SpecTManager:
         """
 
-        Descriptor class that returns values for instance.name and instance.relationships.part_of.
-        Descriptor also writes new values to requiredTags at the appropriate index.
-        On deletion, replaces the special tags with None objects in requiredTags.
-
-        For .relationships.part_of gets, the descriptor first checks if the caller has a
-        .relationships.parent. If so, the descriptor updates caller.required[1] with the
-        parentObject's name. The descriptor assumes name is None if the parentObject
-        is missing the attribute. In all scenarios, the descriptor then returns
-        whatever is in requiredTags[1].
+        Descriptor class that handles ``name`` attribute.
         """
 
         def __init__(self, targetAttribute):
@@ -250,21 +173,7 @@ class Tags:
 
     # Tags.name is a dynamic class attribute linked to
     # self.required and managed by the descriptor above
-    name = dyn_SpecTManager(targetAttribute="name")
-
-    def clearInheritedTags(self):
-        """
-
-
-        Tags.clearInheritedTags() -> None
-
-
-        Method sets instance._inherited to an empty list.
-
-        If ``recur`` is True, method calls clearInheritedTags(recur=True) on
-        every attribute in instance.tagSources.
-        """
-        self._inherited = []
+    name = _dyn_SpecTManager(targetAttribute="name")
 
     def copy(self):
         """
@@ -277,61 +186,9 @@ class Tags:
         True, copy follows ``out`` rules.
         """
         result = copy.copy(self)
-        self.copyTagsTo(result)
+        self._copy_tags_to(result)
 
         return result
-
-    def copyTagsTo(self, target):
-        """
-
-
-        Tags.copyTagsTo(target[,  = True]) -> None
-
-        NOTE: Method changes target **in place**.
-
-        Method copies tags from instance to target, attribute by attribute.
-        Method delegates all actual work to either copyTagsTo_rules_on or
-        copyTagsTo_rules_off.
-
-        If ```` == True, method follows the ``out`` rules of
-        inheritance for each tag.
-
-        NOTE2: Method may loop indefinitely if tagManager.rules contains
-        circular references.
-
-        NOTE3: Method delegates to Relationship class to provide a copy for
-        that attribute. relationships.parent is preserved. Probably this should
-        be in Tags.copy, but it can't be currently--Driver class uses
-        Tags.copyTagsTo to copy itself (a direct call), which bypasses
-        Tags.copy.  Without modifying Driver (and possibly other classes),
-        adding the code for dealing with the relationships class had to go here.
-        """
-        fields = ["required", "_optional", "_inherited"]
-        for attr in fields:
-            t_field = None
-            source_tags = getattr(self, attr)
-            if attr == "required":
-                t_field = "req"
-                source_tags = source_tags[2:]
-                preserve = getattr(target, attr)[:2]
-                # Upgrade-S: can do a direct call instead of getattr
-            else:
-                if attr == "._inherited":
-                    t_field = "inh"
-            check_tags = set(source_tags)
-            #
-            setattr(target, attr, [])
-            # make independent blank lists for the target to make sure method
-            # doesn't accidentally modify source attributes (ie, when it is
-            # called as part of Tags.copy)
-            #
-            new_tags = getattr(target, attr)
-            if attr == "required":
-                new_tags.extend(preserve)
-                # preserve target name, partOf
-            #
-            for t in source_tags:
-                new_tags.append(t)
 
     def extrapolate_to(self, target):
         """
@@ -346,22 +203,20 @@ class Tags:
         then adds new tags from target one field at a time (new items in
         target._optional go on result._optional).
 
-        Method does not look at target.required[:2]. Method applies target
+        Method does not look at target.required[:1]. Method applies target
         tags in sorted() order.
 
         The optional ``mode`` argument describes the set of rules Tags.tags.tag()
         applies when moving target tags to result.
         """
-        target.inherit(recur=True)
-
         seed = self
         result = Tags.copy(seed)
         # maintain all tags on seed
-        fields = ["required", "_optional", "_inherited"]
+        fields = ["required", "_optional"]
         for attr in fields:
             targ_tags = getattr(target, attr)
             if attr == "required":
-                targ_tags = targ_tags[2:]
+                targ_tags = targ_tags[1:]
             targ_tags = set(targ_tags)
             r_res_tags = getattr(result, attr)
             res_tags = set(r_res_tags)
@@ -379,7 +234,7 @@ class Tags:
         T.inherit() -> None
 
 
-        Method runs instance.inheritFrom() every object whose attribute
+        Method runs instance.inherit_from() every object whose attribute
         name is stored in tagSources.
 
         If ``recur`` == True, method runs inheritTags() on every source object
@@ -390,27 +245,22 @@ class Tags:
         Method will generate AttributeErrors if a source attribute does not
         support a Tags interface.
         """
-        for attr in self.tagSources:
+        for attr in self.tag_sources:
             source = getattr(self, attr)
             if source:
                 if recur:
                     source.inherit(recur=True)
-                self.inheritFrom(source)
+                self.inherit_from(source)
 
-    def inheritFrom(self, source, noDuplicates=True):
+    def inherit_from(self, source, noDuplicates=True):
         """
 
 
-        Tags.inheritFrom() -> None
+        Tags.inherit_from() -> None
 
 
         Method adds tags found on the source to self as inherited tags. Method
-        skips source.required[:2] (name and partOf).
-
-        The method will not copy ``doNotInherit`` tags. By default, if
-        doNotInherit is blank, method will strip out doNotTouchTag and
-        dropDownReplicaTag (replicas are a phenomenon of local context, thus
-        it's inappropriate to apply them elsewhere).
+        skips source.required[:1] (name and partOf).
 
         If ``noDuplicates`` is True, method will not copy any source tags that
         the instance already carries. In this mode, a SINGLE existing tag will
@@ -421,27 +271,24 @@ class Tags:
 
         This method evaluates tags as casefolded objects to the extent possible.
         """
-        sourceTags = source.required[2:] + source.optional[:]
-        # dni = [doNotTouchTag, dropDownReplicaTag]
-        # if doNotInherit != tuple():
-        #     dni = doNotInherit
+        sourceTags = source.required[1:] + source.optional[:]
+
         if noDuplicates:
             sourceTags = set(sourceTags) - set(self.all)
+
         # source tags is now **unordered**
         sourceTags = sourceTags
         sourceTags = sorted(sourceTags)
         # turn sourceTags into a sorted list to make sure tags are always added
         # in the same order; otherwise, pseudo-random order of tags in a set
         # wrecks HAVOC on comparisons
-        self.tag(*sourceTags, field="inh")
-        # NOTE: can preserve order by expanding dni and go through tags one by
-        # one. dni = set(dni)+set(self.all). if tag in dni: pass, else tag()
+        self.tag(*sourceTags)
 
-    def setName(self, newName):
+    def set_name(self, newName):
         """
 
 
-        T.tags.setName(newName) -> None
+        T.tags.set_name(newName) -> None
 
 
         Method for setting the name of an object.
@@ -457,15 +304,15 @@ class Tags:
         container, names should generally be unique. That is, a given container
         object should generally contain one object with a specific name. By
         contrast, a container object may contain multiple objects with identical
-        other requiredTags (requiredTags[2:]). The decision of whether to follow
+        other required (required[1:]). The decision of whether to follow
         the unique name policy is left to higher-level objects. Common
         exceptions include Financials objects, which create replicas with
         identical names to manage certain records.
 
-        Names are stored in the first position of requiredTags and managed
+        Names are stored in the first position of required and managed
         through the dynamicSpecialTagManager descriptor. Names are optional. If
-        no name is specified, the requiredTags[0] position will be filled with a
-        None object. Deleting a name similarly sets requiredTags[0] to None.
+        no name is specified, the required[0] position will be filled with a
+        None object. Deleting a name similarly sets required[0] to None.
         """
         self.name = deCase(newName)
 
@@ -480,55 +327,25 @@ class Tags:
 
         Method appends tags to an instance.
 
-        NOTE: Method automatically **decases** all tags.
+        NOTE 1: Method automatically **decases** all tags.
 
         The ``field`` argument regulates tag placement on the instance:
         -- "req" means last position of instance.required
         -- "opt" [ default ] means last position of instance._optional
-        -- "inh" means last position of instance._inherited
 
         Tags should generally be optional. When in doubt, add more tags.
 
         If ``permit_duplicates`` is False, method will skip (no-op) tags
         that already appear in the specified field on the on the instance.
-
-        NOTE2: An instance's ``name`` and ``partOf`` are set directly via a
-        descriptor. These tags always skip catalog registration.
-
-        For tags registered to a rule in the catalog, ``mode`` controls which
-        rule the method follows:
-        -- "at" [ default ] means tagging is taking place within the same object
-        -- "up" means tagging is taking place during inheritance
-        -- "out" means tagging is taking place during copying.
-
-        NOTE3: Use of detag() rules is highly discouraged.
-
-        For best results, create independent functions that explicitly define
-        scenarios during which a tag should be removed or replaced.
-
-        Rule[x].detag rules apply only to tags "behind" them. As such, the
-        impact of detag rules varies based on the state of an object's tags
-        at the time Tags.tag() encounters the detag trigger. Tags.tag() applies
-        detag rules as soon as it encounters their trigger tag. At that time,
-        the instance may not have all of the tags the creator of the detag rule
-        expects it to have. For example, the instance could be inheriting tags
-        after they have been sorted from a set. The order of these tags during
-        inheritance could thus differ from the order on the seed object.
-        Application of a detag rule to a pure deepcopy of the seed object could
-        then yield a different outcome than its application during normal
-        tagging.
-
         """
         attrs = {}
         attrs["r"] = attrs["req"] = attrs["required"] = "required"
         attrs["o"] = attrs["opt"] = attrs["optional"] = "_optional"
-        attrs["i"] = attrs["inh"] = attrs["inherited"] = "_inherited"
         attrs[0] = attrs["required"] = attrs["r"]
         attrs[1] = attrs["_optional"] = attrs["o"]
-        attrs[2] = attrs["_inherited"] = attrs["i"]
-        #
+
         real_thing = getattr(self, attrs[field])
-        #
+
         for tag in newTags:
             # NOTE: automatically decase tags!
             tag = deCase(tag)
@@ -537,39 +354,71 @@ class Tags:
             if tag not in real_thing or permit_duplicates:
                 real_thing.append(tag)
 
-    def unTag(self, badTag, checkInherited=True):
+    def untag(self, badTag):
         """
 
 
-        Tags.unTag(badTag) -> None
+        Tags.untag(badTag) -> None
 
+        --``badTag`` tag to remove from instance
 
         Method to remove tags from an instance.
 
-        If badTag is located in requiredTags[0] or requiredTags[1], method
-        replaces the badTag with None. Method calls itself upon finding and
-        removing the first iteration of the badTag to check for any others.
-
-        If ``checkInherited`` == True, method will remove the badTag from the
-        instance's ._inherited.
+        If badTag is located in required[0], method replaces the badTag with
+        None. Method calls itself upon finding and removing the first iteration
+        of the badTag to check for any others.
         """
-        # have to nest the recursive call in the if statements, otherwise method
-        # will loop indefinitely. that is, only call the method again if the
-        # badTag was already found once and removed
-        if badTag in self.required[:2]:
+
+        # have to nest the recursive call in the if statements, otherwise
+        # method will loop indefinitely. that is, only call the method again if
+        # the badTag was already found once and removed
+
+        if badTag in self.required[:1]:
             location = self.required.index(badTag)
             self.required[location] = None
-            self.unTag(badTag)
+            self.untag(badTag)
 
-        if badTag in self.required[2:]:
+        if badTag in self.required[1:]:
             self.required.remove(badTag)
-            self.unTag(badTag)
+            self.untag(badTag)
 
         if badTag in self._optional:
             self._optional.remove(badTag)
-            self.unTag(badTag)
+            self.untag(badTag)
 
-        if checkInherited:
-            if badTag in self._inherited:
-                self._inherited.remove(badTag)
-                self.unTag(badTag)
+    #*************************************************************************#
+    #                          NON-PUBLIC METHODS                             #
+    #*************************************************************************#
+    def _copy_tags_to(self, target):
+        """
+
+
+        Tags._copy_tags_to(target) -> None
+
+        --``target`` is another instance of Tags on which to transplant tags
+
+        NOTE: Method changes target **in place**.
+
+        Method copies tags from instance to target, attribute by attribute.
+        """
+
+        fields = ["required", "_optional"]
+        for attr in fields:
+            source_tags = getattr(self, attr)
+            if attr == "required":
+                source_tags = source_tags[1:]
+                preserve = getattr(target, attr)[:1]
+                # Upgrade-S: can do a direct call instead of getattr
+
+            setattr(target, attr, [])
+            # make independent blank lists for the target to make sure method
+            # doesn't accidentally modify source attributes (ie, when it is
+            # called as part of Tags.copy)
+
+            new_tags = getattr(target, attr)
+            if attr == "required":
+                new_tags.extend(preserve)
+                # preserve target name
+
+            for t in source_tags:
+                new_tags.append(t)

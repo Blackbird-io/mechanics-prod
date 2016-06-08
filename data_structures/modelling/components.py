@@ -1,10 +1,10 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
-#Blackbird Environment
-#Module: data_structures.modelling.components
+# Blackbird Environment
+# Module: data_structures.modelling.components
 """
 
 Module defines Components class, a container for business units. 
@@ -61,17 +61,18 @@ class Components(dict, TagsMixIn, Equalities):
     DATA:
     by_name               dict; keys are unit names, values are unit bbids
     keyAttributes         list; CLASS; keep empty to follow standard dict logic
+    name                  name property from Tags class
+    relationships         instance of Relationships class
+    tags                  instance of Tags class
 
     FUNCTIONS:
     add_item()            adds an object to self, keyed under obj's bbid
-    clearInheritedTags()  runs Tags method and then repeats for each component
     copy()                returns deep copy of instance and contents
     find_bbid()           return bbid that contains a known string
     get_living()          returns a bbid:bu dict of all bus that are alive
     getOrdered()          legacy interface for get_ordered() 
     get_ordered()         returns a list of values, ordered by key
     get_tagged()          return a dict of units with tags
-    inheritTags()         runs default routine, then inherits from all comps
     refresh_names()       clear and rebuild name-to-bbid dictionary
     remove_item()         remove an item from components
     ====================  ======================================================
@@ -83,7 +84,6 @@ class Components(dict, TagsMixIn, Equalities):
     #obstacles to semantically meaningful implementation.
     #
 
-    #
     keyAttributes = []
     #keyAttributes should remain an explicit empty list to maintain dictionary
     #comparison logic
@@ -156,21 +156,6 @@ class Components(dict, TagsMixIn, Equalities):
         self[bu.id.bbid] = bu
         if bu.tags.name:
             self.by_name[bu.tags.name] = bu.id.bbid
-
-    def clearInheritedTags(self, recur = False):
-        """
-
-
-        Components.clearInheritedTags([recur = False]) -> None
-
-
-        Method runs Tags.clearInheritedTags(). If recur == True, method then
-        clears inherited tags for every component in self.getOrdered(). 
-        """
-        self.tags.clearInheritedTags()
-        if recur:
-            for C in self.getOrdered():
-                C.clearInheritedTags(recur=True)
 
     def copy(self):
         """
@@ -333,32 +318,29 @@ class Components(dict, TagsMixIn, Equalities):
         #group print is 3 rows (one for each bunch), plus the group header.
         #
         for i in range(group_count):
-            #
             group_lines = []
-            #
+
             group_start = i * group_size
             group_end = (i + 1) * group_size - 1
-            #
+
             filled_group_hdr = group_header % (group_start, group_end)
             group_lines.append(filled_group_hdr)
-            #
-            #process the bunches; j is the index in the ordered list of units
-            #
+
+            # process the bunches; j is the index in the ordered list of units
             j = group_start
             while j < group_end:
-                #
-                bunch = units[ j : (j + bunch_size) ]
-                #
+                bunch = units[j:(j + bunch_size)]
+
                 bunch_lines = []
-                #
+
                 boxes = []
                 for unit in bunch:
                     unit_box = unit._get_pretty_lines()
                     boxes.append(unit_box)
                 if i == 0:
                     box_width = len(boxes[0][0])
-                    #set box width once, to the first line of the first unit
-                    #
+                    # set box width once, to the first line of the first unit
+
                 filled_bunch_hdr = None
                 filled_unit_hdrs = []
                 for k in range(j, (j + bunch_size)):
@@ -369,59 +351,58 @@ class Components(dict, TagsMixIn, Equalities):
                 filled_bunch_hdr = unit_spacer.join(filled_unit_hdrs)
                 filled_bunch_hdr = "\t" + filled_bunch_hdr
                 bunch_lines.append(filled_bunch_hdr)                
-                #
-                #boxes now contains 3 lists of strings. the lists are all the
-                #same length because each unit prints in the same format. zip
-                #all those lists together into tuples of (line1a, line1b,
-                #line1c), (line2a, line2b, line2c), etc.
-                #
+
+                # boxes now contains 3 lists of strings. the lists are all the
+                # same length because each unit prints in the same format. zip
+                # all those lists together into tuples of (line1a, line1b,
+                # line1c), (line2a, line2b, line2c), etc.
+
                 zipped_boxes = zip(*boxes)
-                #
+
                 for triplet in zipped_boxes:
                     line = unit_spacer.join(triplet)
                     line = "\t" + line
                     bunch_lines.append(line)
-                #
+
                 bunch_lines.append(bunch_footer)
-                #add a footer string after each bunch; footer can be empty
-                #
+                # add a footer string after each bunch; footer can be empty
+
                 group_lines.extend(bunch_lines)
-                #row is over, move to the next 3 units. unit index goes up by 3.
+                # row is over, move to the next 3 units. unit index goes up by 3.
                 j = j + bunch_size
-            #
-            #loop is over, add the group lines and a group footer to main lines.
+
+            # loop is over, add the group lines and a group footer to main lines.
             main_lines.extend(group_lines)
             main_lines.append(group_footer)
-        #
-        #finished all the groups; now go through the tail
-        #HAVE TO MANUALLY ADD A TAIL HEADER
+
+        # finished all the groups; now go through the tail
+        # HAVE TO MANUALLY ADD A TAIL HEADER
         filled_tail_hdr = group_header % ((unit_count - tail_count),
                                           (unit_count - 1))
         main_lines.append(filled_tail_hdr)
         if tail_count != 0:
-            #
             tail_lines = []
-            #
+
             bunch_count = tail_count // bunch_size
             tail_start = unit_count - tail_count
             stub_count = tail_count % bunch_size
-            #
+
             j = tail_start
             for i in range(bunch_count):
-                #build each bunch-row, extend tail_lines; then add the final
-                #stub row
+                # build each bunch-row, extend tail_lines; then add the final
+                # stub row
                 bunch = units[j : (j + bunch_size)]
-                #
+
                 bunch_lines = []
-                #
+
                 boxes = []
                 for unit in bunch:
                     unit_box = unit._get_pretty_lines()
                     boxes.append(unit_box)
                 if not box_width:
                     box_width = len(boxes[0][0])
-                    #set box_width in case tail is the only group
-                #
+                    # set box_width in case tail is the only group
+
                 filled_bunch_hdr = None
                 filled_unit_hdrs = []
                 for k in range(j, (j + bunch_size)):
@@ -431,37 +412,37 @@ class Components(dict, TagsMixIn, Equalities):
                 filled_bunch_hdr = unit_spacer.join(filled_unit_hdrs)
                 filled_bunch_hdr = "\t" + filled_bunch_hdr
                 bunch_lines.append(filled_bunch_hdr)                
-                #
-                #boxes now contains 3 lists of strings. the lists are all the
-                #same length because each unit prints in the same format. zip
-                #all those lists together into tuples of (line1a, line1b,
-                #line1c), (line2a, line2b, line2c), etc.
-                #
+
+                # boxes now contains 3 lists of strings. the lists are all the
+                # same length because each unit prints in the same format. zip
+                # all those lists together into tuples of (line1a, line1b,
+                # line1c), (line2a, line2b, line2c), etc.
+
                 zipped_boxes = zip(*boxes)
-                #
+
                 for triplet in zipped_boxes:
                     line = unit_spacer.join(triplet)
                     line = "\t" + line
                     bunch_lines.append(line)
                 #
                 bunch_lines.append(bunch_footer)
-                #add a footer string after each bunch; footer can be empty
-                #
+                # add a footer string after each bunch; footer can be empty
+
                 main_lines.extend(bunch_lines)
-                #row is over, move to the next 3 units. unit index goes up by 3.
+                # row is over, move to the next 3 units. unit index goes up by 3.
                 j = j + bunch_size
-            #
-            #finally, manually append the tail_stub row
+
+            # finally, manually append the tail_stub row
             stub_lines = []
             bunch = units[(stub_count * -1):]
             boxes = []
             for unit in bunch:
                 unit_box = unit._get_pretty_lines()
                 boxes.append(unit_box)
-            #
+
             if not box_width:
                 box_width = len(boxes[0][0])
-                #set box_width in case the tail stub is the only row
+                # set box_width in case the tail stub is the only row
             filled_bunch_hdr = None
             filled_unit_hdrs = []
             for k in range(j, (j + stub_count)):
@@ -471,20 +452,20 @@ class Components(dict, TagsMixIn, Equalities):
             filled_bunch_hdr = unit_spacer.join(filled_unit_hdrs)
             filled_bunch_hdr = "\t" + filled_bunch_hdr
             stub_lines.append(filled_bunch_hdr)
-            #
+
             zipped_boxes = zip(*boxes)
-            #
+
             for triplet in zipped_boxes:
                 line = unit_spacer.join(triplet)
                 line = "\t" + line
                 stub_lines.append(line)
-            #
+
             stub_lines.append(bunch_footer)
             main_lines.extend(stub_lines)
-            #
+
         main_lines.append(group_footer)
         main_lines.append(group_footer)
-        #
+
         return main_lines            
 
     def refresh_names(self):
@@ -522,4 +503,3 @@ class Components(dict, TagsMixIn, Equalities):
             self.by_name.pop(bu.tags.name)
 
         return bu
-

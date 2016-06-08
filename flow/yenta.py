@@ -266,7 +266,7 @@ class Yenta():
         #
         for bbid in pool:
             topic = self.TM.local_catalog.issue(bbid)
-            topic_criterion = set(topic.tags.required[2:]) - {None}
+            topic_criterion = set(topic.tags.required[1:]) - {None}
             topic_profile = build_basic_profile(topic)
             #
             missing_on_topic = targ_criterion - topic_profile

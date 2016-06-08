@@ -82,7 +82,10 @@ class BusinessUnit(History, Equalities, TagsMixIn):
     interview             instance of InterviewTracker object
     life                  instance of Life object
     location              placeholder for location functionality
+    name                  name property from Tags class
     parameters            flexible storage for data that shapes unit performance
+    relationships         instance of Relationships class
+    tags                  instance of Tags class
     size                  int; number of real-life equivalents obj represents
     stage                 property; returns non-public stage or interview
     summary               None or BusinessSummary; investment summary
@@ -343,7 +346,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         
         """
         blank_bu = BusinessUnit(name=self.tags.name)
-        for attr in self.tags.tagSources:
+        for attr in self.tags.tag_sources:
             blank_attr = getattr(blank_bu, attr)
             setattr(self, attr, blank_attr)
     

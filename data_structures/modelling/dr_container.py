@@ -1,10 +1,10 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
-#Blackbird Environment
-#Module: data_structures.modelling.dr_container
+# Blackbird Environment
+# Module: data_structures.modelling.dr_container
 """
 
 Module defines DriversContainer class, a Components-type container for Driver
@@ -20,7 +20,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-DriversContainer      subclass of Components
+DrContainer           subclass of Components
 ====================  ==========================================================
 """
 
@@ -76,14 +76,15 @@ class DrContainer(Components, TagsMixIn):
     DATA:
     dr_blank              empty Driver() object for checking driver registration
     dr_directory          dictionary of bbid:driver objects
+    name                  name property from Tags class
+    relationships         instance of Relationships class
+    tags                  instance of Tags class
     
     FUNCTIONS:
     add_item()             adds bbid for applicable tags, object to directory
-    clearInheritedTags()  clears own tags and optionally those of all drivers
     copy()                returns a deep copy of self and all keys and drivers
     get_drivers()         returns a list of drivers associated with a tag
     get_ordered()         returns a list of all drivers sorted by bbid
-    inheritTags()         inherits tags from a list of all drivers in instance
     remove_driver()       remove a driver from this driver container
     setPartOf()           sets parentObject for instance **and** drivers
     ====================  ======================================================
@@ -164,21 +165,7 @@ class DrContainer(Components, TagsMixIn):
                 raise Exception(c)
             else:
                 record[new_driver.position] = new_driver.id.bbid        
-   
-    def clearInheritedTags(self, recur=False):
-        """
 
-
-        DrContainer.clearInheritedTags([recur=False]) -> None
-
-
-        Method runs Tags.clearInheritedTags() on the instance, then has the
-        instance , then clears inherited tags 
-        """
-        self.tags.clearInheritedTags(recur)
-        for dr in self.dr_directory.items():
-            dr.clearInheritedTags(recur)
-            
     def copy(self):
         """
 

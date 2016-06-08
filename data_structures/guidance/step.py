@@ -55,6 +55,9 @@ class Step(PrintAsLine, TagsMixIn):
 
     DATA:
     guide                 instance of Guide
+    name                  name property from Tags class
+    relationships         instance of Relationships class
+    tags                  instance of Tags class
 
     FUNCTIONS:
     pre_format()          sets instance.formatted to a line with a checkbox

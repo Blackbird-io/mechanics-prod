@@ -112,7 +112,10 @@ class Driver(TagsMixIn):
     data                  dict; place holder for driver-specific data
     id                    instance of ID
     formula_bbid          bbid for formula that Driver applies
+    name                  name property from Tags class
     position              int; from 0 to 100
+    relationships         instance of Relationships class
+    tags                  instance of Tags class
     signature             string; how the driver signs lines it modifies
     workConditions        dict; criteria for objects driver will process
 
@@ -254,7 +257,7 @@ class Driver(TagsMixIn):
         -- parameters
         -- workConditions
 
-        Original object copies tags to result using Tags.copyTagsTo(), so method
+        Original object copies tags to result using Tags._copy_tags_to(), so method
         will enforce tag rules when specified.
 
         Result.relationships.parent points to the same object as original because the
