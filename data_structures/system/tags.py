@@ -85,12 +85,10 @@ class Tags:
     required              list; tags required for matching
     spacer_req            string; CLASS, separates req tags from optional in all
     spacer_opt            string; CLASS, separates _opt from _inh tags in opt
-    tag_sources            list; attributes from which obj inherits tags
 
     FUNCTIONS:
     copy()                returns a copy of an object with own tag lists
     extrapolate_to()      returns a Tags.copy()
-    inherit()             inherits tags from every attribute named in tagSources
     inherit_from()        adds tags on a different object to instance
     set_name()            sets instance.reqTags[0]
     tag()                 adds tag to object, if parameters allow
@@ -105,7 +103,6 @@ class Tags:
     def __init__(self, name=None):
         self._optional = []
         self.required = [None]
-        self.tag_sources = []
 
         # self.name is requiredTags[0] so list should have minimum length of 1;
         # actual values set through methods
@@ -121,7 +118,6 @@ class Tags:
 
         def __get__(self, instance, owner):
             oTags = instance._optional + [instance.spacer_opt]
-            oTags = oTags
             return oTags
 
         def __set__(self, instance, value):
@@ -203,7 +199,7 @@ class Tags:
         then adds new tags from target one field at a time (new items in
         target._optional go on result._optional).
 
-        Method does not look at target.required[:1]. Method applies target
+        Method does not look at target.required[0]. Method applies target
         tags in sorted() order.
 
         The optional ``mode`` argument describes the set of rules Tags.tags.tag()
@@ -227,31 +223,6 @@ class Tags:
             result.tag(*new_tags, field=attr)
         return result
 
-    def inherit(self, recur=True):
-        """
-
-
-        T.inherit() -> None
-
-
-        Method runs instance.inherit_from() every object whose attribute
-        name is stored in tagSources.
-
-        If ``recur`` == True, method runs inheritTags() on every source object
-        before passing it to the instance. We recommend running the method with
-        recurison in normal operation to ensure that each object gets the most
-        fresh set of tags possible.
-
-        Method will generate AttributeErrors if a source attribute does not
-        support a Tags interface.
-        """
-        for attr in self.tag_sources:
-            source = getattr(self, attr)
-            if source:
-                if recur:
-                    source.inherit(recur=True)
-                self.inherit_from(source)
-
     def inherit_from(self, source, noDuplicates=True):
         """
 
@@ -260,7 +231,7 @@ class Tags:
 
 
         Method adds tags found on the source to self as inherited tags. Method
-        skips source.required[:1] (name and partOf).
+        skips source.required[0] (name and partOf).
 
         If ``noDuplicates`` is True, method will not copy any source tags that
         the instance already carries. In this mode, a SINGLE existing tag will
