@@ -88,8 +88,8 @@ class Statement(Equalities, TagsMixIn):
     ====================  ======================================================
 
     DATA:
-    POSITION_SPACING      default distance between positions
     consolidated          whether Statement has been consolidated
+    POSITION_SPACING      default distance between positions
     relationships         instance of Relationships class
 
     FUNCTIONS:
@@ -103,7 +103,6 @@ class Statement(Equalities, TagsMixIn):
     get_full_ordered()    return recursive list of details
     increment()           add data from another statement
     reset()               clear values
-    set_consolidated()    sets value of non-public variable _consolidated
     ====================  ======================================================
     """
     keyAttributes = ["_details"]
@@ -172,9 +171,9 @@ class Statement(Equalities, TagsMixIn):
         return result
 
     @property
-    def consolidated(self):
+    def has_been_consolidated(self):
         """
-        read-only property
+        read-only property.
         """
         return self._consolidated
 
@@ -344,9 +343,9 @@ class Statement(Equalities, TagsMixIn):
         ```` is True, copy will conform to ``out`` rules.
         """
         result = copy.copy(self)
+        result._consolidated = False
         result.tags = self.tags.copy()
         result.relationships = self.relationships.copy()
-        result.set_consolidated(False)
 
         # Tags.copy returns a shallow copy of the instance w deep copies
         # of the instance tag attributes.
@@ -535,9 +534,7 @@ class Statement(Equalities, TagsMixIn):
 
         Increment matching lines, add new ones to instance. Works recursively.
 
-        Method skips lines with tagsToOmit. If ``consolidating`` is True, method
-        tags any affected lines with the "consolidated" tag (method delegates
-        incrementation-level tagging to LineItem.consolidate()).
+        If ``consolidating`` is True, method sets obj._consolidated = True.
         """
 
         if bb_settings.DEBUG_MODE:
@@ -568,8 +565,8 @@ class Statement(Equalities, TagsMixIn):
                 if external_line.consolidate:
                     if consolidating:
                         if external_line.value is not None:
-                            if not local_copy.consolidated:
-                                local_copy.set_consolidated(True)
+                            if not local_copy._consolidated:
+                                local_copy._consolidated = True
 
                             # Pick up lines with None values, but don't tag
                             # them. We want to allow derive to write to these
@@ -585,23 +582,6 @@ class Statement(Equalities, TagsMixIn):
                     # positions once.
                 else:
                     pass
-
-    def set_consolidated(self, val):
-        """
-
-
-        LineItem.set_consolidate() -> None
-
-
-        --``val`` must be a boolean (True or False)
-
-        Method for explicitly setting self._consolidate.
-        """
-        if isinstance(val, bool):
-            self._consolidated = val
-        else:
-            msg = "statement._consolidated can only be set to a boolean value"
-            raise(TypeError(msg))
 
     def reset(self):
         """
