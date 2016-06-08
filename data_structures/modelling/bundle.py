@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: data_structures.modelling.bundle
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: data_structures.modelling.bundle
 """
 
 Module defines Bundle class, a mix-in for managing objects whose attributes have
@@ -93,7 +92,7 @@ class Bundle:
         #
         return result
 
-    def copy(self, enforce_rules=True):
+    def copy(self):
         """
 
 
@@ -110,7 +109,7 @@ class Bundle:
         for name in self.ORDER:
             own_statement = getattr(self, name, None)
             if own_statement is not None:
-                new_statement = own_statement.copy(enforce_rules)
+                new_statement = own_statement.copy()
                 setattr(new_instance, name, new_statement)
             
         return new_instance
@@ -143,7 +142,7 @@ class Bundle:
                 routine = getattr(statement, action)
                 routine(*kargs, **pargs)
 
-    def summarize(self, *tagsToOmit):
+    def summarize(self):
         """
 
 
@@ -152,7 +151,7 @@ class Bundle:
 
         Summarize each defined statement.
         """
-        self.run_on_all("summarize", *tagsToOmit)
+        self.run_on_all("summarize")
             
     #<------------------------------------------------------------------------need to inherit tags from statements?   
     

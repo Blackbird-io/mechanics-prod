@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: data_structures.valuation.landscape
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: data_structures.valuation.landscape
 """
 
 Module defines container that computes and stores price data surfaces.
@@ -324,7 +323,7 @@ class Landscape(dict, Step):
         surface = self[field]
         result = pricing_tools.forecast(surface, ask)
 ##        try:
-##            result.tag("extrapolated")
+##            result.tags.tag("extrapolated")
 ##        except AttributeError:
 ##            pass
         if self.keep_forecasts:

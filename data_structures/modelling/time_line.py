@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: data_structures.modelling.time_line
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: data_structures.modelling.time_line
 """
 
 Module defines TimeLine class. TimeLines are dictionaries of time periods with
@@ -492,7 +491,7 @@ class TimeLine(dict):
         period.id.set_namespace(model_namespace)
         # Period has only a pointer to the Model.namespace_id; periods don't have
         # their own bbids.
-        period.setPartOf(self)
+        period.relationships.set_parent(self)
 
         return period
 
@@ -571,8 +570,13 @@ class TimeLine(dict):
         space = " "
         #
         underscore = "_"
-        bu_lines = self.current_period.content._get_pretty_lines()
-        bu_width = len(bu_lines[0])
+        bu_lines = list()
+        if self.current_period.content:
+            bu_lines = self.current_period.content._get_pretty_lines()
+        bu_width = 20
+        # default width should be a setting (probably same as bu view)
+        if bu_lines:
+            bu_width = len(bu_lines[0])
         bu_height = len(bu_lines)
         sep_width = len(sep)
         column_width = bu_width + cushion * 2 + sep_width

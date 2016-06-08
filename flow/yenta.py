@@ -210,7 +210,7 @@ class Yenta():
 
 
         Method returns a list of bbids for topics that are eligible for use on
-        target. Method expects target to have an .allTags attribute and a
+        target. Method expects target to have an .tags.all attribute and a
         properly configured .guide object.
 
         The ``pool`` argument takes a list of bbids to review. If pool is None,
@@ -222,7 +222,7 @@ class Yenta():
         to each bbid in pool from the topic catalog. Method then checks:
 
         (1) whether the topic's tags include each of the tags required by target
-           (excluding target.partOf); and
+           (excluding target.relationships.parent.name); and
         (2) whether the **target's** tags include each of the tags required by
             topic, if any.
 
@@ -237,7 +237,12 @@ class Yenta():
         each topic) to instance.trace.
         """
         eligibles = []
-        targ_criterion = set(target.requiredTags) - {target.partOf}
+        try:
+            part_of = target.relationships.parent.name
+        except AttributeError:
+            part_of = None
+
+        targ_criterion = set(target.tags.required) - {part_of}
         targ_criterion = targ_criterion - {None}
         #
         #UPGRADE-F: Can make selection process more open-ended by also removing
@@ -266,7 +271,7 @@ class Yenta():
         #
         for bbid in pool:
             topic = self.TM.local_catalog.issue(bbid)
-            topic_criterion = set(topic.tags.requiredTags[2:]) - {None}
+            topic_criterion = set(topic.tags.required[1:]) - {None}
             topic_profile = build_basic_profile(topic)
             #
             missing_on_topic = targ_criterion - topic_profile
@@ -298,7 +303,7 @@ class Yenta():
         Method returns a list of bbids for topics that scored highest against
         target.
 
-        ``target`` must have an .allTags attribute.
+        ``target`` must have an .tags.all attribute.
         ``candidates`` must be an iterable container of bbids.
 
         For each bbid, method pulls the topic from the catalog and counts how
@@ -359,7 +364,7 @@ class Yenta():
             #
             match = criteria & build_basic_profile(topic)
             raw_score = len(match)
-            rel_score = raw_score/len(topic.tags.allTags)
+            rel_score = raw_score/len(topic.tags.all)
             #
             self.scores[bbid] = [raw_score, rel_score]
             #save state on Yenta instance so subsequent routines can access

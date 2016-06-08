@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: data_structures.modelling.model
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: data_structures.modelling.model
 """
 
 Module defines Model class, a container that fully describes a company's past,
@@ -37,7 +36,7 @@ import bb_settings
 from .time_line import TimeLine
 
 from data_structures.system.bbid import ID
-from data_structures.system.tags import Tags
+from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.serializers.chef.chef_settings import DEFAULT_SCENARIOS
 
 
@@ -47,7 +46,7 @@ from data_structures.serializers.chef.chef_settings import DEFAULT_SCENARIOS
 # n/a
 
 # classes
-class Model(Tags):
+class Model(TagsMixIn):
     """
 
     This class provides a form of a standard time model of business performance.
@@ -109,7 +108,8 @@ class Model(Tags):
     string for more information.
     """
     def __init__(self, name):
-        Tags.__init__(self, name)
+        TagsMixIn.__init__(self, name)
+
         self._started = False
         #
         self.id = ID()

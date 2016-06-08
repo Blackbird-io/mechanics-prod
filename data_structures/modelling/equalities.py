@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: data_structures.modelling.equalities
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: data_structures.modelling.equalities
 """
 
 Module defines Equalities class. 
@@ -71,11 +70,11 @@ class Equalities:
     __eq__ may cause infinite loops.
 
     For example, to compare two objects with a ``parentObject`` attribute,
-    Eq.__eq__() evaluates A.parentObject == B.parentObject. If ``parentObject``
+    Eq.__eq__() evaluates A.relationships.parent == B.relationships.parent. If ``parentObject``
     in either A or B overloads __eq__ using this Equalities class, the A.__eq__
     evaluation will run parentObject.__eq__. To the extent parentObject is a
     list or other container, parentObject.__eq__ will cycle through each item in
-    said container. If A is in the container, A.parentObject.__eq__ will then
+    said container. If A is in the container, A.relationships.parent.__eq__ will then
     call A.__eq__, closing the loop. Other loop forms are possible too.
 
     ====================  ======================================================
@@ -172,7 +171,11 @@ class Equalities:
                 continue
             else:
                 #check that attribute is not a method
-                standardValue = getattr(self,testattr)
+                if '.' in testattr:
+                    standardValue = Equalities.multi_getattr(self, testattr)
+                else:
+                    standardValue = getattr(self, testattr)
+
                 if trace:
                     p = "\t  standard value: %s" % standardValue
                     tabbed_print(p,tw_arg)
@@ -186,7 +189,12 @@ class Equalities:
                     continue
                 #make sure the comparator has an attribute of the same name
                 try:
-                    compValue = getattr(comparator, testattr)
+                    if '.' in testattr:
+                        compValue = Equalities.multi_getattr(comparator,
+                                                             testattr)
+                    else:
+                        compValue = getattr(comparator, testattr)
+
                     if trace:
                         p = "\t  comp value:     %s" % compValue
                         tabbed_print(p,tw_arg)
@@ -482,3 +490,22 @@ class Equalities:
         eq = self.__eq__(comparator, trace, tab_width)
         result = not eq
         return result
+
+    @staticmethod
+    def multi_getattr(obj, attr, default=None):
+        """
+        Get a named attribute from an object; multi_getattr(x, 'a.b.c.d') is
+        equivalent to x.a.b.c.d. When a default argument is given, it is
+        returned when any attribute in the chain doesn't exist; without
+        it, an exception is raised when a missing attribute is encountered.
+
+        Source: http://code.activestate.com/recipes/577346-getattr-with-arbitrary-depth/
+        """
+        attributes = attr.split(".")
+        for i in attributes:
+            try:
+                obj = getattr(obj, i)
+            except AttributeError:
+                return default
+
+        return obj

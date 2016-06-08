@@ -134,6 +134,9 @@ class ExcelPrepError(BlackbirdError):
 class LinkError(BlackbirdError):
     content = "This Link has been intentionally broken during a path copy."
 
+class BBPermissionError(BlackbirdError):
+    content = "Operation violates the BB system of write permissions."
+    
 class ExternalDataError(BlackbirdError):
     """
     Exception class for outside data connectivity.
