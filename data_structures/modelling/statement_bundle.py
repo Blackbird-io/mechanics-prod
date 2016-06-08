@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: data_structures.modelling.statement_bundle
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: data_structures.modelling.statement_bundle
 """
 
 Module defines StatementBundle, a customized Bundle for Statements. 
@@ -58,7 +57,7 @@ class StatementBundle(Bundle):
     def __init__(self):
         pass
 
-    def build_tables(self, *tagsToOmit):
+    def build_tables(self):
         """
 
 
@@ -67,7 +66,7 @@ class StatementBundle(Bundle):
 
         Build tables for each defined statement.
         """
-        self.run_on_all("build_tables", *tagsToOmit)
+        self.run_on_all("build_tables")
         
     def reset(self):
         """
@@ -80,7 +79,7 @@ class StatementBundle(Bundle):
         """
         self.run_on_all("reset")
 
-    def summarize(self, *tagsToOmit):
+    def summarize(self):
         """
 
 
@@ -89,5 +88,4 @@ class StatementBundle(Bundle):
 
         Summarize each defined statement.
         """
-        self.run_on_all("summarize", *tagsToOmit)
-    
+        self.run_on_all("summarize")

@@ -170,7 +170,7 @@ class LineChef:
                 self._group_lines(sheet)
 
                 if set_labels:
-                    label = indent*" " + line.name + ": details"
+                    label = indent*" " + line.tags.name + ": details"
                     self._set_label(
                         sheet=sheet,
                         label=label,
@@ -324,7 +324,7 @@ class LineChef:
             line.xl.consolidated.cell = summation_cell
 
             if set_labels:
-                label = line.name + ": consolidated results"
+                label = line.tags.name + ": consolidated results"
                 label = (indent * " ") + label
                 self._set_label(sheet=sheet, label=label,
                                 row=sheet.bb.current_row)
@@ -564,7 +564,7 @@ class LineChef:
 
             cell.set_explicit_value(excel_str, data_type=type_codes.FORMULA)
 
-            label = indent*" " + line.name
+            label = indent*" " + line.tags.name
 
             line.xl.ending = sheet.bb.current_row
             line.xl.cell = cell
@@ -606,13 +606,13 @@ class LineChef:
             cell.set_explicit_value(segment_summation,
                                     data_type=type_codes.FORMULA)
 
-            label = indent*" " + LineItem.SUMMARY_PREFIX + line.name
+            label = indent*" " + LineItem.SUMMARY_PREFIX + line.tags.name
         else:
             # Blank or hard-coded line
             cell.value = line.value
             cell_styles.format_hardcoded(cell)
 
-            label = indent*" " + line.name
+            label = indent*" " + line.tags.name
 
         line.xl.ending = sheet.bb.current_row
         line.xl.cell = cell

@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: data_structures.portal.full_question
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: data_structures.portal.full_question
 """
 
 Module defines FullQuestion class. FullQuestion objects provide all details
@@ -372,7 +371,7 @@ class FullQuestion:
         result.context = copy.deepcopy(self.context)
         result.id = copy.deepcopy(self.id)
         result.input_array = copy.deepcopy(self.input_array)
-        result.tags = self.tags.copy(enforce_rules = False)
+        result.tags = self.tags.copy()
         return result
 
     def set_condition(self, binary_spec):

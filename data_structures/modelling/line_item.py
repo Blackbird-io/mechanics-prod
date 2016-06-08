@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: data_structures.modelling.line_item
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: data_structures.modelling.line_item
 """
 
 Module defines a class of Statemenets with value.  
@@ -35,19 +34,15 @@ import bb_exceptions
 import tools.for_printing as printing_tools
 
 from data_structures.guidance.guide import Guide
-from data_structures.system.tags import Tags
 from data_structures.serializers.chef import data_management as xl_mgmt
 
-from .equalities import Equalities
 from .statement import Statement
 
 
 
 
 # Constants
-T_CONSOLIDATED = Tags.tagManager.catalog["consolidated"]
-T_REPLICA = Tags.tagManager.catalog["ddr"]
-
+# n/a
 # Classes
 class LineItem(Statement):
     """
@@ -86,17 +81,15 @@ class LineItem(Statement):
     set_value()           sets value to input, records signature
     ====================  ======================================================
     """
-    keyAttributes = Statement.keyAttributes + ["value", "requiredTags",
-                                               "optionalTags"]
+    keyAttributes = Statement.keyAttributes + ["value", "tags.required",
+                                               "tags.optional"]
 
     # Make sure that equality analysis skips potentially circular pointers like
-    # .parentObject. Otherwise, comparing children could look to parent, which
+    # .relationships.parent. Otherwise, comparing children could look to parent, which
     # could look to child, and so on.
     
     SIGNATURE_FOR_CREATION = "__init__"
     SIGNATURE_FOR_VALUE_RESET = "LineItem.resetValue"
-    SIGNATURE_FOR_DEFAULT_EXTRAPOLATION = "LineItem.ex_to_default"
-    SIGNATURE_FOR_SPECIAL_EXTRAPOLATION = "LineItem.ex_to_special"
     SIGNATURE_FOR_REPLICA_MANAGEMENT = "Bringing down value."
     SIGNATURE_FOR_INCREMENTATION = "Incremented "
 
@@ -117,6 +110,7 @@ class LineItem(Statement):
         self.log = []
         self.position = None
         self._consolidate = True
+        self._replica = False
         self._hardcoded = False
 
         if value is not None:
@@ -150,6 +144,13 @@ class LineItem(Statement):
         If True, set_value() and clear() will have no operation
         """
         return self._hardcoded
+
+    @property
+    def replica(self):
+        """
+        read-only property
+        """
+        return self._replica
 
     @property
     def value(self):
@@ -198,17 +199,17 @@ class LineItem(Statement):
             # Start with a clean slate for Excel tracking, except for
             # number format
             
-    def copy(self, enforce_rules=True):
+    def copy(self):
         """
 
 
         Line.copy() -> Line
 
 
-        Return a deep copy of the instance and its details. If enforce_rules is
+        Return a deep copy of the instance and its details. If  is
         True, copy conforms to ``out`` rules.
         """
-        new_line = Statement.copy(self, enforce_rules)
+        new_line = Statement.copy(self)
         # Shallow copy, should pick up _local_value as is, and then create
         # independent containers for tags. 
         
@@ -222,28 +223,6 @@ class LineItem(Statement):
 
         return new_line
 
-    def extrapolate_to(self, target):
-        """
-
-
-        LineItem.extrapolate_to() -> LineItem
-
-
-        Method extrapolates instance characteristics to target and returns a
-        new object that combines both.
-
-        NOTE: Method delegates all work to Tags.extrapolate_to (standard
-        subroutine selection logic).
-        """
-        result = Tags.extrapolate_to(self, target)
-        return result
-
-        # We include this feature only to show that delegation takes place
-        # explicitly. Real work runs through .copy() for default process
-        # and through statement logic for the more complex versions. A Line
-        # only differs from Statement by its log and local value, and .copy()
-        # picks up both.
-      
     def increment(self, matching_line, signature=None, consolidating=False):
         """
 
@@ -276,8 +255,8 @@ class LineItem(Statement):
                 self.set_value(new_value, signature)
             
                 if consolidating and self._consolidate is True:
-                    self.inheritTagsFrom(matching_line)
-                    self.tag(T_CONSOLIDATED)
+                    self.tags.inherit_from(matching_line.tags)
+                    self.set_consolidated(True)
 
                     self.xl.consolidated.sources.append(matching_line)
 
@@ -312,10 +291,8 @@ class LineItem(Statement):
 
         Method for explicitly setting self._consolidate.
         """
-        if val is True:
-            self._consolidate = True
-        elif val is False:
-            self._consolidate = False
+        if isinstance(val, bool):
+            self._consolidate = val
         else:
             msg = "lineitem._consolidate can only be set to a boolean value"
             raise(TypeError(msg))
@@ -477,10 +454,11 @@ class LineItem(Statement):
 
         Create a replica, add replica to details
         """
-        replica = Tags.copy(self, enforce_rules=False)
+        replica = copy.copy(self)
+        replica.tags = self.tags.copy()
         # Start with a shallow copy that picks up all the tags, including ones
         # like "hardcoded" or "do not touch" that don't normally go ``out``. If
-        # enforce_rules is True, these would not transfer to the replica because
+        #  is True, these would not transfer to the replica because
         # the copy counts as an "out" move. Then, if the original value was to
         # somehow get reset to None, the lineitem could get behind and the
         # entire financials unit could lose a special processing trigger.
@@ -491,10 +469,10 @@ class LineItem(Statement):
 
         # Replicas don't have any details of their own. Can't run .clear() here
         # because instance and replica initially point to the same details dict.
-        replica.tag(T_REPLICA)
+        replica._replica = True
 
         replica.position = 0
-        self._details[replica.name] = replica
+        self._details[replica.tags.name] = replica
         # Add replica in first position.
 
     def _sum_details(self):

@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: data_structures.valuation.pattern
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: data_structures.valuation.pattern
 """
 
 Module that defines the Pattern class, which combines fixed-order, keys, and
@@ -124,7 +123,7 @@ class Pattern(dict, LineItem):
         Method:
         1) sets instance[attrName] to obj
         2) sets instance.attrName to obj
-        3) sets obj.parentObject to self
+        3) sets obj.relationships.parent to self
         4) appends a function to self._o_functions that always returns
         self[attrName]
 
@@ -137,7 +136,7 @@ class Pattern(dict, LineItem):
         self[attrName] = obj
         setattr(self,attrName,obj)
         try:
-            obj.setPartOf(self)
+            obj.relationships.set_parent(self)
         except Exception:
             pass
         self.o_keys.append(attrName)

@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: data_structures.modelling.financials
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: data_structures.modelling.financials
 """
 
 Module defines Financials, a bundle of common statements. 
@@ -32,6 +31,7 @@ import copy
 
 from .statements import Overview, Income, CashFlow, BalanceSheet
 from .statement_bundle import StatementBundle
+from .equalities import Equalities
 
 
 
@@ -77,19 +77,19 @@ class Financials(StatementBundle):
         
         result = "\n"
 
-        if getattr(self, "parentObject", None):
+        if Equalities.multi_getattr(self, "relationships.parent", None):
 
-            header = "Financial statements for " + str(self.parentObject.name)
+            header = "Financial statements for " + str(self.relationships.parent.tags.name)
             header = header.center(bb_settings.SCREEN_WIDTH)
             header += "\n\n"
 
-            starting = "Period starting: " + str(self.parentObject.period.starting)
+            starting = "Period starting: " + str(self.relationships.parent.period.starting)
             starting = starting.center(bb_settings.SCREEN_WIDTH)
             starting += "\n"
 
             header += starting
 
-            ending =  "Period ending:   " + str(self.parentObject.period.ending)
+            ending =  "Period ending:   " + str(self.relationships.parent.period.ending)
             ending = ending.center(bb_settings.SCREEN_WIDTH)
             ending += "\n"
 
@@ -115,7 +115,7 @@ class Financials(StatementBundle):
 
         return result        
 
-    def copy(self, enforce_rules=True):
+    def copy(self):
         """
 
 
@@ -134,7 +134,7 @@ class Financials(StatementBundle):
         for name in self.ORDER:
             own_statement = getattr(self, name, None)
             if own_statement is not None:
-                new_statement = own_statement.copy(enforce_rules)
+                new_statement = own_statement.copy()
                 setattr(new_instance, name, new_statement)
 
         del self.ORDER
