@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: data_structures.modelling.line_item
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: data_structures.modelling.line_item
 """
 
 Module defines a class of Statemenets with value.  
@@ -71,6 +70,9 @@ class LineItem(Statement):
     consolidate           bool; whether or not to consolidate line item
     guide                 instance of Guide object
     log                   list of entries that modified local value
+    name                  name property from Tags class
+    relationships         instance of Relationships class
+    tags                  instance of Tags class
     value                 instance value
     xl                    instance of LineData record set
     
@@ -256,7 +258,7 @@ class LineItem(Statement):
                 self.set_value(new_value, signature)
             
                 if consolidating and self._consolidate is True:
-                    self.tags.inheritFrom(matching_line.tags)
+                    self.tags.inherit_from(matching_line.tags)
                     self.set_consolidated(True)
 
                     self.xl.consolidated.sources.append(matching_line)

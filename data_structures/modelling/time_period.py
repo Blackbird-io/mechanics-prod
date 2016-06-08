@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: data_structures.modelling.time_period
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: data_structures.modelling.time_period
 """
 
 Module defines TimePeriod class.
@@ -77,7 +76,10 @@ class TimePeriod(History, TagsMixIn):
     end                   datetime.date; last date in period 
     id                    instance of ID class
     length                float; seconds between start and end
+    name                  name property from Tags class
     parameters            Parameters object, specifies shared parameters
+    relationships         instance of Relationships class
+    tags                  instance of Tags class
     start                 datetime.date; first date in period.
     ty_directory          dict; keys are strings, values are sets of bbids
     
@@ -168,8 +170,7 @@ class TimePeriod(History, TagsMixIn):
         Method updates tags on seed and target and then passes them to standard
         Tags.extrapolate_to() selection logic. 
         """
-        self.tags.inherit(recur=True)
-        target.tags.inherit(recur=True)
+
         result = self.ex_to_default(target)
 
         if result.end > self.end:

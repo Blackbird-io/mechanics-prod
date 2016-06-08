@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: data_structures.modelling.statement
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: data_structures.modelling.statement
 """
 
 Module defines Statement, a container for lines.
@@ -90,6 +89,10 @@ class Statement(Equalities, TagsMixIn):
 
     DATA:
     POSITION_SPACING      default distance between positions
+    consolidated          whether Statement has been consolidated
+    name                  name property from Tags class
+    relationships         instance of Relationships class
+    tags                  instance of Tags class
 
     FUNCTIONS:
     add_line()            add line to instance
@@ -102,6 +105,7 @@ class Statement(Equalities, TagsMixIn):
     get_full_ordered()    return recursive list of details
     increment()           add data from another statement
     reset()               clear values
+    set_consolidated()    sets value of non-public variable _consolidated
     ====================  ======================================================
     """
     keyAttributes = ["_details"]
@@ -330,26 +334,6 @@ class Statement(Equalities, TagsMixIn):
         line.position = new_position
 
         self._bind_and_record(line)
-
-    def clearInheritedTags(self, recur=True):
-        """
-
-
-        Statement.clearInheritedTags() -> None
-
-
-        Method runs Tags.clearInheritedTags() on instance. If ``recur`` is True,
-        does the same for every line in instance.
-        """
-        self.tags.clearInheritedTags()
-        if recur:
-            if bb_settings.DEBUG_MODE:
-                pool = self.get_ordered()
-            else:
-                pool = self._details.values()
-
-            for line in pool:
-                line.clearInheritedTags(recur)
 
     def copy(self):
         """

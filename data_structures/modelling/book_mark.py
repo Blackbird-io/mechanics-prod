@@ -1,10 +1,9 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
-
-#Blackbird Environment
-#Module: data_structures.modelling.book_mark
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# Blackbird Environment
+# Module: data_structures.modelling.book_mark
 """
 
 Module defines BookMark class. BookMarks are specialized LineItems that mark
@@ -64,7 +63,7 @@ class BookMark(LineItem):
     bmPrefix              BLACKBIRDSTAMP from tagCatalog
     
     FUNCTIONS:
-    setName()             method sets instance name w "|BB|" prefix
+    set_name()             method sets instance name w "|BB|" prefix
     ====================  ======================================================
     """
     bmPrefix = BLACKBIRDSTAMP
@@ -74,15 +73,15 @@ class BookMark(LineItem):
         # self.tags.tag(*self.bmTags)
         self.tags.tag(BLACKBIRDSTAMP)
         if bmName:
-            self.tags.setName(bmName)
+            self.tags.set_name(bmName)
         if tags:
             self.tags.tag(*tags)
         
-    def setName(self,newName):
+    def set_name(self,newName):
         """
 
 
-        BookMark.tags.setName(newName) -> None
+        BookMark.tags.set_name(newName) -> None
 
 
         Method adds the BLACKBIRDSTAMP prefix to the name and then sets the
@@ -90,4 +89,4 @@ class BookMark(LineItem):
         """
         if newName:
             newName = self.bmPrefix + newName
-        Tags.setName(self.tags,newName)
+        Tags.set_name(self.tags,newName)
