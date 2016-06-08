@@ -114,9 +114,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
                             "id",
                             "parent",
                             "part_of"]
-    
-    tagSources = ["components", "drivers", "financials"]
-    
+
     _UPDATE_BALANCE_SIGNATURE = "Update balance"
         
     def __init__(self, name, fins=None):
@@ -331,25 +329,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         # of the required formula parameters at the time the Topic runs.
 
         self.drivers.add_item(newDriver, *otherKeys)
-                  
-    def clear(self):
-        """
 
-
-        BusinessUnit.clear() -> None
-
-
-        Method sets attributes in instance.tagSources to their default
-        __init__ values.
-
-        **NOTE: clear() will permanently delete data**
-        
-        """
-        blank_bu = BusinessUnit(name=self.tags.name)
-        for attr in self.tags.tag_sources:
-            blank_attr = getattr(blank_bu, attr)
-            setattr(self, attr, blank_attr)
-    
     def copy(self):
         """
 
@@ -534,7 +514,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         """
         if fins is None:
             fins = Financials()
-##        fins.relationships.set_parent(self)
+
         self.financials = fins
 
     def set_history(self, history, clear_future=True, recur=True):
