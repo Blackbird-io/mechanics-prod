@@ -20,7 +20,7 @@ FUNCTIONS:
 N/A
 
 CLASSES:
-TagsMixIn            mix-in class for Tags as component
+TagsMixIn             mix-in class for Tags as component
 ====================  ==========================================================
 """
 
@@ -47,10 +47,10 @@ class TagsMixIn:
     ====================  ======================================================
 
     DATA:
-    name                  property; name as stored in tags.required[0]
+    name                  property; returns name of instance
 
     FUNCTIONS:
-    N/A
+    set_name              sets name of instance
     """
 
     def __init__(self, name=None):

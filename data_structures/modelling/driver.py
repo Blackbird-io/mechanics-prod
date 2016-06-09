@@ -415,6 +415,7 @@ class Driver(TagsMixIn):
             else:
                 c = "Driver cannot work on the specified LineItem."
                 print("Line:", line.name, " WC:", self.workConditions)
+
                 raise bb_exceptions.BBAnalyticalError(c)
         else:
             pass
@@ -536,7 +537,7 @@ class Driver(TagsMixIn):
             if not set(self.workConditions["partOf"]).issubset([part_of]+[None]):
                 return False
             else:
-                if not set(self.workConditions["all"]).issubset(targetLineItem.tags.all + [None]):
+                if not set(self.workConditions["all"]).issubset(targetLineItem.tags.all | {targetLineItem.tags.name} | {None}):
                     return False
                 else:
                     return True
