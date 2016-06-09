@@ -87,11 +87,11 @@ class Tags:
 
     @property
     def optional(self):
-        return self._optional
+        return self._optional.copy()
 
     @property
     def required(self):
-        return self._required
+        return self._required.copy()
 
     @property
     def all(self):
