@@ -116,7 +116,6 @@ class Components(dict, TagsMixIn, Equalities):
         """
         return Equalities.__ne__(self, comparator, trace, tab_width)
 
-
     def __str__(self, lines = None):
         """
 
@@ -231,7 +230,7 @@ class Components(dict, TagsMixIn, Equalities):
         """
         return self.get_ordered()
 
-    def get_ordered(self):
+    def get_ordered(self, order_by=None):
         """
 
 
@@ -241,8 +240,7 @@ class Components(dict, TagsMixIn, Equalities):
         Method returns a list of every value in the instance, ordered by key. 
         """
         result = []
-        for k in sorted(self.keys()):
-            bu = self[k]
+        for k, bu in sorted(self.items(), key=order_by):
             result.append(bu)
         return result
 
