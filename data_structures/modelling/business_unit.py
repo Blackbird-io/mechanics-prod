@@ -329,6 +329,39 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
         self.drivers.add_item(newDriver, *otherKeys)
 
+    def compute(self, statement):
+        """
+
+
+        BusinessUnit.compute() -> None
+
+        --``statement`` name of statement to operate on
+
+        Method recursively runs consolidation and derivation logic on
+        statements for instance and components.
+        """
+        self._consolidate(statement)
+        self._derive(statement)
+
+    def compute_balances(self):
+        """
+
+
+        BusinessUnit.computer_balances() -> None
+
+
+        Method recursively fills out balance sheets for instance and components.
+        Method adjusts shape of ending and starting balance sheets, runs
+        consolidation logic, updates balance sheets, then runs derivation logic.
+        """
+        self._load_balance()
+        self._consolidate("ending")
+        self._update_balance()
+
+        # Sets ending balance lines to starting values by default
+        self._derive("ending")
+        # Derive() will overwrite ending balance sheet where appropriate
+
     def copy(self):
         """
 
@@ -384,21 +417,6 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         result.interview = r_interview
 
         return result
-                                
-    def recalculate(self, adjust_future=True):
-        """
-
-
-        BusinessUnit.recalculate () -> None
-
-
-        Recalculate instance finanicals. If ``adjust_future`` is True, will
-        repeat for all future snapshots. 
-        """
-        self.reset_financials()
-        self.fill_out()
-        if adjust_future and self.future:
-            self.future.recalculate(adjust_future=True)
 
     def fillOut(self):
         """
@@ -408,7 +426,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         Legacy interface for fill_out().
         """
         return self.fill_out()
-    
+
     def fill_out(self):
         """
 
@@ -416,10 +434,13 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         BusinessUnit.fill_out() -> None
 
 
-        Will no-op if instance.filled is True. Otherwise, will first sync
-        instance balance sheet, then consolidate, and finally derive. At
-        conclusion, method sets instance.filled to True to make sure that
-        subsequent calls do not increment existing values. 
+        Method is the driver for filling out instance financials.
+
+        Will no-op if instance.filled is True. Otherwise, will consolidate and
+        derive overview, income, and cash statements for the instance and its
+        components. Then, will process balance sheets.  At conclusion, method
+        sets instance.filled to True to make sure that subsequent calls do not
+        increment existing values.
 
         NOTE: consolidate() blocks derive() on the same lineitem.
         
@@ -427,16 +448,15 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         BusinessUnit.derive() will never run again for that LineItem, either at
         that component or any parent or ancestor of that component.
         """
+
         if self.filled:
             return
         else:
-            self._load_balance()
-            self._consolidate()
-            self._update_balance()
-            # Sets ending balance lines to starting values by default
-            self._derive()
-            # Derive() will overwrite ending balance sheet where appropriate
-            
+            for statement in ("overview", "income", "cash"):
+                self.compute(statement)
+
+            self.compute_balances()
+
             self.filled = True
             
     def kill(self, date=None, recur=True):
@@ -492,6 +512,21 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
         self.set_history(younger, clear_future=False)
         # connect all components to their younger selves
+
+    def recalculate(self, adjust_future=True):
+        """
+
+
+        BusinessUnit.recalculate () -> None
+
+
+        Recalculate instance finanicals. If ``adjust_future`` is True, will
+        repeat for all future snapshots.
+        """
+        self.reset_financials()
+        self.fill_out()
+        if adjust_future and self.future:
+            self.future.recalculate(adjust_future=True)
 
     def reset_financials(self, recur=True):
         """
@@ -568,8 +603,8 @@ class BusinessUnit(History, Equalities, TagsMixIn):
                 unit.set_history(mini_history)
 
         self.reset_financials(recur=False)
-        # Reset financials here because we just connected a new starting balance
-        # sheet.
+        # Reset financials here because we just connected a new starting
+        # balance sheet.
 
     def synchronize(self, recur=True):
         """
@@ -590,7 +625,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#    
 
-    def _consolidate(self, trace=False):
+    def _consolidate(self, statement, trace=False):
         """
 
 
@@ -606,29 +641,28 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         # would look different (even though the bottom line would be the same).
             
         for unit in pool:
-            
             if unit.life.conceived:
-                self._consolidate_unit(unit)
-        
-    def _consolidate_unit(self, sub):
+                self._consolidate_unit(unit, statement)
+
+    def _consolidate_unit(self, sub, statement):
         """
 
 
         BusinessUnit.consolidate_unit() -> None
-        
+
 
         -- ``sub`` should be a BusinessUnit object
-           
+
         The Blackbird environment contemplates that BusinessUnits (``parents``)  #<------------------------------------------------update doc string
         may contain multiple component BusinessUnits (``subs``). This method
         consolidates the financials of one sub into the caller instance
         (parent).
 
         The parent does NOT have to include sub in the parent's components for
-        this method to run. 
+        this method to run.
 
         Method first fills out the sub, then integrates each line in sub's
-        financials into parent financials. 
+        financials into parent financials.
 
 
 
@@ -638,23 +672,23 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         STAGE 1: Check if the sub is alive.
         ************************************************************************
 
-        Method performs no-op if sub is not alive. 
+        Method performs no-op if sub is not alive.
 
         ************************************************************************
         STAGE 2: Check if the sub LineItem is "informative".
         ************************************************************************
         For a living sub, method steps through each line in sub financials to
-        check if the line is ``informative``. 
+        check if the line is ``informative``.
 
         ``Informative`` sub LineItems are those that provide insight into the
         meaningful structural or financial profile of the sub. Informative lines
         satisfy at least one of the following conditions:
-        
-            i)   the LineItem has a non-None name 
+
+            i)   the LineItem has a non-None name
             ii)  the LineItem has a non-None value
             iii) the LineItem's allTags list is distinct from the default value
             ([None,None,<spacer>])
-            
+
         Informative LineItems that satisfy condition (i) are ``named``
         LineItems. Informative LineItems that do not satisfy condition (i) but
         do satisfy condition (ii) or (iii) are ``unnamed.``
@@ -665,10 +699,10 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
         By default, tagsToOmit include summaryTag and bookMarkTag. That is,
         bookmarks and summaries are per se uninformative and do not increment
-        symmetric parent lineitems.         
+        symmetric parent lineitems.
 
         This method integrates some of the data from each informative sub line
-        into parent's financials. Method skips uninformative sub lines. 
+        into parent's financials. Method skips uninformative sub lines.
 
         ************************************************************************
         STAGE 3: Increment named LineItems that have symmetric names.
@@ -678,23 +712,23 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
         Specifically, for a given named sub lineitem, this method finds the
         **first** line in parent financials with the same name.
-        
+
         Next, method increments the parent line by the sub line value, if the
         sub line has a specified (non-None value). Method skips sub lines with
         None values even if they are named.<-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------absorb tags?
 
-        A signature from this method blocks drivers from modifying a line. 
-        
+        A signature from this method blocks drivers from modifying a line.
+
         NOTE1: consolidate() **will** sign a parent line when a sub line
-        specifies a value of 0, 0.00, decimal.Decimal(0), etc. 
+        specifies a value of 0, 0.00, decimal.Decimal(0), etc.
 
         That is, setting a lineitem's value to 0 instead of None prevents
         drivers from modifying that lineitem. In the Blackbird environment, 0 is
-        affirmative information. Only None signals the absence of information. 
+        affirmative information. Only None signals the absence of information.
 
         NOTE2: Only named sub LineItems are eligible for incrementation
         treatment, and only if their names are symmetric to a parent object.
-        
+
         Named LineItems required a non-None value for LineItem.name. Therefore,
         a sub LineItem with .name == None will NOT increment a parent LineItem
         with a .name == None.
@@ -713,7 +747,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         lines to a combination of (i) their sub_position and the first 3 tags on
         the sub line. As a result, unnnamed lines from one component should not
         increment the value of parent lines with identical tags.
-        
+
         [UPGRADE-F: TAG-RICH EVO: may require sub lineitems to increment parent
         lineitems with matching or sub.superset tags]
 
@@ -722,7 +756,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         ************************************************************************
 
         Method places replica lines in parent financials to maintain relative
-        position of the line against other items in sub financials. 
+        position of the line against other items in sub financials.
 
         Example:
 
@@ -733,23 +767,23 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
         By contrast, the following order of
         parent lines would violate the relative position of sub L3 and L4:
-        
+
         [L1, ..., L2, ... L4,L3].
-        
+
         Method uses Financials.spotGenerally() to locate the appropriate
-        position for a replica. 
+        position for a replica.
         """
         # Step Only: Actual consolidation
-        sub.fill_out()
+        if statement != "ending":
+            sub.compute(statement)
 
-        for attr_name in sub.financials.ORDER:
-            child_statement = getattr(sub.financials, attr_name)
-            
-            if child_statement:
-                parent_statement = getattr(self.financials, attr_name)
-                parent_statement.increment(child_statement, consolidating=True)
+        child_statement = getattr(sub.financials, statement)
 
-    def _derive(self, spread=False, sheet=None):
+        if child_statement:
+            parent_statement = getattr(self.financials, statement)
+            parent_statement.increment(child_statement, consolidating=True)
+
+    def _derive(self, statement, spread=False, sheet=None):
         """
 
 
@@ -769,20 +803,19 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         instance.drivers. If and only if the drivers dictionary for the line is
         empty, derive() will check if any unassigned (BU.drivers[None]) drivers
         match the line.
-        
+
         NOTE: ALWAYS RUN BusinessUnit.consolidate() BEFORE BusinessUnit.Derive()
         """
-        #need to change tagging rules above to make sure BU.consolidate() tags
-        #lines appropriately. also need to make sure that inheritTagsFrom() does---------------------------------------------------------------
-        #not pick up blockingTags
+        # need to change tagging rules above to make sure BU.consolidate() tags
+        # lines appropriately. also need to make sure that inheritTagsFrom() does---------------------------------------------------------------
+        # not pick up blockingTags
 
         # We never derive the starting balance sheet. Accordingly,
-        # financials.ordered does not include ``starting``. 
-        
-        for statement in self.financials.ordered:
-            if statement is not None:
-                for line in statement.get_ordered():    
-                    self._derive_line(line)
+        # financials.ordered does not include ``starting``.
+        this_statement = getattr(self.financials, statement)
+
+        for line in this_statement.get_ordered():
+            self._derive_line(line)
 
     def _derive_line(self, line):
         """
@@ -793,27 +826,24 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
         Compute the value of a line using drivers stored in the instance.
         """
-        
+
         key = line.tags.name.casefold()
         if key in self.drivers:
             matching_drivers = self.drivers.get_drivers(key)
 
             for driver in matching_drivers:
                 driver.workOnThis(line)
-                
+
         # Repeat for any details            
         if line._details:
-            
             for detail in line.get_ordered():
-                
                 if detail.replica:
                     continue
                     # Skip replicas to make sure we apply the driver only once
                     # A replica should never have any details
                 else:
                     self._derive_line(detail)
-        
-                
+
     def _fit_to_period(self, time_period, recur=True):
         """
 
@@ -1036,6 +1066,14 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         Connect starting balance sheet to past if available, copy shape to
         ending balance sheet.
         """
+        pool = self.components.getOrdered()
+        # Need stable order to make sure we pick up peer lines from units in
+        # the same order. Otherwise, their order might switch and financials
+        # would look different (even though the bottom line would be the same).
+
+        for unit in pool:
+            unit.compute_balances()
+
         if self.past:
             self.financials.starting = self.past.financials.ending
             # Connect to the past
@@ -1045,7 +1083,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
         ending_balance.increment(starting_balance, consolidating=False)
         ending_balance.reset()
-        # Our goal is to pick up shape, so clear values. 
+        # Our goal is to pick up shape, so clear values.
 
         # By default, the ending balance sheet should look the same as the
         # starting one. Here, we copy the starting structure and zero out
@@ -1173,14 +1211,12 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         """
 
 
-        BusinessUnit._update_balance() -> None
+        BusinessUnit._load_balance() -> None
 
-        
-        Populate blank lines in the ending balance sheet with starting values.
-        Ignore lines that we have already consolidated. Derive() can later
-        overwrite these values. 
+
+        Connect starting balance sheet to past if available, copy shape to
+        ending balance sheet.
         """
-
         starting_balance = self.financials.starting
         ending_balance = self.financials.ending
 
