@@ -190,11 +190,12 @@ class UnitChef:
 
         # 1.   Chop the children
         before_kids = len(book.worksheets)
-        children = unit.components.get_ordered()
+        # sort by birth
+        sorter = lambda t: t[1].life.events[common_events.KEY_BIRTH]
+        children = unit.components.get_ordered(order_by=sorter)
 
         for child in children:
             self.chop_multi(book=book, unit=child)
-
 
         # 2.   Chop the parent
         #
