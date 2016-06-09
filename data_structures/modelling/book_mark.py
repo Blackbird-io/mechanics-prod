@@ -70,12 +70,12 @@ class BookMark(LineItem):
     
     def __init__(self, bmName = None, *tags):
         LineItem.__init__(self)
-        # self.tags.tag(*self.bmTags)
-        self.tags.tag(BLACKBIRD_STAMP)
+        # self.tags.add(*self.bmTags)
+        self.tags.add(BLACKBIRD_STAMP)
         if bmName:
             self.tags.set_name(bmName)
         if tags:
-            self.tags.tag(*tags)
+            self.tags.add(*tags)
         
     def set_name(self,newName):
         """
