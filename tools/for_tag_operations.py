@@ -1,7 +1,7 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 #Blackbird Engine
 #Module: tools.for_tag_operations
@@ -30,16 +30,16 @@ n/a
 
 
 
-#imports
+# imports
 # n/a
 
 
 
 
-#globals
-#n/a
+# globals
+# n/a
 
-#functions
+# functions
 def build_basic_profile(target):
     """
 
@@ -50,12 +50,14 @@ def build_basic_profile(target):
     Return set of all tags on target, with None stripped out. 
     """
     try:
-        criteria = set(target.tags.all)
+        criteria = target.tags.all | {target.tags.name}
     except AttributeError:
         raise
+
     criteria = criteria - {None}
-    #
+
     return criteria
+
 
 def build_combo_profile(target, model):
     """
@@ -71,7 +73,7 @@ def build_combo_profile(target, model):
     Financials object and its grandparent will usually be a line, Financials
     object, or a BusinessUnit. 
     """
-    #
+
     parent_rels = getattr(target, "relationships", None)
     if parent_rels:
         parent = getattr(parent_rels, "parent")
@@ -85,23 +87,30 @@ def build_combo_profile(target, model):
         grandpa = None
 
     parent_tags = getattr(parent, "tags", None)
-    tags_up_one = getattr(parent_tags, "all", [])
+    parent_name = getattr(parent_tags, "name", None)
+    tags_up_one = getattr(parent_tags, "all", set())
+    if parent_name:
+         tags_up_one.add(parent_name)
 
     grandpa_tags = getattr(grandpa, "tags", None)
-    tags_up_two = getattr(grandpa_tags, "all", [])
+    grandpa_name = getattr(grandpa_tags, "name", None)
+    tags_up_two = getattr(grandpa_tags, "all", set())
+    if grandpa_name:
+        tags_up_two.add(grandpa_name)
 
     try:
-        criteria = set(target.tags.all)
+        criteria = target.tags.all | {target.tags.name}
     except AttributeError:
         raise
 
     criteria = criteria | set(tags_up_one) | set(tags_up_two)
-    criteria = criteria | set(model.tags.all)
+    criteria = criteria | set(model.tags.all) | {model.tags.name}
     criteria = criteria - {None}
-    #
+
     return criteria
 
-def get_tagged(container, *tags, catch_blank_ids = True):
+
+def get_tagged(container, *tags, catch_blank_ids=True):
     """
 
 
@@ -129,18 +138,19 @@ def get_tagged(container, *tags, catch_blank_ids = True):
                 k = obj.id.bbid
                 result[k] = obj
             except AttributeError:
-                #easier to catch missing error than two layers of getattr
-                #or use some inspect function.
+                # easier to catch missing error than two layers of getattr
+                # or use some inspect function.
                 if catch_blank_ids:
                     blanks = result.setdefault(None, set())
-                    #if None is already a key, pull its set, otherwise add None
-                    #as a key with an empty set
+                    # if None is already a key, pull its set, otherwise add
+                    # None as a key with an empty set
                     blanks.add(obj)
-    #
+
     return result
-    
+
+
 def get_product_names(model, question):
     pass
-    ####should be in interview tools
-   ##return a list of product names, top to bottom by size, that fits
-   ##the input_element array; only runs when model is tagged "real names"
+    # should be in interview tools
+    # return a list of product names, top to bottom by size, that fits
+    # the input_element array; only runs when model is tagged "real names"
