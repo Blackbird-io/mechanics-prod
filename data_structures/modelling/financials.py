@@ -29,6 +29,8 @@ Financials            a StatementBundle with income, cash, balance and others.
 import bb_settings
 import copy
 
+from .statement import  Statement
+
 from .statements import Overview, Income, CashFlow, BalanceSheet
 from .statement_bundle import StatementBundle
 from .equalities import Equalities
@@ -62,13 +64,14 @@ class Financials(StatementBundle):
     copy                  return deep copy
     ====================  ======================================================
     """
-    ORDER = ("overview", "income", "cash", "ending", "ledger")
+    ORDER = ("overview", "income", "cash", "valuation", "ending", "ledger")
     # tuple for immutability
     
     def __init__(self):
         self.overview = Overview()
         self.income = Income()
         self.cash = CashFlow()
+        self.valuation = Statement("Valuation")
         self.starting = BalanceSheet("Starting Balance Sheet")
         self.ending = BalanceSheet("Ending Balance Sheet")
         self.ledger = None
@@ -103,7 +106,8 @@ class Financials(StatementBundle):
 
         result += border
         
-        self.ORDER = ("overview", "income", "cash", "starting", "ending", "ledger")
+        self.ORDER = ("overview", "income", "cash", "valuation", "starting",
+                      "ending", "ledger")
         # Use a special tuple that includes all statements to block the default
         # class order.
         result += StatementBundle.__str__(self)
@@ -129,7 +133,8 @@ class Financials(StatementBundle):
         """
         new_instance = copy.copy(self)
 
-        self.ORDER = ("overview", "income", "cash", "starting", "ending", "ledger")
+        self.ORDER = ("overview", "income", "cash", "valuation", "starting",
+                      "ending", "ledger")
 
         for name in self.ORDER:
             own_statement = getattr(self, name, None)

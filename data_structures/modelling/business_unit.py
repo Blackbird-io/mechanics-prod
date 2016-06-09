@@ -452,7 +452,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         if self.filled:
             return
         else:
-            for statement in ("overview", "income", "cash"):
+            for statement in ("overview", "income", "cash", "valuation"):
                 self.compute(statement)
 
             self.compute_balances()
