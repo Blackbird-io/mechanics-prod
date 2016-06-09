@@ -76,7 +76,7 @@ def secondsToMonths(seconds):
 
 def locateByTag(container, *targetTags):
     """
-    returns index of first location of object that includes the target tag(s)
+    returns index of first location of object that includes the target add(s)
     """
     criteria = set(targetTags)
     location = None
@@ -93,7 +93,7 @@ def locateByTag(container, *targetTags):
 
 def findByTag(container, *targetTags):
     """
-    returns first object that includes the target tag(s)
+    returns first object that includes the target add(s)
     if no match found raises error
     """
     criteria = set()

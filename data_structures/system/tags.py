@@ -71,8 +71,8 @@ class Tags:
     extrapolate_to()      returns a Tags.copy()
     inherit_from()        adds tags on a different object to instance
     set_name()            sets instance.reqTags[0]
-    tag()                 adds tag to object, if parameters allow
-    untag()               removes all instances of tag from object
+    add()                 adds tag to object, if parameters allow
+    remove()               removes all instances of tag from object
     ====================  ======================================================
     """
     def __init__(self, name=None):
@@ -145,7 +145,7 @@ class Tags:
 
         # source tags is now **unordered**
         for tag in source.all:
-            self.tag(tag)
+            self.add(tag)
 
     def set_name(self, name):
         """
@@ -160,11 +160,11 @@ class Tags:
 
         self._name = deCase(name)
 
-    def tag(self, *newTags, field="opt"):
+    def add(self, *newTags, field="opt"):
         """
 
 
-        Tags.tag() -> None
+        Tags.add() -> None
 
         --``*newTags`` is a list of tags to include on the instance
 
@@ -189,11 +189,11 @@ class Tags:
             tag = deCase(tag)
             real_thing.add(tag)
 
-    def untag(self, badTag):
+    def remove(self, badTag):
         """
 
 
-        Tags.untag(badTag) -> None
+        Tags.remove(badTag) -> None
 
         --``badTag`` tag to remove from instance
 
@@ -225,4 +225,4 @@ class Tags:
         for attr in fields:
             source_tags = getattr(self, attr)
             for tag in source_tags:
-                target.tag(tag, field=attr)
+                target.add(tag, field=attr)
