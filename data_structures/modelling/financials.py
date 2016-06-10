@@ -98,7 +98,7 @@ class Financials(StatementBundle):
 
             header += starting
 
-            ending =  "Period ending:   " + str(self.relationships.parent.period.ending)
+            ending = "Period ending:   " + str(self.relationships.parent.period.ending)
             ending = ending.center(bb_settings.SCREEN_WIDTH)
             ending += "\n"
 
@@ -113,8 +113,8 @@ class Financials(StatementBundle):
         result += border
 
         if self.has_valuation:
-            self.ORDER = ("overview", "income", "cash", "valuation",
-                          "starting", "ending", "ledger")
+            self.ORDER = ("overview", "income", "cash", "starting", "ending",
+                          "ledger", "valuation")
         else:
             self.ORDER = ("overview", "income", "cash", "starting", "ending",
                           "ledger")
@@ -143,8 +143,8 @@ class Financials(StatementBundle):
         """
         new_instance = copy.copy(self)
 
-        self.ORDER = ("overview", "income", "cash", "valuation", "starting",
-                      "ending", "ledger")
+        self.ORDER = ("overview", "income", "cash", "starting", "ending",
+                      "ledger", "valuation")
 
         for name in self.ORDER:
             own_statement = getattr(self, name, None)
