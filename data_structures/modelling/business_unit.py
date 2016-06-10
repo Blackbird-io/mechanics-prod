@@ -355,7 +355,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         consolidation logic, updates balance sheets, then runs derivation logic.
         """
         self._load_balance()
-        self._consolidate("ending")
+        self._consolidate("ending", recur=False)
         self._update_balance()
 
         # Sets ending balance lines to starting values by default
@@ -452,10 +452,15 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         if self.filled:
             return
         else:
-            for statement in ("overview", "income", "cash", "valuation"):
+            # compute overview, income, and cash flow statements
+            for statement in ("overview", "income", "cash"):
                 self.compute(statement)
 
+            # compute balance sheets
             self.compute_balances()
+
+            # compute valuation last because it depends on other statements
+            self.compute("valuation")
 
             self.filled = True
 
@@ -625,7 +630,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
 
-    def _consolidate(self, statement, trace=False):
+    def _consolidate(self, statement, trace=False, recur=True):
         """
 
 
@@ -642,9 +647,9 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
         for unit in pool:
             if unit.life.conceived:
-                self._consolidate_unit(unit, statement)
+                self._consolidate_unit(unit, statement, recur=recur)
 
-    def _consolidate_unit(self, sub, statement):
+    def _consolidate_unit(self, sub, statement, recur=True):
         """
 
 
@@ -774,7 +779,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         position for a replica.
         """
         # Step Only: Actual consolidation
-        if statement != "ending":
+        if recur:
             sub.compute(statement)
 
         child_statement = getattr(sub.financials, statement)
@@ -815,7 +820,6 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         this_statement = getattr(self.financials, statement)
 
         for line in this_statement.get_ordered():
-
             self._derive_line(line)
 
     def _derive_line(self, line):
