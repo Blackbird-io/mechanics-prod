@@ -80,13 +80,13 @@ class Model(TagsMixIn):
     All BusinessUnits within a TimePeriod use the directory to check whether
     they can add a new business unit as a component. If the business unit's bbid
     is already in the directory, they cannot. If it is new to the TimePeriod,
-    they can.     
+    they can.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
-    id                    instance of ID object, carries bbid for model 
+    id                    instance of ID object, carries bbid for model
     interview             property; points to target BusinessUnit.interview
     portal_data           dict; stores data from Portal related to the instance
     stage                 property; points to target BusinessUnit.stage
@@ -103,10 +103,10 @@ class Model(TagsMixIn):
     start()               sets _started and started to True
     transcribe()          append message and timestamp to transcript
     ====================  ======================================================
-    
+
     ``P`` indicates attributes decorated as properties. See attribute-level doc
     string for more information.
-    """    
+    """
     def __init__(self, name):
         TagsMixIn.__init__(self, name)
 
@@ -124,7 +124,7 @@ class Model(TagsMixIn):
         self.scenarios = dict()
         for s in DEFAULT_SCENARIOS:
             self.scenarios[s] = dict()
-        
+
         self.target = None
         # target is BU from which to get path and interview info, default
         # points to top-level business unit/company
@@ -208,7 +208,7 @@ class Model(TagsMixIn):
     def from_portal(cls, portal_model):
         """
 
-    
+
         Model.from_portal(portal_model) -> Model
 
 
@@ -221,11 +221,10 @@ class Model(TagsMixIn):
 
         If portal_model does not specify a Model object, method creates a new
         instance. Method stores all portal data other than the Model in the
-        output's .portal_data dictionary.         
+        output's .portal_data dictionary.
         """
-        M = None
         flat_model = portal_model["e_model"]
-        #
+
         if flat_model:
             M = dill.loads(flat_model)
         else:
@@ -236,7 +235,7 @@ class Model(TagsMixIn):
         M.portal_data.update(portal_model)
         del M.portal_data["e_model"]
         return M
-    
+
     def start(self):
         """
 
@@ -244,7 +243,7 @@ class Model(TagsMixIn):
         Model.start() -> None
 
 
-        Method sets instance._started (and ``started`` property) to True. 
+        Method sets instance._started (and ``started`` property) to True.
         """
         self._started = True
 
@@ -259,22 +258,22 @@ class Model(TagsMixIn):
         """
         time_stamp = time.time()
         record = (message,time_stamp)
-        self.transcript.append(record)  
+        self.transcript.append(record)
 
         #//
 
         # later routines:
             # in business unit, should have ._add_time_line(tab)
-            # 
+            #
 
         # should have written the full timeline
         # should enter all of these into bb_col_lookup
             #by end date
-            #then unit-specific sheets can pick those up        
-    
+            #then unit-specific sheets can pick those up
+
         # but better logic is:
             # write the date
-            # write the period      
+            # write the period
 
         # first, carry over the master
         ##for every row that's filled out in params, should also copy here
@@ -307,33 +306,33 @@ class Model(TagsMixIn):
             #would then be easier to ask each period to do its thing?
             #or alternatively would pick every unit in the current period and go from there
                 #yeah, should start with the current period, and then step through the company hierarchy
-        
-    
+
+
         # Loren's point: create an intermediate representation in memory
             # then can write that quickly
             # so would probably set up sheets (in memory), formulas, etcetera
             # would need to have offsets and everything
-            # 
+            #
 
         #for unit:
-            
+
             # spread life somehow
                 # row for each property
-            
+
             # can just record age and stuff
             # or record all events in some profile section
-            
+
             # take the active tab
             # for each line, add consolidation functionality
             # have to connect old balance sheet as starting
                 # that's simple enough
-            
+
         #for driver:
             # need to map ``data`` to cell coordinates
                 #as in, take each key and connect it to a cell
                     #populate the cell with the driver's value
                     #remember the coordinates
-            
+
             # need to translate formula to one that works on cell coordinates
             # formula should have an _xl equivalent
                 # which should take the actual formula and turn it into excel compatible string
@@ -346,13 +345,13 @@ class Model(TagsMixIn):
                 ## may also want to organize lookup tables by section to avoid name collisions
                 ## so have a .income or .cash section where names have to be unique
 
-        
+
         # test would be:
             # compare net income and balance sheet to existing representation
 
-        # 
-        
+        #
 
-    
-        
-            
+
+
+
+
