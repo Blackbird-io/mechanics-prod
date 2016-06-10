@@ -64,7 +64,7 @@ class CompanyValue(Outline):
         self.ev = EnterpriseValue()
         #
         self.set_path()
-        self.tags.tag("valuation", field = "req")
+        self.tags.add("valuation", field = "req")
 
     def set_path(self):
         """

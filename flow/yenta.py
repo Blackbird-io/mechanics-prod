@@ -1,10 +1,10 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2014
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
-#Blackbird Environment
-#Module: flow.yenta
+# Blackbird Environment
+# Module: data_structures.flow.yenta
 
 """
 
@@ -37,22 +37,22 @@ from tools.for_tag_operations import build_basic_profile, build_combo_profile
 
 
 # Constants
-#n/a
+# n/a
 
 #NOTE: class variables set at bottom of the module
 
 # Classes
-#
-#UPGRADE-S: module currently uses a lot of dictionary[key] calls to retrieve
-#topic objects based on lists of tdexes passed from method to method. Module
-#uses this approach to ensure that pickle and deepcopy remain compatible with
-#any selection state saved on the target object. Both deepcopy and pickle break
-#on objects that point to modules. Topics used to be modules. 
-#
-#Module can improve selection speed substantially by passing lists of actual
-#topic objects from one sub-routine to another. Module would still have to save
-#state via bbid only, since a topic can change tags between Matchmaker calls.
-#
+
+# UPGRADE-S: module currently uses a lot of dictionary[key] calls to retrieve
+# topic objects based on lists of tdexes passed from method to method. Module
+# uses this approach to ensure that pickle and deepcopy remain compatible with
+# any selection state saved on the target object. Both deepcopy and pickle
+# break on objects that point to modules. Topics used to be modules.
+
+# Module can improve selection speed substantially by passing lists of actual
+# topic objects from one sub-routine to another. Module would still have to save
+# state via bbid only, since a topic can change tags between Matchmaker calls.
+
 class Yenta():
     """
 
@@ -131,14 +131,14 @@ class Yenta():
         process. Method finds partial matches.
         
         """
-        #
+
         result = False
-        #allow search by partial name
+        # allow search by partial name
         try:
             topic_bbid = self.TM.local_catalog.by_name[topic_name]
         except KeyError:
             for known_key in sorted(self.TM.local_catalog.by_name):
-                #sort to always 
+                # sort to always
                 match = known_key.find(topic_name)
                 if match == -1:
                     continue
@@ -148,60 +148,46 @@ class Yenta():
             else:
                 c = "No topic matches specified name."
                 raise KeyError(c)
-        #
+
         pool_of_one = {topic_bbid}
         eligibles = self.find_eligible(target, model, pool_of_one,
-                                       combined = combined, trace = True)
-        #
+                                       combined=combined, trace=True)
+
         if topic_bbid in eligibles:
             result = True
         work = self.trace
         missing_on_topic = work["scoring"][topic_bbid]["missing on topic"]
         missing_on_target = work["scoring"][topic_bbid]["missing on target"]
-        #
-        #printing logic follows
-        #
-##      Topic:  "name"
-##      Target:  <obj>
-##
-##       A. Tags missing from topic"
-##             1. blah
-##             2. blah
-##             3. #should enumerate here
-#
-#        B. Tags missing from target"
-#              1. blah
-#              2. blah
+
         line_1 = '\n\nTopic:    "%s"\n' % topic_name
         line_2 = 'Target:   %s\n' % target
         line_3 = "Eligible: %s\n\n" % str(result).upper()
         topic_header = "\nA. Tags missing from topic:\n"
         target_header = "\nB. Tags missing from target:\n"
         target_header += "(only exist when the topic specifies required tags)"
-        #
+
         print(line_1)
         print(line_2)
         print(line_3)
-        #
-        #print details only if result is false
+
+        # print details only if result is false
         if not result:
             print(topic_header)
             for (n, tag) in enumerate(sorted(missing_on_topic)):
                 line = "\t%s. %s\n" % (n, tag)
                 print(line)
-        #
+
         if not result:
             print(target_header)
             for (n, tag) in enumerate(sorted(missing_on_target)):
                 line = "\t%s. %s\n" % (n, tag)
                 print(line)
             print("\n")        
-        #
-        return (result, work)       
-        
-    
-    def find_eligible(self, target, model, pool = None, combined = True,
-                      trace = False):
+
+        return result, work
+
+    def find_eligible(self, target, model, pool=None, combined=True,
+                      trace=False):
         """
 
 
@@ -237,19 +223,15 @@ class Yenta():
         each topic) to instance.trace.
         """
         eligibles = []
-        try:
-            part_of = target.relationships.parent.name
-        except AttributeError:
-            part_of = None
 
-        targ_criterion = set(target.tags.required) - {part_of}
+        targ_criterion = target.tags.required | {target.name}
         targ_criterion = targ_criterion - {None}
-        #
-        #UPGRADE-F: Can make selection process more open-ended by also removing
-        #the target name from criterion. As is, naming binding creates a sort of
-        #short cut for matches. Using only descriptive tags would shift
-        #selection to a more functional match.
-        #
+
+        # UPGRADE-F: Can make selection process more open-ended by also removing
+        # the target name from criterion. As is, naming binding creates a sort of
+        # short cut for matches. Using only descriptive tags would shift
+        # selection to a more functional match.
+
         if combined:
             targ_profile = build_combo_profile(target, model)
         else:
@@ -260,40 +242,41 @@ class Yenta():
         #
         pool = set(pool) - model.target.used
         pool = sorted(pool)
-        #sort pool into list to maintain stable evaluation order and results
-        #
+        # sort pool into list to maintain stable evaluation order and results
+
         if trace:
             work = dict()
             work["target criterion"] = targ_criterion.copy()
             work["target profile"] = targ_profile.copy()
             work["revised pool"] = pool.copy()
             work["scoring"] = dict()
-        #
+
         for bbid in pool:
             topic = self.TM.local_catalog.issue(bbid)
-            topic_criterion = set(topic.tags.required[1:]) - {None}
+            topic_criterion = topic.tags.required - {None}
             topic_profile = build_basic_profile(topic)
-            #
+
             missing_on_topic = targ_criterion - topic_profile
             missing_on_target = topic_criterion - targ_profile
+
             if trace:
                 work["scoring"][bbid] = dict()
                 work["scoring"][bbid]["topic profile"] = topic_profile
                 work["scoring"][bbid]["topic criterion"] = topic_criterion
                 work["scoring"][bbid]["missing on topic"] = missing_on_topic
                 work["scoring"][bbid]["missing on target"] = missing_on_target
-            #
-            if any([missing_on_topic, missing_on_target]):   
+
+            if any([missing_on_topic, missing_on_target]):
                 continue
             else:
-                #all requirements satisfied, topic eligible
+                # all requirements satisfied, topic eligible
                 eligibles.append(bbid)
         if trace:
             self.trace = work
-        #
+
         return eligibles
 
-    def pick_best(self, target, model, candidates, combined = True):
+    def pick_best(self, target, model, candidates, combined=True):
         """
 
 
@@ -348,31 +331,31 @@ class Yenta():
         #has to live by the same standard. Otherwise, if bad topics go in front
         #of good ones in candidates, the standard will be low at the outset and
         #high later, so ``best_candidates`` will include sub-par topics.
-        #
+
         self.scores = dict()
         best_candidates = []
-        #
+
         if combined:
             criteria = build_combo_profile(target, model)
         else:
             criteria = build_basic_profile(target)
-        #
+
         best_raw_score = 0
         for bbid in candidates:
-            #
+
             topic = self.TM.local_catalog.issue(bbid)
-            #
+
             match = criteria & build_basic_profile(topic)
             raw_score = len(match)
             rel_score = raw_score/len(topic.tags.all)
-            #
+
             self.scores[bbid] = [raw_score, rel_score]
-            #save state on Yenta instance so subsequent routines can access
-            #the information.
-            #
+            # save state on Yenta instance so subsequent routines can access
+            # the information.
+
             if raw_score >= best_raw_score:
                 best_raw_score = raw_score
-        #
+
         for scored_bbid, [known_raw_score, known_rel_score] in self.scores.items():
             if known_raw_score >= best_raw_score:
                 best_candidates.append(scored_bbid)
@@ -439,31 +422,31 @@ class Yenta():
         best = None
         chosen_bbid = None
         chosen_topic = None
-        #
+
         fp = model.target.stage.focal_point
         fp.guide.selection.increment(1)
-        #
+
         eligibles = self.find_eligible(fp, model)
-        #
+
         if len(eligibles) == 0:
             pass
-            #method will record dry run before concluding
+            # method will record dry run before concluding
         elif len(eligibles) == 1:
             chosen_bbid = eligibles[0]
         else:
-            best = self.pick_best(fp, model, eligibles, combined = True) 
+            best = self.pick_best(fp, model, eligibles, combined=True)
             if len(best) == 1:
                 chosen_bbid = best[0]
             else:
                 chosen_bbid = self.tie_breaker(best)
-        #
-        #check for dry runs and retrieve a copy of the topic w the chosen bbid
+
+        # check for dry runs and retrieve a copy of the topic w the chosen bbid
         if chosen_bbid:
             chosen_topic = self.TM.local_catalog.issue(chosen_bbid)
             fp.guide.selection.record_used_topic(chosen_topic)
         else:
             fp.guide.selection.record_dry_run()
-        #
+
         return chosen_topic
         
     def tie_breaker(self, candidates):
@@ -487,9 +470,9 @@ class Yenta():
                 top_rel_score = rel_score
             else:
                 continue
-        #
+
         return winner
         
-#Connect Yenta class to TopicManager so Yenta can access catalog
+# Connect Yenta class to TopicManager so Yenta can access catalog
 TopicManager.populate()
 Yenta.set_topic_manager(TopicManager)

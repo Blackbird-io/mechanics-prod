@@ -41,7 +41,7 @@ from data_structures.system.messenger import Messenger
 
 #globals
 intro_line = LineItem("introduction")
-intro_line.tags.tag("start", "configuration")
+intro_line.tags.add("start", "configuration")
 intro_line.guide.quality.set_standard(2)
     
 #classes
