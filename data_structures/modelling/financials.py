@@ -54,17 +54,19 @@ class Financials(StatementBundle):
     ====================  ======================================================
 
     DATA:
-    overview              Statement; general data about an object
-    income                Statement; income statement for object
-    cash                  Statement; cash flow statement for object
     balance               BalanceSheet; starting and ending balance for object
+    cash                  Statement; cash flow statement for object
+    has_valuation         bool; whether the object has a non-blank valuation
+    income                Statement; income statement for object
     ledger                placeholder for object general ledger
+    overview              Statement; general data about an object
+    valuation             Statement; business valuation for the object
 
     FUNCTIONS:
     copy                  return deep copy
     ====================  ======================================================
     """
-    ORDER = ("overview", "income", "cash", "valuation", "ending", "ledger")
+    ORDER = ("overview", "income", "cash", "ending", "ledger")
     # tuple for immutability
     
     def __init__(self):
@@ -75,6 +77,10 @@ class Financials(StatementBundle):
         self.starting = BalanceSheet("Starting Balance Sheet")
         self.ending = BalanceSheet("Ending Balance Sheet")
         self.ledger = None
+
+    @property
+    def has_valuation(self):
+        return not self.valuation == Statement("Valuation")
 
     def __str__(self):
         
