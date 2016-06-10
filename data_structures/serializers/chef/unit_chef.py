@@ -251,6 +251,11 @@ class UnitChef:
         sheet.bb.outline_level = 0
         group_lines(sheet, row=selector_row)
 
+        # 2.6 add valuation tab, if any exists for unit
+        sheet.bb.outline_level = 1
+        if unit.financials.has_valuation:
+            self._add_valuation_tab(book, unit, index=before_kids+1)
+
         return sheet
 
     def chop_unit(self, *pargs, book, unit):
@@ -693,7 +698,69 @@ class UnitChef:
         sheet.bb.current_row = parameters.rows.ending
         return sheet
 
-    def _create_unit_sheet(self, *pargs, book, unit, index):
+    def _add_valuation_tab(self, book, unit, index=None):
+        """
+
+
+        UnitChef._add_valuation_tab() -> Worksheet
+
+        --``book`` must be a Workbook
+        --``unit`` must be an instance of BusinessUnit
+
+        Method creates a valuation tab and chops unit valuation statement.
+        """
+
+        # 1.0   set up the unit sheet and spread params
+        if not index:
+            index = len(book.worksheets)
+
+        name = 'Valuation of ' + unit.tags.name
+        sheet = self._create_unit_sheet(book=book, unit=unit,
+                                        index=index, name=name,
+                                        current_only=True)
+        sheet.bb.outline_level += 1
+        self._add_unit_params(sheet=sheet, unit=unit)
+
+        # 1.1   set-up life
+        sheet.bb.current_row += 1
+        sheet = self._add_unit_life(sheet=sheet, unit=unit)
+        sheet.bb.outline_level -= 1
+
+        # 1.2  Add Valuation statement
+        sheet.bb.current_row = sheet.bb.events.rows.ending
+        sheet.bb.current_row += 1
+        current = sheet.bb.time_line.columns.get_position(unit.period.end)
+        statement_row = sheet.bb.current_row+1
+        statement = unit.financials.valuation
+        line_chef.chop_statement(
+            sheet=sheet,
+            statement=statement,
+            column=current,
+            set_labels=True)
+
+        # 1.5 add area and statement labels and sheet formatting
+        sheet_style.style_sheet(sheet)
+        cell_styles.format_area_label(sheet, statement.name, statement_row)
+
+        # 1.6 add selector cell
+        selector_row = sheet.bb.parameters.rows.by_name[
+            field_names.ACTIVE_SCENARIO]
+        if SCENARIO_SELECTORS:
+            label_column = sheet.bb.parameters.columns.by_name[
+                field_names.LABELS]
+            add_scenario_selector(sheet, label_column, selector_row,
+                                  book.scenario_names)
+
+        sheet.bb.outline_level = 1
+        group_lines(sheet, row=selector_row + 1)
+
+        sheet.bb.outline_level = 0
+        group_lines(sheet, row=selector_row)
+
+        return sheet
+
+    def _create_unit_sheet(self, *pargs, book, unit, index, name=None,
+                           current_only=False):
         """
 
 
@@ -703,7 +770,9 @@ class UnitChef:
         Returns sheet with current row pointing to last parameter row
         """
 
-        name = unit.tags.name
+        if not name:
+            name = unit.tags.name
+
         if name in book:
             rev_name = name + " ..." + str(unit.id.bbid)[-8: ]
             name = rev_name
@@ -733,7 +802,8 @@ class UnitChef:
         # Hide sheets for units below a certain depth. The depth should be a
         # Chef-level constant. Use ``sheet_state := "hidden"`` to implement.
         sheet.bb.outline_level += 1
-        self._link_to_time_line(book=book, sheet=sheet)
+        self._link_to_time_line(book=book, sheet=sheet,
+                                current_only=current_only)
         self._add_unit_params(sheet=sheet, unit=unit)
         sheet.bb.outline_level -= 1
         # At this point, sheet.bb.current_row will point to the last parameter.
@@ -752,7 +822,7 @@ class UnitChef:
         return sheet
 
     def _link_to_area(self, source_sheet, local_sheet, area_name, group=False,
-                      keep_format=True):
+                      keep_format=True, current_only=False, num_cols=1):
         """
 
 
@@ -786,7 +856,13 @@ class UnitChef:
             if group:
                 group_lines(local_sheet, row=local_row)
 
-            for column in source_area.columns.by_name.values():
+            if current_only:
+                use_columns = sorted(source_area.columns.by_name.values())
+                use_columns = use_columns[0:num_cols]
+            else:
+                use_columns = source_area.columns.by_name.values()
+
+            for column in use_columns:
 
                 source_column = (source_area.columns.starting or 0) + column
                 local_column = (local_area.columns.starting or 0) + column
@@ -811,7 +887,7 @@ class UnitChef:
 
         return local_sheet
 
-    def _link_to_time_line(self, *pargs, book, sheet):
+    def _link_to_time_line(self, *pargs, book, sheet, current_only=False):
         """
 
 
@@ -824,13 +900,15 @@ class UnitChef:
         """
         source = book.get_sheet_by_name(tab_names.TIME_LINE)
 
-        sheet = self._link_to_area(source, sheet, field_names.TIMELINE)
+        sheet = self._link_to_area(source, sheet, field_names.TIMELINE,
+                                   current_only=current_only, num_cols=1)
 
         for column in sheet.bb.time_line.columns.by_name.values():
             sheet_style.set_column_width(sheet, column)
 
         sheet = self._link_to_area(source, sheet, field_names.PARAMETERS,
-                                   group=True)
+                                   group=True, current_only=current_only,
+                                   num_cols=3)
 
         return sheet
 
@@ -862,7 +940,7 @@ class UnitChef:
                 line.clear()
                 line.xl = LineData()
 
-        new_start_bal.tags.name = "Starting Balance Sheet"
+        new_start_bal.set_name("Starting Balance Sheet")
         return new_start_bal
 
     def _balance_lines(self, start_line, end_line):
