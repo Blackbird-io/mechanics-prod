@@ -1,10 +1,10 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2016
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
-#Blackbird Environment
-#Module: data_structures.modelling.business_unit
+# Blackbird Environment
+# Module: data_structures.modelling.business_unit
 """
 
 Module defines BusinessUnit class.
@@ -37,7 +37,6 @@ from data_structures.guidance.interview_tracker import InterviewTracker
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
-from data_structures.system.tags import Tags
 from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.valuation.business_summary import BusinessSummary
 from data_structures.valuation.company_value import CompanyValue
@@ -95,6 +94,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
     add_component()       adds unit to instance components
     add_driver()          registers a driver
     clear()               restore default attribute values
+    compute()             consolidates and derives a statement for all units
     fill_out()            integrates consolidate() and derive()
     kill()                make dead, optionally recursive
     make_past()           put a younger version of unit in prior period
@@ -329,7 +329,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
         self.drivers.add_item(newDriver, *otherKeys)
 
-    def compute(self, statement):
+    def compute(self, statement_name):
         """
 
 
@@ -340,27 +340,8 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         Method recursively runs consolidation and derivation logic on
         statements for instance and components.
         """
-        self._consolidate(statement)
-        self._derive(statement)
-
-    def compute_balances(self):
-        """
-
-
-        BusinessUnit.computer_balances() -> None
-
-
-        Method recursively fills out balance sheets for instance and components.
-        Method adjusts shape of ending and starting balance sheets, runs
-        consolidation logic, updates balance sheets, then runs derivation logic.
-        """
-        self._load_balance()
-        self._consolidate("ending")
-        self._update_balance()
-
-        # Sets ending balance lines to starting values by default
-        self._derive("ending")
-        # Derive() will overwrite ending balance sheet where appropriate
+        self._consolidate(statement_name, recur_func="compute")
+        self._derive(statement_name)
 
     def copy(self):
         """
@@ -452,10 +433,12 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         if self.filled:
             return
         else:
+            self._load_starting_balance()
+
             for statement in ("overview", "income", "cash"):
                 self.compute(statement)
 
-            self.compute_balances()
+            self._compute_ending_balance("ending")
 
             self.filled = True
 
@@ -624,8 +607,61 @@ class BusinessUnit(History, Equalities, TagsMixIn):
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
+    def _build_directory(self, recur=True, overwrite=True):
+        """
 
-    def _consolidate(self, statement, trace=False):
+
+        BusinessUnit._build_directory() -> (id_directory, ty_directory)
+
+
+        Register yourself and optionally your components, by type and by id
+        return id_directory, ty_directory
+        """
+
+        #return a dict of bbid:unit
+        id_directory = dict()
+        ty_directory = dict()
+        if recur:
+            for unit in self.components.values():
+                lower_level = unit._build_directory(recur=True, overwrite=overwrite)
+                lower_ids = lower_level[0]
+                lower_ty = lower_level[1]
+                id_directory.update(lower_ids)
+                ty_directory.update(lower_ty)
+
+            #update the directory for each unit in self
+            pass
+        if self.id.bbid in id_directory:
+            if not overwrite:
+                c = "Can not overwrite existing bbid"
+                raise bb_exceptions.BBAnalyticalError(c)
+
+        id_directory[self.id.bbid] = self
+        this_type = ty_directory.setdefault(self.type, set())
+        this_type.add(self.id.bbid)
+
+        return id_directory, ty_directory
+
+    def _compute_ending_balance(self, statement_name):
+        """
+
+
+        BusinessUnit.computer_balances() -> None
+
+
+        Method recursively fills out balance sheets for instance and components.
+        Method adjusts shape of ending and starting balance sheets, runs
+        consolidation logic, updates balance sheets, then runs derivation logic.
+        """
+        self._consolidate(statement_name, recur_func="_compute_ending_balance")
+
+        self._update_balance()
+        # Sets ending balance lines to starting values by default
+
+        self._derive(statement_name)
+        # Derive() will overwrite ending balance sheet where appropriate
+
+    def _consolidate(self, statement_name, trace=False, recur_func=None):
         """
 
 
@@ -642,9 +678,10 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
         for unit in pool:
             if unit.life.conceived:
-                self._consolidate_unit(unit, statement)
+                self._consolidate_unit(unit, statement_name,
+                                       recur_func=recur_func)
 
-    def _consolidate_unit(self, sub, statement):
+    def _consolidate_unit(self, sub, statement_name, recur_func=None):
         """
 
 
@@ -774,16 +811,16 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         position for a replica.
         """
         # Step Only: Actual consolidation
-        if statement != "ending":
-            sub.compute(statement)
+        if recur_func:
+            getattr(sub, recur_func)(statement_name)
 
-        child_statement = getattr(sub.financials, statement)
+        child_statement = getattr(sub.financials, statement_name)
 
         if child_statement:
-            parent_statement = getattr(self.financials, statement)
+            parent_statement = getattr(self.financials, statement_name)
             parent_statement.increment(child_statement, consolidating=True)
 
-    def _derive(self, statement, spread=False, sheet=None):
+    def _derive(self, statement_name, spread=False, sheet=None):
         """
 
 
@@ -806,16 +843,11 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
         NOTE: ALWAYS RUN BusinessUnit.consolidate() BEFORE BusinessUnit.Derive()
         """
-        # need to change tagging rules above to make sure BU.consolidate() tags
-        # lines appropriately. also need to make sure that inheritTagsFrom() does---------------------------------------------------------------
-        # not pick up blockingTags
-
         # We never derive the starting balance sheet. Accordingly,
         # financials.ordered does not include ``starting``.
-        this_statement = getattr(self.financials, statement)
+        this_statement = getattr(self.financials, statement_name)
 
         for line in this_statement.get_ordered():
-
             self._derive_line(line)
 
     def _derive_line(self, line):
@@ -1057,7 +1089,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         
         return lines
 
-    def _load_balance(self):
+    def _load_starting_balance(self):
         """
 
 
@@ -1073,7 +1105,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         # would look different (even though the bottom line would be the same).
 
         for unit in pool:
-            unit.compute_balances()
+            unit._load_starting_balance()
 
         if self.past:
             self.financials.starting = self.past.financials.ending
@@ -1140,42 +1172,6 @@ class BusinessUnit(History, Equalities, TagsMixIn):
             for unit in self.components.values():
                 unit._register_in_period(recur, overwrite)
 
-    def _build_directory(self, recur=True, overwrite=True):
-        """
-
-
-        BusinessUnit._build_directory() -> (id_directory, ty_directory)
-
-
-        Register yourself and optionally your components, by type and by id
-        return id_directory, ty_directory
-        """
-
-        #return a dict of bbid:unit
-        id_directory = dict()
-        ty_directory = dict()
-        if recur:
-            for unit in self.components.values():
-                lower_level = unit._build_directory(recur=True, overwrite=overwrite)
-                lower_ids = lower_level[0]
-                lower_ty = lower_level[1]
-                id_directory.update(lower_ids)
-                ty_directory.update(lower_ty)
-
-            #update the directory for each unit in self
-            pass
-        if self.id.bbid in id_directory:
-            if not overwrite:
-                c = "Can not overwrite existing bbid"
-                raise bb_exceptions.BBAnalyticalError(c)
-
-        id_directory[self.id.bbid] = self
-        this_type = ty_directory.setdefault(self.type, set())
-        this_type.add(self.id.bbid)
-
-        return id_directory, ty_directory
-        # unfinished <--------------------------------------------------------------------------------------------
-
     def _set_components(self, comps=None):
         """
 
@@ -1235,6 +1231,25 @@ class BusinessUnit(History, Equalities, TagsMixIn):
                     ending_line = ending_balance.find_first(starting_line.name)
                     self._update_lines(starting_line, ending_line)
 
+    def _update_id(self, namespace, recur=True):
+        """
+
+
+        BusinessUnit._update_id() -> None
+
+
+        Assigns instance a new id in the namespace, based on the instance name.
+        If ``recur`` == True, updates ids for all components in the parent
+        instance bbid namespace.
+        """
+        self.id.set_namespace(namespace)
+        self.id.assign(self.tags.name)
+        # This unit now has an id in the namespace. Now pass our bbid down as
+        # the namespace for all downstream components.
+        if recur:
+            for unit in self.components.values():
+                unit._update_id(namespace=self.id.bbid, recur=True)
+
     def _update_lines(self, start_line, end_line):
         """
 
@@ -1259,22 +1274,3 @@ class BusinessUnit(History, Equalities, TagsMixIn):
             elif start_line.value is not None:
                 end_line.set_value(start_line.value,
                                    self._UPDATE_BALANCE_SIGNATURE)
-
-    def _update_id(self, namespace, recur=True):
-        """
-
-
-        BusinessUnit._update_id() -> None
-
-
-        Assigns instance a new id in the namespace, based on the instance name.
-        If ``recur`` == True, updates ids for all components in the parent
-        instance bbid namespace.
-        """
-        self.id.set_namespace(namespace)
-        self.id.assign(self.tags.name)
-        # This unit now has an id in the namespace. Now pass our bbid down as
-        # the namespace for all downstream components.
-        if recur:
-            for unit in self.components.values():
-                unit._update_id(namespace=self.id.bbid, recur=True)
