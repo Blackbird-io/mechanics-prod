@@ -459,9 +459,6 @@ class BusinessUnit(History, Equalities, TagsMixIn):
             # compute balance sheets
             self.compute_balances()
 
-            # compute valuation last because it depends on other statements
-            self.compute("valuation")
-
             self.filled = True
 
     def kill(self, date=None, recur=True):
