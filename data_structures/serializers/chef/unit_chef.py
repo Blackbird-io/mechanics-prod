@@ -8,7 +8,7 @@
 """
 
 Module defines a class that represents arbitrarily rich BusinessUnit instances
-as a collection of linked Excel worksheets. 
+as a collection of linked Excel worksheets.
 ====================  =========================================================
 Attribute             Description
 ====================  =========================================================
@@ -113,7 +113,8 @@ class UnitChef:
     MAX_TITLE_CHARACTERS = 30
 
     def add_items_to_area(self, *pargs, sheet, area, items, active_column,
-                          set_labels=True, format_func=None, hardcoded=False):
+                          set_labels=True, format_func=None, hardcoded=False,
+                          preference_order=[]):
         """
 
 
@@ -139,7 +140,7 @@ class UnitChef:
         starting = sheet.bb.current_row or 0
         new_row = starting + 1
 
-        for name in sorted(items):
+        for name in self._sort_bypreference(items, preference_order or []):
             value = items[name]
 
             # Register the new row
@@ -306,9 +307,6 @@ class UnitChef:
         # Make sure the unit contains all relevant calculations by filling it
         # out. If BB already performed this action, call will be a no-op.
 
-        if unit.financials.ending is not None:
-            new_start_bal = self._load_balance(unit)
-
         for statement in unit.financials.ordered:
             sheet.bb.current_row += 1
             if statement is not None:
@@ -317,9 +315,12 @@ class UnitChef:
                     statement_row = sheet.bb.current_row + 1
                     fins_dict["Starting Balance Sheet"] = statement_row
 
+                    start_bal = unit.financials.starting.copy()
+                    self._cell_link(unit, start_bal)
+
                     line_chef.chop_statement(
                          sheet=sheet,
-                         statement=new_start_bal,
+                         statement=start_bal,
                          column=column,
                          set_labels=set_labels)
                     sheet.bb.current_row += 1
@@ -573,7 +574,8 @@ class UnitChef:
             area=events,
             items=new_events,
             active_column=active_column,
-            format_func=cell_styles.format_date
+            format_func=cell_styles.format_date,
+            preference_order=unit.life.ORDER
             )
         # Method will update current row to the last filled position.
 
@@ -912,54 +914,69 @@ class UnitChef:
 
         return sheet
 
-    def _load_balance(self, unit):
+    def _balance_lines(self, start_line, ending_line):
         """
 
 
         UnitChef._balance_lines() -> None
 
+        --``start_line`` line of bu.finansials.starting for new period
+        --``ending_line`` line of bu.finansials.ending for past period, with
+            Excel cells already set
 
-        Tool for UnitChef._load_balance().  Method recursively walks
-        through top-level LineItem details from the starting balance sheet
-        ``start_line`` and sets them to reference the matching line in the
-        previous time period's ending balance sheet ``end_line``
-        """
-
-        if unit.past is not None:
-            old_ending_balance = unit.past.financials.ending
-            new_start_bal = old_ending_balance.copy()
-
-            for name, start_line in new_start_bal._details.items():
-                old_line = old_ending_balance.find_first(name)
-
-                self._balance_lines(start_line, old_line)
-
-        else:
-            new_start_bal = unit.financials.ending.copy()
-            for line in new_start_bal.get_full_ordered():
-                line.clear()
-                line.xl = LineData()
-
-        new_start_bal.set_name("Starting Balance Sheet")
-        return new_start_bal
-
-    def _balance_lines(self, start_line, end_line):
-        """
-
-
-        UnitChef._balance_lines() -> None
-
-
-        Tool for UnitChef._load_balance().  Method recursively walks
+        Tool for UnitChef._cell_link().  Method recursively walks
         through top-level LineItem details from the starting balance sheet
         ``start_line`` and sets them to reference the matching line in the
         previous time period's ending balance sheet ``end_line``
         """
         if start_line._details:
-            for name, line in start_line._details.items():
-                ending_line = end_line.find_first(line.tags.name)
+            for name, new_line in start_line._details.items():
+                end_line = ending_line.find_first(new_line.name)
 
-                self._balance_lines(line, ending_line)
+                self._balance_lines(new_line, end_line)
         else:
             start_line.xl = LineData()
-            start_line.xl.reference.source = end_line
+            if ending_line.xl.cell:
+                start_line.xl.reference.source = ending_line
+
+    def _cell_link(self, unit, start_bal):
+        """
+
+
+        UnitChef._cell_link() -> None
+
+        --``unit`` is the new period unit
+        --``start_bal`` copy of unit.financials.starting, to be displayed on the
+            Excel sheet
+
+        Link cell formulas for starting financials to previous period's
+        cells, if such exist.
+        """
+        if unit.past:
+            ending_bal = unit.past.financials.ending
+
+            for name, start_line in start_bal._details.items():
+                ending_line = ending_bal.find_first(name)
+                self._balance_lines(start_line, ending_line)
+
+    def _sort_bypreference(self, items, preference_order=[]):
+        """
+
+
+        UnitChef._sort_bypreference() -> list (of items' keys)
+
+        --``items`` is any dict
+        --``preference_order`` any iterable giving the sorted order of items;
+            items' keys which are not in preference_order will be tacked on at
+            the end in sorted order
+        """
+        result = []
+
+        for k in preference_order:
+            if k in items:
+                result.append(k)
+
+        leftover = set(items.keys()) - set(result)
+        result.extend(sorted(leftover))
+
+        return result

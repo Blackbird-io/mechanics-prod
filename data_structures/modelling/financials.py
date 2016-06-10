@@ -111,14 +111,18 @@ class Financials(StatementBundle):
         border = border.center(bb_settings.SCREEN_WIDTH) + "\n\n"
 
         result += border
-        
-        self.ORDER = ("overview", "income", "cash", "valuation", "starting",
-                      "ending", "ledger")
+
+        if self.has_valuation:
+            self.ORDER = ("overview", "income", "cash", "valuation",
+                          "starting", "ending", "ledger")
+        else:
+            self.ORDER = ("overview", "income", "cash", "starting", "ending",
+                          "ledger")
+
         # Use a special tuple that includes all statements to block the default
         # class order.
         result += StatementBundle.__str__(self)
         del self.ORDER
-        # unblock
 
         result += "\n"
         result += border
