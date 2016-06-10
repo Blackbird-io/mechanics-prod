@@ -41,7 +41,7 @@ from .line_item import LineItem
 #globals
 #Tags class carries a pointer to the tag manager; access individual tags
 #through that pointer
-BLACKBIRDSTAMP = Tags.BLACKBIRD_STAMP
+BLACKBIRD_STAMP = "|BB|"
 
 #classes
 class BookMark(LineItem):
@@ -66,16 +66,16 @@ class BookMark(LineItem):
     set_name()             method sets instance name w "|BB|" prefix
     ====================  ======================================================
     """
-    bmPrefix = BLACKBIRDSTAMP
+    bmPrefix = BLACKBIRD_STAMP
     
     def __init__(self, bmName = None, *tags):
         LineItem.__init__(self)
-        # self.tags.tag(*self.bmTags)
-        self.tags.tag(BLACKBIRDSTAMP)
+        # self.tags.add(*self.bmTags)
+        self.tags.add(BLACKBIRD_STAMP)
         if bmName:
             self.tags.set_name(bmName)
         if tags:
-            self.tags.tag(*tags)
+            self.tags.add(*tags)
         
     def set_name(self,newName):
         """
@@ -84,9 +84,10 @@ class BookMark(LineItem):
         BookMark.tags.set_name(newName) -> None
 
 
-        Method adds the BLACKBIRDSTAMP prefix to the name and then sets the
+        Method adds the BLACKBIRD_STAMP prefix to the name and then sets the
         instance name accordingly. 
         """
         if newName:
             newName = self.bmPrefix + newName
-        Tags.set_name(self.tags,newName)
+
+        Tags.set_name(self.tags, newName)
