@@ -148,7 +148,6 @@ class Statement(Equalities, TagsMixIn):
         return Equalities.__ne__(self, comparator, trace, tab_width)
 
     def __str__(self):
-
         result = "\n"
 
         header = str(self.tags.name).upper()

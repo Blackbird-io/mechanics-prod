@@ -29,6 +29,8 @@ Financials            a StatementBundle with income, cash, balance and others.
 import bb_settings
 import copy
 
+from .statement import  Statement
+
 from .statements import Overview, Income, CashFlow, BalanceSheet
 from .statement_bundle import StatementBundle
 from .equalities import Equalities
@@ -52,11 +54,13 @@ class Financials(StatementBundle):
     ====================  ======================================================
 
     DATA:
-    overview              Statement; general data about an object
-    income                Statement; income statement for object
-    cash                  Statement; cash flow statement for object
     balance               BalanceSheet; starting and ending balance for object
+    cash                  Statement; cash flow statement for object
+    has_valuation         bool; whether the object has a non-blank valuation
+    income                Statement; income statement for object
     ledger                placeholder for object general ledger
+    overview              Statement; general data about an object
+    valuation             Statement; business valuation for the object
 
     FUNCTIONS:
     copy                  return deep copy
@@ -69,9 +73,14 @@ class Financials(StatementBundle):
         self.overview = Overview()
         self.income = Income()
         self.cash = CashFlow()
+        self.valuation = Statement("Valuation")
         self.starting = BalanceSheet("Starting Balance Sheet")
         self.ending = BalanceSheet("Ending Balance Sheet")
         self.ledger = None
+
+    @property
+    def has_valuation(self):
+        return not self.valuation == Statement("Valuation")
 
     def __str__(self):
         
@@ -89,7 +98,7 @@ class Financials(StatementBundle):
 
             header += starting
 
-            ending =  "Period ending:   " + str(self.relationships.parent.period.ending)
+            ending = "Period ending:   " + str(self.relationships.parent.period.ending)
             ending = ending.center(bb_settings.SCREEN_WIDTH)
             ending += "\n"
 
@@ -102,13 +111,14 @@ class Financials(StatementBundle):
         border = border.center(bb_settings.SCREEN_WIDTH) + "\n\n"
 
         result += border
-        
-        self.ORDER = ("overview", "income", "cash", "starting", "ending", "ledger")
+
+        self.ORDER = ("overview", "income", "cash", "starting", "ending",
+                      "ledger")
+
         # Use a special tuple that includes all statements to block the default
         # class order.
         result += StatementBundle.__str__(self)
         del self.ORDER
-        # unblock
 
         result += "\n"
         result += border
@@ -129,7 +139,8 @@ class Financials(StatementBundle):
         """
         new_instance = copy.copy(self)
 
-        self.ORDER = ("overview", "income", "cash", "starting", "ending", "ledger")
+        self.ORDER = ("overview", "income", "cash", "starting", "ending",
+                      "ledger", "valuation")
 
         for name in self.ORDER:
             own_statement = getattr(self, name, None)
