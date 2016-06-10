@@ -54,10 +54,10 @@ class Life(Equalities):
     formulas can run their own evaluations of those events.
 
     All event values should be in datetime.date. All duration inputs should
-    be timedelta objects. 
+    be timedelta objects.
 
     Rules for a good life:
-    
+
     1. Keep your keys consistent; use those on class or in common_events
     2. Your life span will change if you die suddenly
     3. You can use configure_events() to quickly build a common trajectory
@@ -114,17 +114,17 @@ class Life(Equalities):
     KEY_BIRTH             str; recommended key for birth event
     KEY_DEATH             str; recommended key for death event
     KEY_MATURITY          str; recommended key for onset of maturity
-    KEY_OLD_AGE           str; recommended key for onset of old age 
+    KEY_OLD_AGE           str; recommended key for onset of old age
 
     GESTATION             timedelta, 365 days by default
     LIFE_SPAN             timedelta, 50 years by default
     PERCENT_MATURITY      int; where maturity begins, range [0, OLD_AGE_PERCENT)
     PERCENT_OLD_AGE       int; point where old age begins, range [0, 100]
-    
+
     age                   timedelta; ref_date minus birth
     alive                 bool; True if ref_date in [birth, death)
     conceived             bool; True if conception < ref_date
-    events                dict; 
+    events                dict;
     percent               int; age divided by span
     ref_date              timedelta; reference time point for status
     span                  timedelta; time between birth and death
@@ -141,7 +141,7 @@ class Life(Equalities):
     """
     keyAttributes = ["_ref_date", "events"]
     # On calls to __eq__ and __ne__, Equalities will check only these attributes
-    
+
     KEY_CONCEPTION = common_events.KEY_CONCEPTION
     KEY_BIRTH = common_events.KEY_BIRTH
     KEY_DEATH = common_events.KEY_DEATH
@@ -149,26 +149,35 @@ class Life(Equalities):
     KEY_MATURITY = common_events.KEY_MATURITY
     KEY_OLD_AGE = common_events.KEY_OLD_AGE
     # These keys should stay constant (can also add kill, renovation)
-    
+
     # Specify default values as days for timedelta.
     GESTATION = datetime.timedelta(365)
     LIFE_SPAN = datetime.timedelta(18250)
     # Default life span is ~50 years: 365 * 50 = 18250 days
-    
+
     PERCENT_MATURITY = 30
     # Assume maturity begins at 30 (first 30% of life spent on growth).
     PERCENT_OLD_AGE = 70
     # Assume old age begins at 70.
-    
+
+    ORDER = (
+        common_events.KEY_CONCEPTION,
+        common_events.KEY_BIRTH,
+        common_events.KEY_MATURITY,
+        common_events.KEY_OLD_AGE,
+        common_events.KEY_DEATH,
+    )
+    # Preferred order of events for display (in Excel)
+
     def __init__(self):
         self._birth_event_names = {self.KEY_BIRTH}
         self._death_event_names = {self.KEY_DEATH}
         # Can modify these for advanced functionality. For example, if you
         # want your unit to be born again on a "rebranding" event.
         self._ref_date = None
-        
+
         self.events = dict()
-    
+
     @property
     def _clock_starts(self):
         # Return **latest** defined birth event.
@@ -181,7 +190,7 @@ class Life(Equalities):
 
         return start_date
 
-    @property 
+    @property
     def _clock_stops(self):
         # Return **earliest** defined death event
         stop_date = None
@@ -192,7 +201,7 @@ class Life(Equalities):
             stop_date = min(options)
 
         return stop_date
-        
+
     @property
     def age(self):
         """
@@ -208,9 +217,9 @@ class Life(Equalities):
         date_of_birth = self._clock_starts
         if date_of_birth is not None:
             result = self.ref_date - date_of_birth
-        
+
         return result
-        
+
     @property
     def alive(self):
         """
@@ -250,7 +259,7 @@ class Life(Equalities):
             if conception < self.ref_date:
                 result = True
         return result
-        
+
     @property
     def percent(self):
         """
@@ -285,7 +294,7 @@ class Life(Equalities):
 
 
         **property**
-        
+
 
         Time between birth and death. Setter will change death, maturity, and
         old age, using PERCENT_MATURITY and PERCENT_OLD_AGE. You can specify
@@ -300,12 +309,12 @@ class Life(Equalities):
         return result
 
     @span.setter
-    def span(self, value): 
+    def span(self, value):
         birth = self._clock_starts
         death = birth + value
-        
+
         self.events[self.KEY_DEATH] = death
-        
+
         self.events[self.KEY_MATURITY] = (
             birth + (value * self.PERCENT_MATURITY / 100)
             )
@@ -337,13 +346,13 @@ class Life(Equalities):
 
 
         **OBSOLETE**
-        
-        Legacy interface for configuring events. 
+
+        Legacy interface for configuring events.
         """
         self.set_ref_date(ref_date)
         birth = ref_date - age
         self.configure_events(birth)
-        
+
     def configure_events(self, date_of_birth, life_span=None, gestation=None):
         """
 
@@ -371,14 +380,14 @@ class Life(Equalities):
         Life.copy() -> Life
 
 
-        Return deep copy. 
+        Return deep copy.
         """
         # Use shallow copy to start, manually copy mutable objects (for speed).
         result = copy.copy(self)
         result._birth_event_names = self._birth_event_names.copy()
         result._death_event_names = self._death_event_names.copy()
         result.events = self.events.copy()
-        
+
         return result
 
     def get_latest(self, ref_date=None):
@@ -393,10 +402,10 @@ class Life(Equalities):
         """
         event_name = None
         event_date = None
-        
+
         if ref_date is None:
             ref_date = self.ref_date
-        
+
         last_to_first = sorted(self.events.items(), key=lambda i: i[1], reverse=True)
 
         for event_name, event_date in last_to_first:
@@ -404,8 +413,8 @@ class Life(Equalities):
                 break
             else:
                 continue
-            
-        return (event_name, event_date) 
+
+        return (event_name, event_date)
 
     def set_gestation(self, value):
         """
@@ -417,7 +426,7 @@ class Life(Equalities):
         Set custom gestation period. Expects timedelta.
         """
         self.GESTATION = value
-        
+
     def set_percent_maturity(self, value):
         """
 
@@ -440,7 +449,7 @@ class Life(Equalities):
         """
         self.PERCENT_OLD_AGE = value
 
-    
 
-    
-        
+
+
+

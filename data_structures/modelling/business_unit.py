@@ -61,10 +61,10 @@ from .parameters import Parameters
 # Globals
 # n/a
 
-# Classes   
+# Classes
 class BusinessUnit(History, Equalities, TagsMixIn):
     """
-   
+
     Object describes a group of business activity. A business unit can be a
     store, a region, a product, a team, a relationship (or many relationships),
     etcetera.
@@ -90,17 +90,17 @@ class BusinessUnit(History, Equalities, TagsMixIn):
     type                  str or None; unit's in-model type (e.g., "team")
     used                  set; contains BBIDs of used Topics
     valuation             None or CompanyValue; market view on unit
-    
+
     FUNCTIONS:
     add_component()       adds unit to instance components
-    add_driver()          registers a driver 
+    add_driver()          registers a driver
     clear()               restore default attribute values
     fill_out()            integrates consolidate() and derive()
     kill()                make dead, optionally recursive
     make_past()           put a younger version of unit in prior period
     recalculate()         reset financials, compute again, repeat for future
     reset_financials()    resets instance and (optionally) component financials
-    set_analytics()       attaches an object to instance.analytics 
+    set_analytics()       attaches an object to instance.analytics
     set_financials()      attaches a Financials object from the right template
     set_history()         connect instance to older snapshot, optionally recur
     synchronize()         set components to same life, optionally recursive
@@ -115,24 +115,24 @@ class BusinessUnit(History, Equalities, TagsMixIn):
                             "part_of"]
 
     _UPDATE_BALANCE_SIGNATURE = "Update balance"
-        
+
     def __init__(self, name, fins=None):
 
         History.__init__(self)
         TagsMixIn.__init__(self, name)
 
         self._type = None
-        
+
         self.components = None
         self._set_components()
-        
+
         self.drivers = None
         self._set_drivers()
 
         self.filled = False
-        
+
         self.set_financials(fins)
-        
+
         self.guide = Guide()
         self.interview = InterviewTracker()
         self._stage = None
@@ -140,7 +140,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
         self.id = ID()
         # Get the id functionality but do NOT assign a bbid yet
-        
+
         self.life = LifeCycle()
         self.location = None
         self.parameters = Parameters()
@@ -198,7 +198,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         Getter returns instance._type.
 
         Setter registers instance bbid under the new value key and removes old
-        registration (when instance.period is defined). 
+        registration (when instance.period is defined).
 
         Deletion prohibited.
         """
@@ -223,7 +223,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         c = "``type`` is a property; delete prohibited. to represent generic "
         c += "unit, set to None instead."
         raise bb_exceptions.ManagedAttributeError(c)
-        
+
     def __hash__(self):
         return self.id.__hash__()
 
@@ -236,17 +236,17 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
         Method concatenates each line in ``lines``, adds a new-line character at
         the end, and returns a string ready for printing. If ``lines`` is None,
-        method calls _get_pretty_lines() on instance. 
+        method calls _get_pretty_lines() on instance.
         """
         # Get string list, slap a new-line at the end of every line and return
         # a string with all the lines joined together.
         if not lines:
             lines = self._get_pretty_lines()
-            
+
         # Add empty strings for header and footer padding
         lines.insert(0, "")
         lines.append("")
-        
+
         box = "\n".join(lines)
         return box
 
@@ -292,11 +292,11 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         # Step 2: optionally update ids.
         if update_id:
             bu._update_id(namespace=self.id.bbid, recur=True)
-        # Step 3: Register the the units. Will raise errors on collisions.
+        # Step 3: Register the units. Will raise errors on collisions.
         if register_in_period:
             bu._register_in_period(recur=True, overwrite=overwrite)
         self.components.add_item(bu)
-    
+
     def addDriver(self, newDriver, *otherKeys):
         """
 
@@ -305,7 +305,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         Legacy interface for add_driver().
         """
         return self.add_driver(newDriver, *otherKeys)
-        
+
     def add_driver(self, newDriver, *otherKeys):
         """
 
@@ -319,7 +319,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         newDriver.validate(parent=self)
         # Validation call will throw DefinitionError if driver does not have
         # sufficient data to run in this instance at the time of insertion.
-        
+
         # Topics may inject drivers into business units at time A with the
         # intent that these drivers work only at some future time B (when their
         # work conditions or other logic has been satisfied). Time B may be
@@ -394,7 +394,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         #
         r_comps = self.components.copy()
         result._set_components(r_comps)
-        
+
         r_drivers = self.drivers.copy()
         result._set_drivers(r_drivers)
 
@@ -443,7 +443,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         increment existing values.
 
         NOTE: consolidate() blocks derive() on the same lineitem.
-        
+
         Once a non-None value is written into a Lineitem at one component,
         BusinessUnit.derive() will never run again for that LineItem, either at
         that component or any parent or ancestor of that component.
@@ -458,7 +458,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
             self.compute_balances()
 
             self.filled = True
-            
+
     def kill(self, date=None, recur=True):
         """
 
@@ -544,14 +544,14 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         if recur:
 
             pool = self.components.values()
-            
+
             if bb_settings.DEBUG_MODE:
                 pool = self.components.getOrdered()
                 # Use stable order to simplify debugging
-                
+
             for bu in pool:
                 bu.reset_financials(recur)
-                
+
     def set_analytics(self, atx):
         """
 
@@ -560,7 +560,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
 
         Method sets instance.analytics to passed-in argument, sets analytics
-        object to point to instance as its parent. 
+        object to point to instance as its parent.
         """
         atx.relationships.set_parent(self)
         self.valuation = atx
@@ -577,7 +577,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
         Method will set instance financials to ``fins``, if caller specifies
         ``fins``. Otherwise, method will set financials to a new Financials
-        instance. 
+        instance.
         """
         if fins is None:
             fins = Financials()
@@ -596,7 +596,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         """
         History.set_history(self, history, clear_future=clear_future)
 
-        # Use dedicated logic to handle recursion. 
+        # Use dedicated logic to handle recursion.
         if recur:
             for bbid, unit in self.components.items():
                 mini_history = history.components[bbid]
@@ -623,7 +623,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
-    #*************************************************************************#    
+    #*************************************************************************#
 
     def _consolidate(self, statement, trace=False):
         """
@@ -639,7 +639,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         # Need stable order to make sure we pick up peer lines from units in
         # the same order. Otherwise, their order might switch and financials
         # would look different (even though the bottom line would be the same).
-            
+
         for unit in pool:
             if unit.life.conceived:
                 self._consolidate_unit(unit, statement)
@@ -815,6 +815,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         this_statement = getattr(self.financials, statement)
 
         for line in this_statement.get_ordered():
+
             self._derive_line(line)
 
     def _derive_line(self, line):
@@ -834,7 +835,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
             for driver in matching_drivers:
                 driver.workOnThis(line)
 
-        # Repeat for any details            
+        # Repeat for any details
         if line._details:
             for detail in line.get_ordered():
                 if detail.replica:
@@ -850,7 +851,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
         BusinessUnit._fit_to_period() -> None
 
-        
+
         Set pointer to timeperiod and synchronize ref date to period end date.
         If ``recur`` == True, repeat for all components.
         """
@@ -876,13 +877,13 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         new-line character).
 
         Box format (live units):
-      
+
         +=====================+
         | NAME  : Baltimore-4 |
         | ID    : ...x65-0b78 |
         | DOB   :  2015-04-01 |
         | LIFE  :         43% |
-        | STAGE :      MATURE |   
+        | STAGE :      MATURE |
         | TYPE  :         OPS |
         | FILL  :        True |
         | COMPS :          45 |
@@ -895,25 +896,25 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         | id    \ .../65-0b78 |
         | dob   :\ 2/15-04-01 |
         | life  : \/      43% |
-        | stage : /\   MATURE |   
+        | stage : /\   MATURE |
         | type  :/  \     OPS |
         | fill  /    \   True |
         | comps/:     \    45 |
         +=====/========\======+
 
         Box format (unborn units):
-      
+
         ?  = = = = = = = = =  ?
         | NAME  : Baltimore-4 |
-          ID    : ...x65-0b78  
+          ID    : ...x65-0b78
         | DOB   :  2015-04-01 |
-          LIFE  :         43%  
-        | STAGE :      MATURE |   
-          TYPE  :         OPS  
+          LIFE  :         43%
+        | STAGE :      MATURE |
+          TYPE  :         OPS
         | FILL  :        True |
-          COMPS :          45 
+          COMPS :          45
         ?  = = = = = = = = =  ?
-        
+
         """
         reg_corner = "+"
         alt_corner = "?"
@@ -964,7 +965,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         else:
             dob = "n/a"
         data["DOB"] = dob
-        
+
         if self.life.percent is not None:
             life = int(self.life.percent)
             life = str(life) + r"%"
@@ -976,14 +977,14 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         event_name = event_name or "n/a"
         # Choose empty string if life has no events yet
         data["EVENT"] = event_name[:data_width]
-        
+
         unit_type = str(self.type)[:data_width]
         data["TYPE"] = unit_type.upper()
-        
+
         data["FILL"] = str(self.filled)
-        
+
         data["COMPS"] = str(len(self.components.get_living()))
-        
+
         data["SIZE"] = str(self.size)[:data_width]
         #
         ##assemble the real thing
@@ -1054,7 +1055,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
                     alt_lines.append(line)
                 lines = alt_lines
         
-        return lines    
+        return lines
 
     def _load_balance(self):
         """
@@ -1089,7 +1090,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         # starting one. Here, we copy the starting structure and zero out
         # the values. We will fill in the values later through
         # consolidate(), update_balance(), and derive().
-        
+
     def _register_in_period(self, recur=True, overwrite=True):
         """
 
@@ -1110,14 +1111,14 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         any of the caller's children have an overlap, the error will appear only
         when the recursion gets to them. As a result, by the time the error
         occurs, some higher-level or sibling components may have already updated
-        the period's directory.        
+        the period's directory.
         """
         # UPGRADE-S: Can fix the partial-overwrite problem by refactoring this
         # routine into 2 pieces. build_dir(recur=True) would walk the tree and
         # return a clean dict. update_dir(overwrite=bool) would compare that
         # dict with the existing directory and raise an error if there is
         # an overlap. Also carries a speed benefit, cause only compare once.
-        
+
         if not overwrite:
             if self.id.bbid in self.period.bu_directory:
                 c1 = "TimePeriod.bu_directory already contains an object with "
@@ -1129,7 +1130,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
                 print(self.period.bu_directory)
                 c = c1+c2+c3+c4+c5
                 raise bb_exceptions.IDCollisionError(c)
-            
+
         # Check for collisions first, then register if none arise.
         self.period.bu_directory[self.id.bbid] = self
         brethren = self.period.ty_directory.setdefault(self.type, set())
@@ -1144,7 +1145,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
 
         BusinessUnit._build_directory() -> (id_directory, ty_directory)
-        
+
 
         Register yourself and optionally your components, by type and by id
         return id_directory, ty_directory
@@ -1160,18 +1161,18 @@ class BusinessUnit(History, Equalities, TagsMixIn):
                 lower_ty = lower_level[1]
                 id_directory.update(lower_ids)
                 ty_directory.update(lower_ty)
-                
+
             #update the directory for each unit in self
             pass
         if self.id.bbid in id_directory:
             if not overwrite:
                 c = "Can not overwrite existing bbid"
                 raise bb_exceptions.BBAnalyticalError(c)
-            
+
         id_directory[self.id.bbid] = self
         this_type = ty_directory.setdefault(self.type, set())
         this_type.add(self.id.bbid)
-      
+
         return id_directory, ty_directory
         # unfinished <--------------------------------------------------------------------------------------------
 
@@ -1190,7 +1191,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
             comps = Components()
         comps.relationships.set_parent(self)
         self.components = comps
-        
+
     def _set_drivers(self, dr_c=None):
         """
 
@@ -1222,10 +1223,10 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
         # Method expects balance sheet to come with accurate tables. We first
         # build the table in load_balance(). We then run consolidate(), which
-        # will automatically update the tables if it changes the statement. 
-        
+        # will automatically update the tables if it changes the statement.
+
         if starting_balance and ending_balance:
-            
+
             for name, starting_line in starting_balance._details.items():
 
                 if starting_line.has_been_consolidated:
@@ -1273,7 +1274,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         self.id.set_namespace(namespace)
         self.id.assign(self.tags.name)
         # This unit now has an id in the namespace. Now pass our bbid down as
-        # the namespace for all downstream components. 
+        # the namespace for all downstream components.
         if recur:
             for unit in self.components.values():
                 unit._update_id(namespace=self.id.bbid, recur=True)
