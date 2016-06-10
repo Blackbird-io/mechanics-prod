@@ -112,12 +112,8 @@ class Financials(StatementBundle):
 
         result += border
 
-        if self.has_valuation:
-            self.ORDER = ("overview", "income", "cash", "starting", "ending",
-                          "ledger", "valuation")
-        else:
-            self.ORDER = ("overview", "income", "cash", "starting", "ending",
-                          "ledger")
+        self.ORDER = ("overview", "income", "cash", "starting", "ending",
+                      "ledger")
 
         # Use a special tuple that includes all statements to block the default
         # class order.
