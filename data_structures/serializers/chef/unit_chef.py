@@ -708,6 +708,7 @@ class UnitChef:
 
         --``book`` must be a Workbook
         --``unit`` must be an instance of BusinessUnit
+        --``index`` is the index at which to create the new tab
 
         Method creates a valuation tab and chops unit valuation statement.
         """
