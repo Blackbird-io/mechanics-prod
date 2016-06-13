@@ -375,7 +375,6 @@ class Driver(TagsMixIn):
         Method is a no-op if instance is not active.
         """
         if self.active and not line.hardcoded and not line.has_been_consolidated:
-            
             if self._can_work_on_this(line):
                 
                 formula = self._FM.local_catalog.issue(self.formula_bbid)
@@ -411,14 +410,6 @@ class Driver(TagsMixIn):
                 # Each function is "disposable", so we explicitly delete the
                 # pointer after each use.
                 del formula
-                
-            else:
-                c = "Driver cannot work on the specified LineItem."
-                print("Line:", line.name, " WC:", self.workConditions)
-
-                raise bb_exceptions.BBAnalyticalError(c)
-        else:
-            pass
 
     def to_excel(self):
         """
