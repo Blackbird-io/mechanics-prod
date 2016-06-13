@@ -170,11 +170,15 @@ class LineChef:
                 self._group_lines(sheet)
 
                 if set_labels:
+                    label_column = None
+                    if not getattr(sheet.bb, "parameters", None):
+                        label_column = 1
+
                     label = indent*" " + line.tags.name + ": details"
-                    self._set_label(
-                        sheet=sheet,
-                        label=label,
-                        row=sheet.bb.current_row)
+                    self._set_label(sheet=sheet,
+                                    label=label,
+                                    row=sheet.bb.current_row,
+                                    column=label_column)
 
             sheet.bb.outline_level -= 1
 
@@ -620,7 +624,12 @@ class LineChef:
         self._group_lines(sheet)
 
         if set_labels:
-            self._set_label(label=label, sheet=sheet, row=sheet.bb.current_row)
+            label_column = None
+            if not getattr(sheet.bb, "parameters", None):
+                label_column = 1
+
+            self._set_label(label=label, sheet=sheet, row=sheet.bb.current_row,
+                            column=label_column)
 
         return sheet
 
