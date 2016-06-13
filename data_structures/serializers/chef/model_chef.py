@@ -119,7 +119,8 @@ class ModelChef:
            timeline
         """       
         book = Workbook()
-        
+        book.remove_sheet(book.active)
+
         # self._create_cover_tab(book, model)
         self._create_scenarios_tab(book, model)
         self._create_time_line_tab(book, model)
