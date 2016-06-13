@@ -195,7 +195,6 @@ class UnitChef:
         for child in children:
             self.chop_multi(book=book, unit=child)
 
-
         # 2.   Chop the parent
         #
         # In this block, we have to set the current row to the place where the
@@ -251,6 +250,11 @@ class UnitChef:
 
         sheet.bb.outline_level = 0
         group_lines(sheet, row=selector_row)
+
+        # 2.6 add valuation tab, if any exists for unit
+        sheet.bb.outline_level = 1
+        if unit.financials.has_valuation:
+            self._add_valuation_tab(book, unit, index=before_kids)
 
         return sheet
 
@@ -695,7 +699,48 @@ class UnitChef:
         sheet.bb.current_row = parameters.rows.ending
         return sheet
 
-    def _create_unit_sheet(self, *pargs, book, unit, index):
+    def _add_valuation_tab(self, book, unit, index=None):
+        """
+
+
+        UnitChef._add_valuation_tab() -> Worksheet
+
+        --``book`` must be a Workbook
+        --``unit`` must be an instance of BusinessUnit
+        --``index`` is the index at which to create the new tab
+
+        Method creates a valuation tab and chops unit valuation statement.
+        """
+
+        # 1.0   set up the unit sheet and spread params
+        if not index:
+            index = len(book.worksheets)
+
+        if index == 3:
+            name = "Valuation"
+        else:
+            name = unit.tags.name + ' val'
+
+        sheet = self._create_valuation_sheet(book=book, unit=unit,
+                                             index=index, name=name)
+
+        # 1.2  Add Valuation statement
+        current = 4
+        statement_row = sheet.bb.current_row+1
+        sheet.bb.current_row += 1
+        statement = unit.financials.valuation
+        line_chef.chop_statement(sheet=sheet,
+                                 statement=statement,
+                                 column=current,
+                                 set_labels=True)
+
+        # 1.5 add area and statement labels and sheet formatting
+        sheet_style.style_sheet(sheet)
+        cell_styles.format_area_label(sheet, statement.name, statement_row)
+
+        return sheet
+
+    def _create_unit_sheet(self, *pargs, book, unit, index, name=None):
         """
 
 
@@ -705,7 +750,9 @@ class UnitChef:
         Returns sheet with current row pointing to last parameter row
         """
 
-        name = unit.tags.name
+        if not name:
+            name = unit.tags.name
+
         if name in book:
             rev_name = name + " ..." + str(unit.id.bbid)[-8: ]
             name = rev_name
@@ -753,8 +800,42 @@ class UnitChef:
         # Return sheet
         return sheet
 
+    def _create_valuation_sheet(self, *pargs, book, unit, index, name=None):
+        """
+
+
+        UnitChef._create_unit_sheet() -> Worksheet
+
+
+        Returns sheet with current row pointing to last parameter row
+        """
+        if not name:
+            name = unit.tags.name
+
+        if name in book:
+            rev_name = name + " ..." + str(unit.id.bbid)[-8:]
+            name = rev_name
+
+            if name in book:
+                name = str(unit.id.bbid)
+
+        name = name.translate(bad_char_table)
+        name = name[:self.MAX_TITLE_CHARACTERS]
+        # Replace forbidden characters, make sure name is within length limits
+
+        sheet = book.create_sheet(name, index)
+
+        req_rows = len(unit.components.by_name) // self.MAX_LINKS_PER_CELL
+        req_rows = min(req_rows, self.MAX_CONSOLIDATION_ROWS)
+        req_rows = max(1, req_rows)
+
+        sheet.bb.consolidation_size = req_rows
+        sheet.bb.current_row = 1
+
+        return sheet
+
     def _link_to_area(self, source_sheet, local_sheet, area_name, group=False,
-                      keep_format=True):
+                      keep_format=True, current_only=False):
         """
 
 
@@ -788,7 +869,13 @@ class UnitChef:
             if group:
                 group_lines(local_sheet, row=local_row)
 
-            for column in source_area.columns.by_name.values():
+            if current_only:
+                use_columns = sorted(source_area.columns.by_name.values())
+                use_columns = use_columns[0:3]
+            else:
+                use_columns = source_area.columns.by_name.values()
+
+            for column in use_columns:
 
                 source_column = (source_area.columns.starting or 0) + column
                 local_column = (local_area.columns.starting or 0) + column
