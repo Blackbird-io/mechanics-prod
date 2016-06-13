@@ -31,6 +31,7 @@ import copy
 import time
 
 import bb_exceptions
+import bb_settings
 import tools.for_tag_operations
 
 from data_structures.system.relationships import Relationships
@@ -67,6 +68,7 @@ class Components(dict, TagsMixIn, Equalities):
     add_item()            adds an object to self, keyed under obj's bbid
     copy()                returns deep copy of instance and contents
     find_bbid()           return bbid that contains a known string
+    get_all()             returns list of all units in instance
     get_living()          returns a bbid:bu dict of all bus that are alive
     getOrdered()          legacy interface for get_ordered() 
     get_ordered()         returns a list of values, ordered by key
@@ -200,6 +202,25 @@ class Components(dict, TagsMixIn, Equalities):
                 continue
         #
         return result
+
+    def get_all(self):
+        """
+
+
+        Components.get_all() -> list
+
+
+        Method returns list of all units in instance; ordered if in DEBUG_MODE,
+        unordered otherwise.
+        """
+
+        if bb_settings.DEBUG_MODE:
+            # Use stable order to simplify debugging
+            pool = self.get_ordered()
+        else:
+            pool = list(self.values())
+
+        return pool
 
     def get_living(self):
         """

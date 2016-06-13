@@ -30,7 +30,6 @@ BusinessUnit          structured snapshot of a business at a given point in time
 import copy
 
 import bb_exceptions
-import bb_settings
 
 from data_structures.guidance.guide import Guide
 from data_structures.guidance.interview_tracker import InterviewTracker
@@ -95,7 +94,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
     add_driver()          registers a driver
     clear()               restore default attribute values
     compute()             consolidates and derives a statement for all units
-    fill_out()            integrates consolidate() and derive()
+    fill_out()            runs calculations to fill out financial statements
     kill()                make dead, optionally recursive
     make_past()           put a younger version of unit in prior period
     recalculate()         reset financials, compute again, repeat for future
@@ -286,12 +285,14 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         """
         bu.summary = None
         bu.valuation = None
+
         # Step 1: update lifecycle with the right dates for unit and components
         bu._fit_to_period(self.period, recur=True)
 
         # Step 2: optionally update ids.
         if update_id:
             bu._update_id(namespace=self.id.bbid, recur=True)
+
         # Step 3: Register the units. Will raise errors on collisions.
         if register_in_period:
             bu._register_in_period(recur=True, overwrite=overwrite)
@@ -340,7 +341,11 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         Method recursively runs consolidation and derivation logic on
         statements for instance and components.
         """
-        self._consolidate(statement_name, recur_func="compute")
+
+        for unit in self.components.get_all():
+            unit.compute(statement_name)
+
+        self._consolidate(statement_name)
         self._derive(statement_name)
 
     def copy(self):
@@ -438,7 +443,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
             for statement in ("overview", "income", "cash"):
                 self.compute(statement)
 
-            self._compute_ending_balance("ending")
+            self._compute_ending_balance()
 
             self.filled = True
 
@@ -525,12 +530,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         # print("set ``filled`` to False for bbid\n%s\n" % self.id.bbid)
         self.financials.reset()
         if recur:
-
-            pool = self.components.values()
-
-            if bb_settings.DEBUG_MODE:
-                pool = self.components.getOrdered()
-                # Use stable order to simplify debugging
+            pool = self.components.get_all()
 
             for bu in pool:
                 bu.reset_financials(recur)
@@ -642,7 +642,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
         return id_directory, ty_directory
 
-    def _compute_ending_balance(self, statement_name):
+    def _compute_ending_balance(self):
         """
 
 
@@ -653,12 +653,28 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         Method adjusts shape of ending and starting balance sheets, runs
         consolidation logic, updates balance sheets, then runs derivation logic.
         """
-        self._consolidate(statement_name, recur_func="_compute_ending_balance")
+
+        for unit in self.components.get_all():
+            unit._compute_ending_balance()
+
+        ending_balance = self.financials.ending
+        starting_balance = self.financials.starting
+
+        ending_balance.increment(starting_balance, consolidating=False)
+        ending_balance.reset()
+        # Our goal is to pick up shape, so clear values.
+
+        # By default, the ending balance sheet should look the same as the
+        # starting one. Here, we copy the starting structure and zero out
+        # the values. We will fill in the values later through
+        # consolidate(), update_balance(), and derive().
+
+        self._consolidate("ending")
 
         self._update_balance()
         # Sets ending balance lines to starting values by default
 
-        self._derive(statement_name)
+        self._derive("ending")
         # Derive() will overwrite ending balance sheet where appropriate
 
     def _consolidate(self, statement_name, trace=False, recur_func=None):
@@ -671,17 +687,16 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         Method iterates through instance components in order and consolidates
         each living component into instance using BU.consolidate_unit()
         """
-        pool = self.components.getOrdered()
+        pool = self.components.get_all()
         # Need stable order to make sure we pick up peer lines from units in
         # the same order. Otherwise, their order might switch and financials
         # would look different (even though the bottom line would be the same).
 
         for unit in pool:
             if unit.life.conceived:
-                self._consolidate_unit(unit, statement_name,
-                                       recur_func=recur_func)
+                self._consolidate_unit(unit, statement_name)
 
-    def _consolidate_unit(self, sub, statement_name, recur_func=None):
+    def _consolidate_unit(self, sub, statement_name):
         """
 
 
@@ -689,162 +704,32 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
 
         -- ``sub`` should be a BusinessUnit object
+        --``statement_name`` is the name of the financial statement to work on
 
-        The Blackbird environment contemplates that BusinessUnits (``parents``)  #<------------------------------------------------update doc string
-        may contain multiple component BusinessUnits (``subs``). This method
-        consolidates the financials of one sub into the caller instance
-        (parent).
+        Method consolidates value of line items from sub's statement to
+        same statement in instance financials.  Usually sub is a
+        constituent/component of the instance, but this is not mandatory.
 
-        The parent does NOT have to include sub in the parent's components for
-        this method to run.
-
-        Method first fills out the sub, then integrates each line in sub's
-        financials into parent financials.
-
-
-
-        The specific sub-to-parent integration algorithm has 5 stages:
-
-        ************************************************************************
-        STAGE 1: Check if the sub is alive.
-        ************************************************************************
-
-        Method performs no-op if sub is not alive.
-
-        ************************************************************************
-        STAGE 2: Check if the sub LineItem is "informative".
-        ************************************************************************
-        For a living sub, method steps through each line in sub financials to
-        check if the line is ``informative``.
-
-        ``Informative`` sub LineItems are those that provide insight into the
-        meaningful structural or financial profile of the sub. Informative lines
-        satisfy at least one of the following conditions:
-
-            i)   the LineItem has a non-None name
-            ii)  the LineItem has a non-None value
-            iii) the LineItem's allTags list is distinct from the default value
-            ([None,None,<spacer>])
-
-        Informative LineItems that satisfy condition (i) are ``named``
-        LineItems. Informative LineItems that do not satisfy condition (i) but
-        do satisfy condition (ii) or (iii) are ``unnamed.``
-
-        NOTE: A lineitem that includes any tags specified in the method's
-        ``tagsToOmit`` argument cannot be informative even if it otherwise
-        satisifes one of the necessary conditions.
-
-        By default, tagsToOmit include summaryTag and bookMarkTag. That is,
-        bookmarks and summaries are per se uninformative and do not increment
-        symmetric parent lineitems.
-
-        This method integrates some of the data from each informative sub line
-        into parent's financials. Method skips uninformative sub lines.
-
-        ************************************************************************
-        STAGE 3: Increment named LineItems that have symmetric names.
-        ************************************************************************
-        If a sub and parent LineItem have the same name, the value of sub
-        increments the value of the parent.
-
-        Specifically, for a given named sub lineitem, this method finds the
-        **first** line in parent financials with the same name.
-
-        Next, method increments the parent line by the sub line value, if the
-        sub line has a specified (non-None value). Method skips sub lines with
-        None values even if they are named.<-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------absorb tags?
-
-        A signature from this method blocks drivers from modifying a line.
-
-        NOTE1: consolidate() **will** sign a parent line when a sub line
-        specifies a value of 0, 0.00, decimal.Decimal(0), etc.
-
-        That is, setting a lineitem's value to 0 instead of None prevents
-        drivers from modifying that lineitem. In the Blackbird environment, 0 is
-        affirmative information. Only None signals the absence of information.
-
-        NOTE2: Only named sub LineItems are eligible for incrementation
-        treatment, and only if their names are symmetric to a parent object.
-
-        Named LineItems required a non-None value for LineItem.name. Therefore,
-        a sub LineItem with .name == None will NOT increment a parent LineItem
-        with a .name == None.
-
-        ************************************************************************
-        STAGE 4: Create & adjust replicas of name-asymettric sub LineItems.
-        ************************************************************************
-
-        For all informative LineItems that do not match the name of a parent
-        line, this method copies the line into parent financials.
-
-        Method attempts to insert these ``replica`` lines into parent in the
-        same position relative to other lines as the sub line has in sub.
-
-        Prior to insertion, method sets the name for any unnamed informative sub
-        lines to a combination of (i) their sub_position and the first 3 tags on
-        the sub line. As a result, unnnamed lines from one component should not
-        increment the value of parent lines with identical tags.
-
-        [UPGRADE-F: TAG-RICH EVO: may require sub lineitems to increment parent
-        lineitems with matching or sub.superset tags]
-
-        ************************************************************************
-        STAGE 5: Insert replica LineItems into parent.financials.
-        ************************************************************************
-
-        Method places replica lines in parent financials to maintain relative
-        position of the line against other items in sub financials.
-
-        Example:
-
-        If lines are ordered [L1,L2,L3,L4] in sub financials, L1 should
-        precede L2 in parent.financials. Other lines (LA, LB, LC) can go between
-        L1 and L2 in parent because the position of L1 and L2 has no
-        relationship to these other lines.
-
-        By contrast, the following order of
-        parent lines would violate the relative position of sub L3 and L4:
-
-        [L1, ..., L2, ... L4,L3].
-
-        Method uses Financials.spotGenerally() to locate the appropriate
-        position for a replica.
+        Method delegates to Statement.increment() for actual consolidation work.
         """
         # Step Only: Actual consolidation
-        if recur_func:
-            getattr(sub, recur_func)(statement_name)
-
         child_statement = getattr(sub.financials, statement_name)
 
         if child_statement:
             parent_statement = getattr(self.financials, statement_name)
             parent_statement.increment(child_statement, consolidating=True)
 
-    def _derive(self, statement_name, spread=False, sheet=None):
+    def _derive(self, statement_name):
         """
 
 
         BusinessUnit.derive() -> None
 
+        --``statement_name`` is the name of the financial statement to work on
 
-        Method for calculating the value of certain financials lineitems by
-        using drivers. Method builds a Queue of applicable drivers for each
-        LineItem in BusinessUnit.financials. Method then runs the drivers in the
-        queue sequentially. Each LineItem gets a unique queue. Derive() ignores
-        drivers that fail Queue.alignItems (misfits)
-
-        In addition to any user-specified tags, method will not derive any lines
-        carrying tags for consolidation or hard-coding.
-
-        Method will try to use drivers specifically assigned to the line name in
-        instance.drivers. If and only if the drivers dictionary for the line is
-        empty, derive() will check if any unassigned (BU.drivers[None]) drivers
-        match the line.
-
-        NOTE: ALWAYS RUN BusinessUnit.consolidate() BEFORE BusinessUnit.Derive()
+        Method walks through lines in statement and delegates to
+        BusinessUnit._derive_line() for all substantive derivation work.
         """
-        # We never derive the starting balance sheet. Accordingly,
-        # financials.ordered does not include ``starting``.
         this_statement = getattr(self.financials, statement_name)
 
         for line in this_statement.get_ordered():
@@ -856,16 +741,29 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
         BusinessUnit._derive_line() -> None
 
+        --``line`` is the LineItem to work on
 
-        Compute the value of a line using drivers stored in the instance.
+        Method computes the value of a line using drivers stored on the
+        instance.  Method builds a queue of applicable drivers for the provided
+        LineItem. Method then runs the drivers in the queue sequentially. Each
+        LineItem gets a unique queue.
+
+        Method will not derive any lines that are hardcoded or have already
+        been consolidated (LineItem.hardcoded == True or
+        LineItem.has_been_consolidated == True).
         """
 
-        key = line.tags.name.casefold()
-        if key in self.drivers:
-            matching_drivers = self.drivers.get_drivers(key)
+        # look for drivers based on line name, line parent name, all line tags
+        keys = [line.tags.name.casefold()]
+        keys.append(line.relationships.parent.name.casefold())
+        keys.extend(line.tags.all)
 
-            for driver in matching_drivers:
-                driver.workOnThis(line)
+        for key in keys:
+            if key in self.drivers:
+                matching_drivers = self.drivers.get_drivers(key)
+
+                for driver in matching_drivers:
+                    driver.workOnThis(line)
 
         # Repeat for any details
         if line._details:
@@ -1099,7 +997,8 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         Connect starting balance sheet to past if available, copy shape to
         ending balance sheet.
         """
-        pool = self.components.getOrdered()
+
+        pool = self.components.get_ordered()
         # Need stable order to make sure we pick up peer lines from units in
         # the same order. Otherwise, their order might switch and financials
         # would look different (even though the bottom line would be the same).
@@ -1110,18 +1009,6 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         if self.past:
             self.financials.starting = self.past.financials.ending
             # Connect to the past
-
-        ending_balance = self.financials.ending
-        starting_balance = self.financials.starting
-
-        ending_balance.increment(starting_balance, consolidating=False)
-        ending_balance.reset()
-        # Our goal is to pick up shape, so clear values.
-
-        # By default, the ending balance sheet should look the same as the
-        # starting one. Here, we copy the starting structure and zero out
-        # the values. We will fill in the values later through
-        # consolidate(), update_balance(), and derive().
 
     def _register_in_period(self, recur=True, overwrite=True):
         """

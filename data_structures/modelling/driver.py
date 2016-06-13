@@ -374,7 +374,7 @@ class Driver(TagsMixIn):
 
         Method is a no-op if instance is not active.
         """
-        if self.active:
+        if self.active and not line.hardcoded and not line.has_been_consolidated:
             
             if self._can_work_on_this(line):
                 
@@ -502,15 +502,15 @@ class Driver(TagsMixIn):
 
         return params
 
-    def _can_work_on_this(self, targetLineItem):
+    def _can_work_on_this(self, line):
         """
 
 
         Driver._can_work_on_this() -> bool
 
 
-        This method checks whether the targetLineItem satisfies workConditions.
-        If the targetLineItem satisfies each of the workConditions specified for
+        This method checks whether the line satisfies workConditions.
+        If the line satisfies each of the workConditions specified for
         the instance, the method returns True. Otherwise, the method returns
         False.
 
@@ -525,22 +525,28 @@ class Driver(TagsMixIn):
         A workCondition with a value equal to None or an empty list will be
         satisfied for all lineItems.
         """
-        #must be careful not to split strings (names) into letters with set()
-        if not set(self.workConditions["name"]).issubset([targetLineItem.tags.name]+[None]):
-            return False
-        else:
-            try:
-                part_of = targetLineItem.relationships.parent.name
-            except AttributeError:
-                part_of = None
 
-            if not set(self.workConditions["partOf"]).issubset([part_of]+[None]):
+        # must be careful not to split strings (names) into letters with set()
+        if self.workConditions["name"]:
+            if not set(self.workConditions["name"]).issubset([line.name] + [None]):
                 return False
-            else:
-                if not set(self.workConditions["all"]).issubset(targetLineItem.tags.all | {targetLineItem.tags.name} | {None}):
-                    return False
-                else:
-                    return True
+
+        if self.workConditions["partOf"]:
+            try:
+                part_of = set([line.relationships.parent.name]) | {None}
+            except AttributeError:
+                part_of = {None}
+
+            if not set(self.workConditions["partOf"]).issubset(part_of):
+                return False
+
+        if self.workConditions["all"]:
+            all_tags = line.tags.all | set([line.name]) | {None}
+
+            if not set(self.workConditions["all"]).issubset(all_tags):
+                return False
+
+        return True
 
     def _check_data(self, parent=None):
         """
