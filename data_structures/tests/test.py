@@ -24,18 +24,7 @@ component_get_ordered Working of order_by parameter in components.get_ordered.
 
 
 # Imports
-import unittest, os, sys
-from pkg_resources import resource_filename
-
-# this contraption will add the location of config.py to sys.path
-# config.py will then be imported, and in turn will set all additional paths
-try:
-    import test_suite
-except:
-    cwd = resource_filename(__name__, None)
-    cfd = os.path.join(cwd, '../../../../Core Interface/Core-Interface')
-    sys.path.insert(1, os.path.realpath(cfd))
-    import config
+import unittest
 
 import simple_portal
 from data_structures.modelling import common_events
