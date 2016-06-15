@@ -46,7 +46,7 @@ from .components import Components
 from .dr_container import DrContainer
 from .equalities import Equalities
 from .financials import Financials
-from .history import History
+from .history_line import HistoryLine
 from .life import Life as LifeCycle
 from .parameters import Parameters
 
@@ -60,7 +60,7 @@ from .parameters import Parameters
 # n/a
 
 # Classes
-class BusinessUnit(History, Equalities, TagsMixIn):
+class BusinessUnit(HistoryLine, Equalities, TagsMixIn):
     """
 
     Object describes a group of business activity. A business unit can be a
@@ -117,7 +117,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
 
     def __init__(self, name, fins=None):
 
-        History.__init__(self)
+        HistoryLine.__init__(self)
         TagsMixIn.__init__(self, name)
 
         self._type = None
@@ -577,7 +577,7 @@ class BusinessUnit(History, Equalities, TagsMixIn):
         Set history for instance; repeat for components (by bbid) if recur is
         True.
         """
-        History.set_history(self, history, clear_future=clear_future)
+        HistoryLine.set_history(self, history, clear_future=clear_future)
 
         # Use dedicated logic to handle recursion.
         if recur:
