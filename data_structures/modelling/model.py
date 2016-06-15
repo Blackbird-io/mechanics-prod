@@ -28,7 +28,7 @@ Model                 structured snapshots of a company across time periods
 
 # imports
 import time
-import dill
+import pickle
 
 import bb_exceptions
 import bb_settings
@@ -226,7 +226,7 @@ class Model(TagsMixIn):
         flat_model = portal_model["e_model"]
 
         if flat_model:
-            M = dill.loads(flat_model)
+            M = pickle.loads(flat_model)
         else:
             business_name = portal_model["business_name"]
             if not business_name:
