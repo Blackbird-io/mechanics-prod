@@ -28,7 +28,7 @@ PortalModel        object that follows Engine-Wrapper API schema
 
 #imports
 import copy
-import dill
+import pickle
 
 from .ready_for_portal import ReadyForPortal
 
@@ -110,7 +110,7 @@ class PortalModel(ReadyForPortal):
                 result.update(seed.portal_data)
             #
             seed.portal_data.clear()
-            flattened = dill.dumps(seed)
+            flattened = pickle.dumps(seed)
             result["e_model"] = flattened
             #
             result["industry"] = seed.interview.work_space.get("industry")

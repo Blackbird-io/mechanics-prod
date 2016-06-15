@@ -29,7 +29,7 @@ HistoryLine           history mixin for objects hanging on a TimeLine
 
 
 # Imports
-# n/a
+from bb_exceptions import DefinitionError
 
 
 
@@ -54,11 +54,14 @@ class HistoryLine:
     ====================  =====================================================
 
     DATA:
-    locator_attribute     name of parent's attribute with a dictionary that
-                          maps bbid into this object's past and future versions
+    n/a
 
     FUNCTIONS:
     set_history()         set past to argument, recur if necessary
+    past                  getter/setter, finds own predecessor on period's
+                          timeline
+    future                getter/setter, finds own successor on period's
+                          timeline
     ====================  =====================================================
     """
     
@@ -121,6 +124,8 @@ class HistoryLine:
             else:
                 unit_past = None
             return unit_past
+        else:
+            raise DefinitionError('Call out of context')
 
     @past.setter
     def past(self, value):
@@ -130,6 +135,8 @@ class HistoryLine:
             if period_past:
                 locator = getattr(period_past, self._locator_attribute)
                 locator[bbid] = value
+        else:
+            raise DefinitionError('Call out of context')
 
     @property
     def future(self):
@@ -149,6 +156,8 @@ class HistoryLine:
             else:
                 unit_next = None
             return unit_next
+        else:
+            raise DefinitionError('Call out of context')
 
     @future.setter
     def future(self, value):
@@ -158,6 +167,8 @@ class HistoryLine:
             if period_next:
                 locator = getattr(period_next, self._locator_attribute)
                 locator[bbid] = value
+        else:
+            raise DefinitionError('Call out of context')
 
     def __iter__(self):
         """
