@@ -718,27 +718,48 @@ class UnitChef:
         if not index:
             index = len(book.worksheets)
 
-        if index == 3:
-            name = "Valuation"
-        else:
-            name = unit.tags.name + ' val'
+        name = 'Valuation of ' + unit.tags.name
+        sheet = self._create_unit_sheet(book=book, unit=unit,
+                                        index=index, name=name,
+                                        current_only=True)
+        sheet.bb.outline_level += 1
+        self._add_unit_params(sheet=sheet, unit=unit)
 
-        sheet = self._create_valuation_sheet(book=book, unit=unit,
-                                             index=index, name=name)
+        # 1.1   set-up life
+        sheet.bb.current_row += 1
+        sheet = self._add_unit_life(sheet=sheet, unit=unit)
+        sheet.bb.outline_level -= 1
 
         # 1.2  Add Valuation statement
-        current = 4
-        statement_row = sheet.bb.current_row+1
+        sheet.bb.current_row = sheet.bb.events.rows.ending
         sheet.bb.current_row += 1
+        current = sheet.bb.time_line.columns.get_position(unit.period.end)
+        statement_row = sheet.bb.current_row+1
         statement = unit.financials.valuation
-        line_chef.chop_statement(sheet=sheet,
-                                 statement=statement,
-                                 column=current,
-                                 set_labels=True)
+        line_chef.chop_statement(
+            sheet=sheet,
+            statement=statement,
+            column=current,
+            set_labels=True)
 
         # 1.5 add area and statement labels and sheet formatting
         sheet_style.style_sheet(sheet)
         cell_styles.format_area_label(sheet, statement.name, statement_row)
+
+        # 1.6 add selector cell
+        selector_row = sheet.bb.parameters.rows.by_name[
+            field_names.ACTIVE_SCENARIO]
+        if SCENARIO_SELECTORS:
+            label_column = sheet.bb.parameters.columns.by_name[
+                field_names.LABELS]
+            add_scenario_selector(sheet, label_column, selector_row,
+                                  book.scenario_names)
+
+        sheet.bb.outline_level = 1
+        group_lines(sheet, row=selector_row + 1)
+
+        sheet.bb.outline_level = 0
+        group_lines(sheet, row=selector_row)
 
         return sheet
 
