@@ -463,7 +463,7 @@ class LineItem(Statement):
         # entire financials unit could lose a special processing trigger.
         
         replica._details = dict()
-        # replica.xl = xl_mgmt.LineData()
+        replica.xl = xl_mgmt.LineData()
         replica.xl.number_format = self.xl.number_format
         replica.set_consolidate(self._consolidate)
 
