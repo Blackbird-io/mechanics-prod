@@ -760,8 +760,8 @@ class BusinessUnit(HistoryLine, Equalities, TagsMixIn):
 
         for key in keys:
             if key in self.drivers:
+                line.clear()
                 matching_drivers = self.drivers.get_drivers(key)
-
                 for driver in matching_drivers:
                     driver.workOnThis(line)
 
