@@ -41,7 +41,7 @@ PREP_FOR_EXCEL = True
 # data structures.
 
 SCREEN_WIDTH = 80
-MINIMUM_PROGRESS_PER_QUESTION = 2
+MINIMUM_PROGRESS_PER_QUESTION = .1
 
 max_unit_count = 200
 mid_unit_count = 20

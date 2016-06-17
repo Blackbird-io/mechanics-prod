@@ -29,6 +29,7 @@ LineChef              class with methods to chop BB statements into dynamic
 
 
 # Imports
+import re
 import openpyxl as xlio
 from openpyxl.comments import Comment
 
@@ -407,6 +408,25 @@ class LineChef:
 
         label_column = sheet.bb.parameters.columns.get_position(field_names.LABELS)
         period_column = column
+
+        # get params to keep
+        params_keep = []
+        for step in driver_data.formula.values():
+            temp_step = [m.start() for m in re.finditer('parameters\[*', step)]
+
+            for idx in temp_step:
+                jnk = step[idx:]
+                idx_end = jnk.find(']')+idx
+                params_keep.append(step[idx+11:idx_end])
+
+        # clean driver_data
+        orig_rows = driver_data.rows
+        new_rows = []
+        for item in driver_data.rows:
+            if item['labels'] in params_keep:
+                new_rows.append(item)
+
+        driver_data.rows = new_rows
 
         for row_data in sorted(driver_data.rows,
                                key=lambda x: x[field_names.LABELS]):
