@@ -30,6 +30,7 @@ LineChef              class with methods to chop BB statements into dynamic
 
 # Imports
 import re
+
 import openpyxl as xlio
 from openpyxl.comments import Comment
 
@@ -420,7 +421,6 @@ class LineChef:
                 params_keep.append(step[idx+11:idx_end])
 
         # clean driver_data
-        orig_rows = driver_data.rows
         new_rows = []
         for item in driver_data.rows:
             if item['labels'] in params_keep:
