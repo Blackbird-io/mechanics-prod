@@ -432,6 +432,17 @@ class ModelChef:
             
             active_column += 1
 
+        # Freeze panes:
+        corner_row = my_tab.bb.time_line.rows.ending
+        corner_row += 1
+
+        corner_column = my_tab.bb.parameters.columns.get_position(field_names.MASTER)
+        corner_column += 1
+
+        corner_cell = my_tab.cell(column=corner_column, row=corner_row)
+        my_tab.freeze_panes = corner_cell
+
+
         # Add selection cell
         if SCENARIO_SELECTORS:
             selector_row = my_tab.bb.parameters.rows.by_name[field_names.ACTIVE_SCENARIO]
