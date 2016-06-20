@@ -25,9 +25,6 @@ UnitChef              class containing methods to chop BusinessUnits into
 ====================  =========================================================
 """
 
-
-
-
 # Imports
 import openpyxl as xlio
 
@@ -43,9 +40,8 @@ from .sheet_style import SheetStyle
 from .tab_names import TabNames
 
 from data_structures.modelling import common_events
-
-
-
+from data_structures.modelling.statement import Statement
+from data_structures.modelling.line_item import LineItem
 
 # Constants
 # n/a
@@ -57,7 +53,7 @@ REPLACEMENT_CHAR = None
 # When the replacement character is None, UnitChef will remove all bad chars
 # from sheet titles.
 
-bad_char_table = {ord(c):REPLACEMENT_CHAR for c in _INVALID_CHARS}
+bad_char_table = {ord(c): REPLACEMENT_CHAR for c in _INVALID_CHARS}
 # May be this should be on the UnitChef class itself
 
 cell_styles = CellStyles()
@@ -70,6 +66,7 @@ type_codes = TypeCodes()
 get_column_letter = xlio.utils.get_column_letter
 
 line_chef = LineChef()
+
 
 # Classes
 class UnitChef:
@@ -190,9 +187,7 @@ class UnitChef:
 
         # 1.   Chop the children
         before_kids = len(book.worksheets)
-        # sort by birth
-        sorter = lambda t: t[1].life.events[common_events.KEY_BIRTH]
-        children = unit.components.get_ordered(order_by=sorter)
+        children = unit.components.get_ordered()
 
         for child in children:
             self.chop_multi(book=book, unit=child)
@@ -205,7 +200,8 @@ class UnitChef:
         # starting row, and the spreadsheet would look like a staircase.
 
         # 2.1.   set up the unit sheet and spread params
-        sheet = self._create_unit_sheet(book=book, unit=unit, index=before_kids)
+        sheet = self._create_unit_sheet(book=book, unit=unit,
+                                        index=before_kids)
         sheet.bb.outline_level += 1
         for snapshot in unit:
             self._add_unit_params(sheet=sheet, unit=snapshot)
@@ -221,15 +217,17 @@ class UnitChef:
 
         # 2.3.  spread fins
         current = sheet.bb.time_line.columns.get_position(unit.period.end)
-        fins_dict = self._add_financials(sheet=sheet, unit=unit, column=current)
+        fins_dict = self._add_financials(sheet=sheet, unit=unit,
+                                         column=current)
 
         for snapshot in unit:
-
             sheet.bb.current_row = sheet.bb.events.rows.ending
-            column = sheet.bb.time_line.columns.get_position(snapshot.period.end)
+            column = sheet.bb.time_line.columns.get_position(
+                snapshot.period.end)
             # Load balance from prior column!!!
 
-            self._add_financials(sheet=sheet, unit=snapshot, column=column, set_labels=False)
+            self._add_financials(sheet=sheet, unit=snapshot, column=column,
+                                 set_labels=False)
 
             # Should make sure rows align here from one period to the next.
             # Main problem lies in consolidation logic.
@@ -241,14 +239,16 @@ class UnitChef:
             cell_styles.format_area_label(sheet, statement, row)
 
         # 2.5 add selector cell
-        selector_row = sheet.bb.parameters.rows.by_name[field_names.ACTIVE_SCENARIO]
+        selector_row = sheet.bb.parameters.rows.by_name[
+            field_names.ACTIVE_SCENARIO]
         if SCENARIO_SELECTORS:
-            label_column = sheet.bb.parameters.columns.by_name[field_names.LABELS]
+            label_column = sheet.bb.parameters.columns.by_name[
+                field_names.LABELS]
             add_scenario_selector(sheet, label_column, selector_row,
                                   book.scenario_names)
 
         sheet.bb.outline_level = 1
-        group_lines(sheet, row=selector_row+1)
+        group_lines(sheet, row=selector_row + 1)
 
         sheet.bb.outline_level = 0
         group_lines(sheet, row=selector_row)
@@ -282,7 +282,8 @@ class UnitChef:
             self.chop_unit(book=book, unit=child)
 
         # Second, chop the parent
-        sheet = self._create_unit_sheet(book=book, unit=unit, index=before_kids)
+        sheet = self._create_unit_sheet(book=book, unit=unit,
+                                        index=before_kids)
         sheet = self._add_unit_life(sheet=sheet, unit=unit)
 
         current = sheet.bb.time_line.columns.get_position(unit.period.end)
@@ -291,9 +292,9 @@ class UnitChef:
         # Third, return result
         return sheet
 
-    #*************************************************************************#
+    # *************************************************************************#
     #                          NON-PUBLIC METHODS                             #
-    #*************************************************************************#
+    # *************************************************************************#
 
     def _add_financials(self, *pargs, sheet, unit, column, set_labels=True):
         """
@@ -316,14 +317,12 @@ class UnitChef:
                     statement_row = sheet.bb.current_row + 1
                     fins_dict["Starting Balance Sheet"] = statement_row
 
-                    start_bal = unit.financials.starting.copy()
-                    self._cell_link(unit, start_bal)
-
+                    start_bal = self._cell_link(unit)
                     line_chef.chop_statement(
-                         sheet=sheet,
-                         statement=start_bal,
-                         column=column,
-                         set_labels=set_labels)
+                        sheet=sheet,
+                        statement=start_bal,
+                        column=column,
+                        set_labels=set_labels)
                     sheet.bb.current_row += 1
 
                 statement_row = sheet.bb.current_row + 1
@@ -349,8 +348,10 @@ class UnitChef:
 
         active_row = sheet.bb.current_row + 1
 
-        label_column = sheet.bb.parameters.columns.get_position(field_names.LABELS)
-        time_line_row = sheet.bb.time_line.rows.get_position(field_names.LABELS)
+        label_column = sheet.bb.parameters.columns.get_position(
+            field_names.LABELS)
+        time_line_row = sheet.bb.time_line.rows.get_position(
+            field_names.LABELS)
 
         fs = formula_templates
         set_label = line_chef._set_label
@@ -361,15 +362,15 @@ class UnitChef:
         birth = sheet.cell(
             column=active_column,
             row=events.rows.get_position(common_events.KEY_BIRTH)
-            )
+        )
         death = sheet.cell(
             column=active_column,
             row=events.rows.get_position(common_events.KEY_DEATH)
-            )
+        )
         conception = sheet.cell(
             column=active_column,
             row=events.rows.get_position(common_events.KEY_CONCEPTION)
-            )
+        )
 
         cell_styles.format_date(birth)
         cell_styles.format_date(death)
@@ -381,14 +382,14 @@ class UnitChef:
         cells["conception"] = conception
 
         # 1. Add ref_date
-        sheet.bb.life.rows.by_name[field_names.REF_DATE]=active_row
+        sheet.bb.life.rows.by_name[field_names.REF_DATE] = active_row
         if set_labels:
             set_label(
                 label=field_names.REF_DATE,
                 sheet=sheet,
                 row=active_row,
                 column=label_column
-                )
+            )
 
         ref_date = sheet.cell(column=active_column, row=active_row)
         cell_styles.format_date(ref_date)
@@ -407,7 +408,7 @@ class UnitChef:
         # Make sure each cell gets its own formula by deleting F after use.
 
         # Move down two rows (to leave one blank)
-        group_lines(sheet, row=active_row+1)
+        group_lines(sheet, row=active_row + 1)
         active_row += 2
 
         # 2. Add age
@@ -418,15 +419,14 @@ class UnitChef:
                 sheet=sheet,
                 row=active_row,
                 column=label_column
-                )
+            )
 
         age = sheet.cell(column=active_column, row=active_row)
         cell_styles.format_parameter(age)
         group_lines(sheet, row=active_row)
 
-
         cells["age"] = age
-        cos = {k:v.coordinate for k,v in cells.items()}
+        cos = {k: v.coordinate for k, v in cells.items()}
         formula = fs.COMPUTE_AGE_IN_DAYS.format(**cos)
 
         age.set_explicit_value(formula, data_type=type_codes.FORMULA)
@@ -443,12 +443,11 @@ class UnitChef:
                 sheet=sheet,
                 row=active_row,
                 column=label_column
-                )
+            )
 
         alive = sheet.cell(column=active_column, row=active_row)
         cell_styles.format_parameter(alive)
         group_lines(sheet, row=active_row)
-
 
         cells["alive"] = alive
         cos["alive"] = alive.coordinate
@@ -469,7 +468,7 @@ class UnitChef:
                 sheet=sheet,
                 row=active_row,
                 column=label_column
-                )
+            )
 
         span = sheet.cell(column=active_column, row=active_row)
         cell_styles.format_parameter(span)
@@ -494,7 +493,7 @@ class UnitChef:
                 sheet=sheet,
                 row=active_row,
                 column=label_column
-                )
+            )
 
         percent = sheet.cell(column=active_column, row=active_row)
 
@@ -543,7 +542,6 @@ class UnitChef:
             group_lines(sheet, existing_row)
 
             if master_cell.value == active_cell.value:
-
                 link_template = formula_templates.ADD_COORDINATES
                 link = link_template.format(coordinates=master_cell.coordinate)
 
@@ -564,7 +562,6 @@ class UnitChef:
                 # because cell value setter changed x into a representation that
                 # plays better with spreadsheets.
 
-
         # Now add
         new_events = dict()
         for name in new_names:
@@ -577,7 +574,7 @@ class UnitChef:
             active_column=active_column,
             format_func=cell_styles.format_date,
             preference_order=unit.life.ORDER
-            )
+        )
         # Method will update current row to the last filled position.
 
         return sheet
@@ -616,7 +613,7 @@ class UnitChef:
             sheet=sheet,
             unit=unit,
             active_column=active_column
-            )
+        )
 
         sheet.bb.current_row = first_life_row
         sheet = self._add_life_analysis(
@@ -624,7 +621,7 @@ class UnitChef:
             unit=unit,
             active_column=active_column,
             set_labels=set_labels
-            )
+        )
 
         sheet.bb.current_row = sheet.bb.events.rows.ending
 
@@ -643,7 +640,8 @@ class UnitChef:
         parameters = sheet.bb.parameters
         time_line = sheet.bb.time_line
 
-        period_column = sheet.bb.time_line.columns.get_position(unit.period.end)
+        period_column = sheet.bb.time_line.columns.get_position(
+            unit.period.end)
 
         existing_param_names = unit.parameters.keys() & \
                                parameters.rows.by_name.keys()
@@ -652,7 +650,8 @@ class UnitChef:
         for param_name in existing_param_names:
             existing_row = sheet.bb.parameters.rows.get_position(param_name)
 
-            master_column_num = sheet.bb.parameters.columns.get_position(field_names.MASTER)
+            master_column_num = sheet.bb.parameters.columns.get_position(
+                field_names.MASTER)
             master_column = get_column_letter(master_column_num)
             master_value = sheet.cell(row=existing_row,
                                       column=master_column_num).value
@@ -668,7 +667,8 @@ class UnitChef:
                 link_template = formula_templates.ADD_CELL
                 link = link_template.format(alpha_column=master_column,
                                             row=existing_row)
-                data_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+                data_cell.set_explicit_value(link,
+                                             data_type=type_codes.FORMULA)
                 cell_styles.format_parameter(data_cell)
             else:
                 data_cell.value = period_value
@@ -694,9 +694,9 @@ class UnitChef:
             active_column=period_column,
             set_labels=True,
             hardcoded=False
-            )
+        )
 
-            # Always set labels for new items.
+        # Always set labels for new items.
 
         sheet.bb.current_row = parameters.rows.ending
         return sheet
@@ -709,7 +709,6 @@ class UnitChef:
 
         --``book`` must be a Workbook
         --``unit`` must be an instance of BusinessUnit
-        --``index`` is the index at which to create the new tab
 
         Method creates a valuation tab and chops unit valuation statement.
         """
@@ -718,7 +717,11 @@ class UnitChef:
         if not index:
             index = len(book.worksheets)
 
-        name = 'Valuation of ' + unit.tags.name
+        if index == 2:
+            name = "Valuation"
+        else:
+            name = unit.name + ' val'
+
         sheet = self._create_unit_sheet(book=book, unit=unit,
                                         index=index, name=name,
                                         current_only=True)
@@ -734,7 +737,7 @@ class UnitChef:
         sheet.bb.current_row = sheet.bb.events.rows.ending
         sheet.bb.current_row += 1
         current = sheet.bb.time_line.columns.get_position(unit.period.end)
-        statement_row = sheet.bb.current_row+1
+        statement_row = sheet.bb.current_row + 1
         statement = unit.financials.valuation
         line_chef.chop_statement(
             sheet=sheet,
@@ -763,7 +766,8 @@ class UnitChef:
 
         return sheet
 
-    def _create_unit_sheet(self, *pargs, book, unit, index, name=None):
+    def _create_unit_sheet(self, *pargs, book, unit, index, name=None,
+                           current_only=False):
         """
 
 
@@ -777,7 +781,7 @@ class UnitChef:
             name = unit.tags.name
 
         if name in book:
-            rev_name = name + " ..." + str(unit.id.bbid)[-8: ]
+            rev_name = name + " ..." + str(unit.id.bbid)[-8:]
             name = rev_name
 
             if name in book:
@@ -805,7 +809,8 @@ class UnitChef:
         # Hide sheets for units below a certain depth. The depth should be a
         # Chef-level constant. Use ``sheet_state := "hidden"`` to implement.
         sheet.bb.outline_level += 1
-        self._link_to_time_line(book=book, sheet=sheet)
+        self._link_to_time_line(book=book, sheet=sheet,
+                                current_only=current_only)
         self._add_unit_params(sheet=sheet, unit=unit)
         sheet.bb.outline_level -= 1
         # At this point, sheet.bb.current_row will point to the last parameter.
@@ -814,7 +819,8 @@ class UnitChef:
         corner_row = sheet.bb.time_line.rows.ending
         corner_row += 1
 
-        corner_column = sheet.bb.parameters.columns.get_position(field_names.MASTER)
+        corner_column = sheet.bb.parameters.columns.get_position(
+            field_names.MASTER)
         corner_column += 1
 
         corner_cell = sheet.cell(column=corner_column, row=corner_row)
@@ -823,42 +829,8 @@ class UnitChef:
         # Return sheet
         return sheet
 
-    def _create_valuation_sheet(self, *pargs, book, unit, index, name=None):
-        """
-
-
-        UnitChef._create_unit_sheet() -> Worksheet
-
-
-        Returns sheet with current row pointing to last parameter row
-        """
-        if not name:
-            name = unit.tags.name
-
-        if name in book:
-            rev_name = name + " ..." + str(unit.id.bbid)[-8:]
-            name = rev_name
-
-            if name in book:
-                name = str(unit.id.bbid)
-
-        name = name.translate(bad_char_table)
-        name = name[:self.MAX_TITLE_CHARACTERS]
-        # Replace forbidden characters, make sure name is within length limits
-
-        sheet = book.create_sheet(name, index)
-
-        req_rows = len(unit.components.by_name) // self.MAX_LINKS_PER_CELL
-        req_rows = min(req_rows, self.MAX_CONSOLIDATION_ROWS)
-        req_rows = max(1, req_rows)
-
-        sheet.bb.consolidation_size = req_rows
-        sheet.bb.current_row = 1
-
-        return sheet
-
     def _link_to_area(self, source_sheet, local_sheet, area_name, group=False,
-                      keep_format=True, current_only=False):
+                      keep_format=True, current_only=False, num_cols=1):
         """
 
 
@@ -875,7 +847,7 @@ class UnitChef:
         to the ``source_sheet``.  Will keep source formatting if
         ``keep_format`` is true.
         """
-        #<-------------------------------------------------------------------------------------------------------SHOULD BE PUBLIC ROUTINE
+        # <-------------------------------------------------------------------------------------------------------SHOULD BE PUBLIC ROUTINE
         source_area = getattr(source_sheet.bb, area_name)
         local_area = getattr(local_sheet.bb, area_name, None)
 
@@ -894,7 +866,7 @@ class UnitChef:
 
             if current_only:
                 use_columns = sorted(source_area.columns.by_name.values())
-                use_columns = use_columns[0:3]
+                use_columns = use_columns[0:num_cols]
             else:
                 use_columns = source_area.columns.by_name.values()
 
@@ -923,7 +895,7 @@ class UnitChef:
 
         return local_sheet
 
-    def _link_to_time_line(self, *pargs, book, sheet):
+    def _link_to_time_line(self, *pargs, book, sheet, current_only=False):
         """
 
 
@@ -936,13 +908,15 @@ class UnitChef:
         """
         source = book.get_sheet_by_name(tab_names.TIME_LINE)
 
-        sheet = self._link_to_area(source, sheet, field_names.TIMELINE)
+        sheet = self._link_to_area(source, sheet, field_names.TIMELINE,
+                                   current_only=current_only, num_cols=1)
 
         for column in sheet.bb.time_line.columns.by_name.values():
             sheet_style.set_column_width(sheet, column)
 
         sheet = self._link_to_area(source, sheet, field_names.PARAMETERS,
-                                   group=True)
+                                   group=True, current_only=current_only,
+                                   num_cols=3)
 
         return sheet
 
@@ -964,32 +938,88 @@ class UnitChef:
         if start_line._details:
             for name, new_line in start_line._details.items():
                 end_line = ending_line.find_first(new_line.name)
-
-                self._balance_lines(new_line, end_line)
+                if end_line:  # comment out later
+                    self._balance_lines(new_line, end_line)
         else:
             start_line.xl = LineData()
             if ending_line.xl.cell:
                 start_line.xl.reference.source = ending_line
 
-    def _cell_link(self, unit, start_bal):
+    # def _check_line(self, start_line, end_line):
+    #     """
+    #     BLAH BLAH BLAH DOC STRING
+    #     """
+    #     if end_line._details:
+    #         for name, line in end_line._details.items():
+    #             sline = start_line.find_first(name)
+    #             if not sline:
+    #                 start_line.append(line.copy())
+    #             else:
+    #                 if line._details:
+    #                     self._check_line(sline, line)
+
+    def _check_line(self, line1, line2):
+        """
+        BLAH BLAH BLAH DOC STRING
+        """
+        if line2._details:
+            for l2 in line2.get_ordered():
+                l1 = line1.find_first(l2.name)
+                self._check_line(l1, l2)
+        else:
+            if line2.value:
+                line1.set_value(line2.value, "UnitChef")
+
+    def _cell_link(self, unit):
         """
 
 
         UnitChef._cell_link() -> None
 
         --``unit`` is the new period unit
-        --``start_bal`` copy of unit.financials.starting, to be displayed on the
-            Excel sheet
 
         Link cell formulas for starting financials to previous period's
         cells, if such exist.
         """
         if unit.past:
-            ending_bal = unit.past.financials.ending
+            past_end = unit.past.financials.ending
+            line0 = past_end.get_ordered()
+            line0 = line0[0]
+            if line0.xl.cell:
+                start_bal = unit.financials.starting.copy()
+                ending_bal = unit.past.financials.ending
 
-            for name, start_line in start_bal._details.items():
-                ending_line = ending_bal.find_first(name)
-                self._balance_lines(start_line, ending_line)
+                for name, start_line in start_bal._details.items():
+                    ending_line = ending_bal.find_first(name)
+                    self._balance_lines(start_line, ending_line)
+            else:
+                start_bal = unit.financials.ending.copy()
+                for line in start_bal.get_full_ordered():
+                    line.set_hardcoded(False)
+                start_bal.reset()
+
+                for line in unit.financials.starting.get_ordered():
+                    new_line = start_bal.find_first(line.name)
+                    self._check_line(new_line, line)
+
+        else:
+            # pick up shape from this periods ending balance to fix alignment
+            start_bal = unit.financials.ending.copy()
+            start_bal.reset()
+
+        # if unit.past:
+        #     start_bal = unit.financials.starting.copy()
+        #     ending_bal = unit.past.financials.ending
+        #
+        #     for name, start_line in start_bal._details.items():
+        #         ending_line = ending_bal.find_first(name)
+        #         self._balance_lines(start_line, ending_line)
+        # else:
+        #     # pick up shape from this periods ending balance to fix alignment
+        #     start_bal = unit.financials.ending.copy()
+        #     start_bal.reset()
+
+        return start_bal
 
     def _sort_bypreference(self, items, preference_order=[]):
         """
