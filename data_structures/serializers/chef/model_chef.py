@@ -406,6 +406,7 @@ class ModelChef:
                 if spec_value != m_cell.value:
                     param_cell = my_tab.cell(column=active_column, row=param_row)
                     param_cell.value = spec_value
+                    cell_styles.format_hardcoded(param_cell)
                 else:
                     cos = dict(alpha_column=alpha_master_column, row=param_row)
                     link = link_template.format(**cos)

@@ -153,6 +153,7 @@ class UnitChef:
             master_cell = sheet.cell(column=master_column, row=new_row)
             master_cell.value = value
             cell_styles.format_parameter(master_cell)
+            cell_styles.format_hardcoded(master_cell)
 
             # Link the period to the master
             current_cell = sheet.cell(column=active_column, row=new_row)
