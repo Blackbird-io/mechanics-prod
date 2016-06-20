@@ -78,7 +78,7 @@ class Analyst:
     """
     
     def __init__(self):
-        self.max_cycles = 20
+        self.max_cycles = 50
         self.needs_work = True
         self.status = None
 

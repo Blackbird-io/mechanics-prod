@@ -41,7 +41,7 @@ PREP_FOR_EXCEL = True
 # data structures.
 
 SCREEN_WIDTH = 80
-MINIMUM_PROGRESS_PER_QUESTION = 2
+MINIMUM_PROGRESS_PER_QUESTION = .1
 
 max_unit_count = 200
 mid_unit_count = 20
@@ -66,7 +66,7 @@ user_correction = 0.10
 
 #Calendar
 t0 = date(2015, 6, 16)
-fix_ref_date = True #False
+fix_ref_date = True
 #whether models always start on the same date; keep True for testing
 days_in_month = 30
 days_in_year = 365

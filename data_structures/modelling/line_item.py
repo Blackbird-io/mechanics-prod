@@ -257,7 +257,6 @@ class LineItem(Statement):
                 if consolidating and self._consolidate is True:
                     self.tags.inherit_from(matching_line.tags)
                     self._consolidated = True
-
                     self.xl.consolidated.sources.append(matching_line)
 
     # Upgrade-F: The new line structure gives us the option to implement a
@@ -464,6 +463,7 @@ class LineItem(Statement):
         # entire financials unit could lose a special processing trigger.
         
         replica._details = dict()
+        replica.xl = xl_mgmt.LineData()
         replica.xl.number_format = self.xl.number_format
         replica.set_consolidate(self._consolidate)
 
