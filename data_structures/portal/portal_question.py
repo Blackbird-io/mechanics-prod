@@ -80,7 +80,9 @@ class PortalQuestion(ReadyForPortal):
                     "short",
                     "show_if",
                     "topic_name",
-                    "transcribe"]
+                    "transcribe",
+                    "name",
+                    "target"]
         #
         ReadyForPortal.__init__(self, pq_attrs)
         #
@@ -89,12 +91,14 @@ class PortalQuestion(ReadyForPortal):
         self.input_array = []
         self.input_type = "text"
         self.input_sub_type = None
+        self.name = None
         self.prompt = None
         self.progress = 0
         self.short = None
         self.show_if = None
         self.topic_name = None
         self.transcribe = False
+        self.target = None
 
     def to_portal(self, seed, web=False):
         """
@@ -154,7 +158,8 @@ class PortalQuestion(ReadyForPortal):
         # additional portal-oriented data
         result["name"] = copy.copy(seed.tags.name)
         result["question_id"] = str(seed.id.bbid)
-        
+        result["target"] = seed.context.get("target", None)
+
         del result["_var_attrs"]
         
         return result
