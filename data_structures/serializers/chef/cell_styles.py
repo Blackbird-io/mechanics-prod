@@ -170,7 +170,6 @@ class CellStyles:
 
         if line.xl.cell:
             line.xl.cell.number_format = use_format
-            line.xl.cell.font = Font(bold=True)
 
     @staticmethod
     def format_parameter(cell):
