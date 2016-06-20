@@ -398,10 +398,20 @@ class ModelChef:
 
             for spec_name in existing_param_names:
                 spec_value = period.parameters[spec_name]
-                    
-                param_row = parameters.rows.get_position(spec_name)                
-                param_cell = my_tab.cell(column=active_column, row=param_row)
-                param_cell.value = spec_value
+
+                param_row = parameters.rows.get_position(spec_name)
+                m_cell = my_tab.cell(column=local_master_column,
+                                     row=param_row)
+
+                if spec_value != m_cell.value:
+                    param_cell = my_tab.cell(column=active_column, row=param_row)
+                    param_cell.value = spec_value
+                else:
+                    cos = dict(alpha_column=alpha_master_column, row=param_row)
+                    link = link_template.format(**cos)
+                    param_cell.set_explicit_value(link,
+                                                  data_type=type_codes.FORMULA)
+
                 cell_styles.format_parameter(param_cell)
 
             new_params = dict()
