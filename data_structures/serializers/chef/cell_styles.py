@@ -38,7 +38,7 @@ from .data_types import TypeCodes
 
 
 # Constants
-HARDCODED_COLOR = '1f5993'
+HARDCODED_COLOR = '0070c0' #'1f5993'
 CALCULATION_COLOR = '707070'
 
 # Module Globals
@@ -141,7 +141,7 @@ class CellStyles:
         Format cells containing hardcoded values to conform with Chef standard.
         """
 
-        font = Font(color=HARDCODED_COLOR)
+        font = Font(color=HARDCODED_COLOR, bold=True)
         cell.font = font
 
     @staticmethod
