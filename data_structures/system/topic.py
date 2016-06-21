@@ -95,7 +95,7 @@ class Topic:
     record_strings        list of string attribute paths w respect to M
     record_on_exit        bool, whether record work should run on sign off
     scenarios             dictionary of scenarios used by topic, by q bbid
-    source                relative path of conent module that described obj
+    source                relative path of content module that described obj
     tags                  instance of Tags class
     work_plan             dict; keys are line names, values are improvements in
                           quality
