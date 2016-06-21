@@ -39,7 +39,8 @@ from data_structures.modelling.line_item import LineItem
 from ._chef_tools import group_lines
 from .cell_styles import CellStyles
 from .chef_settings import COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING, \
-                           COMMENT_CUSTOM, BLANK_BETWEEN_TOP_LINES
+                           COMMENT_CUSTOM, BLANK_BETWEEN_TOP_LINES, \
+                           FILTER_PARAMETERS
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
@@ -410,23 +411,24 @@ class LineChef:
         label_column = sheet.bb.parameters.columns.get_position(field_names.LABELS)
         period_column = column
 
-        # get params to keep
-        params_keep = []
-        for step in driver_data.formula.values():
-            temp_step = [m.start() for m in re.finditer('parameters\[*', step)]
+        if FILTER_PARAMETERS:
+            # get params to keep
+            params_keep = []
+            for step in driver_data.formula.values():
+                temp_step = [m.start() for m in re.finditer('parameters\[*', step)]
 
-            for idx in temp_step:
-                jnk = step[idx:]
-                idx_end = jnk.find(']')+idx
-                params_keep.append(step[idx+11:idx_end])
+                for idx in temp_step:
+                    jnk = step[idx:]
+                    idx_end = jnk.find(']')+idx
+                    params_keep.append(step[idx+11:idx_end])
 
-        # clean driver_data
-        new_rows = []
-        for item in driver_data.rows:
-            if item['labels'] in params_keep:
-                new_rows.append(item)
+            # clean driver_data
+            new_rows = []
+            for item in driver_data.rows:
+                if item['labels'] in params_keep:
+                    new_rows.append(item)
 
-        driver_data.rows = new_rows
+            driver_data.rows = new_rows
 
         for row_data in sorted(driver_data.rows,
                                key=lambda x: x[field_names.LABELS]):
