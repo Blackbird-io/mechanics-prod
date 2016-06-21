@@ -59,7 +59,7 @@ class History:
                 attr_history = getattr(history, self._recursive_attribute)
 
                 if attr:
-                    attr.set_history(attr_history,  clear_future=clear_future, recur=True)
+                    attr.set_history(attr_history, clear_future=clear_future, recur=True)
 
     def __iter__(self):
         return HistoryIterator(self)
