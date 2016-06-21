@@ -66,7 +66,7 @@ class CellStyles:
     format_parameter()    format number in parameter cells
     format_scenario_label()  format scenario label cells (black with white text)
     format_scenario_selector_cell() format scenario selector cells
-    format_thin_border_group()  add thin border around group of cells
+    format_border_group()  add thin border around group of cells
     ====================  =====================================================
     """
 
@@ -170,7 +170,6 @@ class CellStyles:
 
         if line.xl.cell:
             line.xl.cell.number_format = use_format
-            line.xl.cell.font = Font(bold=True)
 
     @staticmethod
     def format_parameter(cell):
@@ -253,22 +252,24 @@ class CellStyles:
         right_cell.alignment = Alignment(horizontal='center')
 
     @staticmethod
-    def format_thin_border_group(sheet, st_col, ed_col, st_row, ed_row):
+    def format_border_group(sheet, st_col, ed_col, st_row, ed_row,
+                            border_style='thin'):
         """
 
 
-        CellStyles.format_thin_border_group -> None
+        CellStyles.format_border_group -> None
 
         --``sheet`` is an instance of openpyxl worksheet class
         --``st_col`` is the starting column in the group
         --``ed_col`` is the ending column in the group
         --``st_row`` is the starting row in the group
         --``ed_row`` is the ending row in the group
+        --``border_style`` is any openpyxl border style, default is `thin`
 
         Draws thin border around group of cells defined by starting and ending
         rows and columns.
         """
-        side = Side(border_style='thin')
+        side = Side(border_style=border_style)
 
         # SET TOP BORDER
         row = st_row

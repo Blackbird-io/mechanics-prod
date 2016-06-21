@@ -36,6 +36,8 @@ import openpyxl as xlio
 
 from .bb_workbook import BB_Workbook as Workbook
 
+from . import chef_settings
+
 from ._chef_tools import add_scenario_selector
 from .cell_styles import CellStyles
 from .chef_settings import SCENARIO_SELECTORS
@@ -45,6 +47,9 @@ from .formulas import FormulaTemplates
 from .sheet_style import SheetStyle
 from .tab_names import TabNames
 from .unit_chef import UnitChef
+
+from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.styles.colors import WHITE, BLACK
 
 
 
@@ -119,13 +124,109 @@ class ModelChef:
            timeline
         """       
         book = Workbook()
-        book.remove_sheet(book.active)
 
-        # self._create_cover_tab(book, model)
+
+        self._create_cover_tab(book, model)
         self._create_scenarios_tab(book, model)
         self._create_time_line_tab(book, model)
 
         return book
+
+    def _create_cover_tab(self, book, model):
+        """
+
+
+        ModelChef._create_cover_tab() -> None
+
+        --``book`` is an instance of B_Workbook
+        --``model`` is a Blackbird Engine model
+
+        Method adds a cover tab to the workbook
+        """
+        company = model.time_line.current_period.content
+
+        sheet = book.active
+        sheet_style.style_sheet(sheet, label_areas=False)
+
+        row = sheet.row_dimensions[1]
+        row.height = 9
+
+        for r in range(8, 23):
+            row = sheet.row_dimensions[r]
+            row.height = 21.75
+
+        row = sheet.row_dimensions[18]
+        row.height = 9
+
+        column = sheet.column_dimensions['A']
+        column.width = 10.71
+
+        column = sheet.column_dimensions['D']
+        column.width = 14
+
+        column = sheet.column_dimensions['E']
+        column.width = 31.71
+
+        column = sheet.column_dimensions['F']
+        column.width = 14
+
+        img = xlio.drawing.image.Image(chef_settings.IMAGE_PATH)
+        img.drawing.width = 200
+        img.drawing.height = 60
+        img.anchor(sheet.cell('B2'))
+
+        sheet.add_image(img)
+
+        cell_styles.format_border_group(sheet, 2, 8, 9, 22,
+                                        border_style='double')
+
+        cell = sheet.cell('E11')
+        cell.value = company.name.title()
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.font = Font(size=18, bold=True, underline='single')
+
+        cell = sheet.cell('D14')
+        cell.value = chef_settings.DATE_LABEL
+        cell.alignment = Alignment(horizontal='left')
+        cell.font = Font(size=12, bold=True)
+
+        cell = sheet.cell('D15')
+        cell.value = chef_settings.QCOUNT_LABEL
+        cell.alignment = Alignment(horizontal='left')
+        cell.font = Font(size=12, bold=True)
+
+        cell = sheet.cell('F14')
+        cell.value = model.time_line.current_period.end
+        cell.alignment = Alignment(horizontal='right')
+        cell.font = Font(size=12)
+
+        # get length of interview
+        questions = []
+        for i in model.transcript:
+            q = i[0]['q_in']
+            if q:
+                questions.append(q['prompt'])
+
+        cell = sheet.cell('F15')
+        cell.value = len(questions)
+        cell.alignment = Alignment(horizontal='right')
+        cell.font = Font(size=12)
+
+        cell = sheet.cell('C17')
+        cell.value = chef_settings.ESTIMATED_LABEL
+        cell.font = Font(color=WHITE, size=11, bold=True)
+        cell.fill = PatternFill(start_color=BLACK,
+                                end_color=BLACK,
+                                fill_type='solid')
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        sheet.merge_cells('C17:G17')
+
+        cell = sheet.cell('C19')
+        cell.value = chef_settings.DISCLAIMER_TEXT
+        cell.font = Font(size=10)
+        cell.alignment = Alignment(horizontal='center', vertical='center',
+                                   wrap_text=True)
+        sheet.merge_cells('C19:G21')
 
     def _create_scenarios_tab(self, book, model):
         """
@@ -237,13 +338,13 @@ class ModelChef:
             ref_row += 1
 
         # Add cell outline formatting for Scenarios cells here
-        cell_styles.format_thin_border_group(my_tab,
+        cell_styles.format_border_group(my_tab,
                                              custom_column,
                                              custom_column,
                                              title_row,
                                              current_row-1)
 
-        cell_styles.format_thin_border_group(my_tab,
+        cell_styles.format_border_group(my_tab,
                                              base_case_column,
                                              base_case_column+i,
                                              title_row,
@@ -398,10 +499,21 @@ class ModelChef:
 
             for spec_name in existing_param_names:
                 spec_value = period.parameters[spec_name]
-                    
-                param_row = parameters.rows.get_position(spec_name)                
-                param_cell = my_tab.cell(column=active_column, row=param_row)
-                param_cell.value = spec_value
+
+                param_row = parameters.rows.get_position(spec_name)
+                m_cell = my_tab.cell(column=local_master_column,
+                                     row=param_row)
+
+                if spec_value != m_cell.value:
+                    param_cell = my_tab.cell(column=active_column, row=param_row)
+                    param_cell.value = spec_value
+                    cell_styles.format_hardcoded(param_cell)
+                else:
+                    cos = dict(alpha_column=alpha_master_column, row=param_row)
+                    link = link_template.format(**cos)
+                    param_cell.set_explicit_value(link,
+                                                  data_type=type_codes.FORMULA)
+
                 cell_styles.format_parameter(param_cell)
 
             new_params = dict()
@@ -421,6 +533,17 @@ class ModelChef:
             # to the add_items() routine.
             
             active_column += 1
+
+        # Freeze panes:
+        corner_row = my_tab.bb.time_line.rows.ending
+        corner_row += 1
+
+        corner_column = my_tab.bb.parameters.columns.get_position(field_names.MASTER)
+        corner_column += 1
+
+        corner_cell = my_tab.cell(column=corner_column, row=corner_row)
+        my_tab.freeze_panes = corner_cell
+
 
         # Add selection cell
         if SCENARIO_SELECTORS:
