@@ -254,7 +254,8 @@ def grow_batches_by_count(start_dt, end_dt, template, start_num, number, batches
             batch_size = (number // batches) + 1
             # Need this use case when number=100 batches=6.   100/(6-1) = 20
 
-    start_batches = start_num / batch_size  # Existing number of batches
+    start_batches = (start_num or 1) / batch_size
+    # Existing number of batches. Cannot have 0 value
 
     population = []
     time_diff = end_dt - start_dt  # timedelta object
@@ -359,7 +360,7 @@ def grow_units_by_rate(start_dt, end_dt, template, start_num, rate):
 
     birth_dates = []
     for K in range(number):
-        t = (1/rate_c) * math.log((K+1)/start_num + 1)  # Equation B
+        t = (1/rate_c) * math.log((K+1)/(start_num or 1) + 1)  # Equation B
         t_timedelta = timedelta(t * 365)
         birth_dates.append(t_timedelta + start_dt)
 
@@ -367,7 +368,7 @@ def grow_units_by_rate(start_dt, end_dt, template, start_num, rate):
     for birthday in birth_dates:
         copy = template.copy()
         unit_count += 1
-        copy.tags.set_name(copy.tags.name + " " + str(unit_count))
+        copy.tags.set_name(copy.tags.name + " " + str(unit_count + start_num))
         copy.life.configure_events(birthday)
         # Sets events: conception, birth, death, maturity, old_age
         population.append(copy)
