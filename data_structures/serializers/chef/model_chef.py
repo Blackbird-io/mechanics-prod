@@ -146,6 +146,7 @@ class ModelChef:
         company = model.time_line.current_period.content
 
         sheet = book.active
+        sheet.title = chef_settings.COVER_TITLE
         sheet_style.style_sheet(sheet, label_areas=False)
 
         row = sheet.row_dimensions[1]
