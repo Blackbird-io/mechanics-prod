@@ -36,7 +36,7 @@ n/a
 
 
 # Imports
-# n/a
+import os
 
 
 
@@ -60,3 +60,12 @@ PARAM_DECIMAL_POINTS = 2
 # TOGGLES
 COLLAPSE_ROWS = False
 SCENARIO_SELECTORS = False
+
+# DEFAULT TEXT
+
+# cover sheet
+DATE_LABEL = 'Model Date:'
+QCOUNT_LABEL = 'Conversation Length:'
+ESTIMATED_LABEL = 'ESTIMATED VALUES'
+DISCLAIMER_TEXT = 'Blackbird uses classic value analysis coupled with proprietary software to estimate the financial performance of each business member. In certain cases, Blackbird software may make assumptions about a company that turn out to be False. You should carefully check each of these numbers prior to entering into any transaction.'
+IMAGE_PATH = os.path.join(os.path.dirname(__file__), 'static', 'blackbird_engine_img.PNG')
