@@ -59,9 +59,11 @@ class TimeLine(dict):
 
     DATA:
     current_period        P; pointer to the period that represents the present
+    fiscal_year_end       None or date; holds end date of current fiscal year
     id                    instance of PlatformComponents.ID class, for interface
     master                TimePeriod; unit templates that fall outside of time
     parameters            Parameters object, specifies shared parameters
+    summaries             dict; holds TimelineSummary objects keyed by interval
 
     FUNCTIONS:
     build()               populates instance with adjacent time periods
@@ -90,6 +92,8 @@ class TimeLine(dict):
         # bbid.
         self.master = None
         self.parameters = Parameters()
+        self.fiscal_year_end = None
+        self.summaries = dict()
 
     @property
     def current_period(self):
@@ -685,7 +689,3 @@ class TimeLine(dict):
                 #add a blank line after every row
         #
         return clean_lines
-
-
-
-
