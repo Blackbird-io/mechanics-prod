@@ -62,7 +62,7 @@ def get_units_linearly(number, container):
     distributed by age ranking. Returns list of objects ordered by birth date.
 
     number          -- integer, number of objects to be returned
-    container       -- iterable, containing objects with life attr
+    container       -- iterable, containing objects with life attribute
 
     Returned list has pointers to the original existing objects
     It does NOT return copies of these objects.
@@ -134,7 +134,7 @@ def grow_units_by_count(start_dt, end_dt, template, start_num, number):
     """
 
 
-    grow_units_by_count() -> None
+    grow_units_by_count() -> list
 
 
     Returns list of a fixed number of objects with constant geometric growth
@@ -143,7 +143,7 @@ def grow_units_by_count(start_dt, end_dt, template, start_num, number):
     start_dt    -- datetime.date
     end_dt      -- datetime.date
     template    -- object with Life attribute, ie a BusinessUnit
-    start_num   -- int, number of starting BUs of this same type
+    start_num   -- int, number of existing templates of this same type
     number      -- integer, number of templates to be created
 
     The total number of objects created must be known, so this function is
@@ -200,10 +200,93 @@ def grow_units_by_count(start_dt, end_dt, template, start_num, number):
     for birthday in birth_dates:
         copy = template.copy()
         unit_count += 1
-        copy.tags.set_name(copy.tags.name + " " + str(unit_count))
+        # Name of 1st template created will be labeled (start_num + 1)
+        copy.tags.set_name(copy.tags.name + " " + str(unit_count + start_num))
         copy.life.configure_events(birthday)
         # Sets events: conception, birth, death, maturity, old_age
         population.append(copy)
+
+    return population
+
+
+def grow_batches_by_count(start_dt, end_dt, template, start_num, number, batches):
+    """
+
+
+    grow_batches_by_count() -> List
+
+
+    Returns list of a fixed number of template objects with constant geometric
+    growth rate over time. Function is designed to be used when the number > 50.
+    Instead of creating 50 objects, we may create 10 objects each with size=5
+
+    The last template may have a smaller size than the rest if number // batches
+    has leftovers.
+
+    start_dt    -- datetime.date
+    end_dt      -- datetime.date
+    template    -- object with Life attribute, ie a BusinessUnit
+    start_num   -- int, number of starting BUs of this same type
+    number      -- integer, number of sum of the template.size for every batch
+    batches     -- integer, number of templates to make, including rump
+
+    The total number of objects created must be known, so this function is
+    useful for populating historical time periods and near term forecasts.
+
+    Generally if start_num is low (<5 units) it is better to use use
+    make_linear_pop instead.
+
+    Start_dt should be when the last already existing unit has been created.
+    Function will not make a unit on start_date
+    Function will always make the last new unit on end_dt.
+    """
+    if number < batches:
+        c = "Number cannot be < Batches!"
+        raise bb_exceptions.BBAnalyticalError(c)
+
+    if number % batches == 0:  # Same unit count for every batch
+        batch_size = number / batches
+    else:
+        leftover = number % (batches - 1)  # Last batch will have leftovers
+        if leftover > 0:  # Can also change 0 to min_batch_size
+            batch_size = (number - leftover) / (batches - 1)
+        else:
+            batch_size = (number // batches) + 1
+            # Need this use case when number=100 batches=6.   100/(6-1) = 20
+
+    start_batches = (start_num or 1) / batch_size
+    # Existing number of batches. Cannot have 0 value
+
+    population = []
+    time_diff = end_dt - start_dt  # timedelta object
+    time_diff_years = time_diff.days / 365
+
+    rate = (1/time_diff_years) * math.log(batches/start_batches + 1)  # Eq: A
+
+    birth_dates = []
+    for K in range(batches):
+        t = (1/rate) * math.log((K+1)/start_batches + 1)  # Eq: B
+        t_timedelta = timedelta(t * 365)
+        birth_dates.append(t_timedelta + start_dt)
+
+    unit_count = 1
+    for birthday in birth_dates:
+        start_label = start_num + unit_count
+        unit_count += int(batch_size)
+        end_label = min(start_num + unit_count - 1, start_num + number)
+
+        copy = template.copy()
+        # Name of 1st template created will be labeled (start_num + 1)
+        new_name = copy.name + " " + str(start_label) + "-" + str(end_label)
+        copy.tags.set_name(new_name)
+        copy.size = end_label - start_label + 1  # "BU 101-102" is 2 units
+
+        # Sets events: conception, birth, death, maturity, old_age
+        copy.life.configure_events(birthday)
+        population.append(copy)
+        print(copy.name, "StoreSize: ",
+              copy.size, " Birth: ",
+              copy.life.events['birth'])
 
     return population
 
@@ -277,7 +360,7 @@ def grow_units_by_rate(start_dt, end_dt, template, start_num, rate):
 
     birth_dates = []
     for K in range(number):
-        t = (1/rate_c) * math.log((K+1)/start_num + 1)  # Equation B
+        t = (1/rate_c) * math.log((K+1)/(start_num or 1) + 1)  # Equation B
         t_timedelta = timedelta(t * 365)
         birth_dates.append(t_timedelta + start_dt)
 
@@ -285,7 +368,7 @@ def grow_units_by_rate(start_dt, end_dt, template, start_num, rate):
     for birthday in birth_dates:
         copy = template.copy()
         unit_count += 1
-        copy.tags.set_name(copy.tags.name + " " + str(unit_count))
+        copy.tags.set_name(copy.tags.name + " " + str(unit_count + start_num))
         copy.life.configure_events(birthday)
         # Sets events: conception, birth, death, maturity, old_age
         population.append(copy)
@@ -319,6 +402,67 @@ def make_units_linearly(start_dt, end_dt, template, number):
         # Sets events: conception, birth, death, maturity, old_age
         birth_index += time_interval
         population.append(copy)
+
+    return population
+
+
+def make_batches_linearly(start_dt, end_dt, template, start_num, number, batches):
+    """
+
+
+    make_batches_linearly() -> List
+
+
+    Returns a list of newly created objects with uniform birth dates.
+    Function is designed to be used if number > 50. Instead of creating 50
+    template  objects, we may represent them instead with 10 template "batches",
+    each with template.size=5. Last template object may have a smaller size if
+    number // batches has a leftover remainder. Template birth dates will not
+    be on start_dt or end_dt.
+
+    start_dt    -- datetime.date
+    end_dt      -- datetime.date
+    template    -- object with Life attribute, ie a BusinessUnit
+    start_num   -- int, number of existing templates. 1st name = start_num + 1
+    number      -- integer, number of templates objects to be represented
+    batches     -- integer, number of templates to make, including leftovers
+    """
+    if number < batches:
+        c = "Number cannot be < Batches!"
+        raise bb_exceptions.BBAnalyticalError(c)
+
+    if number % batches == 0:  # Same unit count for every batch
+        batch_size = number / batches
+    else:
+        leftover = number % (batches - 1)  # Last batch will have leftovers
+        if leftover > 0:  # Can also change 0 to min_batch_size
+            batch_size = (number - leftover) / (batches - 1)
+        else:
+            batch_size = (number // batches) + 1
+            # Need this use case when number=100 batches=6.   100/(6-1) = 20
+
+    time_diff = end_dt - start_dt  # timedelta object
+    time_interval = time_diff / batches
+    birth_index = start_dt + time_interval/2  # Start in middle of time period
+
+    population = []
+    unit_count = 1
+    for i in range(batches):
+        start_label = start_num + unit_count
+        unit_count += int(batch_size)
+        end_label = min(start_num + unit_count - 1, start_num + number)
+
+        copy = template.copy()
+        new_name = copy.name + " " + str(start_label) + "-" + str(end_label)
+        copy.tags.set_name(new_name)
+        copy.size = end_label - start_label + 1
+        # Sets events: conception, birth, death, maturity, old_age
+        copy.life.configure_events(birth_index)
+        birth_index += time_interval
+        population.append(copy)
+        print(copy.name, "StoreSize: ",
+              copy.size, " Birth: ",
+              copy.life.events['birth'])
 
     return population
 

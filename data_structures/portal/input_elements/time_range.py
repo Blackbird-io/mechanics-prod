@@ -28,7 +28,7 @@ TimeRangeInput        Describes field that collects a low and high date value
 
 #imports
 import re
-
+import datetime
 from .number_range import NumberRangeInput
 
 
@@ -84,19 +84,20 @@ class TimeRangeInput(NumberRangeInput):
         and that for each (a,b) item in response, r_min <= a <= b <= r_max.
         """
         result = True
-        lo = datetime.time()
+        lo = datetime.time(0)
         hi = datetime.time(23,59,59,99999)
         if self.r_min:
-            lo_pieces = [int(x) for x in r_min.split(":")]
+            lo_pieces = [int(x) for x in self.r_min.split(":")]
             lo = datetime.time(*lo_pieces)
         if self.r_max:
-            hi_pieces = [int(x) for x in r_max.split(":")]
-            hi = datetime.time(*pieces)
+            hi_pieces = [int(x) for x in self.r_max.split(":")]
+            hi = datetime.time(*hi_pieces)
         entry_count = len(proposed_response)
         if entry_count < 1:
             result = False
         else:
-            if entry_count > 1 and self.user_can_add == False:
+            if entry_count > 1 and self.user_can_add==False:
+                print('point2')
                 result = False            
         if result:            
             for pair_of_entries in proposed_response:
