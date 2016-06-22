@@ -284,9 +284,9 @@ def grow_batches_by_count(start_dt, end_dt, template, start_num, number, batches
         # Sets events: conception, birth, death, maturity, old_age
         copy.life.configure_events(birthday)
         population.append(copy)
-        print(copy.name, "StoreSize: ",
-              copy.size, " Birth: ",
-              copy.life.events['birth'])
+        # print(copy.name, "StoreSize: ",
+        #       copy.size, " Birth: ",
+        #       copy.life.events['birth'])
 
     return population
 
@@ -460,9 +460,9 @@ def make_batches_linearly(start_dt, end_dt, template, start_num, number, batches
         copy.life.configure_events(birth_index)
         birth_index += time_interval
         population.append(copy)
-        print(copy.name, "StoreSize: ",
-              copy.size, " Birth: ",
-              copy.life.events['birth'])
+        # print(copy.name, "StoreSize: ",
+        #       copy.size, " Birth: ",
+        #       copy.life.events['birth'])
 
     return population
 
