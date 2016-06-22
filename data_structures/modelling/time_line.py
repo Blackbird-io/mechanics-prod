@@ -28,11 +28,11 @@ TimeLine              collection of TimePeriod objects indexed by end date
 
 # imports
 from datetime import date, timedelta
-import time
 
 import bb_settings
 
 from data_structures.system.bbid import ID
+from data_structures.system.summary_builder import SummaryBuilder
 
 from .parameters import Parameters
 from .time_period import TimePeriod
@@ -64,6 +64,7 @@ class TimeLine(dict):
     master                TimePeriod; unit templates that fall outside of time
     parameters            Parameters object, specifies shared parameters
     summaries             dict; holds TimelineSummary objects keyed by interval
+    summary_builder       SummaryBuilder; makes financial summaries
 
     FUNCTIONS:
     build()               populates instance with adjacent time periods
@@ -93,7 +94,9 @@ class TimeLine(dict):
         self.master = None
         self.parameters = Parameters()
         self.fiscal_year_end = None
+
         self.summaries = dict()
+        self.summary_builder = SummaryBuilder(self)
 
     @property
     def current_period(self):
@@ -213,8 +216,6 @@ class TimeLine(dict):
 
         # Now link all of the periods.
         self.link()
-
-        # All set.
 
     def clear(self):
         """

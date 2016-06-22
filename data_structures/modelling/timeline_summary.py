@@ -61,10 +61,10 @@ class TimelineSummary(dict):
     get_ordered()         returns list of periods ordered by end point
     ====================  ======================================================
     """
-    def __init__(self):
+    def __init__(self, interval):
         dict.__init__(self)
         self.id = ID()
-        self.interval = None
+        self.interval = interval
 
     def add_period(self, period):
         """
