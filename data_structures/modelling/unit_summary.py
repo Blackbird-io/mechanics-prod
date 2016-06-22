@@ -80,6 +80,7 @@ class UnitSummary(HistoryLine, TagsMixIn):
         self._set_components()
 
         self.set_financials(fins)
+        self.complete = False
 
         self.id = ID()
         # Get the id functionality but do NOT assign a bbid yet
@@ -279,7 +280,7 @@ class UnitSummary(HistoryLine, TagsMixIn):
 
         return lines
 
-    def _register_in_period(self, recur=True, overwrite=True):
+    def _register_in_period(self, period, recur=True, overwrite=True):
         """
 
 
@@ -301,11 +302,7 @@ class UnitSummary(HistoryLine, TagsMixIn):
         occurs, some higher-level or sibling components may have already updated
         the period's directory.
         """
-        # UPGRADE-S: Can fix the partial-overwrite problem by refactoring this
-        # routine into 2 pieces. build_dir(recur=True) would walk the tree and
-        # return a clean dict. update_dir(overwrite=bool) would compare that
-        # dict with the existing directory and raise an error if there is
-        # an overlap. Also carries a speed benefit, cause only compare once.
+        self.period = period
 
         if not overwrite:
             if self.id.bbid in self.period.bu_directory:
@@ -324,7 +321,7 @@ class UnitSummary(HistoryLine, TagsMixIn):
 
         if recur:
             for unit in self.components.values():
-                unit._register_in_period(recur, overwrite)
+                unit._register_in_period(period, recur, overwrite)
 
     def _set_components(self, comps=None):
         """
