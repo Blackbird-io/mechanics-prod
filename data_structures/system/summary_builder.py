@@ -19,7 +19,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-SummaryBuilder        driver class for building financial summaries
+SummaryBuilder        worker class for building financial summaries
 ====================  =========================================================
 """
 
@@ -27,10 +27,8 @@ SummaryBuilder        driver class for building financial summaries
 
 
 # imports
-import calendar
 import copy
 
-from datetime import date
 from dateutil.relativedelta import relativedelta
 
 import bb_exceptions
@@ -75,13 +73,19 @@ class SummaryBuilder:
         """
 
 
-        SummaryBuilder.get_balance_summary() -> (dict, bool)
+        SummaryBuilder.get_balance_summary() -> dict
 
         --``bu_bbid`` is the id of the business unit you wish to summarize
-        --``start_date`` is the date to start summarizing balance sheets
-        --``end_date`` is the date to stop summarizing balance sheets
+        --``start`` is the date to start summarizing balance sheets
+        --``end`` is the date to stop summarizing balance sheets
 
-        Method
+        Method returns a dictionary with two keys "starting" and "ending" which
+        contains the starting and ending balance sheets over the specified
+        period.
+
+        Starting balance will correspond to the starting balance sheet in the
+        period containing ``start``.  Ending balance will correspond to
+        the ending balance sheet in the period containing ``end``.
         """
 
         # get starting period
@@ -116,26 +120,53 @@ class SummaryBuilder:
 
         return out
 
-    def get_financials_summary(self, bu_bbid, start_date, end_date):
+    def get_financials_summary(self, bu_bbid, start, end):
+        """
+
+
+        SummaryBuilder.get_financials_summary() -> Financials
+
+        --``bu_bbid`` is the id of the business unit you wish to summarize
+        --``start`` is the date to start summarizing financials
+        --``end`` is the date to stop summarizing finanacials
+
+        Method returns a Financials object containing summarized statements and
+        balance sheets.  Method delegates to get_balance_summary() and
+        get_statement_summary() for most of its work.
+        """
+
         # delegate to get_statement_summary and get_balance_summary
-        # store results in
+        # store results in a Financials() object
         fins_out = Financials()
         for name in ["overview", "income", "cash"]:
             new_statement = self.get_statement_summary(bu_bbid,
-                                                       start_date,
-                                                       end_date,
+                                                       start,
+                                                       end,
                                                        name)
             fins_out.__dict__[name] = new_statement
 
-        balances = self.get_balance_summary(bu_bbid, start_date, end_date)
+        balances = self.get_balance_summary(bu_bbid, start, end)
 
         fins_out.starting = balances["starting"]
         fins_out.ending = balances["ending"]
 
         return fins_out
 
-    def get_statement_summary(self, bu_bbid, start_date, end_date,
-                              statement_name):
+    def get_statement_summary(self, bu_bbid, start, end, statement_name):
+        """
+
+
+        SummaryBuilder.get_statement_summary() -> Statement
+
+        --``bu_bbid`` is the id of the business unit you wish to summarize
+        --``start`` is the date to start summarizing statement
+        --``end`` is the date to stop summarizing statement
+        --``statement_name`` is the name of the statement you wish to summarize
+
+        Method returns a Statement() object that contains the summarized values
+        for the specified period.  Method summarizes entire periods from period
+        containing ``start`` date to (inclusive) period containing ``end`` date.
+        """
 
         if statement_name not in ["overview", "income", "cash"]:
             c = 'Method only works for overview, income, and cash statements'
@@ -143,7 +174,7 @@ class SummaryBuilder:
 
         # loop through time periods from start_date to end_date
         # pull business units out
-        period = self.time_line.find_period(start_date)
+        period = self.time_line.find_period(start)
 
         bu = period.bu_directory[bu_bbid]
 
@@ -151,7 +182,9 @@ class SummaryBuilder:
         summary_statement = statement.copy()
         summary_statement.reset()
 
-        while period.end <= end_date:
+        # loop while end date is in the future or current period, break when
+        # end date is in the current period
+        while period.end < end or (period.start <= end <= period.end):
             bu = period.bu_directory[bu_bbid]
 
             if not bu.filled:
@@ -163,69 +196,109 @@ class SummaryBuilder:
             statement = getattr(bu.financials, statement_name)
             summary_statement.increment(statement, consolidating=True)
 
-            period = period.future
-            if not period:
+            if period.start <= end <= period.end:
                 break
+            else:
+                period = period.future
 
         return summary_statement
 
-    # Wrapper functions
-    def make_annual_summaries(self, bu_bbid=None):
-        # calculates all available annual summaries for current period and all
-        # available future periods
-        if not bu_bbid:
-            bu_bbid = self.time_line.current_period.content.id.bbid
+    def make_annual_summaries(self, bu_bbid=None, recur=False):
+        """
 
-        self.make_summaries(bu_bbid, 12, recur=False)
-        self.time_line.summaries["annual"] = self.time_line.summaries[12]
 
-    def make_quarterly_summaries(self, bu_bbid=None):
-        # calculates all available quarterly summaries for current period and
-        # all available future periods
+        SummaryBuilder.make_annual_summaries() -> None
+
+        --``bu_bbid`` is the id of the business unit you wish to summarize
+        --``recur`` whether or not to calculate summaries for component bu's
+
+        Method delegates to make_summaries() to calculate annual summaries for
+        the business unit indicated by bu_bbid.  If bu_bbid is not
+        provided, method will use the bbid of the top-level business unit
+        (company) in the current period.
+
+        If recur = True, method will also calculate summaries for all component
+        business units.
+
+        Calculated summaries are stored in time_line.summaries and keyed by
+        "annual" and 3:
+        model.time_line.summaries["annual"] is model.time_line.summaries[12]
+        True
+        """
+
         # if bbid not provided, uses top-level business unit (company)
         if not bu_bbid:
             bu_bbid = self.time_line.current_period.content.id.bbid
 
-        self.make_summaries(bu_bbid, 3, recur=False)
+        self.make_summaries(bu_bbid, 12, recur=recur)
+        self.time_line.summaries["annual"] = self.time_line.summaries[12]
+
+    def make_quarterly_summaries(self, bu_bbid=None, recur=False):
+        """
+
+
+        SummaryBuilder.make_quarterly_summaries() -> None
+
+        --``bu_bbid`` is the id of the business unit you wish to summarize
+        --``recur`` whether or not to calculate summaries for component bu's
+
+        Method delegates to make_summaries() to calculate quarterly summaries
+        for the business unit indicated by bu_bbid.  If bu_bbid is not
+        provided, method will use the bbid of the top-level business unit
+        (company) in the current period.
+
+        If recur = True, method will also calculate summaries for all component
+        business units.
+
+        Calculated summaries are stored in time_line.summaries and keyed by
+        "quarterly" and 3:
+        model.time_line.summaries["quarterly"] is model.time_line.summaries[3]
+        True
+        """
+
+        # if bbid not provided, uses top-level business unit (company)
+        if not bu_bbid:
+            bu_bbid = self.time_line.current_period.content.id.bbid
+
+        self.make_summaries(bu_bbid, 3, recur=recur)
         self.time_line.summaries["quarterly"] = self.time_line.summaries[3]
 
     def make_summaries(self, bu_bbid, interval, recur=False):
-        # optionally recursive for component business units
-        # calculates financial summaries over given interval for all available
-        # periods now -> future, bases off fiscal_year_end
-        # here is where a lot of the work of storing and traversing is done
+        """
 
-        if (12 % interval != 0 and interval < 12) or interval > 12:
-            print("!!WARNING!!  Given interval does not correspond to cycling "
-                  "over a year (12-month period)")
 
-        if not isinstance(interval, int):
-            c = "Interval must be an integer."
-            raise bb_exceptions.BBAnalyticalError(c)
+        SummaryBuilder.make_summaries() -> None
+
+        --``bu_bbid`` is the id of the business unit you wish to summarize
+        --``interval`` is the period (in months) over which to summarize
+        --``recur`` whether or not to calculate summaries for component bu's
+
+        Method calculates financial summaries over the given interval for the
+        specified business unit (bu_bbid). Summaries start at the beginning of
+        the current fiscal year and are made at the specified interval until
+        the end of the time_line is reached.
+
+        Example:
+            fiscal year start = 1/1/2015
+            interval = 3
+
+            Summaries are made for:
+            1/1/2015 - 3/31/2015
+            4/1/2015 - 6/30/2015
+            7/1/2015 - 9/30/2015
+            10/1/2015 - 12/31/2015
+            1/1/2016 - 3/31/2016
+            And so forth until the end of the time_line is reached...
+
+        If recur = True, method will also calculate summaries for all component
+        business units.
+
+        Calculated summaries are stored in time_line.summaries and are keyed by
+        interval.
+        """
 
         # Get working value for fiscal_year_end
-        if not self.time_line.fiscal_year_end:
-            year = self.time_line.current_period.end.year
-            fye = date(year, 12, 31)
-        else:
-            # maybe make fiscal_year_end a property and do this on assignment
-            fye = self.time_line.fiscal_year_end
-            last_day = calendar.monthrange(fye.year, fye.month)[1]
-            if last_day - fye.day > fye.day:
-                # closer to the beginning of the month, use previous month
-                # for fiscal_year_end
-                temp = fye - relativedelta(months=1)
-                last_month = temp.month
-                last_day = calendar.monthrange(fye.year, last_month)[1]
-
-                fye = date(fye.year, last_month, last_day)
-            else:
-                # use end of current month
-                last_day = calendar.monthrange(fye.year, fye.month)[1]
-                fye = date(fye.year, fye.month, last_day)
-
-        # get bu from current period to use as template
-        template_bu = self.time_line.current_period.bu_directory[bu_bbid]
+        fye = self.time_line.fiscal_year_end
 
         # make the building blocks to hold this set of summaries
         timeline_summary = TimelineSummary(interval)
@@ -239,25 +312,13 @@ class SummaryBuilder:
         # start pointer is inclusive, need to include this TimePeriod
         last_period_end = max(self.time_line.keys())
         while end_pointer <= last_period_end:
-            # here get actual start and end points to use
-            catch_all = self._get_endpoints(bu_bbid, start_pointer, end_pointer)
-            start_date = catch_all[0]
-            end_date = catch_all[1]
-            complete = catch_all[2]
+            unit_summary = self._get_unit_summary(bu_bbid,
+                                                  start_pointer,
+                                                  end_pointer,
+                                                  recur)
 
-            if start_date and end_date:
-                summary_fins = self.get_financials_summary(bu_bbid,
-                                                           start_date,
-                                                           end_date)
-
-                unit_summary = UnitSummary(template_bu.name)
-
-                # intentionally keeping source BU's bbid so we can find it later
-                unit_summary.id = copy.deepcopy(template_bu.id)
-                unit_summary.set_financials(summary_fins)
-                unit_summary.complete = complete
-
-                period_summary = PeriodSummary(start_date, end_date)
+            if unit_summary:
+                period_summary = PeriodSummary(start_pointer, end_pointer)
                 period_summary.set_content(unit_summary, updateID=False)
 
                 timeline_summary.add_period(period_summary)
@@ -272,6 +333,19 @@ class SummaryBuilder:
     #*************************************************************************#
 
     def _find_first_alive(self, bu_bbid, start, end):
+        """
+
+
+        SummaryBuilder._find_first_alive() -> date
+
+        --``bu_bbid`` is the id of the business unit you wish to summarize
+        --``start`` is the first date to consider
+        --``end`` is the last date to consider
+
+        Method finds first period between (inclusive) start and end dates in
+        which the specified business unit is alive. Method returns period.start
+        """
+
         period = self.time_line.find_period(start)
 
         period_found = False
@@ -294,6 +368,18 @@ class SummaryBuilder:
         return new_start
 
     def _find_last_alive(self, bu_bbid, start, end):
+        """
+
+
+        SummaryBuilder._find_first_alive() -> date
+
+        --``bu_bbid`` is the id of the business unit you wish to summarize
+        --``start`` is the earliest date to consider
+        --``end`` is the latest date to consider
+
+        Method finds latest period between (inclusive) start and end dates in
+        which the specified business unit is alive. Method returns period.end
+        """
         period = self.time_line.find_period(end)
 
         period_found = False
@@ -317,14 +403,83 @@ class SummaryBuilder:
 
     @staticmethod
     def _get_interval_end(curr_date, interval):
+        """
+        Method adds specified number of months to the provided date and returns
+        """
         return curr_date + relativedelta(months=interval)
 
-    def _get_endpoints(self, bu_bbid, start_date, end_date):
-        new_st_date = self._find_first_alive(bu_bbid, start_date, end_date)
-        new_ed_date = self._find_last_alive(bu_bbid, start_date, end_date)
+    def _get_endpoints(self, bu_bbid, start, end):
+        """
+
+
+        SummaryBuilder._get_endpoints() -> tuple(start, end, complete)
+
+        --``bu_bbid`` is the id of the business unit you wish to summarize
+        --``start`` is the first date to consider
+        --``end`` is the last date to consider
+
+        Method finds period during which business unit is alive within the
+        given date range and returns relevant start and end dates.  If unit is
+        dead (or not yet born) during some or all of the period,
+        complete = False, if unit is alive during the entire period,
+        complete = True.
+        """
+        new_st_date = self._find_first_alive(bu_bbid, start, end)
+        new_ed_date = self._find_last_alive(bu_bbid, start, end)
 
         complete = False
-        if new_st_date == start_date and new_ed_date == end_date:
+        if new_st_date == start and new_ed_date == end:
             complete = True
 
         return new_st_date, new_ed_date, complete
+
+    def _get_unit_summary(self, bu_bbid, start, end, recur=False):
+        """
+
+
+        SummaryBuilder._get_unit_summary() -> UnitSummary
+
+        --``bu_bbid`` is the id of the business unit you wish to summarize
+        --``start`` is the date to start summarizing statement
+        --``end`` is the date to stop summarizing statement
+        --``recur`` whether or not to calculate summaries for component bu's
+
+        Method delegates to get_financials_summary() to calculate the summary
+        of financials for the given business unit over the given period.
+
+        IF recur = True, method will also calculate summaries for all component
+        business units.
+        """
+
+        # get bu from current period to use as template
+        template_bu = self.time_line.current_period.bu_directory[bu_bbid]
+
+        # here get actual start and end points to use
+        catch_all = self._get_endpoints(bu_bbid, start, end)
+        start_date = catch_all[0]
+        end_date = catch_all[1]
+        complete = catch_all[2]
+
+        unit_summary = None
+        if start_date and end_date:
+            summary_fins = self.get_financials_summary(bu_bbid,
+                                                       start_date,
+                                                       end_date)
+
+            unit_summary = UnitSummary(template_bu.name)
+
+            # intentionally keeping source BU's bbid so we can find it later
+            unit_summary.id = copy.deepcopy(template_bu.id)
+            unit_summary.set_financials(summary_fins)
+            unit_summary.complete = complete
+
+            if recur:
+                for comp in template_bu.components.get_all():
+                    comp_summary = self._get_unit_summary(comp.id.bbid,
+                                                          start,
+                                                          end,
+                                                          recur)
+
+                    unit_summary.add_component(comp_summary)
+
+        return unit_summary
