@@ -114,28 +114,16 @@ class UnitSummary(HistoryLine, TagsMixIn):
         box = "\n".join(lines)
         return box
 
-    def add_component(self, bu, update_id=True, register_in_period=True,
-                      overwrite=False):
+    def add_component(self, bu, overwrite=False):
         """
 
 
         UnitSummary.add_component() -> None
 
         --``bu``
-        --``update_id``
-        --``register_in_period``
         --``overwrite``
 
         Method prepares a bu and adds it to instance components.
-
-        Method always sets bu namespace_id to instance's own namespace_id. If
-        ``updateID`` is True, method then assigns a new bbid to the instance.
-
-        Method raises IDNamespaceError if the bu's bbid falls outside the
-        instance's namespace id. This is most likely if updateID is False and
-        the bu retains an old bbid from a different namespace (e.g., when
-        someone inserts a business unit from one model into another without
-        updating the business unit's bbid).
 
         If register_in_period is true, method raises IDCollisionError if the
         period's directory already contains the new business unit's bbid.
@@ -143,14 +131,9 @@ class UnitSummary(HistoryLine, TagsMixIn):
         If all id verification steps go smoothly, method delegates insertion
         down to SummaryComponents.add_item().
         """
-
-        # optionally update ids.
-        if update_id:
-            bu._update_id(namespace=self.id.bbid, recur=True)
-
         # register the unit, will raise errors on collisions
-        if register_in_period:
-            bu._register_in_period(self.period, recur=True, overwrite=overwrite)
+        bu._register_in_period(self.period, recur=True, overwrite=overwrite)
+
         self.components.add_item(bu)
 
     def set_financials(self, fins=None):

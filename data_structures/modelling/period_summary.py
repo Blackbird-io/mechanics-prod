@@ -139,8 +139,6 @@ class PeriodSummary(History):
         top (company) node of a structure.
         """
 
-        if updateID:
-            bu._update_id(self.id.namespace, recur=True)
         if not bu.id.bbid:
             c = "Cannot add content without a valid bbid."
             raise bb_exceptions.IDError(c)
@@ -148,10 +146,11 @@ class PeriodSummary(History):
 
         if reset_directories:
             self._reset_directories()
+
         bu._register_in_period(self, recur=True, overwrite=False)
         # Register the unit.
 
-    def set_content(self, bu, updateID=True):
+    def set_content(self, bu):
         """
 
 
@@ -169,7 +168,7 @@ class PeriodSummary(History):
         The UnitSummary can elect to get a different bbid if it's name changes,
         but in such an event, the Model will treat it as a new unit altogether.
         """
-        self.register(bu, updateID=updateID, reset_directories=True)
+        self.register(bu, reset_directories=True)
         # Reset directories when setting the top node in the period.
         self.content = bu
 

@@ -288,7 +288,9 @@ class TimeLine(dict):
         TimeLine.extrapolate() -> None
 
 
-        Extrapolate current period to future dates.
+        Extrapolate current period to future dates.  Make quarterly and annual
+        financial summaries.  Updates all summaries contained in
+        instance.summaries.
         """
         if seed is None:
             seed = self.current_period
@@ -296,9 +298,18 @@ class TimeLine(dict):
 
         past, present, future = self.get_segments(seed_date)
         self.extrapolate_dates(seed, future)
-
         # Could run in parallel in simple mode by projecting
         # each snapshot separately and then connecting them
+
+        # generate or re-generate annual and quarterly summaries
+        self.summary_builder.make_annual_summaries(recur=True)
+        self.summary_builder.make_quarterly_summaries(recur=True)
+
+        ignore = [3, 12, 'quarterly', 'annual']
+        intervals = set(self.summaries.keys()) - set(ignore)
+        if intervals:
+            for i in intervals:
+                self.summary_builder.make_summaries(i, recur=True)
 
     def extrapolate_all(self, seed=None):
         """

@@ -101,8 +101,11 @@ class TimelineSummary(dict):
                 # query is a string, split it
                 q_date = date(*num_query)
 
-        end_date = self._get_ref_end_date(q_date)
-        result = self[end_date]
+        result = None
+        for p in self.values():
+            if p.start <= q_date <= p.end:
+                result = p
+                break
 
         return result
 
@@ -127,18 +130,3 @@ class TimelineSummary(dict):
         period.relationships.set_parent(self)
 
         return period
-
-    def _get_ref_end_date(self, ref_date):
-        """
-
-
-        TimeLine._get_ref_end_date() -> datetime.date
-
-
-        Method returns the last date of the month that contains ref_date.
-        """
-        fwd_start_date = self._get_fwd_start_date(ref_date)
-        ref_end_date = fwd_start_date - timedelta(1)
-        result = ref_end_date
-
-        return result
