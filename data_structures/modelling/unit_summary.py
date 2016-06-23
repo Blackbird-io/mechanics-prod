@@ -58,14 +58,16 @@ class UnitSummary(HistoryLine, TagsMixIn):
     ====================  ======================================================
 
     DATA:
-    components            instance of Components class, stores UnitSummaries
+    components            instance of SummaryComponents class
     financials            instance of Financials object
     id                    instance of ID object
     period                pointer to PeriodSummary object
     relationships         instance of Relationships class
+    xl                    instance of UnitData class
 
     FUNCTIONS:
-    add_component()       adds unit to instance components
+    add_component()       adds UnitSummary to instance components
+    set_financials()      sets instance financials attribute
     ====================  ======================================================
     """
 
@@ -171,7 +173,7 @@ class UnitSummary(HistoryLine, TagsMixIn):
         self.financials = fins
 
     # *************************************************************************#
-    #                          NON-PUBLIC METHODS                             #
+    #                          NON-PUBLIC METHODS                              #
     # *************************************************************************#
     def _build_directory(self, recur=True, overwrite=True):
         """

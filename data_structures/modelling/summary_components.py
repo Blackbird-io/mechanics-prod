@@ -51,10 +51,8 @@ class SummaryComponents(dict):
 
     FUNCTIONS:
     add_item()            adds an object to self, keyed under obj's bbid
-    find_bbid()           return bbid that contains a known string
     get_all()             returns list of all units in instance
     get_ordered()         returns a list of values, ordered by key
-    remove_item()         remove an item from components
     ====================  ======================================================
     """
 
