@@ -312,13 +312,14 @@ class SummaryBuilder:
         # start pointer is inclusive, need to include this TimePeriod
         last_period_end = max(self.time_line.keys())
         while end_pointer <= last_period_end:
+            period_summary = PeriodSummary(start_pointer, end_pointer)
             unit_summary = self._get_unit_summary(bu_bbid,
                                                   start_pointer,
                                                   end_pointer,
+                                                  period_summary,
                                                   recur)
 
             if unit_summary:
-                period_summary = PeriodSummary(start_pointer, end_pointer)
                 period_summary.set_content(unit_summary, updateID=False)
 
                 timeline_summary.add_period(period_summary)
@@ -433,7 +434,7 @@ class SummaryBuilder:
 
         return new_st_date, new_ed_date, complete
 
-    def _get_unit_summary(self, bu_bbid, start, end, recur=False):
+    def _get_unit_summary(self, bu_bbid, start, end, period, recur=False):
         """
 
 
@@ -442,6 +443,7 @@ class SummaryBuilder:
         --``bu_bbid`` is the id of the business unit you wish to summarize
         --``start`` is the date to start summarizing statement
         --``end`` is the date to stop summarizing statement
+        --``period`` is the PeriodSummary object in which to place unit
         --``recur`` whether or not to calculate summaries for component bu's
 
         Method delegates to get_financials_summary() to calculate the summary
@@ -472,6 +474,7 @@ class SummaryBuilder:
             unit_summary.id = copy.deepcopy(template_bu.id)
             unit_summary.set_financials(summary_fins)
             unit_summary.complete = complete
+            unit_summary.period = period
 
             if recur:
                 for comp in template_bu.components.get_all():
