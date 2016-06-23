@@ -445,6 +445,8 @@ class BusinessUnit(HistoryLine, Equalities, TagsMixIn):
 
             self._compute_ending_balance()
 
+            self._check_start_balance()
+
             self.filled = True
 
     def kill(self, date=None, recur=True):
@@ -641,6 +643,33 @@ class BusinessUnit(HistoryLine, Equalities, TagsMixIn):
         this_type.add(self.id.bbid)
 
         return id_directory, ty_directory
+
+    def _check_start_balance(self):
+
+        pool = self.components.get_all()
+        for unit in pool:
+            unit._check_start_balance()
+
+        for end_line in self.financials.ending.get_ordered():
+            start_line = self.financials.starting.find_first(end_line.name)
+            if start_line:
+                self._check_line(start_line, end_line)
+            else:
+                new_line = end_line.copy()
+                new_line.clear(force=True)
+                self.financials.starting.add_line(new_line,
+                                                  position=end_line.position)
+
+    def _check_line(self, start_line, end_line):
+        if end_line._details:
+            for end in end_line.get_ordered():
+                start = start_line.find_first(end.name)
+                if start:
+                    self._check_line(start, end)
+                else:
+                    new_line = end.copy()
+                    new_line.clear(force=True)
+                    start_line.add_line(new_line, position=end.position)
 
     def _compute_ending_balance(self):
         """

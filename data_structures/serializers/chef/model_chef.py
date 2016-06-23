@@ -44,6 +44,7 @@ from .chef_settings import SCENARIO_SELECTORS
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
+from .line_chef import LineChef
 from .sheet_style import SheetStyle
 from .tab_names import TabNames
 from .unit_chef import UnitChef
@@ -61,6 +62,7 @@ from openpyxl.styles.colors import WHITE, BLACK
 cell_styles = CellStyles()
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
+line_chef = LineChef()
 sheet_style = SheetStyle()
 tab_names = TabNames()
 type_codes = TypeCodes()
@@ -105,11 +107,57 @@ class ModelChef:
         
         company_sheet = unit_chef.chop_multi(book=book, unit=company)
 
+        self._add_annual_summary(book, model)
+
         return book
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
+
+    def _add_annual_summary(self, book, model):
+
+        sheet = book.create_sheet(chef_settings.SUMMARY_TITLE, 3)
+        sheet.bb.current_row = 3
+        sheet_style.style_sheet(sheet, label_areas=False)
+
+        date = model.time_line.current_period.end
+        sum_timeline = model.time_line.summaries['annual']
+        summary = sum_timeline.find_period(date)
+        unit = summary.content
+
+        req_rows = unit.periods_used
+        sheet.bb.consolidation_size = req_rows
+
+        unit.xl.set_sheet(sheet)
+
+        fins_dict = dict()
+        sheet.bb.outline_level = 0
+        for statement in unit.financials.ordered:
+            sheet.bb.current_row += 1
+            if statement is not None:
+                if statement is unit.financials.ending:
+                    statement_row = sheet.bb.current_row + 1
+                    fins_dict["Starting Balance Sheet"] = statement_row
+
+                    line_chef.chop_statement(
+                        sheet=sheet,
+                        statement=unit.financials.starting,
+                        column=6,
+                        set_labels=True)
+                    sheet.bb.current_row += 1
+
+                statement_row = sheet.bb.current_row + 1
+                fins_dict[statement.tags.name] = statement_row
+
+                line_chef.chop_statement(
+                    sheet=sheet,
+                    statement=statement,
+                    column=6,
+                    set_labels=True)
+
+        for statement, row in fins_dict.items():
+            cell_styles.format_area_label(sheet, statement, row)
 
     def _build_foundation(self, model):
         """

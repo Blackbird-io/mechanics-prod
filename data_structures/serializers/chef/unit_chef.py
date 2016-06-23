@@ -288,6 +288,11 @@ class UnitChef:
         sheet = self._add_unit_life(sheet=sheet, unit=unit)
 
         current = sheet.bb.time_line.columns.get_position(unit.period.end)
+
+        unit.fill_out()
+        # Make sure the unit contains all relevant calculations by filling it
+        # out. If BB already performed this action, call will be a no-op.
+
         self._add_financials(sheet=sheet, unit=unit, column=current)
 
         # Third, return result
@@ -306,25 +311,30 @@ class UnitChef:
         statements added to the worksheet and their starting rows
         """
         fins_dict = dict()
-        unit.fill_out()
-        # Make sure the unit contains all relevant calculations by filling it
-        # out. If BB already performed this action, call will be a no-op.
 
         for statement in unit.financials.ordered:
             sheet.bb.current_row += 1
             if statement is not None:
                 if statement is unit.financials.ending:
                     # insert load-balanced starting balance sheet here
+                    # statement_row = sheet.bb.current_row + 1
+                    # fins_dict["Starting Balance Sheet"] = statement_row
+                    #
+                    # start_bal = self._cell_link(unit)
+                    # line_chef.chop_statement(
+                    #     sheet=sheet,
+                    #     statement=start_bal,
+                    #     column=column,
+                    #     set_labels=set_labels)
+                    # sheet.bb.current_row += 1
+
                     statement_row = sheet.bb.current_row + 1
                     fins_dict["Starting Balance Sheet"] = statement_row
-
-                    start_bal = self._cell_link(unit)
-                    line_chef.chop_statement(
-                        sheet=sheet,
-                        statement=start_bal,
-                        column=column,
-                        set_labels=set_labels)
-                    sheet.bb.current_row += 1
+                    line_chef.chop_starting_balance(
+                              sheet=sheet,
+                              unit=unit,
+                              column=column,
+                              set_labels=set_labels)
 
                 statement_row = sheet.bb.current_row + 1
                 fins_dict[statement.tags.name] = statement_row
@@ -920,107 +930,6 @@ class UnitChef:
                                    num_cols=3)
 
         return sheet
-
-    def _balance_lines(self, start_line, ending_line):
-        """
-
-
-        UnitChef._balance_lines() -> None
-
-        --``start_line`` line of bu.finansials.starting for new period
-        --``ending_line`` line of bu.finansials.ending for past period, with
-            Excel cells already set
-
-        Tool for UnitChef._cell_link().  Method recursively walks
-        through top-level LineItem details from the starting balance sheet
-        ``start_line`` and sets them to reference the matching line in the
-        previous time period's ending balance sheet ``end_line``
-        """
-        if start_line._details:
-            for name, new_line in start_line._details.items():
-                end_line = ending_line.find_first(new_line.name)
-                if end_line:  # comment out later
-                    self._balance_lines(new_line, end_line)
-        else:
-            start_line.xl = LineData()
-            if ending_line.xl.cell:
-                start_line.xl.reference.source = ending_line
-
-    # def _check_line(self, start_line, end_line):
-    #     """
-    #     BLAH BLAH BLAH DOC STRING
-    #     """
-    #     if end_line._details:
-    #         for name, line in end_line._details.items():
-    #             sline = start_line.find_first(name)
-    #             if not sline:
-    #                 start_line.append(line.copy())
-    #             else:
-    #                 if line._details:
-    #                     self._check_line(sline, line)
-
-    def _check_line(self, line1, line2):
-        """
-        BLAH BLAH BLAH DOC STRING
-        """
-        if line2._details:
-            for l2 in line2.get_ordered():
-                l1 = line1.find_first(l2.name)
-                self._check_line(l1, l2)
-        else:
-            if line2.value:
-                line1.set_value(line2.value, "UnitChef")
-
-    def _cell_link(self, unit):
-        """
-
-
-        UnitChef._cell_link() -> None
-
-        --``unit`` is the new period unit
-
-        Link cell formulas for starting financials to previous period's
-        cells, if such exist.
-        """
-        if unit.past:
-            past_end = unit.past.financials.ending
-            line0 = past_end.get_ordered()
-            line0 = line0[0]
-            if line0.xl.cell:
-                start_bal = unit.financials.starting.copy()
-                ending_bal = unit.past.financials.ending
-
-                for name, start_line in start_bal._details.items():
-                    ending_line = ending_bal.find_first(name)
-                    self._balance_lines(start_line, ending_line)
-            else:
-                start_bal = unit.financials.ending.copy()
-                for line in start_bal.get_full_ordered():
-                    line.set_hardcoded(False)
-                start_bal.reset()
-
-                for line in unit.financials.starting.get_ordered():
-                    new_line = start_bal.find_first(line.name)
-                    self._check_line(new_line, line)
-
-        else:
-            # pick up shape from this periods ending balance to fix alignment
-            start_bal = unit.financials.ending.copy()
-            start_bal.reset()
-
-        # if unit.past:
-        #     start_bal = unit.financials.starting.copy()
-        #     ending_bal = unit.past.financials.ending
-        #
-        #     for name, start_line in start_bal._details.items():
-        #         ending_line = ending_bal.find_first(name)
-        #         self._balance_lines(start_line, ending_line)
-        # else:
-        #     # pick up shape from this periods ending balance to fix alignment
-        #     start_bal = unit.financials.ending.copy()
-        #     start_bal.reset()
-
-        return start_bal
 
     def _sort_bypreference(self, items, preference_order=[]):
         """

@@ -63,6 +63,7 @@ SCENARIO_SELECTORS = False
 FILTER_PARAMETERS = False
 
 # DEFAULT TEXT
+SUMMARY_TITLE = "Annual Summary"
 
 # cover sheet
 COVER_TITLE = "Cover"
