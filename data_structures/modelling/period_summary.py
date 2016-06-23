@@ -63,7 +63,6 @@ class PeriodSummary(History):
     content               pointer to content, usually a business unit
     end                   datetime.date; last date in period
     id                    instance of ID class
-    length                float; seconds between start and end
     relationships         instance of Relationships class
     start                 datetime.date; first date in period.
 
