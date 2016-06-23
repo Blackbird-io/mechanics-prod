@@ -27,8 +27,10 @@ SummaryBuilder        worker class for building financial summaries
 
 
 # imports
+import calendar
 import copy
 
+from datetime import date
 from dateutil.relativedelta import relativedelta
 
 import bb_exceptions
@@ -320,11 +322,11 @@ class SummaryBuilder:
                                                   recur)
 
             if unit_summary:
-                period_summary.set_content(unit_summary, updateID=False)
-
+                period_summary.set_content(unit_summary)
                 timeline_summary.add_period(period_summary)
 
             start_pointer = end_pointer + relativedelta(months=1)
+            start_pointer = self._get_month_start(start_pointer)
             end_pointer = self._get_interval_end(start_pointer, interval-1)
 
         self.time_line.summaries[interval] = timeline_summary
@@ -407,7 +409,19 @@ class SummaryBuilder:
         """
         Method adds specified number of months to the provided date and returns
         """
-        return curr_date + relativedelta(months=interval)
+        end_date = curr_date + relativedelta(months=interval)
+        last_day = calendar.monthrange(end_date.year, end_date.month)[1]
+        end_date = date(end_date.year, end_date.month, last_day)
+
+        return end_date
+
+    @staticmethod
+    def _get_month_start(chk_date):
+        """
+        Method returns date corresponding to first of current month
+        """
+        start = date(chk_date.year, chk_date.month, 1)
+        return start
 
     def _get_endpoints(self, bu_bbid, start, end):
         """
@@ -482,7 +496,8 @@ class SummaryBuilder:
                                                           start,
                                                           end,
                                                           recur)
-
-                    unit_summary.add_component(comp_summary)
+                    if comp_summary:
+                        comp_summary.period = period
+                        unit_summary.add_component(comp_summary)
 
         return unit_summary
