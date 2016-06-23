@@ -62,6 +62,7 @@ class UnitSummary(HistoryLine, TagsMixIn):
     financials            instance of Financials object
     id                    instance of ID object
     period                pointer to PeriodSummary object
+    periods_used          int; number of periods used for summaries
     relationships         instance of Relationships class
     xl                    instance of UnitData class
 
@@ -89,6 +90,7 @@ class UnitSummary(HistoryLine, TagsMixIn):
 
         self.period = None
         self.relationships = Relationships(self)
+        self.periods_used = 0
         self.xl = xl_mgmt.UnitData()
 
     def __str__(self, lines=None):

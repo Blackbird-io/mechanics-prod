@@ -490,6 +490,7 @@ class SummaryBuilder:
             unit_summary.set_financials(summary_fins)
             unit_summary.complete = complete
             unit_summary.period = period
+            unit_summary.periods_used = end_date.month - start_date.month + 1
 
             if recur:
                 for comp in template_bu.components.get_all():

@@ -231,6 +231,113 @@ class LineChef:
 
         return sheet
 
+    def chop_startbal_line(self, *pargs, sheet, column, line, set_labels=True, indent=0):
+
+        details = line.get_ordered()
+        if details:
+            # Should have the header here instead
+            sheet.bb.outline_level += 1
+            self._group_lines(sheet)
+
+            sub_indent = indent + LineItem.TAB_WIDTH
+            detail_summation = ""
+
+            for detail in details:
+
+                # sheet.bb.current_row += 1
+
+                sheet.bb.outline_level += 1
+                self._group_lines(sheet)
+                sheet.bb.outline_level -= 1
+
+                self.chop_startbal_line(sheet=sheet,
+                                        column=column,
+                                        line=detail,
+                                        set_labels=set_labels,
+                                        indent=sub_indent)
+
+                link_template = formula_templates.ADD_COORDINATES
+
+                cos = detail.xl.get_coordinates()
+                link = link_template.format(coordinates=cos)
+                detail_summation += link
+            else:
+                # Should group all the details here
+                sheet.bb.current_row += 1
+
+                subtotal_cell = sheet.cell(column=column,
+                                           row=sheet.bb.current_row)
+                subtotal_cell.set_explicit_value(detail_summation,
+                                                 data_type=type_codes.FORMULA)
+
+                line.xl.detailed.ending = sheet.bb.current_row
+                line.xl.detailed.cell = subtotal_cell
+
+                self._group_lines(sheet)
+
+                if set_labels:
+                    label_column = None
+                    if not getattr(sheet.bb, "parameters", None):
+                        label_column = 1
+
+                    label = indent * " " + line.tags.name + ": details"
+                    self._set_label(sheet=sheet,
+                                    label=label,
+                                    row=sheet.bb.current_row,
+                                    column=label_column)
+        else:
+            if line.xl.cell:
+                # here just link the current cell to the cell in line.xl.cell
+                line.xl.reference.source = line
+                self._add_reference(
+                    sheet=sheet,
+                    column=column,
+                    line=line,
+                    set_labels=set_labels,
+                    indent=indent)
+
+        if not line.xl.reference.source:
+            self._combine_segments(
+                sheet=sheet,
+                column=column,
+                line=line,
+                set_labels=set_labels,
+                indent=indent)
+
+    def chop_starting_balance(self, *pargs, sheet, column, unit, set_labels=True):
+        """
+
+
+        LineChef.chop_statement() -> Worksheet
+
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``column`` must be a column number reference
+        --``statement`` must be an instance of Statement
+        --``set_labels`` must be a boolean; True will set labels for line
+
+        Method walks through Statement lines and delegates LineChef.chop_line()
+        to add them as dynamic links in Excel.
+
+        Method relies on sheet.bb.current_row being up-to-date.
+        """
+        statement = unit.financials.starting
+
+        if not BLANK_BETWEEN_TOP_LINES:
+            sheet.bb.current_row += 1
+
+        for line in statement.get_ordered():
+            if BLANK_BETWEEN_TOP_LINES:
+                sheet.bb.current_row += 1
+
+            self.chop_startbal_line(sheet=sheet,
+                                    column=column,
+                                    line=line,
+                                    set_labels=True)
+
+        sheet.bb.current_row += 1
+
+        return sheet
+
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
@@ -712,7 +819,10 @@ class LineChef:
         the sheet.bb.parameters area.
         """
         if column is None:
-            column=sheet.bb.parameters.columns.get_position(field_names.LABELS)
+            if getattr(sheet.bb, "parameters", None):
+                column = sheet.bb.parameters.columns.get_position(field_names.LABELS)
+            else:
+                column = 1
 
         label_cell = sheet.cell(column=column, row=row)
         existing_label = label_cell.value
@@ -726,7 +836,10 @@ class LineChef:
                 Something is wrong with our alignment. We are trying to
                 write a parameter to an existing row with a different label."""
 
-                raise Error(c)
+                import pdb
+                pdb.set_trace()
+
+                raise ExcelPrepError(c)
 
                 # Check to make sure we are writing to the right row; if the
                 # label doesn't match, we are in trouble.
