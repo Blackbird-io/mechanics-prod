@@ -43,6 +43,7 @@ from .statement import Statement
 
 # Constants
 # n/a
+
 # Classes
 class LineItem(Statement):
     """
@@ -76,6 +77,8 @@ class LineItem(Statement):
     FUNCTIONS:
     clear()               if modification permitted, sets value to None
     copy()                returns a new line w copies of key attributes
+    increment()           add data from another line
+    link_to()             links lines in Excel
     set_consolidate()     sets private attribute _consolidate
     set_hardcoded()       sets private attribute _hardcoded
     set_value()           sets value to input, records signature
@@ -278,6 +281,24 @@ class LineItem(Statement):
     # But you can also do the same thing by adding unique lines to the parent
     # that won't overlap with those of the children and running the computation
     # there.
+
+    def link_to(self, matching_line):
+        """
+
+
+        Statement.link_to() -> None
+
+        --``matching_statement`` is another Statement object
+
+        Method links lines to matching_line in Excel.
+        """
+        if self._details:
+            for line in self._details.values():
+                oline = matching_line.find_first(line.name)
+                line.link_to(oline)
+        else:
+            # this part should only live in LineItem since statements don't have xl data
+            self.xl.reference.source = matching_line
 
     def set_consolidate(self, val):
         """
