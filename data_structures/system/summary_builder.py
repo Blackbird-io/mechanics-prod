@@ -94,10 +94,7 @@ class SummaryBuilder:
         start_period = self.time_line.find_period(start_date)
         start_bu = start_period.bu_directory[bu_bbid]
 
-        if not start_bu.filled:
-            start_bu.fill_out()
-
-        if not start_bu.life.alive:
+        if not start_bu.life.alive or not start_bu.filled:
             raise bb_exceptions.BBAnalyticalError
 
         start_bal = start_bu.financials.starting.copy()
@@ -107,10 +104,7 @@ class SummaryBuilder:
         end_period = self.time_line.find_period(end_date)
         end_bu = end_period.bu_directory[bu_bbid]
 
-        if not end_bu.filled:
-            end_bu.fill_out()
-
-        if not end_bu.life.alive:
+        if not end_bu.life.alive or not end_bu.filled:
             raise bb_exceptions.BBAnalyticalError
 
         end_bal = end_bu.financials.ending.copy()
@@ -183,16 +177,15 @@ class SummaryBuilder:
         statement = getattr(bu.financials, statement_name)
         summary_statement = statement.copy()
         summary_statement.reset()
+        for line in summary_statement.get_full_ordered():
+            line.set_hardcoded(False)
 
         # loop while end date is in the future or current period, break when
         # end date is in the current period
         while period.end < end or (period.start <= end <= period.end):
             bu = period.bu_directory[bu_bbid]
 
-            if not bu.filled:
-                bu.fill_out()
-
-            if not bu.life.alive:
+            if not bu.life.alive or not bu.filled:
                 raise bb_exceptions.BBAnalyticalError
 
             statement = getattr(bu.financials, statement_name)
@@ -359,11 +352,14 @@ class SummaryBuilder:
             except KeyError:
                 period = period.future
             else:
-                if not temp.life.alive:
+                if not temp.life.alive or not temp.filled:
                     period = period.future
                 else:
                     period_found = True
                     break
+
+            if not period:
+                break
 
         if period_found:
             new_start = period.start
@@ -392,12 +388,17 @@ class SummaryBuilder:
                 temp = period.bu_directory[bu_bbid]
             except KeyError:
                 period = period.past
+                if not period:
+                    break
             else:
-                if not temp.life.alive:
+                if not temp.life.alive or not temp.filled:
                     period = period.past
                 else:
                     period_found = True
                     break
+
+            if not period:
+                break
 
         if period_found:
             new_end = period.end
