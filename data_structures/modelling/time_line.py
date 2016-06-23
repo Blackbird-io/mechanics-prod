@@ -27,7 +27,10 @@ TimeLine              collection of TimePeriod objects indexed by end date
 
 
 # imports
+import calendar
+
 from datetime import date, timedelta
+from dateutil.relativedelta import relativedelta
 
 import bb_settings
 
@@ -59,7 +62,7 @@ class TimeLine(dict):
 
     DATA:
     current_period        P; pointer to the period that represents the present
-    fiscal_year_end       None or date; holds end date of current fiscal year
+    fiscal_year_end       date; end of fiscal year default = 12/31/current year
     id                    instance of PlatformComponents.ID class, for interface
     master                TimePeriod; unit templates that fall outside of time
     parameters            Parameters object, specifies shared parameters
@@ -93,7 +96,7 @@ class TimeLine(dict):
         # bbid.
         self.master = None
         self.parameters = Parameters()
-        self.fiscal_year_end = None
+        self._fiscal_year_end = None
 
         self.summaries = dict()
         self.summary_builder = SummaryBuilder(self)
@@ -119,6 +122,35 @@ class TimeLine(dict):
     @current_period.deleter
     def current_period(self):
         self.current_period = None
+
+    @property
+    def fiscal_year_end(self):
+        if not self._fiscal_year_end:
+            year = self.current_period.end.year
+            fye = date(year, 12, 31)
+        else:
+            fye = self._fiscal_year_end
+
+        return fye
+
+    @fiscal_year_end.setter
+    def fiscal_year_end(self, fye):
+        # maybe make fiscal_year_end a property and do this on assignment
+        last_day = calendar.monthrange(fye.year, fye.month)[1]
+        if last_day - fye.day > fye.day:
+            # closer to the beginning of the month, use previous month
+            # for fiscal_year_end
+            temp = fye - relativedelta(months=1)
+            last_month = temp.month
+            last_day = calendar.monthrange(fye.year, last_month)[1]
+
+            fye = date(fye.year, last_month, last_day)
+        else:
+            # use end of current month
+            last_day = calendar.monthrange(fye.year, fye.month)[1]
+            fye = date(fye.year, fye.month, last_day)
+
+        self._fiscal_year_end = fye
 
     def __str__(self, lines=None):
         """
