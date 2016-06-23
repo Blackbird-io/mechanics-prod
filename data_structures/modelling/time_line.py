@@ -27,12 +27,15 @@ TimeLine              collection of TimePeriod objects indexed by end date
 
 
 # imports
+import calendar
+
 from datetime import date, timedelta
-import time
+from dateutil.relativedelta import relativedelta
 
 import bb_settings
 
 from data_structures.system.bbid import ID
+from data_structures.system.summary_builder import SummaryBuilder
 
 from .parameters import Parameters
 from .time_period import TimePeriod
@@ -59,9 +62,12 @@ class TimeLine(dict):
 
     DATA:
     current_period        P; pointer to the period that represents the present
+    fiscal_year_end       date; end of fiscal year default = 12/31/current year
     id                    instance of PlatformComponents.ID class, for interface
     master                TimePeriod; unit templates that fall outside of time
     parameters            Parameters object, specifies shared parameters
+    summaries             dict; holds TimelineSummary objects keyed by interval
+    summary_builder       SummaryBuilder; makes financial summaries
 
     FUNCTIONS:
     build()               populates instance with adjacent time periods
@@ -90,6 +96,10 @@ class TimeLine(dict):
         # bbid.
         self.master = None
         self.parameters = Parameters()
+        self._fiscal_year_end = None
+
+        self.summaries = dict()
+        self.summary_builder = SummaryBuilder(self)
 
     @property
     def current_period(self):
@@ -112,6 +122,35 @@ class TimeLine(dict):
     @current_period.deleter
     def current_period(self):
         self.current_period = None
+
+    @property
+    def fiscal_year_end(self):
+        if not self._fiscal_year_end:
+            year = self.current_period.end.year
+            fye = date(year, 12, 31)
+        else:
+            fye = self._fiscal_year_end
+
+        return fye
+
+    @fiscal_year_end.setter
+    def fiscal_year_end(self, fye):
+        # maybe make fiscal_year_end a property and do this on assignment
+        last_day = calendar.monthrange(fye.year, fye.month)[1]
+        if last_day - fye.day > fye.day:
+            # closer to the beginning of the month, use previous month
+            # for fiscal_year_end
+            temp = fye - relativedelta(months=1)
+            last_month = temp.month
+            last_day = calendar.monthrange(fye.year, last_month)[1]
+
+            fye = date(fye.year, last_month, last_day)
+        else:
+            # use end of current month
+            last_day = calendar.monthrange(fye.year, fye.month)[1]
+            fye = date(fye.year, fye.month, last_day)
+
+        self._fiscal_year_end = fye
 
     def __str__(self, lines=None):
         """
@@ -210,8 +249,6 @@ class TimeLine(dict):
         # Now link all of the periods.
         self.link()
 
-        # All set.
-
     def clear(self):
         """
 
@@ -251,7 +288,9 @@ class TimeLine(dict):
         TimeLine.extrapolate() -> None
 
 
-        Extrapolate current period to future dates.
+        Extrapolate current period to future dates.  Make quarterly and annual
+        financial summaries.  Updates all summaries contained in
+        instance.summaries.
         """
         if seed is None:
             seed = self.current_period
@@ -259,9 +298,18 @@ class TimeLine(dict):
 
         past, present, future = self.get_segments(seed_date)
         self.extrapolate_dates(seed, future)
-
         # Could run in parallel in simple mode by projecting
         # each snapshot separately and then connecting them
+
+        # generate or re-generate annual and quarterly summaries
+        self.summary_builder.make_annual_summaries(recur=True)
+        self.summary_builder.make_quarterly_summaries(recur=True)
+
+        ignore = [3, 12, 'quarterly', 'annual']
+        intervals = set(self.summaries.keys()) - set(ignore)
+        if intervals:
+            for i in intervals:
+                self.summary_builder.make_summaries(i, recur=True)
 
     def extrapolate_all(self, seed=None):
         """
@@ -685,7 +733,3 @@ class TimeLine(dict):
                 #add a blank line after every row
         #
         return clean_lines
-
-
-
-

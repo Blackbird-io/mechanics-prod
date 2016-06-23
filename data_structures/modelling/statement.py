@@ -102,6 +102,7 @@ class Statement(Equalities, TagsMixIn):
     get_ordered()         return list of instance details
     get_full_ordered()    return recursive list of details
     increment()           add data from another statement
+    link_to()             links statements in Excel
     reset()               clear values
     ====================  ======================================================
     """
@@ -581,6 +582,20 @@ class Statement(Equalities, TagsMixIn):
                     # positions once.
                 else:
                     pass
+
+    def link_to(self, matching_statement):
+        """
+
+
+        Statement.link_to() -> None
+
+        --``matching_statement`` is another Statement object
+
+        Method links lines from instance to matching_statement in Excel.
+        """
+        for line in self.get_ordered():
+            oline = matching_statement.find_first(line.name)
+            line.link_to(oline)
 
     def reset(self):
         """
