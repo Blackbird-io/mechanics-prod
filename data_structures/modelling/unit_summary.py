@@ -150,7 +150,7 @@ class UnitSummary(HistoryLine, TagsMixIn):
 
         # register the unit, will raise errors on collisions
         if register_in_period:
-            bu._register_in_period(recur=True, overwrite=overwrite)
+            bu._register_in_period(self.period, recur=True, overwrite=overwrite)
         self.components.add_item(bu)
 
     def set_financials(self, fins=None):
