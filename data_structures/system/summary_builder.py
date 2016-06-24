@@ -189,7 +189,8 @@ class SummaryBuilder:
                 raise bb_exceptions.BBAnalyticalError
 
             statement = getattr(bu.financials, statement_name)
-            summary_statement.increment(statement, consolidating=True)
+            summary_statement.increment(statement, consolidating=True,
+                                        xl_label=str(period.end))
 
             if period.start <= end <= period.end:
                 break

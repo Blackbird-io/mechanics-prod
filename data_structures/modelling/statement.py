@@ -525,7 +525,7 @@ class Statement(Equalities, TagsMixIn):
         result = sorted(self._details.values(), key=lambda line: line.position)
         return result
 
-    def increment(self, matching_statement, consolidating=False):
+    def increment(self, matching_statement, consolidating=False, xl_label=None):
         """
 
 
@@ -555,7 +555,8 @@ class Statement(Equalities, TagsMixIn):
 
             if own_line:
                 # Option A
-                own_line.increment(external_line, consolidating=consolidating)
+                own_line.increment(external_line, consolidating=consolidating,
+                                   xl_label=xl_label)
 
             else:
                 # Option B
@@ -575,7 +576,8 @@ class Statement(Equalities, TagsMixIn):
                             # need to make sure Chef knows to consolidate this
                             # source line (or its details) also
 
-                            self._add_lines_in_chef(local_copy, external_line)
+                            self._add_lines_in_chef(local_copy, external_line,
+                                                    xl_label=xl_label)
 
                     self.add_line(local_copy, local_copy.position)
                     # For speed, could potentially add all the lines and then fix
@@ -619,7 +621,7 @@ class Statement(Equalities, TagsMixIn):
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
 
-    def _add_lines_in_chef(self, local_copy, external_line):
+    def _add_lines_in_chef(self, local_copy, external_line, xl_label=None):
         """
 
 
@@ -633,11 +635,12 @@ class Statement(Equalities, TagsMixIn):
         # source line (and its details) also
         if not external_line._details:
             local_copy.xl.consolidated.sources.append(external_line)
+            local_copy.xl.consolidated.labels.append(xl_label)
         else:
             for n, l in local_copy._details.items():
                 detail_to_append = external_line._details.get(n)
 
-                self._add_lines_in_chef(l, detail_to_append)
+                self._add_lines_in_chef(l, detail_to_append, xl_label)
 
     def _bind_and_record(self, line):
         """
