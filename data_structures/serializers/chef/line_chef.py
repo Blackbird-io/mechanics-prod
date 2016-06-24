@@ -101,7 +101,6 @@ class LineChef:
         Routines deliver sheet with the current_row pointing to the last filled
         in cell.
         """
-
         self._add_reference(
             sheet=sheet,
             column=column,
@@ -130,10 +129,9 @@ class LineChef:
         if details:
             sheet.bb.current_row += 1
 
-            # Should have the header here instead
             sheet.bb.outline_level += 1
             self._group_lines(sheet)
-            
+
             sub_indent = indent + LineItem.TAB_WIDTH
             detail_summation = ""
 
@@ -157,7 +155,6 @@ class LineChef:
                 cos = detail.xl.get_coordinates()
                 link = link_template.format(coordinates=cos)
                 detail_summation += link
-
             else:
                 # Should group all the details here
                 sheet.bb.current_row += 1

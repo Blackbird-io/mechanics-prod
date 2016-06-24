@@ -63,7 +63,11 @@ SCENARIO_SELECTORS = False
 FILTER_PARAMETERS = False
 
 # DEFAULT TEXT
+
+# annual summary page
 SUMMARY_TITLE = "Annual Summary"
+COMPLETE_LABEL = "Complete Summary Period:"
+AVAILABLE_LABEL = "Available Months:"
 
 # cover sheet
 COVER_TITLE = "Cover"

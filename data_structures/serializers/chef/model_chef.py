@@ -117,6 +117,11 @@ class ModelChef:
 
     def _add_annual_summary(self, book, model):
 
+        label_col = 1
+        label_alpha_col = get_column_letter(label_col)
+        val_col = 6
+        val_alpha_col = get_column_letter(val_col)
+
         sheet = book.create_sheet(chef_settings.SUMMARY_TITLE, 3)
         sheet.bb.current_row = 3
         sheet_style.style_sheet(sheet, label_areas=False)
@@ -126,6 +131,29 @@ class ModelChef:
         summary = sum_timeline.find_period(date)
         unit = summary.content
 
+        cell = sheet.cell('A1')
+        cell.value = model.time_line.current_period.content.name.title()
+        cell.alignment = Alignment(horizontal='left', vertical='center')
+        cell.font = Font(size=14, bold=True, underline='single')
+
+        cell = sheet.cell('A3')
+        cell.value = chef_settings.COMPLETE_LABEL
+        cell.alignment = Alignment(horizontal='left', vertical='center')
+
+        cell = sheet.cell(val_alpha_col+'3')
+        cell.value = unit.complete
+        cell.alignment = Alignment(horizontal='right', vertical='center')
+
+        cell = sheet.cell('A4')
+        cell.value = chef_settings.AVAILABLE_LABEL
+        cell.alignment = Alignment(horizontal='left', vertical='center')
+
+        cell = sheet.cell(val_alpha_col+'4')
+        cell.value = unit.periods_used
+        cell.alignment = Alignment(horizontal='right', vertical='center')
+
+        sheet_style.set_column_width(sheet, val_col)
+
         req_rows = unit.periods_used
         sheet.bb.consolidation_size = req_rows
 
@@ -133,6 +161,7 @@ class ModelChef:
 
         fins_dict = dict()
         sheet.bb.outline_level = 0
+        sheet.bb.current_row += 1
         for statement in unit.financials.ordered:
             sheet.bb.current_row += 1
             if statement is not None:
@@ -143,7 +172,7 @@ class ModelChef:
                     line_chef.chop_statement(
                         sheet=sheet,
                         statement=unit.financials.starting,
-                        column=6,
+                        column=val_col,
                         set_labels=True)
                     sheet.bb.current_row += 1
 
@@ -153,7 +182,7 @@ class ModelChef:
                 line_chef.chop_statement(
                     sheet=sheet,
                     statement=statement,
-                    column=6,
+                    column=val_col,
                     set_labels=True)
 
         for statement, row in fins_dict.items():
