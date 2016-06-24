@@ -29,10 +29,12 @@ LineChef              class with methods to chop BB statements into dynamic
 
 
 # Imports
+import calendar
 import re
 
 import openpyxl as xlio
 from openpyxl.comments import Comment
+from openpyxl.styles import Alignment
 
 from data_structures.modelling.line_item import LineItem
 
@@ -189,6 +191,107 @@ class LineChef:
 
         return sheet
 
+    def chop_summary_line(self, *pargs, sheet, column, line, set_labels=True, indent=0):
+        """
+
+
+        LineChef.chop_line() -> Worksheet
+
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``column`` must be a column number reference
+        --``line`` must be an instance of LineItem
+        --``set_labels`` must be a boolean; True will set labels for line
+        --``indent`` is amount of indent
+
+        Method walks through LineItems and their details and converts them to
+        dynamic links in Excel cells.  Method adds consolidation and derivation
+        logic to cells.
+
+        Method relies on sheet.bb.current_row being up-to-date.
+
+        Routines deliver sheet with the current_row pointing to the last filled
+        in cell.
+        """
+        self._add_reference(
+            sheet=sheet,
+            column=column,
+            line=line,
+            set_labels=set_labels,
+            indent=indent
+            )
+
+        self._add_consolidation_logic_summary(
+            sheet=sheet,
+            column=column,
+            line=line,
+            set_labels=set_labels,
+            indent=indent + LineItem.TAB_WIDTH
+            )
+
+        details = line.get_ordered()
+        if details:
+            sheet.bb.current_row += 1
+
+            sheet.bb.outline_level += 1
+            self._group_lines(sheet)
+
+            sub_indent = indent + LineItem.TAB_WIDTH
+            detail_summation = ""
+
+            for detail in details:
+
+                sheet.bb.current_row += 1
+
+                sheet.bb.outline_level += 1
+                self._group_lines(sheet)
+                sheet.bb.outline_level -= 1
+
+                self.chop_summary_line(
+                    sheet=sheet,
+                    column=column,
+                    line=detail,
+                    set_labels=set_labels,
+                    indent=sub_indent)
+
+                link_template = formula_templates.ADD_COORDINATES
+
+                cos = detail.xl.get_coordinates()
+                link = link_template.format(coordinates=cos)
+                detail_summation += link
+            else:
+                # Should group all the details here
+                sheet.bb.current_row += 1
+
+                subtotal_cell = sheet.cell(column=column,
+                                           row=sheet.bb.current_row)
+                subtotal_cell.set_explicit_value(detail_summation,
+                                                 data_type=type_codes.FORMULA)
+
+                line.xl.detailed.ending = sheet.bb.current_row
+                line.xl.detailed.cell = subtotal_cell
+
+                self._group_lines(sheet)
+
+                if set_labels:
+                    label = indent*" " + line.tags.name + ": details"
+                    self._set_label(sheet=sheet,
+                                    label=label,
+                                    row=sheet.bb.current_row)
+
+            sheet.bb.outline_level -= 1
+
+        if not line.xl.reference.source:
+            self._combine_segments(
+                sheet=sheet,
+                column=column,
+                line=line,
+                set_labels=set_labels,
+                indent=indent)
+
+        cell_styles.format_line(line)
+
+        return sheet
+
     def chop_statement(self, *pargs, sheet, column, statement, set_labels=True):
         """
 
@@ -213,6 +316,40 @@ class LineChef:
                 sheet.bb.current_row += 1
 
             self.chop_line(
+                sheet=sheet,
+                column=column,
+                line=line,
+                set_labels=set_labels)
+
+        if len(statement.get_ordered()) == 0:
+            sheet.bb.current_row += 1
+
+        return sheet
+
+    def chop_summary_statement(self, *pargs, sheet, column, statement, set_labels=True):
+        """
+
+
+        LineChef.chop_statement() -> Worksheet
+
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``column`` must be a column number reference
+        --``statement`` must be an instance of Statement
+        --``set_labels`` must be a boolean; True will set labels for line
+
+        Method walks through Statement lines and delegates LineChef.chop_line()
+        to add them as dynamic links in Excel.
+
+        Method relies on sheet.bb.current_row being up-to-date.
+        """
+        if not BLANK_BETWEEN_TOP_LINES:
+            sheet.bb.current_row += 1
+
+        for line in statement.get_ordered():
+            if BLANK_BETWEEN_TOP_LINES:
+                sheet.bb.current_row += 1
+
+            self.chop_summary_line(
                 sheet=sheet,
                 column=column,
                 line=line,
@@ -269,7 +406,7 @@ class LineChef:
 
                 if set_labels:
                     label_column = None
-                    if not getattr(sheet.bb, "parameters", None):
+                    if not getattr(sheet.bb, field_names.PARAMETERS, None):
                         label_column = 1
 
                     label = indent * " " + line.tags.name + ": details"
@@ -429,6 +566,116 @@ class LineChef:
                 "ending_row" : line.xl.consolidated.ending,
                 "alpha_column" : alpha_column
                 }
+
+            summation = formula_templates.SUM_RANGE.format(**summation_params)
+            summation_cell = sheet.cell(column=column,
+                                        row=sheet.bb.current_row)
+            summation_cell.set_explicit_value(summation,
+                                              data_type=type_codes.FORMULA)
+
+            line.xl.consolidated.cell = summation_cell
+
+            if set_labels:
+                label = line.tags.name + ": consolidated results"
+                label = (indent * " ") + label
+                self._set_label(sheet=sheet, label=label,
+                                row=sheet.bb.current_row)
+
+            line.xl.consolidated.ending = sheet.bb.current_row
+            self._group_lines(sheet)
+
+            sheet.bb.outline_level -= 1
+
+        return sheet
+
+    def _add_consolidation_logic_summary(self, *pargs, sheet, column, line,
+                                 set_labels=True, indent=0):
+        """
+
+
+        LineChef._add_consolidation_logic() -> Worksheet
+
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``column`` must be a column number reference
+        --``line`` must be an instance of LineItem
+        --``set_labels`` must be a boolean; True will set labels for line
+        --``indent`` is amount of indent
+
+        Expects line.xl.consolidated.sources to include full range of pointers
+        to source lines on children.
+
+        Always stuffs consolidation into the same number of rows.
+        Derive can still cause staircasing if the line picks up details in the
+        future that it doesn't have now.
+
+        Returns Worksheet with consolidation logic added as Excel dynamic links
+        """
+        line_labels = calendar.month_name[1:].copy()
+
+        if not line.xl.consolidated.sources:
+            pass
+        else:
+            sources = line.xl.consolidated.sources.copy()
+            labels = line.xl.consolidated.labels.copy()
+
+            # Here we are going to find source matching label
+
+            required_rows = sheet.bb.consolidation_size
+            link_template = formula_templates.ADD_COORDINATES
+
+            sheet.bb.current_row += 1
+            sheet.bb.outline_level += 1
+
+            line.xl.consolidated.starting = sheet.bb.current_row
+
+            for rr in range(required_rows):
+
+                if sources:
+                    batch_summation = ""
+                    temp_label = line_labels.pop(0)
+
+                    try:
+                        idx = labels.index(temp_label)
+                    except ValueError:
+                        source_line = None
+                    else:
+                        source_line = sources[idx]
+
+                    sub_indent = indent + LineItem.TAB_WIDTH
+                    label_line = (sub_indent * " ") + temp_label
+
+                    # Can reverse sources for better performance.
+                    if source_line:
+                        source_cos = source_line.xl.get_coordinates()
+                        link = link_template.format(coordinates=source_cos)
+                        batch_summation += link
+
+                    batch_cell = sheet.cell(column=column,
+                                            row=sheet.bb.current_row)
+                    if batch_summation:
+                        batch_cell.set_explicit_value(batch_summation,
+                                                      data_type=
+                                                      type_codes.FORMULA)
+                    else:
+                        batch_cell.value = "--"
+                        batch_cell.alignment = Alignment(horizontal='right')
+
+                    self._set_label(sheet=sheet, label=label_line,
+                                    row=sheet.bb.current_row)
+
+                self._group_lines(sheet)
+
+                # Move on to next row
+                line.xl.consolidated.ending = sheet.bb.current_row
+                sheet.bb.current_row += 1
+
+            # Group the cells
+            alpha_column = get_column_letter(column)
+            summation_params = {
+                "starting_row": line.xl.consolidated.starting,
+                "ending_row": line.xl.consolidated.ending,
+                "alpha_column": alpha_column
+            }
 
             summation = formula_templates.SUM_RANGE.format(**summation_params)
             summation_cell = sheet.cell(column=column,
@@ -817,7 +1064,7 @@ class LineChef:
         the sheet.bb.parameters area.
         """
         if column is None:
-            if getattr(sheet.bb, "parameters", None):
+            if getattr(sheet.bb, field_names.PARAMETERS, None):
                 column = sheet.bb.parameters.columns.get_position(field_names.LABELS)
             else:
                 column = 2
@@ -833,6 +1080,9 @@ class LineChef:
                 c = """
                 Something is wrong with our alignment. We are trying to
                 write a parameter to an existing row with a different label."""
+
+                import pdb
+                pdb.set_trace()
 
                 raise ExcelPrepError(c)
 
