@@ -117,76 +117,117 @@ class ModelChef:
 
     def _add_annual_summary(self, book, model):
 
-        label_col = 1
+        label_col = 3
         label_alpha_col = get_column_letter(label_col)
-        val_col = 6
+        val_col = 8
         val_alpha_col = get_column_letter(val_col)
 
-        sheet = book.create_sheet(chef_settings.SUMMARY_TITLE, 3)
-        sheet.bb.current_row = 3
+        start_row = 6
+        header_row = 4
+
+        column_widths = dict()
+        column_widths[2] = 4
+        column_widths[val_col] = chef_settings.COLUMN_WIDTH
+        column_widths[val_col+1] = chef_settings.COLUMN_WIDTH
+        column_widths[val_col+2] = chef_settings.COLUMN_WIDTH
+        column_widths[val_col+3] = chef_settings.COLUMN_WIDTH
+        column_widths[val_col+4] = chef_settings.COLUMN_WIDTH
+        column_widths[val_col+5] = 4
+
+        sheet = book.create_sheet(chef_settings.SUMMARY_TITLE, 1)
+        sheet.bb.current_row = start_row
         sheet_style.style_sheet(sheet, label_areas=False)
 
-        date = model.time_line.current_period.end
-        sum_timeline = model.time_line.summaries['annual']
-        summary = sum_timeline.find_period(date)
-        unit = summary.content
+        area = sheet.bb.add_area(field_names.PARAMETERS)
+        area.columns.by_name[field_names.LABELS] = label_col
+        area.columns.by_name[field_names.VALUES] = val_col
+
+        for k in column_widths.keys():
+            column = sheet.column_dimensions[get_column_letter(k)]
+            column.width = column_widths[k]
 
         cell = sheet.cell('A1')
         cell.value = model.time_line.current_period.content.name.title()
         cell.alignment = Alignment(horizontal='left', vertical='center')
         cell.font = Font(size=14, bold=True, underline='single')
 
-        cell = sheet.cell('A3')
+        cell = sheet.cell(label_alpha_col+str(start_row))
         cell.value = chef_settings.COMPLETE_LABEL
         cell.alignment = Alignment(horizontal='left', vertical='center')
 
-        cell = sheet.cell(val_alpha_col+'3')
-        cell.value = unit.complete
-        cell.alignment = Alignment(horizontal='right', vertical='center')
-
-        cell = sheet.cell('A4')
+        cell = sheet.cell(label_alpha_col+str(start_row+1))
         cell.value = chef_settings.AVAILABLE_LABEL
         cell.alignment = Alignment(horizontal='left', vertical='center')
 
-        cell = sheet.cell(val_alpha_col+'4')
-        cell.value = unit.periods_used
-        cell.alignment = Alignment(horizontal='right', vertical='center')
+        key = model.time_line.summary_builder.ANNUAL_KEY
+        sum_timeline = model.time_line.summary_builder.summaries[key]
 
-        sheet_style.set_column_width(sheet, val_col)
+        set_labels = True
+        col_use = val_col
+        for date in sorted(sum_timeline.keys()):
+            sheet.bb.current_row = start_row
 
-        req_rows = unit.periods_used
-        sheet.bb.consolidation_size = req_rows
+            # set up current period
+            summary = sum_timeline.find_period(date)
+            unit = summary.content
 
-        unit.xl.set_sheet(sheet)
+            cell = sheet.cell(get_column_letter(col_use)+str(start_row))
+            cell.value = unit.complete
+            cell.alignment = Alignment(horizontal='right', vertical='center')
 
-        fins_dict = dict()
-        sheet.bb.outline_level = 0
-        sheet.bb.current_row += 1
-        for statement in unit.financials.ordered:
+            cell = sheet.cell(get_column_letter(col_use)+str(start_row+1))
+            cell.value = unit.periods_used
+            cell.alignment = Alignment(horizontal='right', vertical='center')
+
+            sheet_style.set_column_width(sheet, col_use)
+            sheet.bb.consolidation_size = 12
+
+            unit.xl.set_sheet(sheet)
+
+            cell = sheet[get_column_letter(col_use)+str(header_row)]
+            cell.value = date.year
+            cell_styles.format_header_label(cell, alignment='right')
+
+            fins_dict = dict()
+            sheet.bb.outline_level = 0
             sheet.bb.current_row += 1
-            if statement is not None:
-                if statement is unit.financials.ending:
+
+            for statement in unit.financials.ordered:
+                sheet.bb.current_row += 1
+                if statement is not None:
+                    if statement is unit.financials.ending:
+                        statement_row = sheet.bb.current_row + 1
+                        fins_dict["Starting Balance Sheet"] = statement_row
+
+                        line_chef.chop_summary_statement(
+                            sheet=sheet,
+                            statement=unit.financials.starting,
+                            column=col_use,
+                            set_labels=set_labels)
+                        sheet.bb.current_row += 1
+
                     statement_row = sheet.bb.current_row + 1
-                    fins_dict["Starting Balance Sheet"] = statement_row
+                    fins_dict[statement.name] = statement_row
 
-                    line_chef.chop_statement(
+                    line_chef.chop_summary_statement(
                         sheet=sheet,
-                        statement=unit.financials.starting,
-                        column=val_col,
-                        set_labels=True)
-                    sheet.bb.current_row += 1
+                        statement=statement,
+                        column=col_use,
+                        set_labels=set_labels)
 
-                statement_row = sheet.bb.current_row + 1
-                fins_dict[statement.tags.name] = statement_row
-
-                line_chef.chop_statement(
-                    sheet=sheet,
-                    statement=statement,
-                    column=val_col,
-                    set_labels=True)
+            set_labels = False
+            col_use += 1
 
         for statement, row in fins_dict.items():
-            cell_styles.format_area_label(sheet, statement, row)
+            cell_styles.format_area_label(sheet, statement, row,
+                                          col_num=label_col)
+
+        cell_styles.format_border_group(sheet=sheet,
+                                        st_col=label_col-1,
+                                        ed_col=label_col+10,
+                                        st_row=start_row-3,
+                                        ed_row=sheet.bb.current_row,
+                                        border_style='thin')
 
     def _build_foundation(self, model):
         """

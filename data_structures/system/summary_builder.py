@@ -232,8 +232,9 @@ class SummaryBuilder:
                 raise bb_exceptions.BBAnalyticalError(c)
 
             statement = getattr(bu.financials, statement_name)
+            label = calendar.month_name[period.end.month]
             summary_statement.increment(statement, consolidating=True,
-                                        xl_label=str(period.end))
+                                        xl_label=label)
 
             if period.start <= end <= period.end:
                 break

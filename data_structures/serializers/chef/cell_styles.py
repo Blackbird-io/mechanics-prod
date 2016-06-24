@@ -27,6 +27,8 @@ CellStyles            standard styles for worksheet cells
 
 
 # Imports
+import openpyxl as xlio
+
 from openpyxl.styles import Border, Side, Font, Alignment, PatternFill
 from openpyxl.styles.colors import WHITE, BLACK
 
@@ -44,6 +46,7 @@ CALCULATION_COLOR = '707070'
 # Module Globals
 number_formats = NumberFormats()
 type_codes = TypeCodes()
+get_column_letter = xlio.utils.get_column_letter
 
 # Classes
 class CellStyles:
@@ -71,7 +74,7 @@ class CellStyles:
     """
 
     @staticmethod
-    def format_area_label(sheet, label, row_num):
+    def format_area_label(sheet, label, row_num, col_num=None):
         """
 
 
@@ -85,7 +88,12 @@ class CellStyles:
         """
         side = Side(border_style='double')
 
-        cell_cos = 'A%s' % row_num
+        if col_num:
+            col = get_column_letter(col_num)
+        else:
+            col = 'A'
+
+        cell_cos = col + str(row_num)
         cell = sheet[cell_cos]
         cell.font = Font(bold=True)
         cell.set_explicit_value(label.title(),
@@ -185,8 +193,7 @@ class CellStyles:
         cell.number_format = number_formats.DEFAULT_PARAMETER_FORMAT
         cell.alignment = Alignment(horizontal='right')
 
-    @staticmethod
-    def format_scenario_label(cell):
+    def format_scenario_label(self, cell):
         """
 
 
@@ -196,8 +203,15 @@ class CellStyles:
 
         Format cells containing scenario column labels on Scenario tab.
         """
-        cell.alignment = Alignment(horizontal='center')
-        cell.font = Font(color=WHITE)
+        self.format_header_label(cell, alignment='center')
+
+    @staticmethod
+    def format_header_label(cell, alignment=None):
+
+        if alignment:
+            cell.alignment = Alignment(horizontal=alignment)
+
+        cell.font = Font(color=WHITE, bold=True)
         cell.fill = PatternFill(start_color=BLACK,
                                 end_color=BLACK,
                                 fill_type='solid')
