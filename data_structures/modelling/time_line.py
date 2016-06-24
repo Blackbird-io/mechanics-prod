@@ -83,8 +83,8 @@ class TimeLine(dict):
     update_current()      updates current_period for reference or actual date
     ====================  ======================================================
     """
-    DEFAULT_PERIODS_FORWARD = 36
-    DEFAULT_PERIODS_BACK = 36
+    DEFAULT_PERIODS_FORWARD = 60
+    DEFAULT_PERIODS_BACK = 1
 
     def __init__(self):
         dict.__init__(self)
