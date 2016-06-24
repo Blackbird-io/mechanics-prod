@@ -57,6 +57,8 @@ class SummaryBuilder:
     ====================  =====================================================
 
     DATA:
+    fiscal_year_end       date; end of fiscal year default = 12/31/current year
+    summaries             dict; holds TimelineSummary objects keyed by interval
     time_line             pointer to TimeLine containing relevant financials
 
     FUNCTIONS:
@@ -68,8 +70,43 @@ class SummaryBuilder:
     make_summaries()      makes periodic summaries and stores on time_line
     ====================  =====================================================
     """
+
+    ANNUAL_KEY = "annual"
+    QUARTERLY_KEY = "quarterly"
+
     def __init__(self, timeline):
+        self._fiscal_year_end = None
+        self.summaries = dict()
         self.time_line = timeline
+
+    @property
+    def fiscal_year_end(self):
+        if not self._fiscal_year_end:
+            year = self.time_line.current_period.end.year
+            fye = date(year, 12, 31)
+        else:
+            fye = self._fiscal_year_end
+
+        return fye
+
+    @fiscal_year_end.setter
+    def fiscal_year_end(self, fye):
+        # maybe make fiscal_year_end a property and do this on assignment
+        last_day = calendar.monthrange(fye.year, fye.month)[1]
+        if last_day - fye.day > fye.day:
+            # closer to the beginning of the month, use previous month
+            # for fiscal_year_end
+            temp = fye - relativedelta(months=1)
+            last_month = temp.month
+            last_day = calendar.monthrange(fye.year, last_month)[1]
+
+            fye = date(fye.year, last_month, last_day)
+        else:
+            # use end of current month
+            last_day = calendar.monthrange(fye.year, fye.month)[1]
+            fye = date(fye.year, fye.month, last_day)
+
+        self._fiscal_year_end = fye
 
     def get_balance_summary(self, bu_bbid, start_date, end_date):
         """
@@ -95,7 +132,9 @@ class SummaryBuilder:
         start_bu = start_period.bu_directory[bu_bbid]
 
         if not start_bu.life.alive or not start_bu.filled:
-            raise bb_exceptions.BBAnalyticalError
+            c = "The specified business unit cannot be included in summary; " \
+                "unit is either not alive or not filled."
+            raise bb_exceptions.BBAnalyticalError(c)
 
         start_bal = start_bu.financials.starting.copy()
         start_bal.link_to(start_bu.financials.starting)
@@ -105,7 +144,9 @@ class SummaryBuilder:
         end_bu = end_period.bu_directory[bu_bbid]
 
         if not end_bu.life.alive or not end_bu.filled:
-            raise bb_exceptions.BBAnalyticalError
+            c = "The specified business unit cannot be included in summary; " \
+                "unit is either not alive or not filled."
+            raise bb_exceptions.BBAnalyticalError(c)
 
         end_bal = end_bu.financials.ending.copy()
         end_bal.link_to(end_bu.financials.ending)
@@ -186,7 +227,9 @@ class SummaryBuilder:
             bu = period.bu_directory[bu_bbid]
 
             if not bu.life.alive or not bu.filled:
-                raise bb_exceptions.BBAnalyticalError
+                c = "The specified business unit cannot be included in " \
+                    "summary; unit is either not alive or not filled."
+                raise bb_exceptions.BBAnalyticalError(c)
 
             statement = getattr(bu.financials, statement_name)
             summary_statement.increment(statement, consolidating=True,
@@ -217,8 +260,8 @@ class SummaryBuilder:
         business units.
 
         Calculated summaries are stored in time_line.summaries and keyed by
-        "annual" and 3:
-        model.time_line.summaries["annual"] is model.time_line.summaries[12]
+        ANNUAL_KEY and 3:
+        model.summaries[self.ANNUAL_KEY] is model.summaries[12]
         True
         """
 
@@ -227,7 +270,7 @@ class SummaryBuilder:
             bu_bbid = self.time_line.current_period.content.id.bbid
 
         self.make_summaries(bu_bbid, 12, recur=recur)
-        self.time_line.summaries["annual"] = self.time_line.summaries[12]
+        self.summaries[self.ANNUAL_KEY] = self.summaries[12]
 
     def make_quarterly_summaries(self, bu_bbid=None, recur=False):
         """
@@ -247,8 +290,8 @@ class SummaryBuilder:
         business units.
 
         Calculated summaries are stored in time_line.summaries and keyed by
-        "quarterly" and 3:
-        model.time_line.summaries["quarterly"] is model.time_line.summaries[3]
+        self.QUARTERLY_KEY and 3:
+        model.summaries[self.QUARTERLY_KEY] is model.summaries[3]
         True
         """
 
@@ -257,7 +300,7 @@ class SummaryBuilder:
             bu_bbid = self.time_line.current_period.content.id.bbid
 
         self.make_summaries(bu_bbid, 3, recur=recur)
-        self.time_line.summaries["quarterly"] = self.time_line.summaries[3]
+        self.summaries[self.QUARTERLY_KEY] = self.summaries[3]
 
     def make_summaries(self, bu_bbid, interval, recur=False):
         """
@@ -294,7 +337,7 @@ class SummaryBuilder:
         """
 
         # Get working value for fiscal_year_end
-        fye = self.time_line.fiscal_year_end
+        fye = self.fiscal_year_end
 
         # make the building blocks to hold this set of summaries
         timeline_summary = TimelineSummary(interval)
@@ -323,7 +366,7 @@ class SummaryBuilder:
             start_pointer = self._get_month_start(start_pointer)
             end_pointer = self._get_interval_end(start_pointer, interval-1)
 
-        self.time_line.summaries[interval] = timeline_summary
+        self.summaries[interval] = timeline_summary
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
@@ -343,7 +386,10 @@ class SummaryBuilder:
         which the specified business unit is alive. Method returns period.start
         """
 
-        period = self.time_line.find_period(start)
+        try:
+            period = self.time_line.find_period(start)
+        except KeyError:
+            period = self.time_line[min(self.time_line.keys())]
 
         period_found = False
         new_start = None
@@ -380,29 +426,33 @@ class SummaryBuilder:
         Method finds latest period between (inclusive) start and end dates in
         which the specified business unit is alive. Method returns period.end
         """
-        period = self.time_line.find_period(end)
-
         period_found = False
         new_end = None
-        while period.start >= start:
-            try:
-                temp = period.bu_directory[bu_bbid]
-            except KeyError:
-                period = period.past
+
+        first = min(self.time_line.keys())
+
+        if end >= first:
+            period = self.time_line.find_period(end)
+
+            while period.start >= start:
+                try:
+                    temp = period.bu_directory[bu_bbid]
+                except KeyError:
+                    period = period.past
+                    if not period:
+                        break
+                else:
+                    if not temp.life.alive or not temp.filled:
+                        period = period.past
+                    else:
+                        period_found = True
+                        break
+
                 if not period:
                     break
-            else:
-                if not temp.life.alive or not temp.filled:
-                    period = period.past
-                else:
-                    period_found = True
-                    break
 
-            if not period:
-                break
-
-        if period_found:
-            new_end = period.end
+            if period_found:
+                new_end = period.end
 
         return new_end
 
