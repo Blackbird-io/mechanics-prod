@@ -170,15 +170,10 @@ class LineChef:
                 self._group_lines(sheet)
 
                 if set_labels:
-                    label_column = None
-                    if not getattr(sheet.bb, "parameters", None):
-                        label_column = 1
-
                     label = indent*" " + line.tags.name + ": details"
                     self._set_label(sheet=sheet,
                                     label=label,
-                                    row=sheet.bb.current_row,
-                                    column=label_column)
+                                    row=sheet.bb.current_row)
 
             sheet.bb.outline_level -= 1
 
@@ -233,8 +228,8 @@ class LineChef:
         details = line.get_ordered()
         if details:
             # Should have the header here instead
-            sheet.bb.outline_level += 1
-            self._group_lines(sheet)
+            # sheet.bb.outline_level += 1
+            # self._group_lines(sheet)
 
             sub_indent = indent + LineItem.TAB_WIDTH
             detail_summation = ""
@@ -709,6 +704,8 @@ class LineChef:
             line.xl.cell = cell
             line.xl.reference.cell = ref_cell
 
+            self._group_lines(sheet) # # TEMP
+
             if set_labels:
                 self._set_label(label=label, sheet=sheet,
                                 row=sheet.bb.current_row)
@@ -759,12 +756,7 @@ class LineChef:
         self._group_lines(sheet)
 
         if set_labels:
-            label_column = None
-            if not getattr(sheet.bb, "parameters", None):
-                label_column = 1
-
-            self._set_label(label=label, sheet=sheet, row=sheet.bb.current_row,
-                            column=label_column)
+            self._set_label(label=label, sheet=sheet, row=sheet.bb.current_row)
 
         return sheet
 
@@ -828,7 +820,7 @@ class LineChef:
             if getattr(sheet.bb, "parameters", None):
                 column = sheet.bb.parameters.columns.get_position(field_names.LABELS)
             else:
-                column = 1
+                column = 2
 
         label_cell = sheet.cell(column=column, row=row)
         existing_label = label_cell.value
@@ -841,9 +833,6 @@ class LineChef:
                 c = """
                 Something is wrong with our alignment. We are trying to
                 write a parameter to an existing row with a different label."""
-
-                import pdb
-                pdb.set_trace()
 
                 raise ExcelPrepError(c)
 

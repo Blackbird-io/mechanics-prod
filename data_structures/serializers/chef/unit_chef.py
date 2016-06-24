@@ -315,18 +315,8 @@ class UnitChef:
         for statement in unit.financials.ordered:
             sheet.bb.current_row += 1
             if statement is not None:
+                sheet.bb.outline_level = 0
                 if statement is unit.financials.ending:
-                    # insert load-balanced starting balance sheet here
-                    # statement_row = sheet.bb.current_row + 1
-                    # fins_dict["Starting Balance Sheet"] = statement_row
-                    #
-                    # start_bal = self._cell_link(unit)
-                    # line_chef.chop_statement(
-                    #     sheet=sheet,
-                    #     statement=start_bal,
-                    #     column=column,
-                    #     set_labels=set_labels)
-                    # sheet.bb.current_row += 1
 
                     statement_row = sheet.bb.current_row + 1
                     fins_dict["Starting Balance Sheet"] = statement_row
