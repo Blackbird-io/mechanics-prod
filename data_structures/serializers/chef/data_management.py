@@ -218,6 +218,7 @@ class LineData(Range):
 
         self.consolidated = Range()
         self.consolidated.sources = list()
+        self.consolidated.labels = list()
         # List should contain pointers to source lines
         self.consolidated.cell = None
 

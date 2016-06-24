@@ -226,7 +226,8 @@ class LineItem(Statement):
 
         return new_line
 
-    def increment(self, matching_line, signature=None, consolidating=False):
+    def increment(self, matching_line, signature=None, consolidating=False,
+                  xl_label=None):
         """
 
 
@@ -242,7 +243,9 @@ class LineItem(Statement):
 
         else:
             if matching_line._details:
-                Statement.increment(self, matching_line, consolidating=consolidating)
+                Statement.increment(self, matching_line,
+                                    consolidating=consolidating,
+                                    xl_label=xl_label)
                 # Use Statement method here because we are treating the matching
                 # line as a Statement too. We assume that its details represent
                 # all of its value data. Statement.increment() will copy those
@@ -261,6 +264,7 @@ class LineItem(Statement):
                     self.tags.inherit_from(matching_line.tags)
                     self._consolidated = True
                     self.xl.consolidated.sources.append(matching_line)
+                    self.xl.consolidated.labels.append(xl_label)
 
     # Upgrade-F: The new line structure gives us the option to implement a
     # different approach to line calculation. Basically, we can allow drivers to

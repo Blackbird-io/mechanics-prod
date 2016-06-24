@@ -69,7 +69,7 @@ type_codes = TypeCodes()
 unit_chef = UnitChef()
 
 get_column_letter = xlio.utils.get_column_letter
-
+bounding_box = xlio.drawing.image.bounding_box
 # Classes
 class ModelChef:
     """
@@ -248,9 +248,8 @@ class ModelChef:
         column = sheet.column_dimensions['F']
         column.width = 14
 
-        img = xlio.drawing.image.Image(chef_settings.IMAGE_PATH)
-        img.drawing.width = 200
-        img.drawing.height = 60
+        img = xlio.drawing.image.Image(chef_settings.IMAGE_PATH,
+                                       size=(250, None))
         img.anchor(sheet.cell('B2'))
 
         sheet.add_image(img)

@@ -122,7 +122,7 @@ class LineChef:
             column=column,
             line=line,
             set_labels=set_labels,
-            indent=indent
+            indent=indent + LineItem.TAB_WIDTH
             )
 
         details = line.get_ordered()
@@ -367,7 +367,7 @@ class LineChef:
 
         else:
             sources = line.xl.consolidated.sources.copy()
-
+            labels = line.xl.consolidated.labels.copy()
             required_rows = sheet.bb.consolidation_size
             n_sources = len(sources)
             links_per_cell = n_sources // required_rows
@@ -395,6 +395,11 @@ class LineChef:
 
                         if sources:
                             source_line = sources.pop(0)
+
+                            temp_label = labels.pop(0)
+                            if temp_label:
+                                sub_indent = indent + LineItem.TAB_WIDTH
+                                label_line = (sub_indent * " ") + temp_label
                             # Can reverse sources for better performance.
                             source_cos = source_line.xl.get_coordinates()
                             link = link_template.format(coordinates=source_cos)
@@ -411,6 +416,10 @@ class LineChef:
                         batch_cell.set_explicit_value(batch_summation,
                                                       data_type=
                                                       type_codes.FORMULA)
+                        if temp_label:
+                            self._set_label(sheet=sheet, label=label_line,
+                                            row=sheet.bb.current_row)
+
 
                 self._group_lines(sheet)
 
