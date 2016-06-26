@@ -117,14 +117,19 @@ class ModelChef:
 
     def _add_annual_summary(self, book, model):
 
+        # Set up spreadsheet row/column locations
         label_col = 3
         label_alpha_col = get_column_letter(label_col)
         val_col = 8
-        val_alpha_col = get_column_letter(val_col)
 
         start_row = 6
         header_row = 4
 
+        co_name_cell = 'A1'
+
+        tab_idx = 1
+
+        # Set up column widths
         column_widths = dict()
         column_widths[2] = 4
         column_widths[val_col] = chef_settings.COLUMN_WIDTH
@@ -134,40 +139,47 @@ class ModelChef:
         column_widths[val_col+4] = chef_settings.COLUMN_WIDTH
         column_widths[val_col+5] = 4
 
-        sheet = book.create_sheet(chef_settings.SUMMARY_TITLE, 1)
+        # Create summary tab
+        sheet = book.create_sheet(chef_settings.SUMMARY_TITLE, tab_idx)
         sheet.bb.current_row = start_row
         sheet_style.style_sheet(sheet, label_areas=False)
 
+        # Add parameters area to set up label and value columns
         area = sheet.bb.add_area(field_names.PARAMETERS)
         area.columns.by_name[field_names.LABELS] = label_col
         area.columns.by_name[field_names.VALUES] = val_col
 
+        # Set column widths
         for k in column_widths.keys():
             column = sheet.column_dimensions[get_column_letter(k)]
             column.width = column_widths[k]
 
-        cell = sheet.cell('A1')
+        # Add company name
+        cell = sheet.cell(co_name_cell)
         cell.value = model.time_line.current_period.content.name.title()
         cell.alignment = Alignment(horizontal='left', vertical='center')
         cell.font = Font(size=14, bold=True, underline='single')
 
+        # Add label for Complete T/F
         cell = sheet.cell(label_alpha_col+str(start_row))
         cell.value = chef_settings.COMPLETE_LABEL
         cell.alignment = Alignment(horizontal='left', vertical='center')
 
+        # Add label for available months
         cell = sheet.cell(label_alpha_col+str(start_row+1))
         cell.value = chef_settings.AVAILABLE_LABEL
         cell.alignment = Alignment(horizontal='left', vertical='center')
 
+        # Get annual summary timeline
         key = model.time_line.summary_builder.ANNUAL_KEY
         sum_timeline = model.time_line.summary_builder.summaries[key]
 
+        # Print values to spreadsheet
         set_labels = True
         col_use = val_col
         for date in sorted(sum_timeline.keys()):
             sheet.bb.current_row = start_row
 
-            # set up current period
             summary = sum_timeline.find_period(date)
             unit = summary.content
 
@@ -218,10 +230,11 @@ class ModelChef:
             set_labels = False
             col_use += 1
 
+        # Label financial statements
         for statement, row in fins_dict.items():
             cell_styles.format_area_label(sheet, statement, row,
                                           col_num=label_col)
-
+        # Make pretty border
         cell_styles.format_border_group(sheet=sheet,
                                         st_col=label_col-1,
                                         ed_col=label_col+10,
