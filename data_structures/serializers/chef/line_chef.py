@@ -75,10 +75,12 @@ class LineChef:
     n/a
 
     FUNCTIONS:
-    chop_line()           returns Worksheet containing LineItem instances
-                          converted to dynamic Excel links
-    chop_statement()      returns Worksheet containing Statement instances
-                          converted to dynamic Excel links
+    chop_line()           writes LineItems to Excel
+    chop_startbal_line()  writes LineItems from Starting Balance Sheet to Excel
+    chop_starting_balance() writes Starting Balance Sheet to Excel
+    chop_statement()      writes Statements to Excel (except Starting Balance)
+    chop_summary_line()   writes LineItems from financial summaries to Excel
+    chop_summary_statement() writes financial summary statements to Excel
     ====================  =====================================================
     """
 
@@ -191,11 +193,177 @@ class LineChef:
 
         return sheet
 
-    def chop_summary_line(self, *pargs, sheet, column, line, set_labels=True, indent=0):
+    def chop_startbal_line(self, *pargs, sheet, column, line, set_labels=True,
+                           indent=0):
         """
 
 
-        LineChef.chop_line() -> Worksheet
+        LineChef.chop_startbal_line() -> Worksheet
+
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``column`` must be a column number reference
+        --``line`` must be an instance of LineItem
+        --``set_labels`` must be a boolean; True will set labels for line
+        --``indent`` is amount of indent
+
+        Method walks through LineItems and their details and converts them to
+        dynamic links in Excel cells.  Method method links line to itself if
+        already chopped (starting balance sheets are pointed to previous period
+        ending balance sheets during BusinessUnit._load_balance()), or will
+        strictly print value.  Specific logic for starting balance sheet.
+
+        Method relies on sheet.bb.current_row being up-to-date.
+
+        Routines deliver sheet with the current_row pointing to the last filled
+        in cell.
+        """
+        details = line.get_ordered()
+        if details:
+            # Should have the header here instead
+            # sheet.bb.outline_level += 1
+            # self._group_lines(sheet)
+
+            sub_indent = indent + LineItem.TAB_WIDTH
+            detail_summation = ""
+
+            for detail in details:
+
+                # sheet.bb.current_row += 1
+
+                sheet.bb.outline_level += 1
+                self._group_lines(sheet)
+                sheet.bb.outline_level -= 1
+
+                self.chop_startbal_line(sheet=sheet,
+                                        column=column,
+                                        line=detail,
+                                        set_labels=set_labels,
+                                        indent=sub_indent)
+
+                link_template = formula_templates.ADD_COORDINATES
+
+                cos = detail.xl.get_coordinates()
+                link = link_template.format(coordinates=cos)
+                detail_summation += link
+            else:
+                # Should group all the details here
+                sheet.bb.current_row += 1
+
+                subtotal_cell = sheet.cell(column=column,
+                                           row=sheet.bb.current_row)
+                subtotal_cell.set_explicit_value(detail_summation,
+                                                 data_type=type_codes.FORMULA)
+
+                line.xl.detailed.ending = sheet.bb.current_row
+                line.xl.detailed.cell = subtotal_cell
+
+                self._group_lines(sheet)
+
+                if set_labels:
+                    label_column = None
+                    if not getattr(sheet.bb, field_names.PARAMETERS, None):
+                        label_column = 1
+
+                    label = indent * " " + line.tags.name + ": details"
+                    self._set_label(sheet=sheet,
+                                    label=label,
+                                    row=sheet.bb.current_row,
+                                    column=label_column)
+        else:
+            if line.xl.cell:
+                # here just link the current cell to the cell in line.xl.cell
+                line.xl.reference.source = line
+                self._add_reference(
+                    sheet=sheet,
+                    column=column,
+                    line=line,
+                    set_labels=set_labels,
+                    indent=indent)
+
+        if not line.xl.reference.source:
+            self._combine_segments(
+                sheet=sheet,
+                column=column,
+                line=line,
+                set_labels=set_labels,
+                indent=indent)
+
+    def chop_starting_balance(self, *pargs, sheet, column, unit,
+                              set_labels=True):
+        """
+
+
+        LineChef.chop_starting_balance() -> Worksheet
+
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``column`` must be a column number reference
+        --``statement`` must be an instance of Statement
+        --``set_labels`` must be a boolean; True will set labels for line
+
+        Method walks through starting balance lines and delegates to
+        LineChef.chop_startbal_line() to add them as dynamic links in Excel.
+
+        Method relies on sheet.bb.current_row being up-to-date.  Method logic
+        specific to starting balance sheets.
+        """
+        statement = unit.financials.starting
+
+        if not BLANK_BETWEEN_TOP_LINES:
+            sheet.bb.current_row += 1
+
+        for line in statement.get_ordered():
+            if BLANK_BETWEEN_TOP_LINES:
+                sheet.bb.current_row += 1
+
+            self.chop_startbal_line(sheet=sheet,
+                                    column=column,
+                                    line=line,
+                                    set_labels=True)
+
+        sheet.bb.current_row += 1
+
+        return sheet
+
+    def chop_statement(self, *pargs, sheet, column, statement, set_labels=True):
+        """
+
+
+        LineChef.chop_statement() -> Worksheet
+
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``column`` must be a column number reference
+        --``statement`` must be an instance of Statement
+        --``set_labels`` must be a boolean; True will set labels for line
+
+        Method walks through Statement lines and delegates LineChef.chop_line()
+        to add them as dynamic links in Excel.
+
+        Method relies on sheet.bb.current_row being up-to-date.
+        """
+        if not BLANK_BETWEEN_TOP_LINES:
+            sheet.bb.current_row += 1
+
+        for line in statement.get_ordered():
+            if BLANK_BETWEEN_TOP_LINES:
+                sheet.bb.current_row += 1
+
+            self.chop_line(
+                sheet=sheet,
+                column=column,
+                line=line,
+                set_labels=set_labels)
+
+        if len(statement.get_ordered()) == 0:
+            sheet.bb.current_row += 1
+
+        return sheet
+
+    def chop_summary_line(self, *pargs, sheet, column, line, set_labels=True,
+                          indent=0):
+        """
+
+
+        LineChef.chop_summary_line() -> Worksheet
 
         --``sheet`` must be an instance of openpyxl Worksheet
         --``column`` must be a column number reference
@@ -205,7 +373,7 @@ class LineChef:
 
         Method walks through LineItems and their details and converts them to
         dynamic links in Excel cells.  Method adds consolidation and derivation
-        logic to cells.
+        logic to cells.  Specific logic for lines from summaries.
 
         Method relies on sheet.bb.current_row being up-to-date.
 
@@ -292,53 +460,19 @@ class LineChef:
 
         return sheet
 
-    def chop_statement(self, *pargs, sheet, column, statement, set_labels=True):
-        """
-
-
-        LineChef.chop_statement() -> Worksheet
-
-        --``sheet`` must be an instance of openpyxl Worksheet
-        --``column`` must be a column number reference
-        --``statement`` must be an instance of Statement
-        --``set_labels`` must be a boolean; True will set labels for line
-
-        Method walks through Statement lines and delegates LineChef.chop_line()
-        to add them as dynamic links in Excel.
-
-        Method relies on sheet.bb.current_row being up-to-date.
-        """
-        if not BLANK_BETWEEN_TOP_LINES:
-            sheet.bb.current_row += 1
-
-        for line in statement.get_ordered():
-            if BLANK_BETWEEN_TOP_LINES:
-                sheet.bb.current_row += 1
-
-            self.chop_line(
-                sheet=sheet,
-                column=column,
-                line=line,
-                set_labels=set_labels)
-
-        if len(statement.get_ordered()) == 0:
-            sheet.bb.current_row += 1
-
-        return sheet
-
     def chop_summary_statement(self, *pargs, sheet, column, statement, set_labels=True):
         """
 
 
-        LineChef.chop_statement() -> Worksheet
+        LineChef.chop_summary_statement() -> Worksheet
 
         --``sheet`` must be an instance of openpyxl Worksheet
         --``column`` must be a column number reference
         --``statement`` must be an instance of Statement
         --``set_labels`` must be a boolean; True will set labels for line
 
-        Method walks through Statement lines and delegates LineChef.chop_line()
-        to add them as dynamic links in Excel.
+        Method walks through summary Statement lines and delegates to
+        LineChef.chop_summary_line() to add them as dynamic links in Excel.
 
         Method relies on sheet.bb.current_row being up-to-date.
         """
@@ -357,113 +491,6 @@ class LineChef:
 
         if len(statement.get_ordered()) == 0:
             sheet.bb.current_row += 1
-
-        return sheet
-
-    def chop_startbal_line(self, *pargs, sheet, column, line, set_labels=True, indent=0):
-
-        details = line.get_ordered()
-        if details:
-            # Should have the header here instead
-            # sheet.bb.outline_level += 1
-            # self._group_lines(sheet)
-
-            sub_indent = indent + LineItem.TAB_WIDTH
-            detail_summation = ""
-
-            for detail in details:
-
-                # sheet.bb.current_row += 1
-
-                sheet.bb.outline_level += 1
-                self._group_lines(sheet)
-                sheet.bb.outline_level -= 1
-
-                self.chop_startbal_line(sheet=sheet,
-                                        column=column,
-                                        line=detail,
-                                        set_labels=set_labels,
-                                        indent=sub_indent)
-
-                link_template = formula_templates.ADD_COORDINATES
-
-                cos = detail.xl.get_coordinates()
-                link = link_template.format(coordinates=cos)
-                detail_summation += link
-            else:
-                # Should group all the details here
-                sheet.bb.current_row += 1
-
-                subtotal_cell = sheet.cell(column=column,
-                                           row=sheet.bb.current_row)
-                subtotal_cell.set_explicit_value(detail_summation,
-                                                 data_type=type_codes.FORMULA)
-
-                line.xl.detailed.ending = sheet.bb.current_row
-                line.xl.detailed.cell = subtotal_cell
-
-                self._group_lines(sheet)
-
-                if set_labels:
-                    label_column = None
-                    if not getattr(sheet.bb, field_names.PARAMETERS, None):
-                        label_column = 1
-
-                    label = indent * " " + line.tags.name + ": details"
-                    self._set_label(sheet=sheet,
-                                    label=label,
-                                    row=sheet.bb.current_row,
-                                    column=label_column)
-        else:
-            if line.xl.cell:
-                # here just link the current cell to the cell in line.xl.cell
-                line.xl.reference.source = line
-                self._add_reference(
-                    sheet=sheet,
-                    column=column,
-                    line=line,
-                    set_labels=set_labels,
-                    indent=indent)
-
-        if not line.xl.reference.source:
-            self._combine_segments(
-                sheet=sheet,
-                column=column,
-                line=line,
-                set_labels=set_labels,
-                indent=indent)
-
-    def chop_starting_balance(self, *pargs, sheet, column, unit, set_labels=True):
-        """
-
-
-        LineChef.chop_statement() -> Worksheet
-
-        --``sheet`` must be an instance of openpyxl Worksheet
-        --``column`` must be a column number reference
-        --``statement`` must be an instance of Statement
-        --``set_labels`` must be a boolean; True will set labels for line
-
-        Method walks through Statement lines and delegates LineChef.chop_line()
-        to add them as dynamic links in Excel.
-
-        Method relies on sheet.bb.current_row being up-to-date.
-        """
-        statement = unit.financials.starting
-
-        if not BLANK_BETWEEN_TOP_LINES:
-            sheet.bb.current_row += 1
-
-        for line in statement.get_ordered():
-            if BLANK_BETWEEN_TOP_LINES:
-                sheet.bb.current_row += 1
-
-            self.chop_startbal_line(sheet=sheet,
-                                    column=column,
-                                    line=line,
-                                    set_labels=True)
-
-        sheet.bb.current_row += 1
 
         return sheet
 
@@ -552,7 +579,6 @@ class LineChef:
                             self._set_label(sheet=sheet, label=label_line,
                                             row=sheet.bb.current_row)
 
-
                 self._group_lines(sheet)
 
                 # Move on to next row
@@ -593,7 +619,7 @@ class LineChef:
         """
 
 
-        LineChef._add_consolidation_logic() -> Worksheet
+        LineChef._add_consolidation_logic_summary() -> Worksheet
 
         --``sheet`` must be an instance of openpyxl Worksheet
         --``column`` must be a column number reference
@@ -602,14 +628,14 @@ class LineChef:
         --``indent`` is amount of indent
 
         Expects line.xl.consolidated.sources to include full range of pointers
-        to source lines on children.
+        to source lines in relevant time periods.
 
-        Always stuffs consolidation into the same number of rows.
-        Derive can still cause staircasing if the line picks up details in the
-        future that it doesn't have now.
+        Always stuffs consolidation into 12 rows, one per month.  Always prints
+        lines from January to December.
 
         Returns Worksheet with consolidation logic added as Excel dynamic links
         """
+        # use month names for all lines
         line_labels = calendar.month_name[1:].copy()
 
         if not line.xl.consolidated.sources:
@@ -644,7 +670,6 @@ class LineChef:
                     sub_indent = indent + LineItem.TAB_WIDTH
                     label_line = (sub_indent * " ") + temp_label
 
-                    # Can reverse sources for better performance.
                     if source_line:
                         source_cos = source_line.xl.get_coordinates()
                         link = link_template.format(coordinates=source_cos)
@@ -657,6 +682,8 @@ class LineChef:
                                                       data_type=
                                                       type_codes.FORMULA)
                     else:
+                        # if we don't have a value for this month, print a null
+                        # value as a placeholder
                         batch_cell.value = "--"
                         batch_cell.alignment = Alignment(horizontal='right')
 
