@@ -205,15 +205,17 @@ class SummaryBuilder:
         line, or will set the line reference to the period line.  Method works
         recursively.
         """
-        if summary_line._details:
-            for line in summary_line._details.values():
-                new_line = period_line.find_first(line.name)
-                self.get_line_summary(line, new_line, label=label)
-
         if summary_line.sum_over_time:
             summary_line.increment(period_line, consolidating=True,
                                    xl_label=label, override=True)
         else:
+            if summary_line._details:
+                for line in summary_line._details.values():
+                    new_line = period_line.find_first(line.name)
+                    self.get_line_summary(line, new_line, label=label)
+
+            summary_line.set_value(period_line.value, "SummaryBuilder",
+                                   override=True)
             summary_line.xl.reference.source = period_line
 
     def get_statement_summary(self, bu_bbid, start, end, statement_name):
