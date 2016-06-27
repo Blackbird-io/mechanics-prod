@@ -64,6 +64,7 @@ class SummaryBuilder:
     FUNCTIONS:
     get_balance_summary()    returns starting and ending balance summaries
     get_financials_summary() returns summary of all financials over an interval
+    get_line_summary()       summarizes a line over time
     get_statement_summary()  returns summary of a statement over an interval
     make_annual_summaries()  makes annual summaries and stores on time_line
     make_quarterly_summaries() makes quarterly summaries and stores on time_line
@@ -189,6 +190,32 @@ class SummaryBuilder:
 
         return fins_out
 
+    def get_line_summary(self, summary_line, period_line, label=None):
+        """
+
+
+        SummaryBuilder.get_line_summary() -> None
+
+        --``summary_line`` is a LineItem from the summary statement
+        --``period_line`` is the matching LineItem from a specific time period
+        --``label`` is the string label to apply to the summary line in Excel
+
+        Method summarizes a LineItem over time based on its "sum_over_time"
+        attribute.  Method will either increment the line with the period's
+        line, or will set the line reference to the period line.  Method works
+        recursively.
+        """
+        if summary_line._details:
+            for line in summary_line._details.values():
+                new_line = period_line.find_first(line.name)
+                self.get_line_summary(line, new_line, label=label)
+
+        if summary_line.sum_over_time and summary_line.consolidate:
+            summary_line.increment(period_line, consolidating=True,
+                                   xl_label=label)
+        else:
+            summary_line.xl.reference.source = period_line
+
     def get_statement_summary(self, bu_bbid, start, end, statement_name):
         """
 
@@ -233,8 +260,9 @@ class SummaryBuilder:
 
             statement = getattr(bu.financials, statement_name)
             label = calendar.month_name[period.end.month]
-            summary_statement.increment(statement, consolidating=True,
-                                        xl_label=label)
+            for line in summary_statement.get_ordered():
+                new_line = statement.find_first(line.name)
+                self.get_line_summary(line, new_line, label=label)
 
             if period.start <= end <= period.end:
                 break
@@ -265,7 +293,6 @@ class SummaryBuilder:
         model.summaries[self.ANNUAL_KEY] is model.summaries[12]
         True
         """
-
         # if bbid not provided, uses top-level business unit (company)
         if not bu_bbid:
             bu_bbid = self.time_line.current_period.content.id.bbid
