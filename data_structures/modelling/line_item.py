@@ -67,6 +67,7 @@ class LineItem(Statement):
     ====================  ======================================================
 
     DATA:
+    balance               bool; whether the line item should be balanced or summed
     consolidate           bool; whether or not to consolidate line item
     guide                 instance of Guide object
     hardcoded             bool; if True, set_value() or clear() will not operate
@@ -112,6 +113,7 @@ class LineItem(Statement):
         self.guide = Guide()
         self.log = []
         self.position = None
+        self._sum_over_time = True
         self._consolidate = True
         self._replica = False
         self._hardcoded = False
@@ -131,6 +133,19 @@ class LineItem(Statement):
     # out of the box. Otherwise, you might get a response that a line is "in"
     # a particular set that actually contains an instance with the
     # same value but very different details. 
+
+    @property
+    def sum_over_time(self):
+        """
+        Default value of sum_over_time is True.  If False, line.value will not
+        be summed over time and only the end point will be shown in summaries.
+        If True, line item will be summed over time for summaries.
+        """
+        return self._sum_over_time
+
+    @sum_over_time.setter
+    def sum_over_time(self, value):
+        self._sum_over_time = value
 
     @property
     def consolidate(self):
@@ -218,6 +233,7 @@ class LineItem(Statement):
         
         new_line.guide = copy.deepcopy(self.guide)
         new_line.log = self.log[:]
+        new_line._sum_over_time = self.sum_over_time
         new_line.set_consolidate(self._consolidate)
         new_line.set_hardcoded(self._hardcoded)
 
