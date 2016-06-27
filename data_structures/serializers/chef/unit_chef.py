@@ -317,9 +317,9 @@ class UnitChef:
             if statement is not None:
                 sheet.bb.outline_level = 0
                 if statement is unit.financials.ending:
-
                     statement_row = sheet.bb.current_row + 1
                     fins_dict["Starting Balance Sheet"] = statement_row
+
                     line_chef.chop_starting_balance(
                               sheet=sheet,
                               unit=unit,

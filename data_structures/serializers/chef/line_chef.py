@@ -220,15 +220,17 @@ class LineChef:
         details = line.get_ordered()
         if details:
             # Should have the header here instead
-            # sheet.bb.outline_level += 1
-            # self._group_lines(sheet)
+            sheet.bb.current_row += 1
+
+            sheet.bb.outline_level += 1
+            self._group_lines(sheet)
 
             sub_indent = indent + LineItem.TAB_WIDTH
             detail_summation = ""
 
             for detail in details:
 
-                # sheet.bb.current_row += 1
+                sheet.bb.current_row += 1
 
                 sheet.bb.outline_level += 1
                 self._group_lines(sheet)
@@ -269,6 +271,7 @@ class LineChef:
                                     label=label,
                                     row=sheet.bb.current_row,
                                     column=label_column)
+            sheet.bb.outline_level -= 1
         else:
             if line.xl.cell:
                 # here just link the current cell to the cell in line.xl.cell
