@@ -67,12 +67,12 @@ class LineItem(Statement):
     ====================  ======================================================
 
     DATA:
-    balance               bool; whether the line item should be balanced or summed
     consolidate           bool; whether or not to consolidate line item
     guide                 instance of Guide object
     hardcoded             bool; if True, set_value() or clear() will not operate
     log                   list of entries that modified local value
     value                 instance value
+    sum_over_time         bool; whether the line item should be balanced or summed
     xl                    instance of LineData record set
     
     FUNCTIONS:
@@ -243,7 +243,7 @@ class LineItem(Statement):
         return new_line
 
     def increment(self, matching_line, signature=None, consolidating=False,
-                  xl_label=None):
+                  xl_label=None, override=False):
         """
 
 
@@ -261,7 +261,8 @@ class LineItem(Statement):
             if matching_line._details:
                 Statement.increment(self, matching_line,
                                     consolidating=consolidating,
-                                    xl_label=xl_label)
+                                    xl_label=xl_label,
+                                    override=override)
                 # Use Statement method here because we are treating the matching
                 # line as a Statement too. We assume that its details represent
                 # all of its value data. Statement.increment() will copy those
@@ -276,7 +277,7 @@ class LineItem(Statement):
                 
                 self.set_value(new_value, signature)
             
-                if consolidating and self._consolidate is True:
+                if consolidating and (self._consolidate is True or override):
                     self.tags.inherit_from(matching_line.tags)
                     self._consolidated = True
                     self.xl.consolidated.sources.append(matching_line)
