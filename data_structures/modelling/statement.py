@@ -525,7 +525,8 @@ class Statement(Equalities, TagsMixIn):
         result = sorted(self._details.values(), key=lambda line: line.position)
         return result
 
-    def increment(self, matching_statement, consolidating=False, xl_label=None):
+    def increment(self, matching_statement, consolidating=False, xl_label=None,
+                  override=False):
         """
 
 
@@ -556,14 +557,14 @@ class Statement(Equalities, TagsMixIn):
             if own_line:
                 # Option A
                 own_line.increment(external_line, consolidating=consolidating,
-                                   xl_label=xl_label)
+                                   xl_label=xl_label, override=override)
 
             else:
                 # Option B
                 local_copy = external_line.copy()
                 # Dont enforce rules to track old line.replicate() method
 
-                if external_line.consolidate:
+                if external_line.consolidate or override:
                     if consolidating:
                         if external_line.value is not None:
                             if not local_copy._consolidated:
