@@ -213,9 +213,10 @@ class SummaryBuilder:
                 for line in summary_line._details.values():
                     new_line = period_line.find_first(line.name)
                     self.get_line_summary(line, new_line, label=label)
+            else:
+                summary_line.set_value(period_line.value, "SummaryBuilder",
+                                       override=True)
 
-            summary_line.set_value(period_line.value, "SummaryBuilder",
-                                   override=True)
             summary_line.xl.reference.source = period_line
 
     def get_statement_summary(self, bu_bbid, start, end, statement_name):
