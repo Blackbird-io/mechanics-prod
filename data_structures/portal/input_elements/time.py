@@ -88,16 +88,16 @@ class TimeInput(NumberInput):
         lo = datetime.time()
         hi = datetime.time(23,59,59,99999)
         if self.r_min:
-            lo_pieces = [int(x) for x in r_min.split(":")]
+            lo_pieces = [int(x) for x in self.r_min.split(":")]
             lo = datetime.time(*lo_pieces)
         if self.r_max:
-            hi_pieces = [int(x) for x in r_max.split(":")]
-            hi = datetime.time(*pieces)
+            hi_pieces = [int(x) for x in self.r_max.split(":")]
+            hi = datetime.time(*hi_pieces)
         entry_count = len(proposed_response)
         if entry_count < 1:
             result = False
         else:
-            if entry_count > 1 and self.user_can_add == False:
+            if entry_count > 1 and self.user_can_add==False:
                 result = False            
         if result:            
             for entry in proposed_response:
