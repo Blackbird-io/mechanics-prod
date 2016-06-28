@@ -97,9 +97,9 @@ class LineItem(Statement):
     SIGNATURE_FOR_REPLICA_MANAGEMENT = "Bringing down value."
     SIGNATURE_FOR_INCREMENTATION = "Incremented "
 
-    SUMMARY_PREFIX = "total "
+    SUMMARY_PREFIX = ""  # "total "
 
-    TAB_WIDTH = 2
+    TAB_WIDTH = 3
     
     def __init__(self, name=None, value=None):
 
