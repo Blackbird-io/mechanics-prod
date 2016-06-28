@@ -578,7 +578,7 @@ class LineChef:
         return sheet
 
     def _add_consolidation_logic_summary(self, *pargs, sheet, column, line,
-                                 set_labels=True, indent=0):
+                                         set_labels=True, indent=0):
         """
 
 
@@ -927,7 +927,6 @@ class LineChef:
         """
         if not line.xl.reference.source:
             pass
-
         else:
             sheet.bb.current_row += 1
             cell = sheet.cell(column=column, row=sheet.bb.current_row)
