@@ -254,11 +254,6 @@ class UnitChef:
         sheet.bb.outline_level = 0
         group_lines(sheet, row=selector_row)
 
-        # 2.6 add valuation tab, if any exists for unit
-        sheet.bb.outline_level = 1
-        if unit.financials.has_valuation:
-            self._add_valuation_tab(book, unit, index=before_kids)
-
         return sheet
 
     def chop_multi_valuation(self, *pargs, book, unit):
