@@ -254,12 +254,32 @@ class UnitChef:
         sheet.bb.outline_level = 0
         group_lines(sheet, row=selector_row)
 
+        return sheet
+
+    def chop_multi_valuation(self, *pargs, book, unit):
+        """
+
+
+        UnitChef.chop_multi() -> Worksheet
+
+        --``book`` must be a Workbook
+        --``unit`` must be an instance of BusinessUnit
+
+        Method recursively walks through ``unit`` and components and chops them
+        into Excel format.  Method also spreads financials, parameters, and
+        life of the unit.
+        """
+
+        # 1.   Chop the children
+        before_kids = len(book.worksheets)
+        children = unit.components.get_ordered()
+
+        for child in children:
+            self.chop_multi(book=book, unit=child)
+
         # 2.6 add valuation tab, if any exists for unit
-        sheet.bb.outline_level = 1
         if unit.financials.has_valuation:
             self._add_valuation_tab(book, unit, index=before_kids)
-
-        return sheet
 
     def chop_unit(self, *pargs, book, unit):
         """
@@ -726,6 +746,7 @@ class UnitChef:
         sheet = self._create_unit_sheet(book=book, unit=unit,
                                         index=index, name=name,
                                         current_only=True)
+
         sheet.bb.outline_level += 1
         self._add_unit_params(sheet=sheet, unit=unit)
 
