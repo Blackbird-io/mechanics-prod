@@ -34,6 +34,8 @@ ModelChef             chop Blackbird Engine model into a dynamic Excel workbook
 # Imports
 import openpyxl as xlio
 
+import bb_settings
+
 from .bb_workbook import BB_Workbook as Workbook
 
 from . import chef_settings
@@ -107,7 +109,8 @@ class ModelChef:
         
         company_sheet = unit_chef.chop_multi(book=book, unit=company)
 
-        self._add_annual_summary(book, model)
+        if bb_settings.MAKE_ANNUAL_SUMMARIES:
+            self._add_annual_summary(book, model)
 
         return book
 
