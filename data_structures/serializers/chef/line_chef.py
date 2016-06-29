@@ -145,7 +145,8 @@ class LineChef:
 
                 link_template = formula_templates.ADD_COORDINATES
 
-                cos = detail.xl.get_coordinates()
+                include = detail.xl.cell.parent is not sheet
+                cos = detail.xl.get_coordinates(include_sheet=include)
                 link = link_template.format(coordinates=cos)
                 detail_summation += link
             else:
@@ -219,7 +220,8 @@ class LineChef:
 
                 link_template = formula_templates.ADD_COORDINATES
 
-                cos = detail.xl.get_coordinates()
+                include = detail.xl.cell.parent is not sheet
+                cos = detail.xl.get_coordinates(include_sheet=include)
                 link = link_template.format(coordinates=cos)
                 detail_summation += link
             else:
@@ -388,7 +390,8 @@ class LineChef:
 
                 link_template = formula_templates.ADD_COORDINATES
 
-                cos = detail.xl.get_coordinates()
+                include = detail.xl.cell.parent is not sheet
+                cos = detail.xl.get_coordinates(include_sheet=include)
                 link = link_template.format(coordinates=cos)
                 detail_summation += link
             else:
@@ -523,7 +526,8 @@ class LineChef:
                                 sub_indent = indent + LineItem.TAB_WIDTH
                                 label_line = (sub_indent * " ") + temp_label
                             # Can reverse sources for better performance.
-                            source_cos = source_line.xl.get_coordinates()
+                            include = source_line.xl.cell.parent is not sheet
+                            source_cos = source_line.xl.get_coordinates(include_sheet=include)
                             link = link_template.format(coordinates=source_cos)
                             batch_summation += link
                             count += 1
@@ -634,7 +638,8 @@ class LineChef:
                     label_line = (sub_indent * " ") + temp_label
 
                     if source_line:
-                        source_cos = source_line.xl.get_coordinates()
+                        include = source_line.xl.cell.parent is not sheet
+                        source_cos = source_line.xl.get_coordinates(include_sheet=include)
                         link = link_template.format(coordinates=source_cos)
                         batch_summation += link
 
@@ -827,7 +832,8 @@ class LineChef:
         line_coordinates = dict()
         for k, obj in driver_data.references.items():
             try:
-                line_coordinates[k] = obj.xl.get_coordinates()
+                include = obj.xl.cell.parent is not sheet
+                line_coordinates[k] = obj.xl.get_coordinates(include_sheet=include)
             except ExcelPrepError:
                 print(obj)
                 print("Name:     ", driver_data.name)
@@ -940,7 +946,8 @@ class LineChef:
             cell = sheet.cell(column=column, row=sheet.bb.current_row)
 
             ref_cell = line.xl.reference.source.xl.cell
-            excel_str = "="+line.xl.reference.source.xl.get_coordinates()
+            include = ref_cell.parent is not sheet
+            excel_str = "="+line.xl.reference.source.xl.get_coordinates(include_sheet=include)
 
             cell.set_explicit_value(excel_str, data_type=type_codes.FORMULA)
 
