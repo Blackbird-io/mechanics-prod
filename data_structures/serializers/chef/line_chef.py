@@ -826,7 +826,14 @@ class LineChef:
         #  coordinates)
         line_coordinates = dict()
         for k, obj in driver_data.references.items():
-            line_coordinates[k] = obj.xl.get_coordinates()
+            try:
+                line_coordinates[k] = obj.xl.get_coordinates()
+            except ExcelPrepError:
+                print(obj)
+                print("Name:     ", driver_data.name)
+                print("Template: ", driver_data.formula)
+
+                raise ExcelPrepError
 
         materials = dict()
         materials["lines"] = line_coordinates
@@ -853,6 +860,7 @@ class LineChef:
             except Exception as X:
                 print("Name:     ", driver_data.name)
                 print("Template: ", driver_data.formula)
+
                 raise ExcelPrepError
 
             calc_cell = sheet.cell(column=period_column,
