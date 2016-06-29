@@ -256,30 +256,32 @@ class UnitChef:
 
         return sheet
 
-    def chop_multi_valuation(self, *pargs, book, unit):
+    def chop_multi_valuation(self, *pargs, book, unit, index, recur=False):
         """
 
 
-        UnitChef.chop_multi() -> Worksheet
+        UnitChef.chop_multi_valuation() -> Worksheet
 
         --``book`` must be a Workbook
         --``unit`` must be an instance of BusinessUnit
 
-        Method recursively walks through ``unit`` and components and chops them
-        into Excel format.  Method also spreads financials, parameters, and
-        life of the unit.
+        Method recursively walks through ``unit`` and components and will chop
+        their valuation if any exists.
         """
 
         # 1.   Chop the children
-        before_kids = len(book.worksheets)
-        children = unit.components.get_ordered()
+        if recur:
+            before_kids = len(book.worksheets)
+            children = unit.components.get_ordered()
 
-        for child in children:
-            self.chop_multi(book=book, unit=child)
+            for child in children:
+                index = book.get_index(child.xl.sheet) - 1
+                self.chop_multi_valuation(book=book, unit=child,
+                                          index=index)
 
         # 2.6 add valuation tab, if any exists for unit
         if unit.financials.has_valuation:
-            self._add_valuation_tab(book, unit, index=before_kids)
+            self._add_valuation_tab(book, unit, index=index)
 
     def chop_unit(self, *pargs, book, unit):
         """

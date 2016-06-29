@@ -112,7 +112,8 @@ class ModelChef:
         if bb_settings.MAKE_ANNUAL_SUMMARIES:
             self._add_annual_summary(book, model)
 
-        unit_chef.chop_multi_valuation(book=book, unit=company)
+        unit_chef.chop_multi_valuation(book=book, unit=company, index=2,
+                                       recur=False)
 
         return book
 
