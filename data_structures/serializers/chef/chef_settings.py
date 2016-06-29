@@ -60,7 +60,7 @@ PARAM_DECIMAL_POINTS = 2
 # TOGGLES
 COLLAPSE_ROWS = False
 SCENARIO_SELECTORS = False
-FILTER_PARAMETERS = True
+FILTER_PARAMETERS = False
 
 # DEFAULT TEXT
 
@@ -76,3 +76,8 @@ QCOUNT_LABEL = 'Conversation Length:'
 ESTIMATED_LABEL = 'ESTIMATED VALUES'
 DISCLAIMER_TEXT = 'Blackbird uses classic value analysis coupled with proprietary software to estimate the financial performance of each business member. In certain cases, Blackbird software may make assumptions about a company that turn out to be False. You should carefully check each of these numbers prior to entering into any transaction.'
 IMAGE_PATH = os.path.join(os.path.dirname(__file__), 'static', 'blackbird_engine_2X_410x120.png')
+
+# tab colors
+SCENARIO_TAB_COLOR = '4f81bd'
+SUMMARY_TAB_COLOR = '000000'
+VALUATION_TAB_COLOR = '556a2c'

@@ -29,7 +29,7 @@ UnitChef              class containing methods to chop BusinessUnits into
 import openpyxl as xlio
 
 from ._chef_tools import add_scenario_selector, group_lines
-from .chef_settings import SCENARIO_SELECTORS
+from .chef_settings import SCENARIO_SELECTORS, VALUATION_TAB_COLOR
 from .cell_styles import CellStyles
 from .data_management import LineData
 from .data_types import TypeCodes
@@ -787,6 +787,8 @@ class UnitChef:
 
         sheet.bb.outline_level = 0
         group_lines(sheet, row=selector_row)
+
+        sheet.sheet_properties.tabColor = VALUATION_TAB_COLOR
 
         return sheet
 

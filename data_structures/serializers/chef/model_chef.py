@@ -248,6 +248,8 @@ class ModelChef:
                                         ed_row=sheet.bb.current_row,
                                         border_style='thin')
 
+        sheet.sheet_properties.tabColor = chef_settings.SUMMARY_TAB_COLOR
+
     def _build_foundation(self, model):
         """
 
@@ -491,6 +493,8 @@ class ModelChef:
             sheet_style.set_column_width(my_tab, c)
 
         sheet_style.style_sheet(my_tab)
+
+        my_tab.sheet_properties.tabColor = chef_settings.SCENARIO_TAB_COLOR
 
         return my_tab
 
