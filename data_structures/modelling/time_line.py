@@ -268,16 +268,12 @@ class TimeLine(dict):
         # each snapshot separately and then connecting them
 
         if bb_settings.MAKE_ANNUAL_SUMMARIES:
+            # if len(self.summary_builder.summaries) > 0:
+            #     self.summary_builder.update_summaries()
+            # else:
             # generate or re-generate annual and quarterly summaries
             self.summary_builder.make_annual_summaries()
             self.summary_builder.make_quarterly_summaries()
-
-            ignore = [3, 12, self.summary_builder.QUARTERLY_KEY,
-                      self.summary_builder.ANNUAL_KEY]
-            intervals = set(self.summary_builder.summaries.keys()) - set(ignore)
-            if intervals:
-                for i in intervals:
-                    self.summary_builder.make_summaries(i)
 
     def extrapolate_all(self, seed=None):
         """

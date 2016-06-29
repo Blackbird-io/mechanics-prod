@@ -277,7 +277,7 @@ class UnitChef:
             for child in children:
                 index = book.get_index(child.xl.sheet) - 1
                 self.chop_multi_valuation(book=book, unit=child,
-                                          index=index)
+                                          index=index, recur=recur)
 
         # 2.6 add valuation tab, if any exists for unit
         if unit.financials.has_valuation:
@@ -740,7 +740,7 @@ class UnitChef:
         if not index:
             index = len(book.worksheets)
 
-        if index == 2:
+        if index == 1:
             name = "Valuation"
         else:
             name = unit.name + ' val'
