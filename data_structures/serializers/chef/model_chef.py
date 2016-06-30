@@ -367,6 +367,8 @@ class ModelChef:
                                    wrap_text=True)
         sheet.merge_cells('C19:G21')
 
+        sheet.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
+
     def _create_scenarios_tab(self, book, model):
         """
 
@@ -693,5 +695,7 @@ class ModelChef:
                                   book.scenario_names)
 
         sheet_style.style_sheet(my_tab)
+
+        my_tab.sheet_properties.tabColor = chef_settings.TIMELINE_TAB_COLOR
 
         return my_tab

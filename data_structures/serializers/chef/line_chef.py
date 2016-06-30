@@ -774,6 +774,15 @@ class LineChef:
 
             driver_data.rows = new_rows
 
+        #     if not sheet.bb.params_dict:
+        #         sheet.bb.params_dict[line.id.bbid] = new_rows
+        #
+        # use_rows = driver_data.rows
+        # if sheet.bb.params_dict:
+        #     use_rows = sheet.bb.params_dict[line.id.bbid]
+        #
+        # for row_data in sorted(use_rows, key=lambda x: x[field_names.LABELS]):
+
         for row_data in sorted(driver_data.rows,
                                key=lambda x: x[field_names.LABELS]):
 

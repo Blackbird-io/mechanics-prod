@@ -55,5 +55,5 @@ class TabNames:
     n/a
     ====================  ======================================================
     """
-    SCENARIOS = "Scenarios"
+    SCENARIOS = "Drivers"
     TIME_LINE = "Timeline"
