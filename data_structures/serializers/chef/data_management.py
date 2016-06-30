@@ -410,7 +410,7 @@ class SheetData:
         self.sheet = None
         self.area_names = [field_names.GENERAL]
         self.scenario_selector = None
-        # Number of rows that consolidation area will take up
+        self.line_directory = dict()
 
     def add_area(self, area_name, overwrite=False):
         """

@@ -130,8 +130,6 @@ class BusinessUnit(HistoryLine, Equalities, TagsMixIn):
 
         self.filled = False
 
-        self.set_financials(fins)
-
         self.guide = Guide()
         self.interview = InterviewTracker()
         self._stage = None
@@ -153,6 +151,8 @@ class BusinessUnit(HistoryLine, Equalities, TagsMixIn):
         self.valuation = CompanyValue()
 
         self.xl = xl_mgmt.UnitData()
+
+        self.set_financials(fins)
 
     @property
     def stage(self):
@@ -566,6 +566,9 @@ class BusinessUnit(HistoryLine, Equalities, TagsMixIn):
         """
         if fins is None:
             fins = Financials()
+
+        if self.id.namespace:
+            fins.register(namespace=self.id.bbid)
 
         self.financials = fins
 
@@ -1159,6 +1162,7 @@ class BusinessUnit(HistoryLine, Equalities, TagsMixIn):
         """
         self.id.set_namespace(namespace)
         self.id.assign(self.tags.name)
+        self.financials.register(namespace=namespace)
         # This unit now has an id in the namespace. Now pass our bbid down as
         # the namespace for all downstream components.
         if recur:

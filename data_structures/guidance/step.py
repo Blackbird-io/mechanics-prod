@@ -35,6 +35,7 @@ from data_structures.guidance.guide import Guide
 from data_structures.system.print_as_line import PrintAsLine
 from data_structures.system.relationships import Relationships
 from data_structures.system.tags_mixin import TagsMixIn
+from data_structures.system.bbid import ID
 
 
 
@@ -72,15 +73,13 @@ class Step(PrintAsLine, TagsMixIn):
 
         self.guide = Guide(priority, quality)
         self.relationships = Relationships(self)
+        self.id = ID()
 
     def pre_format(self, **kargs):
         #custom formatting logic
         if self.tags.name:
             kargs["name"] = self.tags.name
         self.formatted = printing_tools.format_completed(self, **kargs)
-        
-        
 
-
-
-    
+    def register(self, namespace):
+        self.id.set_namespace(namespace)

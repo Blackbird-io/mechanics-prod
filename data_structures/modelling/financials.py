@@ -29,11 +29,13 @@ Financials            a StatementBundle with income, cash, balance and others.
 import bb_settings
 import copy
 
-from .statement import  Statement
+from .statement import Statement
 
 from .statements import Overview, Income, CashFlow, BalanceSheet
 from .statement_bundle import StatementBundle
 from .equalities import Equalities
+
+from data_structures.system.bbid import ID
 
 
 
@@ -67,6 +69,8 @@ class Financials(StatementBundle):
     ====================  ======================================================
     """
     ORDER = ("overview", "income", "cash", "ending", "ledger")
+    FULL_ORDER = ("overview", "income", "cash", "starting", "ending", "ledger",
+                  "valuation")
     # tuple for immutability
     
     def __init__(self):
@@ -77,6 +81,7 @@ class Financials(StatementBundle):
         self.starting = BalanceSheet("Starting Balance Sheet")
         self.ending = BalanceSheet("Ending Balance Sheet")
         self.ledger = None
+        self.id = ID()  # does not get its own bbid, just holds namespace
 
     @property
     def has_valuation(self):
@@ -151,4 +156,20 @@ class Financials(StatementBundle):
         del self.ORDER
 
         return new_instance
-    
+
+    def register(self, namespace):
+        """
+
+
+        Financials.register() -> None
+
+        --``namespace`` is the namespace to assign to instance
+
+        Method sets namespace of instance, does not assign an actual ID.
+        Registers statements on instance.
+        """
+        self.id.set_namespace(self.id.namespace)
+
+        for statement in self.full_ordered:
+            if statement:
+                statement.register(self.id.namespace)

@@ -35,6 +35,7 @@ import tools.for_printing as printing_tools
 
 from data_structures.guidance.guide import Guide
 from data_structures.serializers.chef import data_management as xl_mgmt
+from data_structures.system.bbid import ID
 
 from .statement import Statement
 
@@ -51,7 +52,7 @@ class LineItem(Statement):
     A LineItem is a Statement that can have a value and a position.
 
     A LineItem can have value in two ways. First, an instance can define
-    local value. A local value is written directly to that instance via
+     local value. A local value is written directly to that instance via
     set_value() at some point. The instance log tracks any changes to local
     value.
 
@@ -117,6 +118,7 @@ class LineItem(Statement):
         self._consolidate = True
         self._replica = False
         self._hardcoded = False
+        self.id = ID()
 
         if value is not None:
             # BU.consolidate() will NOT increment items with value==None. On the
@@ -236,7 +238,7 @@ class LineItem(Statement):
         new_line._sum_over_time = self.sum_over_time
         new_line.set_consolidate(self._consolidate)
         new_line.set_hardcoded(self._hardcoded)
-
+        new_line.id = copy.copy(self.id)
         new_line.xl = xl_mgmt.LineData()
         new_line.xl.number_format = self.xl.number_format
 
@@ -320,6 +322,23 @@ class LineItem(Statement):
         else:
             # this part should only live in LineItem since statements don't have xl data
             self.xl.reference.source = matching_line
+
+    def register(self, namespace):
+        """
+
+
+        LineItem.register() -> None
+
+        --``namespace`` is the namespace to assign to instance
+
+        Method sets namespace of instance and assigns BBID.  Method recursively
+        registers components.
+        """
+        self.id.set_namespace(namespace)
+        self.id.assign(self.name)
+
+        for line in self.get_ordered():
+            line.register(namespace=self.id.namespace)
 
     def set_consolidate(self, val):
         """
@@ -512,8 +531,9 @@ class LineItem(Statement):
         # Replicas don't have any details of their own. Can't run .clear() here
         # because instance and replica initially point to the same details dict.
         replica._replica = True
-
         replica.position = 0
+        replica.register(namespace=self.id.namespace)
+
         self._details[replica.tags.name] = replica
         # Add replica in first position.
 

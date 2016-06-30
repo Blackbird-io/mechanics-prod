@@ -34,6 +34,8 @@ import bb_settings
 from data_structures.system.relationships import Relationships
 from data_structures.system.tags import Tags
 from data_structures.system.tags_mixin import TagsMixIn
+from data_structures.system.bbid import ID
+
 from .equalities import Equalities
 
 
@@ -122,6 +124,7 @@ class Statement(Equalities, TagsMixIn):
             raise error
 
         self.POSITION_SPACING = spacing
+        self.id = ID() # does not get its own bbid, just holds namespace
 
     def __eq__(self, comparator, trace=False, tab_width=4):
         """
@@ -600,6 +603,23 @@ class Statement(Equalities, TagsMixIn):
             oline = matching_statement.find_first(line.name)
             line.link_to(oline)
 
+    def register(self, namespace):
+        """
+
+
+        Statement.register() -> None
+
+        --``namespace`` is the namespace to assign to instance
+
+        Method sets namespace of instance and assigns BBID.  Method recursively
+        registers components.
+        """
+        self.id.set_namespace(namespace)
+        self.id.assign(self.name)
+
+        for line in self.get_ordered():
+            line.register(namespace=self.id.namespace)
+
     def reset(self):
         """
 
@@ -653,6 +673,8 @@ class Statement(Equalities, TagsMixIn):
         Set instance as line parent, add line to details.
         """
         line.relationships.set_parent(self)
+        line.register(namespace=self.id.namespace)
+
         self._details[line.tags.name] = line
 
     def _inspect_line_for_insertion(self, line):

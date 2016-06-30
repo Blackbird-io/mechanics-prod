@@ -95,6 +95,7 @@ class TimeLine(dict):
         self.master = None
         self.parameters = Parameters()
         self.summary_builder = SummaryBuilder(self)
+        self.has_been_extrapolated = False
 
     @property
     def current_period(self):
@@ -268,12 +269,14 @@ class TimeLine(dict):
         # each snapshot separately and then connecting them
 
         if bb_settings.MAKE_ANNUAL_SUMMARIES:
-            if len(self.summary_builder.summaries) > 0:
-                self.summary_builder.update_summaries()
-            else:
-                # generate or re-generate annual and quarterly summaries
-                self.summary_builder.make_annual_summaries()
-                self.summary_builder.make_quarterly_summaries()
+            # if len(self.summary_builder.summaries) > 0:
+            #     self.summary_builder.update_summaries()
+            # else:
+            # generate or re-generate annual and quarterly summaries
+            self.summary_builder.make_annual_summaries()
+            self.summary_builder.make_quarterly_summaries()
+
+        self.has_been_extrapolated = True
 
     def extrapolate_all(self, seed=None):
         """

@@ -179,6 +179,10 @@ class LineChef:
 
         cell_styles.format_line(line)
 
+        # for row alignment
+        if line.id.bbid not in sheet.bb.line_directory.keys():
+            sheet.bb.line_directory[line.id.bbid] = line.xl
+
         return sheet
 
     def chop_startbal_line(self, *pargs, sheet, column, line, set_labels=True,
@@ -265,6 +269,10 @@ class LineChef:
                 line=line,
                 set_labels=set_labels,
                 indent=indent)
+
+        # for row alignment
+        if line.id.bbid not in sheet.bb.line_directory.keys():
+            sheet.bb.line_directory[line.id.bbid] = line.xl
 
     def chop_starting_balance(self, *pargs, sheet, column, unit,
                               set_labels=True):
@@ -424,6 +432,10 @@ class LineChef:
                 indent=indent)
 
         cell_styles.format_line(line)
+
+        # for row alignment
+        if line.id.bbid not in sheet.bb.line_directory.keys():
+            sheet.bb.line_directory[line.id.bbid] = line.xl
 
         return sheet
 
@@ -774,15 +786,6 @@ class LineChef:
 
             driver_data.rows = new_rows
 
-        #     if not sheet.bb.params_dict:
-        #         sheet.bb.params_dict[line.id.bbid] = new_rows
-        #
-        # use_rows = driver_data.rows
-        # if sheet.bb.params_dict:
-        #     use_rows = sheet.bb.params_dict[line.id.bbid]
-        #
-        # for row_data in sorted(use_rows, key=lambda x: x[field_names.LABELS]):
-
         for row_data in sorted(driver_data.rows,
                                key=lambda x: x[field_names.LABELS]):
 
@@ -1082,8 +1085,8 @@ class LineChef:
                 c = """
                 Something is wrong with our alignment. We are trying to
                 write a parameter to an existing row with a different label."""
-
-                raise ExcelPrepError(c)
+                pass
+                # raise ExcelPrepError(c)
 
                 # Check to make sure we are writing to the right row; if the
                 # label doesn't match, we are in trouble.
