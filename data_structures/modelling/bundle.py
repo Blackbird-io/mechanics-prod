@@ -83,13 +83,30 @@ class Bundle:
         **read-only property**
 
 
-        Return list of attribute values for all names in instance.ORDERED.
+        Return list of attribute values for all names in instance.ORDER.
         """
         result = []
         for name in self.ORDER:
             statement = getattr(self, name)
             result.append(statement)
         #
+        return result
+
+    @property
+    def full_ordered(self):
+        """
+
+
+        **read-only property**
+
+
+        Return list of attribute values for all names in instance.FULL_ORDER.
+        """
+        result = []
+        for name in self.FULL_ORDER:
+            statement = getattr(self, name)
+            result.append(statement)
+
         return result
 
     def copy(self):
