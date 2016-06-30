@@ -81,3 +81,6 @@ IMAGE_PATH = os.path.join(os.path.dirname(__file__), 'static', 'blackbird_engine
 SCENARIO_TAB_COLOR = '4f81bd'
 SUMMARY_TAB_COLOR = '000000'
 VALUATION_TAB_COLOR = '556a2c'
+COVER_TAB_COLOR = 'ffffff'
+TIMELINE_TAB_COLOR = 'cccccc'
+
