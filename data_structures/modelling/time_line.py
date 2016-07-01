@@ -261,6 +261,14 @@ class TimeLine(dict):
         """
         if seed is None:
             seed = self.current_period
+
+        seed.content.reset_financials()
+        seed.content.fill_out()
+
+        if seed.past.content:
+            seed.past.content.reset_financials()
+            seed.past.content.fill_out()
+
         seed_date = seed.end
 
         past, present, future = self.get_segments(seed_date)

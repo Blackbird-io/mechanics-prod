@@ -436,8 +436,11 @@ class SummaryBuilder:
 
         try:
             period = self.time_line.find_period(start)
+            if period is self.time_line.current_period:
+                raise KeyError
         except KeyError:
-            period = self.time_line[min(self.time_line.keys())]
+            period = self.time_line[max([min(self.time_line.keys()),
+                                         self.time_line.current_period.end])]
 
         period_found = False
         new_start = None
