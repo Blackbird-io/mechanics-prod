@@ -201,22 +201,16 @@ def check_alignment(line):
 
     if check_data:
         if check_data.cell.row != cell.row:
-            import pdb
-            pdb.set_trace()
-        # if check_data.cell.row != cell.row:
-        #     c = ''
-        #     print(line)
-        #     print(cell)
-        #     print("Correct row: %s" % check_data.cell.row)
-        #     print("Current row: %s" % cell.row)
-        #
-        #     c = 'Misalignment!  This line should not be written to ' \
-        #         'the current row.'
-        #
-        #     import pdb
-        #     pdb.set_trace()
-        #
-        #     raise ExcelPrepError(c)
+            c = ''
+            print(line)
+            print(cell)
+            print("Correct row: %s" % check_data.cell.row)
+            print("Current row: %s" % cell.row)
+
+            c = 'Misalignment!  This line should not be written to ' \
+                'the current row.'
+
+            raise ExcelPrepError(c)
 
 
 def check_filename_ext(filename, ext):

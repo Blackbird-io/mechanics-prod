@@ -1077,9 +1077,6 @@ class LineChef:
                 Something is wrong with our alignment. We are trying to
                 write a parameter to an existing row with a different label."""
 
-                import pdb
-                pdb.set_trace()
-
                 raise ExcelPrepError(c)
                 # Check to make sure we are writing to the right row; if the
                 # label doesn't match, we are in trouble.
