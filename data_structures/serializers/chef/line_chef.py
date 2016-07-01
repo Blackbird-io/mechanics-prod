@@ -38,16 +38,17 @@ from openpyxl.styles import Alignment
 
 from data_structures.modelling.line_item import LineItem
 
-from ._chef_tools import group_lines
+from ._chef_tools import group_lines, check_alignment, set_param_rows, \
+    get_formula_steps
 from .cell_styles import CellStyles
 from .chef_settings import COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING, \
-                           COMMENT_CUSTOM, BLANK_BETWEEN_TOP_LINES, \
-                           FILTER_PARAMETERS
+                           COMMENT_CUSTOM, BLANK_BETWEEN_TOP_LINES
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
 
 from bb_exceptions import ExcelPrepError
+
 
 
 
@@ -84,7 +85,8 @@ class LineChef:
     ====================  =====================================================
     """
 
-    def chop_line(self, *pargs, sheet, column, line, set_labels=True, indent=0):
+    def chop_line(self, *pargs, sheet, column, line, set_labels=True, indent=0,
+                  check=True):
         """
 
 
@@ -141,7 +143,8 @@ class LineChef:
                     column=column,
                     line=detail,
                     set_labels=set_labels,
-                    indent=sub_indent)
+                    indent=sub_indent,
+                    check=check)
 
                 link_template = formula_templates.ADD_COORDINATES
 
@@ -180,6 +183,9 @@ class LineChef:
         cell_styles.format_line(line)
 
         # for row alignment
+        if check:
+            check_alignment(line)
+
         if line.id.bbid not in sheet.bb.line_directory.keys():
             sheet.bb.line_directory[line.id.bbid] = line.xl
 
@@ -261,18 +267,13 @@ class LineChef:
                     line=line,
                     set_labels=set_labels,
                     indent=indent)
-
-        if not line.xl.reference.source:
-            self._combine_segments(
-                sheet=sheet,
-                column=column,
-                line=line,
-                set_labels=set_labels,
-                indent=indent)
-
-        # for row alignment
-        if line.id.bbid not in sheet.bb.line_directory.keys():
-            sheet.bb.line_directory[line.id.bbid] = line.xl
+            else:
+                self._combine_segments(
+                    sheet=sheet,
+                    column=column,
+                    line=line,
+                    set_labels=set_labels,
+                    indent=indent)
 
     def chop_starting_balance(self, *pargs, sheet, column, unit,
                               set_labels=True):
@@ -329,6 +330,7 @@ class LineChef:
         if not BLANK_BETWEEN_TOP_LINES:
             sheet.bb.current_row += 1
 
+        check = statement.name != 'ending balance sheet'
         for line in statement.get_ordered():
             if BLANK_BETWEEN_TOP_LINES:
                 sheet.bb.current_row += 1
@@ -337,7 +339,8 @@ class LineChef:
                 sheet=sheet,
                 column=column,
                 line=line,
-                set_labels=set_labels)
+                set_labels=set_labels,
+                check=check)
 
         if len(statement.get_ordered()) == 0:
             sheet.bb.current_row += 1
@@ -415,8 +418,6 @@ class LineChef:
                 line.xl.detailed.cell = subtotal_cell
                 line.xl.cell = subtotal_cell
 
-                # self._group_lines(sheet)
-
                 if set_labels:
                     label = indent*" " + line.tags.name
                     self._set_label(sheet=sheet,
@@ -432,10 +433,6 @@ class LineChef:
                 indent=indent)
 
         cell_styles.format_line(line)
-
-        # for row alignment
-        if line.id.bbid not in sheet.bb.line_directory.keys():
-            sheet.bb.line_directory[line.id.bbid] = line.xl
 
         return sheet
 
@@ -696,6 +693,7 @@ class LineChef:
             if set_labels:
                 label = line.tags.name
                 label = ((indent-LineItem.TAB_WIDTH) * " ") + label
+
                 self._set_label(sheet=sheet, label=label,
                                 row=sheet.bb.current_row)
 
@@ -724,6 +722,7 @@ class LineChef:
         if not line.xl.derived.calculations:
             pass
         else:
+            set_param_rows(line, sheet)
             sheet.bb.outline_level += 1
             for data_cluster in line.xl.derived.calculations:
 
@@ -766,25 +765,6 @@ class LineChef:
 
         label_column = sheet.bb.parameters.columns.get_position(field_names.LABELS)
         period_column = column
-
-        if FILTER_PARAMETERS:
-            # get params to keep
-            params_keep = []
-            for step in driver_data.formula.values():
-                temp_step = [m.start() for m in re.finditer('parameters\[*', step)]
-
-                for idx in temp_step:
-                    jnk = step[idx:]
-                    idx_end = jnk.find(']')+idx
-                    params_keep.append(step[idx+11:idx_end])
-
-            # clean driver_data
-            new_rows = []
-            for item in driver_data.rows:
-                if item['labels'] in params_keep:
-                    new_rows.append(item)
-
-            driver_data.rows = new_rows
 
         for row_data in sorted(driver_data.rows,
                                key=lambda x: x[field_names.LABELS]):
@@ -870,8 +850,16 @@ class LineChef:
 
         n_items = len(driver_data.formula.items())
         count = 0
-        for key, template in driver_data.formula.items():
+
+        formula_steps = get_formula_steps(driver_data, line, sheet)
+        for key in formula_steps:
             count += 1
+
+            try:
+                template = driver_data.formula[key]
+            except KeyError:
+                sheet.bb.current_row += 1
+                continue
 
             try:
                 formula = template.format(**materials)
@@ -936,7 +924,7 @@ class LineChef:
         return sheet
 
     def _add_reference(self, *pargs, sheet, column, line,
-                              set_labels=True, indent=0):
+                              set_labels=True, indent=0, update_cell=True):
         """
 
 
@@ -966,8 +954,10 @@ class LineChef:
             label = indent*" " + line.tags.name
 
             line.xl.ending = sheet.bb.current_row
-            line.xl.cell = cell
             line.xl.reference.cell = ref_cell
+
+            if update_cell:
+                line.xl.cell = cell
 
             if set_labels:
                 self._set_label(label=label, sheet=sheet,
@@ -990,8 +980,8 @@ class LineChef:
 
         Adds the combination to the current row.
         """
-        processed = line.xl.consolidated.ending or line.xl.derived.ending or \
-                    line.xl.detailed.ending
+        processed = line.xl.consolidated.cell or line.xl.derived.cell or \
+                    line.xl.detailed.cell or line.xl.reference.cell
 
         if not processed:
             sheet.bb.current_row += 1
@@ -1004,6 +994,7 @@ class LineChef:
             label = indent*" " + line.tags.name
 
             line.xl.ending = sheet.bb.current_row
+
             line.xl.cell = cell
 
             if set_labels:
@@ -1085,9 +1076,11 @@ class LineChef:
                 c = """
                 Something is wrong with our alignment. We are trying to
                 write a parameter to an existing row with a different label."""
-                pass
-                # raise ExcelPrepError(c)
 
+                import pdb
+                pdb.set_trace()
+
+                raise ExcelPrepError(c)
                 # Check to make sure we are writing to the right row; if the
                 # label doesn't match, we are in trouble.
 
