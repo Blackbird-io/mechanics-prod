@@ -49,7 +49,7 @@ COMMENT_FORMULA_STRING = True
 COMMENT_CUSTOM = True
 
 # SCENARIOS
-DEFAULT_SCENARIOS = ["Terrible", "Bad", "Good", "Awesome"]
+DEFAULT_SCENARIOS = ["Terrible", "Bad", "Good", "Excellent"]
 
 # FORMATTING
 AREA_BORDER = False
