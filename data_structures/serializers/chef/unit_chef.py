@@ -430,6 +430,27 @@ class UnitChef:
         del formula
         # Make sure each cell gets its own formula by deleting F after use.
 
+        # Move down one row
+        group_lines(sheet, row=active_row + 1)
+        active_row += 1
+
+        # 1. Add period start date
+        sheet.bb.life.rows.by_name[field_names.START_DATE] = active_row
+        if set_labels:
+            set_label(
+                label=field_names.START_DATE,
+                sheet=sheet,
+                row=active_row,
+                column=label_column
+            )
+
+        start_date = sheet.cell(column=active_column, row=active_row)
+
+        cell_styles.format_date(start_date)
+        group_lines(sheet, row=active_row)
+        cell_styles.format_date(start_date)
+        start_date.value = unit.period.start
+
         # Move down two rows (to leave one blank)
         group_lines(sheet, row=active_row + 1)
         active_row += 2
@@ -506,7 +527,6 @@ class UnitChef:
 
         # Move row down
         active_row += 1
-        sheet.bb.current_row = active_row
 
         # 5. Add percent
         life.rows.by_name[field_names.PERCENT] = active_row
@@ -525,6 +545,8 @@ class UnitChef:
         percent.set_explicit_value(formula, data_type=type_codes.FORMULA)
 
         group_lines(sheet, row=active_row)
+
+        sheet.bb.current_row = active_row+1
 
         # Return sheet
         return sheet
@@ -628,7 +650,7 @@ class UnitChef:
             sheet.bb.add_area("events")
 
         first_life_row = sheet.bb.current_row + 1
-        first_event_row = first_life_row + 8
+        first_event_row = first_life_row + 9
         # Leave nine rows for basic life layout
 
         sheet.bb.current_row = first_event_row
