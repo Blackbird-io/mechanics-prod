@@ -83,6 +83,7 @@ class FieldNames:
     # LIFE
 
     REF_DATE = "ref_date"
+    START_DATE = "period_start"
     AGE = "age"
     ALIVE = "alive"
     SPAN = "span"
