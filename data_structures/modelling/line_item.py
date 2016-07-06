@@ -111,7 +111,7 @@ class LineItem(Statement):
 
         self._local_value = None
         
-        self.guide = Guide()
+        self.guide = Guide(priority=3, quality=1)
         self.log = []
         self.position = None
         self._sum_over_time = True
