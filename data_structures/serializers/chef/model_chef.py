@@ -310,11 +310,11 @@ class ModelChef:
         column = sheet.column_dimensions['F']
         column.width = 14
 
-        img = xlio.drawing.image.Image(chef_settings.IMAGE_PATH,
-                                       size=(250, None))
-        img.anchor(sheet.cell('B2'))
-
-        sheet.add_image(img)
+        # img = xlio.drawing.image.Image(chef_settings.IMAGE_PATH,
+        #                                size=(250, None))
+        # img.anchor(sheet.cell('B2'))
+        #
+        # sheet.add_image(img)
 
         cell_styles.format_border_group(sheet, 2, 8, 9, 22,
                                         border_style='double')
