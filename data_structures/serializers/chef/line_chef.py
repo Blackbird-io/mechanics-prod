@@ -826,10 +826,10 @@ class LineChef:
             try:
                 include = obj.xl.cell.parent is not sheet
                 line_coordinates[k] = obj.xl.get_coordinates(include_sheet=include)
-            except ExcelPrepError:
-                print(obj)
+            except (ExcelPrepError,AttributeError):
                 print("Name:     ", driver_data.name)
                 print("Template: ", driver_data.formula)
+                print(obj)
 
                 raise ExcelPrepError
 
