@@ -146,7 +146,7 @@ class UnitSummary(HistoryLine, TagsMixIn):
         """
 
 
-        BusinessUnit._derive_line() -> None
+        UnitSummary.derive_line() -> None
 
         --``line`` is the LineItem to work on
 
