@@ -110,6 +110,23 @@ class SummaryBuilder:
 
         self._fiscal_year_end = fye
 
+    def copy(self):
+        """
+
+
+        SummaryBuilder.copy() -> obj
+
+
+        Method makes a copy of the instance, maintaining original link to
+        time_line, and returns it.
+        """
+        result = SummaryBuilder(self.time_line)
+        result._fiscal_year_end = self._fiscal_year_end
+        for key, value in self.summaries.items():
+            result[key] = value.copy()
+
+        return result
+
     def get_balance_summary(self, bu_bbid, start_date, end_date):
         """
 

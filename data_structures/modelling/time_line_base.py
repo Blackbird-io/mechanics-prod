@@ -27,6 +27,8 @@ TimelineBase       collection of PeriodSummary objects indexed by end date
 
 
 # imports
+import copy
+
 from datetime import date, timedelta
 
 from data_structures.system.bbid import ID
@@ -82,6 +84,27 @@ class TimelineBase(dict):
         """
         period = self._configure_period(period)
         self[period.end] = period
+
+    def copy(self):
+        """
+
+
+        TimeLineBase.copy() -> obj
+
+
+        Method returns a copy of the instance.
+        """
+        result = copy.copy(self)
+        for key, value in self.items():
+            result[key] = value.copy()
+
+        if self.current_period:
+            result._current_period = result[self.current_period.end]
+
+        if self._old_current_period:
+            result._old_current_period = result[self._old_current_period.end]
+
+        return result
 
     def find_period(self, query):
         """

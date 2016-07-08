@@ -40,9 +40,7 @@ from . import common_events
 
 from .business_unit_base import BusinessUnitBase
 from .components import Components
-from .dr_container import DrContainer
 from .equalities import Equalities
-from .financials import Financials
 from .history_line import HistoryLine
 from .life import Life as LifeCycle
 from .parameters import Parameters
@@ -335,24 +333,11 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         all return deep copies of the object and its contents. See their
         respective class documenation for mode detail.
         """
-        result = copy.copy(self)
-        result.tags = self.tags.copy()
-        result.relationships = self.relationships.copy()
-        # Start with a basic shallow copy, then add tags
-        #
-        r_comps = self.components.copy()
-        result._set_components(r_comps)
-
-        r_drivers = self.drivers.copy()
-        result._set_drivers(r_drivers)
-
-        r_fins = self.financials.copy()
-        result.set_financials(r_fins)
+        result = BusinessUnitBase.copy(self)
 
         result.guide = copy.deepcopy(self.guide)
         # Have to make a deep copy of guide because it is composed of Counter
         # objects. Guide shouldn't point to a business unit or model
-        result.id = copy.copy(self.id)
         result.life = self.life.copy()
         result.parameters = copy.deepcopy(self.parameters)
         result.summary = BusinessSummary()

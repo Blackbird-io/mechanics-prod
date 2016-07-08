@@ -242,16 +242,10 @@ class TimeLine(TimelineBase):
 
         Method returns a copy of the instance.
         """
-        result = copy.copy(self)
+        result = TimelineBase.copy(self)
         result.has_been_extrapolated = self.has_been_extrapolated
-        for key, value in self.items():
-            result[key] = value.copy()
-
-        if self.current_period:
-            result._current_period = result[self.current_period.end]
-
-        if self._old_current_period:
-            result._old_current_period = result[self._old_current_period.end]
+        result.summary_builder = self.summary_builder.copy()
+        result.summary_builder.time_line = result
 
         return result
 
