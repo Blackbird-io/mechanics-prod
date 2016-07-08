@@ -260,6 +260,7 @@ class LineChef:
         else:
             if line.xl.cell:
                 # here just link the current cell to the cell in line.xl.cell
+                old_cell = line.xl.cell
                 line.xl.reference.source = line
                 self._add_reference(
                     sheet=sheet,
@@ -267,6 +268,9 @@ class LineChef:
                     line=line,
                     set_labels=set_labels,
                     indent=indent)
+                line.xl.reference.source = None
+                line.xl.reference.cell = None
+                line.xl.cell = old_cell
             else:
                 self._combine_segments(
                     sheet=sheet,

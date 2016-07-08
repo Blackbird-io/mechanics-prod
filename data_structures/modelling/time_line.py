@@ -247,6 +247,12 @@ class TimeLine(TimelineBase):
         result.summary_builder = self.summary_builder.copy()
         result.summary_builder.time_line = result
 
+        if self.current_period:
+            result._current_period = result[self.current_period.end]
+
+        if self._old_current_period:
+            result._old_current_period = result[self._old_current_period.end]
+
         return result
 
     def extrapolate(self, seed=None):

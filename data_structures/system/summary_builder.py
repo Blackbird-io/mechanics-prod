@@ -123,7 +123,7 @@ class SummaryBuilder:
         result = SummaryBuilder(self.time_line)
         result._fiscal_year_end = self._fiscal_year_end
         for key, value in self.summaries.items():
-            result[key] = value.copy()
+            result.summaries[key] = value.copy()
 
         return result
 

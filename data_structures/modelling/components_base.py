@@ -149,6 +149,9 @@ class ComponentsBase(dict):
 
         return pool
 
+    def getOrdered(self, order_by=None):
+        return self.get_ordered(order_by=order_by)
+
     def get_ordered(self, order_by=None):
         """
 
