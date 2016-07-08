@@ -35,10 +35,10 @@ from dateutil.relativedelta import relativedelta
 
 import bb_exceptions
 
+from data_structures.modelling.business_unit_base import BusinessUnitBase
 from data_structures.modelling.financials import Financials
 from data_structures.modelling.time_period_base import TimePeriodBase
 from data_structures.modelling.time_line_base import TimelineBase
-from data_structures.modelling.unit_summary import UnitSummary
 
 
 
@@ -436,7 +436,7 @@ class SummaryBuilder:
                 for line in statement.get_full_ordered():
                     if line.summary_calculate:
                         line.clear()
-                        unit_summary.derive_line(line)
+                        unit_summary._derive_line(line)
 
     def _find_first_alive(self, bu_bbid, start, end):
         """
@@ -573,7 +573,7 @@ class SummaryBuilder:
         """
 
 
-        SummaryBuilder._get_unit_summary() -> UnitSummary
+        SummaryBuilder._get_unit_summary() -> BusinessUnitBase
 
         --``bu_bbid`` is the id of the business unit you wish to summarize
         --``start`` is the date to start summarizing statement
@@ -603,7 +603,7 @@ class SummaryBuilder:
                                                        start_date,
                                                        end_date)
 
-            unit_summary = UnitSummary(template_bu.name)
+            unit_summary = BusinessUnitBase(template_bu.name)
 
             # intentionally keeping source BU's bbid so we can find it later
             unit_summary.id = copy.deepcopy(template_bu.id)
