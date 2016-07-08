@@ -33,15 +33,12 @@ import bb_exceptions
 
 from data_structures.guidance.guide import Guide
 from data_structures.guidance.interview_tracker import InterviewTracker
-from data_structures.serializers.chef import data_management as xl_mgmt
-from data_structures.system.bbid import ID
-from data_structures.system.relationships import Relationships
-from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.valuation.business_summary import BusinessSummary
 from data_structures.valuation.company_value import CompanyValue
 
 from . import common_events
 
+from .business_unit_base import BusinessUnitBase
 from .components import Components
 from .dr_container import DrContainer
 from .equalities import Equalities
@@ -60,7 +57,7 @@ from .parameters import Parameters
 # n/a
 
 # Classes
-class BusinessUnit(HistoryLine, Equalities, TagsMixIn):
+class BusinessUnit(BusinessUnitBase, Equalities):
     """
 
     Object describes a group of business activity. A business unit can be a
@@ -116,17 +113,12 @@ class BusinessUnit(HistoryLine, Equalities, TagsMixIn):
     _UPDATE_BALANCE_SIGNATURE = "Update balance"
 
     def __init__(self, name, fins=None):
-
-        HistoryLine.__init__(self)
-        TagsMixIn.__init__(self, name)
+        BusinessUnitBase.__init__(self, name, fins)
 
         self._type = None
 
         self.components = None
         self._set_components()
-
-        self.drivers = None
-        self._set_drivers()
 
         self.filled = False
 
@@ -135,24 +127,13 @@ class BusinessUnit(HistoryLine, Equalities, TagsMixIn):
         self._stage = None
         self.used = set()
 
-        self.id = ID()
-        # Get the id functionality but do NOT assign a bbid yet
-
         self.life = LifeCycle()
         self.location = None
         self.parameters = Parameters()
-        self.period = None
-        # May want to change period to a property, so that a set to new value
-        # will always cause the unit to rerun registration.
-        self.relationships = Relationships(self)
 
         self.size = 1
         self.summary = BusinessSummary()
         self.valuation = CompanyValue()
-
-        self.xl = xl_mgmt.UnitData()
-
-        self.set_financials(fins)
 
     @property
     def stage(self):
@@ -225,29 +206,6 @@ class BusinessUnit(HistoryLine, Equalities, TagsMixIn):
 
     def __hash__(self):
         return self.id.__hash__()
-
-    def __str__(self, lines=None):
-        """
-
-
-        BusinessUnit.__str__() -> str
-
-
-        Method concatenates each line in ``lines``, adds a new-line character at
-        the end, and returns a string ready for printing. If ``lines`` is None,
-        method calls _get_pretty_lines() on instance.
-        """
-        # Get string list, slap a new-line at the end of every line and return
-        # a string with all the lines joined together.
-        if not lines:
-            lines = self._get_pretty_lines()
-
-        # Add empty strings for header and footer padding
-        lines.insert(0, "")
-        lines.append("")
-
-        box = "\n".join(lines)
-        return box
 
     def add_component(self, bu, update_id=True, register_in_period=True, overwrite=False):
         """
@@ -550,28 +508,6 @@ class BusinessUnit(HistoryLine, Equalities, TagsMixIn):
         atx.relationships.set_parent(self)
         self.valuation = atx
 
-    def set_financials(self, fins=None):
-        """
-
-
-        BusinessUnit.set_financials() -> None
-
-
-        Method for initializing instance.financials with a properly configured
-        Financials object.
-
-        Method will set instance financials to ``fins``, if caller specifies
-        ``fins``. Otherwise, method will set financials to a new Financials
-        instance.
-        """
-        if fins is None:
-            fins = Financials()
-
-        if self.id.namespace:
-            fins.register(namespace=self.id.bbid)
-
-        self.financials = fins
-
     def set_history(self, history, clear_future=True, recur=True):
         """
 
@@ -766,45 +702,6 @@ class BusinessUnit(HistoryLine, Equalities, TagsMixIn):
 
         for line in this_statement.get_ordered():
             self._derive_line(line)
-
-    def _derive_line(self, line):
-        """
-
-
-        BusinessUnit._derive_line() -> None
-
-        --``line`` is the LineItem to work on
-
-        Method computes the value of a line using drivers stored on the
-        instance.  Method builds a queue of applicable drivers for the provided
-        LineItem. Method then runs the drivers in the queue sequentially. Each
-        LineItem gets a unique queue.
-
-        Method will not derive any lines that are hardcoded or have already
-        been consolidated (LineItem.hardcoded == True or
-        LineItem.has_been_consolidated == True).
-        """
-
-        # look for drivers based on line name, line parent name, all line tags
-        keys = [line.tags.name.casefold()]
-        keys.append(line.relationships.parent.name.casefold())
-        keys.extend(line.tags.all)
-
-        for key in keys:
-            if key in self.drivers:
-                matching_drivers = self.drivers.get_drivers(key)
-                for driver in matching_drivers:
-                    driver.workOnThis(line)
-
-        # Repeat for any details
-        if line._details:
-            for detail in line.get_ordered():
-                if detail.replica:
-                    continue
-                    # Skip replicas to make sure we apply the driver only once
-                    # A replica should never have any details
-                else:
-                    self._derive_line(detail)
 
     def _fit_to_period(self, time_period, recur=True):
         """
@@ -1106,22 +1003,6 @@ class BusinessUnit(HistoryLine, Equalities, TagsMixIn):
         comps.relationships.set_parent(self)
         self.components = comps
 
-    def _set_drivers(self, dr_c=None):
-        """
-
-
-        BusinessUnit._set_drivers() -> None
-
-
-        Method for initializing instance.drivers with a properly configured
-        DrContainer object. Method sets instance as the parentObject for
-        DrContainer and any drivers in DrContainer.
-        """
-        if not dr_c:
-            dr_c = DrContainer()
-        dr_c.setPartOf(self, recur=True)
-        self.drivers = dr_c
-
     def _update_balance(self):
         """
 
@@ -1148,26 +1029,6 @@ class BusinessUnit(HistoryLine, Equalities, TagsMixIn):
                 elif starting_line.value is not None:
                     ending_line = ending_balance.find_first(starting_line.name)
                     self._update_lines(starting_line, ending_line)
-
-    def _update_id(self, namespace, recur=True):
-        """
-
-
-        BusinessUnit._update_id() -> None
-
-
-        Assigns instance a new id in the namespace, based on the instance name.
-        If ``recur`` == True, updates ids for all components in the parent
-        instance bbid namespace.
-        """
-        self.id.set_namespace(namespace)
-        self.id.assign(self.tags.name)
-        self.financials.register(namespace=namespace)
-        # This unit now has an id in the namespace. Now pass our bbid down as
-        # the namespace for all downstream components.
-        if recur:
-            for unit in self.components.values():
-                unit._update_id(namespace=self.id.bbid, recur=True)
 
     def _update_lines(self, start_line, end_line):
         """
