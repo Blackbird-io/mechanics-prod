@@ -404,23 +404,6 @@ class TimeLine(TimelineBase):
         result = [past_dates, [ref_end], future_dates]
         return result
 
-    def get_ordered(self):
-        """
-
-
-        TimeLine.getOrdered() -> list
-
-
-        Method returns list of periods in instance, ordered from earliest to
-        latest endpoint.
-        """
-        result = []
-        for end_date in sorted(self.keys()):
-            period = self[end_date]
-            result.append(period)
-
-        return result
-
     def getOrdered(self):
         """
 

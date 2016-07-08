@@ -4,10 +4,11 @@
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 # Blackbird Environment
-# Module: data_structures.modelling.summary_components
+# Module: data_structures.modelling.components_base
 """
 
-Module defines SummaryComponents class, a container for UnitSummary's.
+Module defines ComponentsBase class, a container for instances of
+BusinessUnit[Base].
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -19,7 +20,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-SummaryComponents     container that stores UnitSummary objects
+ComponentsBase        container that stores instances of BusinessUnit[Base]
 ====================  ==========================================================
 """
 
@@ -86,9 +87,9 @@ class ComponentsBase(dict):
         """
 
 
-        SummaryComponents.add_item() -> None
+        ComponentsBase.add_item() -> None
 
-        --``bu`` is a UnitSummary object
+        --``bu`` is an instance of BusinessUnit or BusinessUnitBase object
 
         Method adds bu to the instance, keyed as bu.id.bbid. If bu does not
         specify a bbid, method raises IDError.
@@ -108,7 +109,7 @@ class ComponentsBase(dict):
         """
 
 
-        Components.copy() -> Components
+        ComponentsBase.copy() -> ComponentsBase
 
 
         Method returns a deep copy of components. Uses Tags.copy() to create a
@@ -133,7 +134,7 @@ class ComponentsBase(dict):
         """
 
 
-        SummaryComponents.get_all() -> list
+        ComponentsBase.get_all() -> list
 
 
         Method returns list of all units in instance; ordered if in DEBUG_MODE,
@@ -152,7 +153,7 @@ class ComponentsBase(dict):
         """
 
 
-        SummaryComponents.get_ordered() -> list
+        ComponentsBase.get_ordered() -> list
 
 
         Method returns a list of every value in the instance, ordered by key.
@@ -166,7 +167,7 @@ class ComponentsBase(dict):
         """
 
 
-        SummaryComponents._get_pretty_lines() -> list
+        ComponentsBase._get_pretty_lines() -> list
 
 
         Method returns a list of strings that show each component in rows of
