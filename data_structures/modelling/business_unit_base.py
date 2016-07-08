@@ -28,6 +28,7 @@ BusinessUnitBase      basic structure to hold business information
 
 # Imports
 import bb_exceptions
+import copy
 
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
@@ -95,6 +96,47 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         self.relationships = Relationships(self)
         self.periods_used = 0
         self.xl = xl_mgmt.UnitData()
+
+    def copy(self):
+        """
+
+
+        BU.copy() -> BU
+
+
+        Method returns a new business unit that is a deep-ish copy of the
+        instance.
+
+        The new bu starts out as a shallow Tags.copy() copy of the instance.
+        The method then sets the following attributes on the new bu to either
+        deep or class-specific copies of the instance values:
+
+        - components
+        - drivers
+        - financials
+        - id (vanilla shallow copy)
+
+        The class-specific copy methods for components, drivers, and financials
+        all return deep copies of the object and its contents. See their
+        respective class documenation for mode detail.
+        """
+        result = copy.copy(self)
+        result.tags = self.tags.copy()
+        result.relationships = self.relationships.copy()
+        # Start with a basic shallow copy, then add tags
+        #
+        r_comps = self.components.copy()
+        result._set_components(r_comps)
+
+        r_drivers = self.drivers.copy()
+        result._set_drivers(r_drivers)
+
+        r_fins = self.financials.copy()
+        result.set_financials(r_fins)
+
+        result.id = copy.copy(self.id)
+
+        return result
 
     def __str__(self, lines=None):
         """
