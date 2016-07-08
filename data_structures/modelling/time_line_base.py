@@ -38,7 +38,7 @@ from data_structures.system.bbid import ID
 # n/a
 
 # classes
-class TimelineSummary(dict):
+class TimelineBase(dict):
     """
 
     A TimeLine is a dictionary of TimePeriod objects keyed by ending date.
@@ -64,13 +64,16 @@ class TimelineSummary(dict):
     def __init__(self, interval):
         dict.__init__(self)
         self.id = ID()
+        # TimelineBase objects support the id interface and pass the model's id
+        # down to time periods. The timeline instance itself does not get its
+        # own bbid.
         self.interval = interval
 
     def add_period(self, period):
         """
 
 
-        TimelineSummary.add_period() -> None
+        TimelineBase.add_period() -> None
 
         --``period`` is a PeriodSummary object
 
@@ -84,7 +87,7 @@ class TimelineSummary(dict):
         """
 
 
-        TimelineSummary.find_period() -> TimePeriod
+        TimelineBase.find_period() -> TimePeriod
 
 
         Method returns a time period that includes query. ``query`` can be a
@@ -117,7 +120,7 @@ class TimelineSummary(dict):
         """
 
 
-        TimelineSummary._configure_period() -> period
+        TimelineBase._configure_period() -> period
 
 
         Method sets period's namespace id to that of the TimeLine, then returns

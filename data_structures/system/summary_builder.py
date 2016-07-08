@@ -37,7 +37,7 @@ import bb_exceptions
 
 from data_structures.modelling.financials import Financials
 from data_structures.modelling.period_summary import PeriodSummary
-from data_structures.modelling.timeline_summary import TimelineSummary
+from data_structures.modelling.time_line_base import TimelineBase
 from data_structures.modelling.unit_summary import UnitSummary
 
 
@@ -58,7 +58,7 @@ class SummaryBuilder:
 
     DATA:
     fiscal_year_end       date; end of fiscal year default = 12/31/current year
-    summaries             dict; holds TimelineSummary objects keyed by interval
+    summaries             dict; holds TimelineBase objects keyed by interval
     time_line             pointer to TimeLine containing relevant financials
 
     FUNCTIONS:
@@ -372,7 +372,7 @@ class SummaryBuilder:
         fye = self.fiscal_year_end
 
         # make the building blocks to hold this set of summaries
-        timeline_summary = TimelineSummary(interval)
+        timeline_summary = TimelineBase(interval)
         timeline_summary.id.set_namespace(self.time_line.id.namespace)
 
         # Start at the beginning of the current fiscal year
