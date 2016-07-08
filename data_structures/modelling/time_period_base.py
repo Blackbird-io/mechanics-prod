@@ -23,6 +23,8 @@ TimePeriod            a snapshot of data over a period of time.
 """
 
 # Imports
+import copy
+
 import bb_exceptions
 import bb_settings
 
@@ -36,7 +38,7 @@ from .history import History
 # n/a
 
 # Classes
-class PeriodSummary(History):
+class TimePeriodBase(History):
     """
 
     PeriodSummary objects represent periods of time and store a snapshot of some
@@ -86,12 +88,38 @@ class PeriodSummary(History):
         self.id = ID()
         self.relationships = Relationships(self)
 
+        # The current approach to indexing units within a period assumes that
+        # Blackbird will rarely remove existing units from a model. both
+        # The ``bu`` directory is static: it does not know if
+        # the unit whose bbid it references is no longer in its domain.
+
     def __str__(self):
         dots = "*" * bb_settings.SCREEN_WIDTH
         s = "\t starts:  \t%s\n" % self.start.isoformat()
         e = "\t ends:    \t%s\n" % self.end.isoformat()
         c = "\t content: \t%s\n" % self.content
         result = dots + "\n" + s + e + c + dots + "\n"
+        return result
+
+    def copy(self):
+        """
+
+
+        TimePeriod.copy() -> TimePeriod
+
+
+        Method returns a new TimePeriod object whose content is a class-specific
+        copy of the caller content.
+        """
+        result = copy.copy(self)
+        result.relationships = self.relationships.copy()
+        result.start = copy.copy(self.start)
+        result.end = copy.copy(self.end)
+        if self.content:
+            new_content = self.content.copy()
+            result.set_content(new_content)
+        #same id namespace (old model)
+
         return result
 
     def get_units(self, pool):

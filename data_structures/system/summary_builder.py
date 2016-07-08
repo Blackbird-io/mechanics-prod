@@ -36,7 +36,7 @@ from dateutil.relativedelta import relativedelta
 import bb_exceptions
 
 from data_structures.modelling.financials import Financials
-from data_structures.modelling.period_summary import PeriodSummary
+from data_structures.modelling.time_period_base import TimePeriodBase
 from data_structures.modelling.time_line_base import TimelineBase
 from data_structures.modelling.unit_summary import UnitSummary
 
@@ -383,7 +383,7 @@ class SummaryBuilder:
         # start pointer is inclusive, need to include this TimePeriod
         last_period_end = max(self.time_line.keys())
         while end_pointer <= last_period_end:
-            period_summary = PeriodSummary(start_pointer, end_pointer)
+            period_summary = TimePeriodBase(start_pointer, end_pointer)
 
             unit_summary = self._get_unit_summary(bu_bbid,
                                                   start_pointer,
@@ -578,7 +578,7 @@ class SummaryBuilder:
         --``bu_bbid`` is the id of the business unit you wish to summarize
         --``start`` is the date to start summarizing statement
         --``end`` is the date to stop summarizing statement
-        --``period`` is the PeriodSummary object in which to place unit
+        --``period`` is the TimePeriodBase object in which to place unit
         --``recur`` whether or not to calculate summaries for component bu's
 
         Method delegates to get_financials_summary() to calculate the summary
