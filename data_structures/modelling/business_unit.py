@@ -135,6 +135,10 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         self.summary = BusinessSummary()
         self.valuation = CompanyValue()
 
+        # attrs from BusinessUnitBase
+        self.complete = True
+        self.periods_used = 1
+
     @property
     def stage(self):
         """

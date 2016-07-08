@@ -4,10 +4,10 @@
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 # Blackbird Environment
-# Module: data_structures.modelling.unit_summary
+# Module: data_structures.modelling.business_unit_base
 """
 
-Module defines BusinessUnit class.
+Module defines BusinessUnitBase class.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -19,7 +19,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-UnitSummary           structured summary of a business and its components
+BusinessUnitBase      basic structure to hold business information
 ====================  ==========================================================
 """
 
@@ -59,11 +59,12 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
     ====================  ======================================================
 
     DATA:
+    complete              bool; if financials are complete for unit in period
     components            instance of SummaryComponents class
     financials            instance of Financials object
     id                    instance of ID object
     period                pointer to PeriodSummary object
-    periods_used          int; number of periods used for summaries
+    periods_used          int; number of periods used for values in financials
     relationships         instance of Relationships class
     xl                    instance of UnitData class
 
@@ -99,7 +100,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         """
 
 
-        UnitSummary.__str__() -> str
+        BusinessUnitBase.__str__() -> str
 
 
         Method concatenates each line in ``lines``, adds a new-line character at
@@ -122,7 +123,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         """
 
 
-        UnitSummary.add_component() -> None
+        BusinessUnitBase.add_component() -> None
 
         --``bu``
         --``overwrite``
@@ -144,7 +145,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         """
 
 
-        UnitSummary.set_financials() -> None
+        BusinessUnitBase.set_financials() -> None
 
 
         Method for initializing instance.financials with a properly configured
@@ -166,7 +167,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         """
 
 
-        UnitSummary._build_directory() -> (id_directory, ty_directory)
+        BusinessUnitBase._build_directory() -> (id_directory, ty_directory)
 
 
         Register yourself and optionally your components, by type and by id
@@ -197,7 +198,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         """
 
 
-        UnitSummary.derive_line() -> None
+        BusinessUnitBase.derive_line() -> None
 
         --``line`` is the LineItem to work on
 
@@ -240,7 +241,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         """
 
 
-        UnitSummary._get_pretty_lines() -> list
+        BusinessUnitBase._get_pretty_lines() -> list
 
 
         Method returns a list of strings that displays a box if printed in
@@ -312,7 +313,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         """
 
 
-        UnitSummary._register_in_period() -> None
+        BusinessUnitBase._register_in_period() -> None
 
 
         Method updates the bu_directory on the instance period with the contents
@@ -355,7 +356,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         """
 
 
-        UnitSummary._set_components() -> None
+        BusinessUnitBase._set_components() -> None
 
 
         Method sets instance.components to the specified object, sets object to
@@ -371,7 +372,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         """
 
 
-        BusinessUnit._set_drivers() -> None
+        BusinessUnitBase._set_drivers() -> None
 
 
         Method for initializing instance.drivers with a properly configured
@@ -387,7 +388,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         """
 
 
-        UnitSummary._update_id() -> None
+        BusinessUnitBase._update_id() -> None
 
 
         Assigns instance a new id in the namespace, based on the instance name.

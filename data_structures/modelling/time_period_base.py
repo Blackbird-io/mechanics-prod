@@ -3,10 +3,10 @@
 # Copyright Blackbird Logical Applications, LLC 2016
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 # Blackbird Environment
-# Module: data_structures.modelling.period_summary
+# Module: data_structures.modelling.time_period_base
 """
 
-Module defines PeriodSummary class.
+Module defines TimePeriodBase class.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -18,9 +18,12 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-TimePeriod            a snapshot of data over a period of time.
+TimePeriodBase        a snapshot of data over a period of time.
 ====================  ==========================================================
 """
+
+
+
 
 # Imports
 import copy
@@ -32,6 +35,8 @@ from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
 
 from .history import History
+
+
 
 
 # Constants
@@ -69,7 +74,7 @@ class TimePeriodBase(History):
     start                 datetime.date; first date in period.
 
     FUNCTIONS:
-    __str__               basic print, shows starts, ends, and content
+    copy()                return a copy of the caller instance
     get_units()           return list of units from bbid pool
     register()            conform and register unit
     set_content()         attach company to period
@@ -105,7 +110,7 @@ class TimePeriodBase(History):
         """
 
 
-        TimePeriod.copy() -> TimePeriod
+        TimePeriodBase.copy() -> TimePeriodBase
 
 
         Method returns a new TimePeriod object whose content is a class-specific
@@ -126,7 +131,7 @@ class TimePeriodBase(History):
         """
 
 
-        PeriodSummary.get_units() -> list
+        TimePeriodBase.get_units() -> list
 
 
         Method returns a list of objects from instance.bu_directory that
@@ -147,8 +152,9 @@ class TimePeriodBase(History):
         """
 
 
-        PeriodSummary.register() -> None
+        TimePeriodBase.register() -> None
 
+        --``bu`` is an instance of BusinessUnit or BusinessUnitBase
 
         Manually add unit to period. Unit will conform to period and appear
         in directories. Use sparingly: designed for master (taxonomy) period.
@@ -182,8 +188,9 @@ class TimePeriodBase(History):
         """
 
 
-        PeriodSummary.set_content() -> None
+        TimePeriodBase.set_content() -> None
 
+        --``bu`` is an instance of BusinessUnit or BusinessUnitBase
 
         Register bu and set instance.content to point to it.
 
@@ -191,9 +198,9 @@ class TimePeriodBase(History):
         a model for the first time (as opposed to moving content from period to
         period or level to level within a model).
 
-        PeriodSummary's in a Model all share the model's namespace_id.
-        Accordingly, a UnitSummary will have the same bbid in all time periods.
-        The UnitSummary can elect to get a different bbid if it's name changes,
+        TimePeriodBase's in a Model all share the model's namespace_id.
+        Accordingly, a bu will have the same bbid in all time periods.
+        The bu can elect to get a different bbid if it's name changes,
         but in such an event, the Model will treat it as a new unit altogether.
         """
         self.register(bu, reset_directories=True)
@@ -208,10 +215,9 @@ class TimePeriodBase(History):
         """
 
 
-        PeriodSummary.reset_directories() -> None
+        TimePeriodBase.reset_directories() -> None
 
 
-        Method sets instance.bu_directory and instance.ty_directory to blank
-        dictionaries.
+        Method sets instance.bu_directory to blank dictionary.
         """
         self.bu_directory = dict()

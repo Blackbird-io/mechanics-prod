@@ -3,11 +3,11 @@
 # Copyright Blackbird Logical Applications, LLC 2016
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 # Blackbird Environment
-# Module: data_structures.modelling.timeline_summary
+# Module: data_structures.modelling.time_line_base
 """
 
-Module defines TimeLine class. TimeLines are dictionaries of time periods with
-custom search methods.
+Module defines TimelineBase class. TimelineBase objects  are dictionaries of
+time periods with custom search methods.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -19,7 +19,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-TimelineSummary       collection of PeriodSummary objects indexed by end date
+TimelineBase       collection of PeriodSummary objects indexed by end date
 ====================  ==========================================================
 """
 
@@ -41,8 +41,8 @@ from data_structures.system.bbid import ID
 class TimelineBase(dict):
     """
 
-    A TimeLine is a dictionary of TimePeriod objects keyed by ending date.
-    The TimeLine helps manage, configure, and search TimePeriods.
+    A TimelineBase is a dictionary of TimePeriod objects keyed by ending date.
+    The TimelineBase helps manage, configure, and search TimePeriods.
 
     Unless otherwise specified, class expects all dates as datetime.date objects
     and all periods as datetime.timedelta objects.
@@ -65,8 +65,8 @@ class TimelineBase(dict):
         dict.__init__(self)
         self.id = ID()
         # TimelineBase objects support the id interface and pass the model's id
-        # down to time periods. The timeline instance itself does not get its
-        # own bbid.
+        # down to time periods. The TimelineBase instance itself does not get
+        # its own bbid.
         self.interval = interval
 
     def add_period(self, period):
@@ -75,7 +75,7 @@ class TimelineBase(dict):
 
         TimelineBase.add_period() -> None
 
-        --``period`` is a PeriodSummary object
+        --``period`` is a TimePeriod or TimePeriodBase object
 
         Method configures period and records it in the instance under the
         period's end_date.
@@ -109,6 +109,23 @@ class TimelineBase(dict):
             if p.start <= q_date <= p.end:
                 result = p
                 break
+
+        return result
+
+    def get_ordered(self):
+        """
+
+
+        TimelineBase.getOrdered() -> list
+
+
+        Method returns list of periods in instance, ordered from earliest to
+        latest endpoint.
+        """
+        result = []
+        for end_date in sorted(self.keys()):
+            period = self[end_date]
+            result.append(period)
 
         return result
 
