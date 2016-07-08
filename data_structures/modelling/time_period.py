@@ -28,18 +28,13 @@ TimePeriod            a snapshot of data over a period of time.
 
 # Imports
 import copy
-import datetime
-import time
 
 import bb_exceptions
-import bb_settings
 
-from data_structures.system.bbid import ID
-from data_structures.system.relationships import Relationships
 from data_structures.system.tags_mixin import TagsMixIn
 
 from .parameters import Parameters
-from .history import History
+from .time_period_base import TimePeriodBase
 
 
 
@@ -48,7 +43,7 @@ from .history import History
 # n/a
 
 # Classes
-class TimePeriod(History, TagsMixIn):
+class TimePeriod(TimePeriodBase, TagsMixIn):
     """
 
     TimePeriod objects represent periods of time and store a snapshot of some
@@ -94,33 +89,20 @@ class TimePeriod(History, TagsMixIn):
     ====================  ======================================================
     """
     def __init__(self, start_date, end_date, content=None):
-        
-        History.__init__(self, recursive_attribute="content")
+        TimePeriodBase.__init__(self, start_date, end_date)
         TagsMixIn.__init__(self)
 
-        self.start = start_date
-        self.end = end_date
-
-        self.bu_directory = {}
-        self.ty_directory = {}
-        
-        self.content = content
-        self.id = ID()
         self.parameters = Parameters()
-        self.relationships = Relationships(self)
+
+        self.ty_directory = dict()
+
+        if content:
+            self.set_content(content)
 
         # The current approach to indexing units within a period assumes that
         # Blackbird will rarely remove existing units from a model. both
         # The ``bu`` and ``ty`` directories are static: they do not know if
         # the unit whose bbid they reference is no longer in their domain. 
-
-    def __str__(self):
-        dots = "*" * bb_settings.SCREEN_WIDTH
-        s = "\t starts:  \t%s\n" % self.start.isoformat()
-        e = "\t ends:    \t%s\n" % self.end.isoformat()
-        c = "\t content: \t%s\n" % self.content
-        result = dots+"\n"+s+e+c+dots+"\n"
-        return result 
 
     def clear(self):
         """
@@ -144,16 +126,15 @@ class TimePeriod(History, TagsMixIn):
         Method returns a new TimePeriod object whose content is a class-specific
         copy of the caller content. 
         """
-        result = copy.copy(self)
-        result.tags = self.tags.copy()
-        result.relationships = self.relationships.copy()
-        result.start = copy.copy(self.start)
-        result.end = copy.copy(self.end)
+
+        result = TimePeriodBase.copy(self)
         if self.content:
             new_content = self.content.copy()
             result.set_content(new_content, updateID=False)
-        #same id namespace (old model)
-        #
+
+        result.tags = self.tags.copy()
+        result.ty_directory = copy.copy(self.ty_directory)
+
         return result
         
     def extrapolate_to(self, target):
@@ -235,27 +216,6 @@ class TimePeriod(History, TagsMixIn):
     
         # Step 3: return container
         return result        
-
-    def get_units(self, pool):
-        """
-
-
-        TimePeriod.get_units() -> list
-
-
-        Method returns a list of objects from instance.bu_directory that
-        correspond to each bbid in ``pool``. Method sorts pool prior to
-        processing.
-
-        Method expects ``pool`` to be an iterable of bbids. 
-        """
-        pool = sorted(pool)
-        #make sure to sort pool for stable output order
-        units = []
-        for bbid in pool:
-            u = self.bu_directory[bbid]
-            units.append(u)
-        return units
 
     def get_lowest_units(self, pool=None, run_on_empty=False):
         """

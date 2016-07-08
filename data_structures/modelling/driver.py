@@ -168,6 +168,8 @@ class Driver(TagsMixIn):
         # We set condition values to a default that must be overwritten to make
         # sure default configuration doesnt apply to every lineItem.
 
+        self._summary_calculate = False
+
     def __eq__(self, comp, trace=False, tab_width=4):
         """
 
@@ -217,7 +219,20 @@ class Driver(TagsMixIn):
         # The issue is that params and conversion table are mutable containers.
         # So either have to make them immutable or figure out some other
         # approach. 
-        
+
+    @property
+    def summary_calculate(self):
+        """
+        Default value of summary_calculate is False.  If False, driver will not
+        be used in annual summary.  If true, driver will be used in annual
+        summary if a matching line exists.
+        """
+        return self._summary_calculate
+
+    @summary_calculate.setter
+    def summary_calculate(self, value):
+        self._summary_calculate = value
+
     def configure(self, data, formula, conversion_table=None):
         """
 
@@ -384,7 +399,7 @@ class Driver(TagsMixIn):
                 bu = self.relationships.parent
 
                 params = self._build_params()
-                
+
                 if not bb_settings.PREP_FOR_EXCEL:
 
                     formula.func(line, bu, params, self.signature)
@@ -459,7 +474,10 @@ class Driver(TagsMixIn):
         the original and converted keys.
         """
         if parent is None:
-            parent = self.relationships.parent
+            try:
+                parent = self.relationships.parent
+            except AttributeError:
+                parent = None
 
         period = None
         time_line = None
@@ -475,14 +493,20 @@ class Driver(TagsMixIn):
 
         params = dict()
 
-        if time_line:
+        try:
             params.update(time_line.parameters)
+        except AttributeError:
+            pass
                                                  
-        if period:
+        try:
             params.update(period.parameters)
+        except AttributeError:
+            pass
 
-        if parent:
+        try:
             params.update(parent.parameters)
+        except AttributeError:
+            pass
 
         params.update(self.parameters)
 
