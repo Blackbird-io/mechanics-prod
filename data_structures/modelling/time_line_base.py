@@ -98,12 +98,6 @@ class TimelineBase(dict):
         for key, value in self.items():
             result[key] = value.copy()
 
-        if self.current_period:
-            result._current_period = result[self.current_period.end]
-
-        if self._old_current_period:
-            result._old_current_period = result[self._old_current_period.end]
-
         return result
 
     def find_period(self, query):

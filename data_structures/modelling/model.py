@@ -237,6 +237,9 @@ class Model(TagsMixIn):
         del M.portal_data["e_model"]
         return M
 
+    def clear_excel(self):
+        self.time_line.clear_excel()
+
     def copy(self):
         """
 
