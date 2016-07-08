@@ -420,6 +420,24 @@ class SummaryBuilder:
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
 
+    @staticmethod
+    def _do_summary_calculations(real_bu, unit_summary):
+
+        # loop through drivers in real_bu.drivers and copy all
+        # "summary_calculate" drivers to unit_summary
+        for bbid in sorted(real_bu.drivers.dr_directory.keys()):
+            dr = real_bu.drivers.dr_directory[bbid]
+            if dr.summary_calculate:
+                unit_summary.drivers.add_item(dr.copy())
+
+        summary_fins = unit_summary.financials
+        for statement in summary_fins.ordered:
+            if statement:
+                for line in statement.get_full_ordered():
+                    if line.summary_calculate:
+                        line.clear()
+                        unit_summary.derive_line(line)
+
     def _find_first_alive(self, bu_bbid, start, end):
         """
 
@@ -593,6 +611,10 @@ class SummaryBuilder:
             unit_summary.complete = complete
             unit_summary.period = period
             unit_summary.periods_used = end_date.month - start_date.month + 1
+
+            check_period = self.time_line.find_period(end_date)
+            check_bu = check_period.bu_directory[bu_bbid]
+            self._do_summary_calculations(check_bu, unit_summary)
 
             if recur:
                 for comp in template_bu.components.get_all():

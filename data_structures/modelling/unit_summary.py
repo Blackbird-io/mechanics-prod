@@ -34,9 +34,10 @@ from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
 from data_structures.system.tags_mixin import TagsMixIn
 
-from .summary_components import SummaryComponents
+from .dr_container import DrContainer
 from .financials import Financials
 from .history_line import HistoryLine
+from .summary_components import SummaryComponents
 
 
 
@@ -81,6 +82,9 @@ class UnitSummary(HistoryLine, TagsMixIn):
 
         self.components = None
         self._set_components()
+
+        self.drivers = None
+        self._set_drivers()
 
         self.set_financials(fins)
         self.complete = False
@@ -137,6 +141,45 @@ class UnitSummary(HistoryLine, TagsMixIn):
         bu._register_in_period(self.period, recur=True, overwrite=overwrite)
 
         self.components.add_item(bu)
+
+    def derive_line(self, line):
+        """
+
+
+        BusinessUnit._derive_line() -> None
+
+        --``line`` is the LineItem to work on
+
+        Method computes the value of a line using drivers stored on the
+        instance.  Method builds a queue of applicable drivers for the provided
+        LineItem. Method then runs the drivers in the queue sequentially. Each
+        LineItem gets a unique queue.
+
+        Method will not derive any lines that are hardcoded or have already
+        been consolidated (LineItem.hardcoded == True or
+        LineItem.has_been_consolidated == True).
+        """
+
+        # look for drivers based on line name, line parent name, all line tags
+        keys = [line.tags.name.casefold()]
+        keys.append(line.relationships.parent.name.casefold())
+        keys.extend(line.tags.all)
+
+        for key in keys:
+            if key in self.drivers:
+                matching_drivers = self.drivers.get_drivers(key)
+                for driver in matching_drivers:
+                    driver.workOnThis(line)
+
+        # Repeat for any details
+        if line._details:
+            for detail in line.get_ordered():
+                if detail.replica:
+                    continue
+                    # Skip replicas to make sure we apply the driver only once
+                    # A replica should never have any details
+                else:
+                    self._derive_line(detail)
 
     def set_financials(self, fins=None):
         """
@@ -325,6 +368,22 @@ class UnitSummary(HistoryLine, TagsMixIn):
             comps = SummaryComponents()
         comps.relationships.set_parent(self)
         self.components = comps
+
+    def _set_drivers(self, dr_c=None):
+        """
+
+
+        BusinessUnit._set_drivers() -> None
+
+
+        Method for initializing instance.drivers with a properly configured
+        DrContainer object. Method sets instance as the parentObject for
+        DrContainer and any drivers in DrContainer.
+        """
+        if not dr_c:
+            dr_c = DrContainer()
+        dr_c.setPartOf(self, recur=True)
+        self.drivers = dr_c
 
     def _update_id(self, namespace, recur=True):
         """
