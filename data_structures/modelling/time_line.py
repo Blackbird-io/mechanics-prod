@@ -27,10 +27,9 @@ TimeLine              collection of TimePeriod objects indexed by end date
 
 
 # imports
-import calendar
+import copy
 
 from datetime import date, timedelta
-from dateutil.relativedelta import relativedelta
 
 import bb_settings
 
@@ -247,6 +246,28 @@ class TimeLine(dict):
         past, present, future = self.get_segments(seed.end)
         for date in future:
             self[date].clear()
+
+    def copy(self):
+        """
+
+
+        TimeLine.copy() -> obj
+
+
+        Method returns a copy of the instance.
+        """
+        result = copy.copy(self)
+        result.has_been_extrapolated = self.has_been_extrapolated
+        for key, value in self.items():
+            result[key] = value.copy()
+
+        if self.current_period:
+            result._current_period = result[self.current_period.end]
+
+        if self._old_current_period:
+            result._old_current_period = result[self._old_current_period.end]
+
+        return result
 
     def extrapolate(self, seed=None):
         """

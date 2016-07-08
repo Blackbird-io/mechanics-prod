@@ -37,7 +37,7 @@ from datetime import date
 DEBUG_MODE = True
 DEFAULT_MODEL_NAME = "Blank Blackbird Model"
 PREP_FOR_EXCEL = True
-MAKE_ANNUAL_SUMMARIES = True
+MAKE_ANNUAL_SUMMARIES = False
 # Toggles whether drivers and formulas package their work into Excel-oriented
 # data structures.
 
