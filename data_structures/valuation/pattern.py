@@ -216,7 +216,7 @@ class Pattern(dict, LineItem):
             label = "Managed attribute, direct write prohibited"
             raise bb_exceptions.ManagedAttributeError(label)
 
-        def __del__(self,instance):
+        def __del__(self):
             label = "Managed attribute, deletion prohibited"
             raise bb_exceptions.ManagedAttributeError(label)
 
