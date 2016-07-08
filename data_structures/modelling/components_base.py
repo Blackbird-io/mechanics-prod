@@ -23,7 +23,11 @@ SummaryComponents     container that stores UnitSummary objects
 ====================  ==========================================================
 """
 
+
+
+
 # imports
+import copy
 import bb_exceptions
 import bb_settings
 
@@ -36,7 +40,7 @@ from data_structures.system.relationships import Relationships
 # n/a
 
 # classes
-class SummaryComponents(dict):
+class ComponentsBase(dict):
     """
 
     The SummaryComponents class defines a container that stores UnitSummary
@@ -99,6 +103,31 @@ class SummaryComponents(dict):
         self[bu.id.bbid] = bu
         if bu.tags.name:
             self.by_name[bu.tags.name] = bu.id.bbid
+
+    def copy(self):
+        """
+
+
+        Components.copy() -> Components
+
+
+        Method returns a deep copy of components. Uses Tags.copy() to create a
+        shell. Method then sets result.by_name to a blank dictionary and adds a
+        copy of each unit in the instance to the result.
+        """
+        result = copy.copy(self)
+        result.relationships = self.relationships.copy()
+
+        # customize container
+        result.clear()
+        result.by_name = dict()
+
+        # fill container (automatically add names)
+        for C in self.getOrdered():
+            rC = C.copy()
+            result.add_item(rC)
+
+        return result
 
     def get_all(self):
         """

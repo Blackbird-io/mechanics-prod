@@ -37,7 +37,7 @@ from data_structures.system.tags_mixin import TagsMixIn
 from .dr_container import DrContainer
 from .financials import Financials
 from .history_line import HistoryLine
-from .summary_components import SummaryComponents
+from .components_base import ComponentsBase
 
 
 
@@ -363,7 +363,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         a clean instance of Components().
         """
         if not comps:
-            comps = SummaryComponents()
+            comps = ComponentsBase()
         comps.relationships.set_parent(self)
         self.components = comps
 
