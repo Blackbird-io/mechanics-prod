@@ -369,21 +369,31 @@ class LineChef:
         Routines deliver sheet with the current_row pointing to the last filled
         in cell.
         """
-        self._add_reference(
-            sheet=sheet,
-            column=column,
-            line=line,
-            set_labels=set_labels,
-            indent=indent
-            )
 
-        self._add_consolidation_logic_summary(
-            sheet=sheet,
-            column=column,
-            line=line,
-            set_labels=set_labels,
-            indent=indent + LineItem.TAB_WIDTH
-            )
+        if line.xl.derived.calculations:
+            self._add_derivation_logic(
+                sheet=sheet,
+                column=column,
+                line=line,
+                set_labels=set_labels,
+                indent=indent
+                )
+        else:
+            self._add_reference(
+                sheet=sheet,
+                column=column,
+                line=line,
+                set_labels=set_labels,
+                indent=indent
+                )
+
+            self._add_consolidation_logic_summary(
+                sheet=sheet,
+                column=column,
+                line=line,
+                set_labels=set_labels,
+                indent=indent + LineItem.TAB_WIDTH
+                )
 
         details = line.get_ordered()
         if details:
@@ -837,15 +847,24 @@ class LineChef:
         materials["lines"] = line_coordinates
         materials[field_names.PARAMETERS] = param_coordinates
 
-        life_coordinates = self._rows_to_coordinates(
-            lookup=sheet.bb.life.rows,
-            column=period_column)
-        materials["life"] = life_coordinates
+        try:
+            life_coordinates = self._rows_to_coordinates(
+                lookup=sheet.bb.life.rows,
+                column=period_column)
+        except AttributeError:
+            pass
+        else:
+            materials["life"] = life_coordinates
 
-        event_coordinates = self._rows_to_coordinates(
-            lookup=sheet.bb.events.rows,
-            column=period_column)
-        materials["events"] = event_coordinates
+        try:
+            event_coordinates = self._rows_to_coordinates(
+                lookup=sheet.bb.events.rows,
+                column=period_column)
+        except AttributeError:
+            pass
+        else:
+            materials["events"] = event_coordinates
+
         materials["steps"] = dict()
 
         n_items = len(driver_data.formula.items())
