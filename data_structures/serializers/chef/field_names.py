@@ -93,3 +93,7 @@ class FieldNames:
     TIMELINE = "time_line"
     PARAMETERS = "parameters"
     GENERAL = "general"
+    SIZE = "size"
+
+    # other lables
+    SIZE_LABEL = "representative units"
