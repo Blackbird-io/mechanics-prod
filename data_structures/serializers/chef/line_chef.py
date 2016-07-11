@@ -869,6 +869,15 @@ class LineChef:
         else:
             materials["events"] = event_coordinates
 
+        try:
+            size = getattr(sheet.bb, field_names.SIZE)
+            size_coordinates = self._rows_to_coordinates(lookup=size.rows,
+                                                         column=period_column)
+        except AttributeError:
+            pass
+        else:
+            materials["size"] = size_coordinates
+
         materials["steps"] = dict()
 
         n_items = len(driver_data.formula.items())
