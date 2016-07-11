@@ -213,16 +213,26 @@ class UnitChef:
         for snapshot in unit:
             sheet.bb.current_row = sheet.bb.parameters.rows.ending + 1
             self._add_unit_life(sheet=sheet, unit=snapshot, set_labels=False)
-
         sheet.bb.outline_level -= 1
 
-        # 2.3.  spread fins
+        # 2.3. add unit size
+        sheet.bb.current_row += 2
+        self._add_unit_size(sheet=sheet, unit=unit, set_labels=True)
+        for snapshot in unit:
+            sheet.bb.current_row = sheet.bb.size.rows.ending
+            self._add_unit_size(sheet=sheet, unit=snapshot, set_labels=False)
+
+        sheet.bb.outline_level += 1
+        group_lines(sheet, sheet.bb.size.rows.ending)
+        sheet.bb.outline_level -= 1
+
+        # 2.4.  spread fins
         current = sheet.bb.time_line.columns.get_position(unit.period.end)
         fins_dict = self._add_financials(sheet=sheet, unit=unit,
                                          column=current)
 
         for snapshot in unit:
-            sheet.bb.current_row = sheet.bb.events.rows.ending
+            sheet.bb.current_row = sheet.bb.size.rows.ending
             column = sheet.bb.time_line.columns.get_position(
                 snapshot.period.end)
             # Load balance from prior column!!!
@@ -233,13 +243,13 @@ class UnitChef:
             # Should make sure rows align here from one period to the next.
             # Main problem lies in consolidation logic.
 
-        # 2.4 add area and statement labels and sheet formatting
+        # 2.5 add area and statement labels and sheet formatting
         sheet_style.style_sheet(sheet)
 
         for statement, row in fins_dict.items():
             cell_styles.format_area_label(sheet, statement, row)
 
-        # 2.5 add selector cell
+        # 2.6 add selector cell
         selector_row = sheet.bb.parameters.rows.by_name[
             field_names.ACTIVE_SCENARIO]
         if SCENARIO_SELECTORS:
@@ -671,6 +681,64 @@ class UnitChef:
         sheet.bb.current_row = sheet.bb.events.rows.ending
 
         # Move current row down to the bottom (max_row() probably best here).
+        return sheet
+
+    def _add_unit_size(self, *pargs, sheet, unit, column=None,
+                       set_labels=True):
+        """
+
+
+        UnitChef._add_unit_size() -> Worksheet
+
+        Method adds "size" Area to unit sheet and populates it with values.
+        Will start writing on current row.
+        """
+        active_column = column
+
+        if not active_column:
+            end = unit.period.end
+            active_column = sheet.bb.time_line.columns.get_position(end)
+
+        parameters = sheet.bb.parameters
+        master_column = parameters.columns.get_position(field_names.MASTER)
+
+        if not getattr(sheet.bb, field_names.SIZE, None):
+            size = sheet.bb.add_area(field_names.SIZE)
+
+            item_dict = dict()
+            item_dict[field_names.SIZE_LABEL] = unit.size
+
+            self.add_items_to_area(
+                sheet=sheet,
+                area=size,
+                items=item_dict,
+                active_column=active_column,
+                set_labels=set_labels,
+                format_func=cell_styles.format_integer)
+
+            size.rows.by_name[field_names.SIZE_LABEL] = sheet.bb.current_row
+        else:
+            size = getattr(sheet.bb, field_names.SIZE)
+
+        # Write values for existing events
+        existing_row = size.rows.get_position(field_names.SIZE_LABEL)
+
+        master_cell = sheet.cell(column=master_column,
+                                 row=existing_row)
+        active_cell = sheet.cell(column=active_column,
+                                 row=existing_row)
+
+        active_cell.value = unit.size
+
+        if master_cell.value == active_cell.value:
+            link_template = formula_templates.ADD_COORDINATES
+            link = link_template.format(coordinates=master_cell.coordinate)
+
+            active_cell.set_explicit_value(link,
+                                           data_type=type_codes.FORMULA)
+
+        cell_styles.format_integer(active_cell)
+
         return sheet
 
     def _add_unit_params(self, *pargs, sheet, unit, set_labels=True):
