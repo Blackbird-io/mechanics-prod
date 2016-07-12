@@ -28,20 +28,16 @@ UnitChef              class containing methods to chop BusinessUnits into
 # Imports
 import openpyxl as xlio
 
+from chef_settings import SCENARIO_SELECTORS, VALUATION_TAB_COLOR
+from data_structures.modelling import common_events
 from ._chef_tools import add_scenario_selector, group_lines
-from .chef_settings import SCENARIO_SELECTORS, VALUATION_TAB_COLOR
 from .cell_styles import CellStyles
-from .data_management import LineData
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
 from .line_chef import LineChef
 from .sheet_style import SheetStyle
 from .tab_names import TabNames
-
-from data_structures.modelling import common_events
-from data_structures.modelling.statement import Statement
-from data_structures.modelling.line_item import LineItem
 
 # Constants
 # n/a

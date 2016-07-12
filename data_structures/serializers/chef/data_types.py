@@ -32,7 +32,8 @@ NumberFormats         formats for numbers
 # Imports
 from openpyxl.styles import numbers
 
-from .chef_settings import PARAM_DECIMAL_POINTS
+from chef_settings import PARAM_DECIMAL_POINTS
+
 
 
 

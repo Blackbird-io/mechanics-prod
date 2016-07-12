@@ -29,9 +29,8 @@ BB_Workbook           workbook where each sheet has a SheetData record set
 # Imports
 import openpyxl as xlio
 
+from chef_settings import COLLAPSE_ROWS, DEFAULT_SCENARIOS, SCENARIO_SELECTORS
 from ._chef_tools import check_filename_ext, test_book
-
-from .chef_settings import COLLAPSE_ROWS, DEFAULT_SCENARIOS, SCENARIO_SELECTORS
 from .data_management import SheetData
 from .field_names import FieldNames
 

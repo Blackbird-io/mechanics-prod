@@ -30,24 +30,21 @@ LineChef              class with methods to chop BB statements into dynamic
 
 # Imports
 import calendar
-import re
 
 import openpyxl as xlio
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment
 
+from bb_exceptions import ExcelPrepError
+from chef_settings import COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING, \
+                           COMMENT_CUSTOM, BLANK_BETWEEN_TOP_LINES
 from data_structures.modelling.line_item import LineItem
-
 from ._chef_tools import group_lines, check_alignment, set_param_rows, \
     get_formula_steps
 from .cell_styles import CellStyles
-from .chef_settings import COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING, \
-                           COMMENT_CUSTOM, BLANK_BETWEEN_TOP_LINES
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
-
-from bb_exceptions import ExcelPrepError
 
 
 

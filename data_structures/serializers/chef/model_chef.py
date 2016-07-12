@@ -33,16 +33,15 @@ ModelChef             chop Blackbird Engine model into a dynamic Excel workbook
 
 # Imports
 import openpyxl as xlio
+from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.styles.colors import WHITE, BLACK
 
 import bb_settings
-
-from .bb_workbook import BB_Workbook as Workbook
-
-from . import chef_settings
-
+import chef_settings
+from chef_settings import SCENARIO_SELECTORS
 from ._chef_tools import add_scenario_selector
+from .bb_workbook import BB_Workbook as Workbook
 from .cell_styles import CellStyles
-from .chef_settings import SCENARIO_SELECTORS
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
@@ -50,9 +49,6 @@ from .line_chef import LineChef
 from .sheet_style import SheetStyle
 from .tab_names import TabNames
 from .unit_chef import UnitChef
-
-from openpyxl.styles import Font, Alignment, PatternFill
-from openpyxl.styles.colors import WHITE, BLACK
 
 
 
