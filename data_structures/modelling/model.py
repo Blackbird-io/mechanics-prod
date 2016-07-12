@@ -99,6 +99,7 @@ class Model(TagsMixIn):
     valuation             P; pointer to current period valuation
 
     FUNCTIONS:
+    copy()                returns a copy of Model instance
     from_portal()         class method, extracts model out of API-format
     start()               sets _started and started to True
     transcribe()          append message and timestamp to transcript
@@ -236,6 +237,30 @@ class Model(TagsMixIn):
         del M.portal_data["e_model"]
         return M
 
+    def clear_excel(self):
+        self.time_line.clear_excel()
+
+    def copy(self):
+        """
+
+
+        Model.copy() -> obj
+
+
+        Method creates a copy of instance and returns it.  Delegates to
+        relevant classes to copy attributes.
+        """
+        result = Model(self.name)
+        result._started = self._started
+        result.portal_data = self.portal_data.copy()
+        result.taxonomy = self.taxonomy.copy()
+        result.transcript = self.transcript.copy()
+        result.time_line = self.time_line.copy()
+        result.scenarios = self.scenarios.copy()
+        result.target = self.target
+
+        return result
+
     def start(self):
         """
 
@@ -259,99 +284,3 @@ class Model(TagsMixIn):
         time_stamp = time.time()
         record = (message,time_stamp)
         self.transcript.append(record)
-
-        #//
-
-        # later routines:
-            # in business unit, should have ._add_time_line(tab)
-            #
-
-        # should have written the full timeline
-        # should enter all of these into bb_col_lookup
-            #by end date
-            #then unit-specific sheets can pick those up
-
-        # but better logic is:
-            # write the date
-            # write the period
-
-        # first, carry over the master
-        ##for every row that's filled out in params, should also copy here
-        ##need to know what column params start in
-        ##so let's establish the params as a named range
-
-        # ranges i set up here:
-        # end_dates
-        ## need to somehow be able to access the params on every unit
-        ## could just have them copied
-
-        # for cell in tl_param_names:
-            # param names in th
-
-        # for cell in tl_param_values:
-            # put in the master column
-
-        # then for every period, ...
-            # period params should point to master by default
-                #populate these first
-                #starting_row
-                #period_
-
-            # if time_line.period has a certain value,
-                # we should overwrite it and hardcode it (a particular color)
-                # find the row, write there?
-
-        # can probably delegate this down to the timeline itself
-        # time_line should raise error if there is no scenarios tab
-            #would then be easier to ask each period to do its thing?
-            #or alternatively would pick every unit in the current period and go from there
-                #yeah, should start with the current period, and then step through the company hierarchy
-
-
-        # Loren's point: create an intermediate representation in memory
-            # then can write that quickly
-            # so would probably set up sheets (in memory), formulas, etcetera
-            # would need to have offsets and everything
-            #
-
-        #for unit:
-
-            # spread life somehow
-                # row for each property
-
-            # can just record age and stuff
-            # or record all events in some profile section
-
-            # take the active tab
-            # for each line, add consolidation functionality
-            # have to connect old balance sheet as starting
-                # that's simple enough
-
-        #for driver:
-            # need to map ``data`` to cell coordinates
-                #as in, take each key and connect it to a cell
-                    #populate the cell with the driver's value
-                    #remember the coordinates
-
-            # need to translate formula to one that works on cell coordinates
-            # formula should have an _xl equivalent
-                # which should take the actual formula and turn it into excel compatible string
-                # use string formatting to convert var names into coordinates
-
-            # for something like ebitda calc, would need to:
-                # know the column
-                # figure out the relevant rows for each input cell
-                ## could have a general conversion routine for .find_first(), which looks up name in lookup table
-                ## may also want to organize lookup tables by section to avoid name collisions
-                ## so have a .income or .cash section where names have to be unique
-
-
-        # test would be:
-            # compare net income and balance sheet to existing representation
-
-        #
-
-
-
-
-

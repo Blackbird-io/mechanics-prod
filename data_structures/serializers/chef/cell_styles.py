@@ -153,6 +153,19 @@ class CellStyles:
         cell.font = font
 
     @staticmethod
+    def format_integer(cell):
+        """
+
+
+        CellStyles.format_integer -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Format cells containing integers to conform with Chef standard.
+        """
+        cell.number_format = number_formats.INTEGER_FORMAT
+
+    @staticmethod
     def format_line(line):
         """
 

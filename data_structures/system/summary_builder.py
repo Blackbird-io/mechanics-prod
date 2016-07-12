@@ -35,10 +35,10 @@ from dateutil.relativedelta import relativedelta
 
 import bb_exceptions
 
+from data_structures.modelling.business_unit_base import BusinessUnitBase
 from data_structures.modelling.financials import Financials
-from data_structures.modelling.period_summary import PeriodSummary
-from data_structures.modelling.timeline_summary import TimelineSummary
-from data_structures.modelling.unit_summary import UnitSummary
+from data_structures.modelling.time_period_base import TimePeriodBase
+from data_structures.modelling.time_line_base import TimelineBase
 
 
 
@@ -58,7 +58,7 @@ class SummaryBuilder:
 
     DATA:
     fiscal_year_end       date; end of fiscal year default = 12/31/current year
-    summaries             dict; holds TimelineSummary objects keyed by interval
+    summaries             dict; holds TimelineBase objects keyed by interval
     time_line             pointer to TimeLine containing relevant financials
 
     FUNCTIONS:
@@ -109,6 +109,23 @@ class SummaryBuilder:
             fye = date(fye.year, fye.month, last_day)
 
         self._fiscal_year_end = fye
+
+    def copy(self):
+        """
+
+
+        SummaryBuilder.copy() -> obj
+
+
+        Method makes a copy of the instance, maintaining original link to
+        time_line, and returns it.
+        """
+        result = SummaryBuilder(self.time_line)
+        result._fiscal_year_end = self._fiscal_year_end
+        for key, value in self.summaries.items():
+            result.summaries[key] = value.copy()
+
+        return result
 
     def get_balance_summary(self, bu_bbid, start_date, end_date):
         """
@@ -372,7 +389,7 @@ class SummaryBuilder:
         fye = self.fiscal_year_end
 
         # make the building blocks to hold this set of summaries
-        timeline_summary = TimelineSummary(interval)
+        timeline_summary = TimelineBase(interval)
         timeline_summary.id.set_namespace(self.time_line.id.namespace)
 
         # Start at the beginning of the current fiscal year
@@ -383,7 +400,7 @@ class SummaryBuilder:
         # start pointer is inclusive, need to include this TimePeriod
         last_period_end = max(self.time_line.keys())
         while end_pointer <= last_period_end:
-            period_summary = PeriodSummary(start_pointer, end_pointer)
+            period_summary = TimePeriodBase(start_pointer, end_pointer)
 
             unit_summary = self._get_unit_summary(bu_bbid,
                                                   start_pointer,
@@ -419,6 +436,24 @@ class SummaryBuilder:
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
+
+    @staticmethod
+    def _do_summary_calculations(real_bu, unit_summary):
+
+        # loop through drivers in real_bu.drivers and copy all
+        # "summary_calculate" drivers to unit_summary
+        for bbid in sorted(real_bu.drivers.dr_directory.keys()):
+            dr = real_bu.drivers.dr_directory[bbid]
+            if dr.summary_calculate:
+                unit_summary.drivers.add_item(dr.copy())
+
+        summary_fins = unit_summary.financials
+        for statement in summary_fins.ordered:
+            if statement:
+                for line in statement.get_full_ordered():
+                    if line.summary_calculate:
+                        line.clear()
+                        unit_summary._derive_line(line)
 
     def _find_first_alive(self, bu_bbid, start, end):
         """
@@ -555,12 +590,12 @@ class SummaryBuilder:
         """
 
 
-        SummaryBuilder._get_unit_summary() -> UnitSummary
+        SummaryBuilder._get_unit_summary() -> BusinessUnitBase
 
         --``bu_bbid`` is the id of the business unit you wish to summarize
         --``start`` is the date to start summarizing statement
         --``end`` is the date to stop summarizing statement
-        --``period`` is the PeriodSummary object in which to place unit
+        --``period`` is the TimePeriodBase object in which to place unit
         --``recur`` whether or not to calculate summaries for component bu's
 
         Method delegates to get_financials_summary() to calculate the summary
@@ -585,7 +620,7 @@ class SummaryBuilder:
                                                        start_date,
                                                        end_date)
 
-            unit_summary = UnitSummary(template_bu.name)
+            unit_summary = BusinessUnitBase(template_bu.name)
 
             # intentionally keeping source BU's bbid so we can find it later
             unit_summary.id = copy.deepcopy(template_bu.id)
@@ -593,6 +628,10 @@ class SummaryBuilder:
             unit_summary.complete = complete
             unit_summary.period = period
             unit_summary.periods_used = end_date.month - start_date.month + 1
+
+            check_period = self.time_line.find_period(end_date)
+            check_bu = check_period.bu_directory[bu_bbid]
+            self._do_summary_calculations(check_bu, unit_summary)
 
             if recur:
                 for comp in template_bu.components.get_all():

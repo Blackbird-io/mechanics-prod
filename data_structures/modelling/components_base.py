@@ -4,10 +4,11 @@
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 # Blackbird Environment
-# Module: data_structures.modelling.summary_components
+# Module: data_structures.modelling.components_base
 """
 
-Module defines SummaryComponents class, a container for UnitSummary's.
+Module defines ComponentsBase class, a container for instances of
+BusinessUnit[Base].
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -19,11 +20,15 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-SummaryComponents     container that stores UnitSummary objects
+ComponentsBase        container that stores instances of BusinessUnit[Base]
 ====================  ==========================================================
 """
 
+
+
+
 # imports
+import copy
 import bb_exceptions
 import bb_settings
 
@@ -36,7 +41,7 @@ from data_structures.system.relationships import Relationships
 # n/a
 
 # classes
-class SummaryComponents(dict):
+class ComponentsBase(dict):
     """
 
     The SummaryComponents class defines a container that stores UnitSummary
@@ -82,9 +87,9 @@ class SummaryComponents(dict):
         """
 
 
-        SummaryComponents.add_item() -> None
+        ComponentsBase.add_item() -> None
 
-        --``bu`` is a UnitSummary object
+        --``bu`` is an instance of BusinessUnit or BusinessUnitBase object
 
         Method adds bu to the instance, keyed as bu.id.bbid. If bu does not
         specify a bbid, method raises IDError.
@@ -100,11 +105,36 @@ class SummaryComponents(dict):
         if bu.tags.name:
             self.by_name[bu.tags.name] = bu.id.bbid
 
+    def copy(self):
+        """
+
+
+        ComponentsBase.copy() -> ComponentsBase
+
+
+        Method returns a deep copy of components. Uses Tags.copy() to create a
+        shell. Method then sets result.by_name to a blank dictionary and adds a
+        copy of each unit in the instance to the result.
+        """
+        result = copy.copy(self)
+        result.relationships = self.relationships.copy()
+
+        # customize container
+        result.clear()
+        result.by_name = dict()
+
+        # fill container (automatically add names)
+        for C in self.getOrdered():
+            rC = C.copy()
+            result.add_item(rC)
+
+        return result
+
     def get_all(self):
         """
 
 
-        SummaryComponents.get_all() -> list
+        ComponentsBase.get_all() -> list
 
 
         Method returns list of all units in instance; ordered if in DEBUG_MODE,
@@ -119,11 +149,14 @@ class SummaryComponents(dict):
 
         return pool
 
+    def getOrdered(self, order_by=None):
+        return self.get_ordered(order_by=order_by)
+
     def get_ordered(self, order_by=None):
         """
 
 
-        SummaryComponents.get_ordered() -> list
+        ComponentsBase.get_ordered() -> list
 
 
         Method returns a list of every value in the instance, ordered by key.
@@ -137,7 +170,7 @@ class SummaryComponents(dict):
         """
 
 
-        SummaryComponents._get_pretty_lines() -> list
+        ComponentsBase._get_pretty_lines() -> list
 
 
         Method returns a list of strings that show each component in rows of

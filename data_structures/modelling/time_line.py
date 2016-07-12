@@ -27,10 +27,9 @@ TimeLine              collection of TimePeriod objects indexed by end date
 
 
 # imports
-import calendar
+import copy
 
 from datetime import date, timedelta
-from dateutil.relativedelta import relativedelta
 
 import bb_settings
 
@@ -38,6 +37,7 @@ from data_structures.system.bbid import ID
 from data_structures.system.summary_builder import SummaryBuilder
 
 from .parameters import Parameters
+from .time_line_base import TimelineBase
 from .time_period import TimePeriod
 
 
@@ -47,7 +47,7 @@ from .time_period import TimePeriod
 # n/a
 
 # classes
-class TimeLine(dict):
+class TimeLine(TimelineBase):
     """
 
     A TimeLine is a dictionary of TimePeriod objects keyed by ending date.
@@ -85,13 +85,11 @@ class TimeLine(dict):
     DEFAULT_PERIODS_BACK = 1
 
     def __init__(self):
-        dict.__init__(self)
+        TimelineBase.__init__(self, interval=1)
+
         self._current_period = None
         self._old_current_period = None
-        self.id = ID()
-        # Timeline objects support the id interface and pass the model's id down
-        # to time periods. The timeline instance itself does not get its own
-        # bbid.
+
         self.master = None
         self.parameters = Parameters()
         self.summary_builder = SummaryBuilder(self)
@@ -135,19 +133,6 @@ class TimeLine(dict):
         line_end = "\n"
         result = line_end.join(lines)
         return result
-
-    def add_period(self, period):
-        """
-
-
-        TimeLine.add_period() -> None
-
-
-        Method configures period and records it in the instance under the
-        period's end_date.
-        """
-        period = self._configure_period(period)
-        self[period.end] = period
 
     def build(self,
               ref_date,
@@ -247,6 +232,28 @@ class TimeLine(dict):
         past, present, future = self.get_segments(seed.end)
         for date in future:
             self[date].clear()
+
+    def copy(self):
+        """
+
+
+        TimeLine.copy() -> obj
+
+
+        Method returns a copy of the instance.
+        """
+        result = TimelineBase.copy(self)
+        result.has_been_extrapolated = self.has_been_extrapolated
+        result.summary_builder = self.summary_builder.copy()
+        result.summary_builder.time_line = result
+
+        if self.current_period:
+            result._current_period = result[self.current_period.end]
+
+        if self._old_current_period:
+            result._old_current_period = result[self._old_current_period.end]
+
+        return result
 
     def extrapolate(self, seed=None):
         """
@@ -377,9 +384,6 @@ class TimeLine(dict):
         POSIX timestamp (int or float), datetime.date object, or string in
         "YYYY-MM-DD" format.
         """
-        result = None
-        end_date = None
-        q_date = None
         if isinstance(query, date):
             q_date = query
         else:
@@ -419,23 +423,6 @@ class TimeLine(dict):
         future_dates = dates[(ref_spot + 1 ): ]
         past_dates = dates[:ref_spot]
         result = [past_dates, [ref_end], future_dates]
-        return result
-
-    def get_ordered(self):
-        """
-
-
-        TimeLine.getOrdered() -> list
-
-
-        Method returns list of periods in instance, ordered from earliest to
-        latest endpoint.
-        """
-        result = []
-        for end_date in sorted(self.keys()):
-            period = self[end_date]
-            result.append(period)
-
         return result
 
     def getOrdered(self):
@@ -499,24 +486,6 @@ class TimeLine(dict):
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
-
-    def _configure_period(self, period):
-        """
-
-
-        TimeLine._configure_period() -> period
-
-
-        Method sets period's namespace id to that of the TimeLine, then returns
-        period.
-        """
-        model_namespace = self.id.namespace
-        period.id.set_namespace(model_namespace)
-        # Period has only a pointer to the Model.namespace_id; periods don't have
-        # their own bbids.
-        period.relationships.set_parent(self)
-
-        return period
 
     def _get_fwd_start_date(self, ref_date):
         """

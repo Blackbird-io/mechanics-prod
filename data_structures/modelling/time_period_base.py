@@ -3,10 +3,10 @@
 # Copyright Blackbird Logical Applications, LLC 2016
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 # Blackbird Environment
-# Module: data_structures.modelling.period_summary
+# Module: data_structures.modelling.time_period_base
 """
 
-Module defines PeriodSummary class.
+Module defines TimePeriodBase class.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -18,11 +18,16 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-TimePeriod            a snapshot of data over a period of time.
+TimePeriodBase        a snapshot of data over a period of time.
 ====================  ==========================================================
 """
 
+
+
+
 # Imports
+import copy
+
 import bb_exceptions
 import bb_settings
 
@@ -32,11 +37,13 @@ from data_structures.system.relationships import Relationships
 from .history import History
 
 
+
+
 # Constants
 # n/a
 
 # Classes
-class PeriodSummary(History):
+class TimePeriodBase(History):
     """
 
     PeriodSummary objects represent periods of time and store a snapshot of some
@@ -67,7 +74,7 @@ class PeriodSummary(History):
     start                 datetime.date; first date in period.
 
     FUNCTIONS:
-    __str__               basic print, shows starts, ends, and content
+    copy()                return a copy of the caller instance
     get_units()           return list of units from bbid pool
     register()            conform and register unit
     set_content()         attach company to period
@@ -86,6 +93,11 @@ class PeriodSummary(History):
         self.id = ID()
         self.relationships = Relationships(self)
 
+        # The current approach to indexing units within a period assumes that
+        # Blackbird will rarely remove existing units from a model. both
+        # The ``bu`` directory is static: it does not know if
+        # the unit whose bbid it references is no longer in its domain.
+
     def __str__(self):
         dots = "*" * bb_settings.SCREEN_WIDTH
         s = "\t starts:  \t%s\n" % self.start.isoformat()
@@ -94,11 +106,32 @@ class PeriodSummary(History):
         result = dots + "\n" + s + e + c + dots + "\n"
         return result
 
+    def copy(self):
+        """
+
+
+        TimePeriodBase.copy() -> TimePeriodBase
+
+
+        Method returns a new TimePeriod object whose content is a class-specific
+        copy of the caller content.
+        """
+        result = copy.copy(self)
+        result.relationships = self.relationships.copy()
+        result.start = copy.copy(self.start)
+        result.end = copy.copy(self.end)
+        if self.content:
+            new_content = self.content.copy()
+            result.set_content(new_content)
+        #same id namespace (old model)
+
+        return result
+
     def get_units(self, pool):
         """
 
 
-        PeriodSummary.get_units() -> list
+        TimePeriodBase.get_units() -> list
 
 
         Method returns a list of objects from instance.bu_directory that
@@ -119,8 +152,9 @@ class PeriodSummary(History):
         """
 
 
-        PeriodSummary.register() -> None
+        TimePeriodBase.register() -> None
 
+        --``bu`` is an instance of BusinessUnit or BusinessUnitBase
 
         Manually add unit to period. Unit will conform to period and appear
         in directories. Use sparingly: designed for master (taxonomy) period.
@@ -154,8 +188,9 @@ class PeriodSummary(History):
         """
 
 
-        PeriodSummary.set_content() -> None
+        TimePeriodBase.set_content() -> None
 
+        --``bu`` is an instance of BusinessUnit or BusinessUnitBase
 
         Register bu and set instance.content to point to it.
 
@@ -163,9 +198,9 @@ class PeriodSummary(History):
         a model for the first time (as opposed to moving content from period to
         period or level to level within a model).
 
-        PeriodSummary's in a Model all share the model's namespace_id.
-        Accordingly, a UnitSummary will have the same bbid in all time periods.
-        The UnitSummary can elect to get a different bbid if it's name changes,
+        TimePeriodBase's in a Model all share the model's namespace_id.
+        Accordingly, a bu will have the same bbid in all time periods.
+        The bu can elect to get a different bbid if it's name changes,
         but in such an event, the Model will treat it as a new unit altogether.
         """
         self.register(bu, reset_directories=True)
@@ -180,10 +215,9 @@ class PeriodSummary(History):
         """
 
 
-        PeriodSummary.reset_directories() -> None
+        TimePeriodBase.reset_directories() -> None
 
 
-        Method sets instance.bu_directory and instance.ty_directory to blank
-        dictionaries.
+        Method sets instance.bu_directory to blank dictionary.
         """
         self.bu_directory = dict()
