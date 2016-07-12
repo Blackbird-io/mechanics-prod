@@ -33,6 +33,9 @@ from datetime import date
 
 
 
+# MASTER SWITCH
+WEB_MODE = True
+
 # Constants
 DEBUG_MODE = False
 DEFAULT_MODEL_NAME = "Blank Blackbird Model"
@@ -71,3 +74,9 @@ fix_ref_date = False
 #whether models always start on the same date; keep True for testing
 days_in_month = 30
 days_in_year = 365
+
+if WEB_MODE:
+    DEBUG_MODE = False
+    PREP_FOR_EXCEL = True
+    MAKE_ANNUAL_SUMMARIES = True
+    fix_ref_date = False
