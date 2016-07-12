@@ -34,14 +34,14 @@ n/a
 
 
 # Imports
-from bb_exceptions import ExcelPrepError
-
-from .chef_settings import SCENARIO_SELECTORS, FILTER_PARAMETERS
-
-import openpyxl as xlio
 import os
 import re
+
+import openpyxl as xlio
 import xlrd
+
+from bb_exceptions import ExcelPrepError
+from chef_settings import SCENARIO_SELECTORS, FILTER_PARAMETERS
 
 if SCENARIO_SELECTORS:
     import win32api

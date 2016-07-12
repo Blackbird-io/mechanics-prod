@@ -29,9 +29,12 @@ SheetStyle            standard styles for worksheets
 # Imports
 import openpyxl as xlio
 
+from chef_settings import COLUMN_WIDTH
 from .cell_styles import CellStyles
-from .chef_settings import COLUMN_WIDTH
 from .field_names import FieldNames
+
+
+
 
 # Constants
 SHOW_GRID_LINES = False

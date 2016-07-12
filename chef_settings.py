@@ -37,6 +37,7 @@ n/a
 
 # Imports
 import os
+from .bb_settings import WEB_MODE
 
 
 
@@ -84,3 +85,11 @@ VALUATION_TAB_COLOR = '556a2c'
 COVER_TAB_COLOR = 'ffffff'
 TIMELINE_TAB_COLOR = 'cccccc'
 
+if WEB_MODE:
+    COMMENT_FORMULA_NAME = False
+    COMMENT_FORMULA_STRING = False
+    COMMENT_CUSTOM = False
+
+    COLLAPSE_ROWS = False
+    SCENARIO_SELECTORS = False
+    FILTER_PARAMETERS = True

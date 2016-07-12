@@ -28,11 +28,10 @@ CellStyles            standard styles for worksheet cells
 
 # Imports
 import openpyxl as xlio
-
 from openpyxl.styles import Border, Side, Font, Alignment, PatternFill
 from openpyxl.styles.colors import WHITE, BLACK
 
-from .chef_settings import AREA_BORDER
+from chef_settings import AREA_BORDER
 from .data_types import NumberFormats
 from .data_types import TypeCodes
 

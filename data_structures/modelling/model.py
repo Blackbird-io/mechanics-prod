@@ -27,19 +27,15 @@ Model                 structured snapshots of a company across time periods
 
 
 # imports
-import time
 import pickle
+import time
 
 import bb_exceptions
 import bb_settings
-
-from .time_line import TimeLine
-
+from chef_settings import DEFAULT_SCENARIOS
 from data_structures.system.bbid import ID
 from data_structures.system.tags_mixin import TagsMixIn
-from data_structures.serializers.chef.chef_settings import DEFAULT_SCENARIOS
-
-
+from .time_line import TimeLine
 
 
 # constants
