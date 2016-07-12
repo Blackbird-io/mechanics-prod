@@ -260,6 +260,7 @@ class LineChef:
         else:
             if line.xl.cell:
                 # here just link the current cell to the cell in line.xl.cell
+                old_cell = line.xl.cell
                 line.xl.reference.source = line
                 self._add_reference(
                     sheet=sheet,
@@ -267,6 +268,9 @@ class LineChef:
                     line=line,
                     set_labels=set_labels,
                     indent=indent)
+                line.xl.reference.source = None
+                line.xl.reference.cell = None
+                line.xl.cell = old_cell
             else:
                 self._combine_segments(
                     sheet=sheet,
@@ -369,21 +373,31 @@ class LineChef:
         Routines deliver sheet with the current_row pointing to the last filled
         in cell.
         """
-        self._add_reference(
-            sheet=sheet,
-            column=column,
-            line=line,
-            set_labels=set_labels,
-            indent=indent
-            )
 
-        self._add_consolidation_logic_summary(
-            sheet=sheet,
-            column=column,
-            line=line,
-            set_labels=set_labels,
-            indent=indent + LineItem.TAB_WIDTH
-            )
+        if line.xl.derived.calculations:
+            self._add_derivation_logic(
+                sheet=sheet,
+                column=column,
+                line=line,
+                set_labels=set_labels,
+                indent=indent
+                )
+        else:
+            self._add_reference(
+                sheet=sheet,
+                column=column,
+                line=line,
+                set_labels=set_labels,
+                indent=indent
+                )
+
+            self._add_consolidation_logic_summary(
+                sheet=sheet,
+                column=column,
+                line=line,
+                set_labels=set_labels,
+                indent=indent + LineItem.TAB_WIDTH
+                )
 
         details = line.get_ordered()
         if details:
@@ -837,15 +851,33 @@ class LineChef:
         materials["lines"] = line_coordinates
         materials[field_names.PARAMETERS] = param_coordinates
 
-        life_coordinates = self._rows_to_coordinates(
-            lookup=sheet.bb.life.rows,
-            column=period_column)
-        materials["life"] = life_coordinates
+        try:
+            life_coordinates = self._rows_to_coordinates(
+                lookup=sheet.bb.life.rows,
+                column=period_column)
+        except AttributeError:
+            pass
+        else:
+            materials["life"] = life_coordinates
 
-        event_coordinates = self._rows_to_coordinates(
-            lookup=sheet.bb.events.rows,
-            column=period_column)
-        materials["events"] = event_coordinates
+        try:
+            event_coordinates = self._rows_to_coordinates(
+                lookup=sheet.bb.events.rows,
+                column=period_column)
+        except AttributeError:
+            pass
+        else:
+            materials["events"] = event_coordinates
+
+        try:
+            size = getattr(sheet.bb, field_names.SIZE)
+            size_coordinates = self._rows_to_coordinates(lookup=size.rows,
+                                                         column=period_column)
+        except AttributeError:
+            pass
+        else:
+            materials["size"] = size_coordinates
+
         materials["steps"] = dict()
 
         n_items = len(driver_data.formula.items())

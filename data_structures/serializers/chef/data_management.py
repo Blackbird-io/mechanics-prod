@@ -197,14 +197,15 @@ class LineData(Range):
     ====================  =====================================================
 
     DATA:
+    cell                  instance of Cell
     consolidated          instance of Range(); holds consolidation data
                           (list of sources, cell, starting, ending)
     derived               instance of Range(); holds derivation data (list of
                           calculations, cell, starting, ending)
     detailed              instance of Range(); holds detail data (cell,
                           starting, ending)
+    reference             instance of Reference
     sheet                 instance of Worksheet
-    cell                  instance of Cell
 
     FUNCTIONS:
     get_coordinates       returns Excel reference string of cell coordinates

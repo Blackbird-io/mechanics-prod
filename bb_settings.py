@@ -34,7 +34,7 @@ from datetime import date
 
 
 # Constants
-DEBUG_MODE = True
+DEBUG_MODE = False
 DEFAULT_MODEL_NAME = "Blank Blackbird Model"
 PREP_FOR_EXCEL = True
 MAKE_ANNUAL_SUMMARIES = True
@@ -70,11 +70,7 @@ user_correction = 0.10
 
 #Calendar
 t0 = date(2015, 6, 16)
-fix_ref_date = True
+fix_ref_date = False
 #whether models always start on the same date; keep True for testing
 days_in_month = 30
 days_in_year = 365
-
-
-
-

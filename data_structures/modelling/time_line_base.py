@@ -3,11 +3,11 @@
 # Copyright Blackbird Logical Applications, LLC 2016
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 # Blackbird Environment
-# Module: data_structures.modelling.timeline_summary
+# Module: data_structures.modelling.time_line_base
 """
 
-Module defines TimeLine class. TimeLines are dictionaries of time periods with
-custom search methods.
+Module defines TimelineBase class. TimelineBase objects  are dictionaries of
+time periods with custom search methods.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -19,7 +19,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-TimelineSummary       collection of PeriodSummary objects indexed by end date
+TimelineBase       collection of PeriodSummary objects indexed by end date
 ====================  ==========================================================
 """
 
@@ -27,6 +27,8 @@ TimelineSummary       collection of PeriodSummary objects indexed by end date
 
 
 # imports
+import copy
+
 from datetime import date, timedelta
 
 from data_structures.system.bbid import ID
@@ -38,11 +40,11 @@ from data_structures.system.bbid import ID
 # n/a
 
 # classes
-class TimelineSummary(dict):
+class TimelineBase(dict):
     """
 
-    A TimeLine is a dictionary of TimePeriod objects keyed by ending date.
-    The TimeLine helps manage, configure, and search TimePeriods.
+    A TimelineBase is a dictionary of TimePeriod objects keyed by ending date.
+    The TimelineBase helps manage, configure, and search TimePeriods.
 
     Unless otherwise specified, class expects all dates as datetime.date objects
     and all periods as datetime.timedelta objects.
@@ -64,15 +66,18 @@ class TimelineSummary(dict):
     def __init__(self, interval):
         dict.__init__(self)
         self.id = ID()
+        # TimelineBase objects support the id interface and pass the model's id
+        # down to time periods. The TimelineBase instance itself does not get
+        # its own bbid.
         self.interval = interval
 
     def add_period(self, period):
         """
 
 
-        TimelineSummary.add_period() -> None
+        TimelineBase.add_period() -> None
 
-        --``period`` is a PeriodSummary object
+        --``period`` is a TimePeriod or TimePeriodBase object
 
         Method configures period and records it in the instance under the
         period's end_date.
@@ -80,11 +85,26 @@ class TimelineSummary(dict):
         period = self._configure_period(period)
         self[period.end] = period
 
+    def copy(self):
+        """
+
+
+        TimeLineBase.copy() -> obj
+
+
+        Method returns a copy of the instance.
+        """
+        result = copy.copy(self)
+        for key, value in self.items():
+            result[key] = value.copy()
+
+        return result
+
     def find_period(self, query):
         """
 
 
-        TimelineSummary.find_period() -> TimePeriod
+        TimelineBase.find_period() -> TimePeriod
 
 
         Method returns a time period that includes query. ``query`` can be a
@@ -109,6 +129,23 @@ class TimelineSummary(dict):
 
         return result
 
+    def get_ordered(self):
+        """
+
+
+        TimelineBase.getOrdered() -> list
+
+
+        Method returns list of periods in instance, ordered from earliest to
+        latest endpoint.
+        """
+        result = []
+        for end_date in sorted(self.keys()):
+            period = self[end_date]
+            result.append(period)
+
+        return result
+
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
@@ -117,7 +154,7 @@ class TimelineSummary(dict):
         """
 
 
-        TimelineSummary._configure_period() -> period
+        TimelineBase._configure_period() -> period
 
 
         Method sets period's namespace id to that of the TimeLine, then returns

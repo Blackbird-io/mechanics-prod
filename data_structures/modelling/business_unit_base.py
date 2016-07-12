@@ -4,10 +4,10 @@
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 # Blackbird Environment
-# Module: data_structures.modelling.unit_summary
+# Module: data_structures.modelling.business_unit_base
 """
 
-Module defines BusinessUnit class.
+Module defines BusinessUnitBase class.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -19,7 +19,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-UnitSummary           structured summary of a business and its components
+BusinessUnitBase      basic structure to hold business information
 ====================  ==========================================================
 """
 
@@ -28,15 +28,17 @@ UnitSummary           structured summary of a business and its components
 
 # Imports
 import bb_exceptions
+import copy
 
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
 from data_structures.system.tags_mixin import TagsMixIn
 
-from .summary_components import SummaryComponents
+from .dr_container import DrContainer
 from .financials import Financials
 from .history_line import HistoryLine
+from .components_base import ComponentsBase
 
 
 
@@ -48,7 +50,7 @@ from .history_line import HistoryLine
 # n/a
 
 # Classes
-class UnitSummary(HistoryLine, TagsMixIn):
+class BusinessUnitBase(HistoryLine, TagsMixIn):
     """
 
     Object is primarily a storage container for financial summary and business
@@ -58,11 +60,12 @@ class UnitSummary(HistoryLine, TagsMixIn):
     ====================  ======================================================
 
     DATA:
+    complete              bool; if financials are complete for unit in period
     components            instance of SummaryComponents class
     financials            instance of Financials object
     id                    instance of ID object
     period                pointer to PeriodSummary object
-    periods_used          int; number of periods used for summaries
+    periods_used          int; number of periods used for values in financials
     relationships         instance of Relationships class
     xl                    instance of UnitData class
 
@@ -77,10 +80,11 @@ class UnitSummary(HistoryLine, TagsMixIn):
         HistoryLine.__init__(self)
         TagsMixIn.__init__(self, name)
 
-        self._type = None
-
         self.components = None
         self._set_components()
+
+        self.drivers = None
+        self._set_drivers()
 
         self.set_financials(fins)
         self.complete = False
@@ -93,11 +97,52 @@ class UnitSummary(HistoryLine, TagsMixIn):
         self.periods_used = 0
         self.xl = xl_mgmt.UnitData()
 
+    def copy(self):
+        """
+
+
+        BU.copy() -> BU
+
+
+        Method returns a new business unit that is a deep-ish copy of the
+        instance.
+
+        The new bu starts out as a shallow Tags.copy() copy of the instance.
+        The method then sets the following attributes on the new bu to either
+        deep or class-specific copies of the instance values:
+
+        - components
+        - drivers
+        - financials
+        - id (vanilla shallow copy)
+
+        The class-specific copy methods for components, drivers, and financials
+        all return deep copies of the object and its contents. See their
+        respective class documenation for mode detail.
+        """
+        result = copy.copy(self)
+        result.tags = self.tags.copy()
+        result.relationships = self.relationships.copy()
+        # Start with a basic shallow copy, then add tags
+        #
+        r_comps = self.components.copy()
+        result._set_components(r_comps)
+
+        r_drivers = self.drivers.copy()
+        result._set_drivers(r_drivers)
+
+        r_fins = self.financials.copy()
+        result.set_financials(r_fins)
+
+        result.id = copy.copy(self.id)
+
+        return result
+
     def __str__(self, lines=None):
         """
 
 
-        UnitSummary.__str__() -> str
+        BusinessUnitBase.__str__() -> str
 
 
         Method concatenates each line in ``lines``, adds a new-line character at
@@ -120,7 +165,7 @@ class UnitSummary(HistoryLine, TagsMixIn):
         """
 
 
-        UnitSummary.add_component() -> None
+        BusinessUnitBase.add_component() -> None
 
         --``bu``
         --``overwrite``
@@ -142,7 +187,7 @@ class UnitSummary(HistoryLine, TagsMixIn):
         """
 
 
-        UnitSummary.set_financials() -> None
+        BusinessUnitBase.set_financials() -> None
 
 
         Method for initializing instance.financials with a properly configured
@@ -164,7 +209,7 @@ class UnitSummary(HistoryLine, TagsMixIn):
         """
 
 
-        UnitSummary._build_directory() -> (id_directory, ty_directory)
+        BusinessUnitBase._build_directory() -> (id_directory, ty_directory)
 
 
         Register yourself and optionally your components, by type and by id
@@ -191,6 +236,45 @@ class UnitSummary(HistoryLine, TagsMixIn):
 
         return id_directory
 
+    def _derive_line(self, line):
+        """
+
+
+        BusinessUnitBase.derive_line() -> None
+
+        --``line`` is the LineItem to work on
+
+        Method computes the value of a line using drivers stored on the
+        instance.  Method builds a queue of applicable drivers for the provided
+        LineItem. Method then runs the drivers in the queue sequentially. Each
+        LineItem gets a unique queue.
+
+        Method will not derive any lines that are hardcoded or have already
+        been consolidated (LineItem.hardcoded == True or
+        LineItem.has_been_consolidated == True).
+        """
+
+        # look for drivers based on line name, line parent name, all line tags
+        keys = [line.tags.name.casefold()]
+        keys.append(line.relationships.parent.name.casefold())
+        keys.extend(line.tags.all)
+
+        for key in keys:
+            if key in self.drivers:
+                matching_drivers = self.drivers.get_drivers(key)
+                for driver in matching_drivers:
+                    driver.workOnThis(line)
+
+        # Repeat for any details
+        if line._details:
+            for detail in line.get_ordered():
+                if detail.replica:
+                    continue
+                    # Skip replicas to make sure we apply the driver only once
+                    # A replica should never have any details
+                else:
+                    self._derive_line(detail)
+
     def _get_pretty_lines(self,
                           top_element="=",
                           side_element="|",
@@ -199,7 +283,7 @@ class UnitSummary(HistoryLine, TagsMixIn):
         """
 
 
-        UnitSummary._get_pretty_lines() -> list
+        BusinessUnitBase._get_pretty_lines() -> list
 
 
         Method returns a list of strings that displays a box if printed in
@@ -271,7 +355,7 @@ class UnitSummary(HistoryLine, TagsMixIn):
         """
 
 
-        UnitSummary._register_in_period() -> None
+        BusinessUnitBase._register_in_period() -> None
 
 
         Method updates the bu_directory on the instance period with the contents
@@ -314,7 +398,7 @@ class UnitSummary(HistoryLine, TagsMixIn):
         """
 
 
-        UnitSummary._set_components() -> None
+        BusinessUnitBase._set_components() -> None
 
 
         Method sets instance.components to the specified object, sets object to
@@ -322,15 +406,31 @@ class UnitSummary(HistoryLine, TagsMixIn):
         a clean instance of Components().
         """
         if not comps:
-            comps = SummaryComponents()
+            comps = ComponentsBase()
         comps.relationships.set_parent(self)
         self.components = comps
+
+    def _set_drivers(self, dr_c=None):
+        """
+
+
+        BusinessUnitBase._set_drivers() -> None
+
+
+        Method for initializing instance.drivers with a properly configured
+        DrContainer object. Method sets instance as the parentObject for
+        DrContainer and any drivers in DrContainer.
+        """
+        if not dr_c:
+            dr_c = DrContainer()
+        dr_c.setPartOf(self, recur=True)
+        self.drivers = dr_c
 
     def _update_id(self, namespace, recur=True):
         """
 
 
-        UnitSummary._update_id() -> None
+        BusinessUnitBase._update_id() -> None
 
 
         Assigns instance a new id in the namespace, based on the instance name.
@@ -339,6 +439,7 @@ class UnitSummary(HistoryLine, TagsMixIn):
         """
         self.id.set_namespace(namespace)
         self.id.assign(self.tags.name)
+        self.financials.register(namespace=namespace)
         # This unit now has an id in the namespace. Now pass our bbid down as
         # the namespace for all downstream components.
         if recur:

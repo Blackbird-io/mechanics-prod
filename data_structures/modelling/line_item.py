@@ -115,6 +115,7 @@ class LineItem(Statement):
         self.log = []
         self.position = None
         self._sum_over_time = True
+        self._summary_calculate = False
         self._consolidate = True
         self._replica = False
         self._hardcoded = False
@@ -148,6 +149,19 @@ class LineItem(Statement):
     @sum_over_time.setter
     def sum_over_time(self, value):
         self._sum_over_time = value
+
+    @property
+    def summary_calculate(self):
+        """
+        Default value of summary_calculate is False.  If False, line will be
+        dealt with per the value of "sum_over_time".  If True, line item will
+        be calculated with any relevant drivers that are "summary_calculate'.
+        """
+        return self._summary_calculate
+
+    @summary_calculate.setter
+    def summary_calculate(self, value):
+        self._summary_calculate = value
 
     @property
     def consolidate(self):
