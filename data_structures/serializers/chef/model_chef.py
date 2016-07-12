@@ -32,6 +32,7 @@ ModelChef             chop Blackbird Engine model into a dynamic Excel workbook
 
 
 # Imports
+import os
 import openpyxl as xlio
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.styles.colors import WHITE, BLACK
@@ -54,7 +55,7 @@ from .unit_chef import UnitChef
 
 
 # Constants
-# n/a
+IMAGE_PATH = os.path.join(os.path.dirname(__file__), 'static', 'blackbird_engine_2X_410x120.png')
 
 # Module Globals
 cell_styles = CellStyles()
@@ -306,11 +307,12 @@ class ModelChef:
         column = sheet.column_dimensions['F']
         column.width = 14
 
-        img = xlio.drawing.image.Image(chef_settings.IMAGE_PATH,
-                                       size=(250, None))
-        img.anchor(sheet.cell('B2'))
+        if chef_settings.INCLUDE_LOGO:
+            img = xlio.drawing.image.Image(IMAGE_PATH,
+                                           size=(250, None))
+            img.anchor(sheet.cell('B2'))
 
-        sheet.add_image(img)
+            sheet.add_image(img)
 
         cell_styles.format_border_group(sheet, 2, 8, 9, 22,
                                         border_style='double')
