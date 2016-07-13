@@ -255,8 +255,6 @@ class Topic:
         self.MR.receive(message_1)
         #sets MR.messageIn to message
         self.MR.unpack()
-        #unpacks MR.messageIn into individual components
-        model = self.MR.activeModel
         #
         self.set_record_containers()
         active_scenario = self.choose_scenario()
@@ -276,6 +274,8 @@ class Topic:
             c = "No message at message out. Scenario did not wrap properly."
             raise bb_exceptions.TopicDefinitionError(c)
         self.transcribe(message_1, message_2, active_scenario)
+        self.MR.clear()
+
         return message_2
 
     def record_work(self):
