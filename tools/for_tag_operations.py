@@ -103,7 +103,12 @@ def build_combo_profile(target, model):
     except AttributeError:
         raise
 
-    criteria = criteria | set(tags_up_one) | set(tags_up_two)
+    try:
+        path_tags = model.target.stage.path.tags.all
+    except AttributeError:
+        path_tags = {None}
+
+    criteria = criteria | set(tags_up_one) | set(tags_up_two) | path_tags
     criteria = criteria | set(model.tags.all) | {model.tags.name}
     criteria = criteria - {None}
 
