@@ -102,7 +102,7 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         # The current approach to indexing units within a period assumes that
         # Blackbird will rarely remove existing units from a model. both
         # The ``bu`` and ``ty`` directories are static: they do not know if
-        # the unit whose bbid they reference is no longer in their domain. 
+        # the unit whose bbid they reference is no longer in their domain.
 
     def clear(self):
         """
