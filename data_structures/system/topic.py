@@ -26,10 +26,9 @@ Topic                 an object that asks questions and processes responses
 
 
 
-#imports
+# Imports
 import time
 import uuid
-from functools import reduce
 
 import bb_exceptions
 import bb_settings
@@ -44,15 +43,16 @@ from .tags import Tags
 
 
 
-#globals
+# Globals
 ColorManager.populate()
 user_stop = message_tools.USER_STOP
 
-#classes
+
+# Classes
 class Topic:
     """
 
-    Topic objects analyze and modify models. 
+    Topic objects analyze and modify models.
 
     Topics receive MQR-format messages and process their contents into new
     messages. Topics focus on one particular insight into a given business and
@@ -80,15 +80,15 @@ class Topic:
         further user input; this method exits the current topic
      -- ``wrap_to_stop()`` concludes end scenarios and generates the M,_,End
         message. Higher-level modules can then pass the M,_,End message to
-        other topics to run follow-up assumption-based logic.        
-    
+        other topics to run follow-up assumption-based logic.
+
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
     applied_drivers       dictionary of drivers applied by the topic, by name
-    formulas              dictionary of formulas used by the topic, by name 
+    formulas              dictionary of formulas used by the topic, by name
     id                    instance of ID class
     MR                    instance of Messenger class
     questions             dictionary of MiniQuestions used by topic, by name
@@ -116,7 +116,7 @@ class Topic:
     wrap_topic()          generate a M,_,_ message
     ====================  ======================================================
     """
-    
+
     trace = True
 
     def __init__(self):
@@ -144,7 +144,7 @@ class Topic:
 
         Method records arguments in self.work_plan, with line_name as key and
         contribution as value. Method tags self with the line_name unless the
-        tag already exists. 
+        tag already exists.
         """
         self.work_plan[line_name] = contribution
         if line_name not in self.tags.all:
@@ -166,10 +166,10 @@ class Topic:
         signifies that a Topic should begin its analysis from scratch in either
         a normal context (R == None) or following a user stop order
         (R == user_stop). In the latter case, method uses the active response
-        as the key. 
+        as the key.
         """
         #
-        #add response sensing logic here
+        # add response sensing logic here
         scenario_key = None
         active_scenario = None
         if self.MR.activeQuestion:
@@ -182,53 +182,52 @@ class Topic:
         if scenario_key in self.scenarios.keys():
             active_scenario = self.scenarios[scenario_key]
         else:
-            c = ""
             raise bb_exceptions.TopicDefinitionError()
         return active_scenario
-        
+
     def get_first_answer(self):
         """
 
         Topic.get_first_answer() -> obj
-        
+
         Method returns the first item of the first array element in the active
         response (activeResponse[0]["response"][0]).
 
         For example, suppose instance.activeResponse looks like this:
-        
+
           activeResponse = [response_elem0, response_elem1, response_elem2]
           response_elem0["response"] = ["ford","gm","chrysler"]
           response_elem1["response"] = ["coke","pepsi"]
           response_elem2["response"] = ["door","window","ceiling"]
 
-        Method will return "ford". 
+        Method will return "ford".
         """
         first_element = self.MR.activeResponse[0]
         answer = first_element["response"][0]
         return answer
-        
+
     def get_second_answer(self):
         """
 
         Topic.get_second_answer() -> obj
-        
+
         Method returns the second item of the first array element in the active
         response (activeResponse[0]["response"][1]).
 
         For example, suppose instance.activeResponse looks like this:
-        
+
           activeResponse = [response_elem0, response_elem1, response_elem2]
           response_elem0["response"] = ["ford","gm","chrysler"]
           response_elem1["response"] = ["coke","pepsi"]
           response_elem2["response"] = ["door","window","ceiling"]
 
-        Method will return "gm". 
+        Method will return "gm".
         """
         first_element = self.MR.activeResponse[0]
         answer = first_element["response"][1]
         return answer
-        
-    def process(self,message_1):
+
+    def process(self, message_1):
         """
 
 
@@ -236,7 +235,7 @@ class Topic:
 
 
         Method processes message with the instance and returns a new message.
-        Works for both live interview and stop interview messages. 
+        Works for both live interview and stop interview messages.
 
         Algorithm:
          -- clear instance messenger,
@@ -257,15 +256,15 @@ class Topic:
         active_scenario = self.choose_scenario()
         active_scenario(self)
         #
-        #scenarios are unbound functions, so have to manually feed in topic
-        #instance on call. scenario can then access any topic attributes
-        #directly. 
+        # scenarios are unbound functions, so have to manually feed in topic
+        # instance on call. scenario can then access any topic attributes
+        # directly.
         #
         message_2 = self.MR.messageOut
         #
-        #scenarios responsible for generating outbound message and posting it
-        #to self.MR.messageOut. scenarios do so by calling wrap_scenario or
-        #wrap_topic.
+        # scenarios responsible for generating outbound message and posting it
+        # to self.MR.messageOut. scenarios do so by calling wrap_scenario or
+        # wrap_topic.
         #
         if not message_2:
             c = "No message at message out. Scenario did not wrap properly."
@@ -287,7 +286,7 @@ class Topic:
         increments. Checks containers for both cased and casefolded versions of
         the line name.
 
-        Method expects each record container to support build_tables(). 
+        Method expects each record container to support build_tables().
         """
         model = self.MR.activeModel
         model.interview.record_work(self)
@@ -302,7 +301,7 @@ class Topic:
         Method sets instance.work_plan to a blank dictionary.
         """
         self.work_plan = {}
-        
+
     def transcribe(self, msg1, msg2, applied_scenario):
         """
 
@@ -312,7 +311,7 @@ class Topic:
 
         Method records a mark in active model's transcript. The transcript
         allows human and machine readers to review and continue analysis.
-        
+
         Each mark is a dictionary with the following keys:
         -- ``scenario_name``: name of scenario instance appplied to msg1
         -- ``q_in`` : question object from inbound message
@@ -324,7 +323,7 @@ class Topic:
 
         When the Engine receives an MQR message, higher level modules use the
         topic_bbid in the last transcript entry to locate the topic that asked
-        the question. 
+        the question.
         """
         mark = {}
         mark["q_in"] = msg1[1]
@@ -332,7 +331,7 @@ class Topic:
         mark["r_in"] = msg1[2]
         mark["r_out"] = msg1[2]
         mark["topic_bbid"] = self.id.bbid
-        scene_name = getattr(applied_scenario,"name",None)
+        scene_name = getattr(applied_scenario, "name", None)
         if not scene_name:
             scene_name = applied_scenario.__name__
         mark["scenario_name"] = scene_name
@@ -341,7 +340,7 @@ class Topic:
         mark["target_bu"] = model.target.tags.name
         model.transcribe(mark)
         model.target.used.add(self.id.bbid)
-        
+
     def wrap_scenario(self, Q):
         """
 
@@ -352,7 +351,7 @@ class Topic:
         Method pauses internal analysis to ask the user a question by generating
         a M,Q,_ message. M is the active model, Q is the argument.
 
-        Method sets question progress to Model.interview.progress. 
+        Method sets question progress to Model.interview.progress.
         """
         if not Q:
             c = "Topic.wrap_scenario() requires a valid question object to run."
@@ -361,14 +360,16 @@ class Topic:
         M = self.MR.activeModel
         R = None
         #
-        #set progress status on Q; always increment progress by 1 for every new
-        #question the user sees to show that they are moving along
+        # set progress status on Q; always increment progress by 1 for every new
+        # question the user sees to show that they are moving along
         #
-        new_progress = M.interview.progress + bb_settings.MINIMUM_PROGRESS_PER_QUESTION
+        new_progress = \
+            M.interview.progress + \
+            bb_settings.MINIMUM_PROGRESS_PER_QUESTION
         M.interview.set_progress(new_progress)
         Q.progress = new_progress
         #
-        self.MR.generateMessage(M,Q,R)
+        self.MR.generateMessage(M, Q, R)
 
     def wrap_to_stop(self):
         """
@@ -384,7 +385,7 @@ class Topic:
         M = self.MR.messageOut[0]
         Q = None
         R = user_stop
-        self.MR.generateMessage(M,Q,R)
+        self.MR.generateMessage(M, Q, R)
 
     def wrap_topic(self):
         """
@@ -392,11 +393,11 @@ class Topic:
 
         Topic.wrap_topic() -> None
 
-        
+
         Method increments line items in model path according to work_plan and
         exits topic by generating a M,_,_ message. Message uses activeModel from
         instance messenger.
-        
+
         A topic can signal that it has completed its analysis by returning a
         (M,None,None) message. The Analyzer module does not send M _ _ messages
         back out to the portal. Instead, Analyzer internally selects a different
@@ -407,8 +408,4 @@ class Topic:
         M = self.MR.activeModel
         Q = None
         R = None
-        self.MR.generateMessage(M,Q,R)
-        
-    
-
-    
+        self.MR.generateMessage(M, Q, R)
