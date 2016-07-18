@@ -29,6 +29,7 @@ Topic                 an object that asks questions and processes responses
 #imports
 import time
 import uuid
+from functools import reduce
 
 import bb_exceptions
 import bb_settings
@@ -78,7 +79,7 @@ class Topic:
      -- ``wrap_topic()`` concludes scenarios that finalize their work without
         further user input; this method exits the current topic
      -- ``wrap_to_stop()`` concludes end scenarios and generates the M,_,End
-        message. Higher-level modules can then pass the M,_,End message to ]
+        message. Higher-level modules can then pass the M,_,End message to
         other topics to run follow-up assumption-based logic.        
     
     ====================  ======================================================
@@ -131,7 +132,7 @@ class Topic:
         #directly when the module assembles the TopicCatalog
         #
         self.record_containers = []
-        self.record_strings = ["M.interview.path"]
+        self.record_strings = ["interview.path"]
         self.record_on_exit = True
         self.scenarios = None
         self.source = None
@@ -275,6 +276,7 @@ class Topic:
             raise bb_exceptions.TopicDefinitionError(c)
         self.transcribe(message_1, message_2, active_scenario)
         self.MR.clear()
+        self.record_containers.clear()
 
         return message_2
 
@@ -317,15 +319,8 @@ class Topic:
 
         T.set_record_containers([strings = None]) -> None
 
-
-        Strings should be an iterable of attribute paths w respect to ``M``.
-        ``M`` represents the active model on instance messenger.
-
-        At runtime, method assigns instance.MR.activeModel to a variable named M
-        and runs eval() to get the object specified by the string path. Method
-        then appends the object to instance.record_containers.
-
-        NOTE: Method uses **eval()**
+        Strings should be an iterable of attribute paths with respect to the
+        active model on instance messenger.
         
         Method starts with a blank list of objects on each call. If ``strings``
         left blank, method goes through instance.record_strings.        
@@ -336,9 +331,11 @@ class Topic:
         M = self.MR.activeModel
         # All attribute paths specified with respect to M as Model, so need to
         # unpack that into function namespace.
+        # import weakref
         for attrpath in strings:
-            obj = eval(attrpath)
+            obj = reduce(getattr, attrpath.split('.'), M)
             if not obj in items:
+                # items.append(weakref.proxy(obj))
                 items.append(obj)
         self.record_containers = items
         
