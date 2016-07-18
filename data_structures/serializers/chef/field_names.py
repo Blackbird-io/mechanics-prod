@@ -96,4 +96,4 @@ class FieldNames:
     SIZE = "size"
 
     # other lables
-    SIZE_LABEL = "representative units"
+    SIZE_LABEL = "store count"
