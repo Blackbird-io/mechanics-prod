@@ -128,11 +128,8 @@ class Topic:
         self.applied_drivers = None
         self.formulas = None
         self.questions = None
-        #drivers, formulas, qs, and scenes all configured by TopicManager
-        #directly when the module assembles the TopicCatalog
-        #
-        self.record_containers = []
-        self.record_strings = ["interview.path"]
+        # drivers, formulas, qs, and scenes all configured by TopicManager
+        # directly when the module assembles the TopicCatalog
         self.record_on_exit = True
         self.scenarios = None
         self.source = None
@@ -254,10 +251,9 @@ class Topic:
         """
         self.MR.clearMQR()
         self.MR.receive(message_1)
-        #sets MR.messageIn to message
+        # sets MR.messageIn to message
         self.MR.unpack()
-        #
-        self.set_record_containers()
+
         active_scenario = self.choose_scenario()
         active_scenario(self)
         #
@@ -276,7 +272,6 @@ class Topic:
             raise bb_exceptions.TopicDefinitionError(c)
         self.transcribe(message_1, message_2, active_scenario)
         self.MR.clear()
-        self.record_containers.clear()
 
         return message_2
 
@@ -287,20 +282,15 @@ class Topic:
         T.record_work() -> None
 
 
-        Increments the guide.quality counter of any line item in either Model's
-        path or current top-level financials. Uses instance.work_plan for quality
+        Increments the guide.quality counter of any line item in Model's path
+        or current top-level financials. Uses instance.work_plan for quality
         increments. Checks containers for both cased and casefolded versions of
         the line name.
 
         Method expects each record container to support build_tables(). 
         """
-        if self.work_plan != {}:
-            for C in self.record_containers:
-                if C:
-                    for (line_name, contribution) in self.work_plan.items():
-                        line = C.find_first(line_name)
-                        if line:
-                            line.guide.quality.increment(contribution)
+        model = self.MR.activeModel
+        model.interview.record_work(self)
 
     def reset_work_plan(self):
         """
@@ -312,32 +302,6 @@ class Topic:
         Method sets instance.work_plan to a blank dictionary.
         """
         self.work_plan = {}
-        
-    def set_record_containers(self,strings = None):
-        """
-
-
-        T.set_record_containers([strings = None]) -> None
-
-        Strings should be an iterable of attribute paths with respect to the
-        active model on instance messenger.
-        
-        Method starts with a blank list of objects on each call. If ``strings``
-        left blank, method goes through instance.record_strings.        
-        """
-        if not strings:
-            strings = self.record_strings
-        items = []
-        M = self.MR.activeModel
-        # All attribute paths specified with respect to M as Model, so need to
-        # unpack that into function namespace.
-        # import weakref
-        for attrpath in strings:
-            obj = reduce(getattr, attrpath.split('.'), M)
-            if not obj in items:
-                # items.append(weakref.proxy(obj))
-                items.append(obj)
-        self.record_containers = items
         
     def transcribe(self, msg1, msg2, applied_scenario):
         """
