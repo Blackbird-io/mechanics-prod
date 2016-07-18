@@ -132,3 +132,18 @@ class InterviewTracker(Outline):
                     new_step.target = bb_exceptions.LinkError
 
         return result
+
+    def record_work(self, topic):
+        """
+
+
+        InterviewTracker.record_work() -> None
+
+        ``topic`` Topic instance whose work is to be recorded
+        Finds lines mentioned in topic's work_plan in InterviewTracker.path
+        and increments their quality.
+        """
+        for (line_name, contribution) in topic.work_plan.items():
+            line = self.path.find_first(line_name)
+            if line:
+                line.guide.quality.increment(contribution)
