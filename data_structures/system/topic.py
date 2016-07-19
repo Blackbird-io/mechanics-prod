@@ -34,6 +34,7 @@ import bb_exceptions
 import bb_settings
 
 import color_manager as ColorManager
+
 from tools import for_messages as message_tools
 
 from .bbid import ID
