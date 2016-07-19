@@ -451,6 +451,7 @@ class ModelChef:
                                     row=current_row)
             case_cell.value = base[param_name]
             cell_styles.format_hardcoded(case_cell)
+            cell_styles.format_parameter(case_cell)
 
             # Loop through scenarios and add values
             for i, s in enumerate(scenario_columns):
