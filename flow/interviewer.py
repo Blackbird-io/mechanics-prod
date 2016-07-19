@@ -335,6 +335,7 @@ class Interviewer:
         # NEVER cache to self._levels in Interviewer, levels was once an
         # attribute of Outline (where levels could be cached), but is no more.
         self._levels = dict()
+        self.MR.clear()
 
         return new_mqr
     

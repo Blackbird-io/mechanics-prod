@@ -376,7 +376,7 @@ class Driver(TagsMixIn):
         
         return result
         
-    def workOnThis(self, line):
+    def workOnThis(self, line, bu):
         """
 
 
@@ -396,9 +396,8 @@ class Driver(TagsMixIn):
                 formula = self._FM.local_catalog.issue(self.formula_bbid)
                 # formula_catalog.issue() only performs dict retrieval and
                 # return for key.
-                bu = self.relationships.parent
 
-                params = self._build_params()
+                params = self._build_params(parent=bu)
 
                 if not bb_settings.PREP_FOR_EXCEL:
 
@@ -456,7 +455,7 @@ class Driver(TagsMixIn):
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
 
-    def _build_params(self, parent=None):
+    def _build_params(self, parent):
         """
 
 
@@ -473,12 +472,6 @@ class Driver(TagsMixIn):
         formula arguments using instance.conversion_table. Result includes both
         the original and converted keys.
         """
-        if parent is None:
-            try:
-                parent = self.relationships.parent
-            except AttributeError:
-                parent = None
-
         period = None
         time_line = None
         
