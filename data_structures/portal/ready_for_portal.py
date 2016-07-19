@@ -44,7 +44,7 @@ class ReadyForPortal(Schema):
     ReadyForPortal objects inherit Schema attribute whitelist restrictions.
     ReadyForPortal class adds instance generation and update from seed objects
     (``rich`` Engine-oriented types like FullQuestion) and clean-dictionary
-    output. 
+    output.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -54,9 +54,9 @@ class ReadyForPortal(Schema):
 
     FUNCTIONS:
     from_engine()         returns new instance w attr values from seed
-    to_portal()           runs from_engine, returns copy of instance dictionary 
+    to_portal()           runs from_engine, returns copy of instance dictionary
     ====================  ======================================================
-    """    
+    """
     def __init__(self,var_attrs):
         Schema.__init__(self,var_attrs)
 
@@ -66,10 +66,10 @@ class ReadyForPortal(Schema):
 
         PortalObject.from_engine(seed) -> obj
 
-        
+
         Method creates a new instance of the caller's class, then sets all
         attributes on that new instance to values from seed. Method skips
-        instance attributes that seed does not define. 
+        instance attributes that seed does not define.
         """
         cls = self.__class__
         new_instance = cls()
@@ -80,26 +80,25 @@ class ReadyForPortal(Schema):
             except AttributeError:
                 continue
         return new_instance
-        
+
     def to_portal(self, seed = None):
         """
 
 
         PortalObject.to_portal([seed = None]) -> dict
 
-        
+
         Method returns a dictionary that follows the instance attribute pattern
         with values that track the seed. If ``seed`` is None, method uses
         instance. Otherwise, when caller specifies ``seed``, method runs
         from_engine() to compact the seed into an instance of the bottom class,
         and then delivers a dictionary tracking the instance.
         """
-        # seed = None
         if seed:
             prelim = self.from_engine(seed)
         else:
             prelim = self
         result = prelim.__dict__.copy()
         return result
-        
-    
+
+
