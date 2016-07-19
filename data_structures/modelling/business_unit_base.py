@@ -263,7 +263,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
             if key in self.drivers:
                 matching_drivers = self.drivers.get_drivers(key)
                 for driver in matching_drivers:
-                    driver.workOnThis(line)
+                    driver.workOnThis(line, bu=self)
 
         # Repeat for any details
         if line._details:

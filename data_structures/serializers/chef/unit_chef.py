@@ -846,7 +846,10 @@ class UnitChef:
         # 1.2  Add Valuation statement
         sheet.bb.current_row = sheet.bb.events.rows.ending
         sheet.bb.current_row += 1
+
         current = sheet.bb.time_line.columns.get_position(unit.period.end)
+        sheet_style.set_column_width(sheet, current, width=22)
+
         statement_row = sheet.bb.current_row + 1
         statement = unit.financials.valuation
         line_chef.chop_statement(
