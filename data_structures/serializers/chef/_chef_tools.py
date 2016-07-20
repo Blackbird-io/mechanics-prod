@@ -199,7 +199,6 @@ def check_alignment(line):
         # check_data = sheet.bb.line_directory[line.id.bbid]
         check_data = None
 
-
     if check_data:
         if check_data.cell.row != cell.row:
             c = ''
