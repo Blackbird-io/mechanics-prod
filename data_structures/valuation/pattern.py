@@ -45,7 +45,7 @@ class Pattern(dict, LineItem):
     """
 
     The Pattern class provides object storage. Pattern instances provide:
-    
+
     -- a fixed-order perspective on contents via .ordered attribute
     -- high speed access through keys
     -- most substantive LineItem attributes
@@ -55,7 +55,7 @@ class Pattern(dict, LineItem):
     have a lot fewer constraints than a LineItem, so the class then modifies
     a number of LineItem methods to make them more flexible. The Pattern class
     excludes LineItem attributes that do not make sense for an object without
-    value constraints. 
+    value constraints.
 
     NOTE: Pattern instances run standard dict-class .__eq__ logic on comparisons
 
@@ -66,8 +66,8 @@ class Pattern(dict, LineItem):
     enterprise value for Business A would hash as the same as another instance
     covering enterprise value for Business B. In other words, the instances
     would look like the same "sort" of thing. Pattern A == Patern B would still
-    return False unless they had identical components, however. 
-    
+    return False unless they had identical components, however.
+
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -78,7 +78,7 @@ class Pattern(dict, LineItem):
     o_keys                static list of keys for ordered view
     ordered               dynamic list of values associated w function keys
     trackChanges          bool, toggles whether changeElement records to log
-    
+
     FUNCTIONS:
     addElement()          adds a key:val item to self and ordered
     applyStandard()       sets each key to a deepcopy of standard value
@@ -98,14 +98,14 @@ class Pattern(dict, LineItem):
         self.setValue(value,"__init__") #<--------------------------------------------------------------------------------------------------------------------------------------------------- conform to sig policy
         self.log = []
         self.trackChanges = False
-        
+
 #remove unnecessary attributes
 ##    del toggleSign
 ##    del dynamicValueManager
 ##    del dynamicSignManager
 ##    del sign
 ##    del _sign
-        
+
     def __eq__(self,comparator):
         return dict.__eq__(self,comparator)
 
@@ -131,7 +131,7 @@ class Pattern(dict, LineItem):
         than once in self.ordered
 
         NOTE2: _o_functions each have a ``key`` attribute that shows the key
-        they get in self. 
+        they get in self.
         """
         self[attrName] = obj
         setattr(self,attrName,obj)
@@ -140,7 +140,7 @@ class Pattern(dict, LineItem):
         except Exception:
             pass
         self.o_keys.append(attrName)
-        
+
     def applyStandard(self,standard_value):
         """
 
@@ -193,14 +193,14 @@ class Pattern(dict, LineItem):
         target                name of target attribute ("ordered" or "o_keys")
 
         FUNCTIONS:
-        __get__               calls every o_func in order, returns a list of results               
+        __get__               calls every o_func in order, returns a list of results
         __set__               raises bb_exceptions.ManagedAttributeError
         __del__               raises bb_exceptions.ManagedAttributeError
         ====================  ======================================================
         """
         def __init__(self,attr):
             self.target = attr
-            
+
         def __get__(self,instance,owner):
             fresh = []
             for k in instance.o_keys:
@@ -211,14 +211,14 @@ class Pattern(dict, LineItem):
                     obj = k
                 fresh.append(obj)
             return fresh
-        
+
         def __set__(self,instance,value):
             label = "Managed attribute, direct write prohibited"
             raise bb_exceptions.ManagedAttributeError(label)
 
-        def __del__(self):
-            label = "Managed attribute, deletion prohibited"
-            raise bb_exceptions.ManagedAttributeError(label)
+        # def __del__(self):
+        #     label = "Managed attribute, deletion prohibited"
+        #     raise bb_exceptions.ManagedAttributeError(label)
 
     ordered = dynamicOrdered("ordered")
 
@@ -231,7 +231,7 @@ class Pattern(dict, LineItem):
         **actual** object provided as defaultValue. To create independent copies
         of the default value, run fromkeys() and then applyStandard().
 
-        ``obj`` should be iterable. Method returns the filled in instance. 
+        ``obj`` should be iterable. Method returns the filled in instance.
         """
         for field in obj:
             self.addElement(field,defaultValue)
@@ -239,7 +239,7 @@ class Pattern(dict, LineItem):
 
     def resetLog(self):
         self.log = []
-    
+
     def resetValue(self):
         """
 
@@ -249,14 +249,14 @@ class Pattern(dict, LineItem):
         """
         self.setValue(None,"resetValue()")
         #<-------------------------------------------------------------------------------------------------------------------------------------------------------------need signature mgmt
-        
+
     def setValue(self, newValue, driverSignature):
         """
 
         Pattern.setValue() -> None
-                
+
         Method delegates to LineItem.setValue() with value management
-        suppressed. 
+        suppressed.
         """
         LineItem.set_value(self, newValue, driverSignature, override=True)
 
