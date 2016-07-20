@@ -36,15 +36,15 @@ class PortalResponse(list, Schema):
     """
 
     Class defines an array for holding ResponseElement objects, per Engine API.
-    Class inherits the Schema attribute restrcition whitelist. By default, the
-    PortalResponse class has no attributes and the whitelist is empty.     
+    Class inherits the Schema attribute restriction whitelist. By default, the
+    PortalResponse class has no attributes and the whitelist is empty.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
     n/a
-    
+
     FUNCTIONS:
     n/a
     ====================  ======================================================
@@ -52,4 +52,4 @@ class PortalResponse(list, Schema):
     def __init__(self):
         list.__init__(self)
         Schema.__init__(self, [])
-    
+
