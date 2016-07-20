@@ -416,7 +416,7 @@ def test_book(model, filename):
     log_wb.save(log_fnam)
 
 
-def update_formulas(filename):
+def calculate_formulas(filename):
     """
 
 
