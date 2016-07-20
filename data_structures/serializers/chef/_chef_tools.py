@@ -61,6 +61,7 @@ from .field_names import FieldNames
 
 # Constants
 _COLLAPSE_GROUPS_VBS_FILE = "excel_collapse_pretty_rows.vbs"
+_OPEN_SAVE_CLOSE_VBS_FILE = "open_save_close_excel.vbs"
 _VBS_FILENAME_BOOKMARK = "FILENAME_PLACEHOLDER"
 _VBS_PATH = os.path.dirname(os.path.realpath(__file__))
 
@@ -197,7 +198,6 @@ def check_alignment(line):
         # sheet.bb.line_directory[line.id.bbid] = line.xl
         # check_data = sheet.bb.line_directory[line.id.bbid]
         check_data = None
-
 
     if check_data:
         if check_data.cell.row != cell.row:
@@ -414,6 +414,19 @@ def test_book(model, filename):
             _check_bu(t.content, wb, log_ws)
 
     log_wb.save(log_fnam)
+
+
+def calculate_formulas(filename):
+    """
+
+
+    update_formulas -> None
+
+    --``filename`` must be the string path for the file to check, real path
+
+    This function opens an Excel file, saves, and closes the file.
+    """
+    _write_run_temp_vbs_file(filename, _OPEN_SAVE_CLOSE_VBS_FILE)
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
