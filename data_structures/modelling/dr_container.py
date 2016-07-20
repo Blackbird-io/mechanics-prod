@@ -130,8 +130,6 @@ class DrContainer(Components, TagsMixIn):
         # Could prohibit implicit overwrites, but would be cumbersome. Would
         # have to check whether a bbid is already in a given key's set.
 
-        new_driver.relationships.set_parent(self.relationships.parent)
-        # Drivers point to business unit as a parent object.
         self.dr_directory[new_driver.id.bbid] = new_driver
 
         # Build the set of keys where we are going to register the driver

@@ -134,9 +134,11 @@ def process(message):
     #
     seth_klarman = Analyst()
     message = seth_klarman.process(message)
-    #
+    MR.clear()
+
     return message
-    
+
+
 def summarize_landscape(model, ref_date = None):
     """
 
