@@ -7,7 +7,7 @@
 #Module: flow.supervisor
 """
 
-Module supervises how the Engine performs substantive work. 
+Module supervises how the Engine performs substantive work.
 
 Conceptually, the Engine works by exchanging raw information it gets through
 Shell for processed information it produces. Supervisor sits directly below
@@ -65,7 +65,7 @@ def check_started(message):
 
     Function checks whether Engine has started working on the Model in an MQR
     message. Returns True if message contains a model with M.started == True.
-    Function returns False otherwise. 
+    Function returns False otherwise.
     """
     result = False
     model = message[0]
@@ -108,7 +108,7 @@ def process(message):
     process(message) -> message
 
 
-    Function returns a new MQR message that responds to the input. 
+    Function returns a new MQR message that responds to the input.
 
     Function delegates all substantive work to junior modules. For messages that
     are empty (msg == (None, None, None)) or signal the start of an interview
@@ -116,7 +116,7 @@ def process(message):
     other messages, function delegates work to an analyst.
 
     To allow admin to look inside the function-time operation, function stores
-    message_in on MR. Function clears MR at the beginning of each call. 
+    message_in on MR. Function clears MR at the beginning of each call.
     """
     #Function makes a fresh analyst for every call. This approach helps keep
     #engine completely stateless. The analyst delegates to topics as necessary
@@ -148,7 +148,7 @@ def summarize_landscape(model, ref_date = None):
 
     Function returns a summary for the combined credit landscape on the
     ref_date. If ref_date is None, function returns summary for the existing
-    current period. 
+    current period.
 
     ``ref_date`` can be datetime.date or ISO-format string object.
     """
@@ -169,7 +169,7 @@ def update_valuation(model):
 
 
     proces_analytics(model) -> model
-    
+
 
     Function gets an analyst to process valuation for the current period.
     """

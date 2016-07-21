@@ -41,12 +41,12 @@ from .yenta import Yenta
 summary_t_name = "basic model summary, annualized current with capex"
 
 # Other Globals
-check = Globals.checkMessageStatus
+check = Globals.engine_message_status
 
-topic_needed = Globals.status_topicNeeded
-pending_question = Globals.status_pendingQuestion
-pending_response = Globals.status_pendingResponse
-end_session = Globals.status_endSession
+topic_needed = Globals.TOPIC_NEEDED
+pending_question = Globals.PENDING_QUESTION
+pending_response = Globals.PENDING_RESPONSE
+end_session = Globals.END_SESSION
 
 charlie_rose = Interviewer()
 larry_king = Interviewer()
@@ -54,7 +54,7 @@ larry_king = Interviewer()
 yenta = Yenta()
 
 
-# Classes    
+# Classes
 class Analyst:
     """
 
@@ -72,11 +72,11 @@ class Analyst:
     FUNCTIONS:
     check_stage()         see if a particular stage is complete
     choose_direction()    point message to more analysis or portal
-    process()             main interace, perform engine work until ready 
+    process()             main interace, perform engine work until ready
     wrap_interview()      clean up / storage to run prior to end
     ====================  ======================================================
     """
-    
+
     def __init__(self):
         self.max_cycles = 200
         self.needs_work = True
@@ -87,7 +87,7 @@ class Analyst:
 
 
         Analyst.check_stage(message, stage) -> message
-    
+
 
         For **end_session messages only**, method checks if ``stage`` is
         complete. If it is, returns message as-is. Otherwise, sets
@@ -119,11 +119,11 @@ class Analyst:
 
 
         Analyst.choose_direction(message) -> message
-        
+
 
         Method reads the message and selects the direction that best suits its
         content. If the message is ready for delivery to portal, method notes
-        accordingly on the instance. 
+        accordingly on the instance.
 
         Method focuses on m,_,_ and m,_,end messages. These represent an
         inflection point in the interview: the Engine can either move on to a
@@ -131,7 +131,7 @@ class Analyst:
 
         Method only performs shallow, format-based analysis on its own. Method
         delegates deeper, substantive analysis to objects that specialize in
-        that kind of reasoning. 
+        that kind of reasoning.
 
         Method first checks the message format to determine whether the model
         needs a fresh topic of analysis. If it does, method passes the message
@@ -150,7 +150,7 @@ class Analyst:
 
         Once wrap_interview() returns the message, this method will perform
         a final status check and note whether the message is ready for
-        delivery to the portal. 
+        delivery to the portal.
         """
 ##        status = check(message)
 ##        #
@@ -226,7 +226,7 @@ class Analyst:
         n = 0
         message = self.choose_direction(message, *pargs, **kargs)
         #use choose_direction() to for substantive work. method also weeds
-        #out messages that are ready for portal delivery right away.       
+        #out messages that are ready for portal delivery right away.
         while self.status in [topic_needed, pending_response]:
             #
             model = message[0]
@@ -255,20 +255,20 @@ class Analyst:
                 break
             #circuit-breaker logic
         #
-        return message           
+        return message
 
     def wrap_interview(self, message, run_valuation = True, run_summary = True):
         """
-        
+
 
         Analyst.wrap_interview(message) -> message
 
 
         Method prepares a final message for portal. The final message should
         contain a completed Engine model, as well as any API-format summary
-        and analytics data the portal expects. Accordingly, 
+        and analytics data the portal expects. Accordingly,
 
-        
+
         Method runs process_summary to summarize the model.
 
         More generally, wrapInterview() performs clean up, storage, and/or
@@ -276,7 +276,7 @@ class Analyst:
         before they go out to higher level modules and the user.
 
         For example, wrapInterview() can insert final questions or flag certain
-        items for follow-up or review. 
+        items for follow-up or review.
         """
         #basically, check for completion in various ways, if it's not complete
         #point where necessary, and set message into m,_,_
@@ -290,11 +290,11 @@ class Analyst:
         #
         return message
 
-        
-
-        
 
 
 
 
-    
+
+
+
+
