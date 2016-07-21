@@ -418,6 +418,20 @@ def test_book(model, filename):
         if t.content:
             _check_bu(t.content, wb, log_ws, check_val=check_val)
 
+    for t in model.time_line.values():
+        if t is model.time_line.current_period:
+            check_val = True
+        else:
+            check_val = False
+
+        if t.content:
+            _check_bu(t.content, wb, log_ws, check_val=check_val)
+
+    annual_summaries = model.time_line.summary_builder.summaries['annual']
+    for t in annual_summaries.values():
+        if t.content:
+            _check_bu(t.content, wb, log_ws, check_val=False)
+
     log_wb.save(log_fnam)
 
 
