@@ -410,8 +410,13 @@ def test_book(model, filename):
 
     # get model and walk through time periods, bu's, statements, lines
     for t in model.time_line.values():
+        if t is model.time_line.current_period:
+            check_val=True
+        else:
+            check_val=False
+
         if t.content:
-            _check_bu(t.content, wb, log_ws)
+            _check_bu(t.content, wb, log_ws, check_val=check_val)
 
     log_wb.save(log_fnam)
 
@@ -433,7 +438,7 @@ def calculate_formulas(filename):
     #*************************************************************************#
 
 
-def _check_bu(business_unit, workbook_in, log_ws):
+def _check_bu(business_unit, workbook_in, log_ws, check_val=False):
     """
 
     _check_bu -> None (writes to log file)
@@ -453,8 +458,11 @@ def _check_bu(business_unit, workbook_in, log_ws):
         _check_bu(c, workbook_in, log_ws)
 
     # walk through statements
-    for statement in business_unit.financials.ordered:
+    for statement in business_unit.financials.full_ordered:
         if statement:
+            is_val = statement is business_unit.financials.valuation
+            if is_val and not check_val:
+                continue
             _check_statement(statement, workbook_in, log_ws)
 
 
