@@ -30,17 +30,18 @@ LineChef              class with methods to chop BB statements into dynamic
 
 # Imports
 import calendar
-
 import openpyxl as xlio
+import re
+
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment
 
 from bb_exceptions import ExcelPrepError
 from chef_settings import COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING, \
-                           COMMENT_CUSTOM, BLANK_BETWEEN_TOP_LINES
+                          COMMENT_CUSTOM, BLANK_BETWEEN_TOP_LINES,\
+                          FILTER_PARAMETERS
 from data_structures.modelling.line_item import LineItem
-from ._chef_tools import group_lines, check_alignment, set_param_rows, \
-    get_formula_steps
+from ._chef_tools import group_lines, check_alignment
 from .cell_styles import CellStyles
 from .data_types import TypeCodes
 from .field_names import FieldNames
@@ -736,7 +737,7 @@ class LineChef:
         if not line.xl.derived.calculations:
             pass
         else:
-            set_param_rows(line, sheet)
+            self._set_param_rows(line, sheet)
             sheet.bb.outline_level += 1
             for data_cluster in line.xl.derived.calculations:
 
@@ -883,7 +884,7 @@ class LineChef:
         n_items = len(driver_data.formula.items())
         count = 0
 
-        formula_steps = get_formula_steps(driver_data, line, sheet)
+        formula_steps = self._get_formula_steps(driver_data, line, sheet)
         for key in formula_steps:
             count += 1
 
@@ -1036,6 +1037,30 @@ class LineChef:
         return sheet
 
     @staticmethod
+    def _get_formula_steps(driver_data, line, sheet):
+        """
+
+        Function gets and returns steps in formula calculation based on the
+        template calculation for this line.
+        """
+        try:
+            template_xl = sheet.bb.line_directory[line.id.bbid]
+        except KeyError:
+            template_xl = None
+
+        if template_xl:
+            # find template_driver_data where name = driver_data.name
+            for check_data in template_xl.derived.calculations:
+                if check_data.name == driver_data.name:
+                    keys = check_data.formula.keys()
+                    break
+        else:
+            keys = driver_data.formula.keys()
+
+        return keys
+
+
+    @staticmethod
     def _group_lines(sheet):
         """
 
@@ -1114,3 +1139,47 @@ class LineChef:
                 # label doesn't match, we are in trouble.
 
         return sheet
+
+    @staticmethod
+    def _set_param_rows(line, sheet):
+        try:
+            template_xl = sheet.bb.line_directory[line.id.bbid]
+        except KeyError:
+            template_xl = None
+
+        if template_xl:
+            for check_data, driver_data in zip(template_xl.derived.calculations,
+                                               line.xl.derived.calculations):
+                if check_data.name != driver_data.name:
+                    c = "Formulas are not consistent for line over time!"
+                    raise ExcelPrepError(c)
+
+                driver_data.rows = check_data.rows
+        elif FILTER_PARAMETERS:
+            # get params to keep
+            for driver_data in line.xl.derived.calculations:
+                params_keep = []
+                for step in driver_data.formula.values():
+                    temp_step = [m.start() for m in re.finditer('parameters\[*',
+                                                                step)]
+
+                    for idx in temp_step:
+                        jnk = step[idx:]
+                        idx_end = jnk.find(']') + idx
+                        params_keep.append(step[idx + 11:idx_end])
+
+            # clean driver_data
+            new_rows = []
+            for item in driver_data.rows:
+                if item[field_names.LABELS] in params_keep:
+                    new_rows.append(item)
+
+                try:
+                    temp = driver_data.conversion_map[item[field_names.LABELS]]
+                except KeyError:
+                    pass
+                else:
+                    if temp in params_keep:
+                        new_rows.append(item)
+
+            driver_data.rows = new_rows
