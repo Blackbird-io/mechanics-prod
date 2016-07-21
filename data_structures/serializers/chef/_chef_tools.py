@@ -18,6 +18,9 @@ n/a
 FUNCTIONS:
 add_links_to_selectors function adds VB macros to link cells in sheets
 add_scenario_selector function adds a scenario selector cell to the sheet
+calculate_formulas    function opens-saves-closes Excel book do calculations
+check_alignment       function checks that line is correctly aligned
+check_filename_ext    function checks that file has correct extension
 close_excel_by_force  function closes Excel application by force
 collapse_groups       function opens an Excel file and collapses all groups
 group_lines           function adds row to outline group for pretty collapsing
@@ -35,13 +38,10 @@ n/a
 
 # Imports
 import os
-import re
-
 import openpyxl as xlio
 import xlrd
 
-from bb_exceptions import ExcelPrepError
-from chef_settings import SCENARIO_SELECTORS, FILTER_PARAMETERS
+from chef_settings import SCENARIO_SELECTORS
 
 if SCENARIO_SELECTORS:
     import win32api
@@ -187,8 +187,30 @@ def add_scenario_selector(sheet, column, row, selections):
                                                row)
 
 
-def check_alignment(line):
+def calculate_formulas(filename):
+    """
 
+
+    update_formulas -> None
+
+    --``filename`` must be the string path for the file to check, real path
+
+    This function opens an Excel file, saves, and closes the file.
+    """
+    _write_run_temp_vbs_file(filename, _OPEN_SAVE_CLOSE_VBS_FILE)
+
+
+def check_alignment(line):
+    """
+
+
+    check_alignment() -> bool
+
+    --``line`` must be a BB LineItem object
+
+    Function checks that ``line`` is aligned with itself from prior periods.
+    Function prints misalignments to screen and returns False when detected.
+    """
     cell = line.xl.cell
     sheet = cell.parent
 
@@ -199,9 +221,9 @@ def check_alignment(line):
         # check_data = sheet.bb.line_directory[line.id.bbid]
         check_data = None
 
+    result = True
     if check_data:
         if check_data.cell.row != cell.row:
-            c = ''
             print(line)
             print(cell)
             print("Correct row: %s" % check_data.cell.row)
@@ -209,12 +231,24 @@ def check_alignment(line):
 
             c = 'Misalignment!  This line should not be written to ' \
                 'the current row.'
+            print(c)
+            result = False
 
-            raise ExcelPrepError(c)
+    return result
 
 
 def check_filename_ext(filename, ext):
+    """
 
+
+    check_filename_ext() -> str
+
+    --``filename`` proposed filename for workbook
+    --``ext`` correct file extension for workbook
+
+    Function ensures filename complies with specified extension and corrects
+    if not.  Function returns correct file path.
+    """
     temp = filename.strip().split('.')
     check_ext = temp[-1]
 
@@ -225,7 +259,6 @@ def check_filename_ext(filename, ext):
         result = base + ext
 
     return result
-    # return filename
 
 
 def close_excel_by_force(excel):
@@ -272,68 +305,6 @@ def collapse_groups(filename):
     _write_run_temp_vbs_file(filename, _COLLAPSE_GROUPS_VBS_FILE)
 
 
-def get_formula_steps(driver_data, line, sheet):
-    try:
-        template_xl = sheet.bb.line_directory[line.id.bbid]
-    except KeyError:
-        template_xl = None
-
-    if template_xl:
-        # find template_driver_data where name = driver_data.name
-        for check_data in template_xl.derived.calculations:
-            if check_data.name == driver_data.name:
-                keys = check_data.formula.keys()
-                break
-    else:
-        keys = driver_data.formula.keys()
-
-    return keys
-
-
-def set_param_rows(line, sheet):
-    try:
-        template_xl = sheet.bb.line_directory[line.id.bbid]
-    except KeyError:
-        template_xl = None
-
-    if template_xl:
-        for check_data, driver_data in zip(template_xl.derived.calculations,
-                                           line.xl.derived.calculations):
-            if check_data.name != driver_data.name:
-                c = "Formulas are not consistent for line over time!"
-                raise ExcelPrepError(c)
-
-            driver_data.rows = check_data.rows
-    elif FILTER_PARAMETERS:
-        # get params to keep
-        for driver_data in line.xl.derived.calculations:
-            params_keep = []
-            for step in driver_data.formula.values():
-                temp_step = [m.start() for m in re.finditer('parameters\[*',
-                                                            step)]
-
-                for idx in temp_step:
-                    jnk = step[idx:]
-                    idx_end = jnk.find(']') + idx
-                    params_keep.append(step[idx + 11:idx_end])
-
-        # clean driver_data
-        new_rows = []
-        for item in driver_data.rows:
-            if item[field_names.LABELS] in params_keep:
-                new_rows.append(item)
-
-            try:
-                temp = driver_data.conversion_map[item[field_names.LABELS]]
-            except KeyError:
-                pass
-            else:
-                if temp in params_keep:
-                    new_rows.append(item)
-
-        driver_data.rows = new_rows
-
-
 def group_lines(sheet, row=None):
     """
 
@@ -372,34 +343,47 @@ def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 
-def test_book(model, filename):
+def test_book(model, filename, log_filename=None):
     """
 
 
-    test_book -> None (writes a log file)
+    test_book -> bool & writes a log file
 
     --``model`` must be a Chef-chopped Blackbird engine model
     --``filename`` must be string path at which the workbook for the
         chopped model has been saved.
+    --``log_filename`` is the optional path at which to write the test's log
+
+    Function relies on the user having open-saved-closed the Excel spreadsheet,
+    manually or programmatically, to make the formulas calculate.
 
     This is the driver function for checking Excel output.  Function delegates
-    to _write_run_temp_vbs_file and _check_bu to do most of the work.
+    to _check_bu to do most of the work.
 
     Function checks formulas and values written to Excel against values
     calculated and stored in the Blackbird Engine. Function uses fuzzy equals
     (to the 0.001) to compare numeric values.
+
+    Function returns "True" if the test passes (there are no discrepancies
+    between the model and excel workbook), "False" otherwise.
 
     Note:
     A None in the Engine is declared equivalent to an Excel Zero for the
     purpose of this test.
     """
 
+    # start with passed = True, will set False if any inconsistencies are found
+    passed = True
+
     # now open workbook and retrieve relevant cells to compare to dict
     wb = xlrd.open_workbook(filename=filename)
 
     # open log file
-    loc_dot = filename.rfind(".")
-    log_fnam = filename[0:loc_dot] + "_log.xlsx"
+    if not log_filename:
+        loc_dot = filename.rfind(".")
+        log_fnam = filename[0:loc_dot] + "_log.xlsx"
+    else:
+        log_fnam = log_filename
 
     log_wb = xlio.Workbook()
     log_ws = log_wb.active
@@ -411,65 +395,54 @@ def test_book(model, filename):
     # get model and walk through time periods, bu's, statements, lines
     for t in model.time_line.values():
         if t is model.time_line.current_period:
-            check_val=True
-        else:
-            check_val=False
-
-        if t.content:
-            _check_bu(t.content, wb, log_ws, check_val=check_val)
-
-    for t in model.time_line.values():
-        if t is model.time_line.current_period:
+            # only check valuation for the company-level unit in the current
+            # period
             check_val = True
         else:
             check_val = False
 
         if t.content:
-            _check_bu(t.content, wb, log_ws, check_val=check_val)
+            passed = _check_bu(t.content, wb, log_ws, passed,
+                               check_val=check_val)
 
+    # now check annual summaries
     annual_summaries = model.time_line.summary_builder.summaries['annual']
     for t in annual_summaries.values():
         if t.content:
-            _check_bu(t.content, wb, log_ws, check_val=False)
+            passed = _check_bu(t.content, wb, log_ws, passed, check_val=False)
 
     log_wb.save(log_fnam)
 
-
-def calculate_formulas(filename):
-    """
-
-
-    update_formulas -> None
-
-    --``filename`` must be the string path for the file to check, real path
-
-    This function opens an Excel file, saves, and closes the file.
-    """
-    _write_run_temp_vbs_file(filename, _OPEN_SAVE_CLOSE_VBS_FILE)
+    return passed
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
 
 
-def _check_bu(business_unit, workbook_in, log_ws, check_val=False):
+def _check_bu(business_unit, workbook_in, log_ws, passed, check_val=False):
     """
 
-    _check_bu -> None (writes to log file)
+    _check_bu -> bool & writes to log file
 
     --``business_unit`` must be an instance of BusinessUnit
     --``workbook_in`` must be the Excel workbook (xlrd.Workbook type) to check
     --``log_ws`` must be the Excel sheet for test log entries (openpyxl.Sheet
         type)
+    --``passed`` must ba a bool, whether or not the test has passed thus far
+    --``check_val`` whether or not to check Valuation for the business unit
 
     Function walks through BusinessUnits and Statements and delegates to _check
-    _statement to do the bulk of the work.
+    _statement to do the bulk of the work.  Function returns "True" if the
+    test has passed thus far, "False" otherwise.
     """
 
     # recursively walk through all business units
     comps = business_unit.components.get_ordered()
     for c in comps:
-        _check_bu(c, workbook_in, log_ws)
+        # do not check valuation, only check for company-level unit in current
+        # period
+        passed = _check_bu(c, workbook_in, log_ws, passed, check_val=False)
 
     # walk through statements
     for statement in business_unit.financials.full_ordered:
@@ -477,22 +450,27 @@ def _check_bu(business_unit, workbook_in, log_ws, check_val=False):
             is_val = statement is business_unit.financials.valuation
             if is_val and not check_val:
                 continue
-            _check_statement(statement, workbook_in, log_ws)
+            passed = _check_statement(statement, workbook_in, log_ws, passed)
+
+    return passed
 
 
-def _check_statement(statement, workbook_in, log_ws):
+def _check_statement(statement, workbook_in, log_ws, passed):
     """
 
-    _check_statement -> None (writes to log file)
+    _check_statement -> bool & writes to log file
 
     --``business_unit`` must be an instance of BusinessUnit
     --``workbook_in`` must be the Excel workbook (xlrd.Workbook type) to check
     --``log_ws`` must be the Excel sheet for test log entries (openpyxl.Sheet
         type)
+    --``passed`` must ba a bool, whether or not the test has passed thus far
 
     Function recursively checks Excel output for all business units and writes
     inconsistencies to log_ws.  Function uses fuzzy equals (to the 0.001) to
     compare numeric values.
+
+    Function returns "True" if the test has passed thus far, "False" otherwise.
 
     Note:
     A None in the Engine is declared equivalent to an Excel Zero and Excel
@@ -514,6 +492,7 @@ def _check_statement(statement, workbook_in, log_ws):
             m1 = "Row %s, Col %s" % (row, col)
             m2 = "NROWS %s, NCOLS %s" % (sheet.nrows, sheet.ncols)
             m = m1 + "\n" + m2
+            passed = False
             raise IndexError(m)
 
         same = False
@@ -551,6 +530,9 @@ def _check_statement(statement, workbook_in, log_ws):
             qa_list = [line.xl.cell.parent.title, line.xl.cell.coordinate,
                        line.value, cell.value, formula]
             log_ws.append(qa_list)
+            passed = False
+
+    return passed
 
 
 def _write_run_temp_vbs_file(filename, vbs_file):
