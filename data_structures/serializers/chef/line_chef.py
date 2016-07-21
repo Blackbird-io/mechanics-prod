@@ -444,7 +444,7 @@ class LineChef:
                 indent=indent)
 
         cell_styles.format_line(line)
-        
+
         if line.id.bbid not in sheet.bb.line_directory.keys():
             sheet.bb.line_directory[line.id.bbid] = line.xl
 
