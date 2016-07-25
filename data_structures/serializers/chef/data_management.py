@@ -24,6 +24,7 @@ Area                  stores references to a specific area of cells in a
 DriverData            stores driver data for Excel conversion
 LineData              holds data for coordinating line location across multiple
                       non-contiguous ranges of rows
+LineFormat            holds formatting for lines in Excel
 Lookup                holds look-up values relative to the starting point
 Range                 tracks starting and ending row
 Reference             holds reference to a specific line item/cell
@@ -38,6 +39,8 @@ UnitData              holds the Worksheet for a particular BusinessUnit
 
 # Imports
 import copy
+
+from openpyxl.styles import Side
 
 from bb_exceptions import ExcelPrepError
 
@@ -235,7 +238,18 @@ class LineData(Range):
 
         self.sheet = None
         self.cell = None
-        self.number_format = None
+        self.format = LineFormat()
+
+    @property
+    def number_format(self):
+        """
+        legacy interface
+        """
+        return self.format.number_format
+
+    @number_format.setter
+    def number_format(self, value):
+        self.format.number_format = value
 
     def get_coordinates(self, include_sheet=True):
         """
@@ -272,6 +286,54 @@ class LineData(Range):
         """
 
         self.sheet = sheet
+
+
+class LineFormat:
+    """
+
+    Class for formatting line values in Excel.
+    ====================  =====================================================
+    Attribute             Description
+    ====================  =====================================================
+
+    DATA:
+    blank_row_after       bool; insert a blank row after writing line
+    blank_row_before      bool; insert a blank row before writing line
+    border                str; name of an openpyxl border style
+                         (openpyxl.styles.Side.style.values)
+    number_format         None or an openpyxl number format
+
+    FUNCTIONS:
+    N/A
+    ====================  =====================================================
+    """
+    def __init__(self):
+        self.number_format = None
+        self.blank_row_before = False
+        self.blank_row_after = False
+        self._border = None
+
+        # will accept any additional format items for font/text format;
+        # anything that conforms to opynpyxl.styles.Font keywords will
+        # work to format values/text as expected
+        self.font_format = dict()
+
+    @property
+    def border(self):
+        return self._border
+
+    @border.setter
+    def border(self, value):
+        try:
+            assert value in Side.style.values
+        except AssertionError:
+            c = "Border value must be in openpyxl.styles.Side.style.values. " \
+                "Common values are 'thin','medium','thick', 'dotted', etc."
+            raise ValueError(c)
+
+    @border.deleter
+    def border(self):
+        self._border = None
 
 
 class Lookup(Range):
