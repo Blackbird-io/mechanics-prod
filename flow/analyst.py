@@ -41,14 +41,7 @@ from tools.for_messages import \
 # Constants
 summary_t_name = "basic model summary, annualized current with capex"
 
-# Other Globals
-# check = for_messages.check_engine_message
-
-# topic_needed = for_messages.TOPIC_NEEDED
-# pending_question = for_messages.PENDING_QUESTION
-# pending_response = for_messages.PENDING_RESPONSE
-# end_session = for_messages.END_SESSION
-
+# Globals
 charlie_rose = Interviewer()
 larry_king = Interviewer()
 
