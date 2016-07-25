@@ -1,10 +1,10 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2014
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
-#Blackbird Environment
-#Module: flow.analyst
+# Blackbird Engine
+# Module: flow.analyst
 """
 
 Module defines Analyt class. Analysts receive messages and work on a response
@@ -28,11 +28,12 @@ Analyst               worker object, can run independently
 
 
 # Imports
-from tools import for_messages as Globals
-
 from .interviewer import Interviewer
 from .yenta import Yenta
 
+from tools.for_messages import \
+    TOPIC_NEEDED, PENDING_RESPONSE, END_SESSION, \
+    check_engine_message as check
 
 
 
@@ -41,12 +42,12 @@ from .yenta import Yenta
 summary_t_name = "basic model summary, annualized current with capex"
 
 # Other Globals
-check = Globals.engine_message_status
+# check = for_messages.check_engine_message
 
-topic_needed = Globals.TOPIC_NEEDED
-pending_question = Globals.PENDING_QUESTION
-pending_response = Globals.PENDING_RESPONSE
-end_session = Globals.END_SESSION
+# topic_needed = for_messages.TOPIC_NEEDED
+# pending_question = for_messages.PENDING_QUESTION
+# pending_response = for_messages.PENDING_RESPONSE
+# end_session = for_messages.END_SESSION
 
 charlie_rose = Interviewer()
 larry_king = Interviewer()
@@ -102,7 +103,7 @@ class Analyst:
         """
         #
         status = check(message)
-        if status == end_session:
+        if status == END_SESSION:
             if stage.guide.complete:
                 pass
             else:
@@ -110,7 +111,7 @@ class Analyst:
                 model.target.stage = stage
                 message = (model, None, None)
                 message = larry_king.process(message)
-                #make sure message comes out with a focal point
+                # make sure message comes out with a focal point
         #
         return message
 
@@ -152,59 +153,12 @@ class Analyst:
         a final status check and note whether the message is ready for
         delivery to the portal.
         """
-##        status = check(message)
-##        #
-##        if status in [topic_needed, end_session]:
-##            for i in range(2):
-##                if i > 0:
-##                    status = check(message)
-##                    #save cycles
-##                if status == topic_needed:
-##                    message = interviewer_a.process(message)
-##                    status = check(message)
-##                    if status == topic_needed:
-##                        break
-##                #
-##                if status == end_session:
-##                    message = self.wrap_interview(message, *pargs, **kargs)
-##                    status = check(message)
-##                    if status == end_session:
-##                        break
-##                #
-##        self.status = status
-##        if status in [pending_question, end_session]:
-##            self.needs_work = False
-##        else:
-##            self.needs_work = True
-##        #
-##        return message
-##        #loop runs at most twice per call. interviewer and wrap_interview both
-##        #can transform the message. we only want to deliver end_session messages
-##        #if wrap_interview() has ``signed off`` on them.
-##        #
-##        #on the other hand, if interviewer says ``end_session``, we want to pass
-##        #the message to wrap_interview() to confirm the action. similarly, if
-##        #wrap() thinks that a message needs more work, we need to pass it to
-##        #interviewer() to pick a focal point for that work.
-##        #
-##        #hence the loop structure: each subroutine can deliver a message we
-##        #trust, in which case we break. or it can deliver something the other
-##        #routine needs to see, in which case we pass it on.
-##        #
-##        #the loop runs twice, so we always pick a direction (even, for example,
-##        #if interviewer insists that a m,_,_ message it got from wrap() should
-##        #turn to end session). if we don't put a fixed decision limit on the
-##        #flow, we risk creating an infinite loop where the routines disagree
-##        #with each other. the same problem prevents a recursive implementation.
-##        #
-##
-##    def choose_no_loop(self, message, *pargs, **kargs):
         status = check(message)
-        if status == topic_needed:
+        if status == TOPIC_NEEDED:
             message = charlie_rose.process(message)
             status = check(message)
         #
-        if status == end_session:
+        if status == END_SESSION:
             message = self.wrap_interview(message)
             status = check(message)
         #
@@ -225,39 +179,39 @@ class Analyst:
         """
         n = 0
         message = self.choose_direction(message, *pargs, **kargs)
-        #use choose_direction() to for substantive work. method also weeds
-        #out messages that are ready for portal delivery right away.
-        while self.status in [topic_needed, pending_response]:
+        # use choose_direction() to for substantive work. method also weeds
+        # out messages that are ready for portal delivery right away.
+        while self.status in [TOPIC_NEEDED, PENDING_RESPONSE]:
             #
             model = message[0]
             #
-            if self.status == pending_response:
+            if self.status == PENDING_RESPONSE:
                 topic_bbid = model.transcript[-1][0]["topic_bbid"]
                 topic = yenta.TM.local_catalog.issue(topic_bbid)
                 message = topic.process(message)
             #
-            elif self.status == topic_needed:
+            elif self.status == TOPIC_NEEDED:
                 topic = yenta.select_topic(model)
                 if topic:
                     message = topic.process(message)
                 else:
                     pass
-                    #Yenta.select_topic() returned None for Topic, which means
-                    #it couldn't find any matches in the Topic Catalog. In such
-                    #an event, Yenta notes dry run on focal point and IC shifts
-                    #to the next focal point
+                    # Yenta.select_topic() returned None for Topic, which means
+                    # it couldn't find any matches in the Topic Catalog. In such
+                    # an event, Yenta notes dry run on focal point and IC shifts
+                    # to the next focal point
             message = self.choose_direction(message, *pargs, **kargs)
-            #the engine has done more work on the model. use choose_direction()
-            #to see if it can stop or needs to continue.
+            # the engine has done more work on the model. use choose_direction()
+            # to see if it can stop or needs to continue.
             #
             n = n + 1
             if n > self.max_cycles:
                 break
-            #circuit-breaker logic
+            # circuit-breaker logic
         #
         return message
 
-    def wrap_interview(self, message, run_valuation = True, run_summary = True):
+    def wrap_interview(self, message, run_valuation=True, run_summary=True):
         """
 
 
@@ -278,8 +232,8 @@ class Analyst:
         For example, wrapInterview() can insert final questions or flag certain
         items for follow-up or review.
         """
-        #basically, check for completion in various ways, if it's not complete
-        #point where necessary, and set message into m,_,_
+        # basically, check for completion in various ways, if it's not complete
+        # point where necessary, and set message into m,_,_
         #
         model = message[0]
         #
@@ -289,12 +243,3 @@ class Analyst:
             message = self.check_stage(message, model.summary)
         #
         return message
-
-
-
-
-
-
-
-
-
