@@ -1,10 +1,10 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2015
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2016
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
-#Blackbird Engine
-#Module: flow.supervisor
+# Blackbird Engine
+# Module: flow.supervisor
 """
 
 Module supervises how the Engine performs substantive work.
@@ -50,10 +50,11 @@ from .starter import Starter
 
 
 # Constants
-#n/a
+# n/a
 
 # Other Globals
 MR = Messenger()
+
 
 # Functions
 def check_started(message):
@@ -74,7 +75,8 @@ def check_started(message):
             result = True
     return result
 
-def forecast_terms(model, fixed, ask, ref_date = None):
+
+def forecast_terms(model, fixed, ask, ref_date=None):
     """
 
 
@@ -94,12 +96,13 @@ def forecast_terms(model, fixed, ask, ref_date = None):
     model = update_valuation(model)
     #
     model.valuation.credit.combine()
-    ref = model.valuation.credit.combined.forecast(ask = ask, field = fixed)
+    ref = model.valuation.credit.combined.forecast(ask=ask, field=fixed)
     #
     model.time_line.revert_current()
     result = (model, ref)
     #
     return result
+
 
 def process(message):
     """
@@ -118,15 +121,15 @@ def process(message):
     To allow admin to look inside the function-time operation, function stores
     message_in on MR. Function clears MR at the beginning of each call.
     """
-    #Function makes a fresh analyst for every call. This approach helps keep
-    #engine completely stateless. The analyst delegates to topics as necessary
-    #and then unilaterally determines when the model is done. The analyst
-    #returns messages with user-facing questions and a final (M,_,END) with the
-    #completed model.
+    # Function makes a fresh analyst for every call. This approach helps keep
+    # engine completely stateless. The analyst delegates to topics as necessary
+    # and then unilaterally determines when the model is done. The analyst
+    # returns messages with user-facing questions and a final (M,_,END) with the
+    # completed model.
     #
     MR.prep(message)
-    #only purpose of MR here is to allow an admin to look inside the engine at
-    #run time and see what went in/came out.
+    # only purpose of MR here is to allow an admin to look inside the engine at
+    # run time and see what went in/came out.
     #
     if not check_started(message):
         grant_hill = Starter()
@@ -139,7 +142,7 @@ def process(message):
     return message
 
 
-def summarize_landscape(model, ref_date = None):
+def summarize_landscape(model, ref_date=None):
     """
 
 
@@ -164,6 +167,7 @@ def summarize_landscape(model, ref_date = None):
     #
     return result
 
+
 def update_valuation(model):
     """
 
@@ -177,7 +181,7 @@ def update_valuation(model):
     #
     message = (model, None, None)
     warren_buffet = Analyst()
-    message = warren_buffet.process(message, run_summary = False)
+    message = warren_buffet.process(message, run_summary=False)
     #
     updated_model = message[0]
     return updated_model
