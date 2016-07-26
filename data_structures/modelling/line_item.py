@@ -258,12 +258,7 @@ class LineItem(Statement):
         new_line.set_hardcoded(self._hardcoded)
         new_line.id = copy.copy(self.id)
         new_line.xl = xl_mgmt.LineData()
-
-        try:
-            new_line.xl.format = self.xl.format.copy()
-        except AttributeError:
-            import pdb
-            pdb.set_trace()
+        new_line.xl.format = self.xl.format.copy()
 
         return new_line
 
