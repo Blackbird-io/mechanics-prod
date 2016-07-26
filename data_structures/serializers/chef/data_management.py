@@ -331,11 +331,29 @@ class LineFormat:
             c = "Border value must be in openpyxl.styles.Side.style.values. " \
                 "Common values are 'thin','medium','thick', 'dotted', etc."
             raise ValueError(c)
+        else:
+            self._border = value
 
     @border.deleter
     def border(self):
         self._border = None
 
+    def copy(self):
+        """
+
+
+        LineFormat.copy() -> obj
+
+        Function makes a copy of instance and returns it.
+        """
+        result = LineFormat()
+        result.number_format = self.number_format
+        result.blank_row_after = self.blank_row_after
+        result.blank_row_before = self.blank_row_before
+        result._border = self._border
+        result.font_format = self.font_format.copy()
+
+        return result
 
 class Lookup(Range):
     """

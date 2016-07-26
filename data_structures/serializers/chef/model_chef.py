@@ -723,15 +723,19 @@ class ModelChef:
 
             # go through all lines in sheet.bb.line_directory and add border
             # formatting, if any
+            st_col = sheet.bb.parameters.columns.by_name[field_names.VALUES]
+            if 'time_line' in sheet.bb.area_names:
+                ed_col = min((sheet.bb.time_line.columns.ending,
+                              sheet.max_column))
+            else:
+                ed_col = sheet.max_column - 1
+
             for xl in sheet.bb.line_directory.values():
                 row = xl.cell.row
                 border = xl.format.border
 
                 if not border:
                     continue
-
-                st_col = sheet.bb.parameters.columns.by_name[field_names.VALUES]
-                ed_col = sheet.max_column
 
                 cell_styles.format_border_group(sheet, st_col=st_col,
                                                 ed_col=ed_col, st_row=row,
