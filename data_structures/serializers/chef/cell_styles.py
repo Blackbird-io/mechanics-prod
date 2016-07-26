@@ -191,6 +191,9 @@ class CellStyles:
         if line.xl.cell:
             line.xl.cell.number_format = use_format
 
+        if line.xl.format.font_format:
+            line.xl.cell.font = Font(**line.xl.format.font_format)
+
     @staticmethod
     def format_parameter(cell):
         """

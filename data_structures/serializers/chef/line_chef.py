@@ -105,6 +105,10 @@ class LineChef:
         Routines deliver sheet with the current_row pointing to the last filled
         in cell.
         """
+
+        if line.xl.format.blank_row_before:
+            sheet.bb.current_row += 1
+
         self._add_reference(
             sheet=sheet,
             column=column,
@@ -186,6 +190,9 @@ class LineChef:
 
         if line.id.bbid not in sheet.bb.line_directory.keys():
             sheet.bb.line_directory[line.id.bbid] = line.xl
+
+        if line.xl.format.blank_row_after:
+            sheet.bb.current_row += 1
 
         return sheet
 
