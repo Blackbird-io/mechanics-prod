@@ -301,6 +301,7 @@ class LineFormat:
     blank_row_before      bool; insert a blank row before writing line
     border                str; name of an openpyxl border style
                          (openpyxl.styles.Side.style.values)
+    font_format           dict; contains openpyxl-compatible Font kwargs
     number_format         None or an openpyxl number format
 
     FUNCTIONS:
