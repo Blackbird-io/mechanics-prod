@@ -25,11 +25,12 @@ UnitChef              class containing methods to chop BusinessUnits into
 ====================  =========================================================
 """
 
+
+
+
 # Imports
 import openpyxl as xlio
 
-from chef_settings import SCENARIO_SELECTORS, VALUATION_TAB_COLOR
-from data_structures.modelling import common_events
 from ._chef_tools import add_scenario_selector, group_lines
 from .cell_styles import CellStyles
 from .data_types import TypeCodes
@@ -38,6 +39,12 @@ from .formulas import FormulaTemplates
 from .line_chef import LineChef
 from .sheet_style import SheetStyle
 from .tab_names import TabNames
+
+from chef_settings import SCENARIO_SELECTORS, VALUATION_TAB_COLOR
+from data_structures.modelling import common_events
+
+
+
 
 # Constants
 # n/a
@@ -288,43 +295,6 @@ class UnitChef:
         # 2.6 add valuation tab, if any exists for unit
         if unit.financials.has_valuation:
             self._add_valuation_tab(book, unit, index=index)
-
-    def chop_unit(self, *pargs, book, unit):
-        """
-
-
-        UnitChef.chop_unit() -> Worksheet
-
-        --``book`` must be a Workbook
-        --``unit`` must be an instance of BusinessUnit
-
-        Method recursively walks through ``unit`` and components and chops them
-        into Excel format. Does NOT spread fins/params/life.
-        """
-
-        # First, chop up the kids so we can link to their results.
-        before_kids = len(book.worksheets)
-        children = unit.components.get_ordered()
-        # Spread children in order to ensure stable results across run times.
-
-        for child in children:
-            self.chop_unit(book=book, unit=child)
-
-        # Second, chop the parent
-        sheet = self._create_unit_sheet(book=book, unit=unit,
-                                        index=before_kids)
-        sheet = self._add_unit_life(sheet=sheet, unit=unit)
-
-        current = sheet.bb.time_line.columns.get_position(unit.period.end)
-
-        unit.fill_out()
-        # Make sure the unit contains all relevant calculations by filling it
-        # out. If BB already performed this action, call will be a no-op.
-
-        self._add_financials(sheet=sheet, unit=unit, column=current)
-
-        # Third, return result
-        return sheet
 
     # *************************************************************************#
     #                          NON-PUBLIC METHODS                             #
@@ -927,6 +897,9 @@ class UnitChef:
         self._link_to_time_line(book=book, sheet=sheet,
                                 current_only=current_only)
         self._add_unit_params(sheet=sheet, unit=unit)
+        val_col = sheet.bb.time_line.columns.get_position(unit.period.end)
+        sheet.bb.parameters.columns.by_name[field_names.VALUES] = val_col
+
         sheet.bb.outline_level -= 1
         # At this point, sheet.bb.current_row will point to the last parameter.
 

@@ -69,6 +69,7 @@ unit_chef = UnitChef()
 
 get_column_letter = xlio.utils.get_column_letter
 bounding_box = xlio.drawing.image.bounding_box
+
 # Classes
 class ModelChef:
     """
@@ -111,6 +112,8 @@ class ModelChef:
 
         unit_chef.chop_multi_valuation(book=book, unit=company, index=1,
                                        recur=False)
+
+        self._format_line_borders(book)
 
         return book
 
@@ -686,7 +689,6 @@ class ModelChef:
         corner_cell = my_tab.cell(column=corner_column, row=corner_row)
         my_tab.freeze_panes = corner_cell
 
-
         # Add selection cell
         if SCENARIO_SELECTORS:
             selector_row = my_tab.bb.parameters.rows.by_name[field_names.ACTIVE_SCENARIO]
@@ -698,3 +700,39 @@ class ModelChef:
         my_tab.sheet_properties.tabColor = chef_settings.TIMELINE_TAB_COLOR
 
         return my_tab
+
+    @staticmethod
+    def _format_line_borders(book):
+        """
+
+
+        model_chef._format_line_borders() -> None
+
+        --``book`` is the workbook to format
+
+        Function manipulates workbook in place, adding borders to rows where
+        line items request them.
+        """
+        for sheet in book.worksheets:
+
+            if not getattr(sheet, 'bb', None):
+                continue
+
+            if not sheet.bb.line_directory:
+                continue
+
+            # go through all lines in sheet.bb.line_directory and add border
+            # formatting, if any
+            for xl in sheet.bb.line_directory.values():
+                row = xl.cell.row
+                border = xl.format.border
+
+                if not border:
+                    continue
+
+                st_col = sheet.bb.parameters.columns.by_name[field_names.VALUES]
+                ed_col = sheet.max_column
+
+                cell_styles.format_border_group(sheet, st_col=st_col,
+                                                ed_col=ed_col, st_row=row,
+                                                ed_row=row, border_style=border)
