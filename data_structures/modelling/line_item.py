@@ -204,7 +204,7 @@ class LineItem(Statement):
         result += "\n"
         return result
 
-    def clear(self, recur=True, force=False):
+    def clear(self, recur=True, force=False, keep_format=True):
         """
 
 
@@ -227,8 +227,12 @@ class LineItem(Statement):
             sig = self.SIGNATURE_FOR_VALUE_RESET
             self.set_value(None, sig, override=True)
 
+            keep_format = self.xl.format.copy()
             self.xl = xl_mgmt.LineData()
-            self.xl.number_format = num_format
+
+            if keep_format:
+                self.xl.format = keep_format
+
             self.set_consolidate(consolidate)
             # Start with a clean slate for Excel tracking, except for
             # number format
@@ -254,7 +258,7 @@ class LineItem(Statement):
         new_line.set_hardcoded(self._hardcoded)
         new_line.id = copy.copy(self.id)
         new_line.xl = xl_mgmt.LineData()
-        new_line.xl.number_format = self.xl.number_format
+        new_line.xl.format = self.xl.format.copy()
 
         return new_line
 
@@ -539,7 +543,7 @@ class LineItem(Statement):
         
         replica._details = dict()
         replica.xl = xl_mgmt.LineData()
-        replica.xl.number_format = self.xl.number_format
+        replica.xl.format = self.xl.format.copy()
         replica.set_consolidate(self._consolidate)
 
         # Replicas don't have any details of their own. Can't run .clear() here

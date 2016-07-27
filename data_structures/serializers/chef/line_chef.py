@@ -105,6 +105,11 @@ class LineChef:
         Routines deliver sheet with the current_row pointing to the last filled
         in cell.
         """
+        details = line.get_ordered()
+
+        if line.xl.format.blank_row_before and not details:
+            sheet.bb.current_row += 1
+
         self._add_reference(
             sheet=sheet,
             column=column,
@@ -129,7 +134,7 @@ class LineChef:
             indent=indent + LineItem.TAB_WIDTH
             )
 
-        details = line.get_ordered()
+
         if details:
             sub_indent = indent + LineItem.TAB_WIDTH
             detail_summation = ""
@@ -151,6 +156,9 @@ class LineChef:
                 link = link_template.format(coordinates=cos)
                 detail_summation += link
             else:
+                if line.xl.format.blank_row_before:
+                    sheet.bb.current_row += 1
+
                 # Should group all the details here
                 sheet.bb.current_row += 1
                 sheet.bb.outline_level = 0
@@ -187,6 +195,9 @@ class LineChef:
         if line.id.bbid not in sheet.bb.line_directory.keys():
             sheet.bb.line_directory[line.id.bbid] = line.xl
 
+        if line.xl.format.blank_row_after:
+            sheet.bb.current_row += 1
+
         return sheet
 
     def chop_startbal_line(self, *pargs, sheet, column, line, set_labels=True,
@@ -214,6 +225,10 @@ class LineChef:
         in cell.
         """
         details = line.get_ordered()
+
+        if line.xl.format.blank_row_before and not details:
+            sheet.bb.current_row += 1
+
         if details:
             sub_indent = indent + LineItem.TAB_WIDTH
             detail_summation = ""
@@ -233,6 +248,9 @@ class LineChef:
                 link = link_template.format(coordinates=cos)
                 detail_summation += link
             else:
+                if line.xl.format.blank_row_before:
+                    sheet.bb.current_row += 1
+
                 # Should group all the details here
                 sheet.bb.current_row += 1
 
@@ -276,6 +294,11 @@ class LineChef:
                     line=line,
                     set_labels=set_labels,
                     indent=indent)
+
+        cell_styles.format_line(line)
+
+        if line.xl.format.blank_row_after:
+            sheet.bb.current_row += 1
 
     def chop_starting_balance(self, *pargs, sheet, column, unit,
                               set_labels=True):
@@ -372,6 +395,11 @@ class LineChef:
         in cell.
         """
 
+        details = line.get_ordered()
+
+        if line.xl.format.blank_row_before and not details:
+            sheet.bb.current_row += 1
+
         if line.xl.derived.calculations:
             self._add_derivation_logic(
                 sheet=sheet,
@@ -397,7 +425,6 @@ class LineChef:
                 indent=indent + LineItem.TAB_WIDTH
                 )
 
-        details = line.get_ordered()
         if details:
             sub_indent = indent + LineItem.TAB_WIDTH
             detail_summation = ""
@@ -418,6 +445,9 @@ class LineChef:
                 link = link_template.format(coordinates=cos)
                 detail_summation += link
             else:
+                if line.xl.format.blank_row_before:
+                    sheet.bb.current_row += 1
+
                 # Should group all the details here
                 sheet.bb.current_row += 1
 
@@ -448,6 +478,9 @@ class LineChef:
 
         if line.id.bbid not in sheet.bb.line_directory.keys():
             sheet.bb.line_directory[line.id.bbid] = line.xl
+
+        if line.xl.format.blank_row_after:
+            sheet.bb.current_row += 1
 
         return sheet
 

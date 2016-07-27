@@ -191,6 +191,9 @@ class CellStyles:
         if line.xl.cell:
             line.xl.cell.number_format = use_format
 
+        if line.xl.format.font_format:
+            line.xl.cell.font = Font(**line.xl.format.font_format)
+
     @staticmethod
     def format_parameter(cell):
         """
@@ -330,19 +333,24 @@ class CellStyles:
                 border.right = side
                 cell.border = border
 
-        # SET BOTTOM BORDER
+        # SET TOP AND BOTTOM BORDERS
         row = ed_row
         if st_row != ed_row:
             for c in range(st_col, ed_col+1):
                 cell = sheet.cell(column=c, row=row)
-                border = Border(bottom=cell.border.bottom)
+                border = Border(bottom=cell.border.bottom,
+                                left=cell.border.left,
+                                top=cell.border.top,
+                                right=cell.border.right)
                 border.bottom = side
                 cell.border = border
         else:
             for c in range(st_col, ed_col+1):
                 cell = sheet.cell(column=c, row=row)
                 border = Border(bottom=cell.border.bottom,
-                                top=cell.border.top)
+                                left=cell.border.left,
+                                top=cell.border.top,
+                                right=cell.border.right)
                 border.top = side
                 border.bottom = side
                 cell.border = border
@@ -350,28 +358,32 @@ class CellStyles:
         if st_col != ed_col:
             # SET UPPER-LEFT CORNER BORDER
             cell = sheet.cell(column=st_col, row=st_row)
-            border = Border(top=cell.border.top, left=cell.border.left)
+            border = Border(bottom=cell.border.bottom, left=cell.border.left,
+                            top=cell.border.top, right=cell.border.right)
             border.top = side
             border.left = side
             cell.border = border
 
             # SET UPPER-RIGHT CORNER BORDER
             cell = sheet.cell(column=ed_col, row=st_row)
-            border = Border(top=cell.border.top, right=cell.border.right)
+            border = Border(bottom=cell.border.bottom, left=cell.border.left,
+                            top=cell.border.top, right=cell.border.right)
             border.top = side
             border.right = side
             cell.border = border
 
             # SET LOWER-LEFT CORNER BORDER
             cell = sheet.cell(column=st_col, row=ed_row)
-            border = Border(bottom=cell.border.bottom, left=cell.border.left)
+            border = Border(bottom=cell.border.bottom, left=cell.border.left,
+                            top=cell.border.top, right=cell.border.right)
             border.bottom = side
             border.left = side
             cell.border = border
 
             # SET LOWER-RIGHT CORNER BORDER
             cell = sheet.cell(column=ed_col, row=ed_row)
-            border = Border(bottom=cell.border.bottom, right=cell.border.right)
+            border = Border(bottom=cell.border.bottom, left=cell.border.left,
+                            top=cell.border.top, right=cell.border.right)
             border.bottom = side
             border.right = side
             cell.border = border
@@ -380,6 +392,7 @@ class CellStyles:
             # SET TOP CELL BORDER
             cell = sheet.cell(column=st_col, row=st_row)
             border = Border(top=cell.border.top,
+                            bottom=cell.border.bottom,
                             left=cell.border.left,
                             right=cell.border.right)
             border.top = side
@@ -389,7 +402,8 @@ class CellStyles:
 
             # SET BOTTOM CELL BORDER
             cell = sheet.cell(column=st_col, row=ed_row)
-            border = Border(bottom=cell.border.bottom,
+            border = Border(top=cell.border.top,
+                            bottom=cell.border.bottom,
                             left=cell.border.left,
                             right=cell.border.right)
             border.bottom = side
