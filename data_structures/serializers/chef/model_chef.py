@@ -615,7 +615,7 @@ class ModelChef:
             # 1. Pulling the master values for each parameter.
             # my_tab.bb.current_row += 2
             existing_params = dict()
-            for k in my_tab.bb.parameters.rows.by_name.keys():
+            for k in my_tab.bb.parameters.rows.by_name:
                 # May write the column in undefined order
                 param_row = my_tab.bb.parameters.rows.by_name[k]
 
@@ -639,6 +639,7 @@ class ModelChef:
             existing_param_names = period.parameters.keys() & \
                                    parameters.rows.by_name.keys()
             new_param_names = period.parameters.keys() - existing_param_names
+
             # New parameters are specific to the period. We don't have a row
             # for them on the sheet yet, so we'll add them later.
 
@@ -649,8 +650,8 @@ class ModelChef:
                 m_cell = my_tab.cell(column=local_master_column,
                                      row=param_row)
 
+                param_cell = my_tab.cell(column=active_column, row=param_row)
                 if spec_value != m_cell.value:
-                    param_cell = my_tab.cell(column=active_column, row=param_row)
                     param_cell.value = spec_value
                     cell_styles.format_hardcoded(param_cell)
                 else:

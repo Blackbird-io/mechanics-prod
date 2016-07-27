@@ -650,8 +650,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         # would look different (even though the bottom line would be the same).
 
         for unit in pool:
-            if unit.life.conceived:
-                self._consolidate_unit(unit, statement_name)
+            self._consolidate_unit(unit, statement_name)
 
     def _consolidate_unit(self, sub, statement_name):
         """
