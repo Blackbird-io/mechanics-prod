@@ -127,7 +127,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         self.life = LifeCycle()
         self.location = None
-        self.parameters = Parameters()
 
         self.size = 1
         self.summary = BusinessSummary()
@@ -136,6 +135,19 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         # attrs from BusinessUnitBase
         self.complete = True
         self.periods_used = 1
+
+        self.parameters = Parameters()
+
+    # @property
+    # def parameters(self):
+    #     try:
+    #         parameters = self.period.unit_parameters[self.id.bbid]
+    #     except AttributeError:
+    #         c = "Parameters can only be retrieved and assigned through " \
+    #             "TimePeriod.unit_parameters"
+    #         raise AttributeError(c)
+    #
+    #     return parameters
 
     @property
     def stage(self):
@@ -339,9 +351,9 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         # Have to make a deep copy of guide because it is composed of Counter
         # objects. Guide shouldn't point to a business unit or model
         result.life = self.life.copy()
-        result.parameters = copy.deepcopy(self.parameters)
         result.summary = BusinessSummary()
         result.valuation = CompanyValue()
+        result.parameters = copy.deepcopy(self.parameters)
 
         result._stage = None
         result.used = set()
@@ -560,7 +572,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
                 ty_directory.update(lower_ty)
 
             #update the directory for each unit in self
-            pass
         if self.id.bbid in id_directory:
             if not overwrite:
                 c = "Can not overwrite existing bbid"
@@ -969,6 +980,10 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         # Check for collisions first, then register if none arise.
         self.period.bu_directory[self.id.bbid] = self
+
+        if self.id.bbid not in self.period.unit_parameters.keys():
+            self.period.unit_parameters[self.id.bbid] = Parameters()
+
         brethren = self.period.ty_directory.setdefault(self.type, set())
         brethren.add(self.id.bbid)
 

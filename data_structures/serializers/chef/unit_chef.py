@@ -737,8 +737,9 @@ class UnitChef:
 
             data_cell = sheet.cell(column=period_column, row=existing_row)
 
+            temp_params = unit.period.unit_parameters[unit.id.bbid]
             try:
-                period_value = unit.parameters[param_name]
+                period_value = temp_params[param_name]
             except KeyError:
                 period_value = master_value
 
