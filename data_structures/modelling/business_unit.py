@@ -671,9 +671,15 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         # Step Only: Actual consolidation
         child_statement = getattr(sub.financials, statement_name)
 
+        if sub.life.conceived:
+            xl_only = False
+        else:
+            xl_only = True
+
         if child_statement:
             parent_statement = getattr(self.financials, statement_name)
-            parent_statement.increment(child_statement, consolidating=True)
+            parent_statement.increment(child_statement, consolidating=True,
+                                       xl_only=xl_only)
 
     def _derive(self, statement_name):
         """
