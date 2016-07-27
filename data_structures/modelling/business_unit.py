@@ -20,6 +20,7 @@ n/a
 
 CLASSES:
 BusinessUnit          structured snapshot of a business at a given point in time
+ParameterManager      manager class for unit parameters over time
 ====================  ==========================================================
 """
 
@@ -136,18 +137,20 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         self.complete = True
         self.periods_used = 1
 
-        self.parameters = Parameters()
+        self._parameters = Parameters()
 
-    # @property
-    # def parameters(self):
-    #     try:
-    #         parameters = self.period.unit_parameters[self.id.bbid]
-    #     except AttributeError:
-    #         c = "Parameters can only be retrieved and assigned through " \
-    #             "TimePeriod.unit_parameters"
-    #         raise AttributeError(c)
-    #
-    #     return parameters
+    @property
+    def parameters(self):
+        if not self.period:
+            result = self._parameters
+        else:
+            result = self.period.unit_parameters[self.id.bbid]
+
+        return result
+
+    @parameters.deleter
+    def parameters(self):
+        self._parameters = Parameters()
 
     @property
     def stage(self):
@@ -353,7 +356,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         result.life = self.life.copy()
         result.summary = BusinessSummary()
         result.valuation = CompanyValue()
-        result.parameters = copy.deepcopy(self.parameters)
+        result._parameters = self.parameters.copy()
 
         result._stage = None
         result.used = set()
@@ -982,7 +985,14 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         self.period.bu_directory[self.id.bbid] = self
 
         if self.id.bbid not in self.period.unit_parameters.keys():
-            self.period.unit_parameters[self.id.bbid] = Parameters()
+            self.period.unit_parameters[self.id.bbid] = self._parameters.copy()
+        else:
+            all_params = self._parameters.copy()
+            if all_params:
+                all_params.update(self.period.unit_parameters[self.id.bbid])
+                self.period.unit_parameters[self.id.bbid] = all_params
+
+        self._parameters = Parameters()
 
         brethren = self.period.ty_directory.setdefault(self.type, set())
         brethren.add(self.id.bbid)

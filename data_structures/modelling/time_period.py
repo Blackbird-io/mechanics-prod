@@ -217,9 +217,25 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         result.end = copy.copy(target.end)
 
         result.parameters = target.parameters.copy()
+
         result.unit_parameters = Parameters()
+
+        temp_parameters = Parameters()
+        for bbid, unit_dict in self.unit_parameters.items():
+            temp_parameters[bbid] = unit_dict.copy()
+
         for bbid, unit_dict in target.unit_parameters.items():
-            result.unit_parameters[bbid] = unit_dict.copy()
+            try:
+                temp = temp_parameters[bbid]
+            except KeyError:
+                temp = None
+
+            if temp:
+                new_params = temp.update(unit_dict)
+            else:
+                new_params = unit_dict.copy()
+
+            result.unit_parameters[bbid] = new_params
         
         if seed.content:
             new_content = seed.content.copy()
@@ -304,11 +320,9 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         
         if reset_directories:
             self._reset_directories()
+
         bu._register_in_period(recur=True, overwrite=False)
         # Register the unit.
-
-        if bu.id.bbid not in self.unit_parameters.keys():
-            self.unit_parameters[bu.id.bbid] = Parameters()
 
     def set_content(self, bu, updateID=True):
         """
