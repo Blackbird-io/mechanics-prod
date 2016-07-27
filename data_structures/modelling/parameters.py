@@ -74,4 +74,9 @@ class Parameters(dict):
             else:
                 self.update(new_data)
 
-             
+    def copy(self):
+        dict_copy = dict.copy(self)
+        result = Parameters()
+        result.update(dict_copy)
+
+        return result
