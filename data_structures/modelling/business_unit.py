@@ -138,17 +138,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         self.parameters = Parameters()
 
-    # @property
-    # def parameters(self):
-    #     try:
-    #         parameters = self.period.unit_parameters[self.id.bbid]
-    #     except AttributeError:
-    #         c = "Parameters can only be retrieved and assigned through " \
-    #             "TimePeriod.unit_parameters"
-    #         raise AttributeError(c)
-    #
-    #     return parameters
-
     @property
     def stage(self):
         """
@@ -980,9 +969,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         # Check for collisions first, then register if none arise.
         self.period.bu_directory[self.id.bbid] = self
-
-        if self.id.bbid not in self.period.unit_parameters.keys():
-            self.period.unit_parameters[self.id.bbid] = Parameters()
 
         brethren = self.period.ty_directory.setdefault(self.type, set())
         brethren.add(self.id.bbid)
