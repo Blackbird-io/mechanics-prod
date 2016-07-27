@@ -529,7 +529,7 @@ class Statement(Equalities, TagsMixIn):
         return result
 
     def increment(self, matching_statement, consolidating=False, xl_label=None,
-                  override=False):
+                  override=False, xl_only=False):
         """
 
 
@@ -560,7 +560,8 @@ class Statement(Equalities, TagsMixIn):
             if own_line:
                 # Option A
                 own_line.increment(external_line, consolidating=consolidating,
-                                   xl_label=xl_label, override=override)
+                                   xl_label=xl_label, override=override,
+                                   xl_only=xl_only)
 
             else:
                 # Option B
@@ -570,7 +571,7 @@ class Statement(Equalities, TagsMixIn):
                 if external_line.consolidate or override:
                     if consolidating:
                         if external_line.value is not None:
-                            if not local_copy._consolidated:
+                            if not local_copy._consolidated and not xl_only:
                                 local_copy._consolidated = True
 
                             # Pick up lines with None values, but don't tag
