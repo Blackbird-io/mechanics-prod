@@ -641,8 +641,7 @@ class ModelChef:
             # 2. Overwrite links with hard-coded values where the period
             #    specifies them. Add period-specific parameters.
 
-            existing_param_names = period.parameters.keys() | \
-                                   parameters.rows.by_name.keys()
+            existing_param_names = parameters.rows.by_name.keys()
             new_param_names = period.parameters.keys() - existing_param_names
 
             # New parameters are specific to the period. We don't have a row
