@@ -141,16 +141,18 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
     @property
     def parameters(self):
-        if not self.period:
-            result = self._parameters
+        params = self._parameters
+
+        try:
+            period_params = self.period.unit_parameters[self.id.bbid]
+        except AttributeError:
+            pass
+        except KeyError:
+            pass
         else:
-            result = self.period.unit_parameters[self.id.bbid]
+            params.update(period_params)
 
-        return result
-
-    @parameters.deleter
-    def parameters(self):
-        self._parameters = Parameters()
+        return params
 
     @property
     def stage(self):
@@ -356,7 +358,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         result.life = self.life.copy()
         result.summary = BusinessSummary()
         result.valuation = CompanyValue()
-        result._parameters = self.parameters.copy()
+        result._parameters = self._parameters.copy()
 
         result._stage = None
         result.used = set()
@@ -718,6 +720,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         """
         self.period = time_period
         self.life.set_ref_date(time_period.end)
+
         if recur:
             for unit in self.components.values():
                 unit._fit_to_period(time_period, recur)
@@ -983,16 +986,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         # Check for collisions first, then register if none arise.
         self.period.bu_directory[self.id.bbid] = self
-
-        if self.id.bbid not in self.period.unit_parameters.keys():
-            self.period.unit_parameters[self.id.bbid] = self._parameters.copy()
-        else:
-            all_params = self._parameters.copy()
-            if all_params:
-                all_params.update(self.period.unit_parameters[self.id.bbid])
-                self.period.unit_parameters[self.id.bbid] = all_params
-
-        self._parameters = Parameters()
 
         brethren = self.period.ty_directory.setdefault(self.type, set())
         brethren.add(self.id.bbid)

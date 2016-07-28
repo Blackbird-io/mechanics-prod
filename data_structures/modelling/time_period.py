@@ -218,25 +218,17 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
 
         result.parameters = target.parameters.copy()
 
-        result.unit_parameters = Parameters()
-
-        temp_parameters = Parameters()
-        for bbid, unit_dict in self.unit_parameters.items():
-            temp_parameters[bbid] = unit_dict.copy()
-
-        for bbid, unit_dict in target.unit_parameters.items():
+        # update period-specific unit parameters to reflect target period vals
+        for bbid, unit_parms in target.unit_parameters.items():
             try:
-                temp = temp_parameters[bbid]
+                temp_parms = result.unit_parameters[bbid]
             except KeyError:
-                temp = None
+                temp_parms = Parameters()
 
-            if temp:
-                new_params = temp.update(unit_dict)
-            else:
-                new_params = unit_dict.copy()
+            temp_parms.update(unit_parms)
 
-            result.unit_parameters[bbid] = new_params
-        
+            result.unit_parameters.add({bbid: temp_parms}, overwrite=True)
+
         if seed.content:
             new_content = seed.content.copy()
             result.set_content(new_content, updateID=False)
