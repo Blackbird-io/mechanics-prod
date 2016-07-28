@@ -509,8 +509,7 @@ class ModelChef:
 
         return my_tab
 
-    @staticmethod
-    def _create_time_line_tab(book, model):
+    def _create_time_line_tab(self, book, model):
         """
 
 
@@ -620,7 +619,6 @@ class ModelChef:
             cell_styles.format_date(header_cell)
 
             # 1. Pulling the master values for each parameter.
-            # my_tab.bb.current_row += 2
             existing_params = dict()
             for k in my_tab.bb.parameters.rows.by_name:
                 # May write the column in undefined order
@@ -643,7 +641,7 @@ class ModelChef:
             # 2. Overwrite links with hard-coded values where the period
             #    specifies them. Add period-specific parameters.
 
-            existing_param_names = period.parameters.keys() & \
+            existing_param_names = period.parameters.keys() | \
                                    parameters.rows.by_name.keys()
             new_param_names = period.parameters.keys() - existing_param_names
 
@@ -651,18 +649,37 @@ class ModelChef:
             # for them on the sheet yet, so we'll add them later.
 
             for spec_name in existing_param_names:
-                spec_value = period.parameters[spec_name]
+                try:
+                    spec_value = period.parameters[spec_name]
+                except KeyError:
+                    continue
 
                 param_row = parameters.rows.get_position(spec_name)
                 m_cell = my_tab.cell(column=local_master_column,
                                      row=param_row)
 
+                if active_column == starting_column:
+                    prev_cell = m_cell
+                else:
+                    prev_cell = my_tab.cell(column=active_column-1,
+                                            row=param_row)
+
+                if prev_cell.data_type == 'f':
+                    # prev_cell is a formula, because we are in parameters,
+                    # assuming that it is a cell reference.
+                    prev_value = self._find_orig_value(my_tab, prev_cell)
+                else:
+                    prev_value = prev_cell.value
+
                 param_cell = my_tab.cell(column=active_column, row=param_row)
-                if spec_value != m_cell.value:
+
+                # This is where we will check against the previous value
+                if spec_value != prev_value:
                     param_cell.value = spec_value
                     cell_styles.format_hardcoded(param_cell)
                 else:
-                    cos = dict(alpha_column=alpha_master_column, row=param_row)
+                    cos = dict(alpha_column=prev_cell.column,
+                               row=prev_cell.row)
                     link = link_template.format(**cos)
                     param_cell.set_explicit_value(link,
                                                   data_type=type_codes.FORMULA)
@@ -748,3 +765,64 @@ class ModelChef:
                 cell_styles.format_border_group(sheet, st_col=st_col,
                                                 ed_col=ed_col, st_row=row,
                                                 ed_row=row, border_style=border)
+
+    def _find_orig_value(self, sheet, cell):
+        ref_addy = cell.value.strip('+= ')
+
+        try:
+            ref_cell = sheet.cell(ref_addy)
+        except xlio.utils.exceptions.CellCoordinatesException:
+            # ref cell is on a different sheet (Drivers)
+            temp = ref_addy.split('!')
+            ref_sheet = temp[0].strip("' ")
+            ref_cos = temp[1]
+
+            ref_sheet = sheet.parent.get_sheet_by_name(ref_sheet)
+            ref_cell = ref_sheet[ref_cos]
+
+            # if we made it this far without an error, we're referencing back
+            # to the Drivers tab.  Here we encounter a formula that looks like:
+            # =HLOOKUP(D3,F3:L9,7,FALSE)
+            temp = ref_cell.value.split('(')
+            temp = temp[1].strip(')')
+            args = temp.split(',')
+
+            row_use = ref_cell.row
+
+            # which case are we looking at
+            case_cos = args[0]
+            case_cell = ref_sheet[case_cos]
+
+            # range to pull values from
+            range = args[1]
+
+            first_header_cell = range.split(':')[0]
+            header_row = first_header_cell[1]
+
+            last_header_cell = range.split(':')[1][0] + header_row
+
+            # now find which column matches matches the case
+            import string
+            letters = string.ascii_uppercase
+            idx = letters.find(first_header_cell[0].upper())
+            last_idx = letters.find(last_header_cell[0].upper())
+            while True:
+                col_letter = letters[idx]
+                temp_cell = ref_sheet[col_letter+header_row]
+                if temp_cell.value == case_cell.value:
+                    break
+                else:
+                    idx += 1
+
+                if idx > last_idx:
+                    c = "PROBLEM LOCATING ORIGINAL VALUE CELL"
+                    raise ValueError(c)
+
+            ref_cell = ref_sheet[col_letter+str(row_use)]
+
+        if ref_cell.data_type == 'f':
+            result = self._find_orig_value(sheet, ref_cell)
+        else:
+            result = ref_cell.value
+
+        return result

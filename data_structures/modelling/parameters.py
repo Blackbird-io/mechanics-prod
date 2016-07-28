@@ -55,7 +55,7 @@ class Parameters(dict):
     def __init__(self):
         dict.__init__(self)
 
-    def add(self, new_data, overwrite=False):
+    def add(self, new_data, overwrite=True):
         """
 
 
