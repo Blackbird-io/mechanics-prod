@@ -263,7 +263,7 @@ class LineItem(Statement):
         return new_line
 
     def increment(self, matching_line, signature=None, consolidating=False,
-                  xl_label=None, override=False):
+                  xl_label=None, override=False, xl_only=False):
         """
 
 
@@ -275,14 +275,20 @@ class LineItem(Statement):
         value.
         """
         if matching_line.value is None:
-            pass
-
+            if matching_line._details:
+                Statement.increment(self, matching_line,
+                                    consolidating=consolidating,
+                                    xl_label=xl_label,
+                                    override=override, xl_only=xl_only)
+            else:
+                self.xl.consolidated.sources.append(matching_line)
+                self.xl.consolidated.labels.append(xl_label)
         else:
             if matching_line._details:
                 Statement.increment(self, matching_line,
                                     consolidating=consolidating,
                                     xl_label=xl_label,
-                                    override=override)
+                                    override=override, xl_only=xl_only)
                 # Use Statement method here because we are treating the matching
                 # line as a Statement too. We assume that its details represent
                 # all of its value data. Statement.increment() will copy those
@@ -295,11 +301,13 @@ class LineItem(Statement):
                 starting_value = self.value or 0
                 new_value = starting_value + matching_line.value
 
-                self.set_value(new_value, signature)
+                if not xl_only:
+                    self.set_value(new_value, signature)
 
                 if consolidating and (self._consolidate is True or override):
-                    self.tags.inherit_from(matching_line.tags)
-                    self._consolidated = True
+                    if not xl_only:
+                        self.tags.inherit_from(matching_line.tags)
+                        self._consolidated = True
                     self.xl.consolidated.sources.append(matching_line)
                     self.xl.consolidated.labels.append(xl_label)
 

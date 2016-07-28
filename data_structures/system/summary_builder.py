@@ -485,11 +485,11 @@ class SummaryBuilder:
             except KeyError:
                 period = period.future
             else:
-                if not temp.life.alive or not temp.filled:
-                    period = period.future
-                else:
-                    period_found = True
-                    break
+                # if not temp.life.alive or not temp.filled:
+                #     period = period.future
+                # else:
+                period_found = True
+                break
 
             if not period:
                 break
@@ -528,11 +528,11 @@ class SummaryBuilder:
                     if not period:
                         break
                 else:
-                    if not temp.life.alive or not temp.filled:
-                        period = period.past
-                    else:
-                        period_found = True
-                        break
+                    # if not temp.life.alive or not temp.filled:
+                    #     period = period.past
+                    # else:
+                    period_found = True
+                    break
 
                 if not period:
                     break
