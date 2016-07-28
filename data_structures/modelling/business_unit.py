@@ -693,8 +693,12 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         if child_statement:
             parent_statement = getattr(self.financials, statement_name)
-                                       xl_only=xl_only, xl_label=sub.name)
+            parent_statement.increment(
+                child_statement,
+                consolidating=True,
                 xl_only=xl_only,
+                xl_label=sub.name,
+            )
 
     def _derive(self, statement_name):
         """
