@@ -153,7 +153,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
             params.update(period_params)
 
         return params
-
     @property
     def stage(self):
         """
