@@ -40,8 +40,8 @@ from .line_chef import LineChef
 from .sheet_style import SheetStyle
 from .tab_names import TabNames
 
-from chef_settings import SCENARIO_SELECTORS, VALUATION_TAB_COLOR,\
-                            COLOR_DECEMBER, DECEMBER_COLOR
+from chef_settings import SCENARIO_SELECTORS, VALUATION_TAB_COLOR, \
+                            APPLY_COLOR_TO_DECEMBER, DECEMBER_COLOR
 from data_structures.modelling import common_events
 from openpyxl.styles import PatternFill
 
@@ -269,7 +269,7 @@ class UnitChef:
         group_lines(sheet, row=selector_row)
 
         # color the December columns
-        if COLOR_DECEMBER:
+        if APPLY_COLOR_TO_DECEMBER:
             for date, column in sheet.bb.time_line.columns.by_name.items():
                 if date.month == 12:
                     for row in range(1, sheet.max_row+1):
