@@ -540,7 +540,6 @@ class Statement(Equalities, TagsMixIn):
 
         If ``consolidating`` is True, method sets obj._consolidated = True.
         """
-
         if bb_settings.DEBUG_MODE:
             pool = matching_statement._get_ordered_items_debug()
         else:
