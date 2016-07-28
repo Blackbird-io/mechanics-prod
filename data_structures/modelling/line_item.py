@@ -275,8 +275,14 @@ class LineItem(Statement):
         value. 
         """
         if matching_line.value is None:
-            pass
-
+            if matching_line._details:
+                Statement.increment(self, matching_line,
+                                    consolidating=consolidating,
+                                    xl_label=xl_label,
+                                    override=override, xl_only=xl_only)
+            else:
+                self.xl.consolidated.sources.append(matching_line)
+                self.xl.consolidated.labels.append(xl_label)
         else:
             if matching_line._details:
                 Statement.increment(self, matching_line,
