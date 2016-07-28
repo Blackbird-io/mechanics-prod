@@ -118,6 +118,7 @@ class ModelChef:
 
         spacer_idx = book.get_index(timeline)
         spacer_sheet = book.create_sheet("Monthly >>", spacer_idx+1)
+        spacer_sheet.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
         sheet_style.style_sheet(spacer_sheet)
 
         self._format_line_borders(book)
