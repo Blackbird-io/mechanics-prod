@@ -215,6 +215,8 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         result.start = copy.copy(target.start)
         result.end = copy.copy(target.end)
 
+        # Use seed parameters as a base, then update with target params where
+        # applicable.
         result.parameters = seed.parameters.copy()
         result.parameters.update(target.parameters)
 
