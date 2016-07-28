@@ -215,7 +215,8 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         result.start = copy.copy(target.start)
         result.end = copy.copy(target.end)
 
-        result.parameters = target.parameters.copy()
+        result.parameters = seed.parameters.copy()
+        result.parameters.update(target.parameters)
 
         # update period-specific unit parameters to reflect target period vals
         for bbid, unit_parms in target.unit_parameters.items():
