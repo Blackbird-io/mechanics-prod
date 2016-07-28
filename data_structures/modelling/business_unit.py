@@ -695,9 +695,8 @@ class BusinessUnit(BusinessUnitBase, Equalities):
             parent_statement = getattr(self.financials, statement_name)
             parent_statement.increment(
                 child_statement,
-            parent_statement.increment(child_statement, consolidating=True,
-                                       xl_only=xl_only)
                 consolidating=True,
+                xl_only=xl_only,
                 xl_label=sub.name,
             )
 
