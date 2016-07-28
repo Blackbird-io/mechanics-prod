@@ -67,6 +67,8 @@ class CellStyles:
     format_line()         format text in line item cells
     format_parameter()    format number in parameter cells
     format_scenario_label()  format scenario label cells (black with white text)
+    format_header_label() white on black
+    format_consolidated_label() consolidated rows in italic
     format_scenario_selector_cell() format scenario selector cells
     format_border_group()  add thin border around group of cells
     ====================  =====================================================
