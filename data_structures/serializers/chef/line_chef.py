@@ -417,7 +417,7 @@ class LineChef:
                 indent=indent
                 )
 
-            self._add_consolidation_logic_summary(
+            self._add_consolidation_reference_summary(
                 sheet=sheet,
                 column=column,
                 line=line,
@@ -748,6 +748,71 @@ class LineChef:
             line.xl.consolidated.ending = sheet.bb.current_row
 
             sheet.bb.outline_level -= 1
+
+        return sheet
+
+    def _add_consolidation_reference_summary(self, *pargs, sheet, column, line,
+                                             set_labels=True, indent=0):
+        """
+
+
+        LineChef._add_consolidation_reference_summary() -> Worksheet
+
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``column`` must be a column number reference
+        --``line`` must be an instance of LineItem
+        --``set_labels`` must be a boolean; True will set labels for line
+        --``indent`` is amount of indent
+
+        Expects line.xl.consolidated.sources to include full range of pointers
+        to source lines in relevant time periods.
+
+        Creates a sum formula linking directly to TimeLine inputs.
+
+        Returns Worksheet with consolidation logic added as Excel SUM.
+        """
+        if not line.xl.consolidated.sources:
+            pass
+        else:
+            sources = line.xl.consolidated.sources.copy()
+
+            sheet.bb.current_row += 1
+            line.xl.consolidated.starting = sheet.bb.current_row
+
+            source_links = []
+            for source_line in sources:
+                include = source_line.xl.cell.parent is not sheet
+                source_cos = source_line.xl.get_coordinates(
+                    include_sheet=include
+                )
+                source_links.append(source_cos)
+
+            if source_links:
+                # take starting and ending cells for the range
+                summation_template = formula_templates.SUM_ANYRANGE
+                summation = summation_template.format(
+                    top_cell=source_links[ 0],
+                    end_cell=source_links[-1],
+                )
+            else:
+                summation = ''
+
+            summation_cell = sheet.cell(column=column,
+                                        row=sheet.bb.current_row)
+            summation_cell.set_explicit_value(summation,
+                                              data_type=type_codes.FORMULA)
+
+            line.xl.consolidated.cell = summation_cell
+            line.xl.cell = summation_cell
+
+            if set_labels:
+                label = line.tags.name
+                label = ((indent - LineItem.TAB_WIDTH) * " ") + label
+
+                self._set_label(sheet=sheet, label=label,
+                                row=sheet.bb.current_row)
+
+            line.xl.consolidated.ending = sheet.bb.current_row
 
         return sheet
 
