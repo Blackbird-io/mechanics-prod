@@ -93,6 +93,7 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         TagsMixIn.__init__(self)
 
         self.parameters = Parameters()
+        self.unit_parameters = Parameters()
         self.ty_directory = dict()
 
         if content:
@@ -134,6 +135,10 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         result.tags = self.tags.copy()
         result.ty_directory = copy.copy(self.ty_directory)
         result.parameters = self.parameters.copy()
+
+        result.unit_parameters = Parameters()
+        for bbid, unit_dict in self.unit_parameters.items():
+            result.unit_parameters[bbid] = unit_dict.copy()
 
         return result
         
@@ -211,6 +216,17 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         result.end = copy.copy(target.end)
 
         result.parameters = target.parameters.copy()
+
+        # update period-specific unit parameters to reflect target period vals
+        for bbid, unit_parms in target.unit_parameters.items():
+            try:
+                temp_parms = result.unit_parameters[bbid]
+            except KeyError:
+                temp_parms = Parameters()
+
+            temp_parms.update(unit_parms)
+
+            result.unit_parameters.add({bbid: temp_parms}, overwrite=True)
 
         if seed.content:
             new_content = seed.content.copy()
@@ -295,6 +311,7 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         
         if reset_directories:
             self._reset_directories()
+
         bu._register_in_period(recur=True, overwrite=False)
         # Register the unit.
 
@@ -336,6 +353,7 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         """
         self.bu_directory = {}
         self.ty_directory = {}
+        self.unit_parameters = Parameters()
         
     
         

@@ -49,6 +49,7 @@ class Parameters(dict):
 
     FUNCTIONS:
     add()                 add data, throw exception for overlap with known keys
+    copy()                copy the instance and return the copy
     ====================  ======================================================
     """
     def __init__(self):
@@ -74,4 +75,16 @@ class Parameters(dict):
             else:
                 self.update(new_data)
 
-             
+    def copy(self):
+        """
+
+
+        Parameters.copy() -> obj
+
+        Function returns a copy of the instance.
+        """
+        dict_copy = dict.copy(self)
+        result = Parameters()
+        result.update(dict_copy)
+
+        return result

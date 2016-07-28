@@ -20,6 +20,7 @@ n/a
 
 CLASSES:
 BusinessUnit          structured snapshot of a business at a given point in time
+ParameterManager      manager class for unit parameters over time
 ====================  ==========================================================
 """
 
@@ -136,8 +137,22 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         self.complete = True
         self.periods_used = 1
 
-        self.parameters = Parameters()
+        self._parameters = Parameters()
 
+    @property
+    def parameters(self):
+        params = self._parameters
+
+        try:
+            period_params = self.period.unit_parameters[self.id.bbid]
+        except AttributeError:
+            pass
+        except KeyError:
+            pass
+        else:
+            params.update(period_params)
+
+        return params
     @property
     def stage(self):
         """
@@ -342,7 +357,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         result.life = self.life.copy()
         result.summary = BusinessSummary()
         result.valuation = CompanyValue()
-        result.parameters = copy.deepcopy(self.parameters)
+        result._parameters = self._parameters.copy()
 
         result._stage = None
         result.used = set()
@@ -709,6 +724,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         """
         self.period = time_period
         self.life.set_ref_date(time_period.end)
+
         if recur:
             for unit in self.components.values():
                 unit._fit_to_period(time_period, recur)
