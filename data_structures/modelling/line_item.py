@@ -6,7 +6,7 @@
 # Module: data_structures.modelling.line_item
 """
 
-Module defines a class of Statemenets with value.  
+Module defines a class of Statemenets with value.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -75,7 +75,7 @@ class LineItem(Statement):
     value                 instance value
     sum_over_time         bool; whether the line item should be balanced or summed
     xl                    instance of LineData record set
-    
+
     FUNCTIONS:
     clear()               if modification permitted, sets value to None
     copy()                returns a new line w copies of key attributes
@@ -92,7 +92,7 @@ class LineItem(Statement):
     # Make sure that equality analysis skips potentially circular pointers like
     # .relationships.parent. Otherwise, comparing children could look to parent, which
     # could look to child, and so on.
-    
+
     SIGNATURE_FOR_CREATION = "__init__"
     SIGNATURE_FOR_VALUE_RESET = "LineItem.resetValue"
     SIGNATURE_FOR_REPLICA_MANAGEMENT = "Bringing down value."
@@ -101,16 +101,16 @@ class LineItem(Statement):
     SUMMARY_PREFIX = ""  # "total "
 
     TAB_WIDTH = 3
-    
+
     def __init__(self, name=None, value=None):
 
         Statement.__init__(self, name)
         # We intentionally use inheritance for the Statement relationship here
         # because then the .find_ and .add_ methods map right on top of each
-        # other by default. 
+        # other by default.
 
         self._local_value = None
-        
+
         self.guide = Guide(priority=3, quality=1)
         self.log = []
         self.position = None
@@ -135,7 +135,7 @@ class LineItem(Statement):
     # know exactly what the user has in mind, we don't support set operations
     # out of the box. Otherwise, you might get a response that a line is "in"
     # a particular set that actually contains an instance with the
-    # same value but very different details. 
+    # same value but very different details.
 
     @property
     def sum_over_time(self):
@@ -236,7 +236,7 @@ class LineItem(Statement):
             self.set_consolidate(consolidate)
             # Start with a clean slate for Excel tracking, except for
             # number format
-            
+
     def copy(self):
         """
 
@@ -249,8 +249,8 @@ class LineItem(Statement):
         """
         new_line = Statement.copy(self)
         # Shallow copy, should pick up _local_value as is, and then create
-        # independent containers for tags. 
-        
+        # independent containers for tags.
+
         new_line.guide = copy.deepcopy(self.guide)
         new_line.log = self.log[:]
         new_line._sum_over_time = self.sum_over_time
@@ -272,7 +272,7 @@ class LineItem(Statement):
 
         Increment line value by matching line and details. If ``consolidating``
         is True, method will tag lines accordingly when incrementing local
-        value. 
+        value.
         """
         if matching_line.value is None:
             pass
@@ -286,17 +286,17 @@ class LineItem(Statement):
                 # Use Statement method here because we are treating the matching
                 # line as a Statement too. We assume that its details represent
                 # all of its value data. Statement.increment() will copy those
-                # details to this instance. 
-        
+                # details to this instance.
+
             else:
                 if signature is None:
                     signature = self.SIGNATURE_FOR_INCREMENTATION
 
-                starting_value = self.value or 0            
+                starting_value = self.value or 0
                 new_value = starting_value + matching_line.value
-                
+
                 self.set_value(new_value, signature)
-            
+
                 if consolidating and (self._consolidate is True or override):
                     self.tags.inherit_from(matching_line.tags)
                     self._consolidated = True
@@ -409,7 +409,7 @@ class LineItem(Statement):
         Use set_value() instead.
         """
         return self.set_value(value, signature, overrideValueManagement)
-            
+
     def set_value(self, value, signature, override=False):
         """
 
@@ -431,7 +431,7 @@ class LineItem(Statement):
             if self.hardcoded:
                 c = "Line is hardcoded. Cannot write."
                 raise bb_exceptions.BBPermissionError(c, self)
-            
+
         new_value = value
         if new_value is None:
             self._local_value = new_value
@@ -445,7 +445,7 @@ class LineItem(Statement):
 
         log_entry = (signature, time.time(), value)
         self.log.append(log_entry)
-            
+
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
@@ -497,11 +497,11 @@ class LineItem(Statement):
 
 
         Return list of one or more strings that describe this line and any
-        details. Lines have raw ends. 
+        details. Lines have raw ends.
         """
 
         result = []
-        
+
         if not self._details:
             # Simple view: only the local value
             simple = printing_tools.format_as_line(self, left_tab=indent)
@@ -540,7 +540,7 @@ class LineItem(Statement):
         # the copy counts as an "out" move. Then, if the original value was to
         # somehow get reset to None, the lineitem could get behind and the
         # entire financials unit could lose a special processing trigger.
-        
+
         replica._details = dict()
         replica.xl = xl_mgmt.LineData()
         replica.xl.format = self.xl.format.copy()
