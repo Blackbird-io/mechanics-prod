@@ -113,6 +113,10 @@ class ModelChef:
         unit_chef.chop_multi_valuation(book=book, unit=company, index=1,
                                        recur=False)
 
+        spacer_idx = book.get_index(book.get_sheet_by_name("Timeline"))
+        spacer_sheet = book.create_sheet("Monthly >>", spacer_idx+1)
+        sheet_style.style_sheet(spacer_sheet)
+
         self._format_line_borders(book)
 
         return book
