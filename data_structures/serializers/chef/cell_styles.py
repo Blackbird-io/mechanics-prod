@@ -232,6 +232,19 @@ class CellStyles:
                                 fill_type='solid')
 
     @staticmethod
+    def format_consolidated_label(cell):
+        """
+
+
+        CellStyles.format_consolidated_labelr -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Format cells which are labels for consolidating logic.
+        """
+        cell.font = Font(italic=True)
+
+    @staticmethod
     def format_scenario_selector_cells(sheet, label_col, selector_col, row):
         """
 
@@ -307,7 +320,7 @@ class CellStyles:
             border = Border(top=cell.border.top)
             border.top = side
             cell.border = border
-        
+
         # SET LEFT BORDER
         col = st_col
         for r in range(st_row, ed_row+1):

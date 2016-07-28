@@ -600,8 +600,12 @@ class LineChef:
                                                       data_type=
                                                       type_codes.FORMULA)
                         if temp_label:
-                            self._set_label(sheet=sheet, label=label_line,
-                                            row=sheet.bb.current_row)
+                            self._set_label(
+                                sheet=sheet,
+                                label=label_line,
+                                row=sheet.bb.current_row,
+                                formatter=CellStyles.format_consolidated_label
+                            )
 
                 self._group_lines(sheet)
 
@@ -1195,7 +1199,8 @@ class LineChef:
         return result
 
     def _set_label(self, *pargs, label, sheet, row, column=None,
-                   overwrite=False):
+                   overwrite=False,
+                   formatter=None):
         """
 
 
@@ -1207,6 +1212,7 @@ class LineChef:
         --``column`` column index or None where ``label`` should be written
         --``overwrite`` must be a boolean; True overwrites existing value,
            if any; default is False
+        --``formatter`` method in cell_styles to be called on the label cell
 
         Set (column, row) cell value to label. Throw exception if cell already
         has a different label, unless ``overwrite`` is True.
@@ -1235,6 +1241,9 @@ class LineChef:
                 raise ExcelPrepError(c)
                 # Check to make sure we are writing to the right row; if the
                 # label doesn't match, we are in trouble.
+
+        if formatter:
+            formatter(label_cell)
 
         return sheet
 
