@@ -74,10 +74,11 @@ class FormulaTemplates:
     """
 
     # GENERIC
+    SUM_ANYRANGE = "+SUM({top_cell}:{end_cell})"
     SUM_RANGE = "=SUM({alpha_column}{starting_row}:{alpha_column}{ending_row})"
     SUM_RANGE_ON_SHEET = "+SUM('{sheet}'!{alpha_column}{starting_row}:" +\
                          "'{sheet}'!{alpha_column}{ending_row})"
-    
+
     ADD_CELL = "+{alpha_column}{row}"
     ADD_CELL_FROM_SHEET = "+'{sheet}'!{alpha_column}{row}"
     ADD_COORDINATES = "+{coordinates}"
@@ -93,5 +94,5 @@ class FormulaTemplates:
     COMPUTE_AGE_IN_DAYS = "=IF({birth}, {ref_date}-{birth})"
     COMPUTE_AGE_IN_PERCENT = "=IF({span}, ROUND({age}/{span}*100,0))"
     COMPUTE_SPAN_IN_DAYS = "=IF({death}, {death}-{birth})"
-    
+
     IS_ALIVE = "=IF(AND({birth}<={ref_date},{ref_date}<{death}),TRUE,FALSE)"
