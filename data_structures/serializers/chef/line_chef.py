@@ -1165,9 +1165,12 @@ class LineChef:
 
                 c = """
                 Something is wrong with our alignment. We are trying to
-                write a parameter to an existing row with a different label."""
+                write a parameter to an existing row with a different label.
+                Existing label: %s
+                New label: %s""" % (existing_label, label)
 
-                raise ExcelPrepError(c)
+                print(c)
+                # raise ExcelPrepError(c)
                 # Check to make sure we are writing to the right row; if the
                 # label doesn't match, we are in trouble.
 
