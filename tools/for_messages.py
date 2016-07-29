@@ -41,7 +41,7 @@ message_patterns[p_end_session] = END_SESSION
 message_patterns[p_blank] = END_SESSION
 
 
-def engine_message_status(engine_message):
+def check_engine_message(engine_message):
     """
 
     engine_message_status() -> str
@@ -67,7 +67,7 @@ def engine_message_status(engine_message):
     return status
 
 
-def portal_message_status(portal_message):
+def check_portal_message(portal_message):
     """
 
     portal_message_status() -> str
@@ -77,4 +77,4 @@ def portal_message_status(portal_message):
     """
     mock_engine_msg = (portal_message[k] for k in ('M', 'Q', 'R'))
 
-    return engine_message_status(tuple(mock_engine_msg))
+    return check_engine_message(tuple(mock_engine_msg))
