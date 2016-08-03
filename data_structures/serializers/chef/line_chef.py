@@ -37,9 +37,10 @@ from openpyxl.comments import Comment
 from openpyxl.styles import Alignment
 
 from bb_exceptions import ExcelPrepError
-from chef_settings import COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING, \
-                          COMMENT_CUSTOM, BLANK_BETWEEN_TOP_LINES,\
-                          FILTER_PARAMETERS
+from chef_settings import (
+    COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING,
+    COMMENT_CUSTOM, BLANK_BETWEEN_TOP_LINES, FILTER_PARAMETERS
+)
 from data_structures.modelling.line_item import LineItem
 from ._chef_tools import group_lines, check_alignment
 from .cell_styles import CellStyles
@@ -60,6 +61,7 @@ formula_templates = FormulaTemplates()
 type_codes = TypeCodes()
 
 get_column_letter = xlio.utils.get_column_letter
+
 
 # Classes
 class LineChef:
@@ -116,7 +118,7 @@ class LineChef:
             line=line,
             set_labels=set_labels,
             indent=indent
-            )
+        )
 
         self._add_derivation_logic(
             sheet=sheet,
@@ -124,7 +126,7 @@ class LineChef:
             line=line,
             set_labels=set_labels,
             indent=indent + LineItem.TAB_WIDTH
-            )
+        )
 
         self._add_consolidation_logic(
             sheet=sheet,
@@ -132,7 +134,7 @@ class LineChef:
             line=line,
             set_labels=set_labels,
             indent=indent + LineItem.TAB_WIDTH
-            )
+        )
 
 
         if details:
@@ -372,8 +374,10 @@ class LineChef:
 
         return sheet
 
-    def chop_summary_line(self, *pargs, sheet, column, line, set_labels=True,
-                          indent=0):
+    def chop_summary_line(
+        self,
+        sheet, column, line, set_labels=True, indent=0
+    ):
         """
 
 
@@ -397,8 +401,13 @@ class LineChef:
 
         details = line.get_ordered()
 
+        # previous line may have requested a spacer after itself
+        # or we want one ourselves
         if line.xl.format.blank_row_before and not details:
+            sheet.bb.need_spacer = True
+        if sheet.bb.need_spacer:
             sheet.bb.current_row += 1
+            sheet.bb.need_spacer = False
 
         if line.xl.derived.calculations:
             self._add_derivation_logic(
@@ -407,7 +416,7 @@ class LineChef:
                 line=line,
                 set_labels=set_labels,
                 indent=indent
-                )
+            )
         else:
             self._add_reference(
                 sheet=sheet,
@@ -415,7 +424,7 @@ class LineChef:
                 line=line,
                 set_labels=set_labels,
                 indent=indent
-                )
+            )
 
             self._add_consolidation_reference_summary(
                 sheet=sheet,
@@ -423,7 +432,7 @@ class LineChef:
                 line=line,
                 set_labels=set_labels,
                 indent=indent + LineItem.TAB_WIDTH
-                )
+            )
 
         if details:
             sub_indent = indent + LineItem.TAB_WIDTH
@@ -437,17 +446,12 @@ class LineChef:
                     line=detail,
                     set_labels=set_labels,
                     indent=sub_indent)
-
                 link_template = formula_templates.ADD_COORDINATES
-
                 include = detail.xl.cell.parent is not sheet
                 cos = detail.xl.get_coordinates(include_sheet=include)
                 link = link_template.format(coordinates=cos)
                 detail_summation += link
             else:
-                if line.xl.format.blank_row_before:
-                    sheet.bb.current_row += 1
-
                 # Should group all the details here
                 sheet.bb.current_row += 1
 
@@ -456,12 +460,12 @@ class LineChef:
                 subtotal_cell.set_explicit_value(detail_summation,
                                                  data_type=type_codes.FORMULA)
 
-                line.xl.detailed.ending = sheet.bb.current_row-1
+                line.xl.detailed.ending = sheet.bb.current_row - 1
                 line.xl.detailed.cell = subtotal_cell
                 line.xl.cell = subtotal_cell
 
                 if set_labels:
-                    label = indent*" " + line.tags.name
+                    label = indent * " " + line.tags.name
                     self._set_label(sheet=sheet,
                                     label=label,
                                     row=sheet.bb.current_row)
@@ -480,11 +484,14 @@ class LineChef:
             sheet.bb.line_directory[line.id.bbid] = line.xl
 
         if line.xl.format.blank_row_after:
-            sheet.bb.current_row += 1
+            sheet.bb.need_spacer = True
 
         return sheet
 
-    def chop_summary_statement(self, *pargs, sheet, column, statement, set_labels=True):
+    def chop_summary_statement(
+        self,
+        sheet, column, statement, row_container, set_labels=True, title=None
+    ):
         """
 
 
@@ -500,9 +507,27 @@ class LineChef:
 
         Method relies on sheet.bb.current_row being up-to-date.
         """
-        if not BLANK_BETWEEN_TOP_LINES:
-            sheet.bb.current_row += 1
+        # Size up what has been added so far, so we know our starting row
+        row_container.calc_size()
 
+        # Sub-container for this statement
+        if not title:
+            title = statement.name
+        statement_rows = row_container.add_group(
+            title,
+            # add a spacer between self and previous statement, if not first
+            offset=1 if row_container.groups else 0,
+            add_outline=True
+        )
+
+        # Add title row and statement body
+        header = statement_rows.add_group('title', size=1, title=title)
+        matter = statement_rows.add_group('lines')
+        # current line is at the header row
+        sheet.bb.current_row = header.number()
+
+        # if previous line wants blank_row_after, or this one blank_row_before
+        sheet.bb.need_spacer = False
         for line in statement.get_ordered():
             if BLANK_BETWEEN_TOP_LINES:
                 sheet.bb.current_row += 1
@@ -513,14 +538,14 @@ class LineChef:
                 line=line,
                 set_labels=set_labels)
 
-        if len(statement.get_ordered()) == 0:
-            sheet.bb.current_row += 1
+        # determine container size from the number of written rows
+        matter.size = sheet.bb.current_row - header.number()
 
         return sheet
 
-    #*************************************************************************#
-    #                          NON-PUBLIC METHODS                             #
-    #*************************************************************************#
+    # *************************************************************************#
+    #                           NON-PUBLIC METHODS                             #
+    # *************************************************************************#
 
     def _add_consolidation_logic(self, *pargs, sheet, column, line,
                                  set_labels=True, indent=0):
@@ -568,8 +593,8 @@ class LineChef:
 
                 if sources:
                     batch_summation = ""
-                    if rr == required_rows-1:
-                        links_to_use = n_sources-count
+                    if rr == required_rows - 1:
+                        links_to_use = n_sources - count
                     else:
                         links_to_use = links_per_cell
 
@@ -596,9 +621,10 @@ class LineChef:
                     if batch_summation:
                         batch_cell = sheet.cell(column=column,
                                                 row=sheet.bb.current_row)
-                        batch_cell.set_explicit_value(batch_summation,
-                                                      data_type=
-                                                      type_codes.FORMULA)
+                        batch_cell.set_explicit_value(
+                            batch_summation,
+                            data_type=type_codes.FORMULA
+                        )
                         if temp_label:
                             self._set_label(
                                 sheet=sheet,
@@ -616,10 +642,10 @@ class LineChef:
             # Group the cells
             alpha_column = get_column_letter(column)
             summation_params = {
-                "starting_row" : line.xl.consolidated.starting,
-                "ending_row" : line.xl.consolidated.ending,
-                "alpha_column" : alpha_column
-                }
+                "starting_row": line.xl.consolidated.starting,
+                "ending_row": line.xl.consolidated.ending,
+                "alpha_column": alpha_column
+            }
 
             summation = formula_templates.SUM_RANGE.format(**summation_params)
             summation_cell = sheet.cell(column=column,
@@ -632,7 +658,7 @@ class LineChef:
 
             if set_labels:
                 label = line.tags.name
-                label = ((indent-LineItem.TAB_WIDTH)* " ") + label
+                label = ((indent - LineItem.TAB_WIDTH) * " ") + label
                 self._set_label(sheet=sheet, label=label,
                                 row=sheet.bb.current_row)
 
@@ -707,9 +733,10 @@ class LineChef:
                     batch_cell = sheet.cell(column=column,
                                             row=sheet.bb.current_row)
                     if batch_summation:
-                        batch_cell.set_explicit_value(batch_summation,
-                                                      data_type=
-                                                      type_codes.FORMULA)
+                        batch_cell.set_explicit_value(
+                            batch_summation,
+                            data_type=type_codes.FORMULA
+                        )
                     else:
                         # if we don't have a value for this month, print a null
                         # value as a placeholder
@@ -744,7 +771,7 @@ class LineChef:
 
             if set_labels:
                 label = line.tags.name
-                label = ((indent-LineItem.TAB_WIDTH) * " ") + label
+                label = ((indent - LineItem.TAB_WIDTH) * " ") + label
 
                 self._set_label(sheet=sheet, label=label,
                                 row=sheet.bb.current_row)
@@ -880,7 +907,8 @@ class LineChef:
         # Set up a private range that's going to include both "shared" period &
         # unit parameters from the column and "private" driver parameters.
 
-        label_column = sheet.bb.parameters.columns.get_position(field_names.LABELS)
+        cols = sheet.bb.parameters.columns
+        label_column = cols.get_position(field_names.LABELS)
         period_column = column
 
         for row_data in sorted(driver_data.rows,
@@ -898,7 +926,7 @@ class LineChef:
                     label=indented_label,
                     row=sheet.bb.current_row,
                     column=label_column
-                    )
+                )
 
             self._group_lines(sheet)
 
@@ -915,8 +943,8 @@ class LineChef:
 
             param_cell.value = private_value
 
-            relative_position = sheet.bb.current_row - \
-                                (private_data.rows.starting or 0)
+            relative_position = sheet.bb.current_row \
+                - (private_data.rows.starting or 0)
             private_data.rows.by_name[private_label] = relative_position
             # ... In this particular case, we could map a specific cell
             # (in memory) to the parameter. Unclear whether that's useful
@@ -942,8 +970,10 @@ class LineChef:
         for k, obj in driver_data.references.items():
             try:
                 include = obj.xl.cell.parent is not sheet
-                line_coordinates[k] = obj.xl.get_coordinates(include_sheet=include)
-            except (ExcelPrepError,AttributeError):
+                line_coordinates[k] = obj.xl.get_coordinates(
+                    include_sheet=include
+                )
+            except (ExcelPrepError, AttributeError):
                 print("Name:     ", driver_data.name)
                 print("Template: ", driver_data.formula)
                 print(obj)
@@ -1052,14 +1082,17 @@ class LineChef:
                 self._group_lines(sheet)
 
                 if set_labels:
-                    label = ((indent-LineItem.TAB_WIDTH) * " ") + line.tags.name
+                    label = ((indent - LineItem.TAB_WIDTH) * " ") \
+                        + line.tags.name
                     self._set_label(sheet=sheet, label=label,
                                     row=sheet.bb.current_row)
 
         return sheet
 
-    def _add_reference(self, *pargs, sheet, column, line,
-                              set_labels=True, indent=0, update_cell=True):
+    def _add_reference(
+        self,
+        *pargs, sheet, column, line, set_labels=True, indent=0, update_cell=True
+    ):
         """
 
 
@@ -1082,11 +1115,12 @@ class LineChef:
 
             ref_cell = line.xl.reference.source.xl.cell
             include = ref_cell.parent is not sheet
-            excel_str = "="+line.xl.reference.source.xl.get_coordinates(include_sheet=include)
+            source = line.xl.reference.source
+            excel_str = "=" + source.xl.get_coordinates(include_sheet=include)
 
             cell.set_explicit_value(excel_str, data_type=type_codes.FORMULA)
 
-            label = indent*" " + line.tags.name
+            label = indent * " " + line.tags.name
 
             line.xl.ending = sheet.bb.current_row
             line.xl.reference.cell = ref_cell
@@ -1116,7 +1150,7 @@ class LineChef:
         Adds the combination to the current row.
         """
         processed = line.xl.consolidated.cell or line.xl.derived.cell or \
-                    line.xl.detailed.cell or line.xl.reference.cell
+            line.xl.detailed.cell or line.xl.reference.cell
 
         if not processed:
             sheet.bb.current_row += 1
@@ -1126,7 +1160,7 @@ class LineChef:
             cell.value = line.value
             cell_styles.format_hardcoded(cell)
 
-            label = indent*" " + line.tags.name
+            label = indent * " " + line.tags.name
 
             line.xl.ending = sheet.bb.current_row
 
@@ -1222,7 +1256,8 @@ class LineChef:
         """
         if column is None:
             if getattr(sheet.bb, field_names.PARAMETERS, None):
-                column = sheet.bb.parameters.columns.get_position(field_names.LABELS)
+                cols = sheet.bb.parameters.columns
+                column = cols.get_position(field_names.LABELS)
             else:
                 column = 2
 

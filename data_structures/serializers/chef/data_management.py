@@ -41,6 +41,7 @@ UnitData              holds the Worksheet for a particular BusinessUnit
 import copy
 
 from openpyxl.styles import Side
+from openpyxl.utils import get_column_letter
 
 from bb_exceptions import ExcelPrepError
 
@@ -76,7 +77,6 @@ class Area:
     def __init__(self, name=None):
         self.name = name
         self.parent = None
-
         self.rows = Lookup()
         self.columns = Lookup()
 
@@ -494,6 +494,9 @@ class SheetData:
         self.scenario_selector = None
         self.line_directory = dict()
 
+        self.row_axis = AxisGroup(tip=0)
+        self.col_axis = AxisGroup(tip=0)
+
     def add_area(self, area_name, overwrite=False):
         """
 
@@ -570,3 +573,224 @@ class UnitData:
         """
 
         self.sheet = sheet
+
+
+class AxisGroup:
+    """
+
+    A placeholder for spreadsheet layout on the R and C axes. Defines the order
+    of rows or cols without specifying their exact location at first.
+    ====================  =====================================================
+    Attribute             Description
+    ====================  =====================================================
+
+    DATA:
+    name                  our tag, unique within parent
+    path                  shows path to ourselves from the very top
+    offset                our offset from the predecessor, or from the tip of
+                          container if we are at the top of container
+    tip                   0-base starting position of this group in container
+                          after offset is applied, may be None if unknown
+    size                  total span from tip to end, fixed or calculated,
+                          does not include own offset
+    outline               Excel outline level for group
+    groups                ordered container for groups
+    by_name               unique names of groups -> index in groups
+    extra                 anything else we need to remember
+
+    FUNCTIONS:
+    add_group()           recursively adds nested groups or returns existing
+    get_group()           same as add_group, but will not add
+    calc_size()           calculates the span of this group and children
+    get_subgroups()       convenience iterator over subgroups
+    number()              converts 0 -> 1 for Excel coordinate system
+    get_corner_address()  converts row and col coordinates into 'A1' for Excel
+    ====================  =====================================================
+    """
+    def __init__(self, **kargs):
+        """
+
+        AxisGroup.__init__() -> None
+
+        Any unparsed (key, value) pairs in kargs will be placed into the
+        ``extra`` dict, to facilitate manipulation and formatting.
+        """
+        self.tip = kargs.get('tip')
+        self.name = kargs.get('name')
+        self.path = kargs.get('path')
+        self.size = kargs.get('size')
+        self.offset = kargs.get('offset')
+        self.outline = kargs.get('outline', 0)
+        self.groups = []
+        self.by_name = {}
+
+        # any extra information, e.g. labels
+        self.extra = {}
+        for k, v in kargs.items():
+            if k not in self.__dict__:
+                self.extra[k] = v
+
+    def add_group(
+        self, *path, size=None, offset=None, add_outline=False, **kargs
+    ):
+        """
+
+        AxisGroup.add_group() -> AxisGroup
+
+        Walks the ``path`` adding groups at nested levels, or matching existing
+        ones.
+        """
+        group = self
+
+        for name in path:
+            # anyting that formats will do as a tag
+            name = format(name)
+
+            if name in group.by_name:
+                group_idx = group.by_name[name]
+                group = group.groups[group_idx]
+            else:
+                new_group = self._make_group(
+                    name, size, offset, add_outline, **kargs
+                )
+                group.by_name[name] = len(group.groups)
+                group.groups.append(new_group)
+                group = new_group
+        return group
+
+    def get_group(self, *path):
+        """
+
+        AxisGroup.add_group() -> None
+
+        Walks the ``path`` to match an existing group, returns None if not
+        found (instead of creating one as add_group would do).
+        """
+        group = self
+        for name in path:
+            name = format(name)
+            if name in group.by_name:
+                group_idx = group.by_name[name]
+                group = group.groups[group_idx]
+            else:
+                return None
+        return group
+
+    def calc_size(self):
+        """
+
+        AxisGroup.calc_size() -> int
+
+        Recursively calculates and sets the span sizes of all subgroups.
+        Only works if own tip is set.
+        Group size is the sum of subgroup sizes and their offsets.
+        Own offset is not included in own size, but added to parent's size.
+        Will adjusts the starting locations of groups based on predecessor's
+        sizes.
+        """
+        mysize = 0
+        for group in self.groups:
+            group.tip = self.tip + mysize + (group.offset or 0)
+            if group.groups:
+                group_size = group.calc_size()
+            else:
+                group_size = group.size
+            # accumulate subgroup sizes into mysize
+            mysize += group_size + (group.offset or 0)
+        self.size = mysize
+        return mysize
+
+    def get_subgroups(self, name):
+        """
+
+        AxisGroup.get_subgroups() -> iter -> AxisGroup
+
+        Convenience iterator over the subgroups of a group given by ``name``.
+        """
+        if name in self.by_name:
+            group_idx = self.by_name[name]
+            for group in self.groups[group_idx].groups:
+                yield group
+
+    def number(self):
+        """
+
+        AxisGroup.number() -> int
+
+        Excel convenience: converts own 0-base location into 1-base.
+        """
+        if self.tip is not None:
+            return self.tip + 1
+
+    def get_corner_address(self, col_group, row_path=[], col_path=[]):
+        """
+
+        AxisGroup.get_corner_address() -> str
+
+        --``col_group`` AxisGroup, column locator
+
+        Excel convenience: finds the address label of our intersection with
+        a column locator (top left cell address), e.g. 'C9'.
+        Only makes sense if we are a row locator, and the cross-locator is a
+        column locator.
+        """
+        row = self.get_group(*row_path)
+        col = col_group.get_group(*col_path)
+        if row and col:
+            rownum = row.number()
+            colnum = col.number()
+            letter = get_column_letter(colnum)
+            return '{}{}'.format(letter, rownum)
+
+    #**************************************************************************#
+    #                          NON-PUBLIC METHODS                              #
+    #**************************************************************************#
+
+    def _make_group(self,
+        name, size=None, offset=None, add_outline=False, **kargs
+    ):
+        """
+
+        AxisGroup._make_group() -> AxisGroup
+
+        Constructs AxisGroup instance parameters from inputs. Does some of the
+        work of .calc_size(), for cases when span can be calculated at
+        construction time.
+        """
+        name = format(name)
+
+        # decorative property, for debugging
+        path = name
+        if self.path:
+            path = self.path + '.' + path
+
+        # child's head position, if we can tell what it is
+        tip = None
+        if self.groups:
+            # from peer predecessor
+            end_group = self.groups[-1]
+            if end_group.tip is not None and end_group.size is not None:
+                tip = end_group.tip + end_group.size
+        elif self.tip is not None:
+            # from container
+            tip = self.tip
+
+        # shift the starting position, creating an implicit spacer
+        if tip is not None and offset:
+            tip += offset
+
+        # bump up outline level by one, if set
+        outline_level = (self.outline or 0)
+        if add_outline:
+            outline_level += 1
+
+        new_group = AxisGroup(
+            name=name,
+            path=path,
+            tip=tip,
+            size=size,
+            offset=offset,
+            outline=outline_level,
+            **kargs
+        )
+        return new_group

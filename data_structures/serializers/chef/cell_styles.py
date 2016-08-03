@@ -41,6 +41,7 @@ from .data_types import TypeCodes
 # Constants
 HARDCODED_COLOR = '0070c0' #'1f5993'
 CALCULATION_COLOR = '707070'
+SUBHEADER_COLOR = '808080'
 
 # Module Globals
 number_formats = NumberFormats()
@@ -223,15 +224,36 @@ class CellStyles:
         self.format_header_label(cell, alignment='center')
 
     @staticmethod
-    def format_header_label(cell, alignment=None):
+    def format_header_label(cell, alignment=None, color=BLACK):
+        """
 
+
+        CellStyles.format_header_label -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Headers at the top, white on black.
+        """
         if alignment:
             cell.alignment = Alignment(horizontal=alignment)
 
         cell.font = Font(color=WHITE, bold=True)
-        cell.fill = PatternFill(start_color=BLACK,
-                                end_color=BLACK,
+        cell.fill = PatternFill(start_color=color,
+                                end_color=color,
                                 fill_type='solid')
+
+    @staticmethod
+    def format_subheader_label(cell, alignment=None, color=SUBHEADER_COLOR):
+        """
+
+
+        CellStyles.format_subheader_label -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Looks like Header, but on a different background color.
+        """
+        CellStyles.format_header_label(cell, alignment, color)
 
     @staticmethod
     def format_consolidated_label(cell):
