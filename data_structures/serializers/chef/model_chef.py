@@ -397,25 +397,10 @@ class ModelChef:
         # fill out the headers, now that the column positions are known
         for year_colgroup in years_cols.groups:
             self._year_headers(sheet, year_colgroup, year_headrow)
-            # # set width of the column holding annual numbers
-            # year_col = year_colgroup.get_group('year')
-            # address = year_headrow.get_corner_address(year_col)
-            # cell = sheet.cell(address)
-            # column = sheet.column_dimensions[cell.column]
-            # column.width = chef_settings.COLUMN_WIDTH
-            #
-            # # set year label at the start of the year_colgroup
-            # address = year_headrow.get_corner_address(year_colgroup)
-            # cell = sheet.cell(address)
-            # cell.value = year_colgroup.name
-            # cell_styles.format_header_label(cell, alignment='right')
-            # if year_colgroup.size > 1:
-            #     stretch = year_headrow.get_range_address(year_colgroup)
-            #     sheet.merge_cells(stretch)
 
+            # if SUMMARY_INCLUDES_QUARTERS, format quarter columns
+            # quarters show up one row below year_header
             for qtr_colgroup in year_colgroup.get_subgroups('quarters'):
-                # if SUMMARY_INCLUDES_QUARTERS was set, format quarter column
-                # quarters show up one row below year_header
                 if chef_settings.SUMMARY_INCLUDES_QUARTERS:
                     self._quarter_headers(sheet, qtr_colgroup, qtr_headrow)
 
@@ -490,7 +475,7 @@ class ModelChef:
            timeline
         """
         book = Workbook()
-
+        book.properties.creator = chef_settings.WORKBOOK_AUTHOR
 
         self._create_cover_tab(book, model)
         self._create_scenarios_tab(book, model)
