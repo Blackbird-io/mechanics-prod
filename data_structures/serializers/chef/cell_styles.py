@@ -42,6 +42,7 @@ from .data_types import TypeCodes
 HARDCODED_COLOR = '0070c0' #'1f5993'
 CALCULATION_COLOR = '707070'
 SUBHEADER_COLOR = '808080'
+LOWHEADER_COLOR = 'CCCCCC'
 
 # Module Globals
 number_formats = NumberFormats()

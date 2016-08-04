@@ -42,7 +42,7 @@ import chef_settings
 from chef_settings import SCENARIO_SELECTORS
 from ._chef_tools import add_scenario_selector
 from .bb_workbook import BB_Workbook as Workbook
-from .cell_styles import CellStyles
+from .cell_styles import CellStyles, LOWHEADER_COLOR
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
@@ -173,7 +173,7 @@ class ModelChef:
         qtr_timeline = model.time_line.summary_builder.summaries[key]
         # calculate the column layout for quarters and years
         self._annual_summary_headers(
-            sheet, qtr_timeline, output_rows, output_cols
+            sheet, model.time_line, output_rows, output_cols
         )
 
         # Add parameters area to set up label and value columns
@@ -207,7 +207,7 @@ class ModelChef:
         if chef_settings.SUMMARY_INCLUDES_QUARTERS:
             # column selector: date -> years_cols.2017.quarters.1Q17
             col_selector = lambda date: years_cols.get_group(
-                date.year, 'quarters', self._quarter_name(date)
+                date.year, 'quarters', self._quarter_name(date), 'quarter'
             )
             # chop quarterly
             self._annual_summary_detail(
@@ -225,12 +225,19 @@ class ModelChef:
         col_selector = lambda date: years_cols.get_group(
             date.year, 'year'
         )
+        # if chef_settings.SUMMARY_INCLUDES_QUARTERS:
+        #     from_cols = lambda date: years_cols.get_group(
+        #         date.year, 'quarters'
+        #     )
+        # else:
+        #     from_cols = None
         self._annual_summary_detail(
             sheet,
             sum_timeline,
             output_rows,
             output_cols,
-            col_selector=col_selector
+            col_selector=col_selector,
+            # from_cols=from_cols,
         )
 
         # Styling and formatting that's left
@@ -275,7 +282,69 @@ class ModelChef:
 
         Convenience: datetime.date -> '1Q17'.
         """
-        return '{}Q{:02d}'.format(date.month // 3, date.year % 100)
+        return '{}Q{:02d}'.format(1 + (date.month - 1) // 3, date.year % 100)
+
+    def _year_headers(self, sheet, year_colgroup, year_headrow):
+        """
+
+
+        ModelChef._year_headers() -> None
+
+        --``year_colgroup`` range of headers, possibly with quarters
+        --``year_headrow`` header row, size 1
+
+        Sets up column header layout at the intersection of ``year_headrow``
+        and ``year_colgroup``.
+        """
+        # set width of the column holding annual numbers
+        year_col = year_colgroup.get_group('year')
+        address = year_headrow.get_corner_address(year_col)
+        cell = sheet.cell(address)
+        column = sheet.column_dimensions[cell.column]
+        column.width = chef_settings.COLUMN_WIDTH
+
+        # set year label at the start of year block
+        address = year_headrow.get_corner_address(year_colgroup)
+        cell = sheet.cell(address)
+        cell.value = year_colgroup.name
+        cell_styles.format_header_label(cell, alignment='right')
+
+        # merge header cells
+        if year_colgroup.size > 1:
+            stretch = year_headrow.get_range_address(year_colgroup)
+            sheet.merge_cells(stretch)
+
+    def _quarter_headers(self, sheet, qtr_colgroup, qtr_headrow):
+        """
+
+
+        ModelChef._quarter_headers() -> None
+
+        --``qtr_colgroup`` range of headers, possibly with months
+        --``qtr_headrow`` header row, size 1
+
+        Sets up column header layout at the intersection of ``qtr_headrow``
+        and ``qtr_colgroup``.
+        """
+        # set width of the column holding quarterly numbers
+        qtr_col = qtr_colgroup.get_group('quarter')
+        address = qtr_headrow.get_corner_address(qtr_col)
+        cell = sheet.cell(address)
+        column = sheet.column_dimensions[cell.column]
+        column.width = chef_settings.COLUMN_WIDTH
+
+        # set quarter label at the start of quarterly block
+        address = qtr_headrow.get_corner_address(qtr_colgroup)
+        cell = sheet.cell(address)
+        cell.value = qtr_colgroup.name
+        cell_styles.format_subheader_label(cell, alignment='right')
+
+        # group and merge header cells
+        col_tip, col_end = qtr_colgroup.get_span(letters=True)
+        sheet.column_dimensions.group(col_tip, col_end, hidden=True)
+        if qtr_colgroup.size > 1:
+            stretch = qtr_headrow.get_range_address(qtr_colgroup)
+            sheet.merge_cells(stretch)
 
     def _annual_summary_headers(
         self, sheet, timeline, output_rows, output_cols
@@ -287,8 +356,8 @@ class ModelChef:
 
         --``timeline`` quarterly summary timeline
 
-        Create the layout for column headers the annual summary sheet.
-        Fills in year and quarter labels in headers.
+        Create the layout for column headers on annual summary sheet.
+        Fill in year, quarter and month labels in headers.
         """
         # column group for years
         years_cols = output_cols.get_group('years')
@@ -297,56 +366,62 @@ class ModelChef:
         if chef_settings.SUMMARY_INCLUDES_QUARTERS:
             # row for quarter headers, if needed
             qtr_headrow = output_rows.add_group('quarters', size=1)
+        if chef_settings.SUMMARY_INCLUDES_MONTHS:
+            # row for month headers, if needed
+            mon_headrow = output_rows.add_group('months', size=1)
 
-        # actual header labels, years and (possibly) quarters
-        # nested in the form: years.2017.quarters.1Q17, years.2017.year
+        # actual header labels, years and (possibly) quarters and months
+        # nested in the form: years.2017.quarters.1Q17.months.2017-01-01
         for date in sorted(timeline.keys()):
-            # label for year column
-            year_name = format(date.year)
             # container for quarters (if requested) and year
-            year_colgroup = years_cols.add_group(year_name)
+            year_colgroup = years_cols.add_group(date.year)
+            # label for quarter column
+            qtr_name = self._quarter_name(date)
+            # sub-container for quarters:
+            # years.2017.quarters.1Q17
+            qtr_colgroup = year_colgroup.add_group('quarters', qtr_name)
+            if chef_settings.SUMMARY_INCLUDES_MONTHS:
+                # terminal leaf for monthly values
+                # years.2017.quarters.1Q17.months.2017-01-31
+                qtr_colgroup.add_group('months', date, size=1)
             if chef_settings.SUMMARY_INCLUDES_QUARTERS:
-                # label for quarter column
-                qtr_name = self._quarter_name(date)
-                # sub-container for quarters
-                qtr_colgroup = year_colgroup.add_group('quarters')
-                # teminal leaf, holds the quarterly values
-                qtr_colgroup.add_group(qtr_name, size=1, add_outline=True)
+                # terminal leaf for quarterly values, after months
+                # years.2017.quarters.1Q17.quarter
+                qtr_colgroup.add_group('quarter', size=1)
             # column for year itself, after quarters
+            # years.2017.year
             year_colgroup.add_group('year', size=1)
-        # column layout is known at this point
+        # column layout is known at this point, calculate all col locations
         output_cols.calc_size()
 
         # fill out the headers, now that the column positions are known
         for year_colgroup in years_cols.groups:
-            # if 'quarters' was set, format quarters column headings
-            # quarters show up one row below year_header
-            for qtr_col in year_colgroup.get_subgroups('quarters'):
-                address = qtr_headrow.get_corner_address(qtr_col)
-                cell = sheet.cell(address)
-                cell.value = qtr_col.name
-                cell_styles.format_subheader_label(cell, alignment='right')
-                column = sheet.column_dimensions[cell.column]
-                column.width = chef_settings.COLUMN_WIDTH
-                column.outline_level = qtr_col.outline
-            year_col = year_colgroup.get_group('year')
-            # width of the column holding annual numbers
-            address = year_headrow.get_corner_address(year_col)
-            cell = sheet.cell(address)
-            column = sheet.column_dimensions[cell.column]
-            column.width = chef_settings.COLUMN_WIDTH
-            # year label
-            address = year_headrow.get_corner_address(year_colgroup)
-            cell = sheet.cell(address)
-            cell.value = year_colgroup.name
-            cell_styles.format_header_label(cell, alignment='right')
-            # merge year header cell if there are quarters
-            if year_colgroup.size > 1:
-                stretch = year_headrow.get_corner_address(year_col)
-                sheet.merge_cells('{}:{}'.format(address, stretch))
+            self._year_headers(sheet, year_colgroup, year_headrow)
+            # # set width of the column holding annual numbers
+            # year_col = year_colgroup.get_group('year')
+            # address = year_headrow.get_corner_address(year_col)
+            # cell = sheet.cell(address)
+            # column = sheet.column_dimensions[cell.column]
+            # column.width = chef_settings.COLUMN_WIDTH
+            #
+            # # set year label at the start of the year_colgroup
+            # address = year_headrow.get_corner_address(year_colgroup)
+            # cell = sheet.cell(address)
+            # cell.value = year_colgroup.name
+            # cell_styles.format_header_label(cell, alignment='right')
+            # if year_colgroup.size > 1:
+            #     stretch = year_headrow.get_range_address(year_colgroup)
+            #     sheet.merge_cells(stretch)
+
+            for qtr_colgroup in year_colgroup.get_subgroups('quarters'):
+                # if SUMMARY_INCLUDES_QUARTERS was set, format quarter column
+                # quarters show up one row below year_header
+                if chef_settings.SUMMARY_INCLUDES_QUARTERS:
+                    self._quarter_headers(sheet, qtr_colgroup, qtr_headrow)
 
     def _annual_summary_detail(self,
-        sheet, timeline, output_rows, output_cols, col_selector
+        sheet, timeline, output_rows, output_cols, col_selector,
+        from_cols=None,
     ):
         """
 

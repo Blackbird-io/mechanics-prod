@@ -742,6 +742,48 @@ class AxisGroup:
             letter = get_column_letter(colnum)
             return '{}{}'.format(letter, rownum)
 
+    def get_range_address(self, col_group, row_path=[], col_path=[]):
+        """
+
+        AxisGroup.get_corner_address() -> str
+
+        --``col_group`` AxisGroup, column locator
+
+        Excel convenience: finds the full range address of our intersection
+        with a column locator, e.g. 'C2:E9'. Sizes need to be set.
+        Only makes sense if we are a row locator, and the cross-locator is a
+        column locator.
+        """
+        row = self.get_group(*row_path)
+        col = col_group.get_group(*col_path)
+        if row and col:
+            rowtip = row.number()
+            rowend = row.number() + row.size - 1
+            coltip = col.number()
+            colend = col.number() + col.size - 1
+            coltip = get_column_letter(coltip)
+            colend = get_column_letter(colend)
+            return '{}{}:{}{}'.format(coltip, rowtip, colend, rowend)
+
+    def get_span(self, *path, letters=False):
+        """
+
+        AxisGroup.get_span() -> (int, int) or (str, str)
+
+        --``letters`` return column letters instead of numbers
+
+        Excel convenience: first and last row/col numbers of the Excel range
+        spanned by us. As column letters, optionally.
+        Breaks if size has not been set.
+        """
+        group = self.get_group(*path)
+        tip = group.tip + 1
+        end = group.tip + group.size
+        if letters:
+            tip = get_column_letter(tip)
+            end = get_column_letter(end)
+        return tip, end
+
     #**************************************************************************#
     #                          NON-PUBLIC METHODS                              #
     #**************************************************************************#
