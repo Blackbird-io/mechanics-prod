@@ -536,7 +536,8 @@ class LineChef:
                 sheet=sheet,
                 column=column,
                 line=line,
-                set_labels=set_labels)
+                set_labels=set_labels,
+            )
 
         # determine container size from the number of written rows
         matter.size = sheet.bb.current_row - header.number()
@@ -587,6 +588,7 @@ class LineChef:
             sheet.bb.outline_level += 1
 
             line.xl.consolidated.starting = sheet.bb.current_row
+            line.xl.consolidated.array.clear()
 
             count = 0
             for rr in range(required_rows):
@@ -625,6 +627,9 @@ class LineChef:
                             batch_summation,
                             data_type=type_codes.FORMULA
                         )
+
+                        line.xl.consolidated.array.append(batch_cell)
+
                         if temp_label:
                             self._set_label(
                                 sheet=sheet,
