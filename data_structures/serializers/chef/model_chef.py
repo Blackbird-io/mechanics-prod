@@ -372,8 +372,8 @@ class ModelChef:
             )
             column = sheet.column_dimensions[cell.column]
             column.width = chef_settings.COLUMN_WIDTH
-            column.outlineLevel = 2
-            column.hidden= True
+            column.outlineLevel = 1 + chef_settings.SUMMARY_INCLUDES_QUARTERS
+            column.hidden = True
 
     def _annual_summary_headers(
         self, sheet, timeline, output_rows, output_cols
