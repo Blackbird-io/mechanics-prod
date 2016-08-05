@@ -189,6 +189,9 @@ class CellStyles:
         if line.xl.consolidated.cell:
             line.xl.consolidated.cell.number_format = use_format
 
+        for cell in line.xl.consolidated.array:
+            cell.number_format = use_format
+
         if line.xl.detailed.cell:
             line.xl.detailed.cell.number_format = use_format
 

@@ -225,19 +225,12 @@ class ModelChef:
         col_selector = lambda date: years_cols.get_group(
             date.year, 'year'
         )
-        # if chef_settings.SUMMARY_INCLUDES_QUARTERS:
-        #     from_cols = lambda date: years_cols.get_group(
-        #         date.year, 'quarters'
-        #     )
-        # else:
-        #     from_cols = None
         self._annual_summary_detail(
             sheet,
             sum_timeline,
             output_rows,
             output_cols,
             col_selector=col_selector,
-            # from_cols=from_cols,
         )
 
         # Styling and formatting that's left
@@ -338,6 +331,8 @@ class ModelChef:
         cell = sheet.cell(address)
         cell.value = qtr_colgroup.name
         cell_styles.format_subheader_label(cell, alignment='right')
+        column = sheet.column_dimensions[cell.column]
+        column.width = chef_settings.COLUMN_WIDTH
 
         # group and merge header cells
         col_tip, col_end = qtr_colgroup.get_span(letters=True)
@@ -345,6 +340,34 @@ class ModelChef:
         if qtr_colgroup.size > 1:
             stretch = qtr_headrow.get_range_address(qtr_colgroup)
             sheet.merge_cells(stretch)
+
+    def _month_headers(self, sheet, years_cols, mon_headrow):
+        """
+
+
+        ModelChef._month_headers() -> None
+
+        --``years_cols`` main column header container
+        --``mon_headrow`` header row, size 1
+
+        Sets up column header layout at the intersection of ``mon_headrow``
+        and month's location in ``years_cols``.
+        """
+        # iterate over all locators of the form:
+        # 2017.quarters.1Q17.months.2017-02-28
+        for mon_col in years_cols.iter_level(
+            None, 'quarters', None, 'months', None
+        ):
+            address = mon_headrow.get_corner_address(mon_col)
+            cell = sheet.cell(address)
+            cell.value = mon_col.name
+            cell_styles.format_subheader_label(
+                cell,
+                alignment='right',
+                color=LOWHEADER_COLOR
+            )
+            column = sheet.column_dimensions[cell.column]
+            column.width = chef_settings.COLUMN_WIDTH
 
     def _annual_summary_headers(
         self, sheet, timeline, output_rows, output_cols
@@ -388,7 +411,7 @@ class ModelChef:
                 # terminal leaf for quarterly values, after months
                 # years.2017.quarters.1Q17.quarter
                 qtr_colgroup.add_group('quarter', size=1)
-            # column for year itself, after quarters
+            # terminal leaf for year itself, after quarters
             # years.2017.year
             year_colgroup.add_group('year', size=1)
         # column layout is known at this point, calculate all col locations
@@ -404,9 +427,11 @@ class ModelChef:
                 if chef_settings.SUMMARY_INCLUDES_QUARTERS:
                     self._quarter_headers(sheet, qtr_colgroup, qtr_headrow)
 
-    def _annual_summary_detail(self,
-        sheet, timeline, output_rows, output_cols, col_selector,
-        from_cols=None,
+        if chef_settings.SUMMARY_INCLUDES_MONTHS:
+            self._month_headers(sheet, years_cols, mon_headrow)
+
+    def _annual_summary_detail(
+        self, sheet, timeline, output_rows, output_cols, col_selector
     ):
         """
 

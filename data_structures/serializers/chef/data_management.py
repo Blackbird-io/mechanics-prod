@@ -225,6 +225,8 @@ class LineData(Range):
         self.consolidated.labels = list()
         # List should contain pointers to source lines
         self.consolidated.cell = None
+        # Cells created from consolidation sources
+        self.consolidated.array = []
 
         self.derived = Range()
         self.derived.calculations = list()
@@ -711,6 +713,23 @@ class AxisGroup:
             group_idx = self.by_name[name]
             for group in self.groups[group_idx].groups:
                 yield group
+
+    def iter_level(self, *path):
+        """
+
+        AxisGroup.iter_level() -> iter -> AxisGroup
+
+        Convenience iterator over the subgroups at a certain level in the path.
+        """
+        if path:
+            name = path[0]
+            for group in self.groups:
+                if name is not None and group.name != name:
+                    continue
+                if len(path) > 1:
+                    yield from group.iter_level(*path[1:])
+                else:
+                    yield group
 
     def number(self):
         """
