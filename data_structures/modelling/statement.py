@@ -335,7 +335,7 @@ class Statement(Equalities, TagsMixIn):
 
         self._bind_and_record(line)
 
-    def copy(self):
+    def copy(self, check_consolidate=False):
         """
 
 
@@ -355,13 +355,20 @@ class Statement(Equalities, TagsMixIn):
         result._details = dict()
         # Clean dictionary
 
+
         if bb_settings.DEBUG_MODE:
             pool = self.get_ordered()
         else:
             pool = self._details.values()
 
         for own_line in pool:
-            new_line = own_line.copy()
+            if check_consolidate:
+                # if this line is copied during consolidate, check if detail
+                # should be included
+                if not own_line.consolidate:
+                    continue
+
+            new_line = own_line.copy(check_consolidate=check_consolidate)
             result.add_line(new_line, position=own_line.position)
             # Preserve relative order
 
@@ -529,7 +536,7 @@ class Statement(Equalities, TagsMixIn):
         return result
 
     def increment(self, matching_statement, consolidating=False, xl_label=None,
-                  override=False):
+                  override=False, xl_only=False):
         """
 
 
@@ -540,7 +547,6 @@ class Statement(Equalities, TagsMixIn):
 
         If ``consolidating`` is True, method sets obj._consolidated = True.
         """
-
         if bb_settings.DEBUG_MODE:
             pool = matching_statement._get_ordered_items_debug()
         else:
@@ -560,17 +566,18 @@ class Statement(Equalities, TagsMixIn):
             if own_line:
                 # Option A
                 own_line.increment(external_line, consolidating=consolidating,
-                                   xl_label=xl_label, override=override)
+                                   xl_label=xl_label, override=override,
+                                   xl_only=xl_only)
 
             else:
                 # Option B
-                local_copy = external_line.copy()
+                local_copy = external_line.copy(check_consolidate=True)
                 # Dont enforce rules to track old line.replicate() method
 
                 if external_line.consolidate or override:
                     if consolidating:
                         if external_line.value is not None:
-                            if not local_copy._consolidated:
+                            if not local_copy._consolidated and not xl_only:
                                 local_copy._consolidated = True
 
                             # Pick up lines with None values, but don't tag
@@ -579,13 +586,12 @@ class Statement(Equalities, TagsMixIn):
 
                             # need to make sure Chef knows to consolidate this
                             # source line (or its details) also
-
                             self._add_lines_in_chef(local_copy, external_line,
                                                     xl_label=xl_label)
 
                     self.add_line(local_copy, local_copy.position)
-                    # For speed, could potentially add all the lines and then fix
-                    # positions once.
+                    # For speed, could potentially add all the lines and then
+                    # fix positions once.
                 else:
                     pass
 
@@ -654,7 +660,7 @@ class Statement(Equalities, TagsMixIn):
 
         # need to make sure Chef knows to consolidate this
         # source line (and its details) also
-        if not external_line._details:
+        if not local_copy._details:
             local_copy.xl.consolidated.sources.append(external_line)
             local_copy.xl.consolidated.labels.append(xl_label)
         else:
