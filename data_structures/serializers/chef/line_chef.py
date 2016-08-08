@@ -39,7 +39,8 @@ from openpyxl.styles import Alignment
 from bb_exceptions import ExcelPrepError
 from chef_settings import (
     COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING,
-    COMMENT_CUSTOM, BLANK_BETWEEN_TOP_LINES, FILTER_PARAMETERS
+    COMMENT_CUSTOM, BLANK_BETWEEN_TOP_LINES, FILTER_PARAMETERS,
+    SUMMARY_INCLUDES_MONTHS
 )
 from data_structures.modelling.line_item import LineItem
 from ._chef_tools import group_lines, check_alignment
@@ -375,8 +376,8 @@ class LineChef:
         return sheet
 
     def chop_summary_line(
-        self,
-        sheet, column, line, set_labels=True, indent=0
+        self, sheet,
+        column, line, set_labels=True, indent=0
     ):
         """
 
@@ -431,7 +432,7 @@ class LineChef:
                 column=column,
                 line=line,
                 set_labels=set_labels,
-                indent=indent + LineItem.TAB_WIDTH
+                indent=indent + LineItem.TAB_WIDTH,
             )
 
         if details:
@@ -445,7 +446,8 @@ class LineChef:
                     column=column,
                     line=detail,
                     set_labels=set_labels,
-                    indent=sub_indent)
+                    indent=sub_indent
+                )
                 link_template = formula_templates.ADD_COORDINATES
                 include = detail.xl.cell.parent is not sheet
                 cos = detail.xl.get_coordinates(include_sheet=include)
@@ -489,8 +491,9 @@ class LineChef:
         return sheet
 
     def chop_summary_statement(
-        self,
-        sheet, column, statement, row_container, set_labels=True, title=None
+        self, sheet,
+        column, statement, row_container, col_container,
+        set_labels=True, title=None
     ):
         """
 
@@ -787,8 +790,10 @@ class LineChef:
 
         return sheet
 
-    def _add_consolidation_reference_summary(self, *pargs, sheet, column, line,
-                                             set_labels=True, indent=0):
+    def _add_consolidation_reference_summary(
+        self, sheet,
+        column, line, set_labels=True, indent=0
+    ):
         """
 
 
@@ -807,29 +812,40 @@ class LineChef:
 
         Returns Worksheet with consolidation logic added as Excel SUM.
         """
-        if not line.xl.consolidated.sources:
-            pass
-        else:
-            sources = line.xl.consolidated.sources.copy()
+        if line.xl.consolidated.sources:
+            sources = line.xl.consolidated.sources
+            labels = line.xl.consolidated.labels
 
             sheet.bb.current_row += 1
             line.xl.consolidated.starting = sheet.bb.current_row
+            line.xl.consolidated.array.clear()
 
-            source_links = []
-            for source_line in sources:
+            source_lines = []
+            for label, source_line in zip(labels, sources):
+                # to reference this cell from the monthly summary
                 include = source_line.xl.cell.parent is not sheet
                 source_cos = source_line.xl.get_coordinates(
                     include_sheet=include
                 )
-                source_links.append(source_cos)
+                cell = source_line.xl.cell
 
-            if source_links:
-                # take starting and ending cells for the range
-                summation_template = formula_templates.SUM_ANYRANGE
-                summation = summation_template.format(
-                    top_cell=source_links[ 0],
-                    end_cell=source_links[-1],
+                cell_info = dict(
+                    header_tag = label, coordinate = source_cos, cell=cell,
                 )
+                source_lines.append(cell_info)
+
+            # links to monthly values
+            source_lines = self._link_consolidation_reference(
+                sheet, source_lines
+            )
+
+            if source_lines:
+                summation = '=' + '+'.join(
+                    source_line['coordinate'] for source_line in source_lines
+                )
+                line.xl.consolidated.array = [
+                    source_line['cell'] for source_line in source_lines
+                ]
             else:
                 summation = ''
 
@@ -851,6 +867,47 @@ class LineChef:
             line.xl.consolidated.ending = sheet.bb.current_row
 
         return sheet
+
+    def _link_consolidation_reference(self, sheet, source_lines):
+        """
+
+
+        LineChef._link_consolidation_reference() -> list
+
+        --``sheet`` openpyxl Worksheet
+        --``source_lines`` list of source cell information
+
+        If the summary sheet should contain months then
+        1. Link source months to current sheet
+        2. Replace consolidation sources with local cells
+        """
+        if SUMMARY_INCLUDES_MONTHS:
+            years_cols = sheet.bb.col_axis.get_group('output_cols', 'years')
+
+            for source_line in source_lines:
+                month = source_line['header_tag']
+                source_cos = source_line['coordinate']
+
+                # find the monthly column matching source month
+                for mon_col in years_cols.find_all(
+                    None, 'quarters', None, 'months', month
+                ):
+                    cell = sheet.cell(
+                        row=sheet.bb.current_row,
+                        column=mon_col.number()
+                    )
+                    template = formula_templates.LINK_TO_COORDINATES
+                    formula = template.format(coordinates=source_cos)
+                    cell.set_explicit_value(
+                        formula,
+                        data_type=type_codes.FORMULA
+                    )
+
+                    # replace original consolidated source with local cell
+                    source_line['cell'] = cell
+                    source_line['coordinate'] = cell.coordinate
+                    break
+        return source_lines
 
     def _add_derivation_logic(self, *pargs, sheet, column, line,
                               set_labels=True, indent=0):

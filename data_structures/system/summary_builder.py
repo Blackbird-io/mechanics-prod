@@ -280,7 +280,8 @@ class SummaryBuilder:
                 raise bb_exceptions.BBAnalyticalError(c)
 
             statement = getattr(bu.financials, statement_name)
-            label = calendar.month_name[period.end.month]
+            # label = calendar.month_name[period.end.month]
+            label = format(period.end)
             for line in summary_statement.get_ordered():
                 new_line = statement.find_first(line.name)
                 self.get_line_summary(line, new_line, label=label)
