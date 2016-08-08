@@ -321,7 +321,7 @@ class ModelChef:
         and 'quarters' in ``years_cols``.
         """
         # set width of the column holding quarterly numbers
-        for qtr_colgroup in years_cols.iter_level(
+        for qtr_colgroup in years_cols.find_all(
             None, 'quarters', None
         ):
             qtr_col = qtr_colgroup.get_group('quarter')
@@ -359,7 +359,7 @@ class ModelChef:
         """
         # iterate over all locators of the form:
         # 2017.quarters.1Q17.months.2017-02-28
-        for mon_col in years_cols.iter_level(
+        for mon_col in years_cols.find_all(
             None, 'quarters', None, 'months', None
         ):
             address = mon_headrow.get_corner_address(mon_col)
@@ -478,6 +478,7 @@ class ModelChef:
                             statement=unit.financials.starting,
                             column=column.number(),
                             row_container=statement_rowgroup,
+                            # col_container=output_cols,
                             set_labels=set_labels,
                             title='starting balance sheet',
                         )
@@ -486,6 +487,7 @@ class ModelChef:
                         statement=statement,
                         column=column.number(),
                         row_container=statement_rowgroup,
+                        # col_container=output_cols,
                         set_labels=set_labels,
                     )
 

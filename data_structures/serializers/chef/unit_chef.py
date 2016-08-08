@@ -308,7 +308,7 @@ class UnitChef:
             self._add_valuation_tab(book, unit, index=index)
 
     # *************************************************************************#
-    #                          NON-PUBLIC METHODS                             #
+    #                          NON-PUBLIC METHODS                              #
     # *************************************************************************#
 
     def _add_financials(self, *pargs, sheet, unit, column, set_labels=True):
