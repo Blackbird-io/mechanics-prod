@@ -478,7 +478,7 @@ class ModelChef:
                             statement=unit.financials.starting,
                             column=column.number(),
                             row_container=statement_rowgroup,
-                            # col_container=output_cols,
+                            col_container=output_cols,
                             set_labels=set_labels,
                             title='starting balance sheet',
                         )
@@ -487,7 +487,7 @@ class ModelChef:
                         statement=statement,
                         column=column.number(),
                         row_container=statement_rowgroup,
-                        # col_container=output_cols,
+                        col_container=output_cols,
                         set_labels=set_labels,
                     )
 
