@@ -714,20 +714,23 @@ class AxisGroup:
             for group in self.groups[group_idx].groups:
                 yield group
 
-    def iter_level(self, *path):
+    def find_all(self, *path):
         """
 
-        AxisGroup.iter_level() -> iter -> AxisGroup
+        AxisGroup.find_all() -> iter -> AxisGroup
 
         Convenience iterator over the subgroups at a certain level in the path.
+        If None is in the path, all groups are returned at that level.
+        To iterate over all terminal groups in the ``path``, conclude ``path``
+        with None.
         """
         if path:
             name = path[0]
             for group in self.groups:
-                if name is not None and group.name != name:
+                if name is not None and group.name != format(name):
                     continue
                 if len(path) > 1:
-                    yield from group.iter_level(*path[1:])
+                    yield from group.find_all(*path[1:])
                 else:
                     yield group
 
