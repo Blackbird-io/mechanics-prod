@@ -335,7 +335,7 @@ class Statement(Equalities, TagsMixIn):
 
         self._bind_and_record(line)
 
-    def copy(self, check_consolidate=False):
+    def copy(self, check_include_details=False):
         """
 
 
@@ -361,15 +361,15 @@ class Statement(Equalities, TagsMixIn):
         else:
             pool = self._details.values()
 
-        for own_line in pool:
-            if check_consolidate:
-                # if this line is copied during consolidate, check if detail
-                # should be included
-                if not own_line.consolidate:
-                    continue
+        add_details = True
+        if check_include_details:
+            if not self.include_details:
+                add_details = False
 
-            new_line = own_line.copy(check_consolidate=check_consolidate)
-            result.add_line(new_line, position=own_line.position)
+        if add_details:
+            for own_line in pool:
+                new_line = own_line.copy(check_include_details=check_include_details)
+                result.add_line(new_line, position=own_line.position)
             # Preserve relative order
 
         return result
@@ -568,32 +568,28 @@ class Statement(Equalities, TagsMixIn):
                 own_line.increment(external_line, consolidating=consolidating,
                                    xl_label=xl_label, override=override,
                                    xl_only=xl_only)
-
             else:
                 # Option B
-                local_copy = external_line.copy(check_consolidate=True)
+                local_copy = external_line.copy(check_include_details=True)
                 # Dont enforce rules to track old line.replicate() method
 
-                if external_line.consolidate or override:
-                    if consolidating:
-                        if external_line.value is not None:
-                            if not local_copy._consolidated and not xl_only:
-                                local_copy._consolidated = True
+                if consolidating:
+                    if external_line.value is not None:
+                        if not local_copy._consolidated and not xl_only:
+                            local_copy._consolidated = True
 
-                            # Pick up lines with None values, but don't tag
-                            # them. We want to allow derive to write to these
-                            # if necessary.
+                        # Pick up lines with None values, but don't tag
+                        # them. We want to allow derive to write to these
+                        # if necessary.
 
-                            # need to make sure Chef knows to consolidate this
-                            # source line (or its details) also
-                            self._add_lines_in_chef(local_copy, external_line,
-                                                    xl_label=xl_label)
+                        # need to make sure Chef knows to consolidate this
+                        # source line (or its details) also
+                        self._add_lines_in_chef(local_copy, external_line,
+                                                xl_label=xl_label)
 
-                    self.add_line(local_copy, local_copy.position)
-                    # For speed, could potentially add all the lines and then
-                    # fix positions once.
-                else:
-                    pass
+                self.add_line(local_copy, local_copy.position)
+                # For speed, could potentially add all the lines and then
+                # fix positions once.
 
     def link_to(self, matching_statement):
         """
