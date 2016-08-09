@@ -122,6 +122,7 @@ class LineItem(Statement):
         self._replica = False
         self._hardcoded = False
         self._include_details = True
+        self._allow_consolidation = True
         self.id = ID()
 
         if value is not None:
@@ -141,30 +142,16 @@ class LineItem(Statement):
     # same value but very different details.
 
     @property
-    def sum_over_time(self):
-        """
-        Default value of sum_over_time is True.  If False, line.value will not
-        be summed over time and only the end point will be shown in summaries.
-        If True, line item will be summed over time for summaries.
-        """
-        return self._sum_over_time
+    def allow_consolidation(self):
+        return self._allow_consolidation
 
-    @sum_over_time.setter
-    def sum_over_time(self, value):
-        self._sum_over_time = value
-
-    @property
-    def summary_calculate(self):
-        """
-        Default value of summary_calculate is False.  If False, line will be
-        dealt with per the value of "sum_over_time".  If True, line item will
-        be calculated with any relevant drivers that are "summary_calculate'.
-        """
-        return self._summary_calculate
-
-    @summary_calculate.setter
-    def summary_calculate(self, value):
-        self._summary_calculate = value
+    @allow_consolidation.setter
+    def allow_consolidation(self, val):
+        if isinstance(val, bool):
+            self._allow_consolidation = val
+        else:
+            msg = "lineitem._allow_consolidation can only be set to a boolean value"
+            raise(TypeError(msg))
 
     @property
     def consolidate(self):
@@ -200,6 +187,32 @@ class LineItem(Statement):
         read-only property
         """
         return self._replica
+
+    @property
+    def summary_calculate(self):
+        """
+        Default value of summary_calculate is False.  If False, line will be
+        dealt with per the value of "sum_over_time".  If True, line item will
+        be calculated with any relevant drivers that are "summary_calculate'.
+        """
+        return self._summary_calculate
+
+    @summary_calculate.setter
+    def summary_calculate(self, value):
+        self._summary_calculate = value
+
+    @property
+    def sum_over_time(self):
+        """
+        Default value of sum_over_time is True.  If False, line.value will not
+        be summed over time and only the end point will be shown in summaries.
+        If True, line item will be summed over time for summaries.
+        """
+        return self._sum_over_time
+
+    @sum_over_time.setter
+    def sum_over_time(self, value):
+        self._sum_over_time = value
 
     @property
     def value(self):
@@ -295,15 +308,16 @@ class LineItem(Statement):
         value.
         """
         if matching_line.value is None:
-            if matching_line._details and matching_line.include_details:
-                Statement.increment(self, matching_line,
-                                    consolidating=consolidating,
-                                    xl_label=xl_label,
-                                    override=override, xl_only=xl_only)
-            else:
-                if self.consolidate:
-                    self.xl.consolidated.sources.append(matching_line)
-                    self.xl.consolidated.labels.append(xl_label)
+            if matching_line.allow_consolidation:
+                if matching_line._details and matching_line.include_details:
+                    Statement.increment(self, matching_line,
+                                        consolidating=consolidating,
+                                        xl_label=xl_label,
+                                        override=override, xl_only=xl_only)
+                else:
+                    if self.consolidate:
+                        self.xl.consolidated.sources.append(matching_line)
+                        self.xl.consolidated.labels.append(xl_label)
         else:
             if matching_line._details and matching_line.include_details:
                 Statement.increment(self, matching_line,
@@ -324,7 +338,9 @@ class LineItem(Statement):
                 if not xl_only:
                     self.set_value(new_value, signature)
 
-                if consolidating and (self.consolidate or override):
+                allow_consolidation = (self.consolidate or override) and \
+                                    matching_line.allow_consolidation
+                if consolidating and allow_consolidation:
                     if not xl_only:
                         self.tags.inherit_from(matching_line.tags)
                         self._consolidated = True
