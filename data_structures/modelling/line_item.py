@@ -71,6 +71,7 @@ class LineItem(Statement):
     consolidate           bool; whether or not to consolidate line item
     guide                 instance of Guide object
     hardcoded             bool; if True, set_value() or clear() will not operate
+    include_details       bool; whether or not to consolidate details to parent
     log                   list of entries that modified local value
     value                 instance value
     sum_over_time         bool; whether the line item should be balanced or summed
@@ -120,6 +121,7 @@ class LineItem(Statement):
         self._consolidate = True
         self._replica = False
         self._hardcoded = False
+        self._include_details = True
         self.id = ID()
 
         if value is not None:
@@ -181,6 +183,18 @@ class LineItem(Statement):
         return self._hardcoded
 
     @property
+    def include_details(self):
+        return self._include_details
+
+    @include_details.setter
+    def include_details(self, val):
+        if isinstance(val, bool):
+            self._include_details = val
+        else:
+            msg = "lineitem._include_details can only be set to a boolean value"
+            raise(TypeError(msg))
+
+    @property
     def replica(self):
         """
         read-only property
@@ -238,7 +252,7 @@ class LineItem(Statement):
             # Start with a clean slate for Excel tracking, except for
             # number format
 
-    def copy(self, check_consolidate=False):
+    def copy(self, check_include_details=False):
         """
 
 
@@ -248,23 +262,23 @@ class LineItem(Statement):
         Return a deep copy of the instance and its details. If  is
         True, copy conforms to ``out`` rules.
         """
-        new_line = Statement.copy(self, check_consolidate=check_consolidate)
+        new_line = Statement.copy(self, check_include_details=check_include_details)
         # Shallow copy, should pick up _local_value as is, and then create
         # independent containers for tags.
 
         new_line.guide = copy.deepcopy(self.guide)
         new_line.log = self.log[:]
         new_line._sum_over_time = self.sum_over_time
+        new_line._include_details = self.include_details
         new_line.set_consolidate(self._consolidate)
         new_line.set_hardcoded(self._hardcoded)
         new_line.id = copy.copy(self.id)
         new_line.xl = xl_mgmt.LineData()
         new_line.xl.format = self.xl.format.copy()
 
-        if check_consolidate and not new_line._details and self._details:
+        if check_include_details and not new_line._details and self._details:
             new_line.set_value(self.value, self.SIGNATURE_FOR_COPY,
                                override=True)
-            # new_line.set_hardcoded(True)
 
         return new_line
 
@@ -281,31 +295,22 @@ class LineItem(Statement):
         value.
         """
         if matching_line.value is None:
-            if matching_line._details:
+            if matching_line._details and matching_line.include_details:
                 Statement.increment(self, matching_line,
                                     consolidating=consolidating,
                                     xl_label=xl_label,
                                     override=override, xl_only=xl_only)
             else:
-                if self.consolidate and matching_line.consolidate:
+                if self.consolidate:
                     self.xl.consolidated.sources.append(matching_line)
                     self.xl.consolidated.labels.append(xl_label)
         else:
-            detail_consolidate = False
-            for ln in matching_line._details.values():
-                if ln.consolidate:
-                    detail_consolidate = True
-                    break
-
-            if self._details:
-                detail_consolidate = True
-
-            if matching_line._details and detail_consolidate:
+            if matching_line._details and matching_line.include_details:
                 Statement.increment(self, matching_line,
                                     consolidating=consolidating,
                                     xl_label=xl_label,
                                     override=override, xl_only=xl_only)
-                # Use Statement method here because we are treating the matching
+                # Use Statement method here because we're treating the matching
                 # line as a Statement too. We assume that its details represent
                 # all of its value data. Statement.increment() will copy those
                 # details to this instance.
@@ -319,34 +324,13 @@ class LineItem(Statement):
                 if not xl_only:
                     self.set_value(new_value, signature)
 
-                do_consolidate = self.consolidate and matching_line.consolidate
-                if consolidating and (do_consolidate or override):
+                if consolidating and (self.consolidate or override):
                     if not xl_only:
                         self.tags.inherit_from(matching_line.tags)
                         self._consolidated = True
 
                     self.xl.consolidated.sources.append(matching_line)
                     self.xl.consolidated.labels.append(xl_label)
-
-    # Upgrade-F: The new line structure gives us the option to implement a
-    # different approach to line calculation. Basically, we can allow drivers to
-    # write "on top" of consolidated lines. So a parent unit can consolidate
-    # results from children and then add its own to the same line with the same
-    # driver (e.g., rent). The driver would have to increment the line instead
-    # of writing a clean value, but that's a simple driver-level change.
-    #
-    # One existing alternative is to capture the parallel "operating" activities
-    # of parent in a separate child unit that kind of resembles our line replica.
-    # Consolidating the parent would then combine results from the real children
-    # and the replica.
-    #
-    # A benefit to the "incremental driver" approach is that we can make
-    # driver calculations depend on the profile (count, type, etc.) of the
-    # parent's children.
-    #
-    # But you can also do the same thing by adding unique lines to the parent
-    # that won't overlap with those of the children and running the computation
-    # there.
 
     def link_to(self, matching_line):
         """
