@@ -554,6 +554,8 @@ class Statement(Equalities, TagsMixIn):
 
         for name, external_line in pool:
             # ORDER SHOULD NOT MATTER HERE
+            if not external_line.allow_consolidation:
+                continue
 
             # If we get here, the line has survived screening. We now have two
             # ways to add its information to the instance. Option A, is to
