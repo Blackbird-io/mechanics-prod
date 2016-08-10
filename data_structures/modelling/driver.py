@@ -256,7 +256,19 @@ class Driver(TagsMixIn):
         # multiple times. 
         
         self._set_formula(formula)
-        
+
+        # get namespace for driver
+        base = self.name or formula.tags.name
+        for k, wc in self.workConditions.items():
+            wc = set(wc) - {None}
+            if wc:
+                tmp = '||WorkConditions||'+k+':'
+                tmp += ','.join(wc)
+                base += tmp
+
+        self.id.set_namespace(formula.id.namespace)
+        self.id.assign(seed=base)
+
     def copy(self):
         """
 
