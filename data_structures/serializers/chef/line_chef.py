@@ -134,6 +134,9 @@ class LineChef:
 
                 raise ExcelPrepError
 
+            print(calc.name)
+            print(step)
+            print(formula_string)
             cell.set_explicit_value(formula_string,
                                     data_type=type_codes.FORMULA)
 
@@ -1079,7 +1082,7 @@ class LineChef:
         # (if references are a dict of objects, could map each obj to its
         #  coordinates)
         line_coordinates = dict()
-        problem_line = True # False import pdb
+        problem_line = False
         for k, obj in driver_data.references.items():
             try:
                 include = obj.xl.cell.parent is not sheet
