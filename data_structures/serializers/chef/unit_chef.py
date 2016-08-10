@@ -311,6 +311,23 @@ class UnitChef:
     #                          NON-PUBLIC METHODS                              #
     # *************************************************************************#
 
+    def _add_statement_rows(self, sheet, statement, title=None):
+        """
+
+        UnitChef._add_statement() -> AxisGroup
+
+        """
+        statement_group = sheet.bb.row_axis.get_group('statements')
+        statement_group.calc_size()
+
+        offset = 1 if statement_group.size else 0
+        name = title or statement.name
+        statement_rows = statement_group.add_group(name, offset=offset)
+        statement_rows.add_group('title', title=name, size=1)
+        statement_rows.add_group('matter', size=0)
+
+        return statement_rows
+
     def _add_financials(self, *pargs, sheet, unit, column, set_labels=True):
         """
 
@@ -321,28 +338,42 @@ class UnitChef:
         """
         fins_dict = dict()
 
+        statement_group = sheet.bb.row_axis.add_group(
+            'statements',
+            offset=sheet.bb.current_row + 1
+        )
+
         for statement in unit.financials.ordered:
-            sheet.bb.current_row += 1
             if statement is not None:
+                sheet.bb.current_row += 1
                 sheet.bb.outline_level = 0
+
                 if statement is unit.financials.ending:
                     statement_row = sheet.bb.current_row + 1
                     fins_dict["Starting Balance Sheet"] = statement_row
 
+                    statement_rows = self._add_statement_rows(
+                        sheet, statement, title='Starting Balance Sheet'
+                    )
                     line_chef.chop_starting_balance(
-                              sheet=sheet,
-                              unit=unit,
-                              column=column,
-                              set_labels=set_labels)
+                          sheet=sheet,
+                          unit=unit,
+                          column=column,
+                          row_container=statement_rows,
+                          set_labels=set_labels
+                    )
 
                 statement_row = sheet.bb.current_row + 1
                 fins_dict[statement.tags.name] = statement_row
 
+                statement_rows = self._add_statement_rows(sheet, statement)
                 line_chef.chop_statement(
                     sheet=sheet,
                     statement=statement,
                     column=column,
-                    set_labels=set_labels)
+                    row_container=statement_rows,
+                    set_labels=set_labels,
+                )
 
         return fins_dict
 
