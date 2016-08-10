@@ -153,7 +153,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
             params.update(period_params)
 
         return params
-
     @property
     def stage(self):
         """
@@ -440,9 +439,9 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         BusinessUnit.make_past() -> None
 
-        
+
         --``overwrite``: if True, will replace existing instance.past
-        
+
         Create a past for instance.
 
         Routine operates by making an instance copy, fitting the copy to the
@@ -456,7 +455,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
                 c = "Instance already defines past. "
                 c += "Implicit overwrites prohibited."
                 raise bb_exceptions.BBPermissionError(c)
-        
+
         younger = self.copy()
         younger.reset_financials()
 
@@ -666,8 +665,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         # would look different (even though the bottom line would be the same).
 
         for unit in pool:
-            if unit.life.conceived:
-                self._consolidate_unit(unit, statement_name)
+            self._consolidate_unit(unit, statement_name)
 
     def _consolidate_unit(self, sub, statement_name):
         """
@@ -688,9 +686,19 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         # Step Only: Actual consolidation
         child_statement = getattr(sub.financials, statement_name)
 
+        if sub.life.conceived:
+            xl_only = False
+        else:
+            xl_only = True
+
         if child_statement:
             parent_statement = getattr(self.financials, statement_name)
-            parent_statement.increment(child_statement, consolidating=True)
+            parent_statement.increment(
+                child_statement,
+                consolidating=True,
+                xl_only=xl_only,
+                xl_label=sub.name,
+            )
 
     def _derive(self, statement_name):
         """
@@ -867,7 +875,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         #
         #add a bottom border symmetrical to the top
         lines.append(top_border)
-        
+
         # Post-processing (dashed lines for units scheduled to open in the
         # future, x's for units that have already closed)
 
@@ -887,17 +895,17 @@ class BusinessUnit(BusinessUnitBase, Equalities):
                     core_lines[i] = line
                 #
                 lines = [alt_border] + core_lines + [alt_border]
-        
+
         date_of_death = self.life.events.get(self.life.KEY_DEATH)
         if self.life.ref_date and date_of_death:
             if self.life.ref_date > date_of_death:
-                
+
                 alt_lines = []
                 line_count = len(lines)
                 down_start = int((box_width - line_count)/2)
                 #X is line_count lines wide
                 up_start = down_start + line_count
-                
+
                 for i in range(line_count):
                     #
                     #replace the character at (down_start + i) with "\"
@@ -918,7 +926,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
                     #
                     alt_lines.append(line)
                 lines = alt_lines
-        
+
         return lines
 
     def _load_starting_balance(self):

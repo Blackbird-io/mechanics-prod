@@ -134,12 +134,11 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
 
         result.tags = self.tags.copy()
         result.ty_directory = copy.copy(self.ty_directory)
+        result.parameters = self.parameters.copy()
 
         result.unit_parameters = Parameters()
         for bbid, unit_dict in self.unit_parameters.items():
             result.unit_parameters[bbid] = unit_dict.copy()
-
-        result.parameters = self.parameters.copy()
 
         return result
         
@@ -354,6 +353,7 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         """
         self.bu_directory = {}
         self.ty_directory = {}
+        self.unit_parameters = Parameters()
         
     
         
