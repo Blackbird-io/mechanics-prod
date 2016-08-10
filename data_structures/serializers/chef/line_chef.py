@@ -86,8 +86,10 @@ class LineChef:
     ====================  =====================================================
     """
 
-    def chop_line(self, *pargs, sheet, column, line, set_labels=True, indent=0,
-                  check=True):
+    def chop_line(
+        self, sheet,
+        column, line, row_container, set_labels=True, indent=0, check=True
+    ):
         """
 
 
@@ -111,8 +113,17 @@ class LineChef:
         details = line.get_ordered()
 
         if line.xl.format.blank_row_before and not details:
+            sheet.bb.need_spacer = True
+        if sheet.bb.need_spacer:
+            if not row_container.offset:
+                row_container.tip += 1
+                row_container.offset = 1
             sheet.bb.current_row += 1
+            sheet.bb.need_spacer = False
 
+        sheet.bb.current_row = row_container.tip
+
+        row_group = row_container.add_group('reference')
         self._add_reference(
             sheet=sheet,
             column=column,
@@ -120,7 +131,9 @@ class LineChef:
             set_labels=set_labels,
             indent=indent
         )
+        row_group.size = sheet.bb.current_row - row_group.tip
 
+        row_group = row_container.add_group('derivation')
         self._add_derivation_logic(
             sheet=sheet,
             column=column,
@@ -128,7 +141,9 @@ class LineChef:
             set_labels=set_labels,
             indent=indent + LineItem.TAB_WIDTH
         )
+        row_group.size = sheet.bb.current_row - row_group.tip
 
+        row_group = row_container.add_group('consolidation')
         self._add_consolidation_logic(
             sheet=sheet,
             column=column,
@@ -136,21 +151,25 @@ class LineChef:
             set_labels=set_labels,
             indent=indent + LineItem.TAB_WIDTH
         )
-
+        row_group.size = sheet.bb.current_row - row_group.tip
 
         if details:
             sub_indent = indent + LineItem.TAB_WIDTH
             detail_summation = ""
+            detail_group = row_container.add_group('details')
 
             for detail in details:
+                detail_rows = detail_group.add_group(detail.name)
                 sheet.bb.outline_level = 0
                 self.chop_line(
                     sheet=sheet,
                     column=column,
                     line=detail,
+                    row_container=detail_rows,
                     set_labels=set_labels,
                     indent=sub_indent,
-                    check=check)
+                    check=check
+                )
 
                 link_template = formula_templates.ADD_COORDINATES
 
@@ -159,8 +178,13 @@ class LineChef:
                 link = link_template.format(coordinates=cos)
                 detail_summation += link
             else:
+                detail_group.calc_size()
+
                 if line.xl.format.blank_row_before:
                     sheet.bb.current_row += 1
+                    row_container.add_group('spacer_details', size=1)
+
+                row_container.add_group('details_summary', size=1)
 
                 # Should group all the details here
                 sheet.bb.current_row += 1
@@ -182,12 +206,14 @@ class LineChef:
                                     row=sheet.bb.current_row)
 
         if not line.xl.reference.source:
+            segment_group = row_container.add_group('segments')
             self._combine_segments(
                 sheet=sheet,
                 column=column,
                 line=line,
                 set_labels=set_labels,
                 indent=indent)
+            segment_group.size = sheet.bb.current_row - segment_group.tip
 
         cell_styles.format_line(line)
 
@@ -199,8 +225,9 @@ class LineChef:
             sheet.bb.line_directory[line.id.bbid] = line.xl
 
         if line.xl.format.blank_row_after:
-            sheet.bb.current_row += 1
+            sheet.bb.need_spacer = True
 
+        row_container.calc_size()
         return sheet
 
     def chop_startbal_line(self, *pargs, sheet, column, line, set_labels=True,
@@ -303,8 +330,9 @@ class LineChef:
         if line.xl.format.blank_row_after:
             sheet.bb.current_row += 1
 
-    def chop_starting_balance(self, *pargs, sheet, column, unit,
-                              set_labels=True):
+    def chop_starting_balance(
+        self, sheet, column, unit, row_container, set_labels=True
+    ):
         """
 
 
@@ -330,16 +358,20 @@ class LineChef:
             if BLANK_BETWEEN_TOP_LINES:
                 sheet.bb.current_row += 1
 
+            line_rows = row_container.add_group(line.name)
             self.chop_startbal_line(sheet=sheet,
                                     column=column,
                                     line=line,
                                     set_labels=True)
+            line_rows.size = sheet.bb.current_row - line_rows.tip
 
         sheet.bb.current_row += 1
 
         return sheet
 
-    def chop_statement(self, *pargs, sheet, column, statement, set_labels=True):
+    def chop_statement(
+        self, sheet, column, statement, row_container, set_labels=True
+    ):
         """
 
 
@@ -355,20 +387,28 @@ class LineChef:
 
         Method relies on sheet.bb.current_row being up-to-date.
         """
+        matter = row_container.get_group('matter')
+
         if not BLANK_BETWEEN_TOP_LINES:
             sheet.bb.current_row += 1
 
+        sheet.bb.need_spacer = False
         check = statement.name != 'ending balance sheet'
         for line in statement.get_ordered():
             if BLANK_BETWEEN_TOP_LINES:
                 sheet.bb.current_row += 1
 
+            offset = 1 if BLANK_BETWEEN_TOP_LINES else 0
+            line_rows = matter.add_group(line.name, offset=offset)
+
             self.chop_line(
                 sheet=sheet,
                 column=column,
                 line=line,
+                row_container=line_rows,
                 set_labels=set_labels,
-                check=check)
+                check=check
+            )
 
         if len(statement.get_ordered()) == 0:
             sheet.bb.current_row += 1
