@@ -134,9 +134,6 @@ class LineChef:
 
                 raise ExcelPrepError
 
-            print(calc.name)
-            print(step)
-            print(formula_string)
             cell.set_explicit_value(formula_string,
                                     data_type=type_codes.FORMULA)
 
