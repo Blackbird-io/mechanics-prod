@@ -77,6 +77,7 @@ class LineChef:
     n/a
 
     FUNCTIONS:
+    attempt_reference_resolution() tries to resolve missing line refs in formulas
     chop_line()           writes LineItems to Excel
     chop_startbal_line()  writes LineItems from Starting Balance Sheet to Excel
     chop_starting_balance() writes Starting Balance Sheet to Excel
@@ -85,6 +86,56 @@ class LineChef:
     chop_summary_statement() writes financial summary statements to Excel
     ====================  =====================================================
     """
+
+    @staticmethod
+    def attempt_reference_resolution(sheet, calc, materials):
+        """
+        Make new method for reevaluating problem lines and updating
+         their line references.  Algorithm will look something like:
+            - update line_coordinates dictionary (copy from below)
+            - find first line where steps were written
+            - reformat formulas using updated materials dict and save
+              values
+        """
+
+        # Update materials
+        new_lines = dict()
+        for key, line in calc.references.items():
+            try:
+                include = line.xl.cell.parent is not sheet
+                new_lines[key] = line.xl.get_coordinates(include_sheet=include)
+            except (ExcelPrepError, AttributeError):
+                print("Name:     ", calc.name)
+                print("Template: ", calc.formula)
+                print(line)
+
+                msg = 'Cannot resolve bad line reference.'
+                raise ExcelPrepError(msg)
+
+        materials['lines'] = new_lines
+
+        # now reformat all formulas in steps
+        for step in calc.formula:
+            # see if step in materials['steps'], if not, it was purposely
+            # omitted so skip it!
+            if step not in materials['steps']:
+                continue
+
+            cell_coos = materials['steps'][step]
+            cell = sheet[cell_coos]
+
+            formula_string = calc.formula[step]
+            try:
+                formula_string = formula_string.format(**materials)
+            except Exception as X:
+                print("Name:     ", calc.name)
+                print("Step:     ", step)
+                print("Template: ", formula_string)
+
+                raise ExcelPrepError
+
+            cell.set_explicit_value(formula_string,
+                                    data_type=type_codes.FORMULA)
 
     def chop_line(self, *pargs, sheet, column, line, set_labels=True, indent=0,
                   check=True):
@@ -136,7 +187,6 @@ class LineChef:
             set_labels=set_labels,
             indent=indent + LineItem.TAB_WIDTH
         )
-
 
         if details:
             sub_indent = indent + LineItem.TAB_WIDTH
@@ -1029,18 +1079,19 @@ class LineChef:
         # (if references are a dict of objects, could map each obj to its
         #  coordinates)
         line_coordinates = dict()
+        problem_line = True # False import pdb
         for k, obj in driver_data.references.items():
             try:
                 include = obj.xl.cell.parent is not sheet
                 line_coordinates[k] = obj.xl.get_coordinates(
-                    include_sheet=include
-                )
+                    include_sheet=include)
             except (ExcelPrepError, AttributeError):
-                print("Name:     ", driver_data.name)
-                print("Template: ", driver_data.formula)
-                print(obj)
+                # set flag for saving problem line
+                problem_line = True
 
-                raise ExcelPrepError
+                # as a temporary measure, introduce a placeholder for line
+                # coordinates
+                line_coordinates[k] = '###'  # placeholder
 
         materials = dict()
         materials["lines"] = line_coordinates
@@ -1129,6 +1180,11 @@ class LineChef:
             line.xl.derived.ending = sheet.bb.current_row
             line.xl.derived.cell = calc_cell
             line.xl.cell = calc_cell
+
+            if problem_line:
+                # save tuple of line and derivation materials
+                info = (driver_data, materials)
+                sheet.bb.problem_lines.append(info)
 
             if count < n_items:
                 self._group_lines(sheet)
