@@ -554,8 +554,6 @@ class Statement(Equalities, TagsMixIn):
 
         for name, external_line in pool:
             # ORDER SHOULD NOT MATTER HERE
-            if not external_line.allow_consolidation:
-                continue
 
             # If we get here, the line has survived screening. We now have two
             # ways to add its information to the instance. Option A, is to
@@ -572,26 +570,27 @@ class Statement(Equalities, TagsMixIn):
                                    xl_only=xl_only)
             else:
                 # Option B
-                local_copy = external_line.copy(check_include_details=True)
-                # Dont enforce rules to track old line.replicate() method
+                if external_line.consolidate:
+                    local_copy = external_line.copy(check_include_details=True)
+                    # Dont enforce rules to track old line.replicate() method
 
-                if consolidating:
-                    if external_line.value is not None:
-                        if not local_copy._consolidated and not xl_only:
-                            local_copy._consolidated = True
+                    if consolidating:
+                        if external_line.value is not None:
+                            if not local_copy._consolidated and not xl_only:
+                                local_copy._consolidated = True
 
-                        # Pick up lines with None values, but don't tag
-                        # them. We want to allow derive to write to these
-                        # if necessary.
+                            # Pick up lines with None values, but don't tag
+                            # them. We want to allow derive to write to these
+                            # if necessary.
 
-                        # need to make sure Chef knows to consolidate this
-                        # source line (or its details) also
-                        self._add_lines_in_chef(local_copy, external_line,
-                                                xl_label=xl_label)
+                            # need to make sure Chef knows to consolidate this
+                            # source line (or its details) also
+                            self._add_lines_in_chef(local_copy, external_line,
+                                                    xl_label=xl_label)
 
-                self.add_line(local_copy, local_copy.position)
-                # For speed, could potentially add all the lines and then
-                # fix positions once.
+                    self.add_line(local_copy, local_copy.position)
+                    # For speed, could potentially add all the lines and then
+                    # fix positions once.
 
     def link_to(self, matching_statement):
         """

@@ -43,7 +43,8 @@ from .statement import Statement
 
 
 # Constants
-# n/a
+SPECIAL_CONSOLIDATION_LINE_PREFIX = ""
+SPECIAL_CONSOLIDATION_LINE_SUFFIX = " (consolidated)"
 
 # Classes
 class LineItem(Statement):
@@ -122,7 +123,6 @@ class LineItem(Statement):
         self._replica = False
         self._hardcoded = False
         self._include_details = True
-        self._allow_consolidation = True
         self.id = ID()
 
         if value is not None:
@@ -140,18 +140,6 @@ class LineItem(Statement):
     # out of the box. Otherwise, you might get a response that a line is "in"
     # a particular set that actually contains an instance with the
     # same value but very different details.
-
-    @property
-    def allow_consolidation(self):
-        return self._allow_consolidation
-
-    @allow_consolidation.setter
-    def allow_consolidation(self, val):
-        if isinstance(val, bool):
-            self._allow_consolidation = val
-        else:
-            msg = "lineitem._allow_consolidation can only be set to a boolean value"
-            raise(TypeError(msg))
 
     @property
     def consolidate(self):
@@ -245,7 +233,6 @@ class LineItem(Statement):
         if self.hardcoded and not force:
             pass
         else:
-            num_format = self.xl.number_format
             consolidate = self.consolidate
             if self._details:
                 self._bring_down_local_value()
@@ -308,16 +295,15 @@ class LineItem(Statement):
         value.
         """
         if matching_line.value is None:
-            if matching_line.allow_consolidation:
-                if matching_line._details and matching_line.include_details:
-                    Statement.increment(self, matching_line,
-                                        consolidating=consolidating,
-                                        xl_label=xl_label,
-                                        override=override, xl_only=xl_only)
-                else:
-                    if self.consolidate:
-                        self.xl.consolidated.sources.append(matching_line)
-                        self.xl.consolidated.labels.append(xl_label)
+            if matching_line._details and matching_line.include_details:
+                Statement.increment(self, matching_line,
+                                    consolidating=consolidating,
+                                    xl_label=xl_label,
+                                    override=override, xl_only=xl_only)
+            else:
+                if self.consolidate:
+                    self.xl.consolidated.sources.append(matching_line)
+                    self.xl.consolidated.labels.append(xl_label)
         else:
             if matching_line._details and matching_line.include_details:
                 Statement.increment(self, matching_line,
@@ -332,21 +318,39 @@ class LineItem(Statement):
                 if signature is None:
                     signature = self.SIGNATURE_FOR_INCREMENTATION
 
-                starting_value = self.value or 0
-                new_value = starting_value + matching_line.value
+                if self._details:
+                    # 1) determine the name for the consolidation line
+                    con_line_name = SPECIAL_CONSOLIDATION_LINE_PREFIX
+                    con_line_name += matching_line.name
+                    con_line_name += SPECIAL_CONSOLIDATION_LINE_SUFFIX
 
-                if not xl_only:
-                    self.set_value(new_value, signature)
+                    # 2) look in details for the consolidation line
+                    if con_line_name in self._details:
+                        # 3) if line exists, increment that line with the
+                        # matching_line
+                        own_line = self._details[con_line_name]
+                        own_line.increment(matching_line)
+                    else:
+                        # 4) if line does NOT exist, make it and increment with
+                        #  matching_line
+                        new_line = LineItem(name=con_line_name)
+                        self.append(new_line)
+                        new_line.increment(matching_line)
+                else:
+                    starting_value = self.value or 0
+                    new_value = starting_value + matching_line.value
 
-                allow_consolidation = (self.consolidate or override) and \
-                                    matching_line.allow_consolidation
-                if consolidating and allow_consolidation:
                     if not xl_only:
-                        self.tags.inherit_from(matching_line.tags)
-                        self._consolidated = True
+                        self.set_value(new_value, signature)
 
-                    self.xl.consolidated.sources.append(matching_line)
-                    self.xl.consolidated.labels.append(xl_label)
+                    allow_consolidation = self.consolidate or override
+                    if consolidating and allow_consolidation:
+                        if not xl_only:
+                            self.tags.inherit_from(matching_line.tags)
+                            self._consolidated = True
+
+                        self.xl.consolidated.sources.append(matching_line)
+                        self.xl.consolidated.labels.append(xl_label)
 
     def link_to(self, matching_line):
         """
@@ -363,7 +367,8 @@ class LineItem(Statement):
                 oline = matching_line.find_first(line.name)
                 line.link_to(oline)
         else:
-            # this part should only live in LineItem since statements don't have xl data
+            # this part should only live in LineItem since statements don't
+            # have xl data
             self.xl.reference.source = matching_line
 
     def register(self, namespace):
