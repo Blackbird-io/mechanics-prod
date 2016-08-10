@@ -288,8 +288,8 @@ class TimeLine(TimelineBase):
             #     self.summary_builder.update_summaries()
             # else:
             # generate or re-generate annual and quarterly summaries
-            self.summary_builder.make_annual_summaries()
             self.summary_builder.make_quarterly_summaries()
+            self.summary_builder.make_annual_summaries()
 
         self.has_been_extrapolated = True
 

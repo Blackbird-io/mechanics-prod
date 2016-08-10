@@ -314,6 +314,7 @@ class LineItem(Statement):
                 # line as a Statement too. We assume that its details represent
                 # all of its value data. Statement.increment() will copy those
                 # details to this instance.
+
             else:
                 if signature is None:
                     signature = self.SIGNATURE_FOR_INCREMENTATION

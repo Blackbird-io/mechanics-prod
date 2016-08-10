@@ -10,7 +10,7 @@
 Class for creating dynamic Excel representations of Blackbird Engine models.
 
 Chef modules write formulas to cells explicitly, using the set_explicit_value()
-method, to make sure Excel interprets the strings correctly. 
+method, to make sure Excel interprets the strings correctly.
 ====================  =========================================================
 Attribute             Description
 ====================  =========================================================
@@ -42,7 +42,7 @@ import chef_settings
 from chef_settings import SCENARIO_SELECTORS
 from ._chef_tools import add_scenario_selector
 from .bb_workbook import BB_Workbook as Workbook
-from .cell_styles import CellStyles
+from .cell_styles import CellStyles, LOWHEADER_COLOR
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
@@ -87,7 +87,7 @@ class ModelChef:
                           dynamic links
     ====================  =====================================================
     """
-    
+
     def chop_model(self, model):
         """
 
@@ -104,7 +104,7 @@ class ModelChef:
         book = self._build_foundation(model)
         now = model.time_line.current_period
         company = now.content
-        
+
         company_sheet = unit_chef.chop_multi(book=book, unit=company)
 
         if bb_settings.MAKE_ANNUAL_SUMMARIES:
@@ -112,6 +112,14 @@ class ModelChef:
 
         unit_chef.chop_multi_valuation(book=book, unit=company, index=1,
                                        recur=False)
+
+        timeline = book.get_sheet_by_name("Timeline")
+        timeline.sheet_state = timeline.SHEETSTATE_HIDDEN
+
+        spacer_idx = book.get_index(timeline)
+        spacer_sheet = book.create_sheet("Monthly >>", spacer_idx+1)
+        spacer_sheet.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
+        sheet_style.style_sheet(spacer_sheet)
 
         self._format_line_borders(book)
 
@@ -122,148 +130,381 @@ class ModelChef:
     #*************************************************************************#
 
     def _add_annual_summary(self, book, model):
+        """
 
-        # Set up spreadsheet row/column locations
-        label_col = 3
-        label_alpha_col = get_column_letter(label_col)
-        val_col = 8
 
-        start_row = 6
-        header_row = 4
+        ModelChef._add_annual_summary -> None
 
-        co_name_cell = 'A1'
+        --``model`` is an instance of Blackbird Engine model
 
-        tab_idx = 1
-
-        # Set up column widths
-        column_widths = dict()
-        column_widths[2] = 4
-        column_widths[val_col] = chef_settings.COLUMN_WIDTH
-        column_widths[val_col+1] = chef_settings.COLUMN_WIDTH
-        column_widths[val_col+2] = chef_settings.COLUMN_WIDTH
-        column_widths[val_col+3] = chef_settings.COLUMN_WIDTH
-        column_widths[val_col+4] = chef_settings.COLUMN_WIDTH
-        column_widths[val_col+5] = 4
-
+        Adds an annual summary tab.
+        """
         # Create summary tab
+        tab_idx = 1
         sheet = book.create_sheet(chef_settings.SUMMARY_TITLE, tab_idx)
-        sheet.bb.current_row = start_row
-        sheet_style.style_sheet(sheet, label_areas=False)
 
-        # Add parameters area to set up label and value columns
-        area = sheet.bb.add_area(field_names.PARAMETERS)
-        area.columns.by_name[field_names.LABELS] = label_col
-        area.columns.by_name[field_names.VALUES] = val_col
+        # 2x1 top left corner for company name
+        header_rows = sheet.bb.row_axis.add_group('tab_header', size=2)
+        header_cols = sheet.bb.col_axis.add_group('tab_header', size=1)
 
-        # Set column widths
-        for k in column_widths.keys():
-            column = sheet.column_dimensions[get_column_letter(k)]
-            column.width = column_widths[k]
-
-        # Add company name
-        cell = sheet.cell(co_name_cell)
+        # Add company name, top left of header section
+        address = header_rows.get_corner_address(header_cols)
+        cell = sheet.cell(address)
         cell.value = model.time_line.current_period.content.name.title()
         cell.alignment = Alignment(horizontal='left', vertical='center')
         cell.font = Font(size=14, bold=True, underline='single')
 
-        # Add label for Complete T/F
-        cell = sheet.cell(label_alpha_col+str(start_row))
+        # Output area, size to be calculated
+        output_rows = sheet.bb.row_axis.add_group('output_rows')
+        output_cols = sheet.bb.col_axis.add_group('output_cols')
+
+        # Output column layout
+        # blank column on the left
+        colspacer_tip = output_cols.add_group('spacer_tip', size=1)
+        # columns for row labels
+        label_cols = output_cols.add_group('labels', size=5)
+        # columns for years and quarters, size to be calculated
+        years_cols = output_cols.add_group('years')
+        # blank column at the end
+        colspacer_end = output_cols.add_group('spacer_end', size=1)
+
+        # Annual and quarterly column headers, from quarterly summary
+        key = model.time_line.summary_builder.QUARTERLY_KEY
+        qtr_timeline = model.time_line.summary_builder.summaries[key]
+        # calculate the column layout for quarters and years
+        self._annual_summary_headers(
+            sheet, model.time_line, output_rows, output_cols
+        )
+
+        # Add parameters area to set up label and value columns
+        area = sheet.bb.add_area(field_names.PARAMETERS)
+        area.columns.by_name[field_names.LABELS] = label_cols.number()
+        area.columns.by_name[field_names.VALUES] = years_cols.number()
+
+        # Add row and label for Complete T/F
+        complete_label_rows = output_rows.add_group(
+            'complete_label',
+            size=1,
+            offset=1
+        )
+        address = complete_label_rows.get_corner_address(label_cols)
+        cell = sheet.cell(address)
         cell.value = chef_settings.COMPLETE_LABEL
         cell.alignment = Alignment(horizontal='left', vertical='center')
 
-        # Add label for available months
-        cell = sheet.cell(label_alpha_col+str(start_row+1))
+        # Add row and label for Available Months
+        available_months_rows = output_rows.add_group(
+            'available_months',
+            size=1,
+            offset=0
+        )
+        address = available_months_rows.get_corner_address(label_cols)
+        cell = sheet.cell(address)
         cell.value = chef_settings.AVAILABLE_LABEL
         cell.alignment = Alignment(horizontal='left', vertical='center')
 
-        # Get annual summary timeline
+        # Fill output: quarterly summary timeline
+        if chef_settings.SUMMARY_INCLUDES_QUARTERS:
+            # column selector: date -> years_cols.2017.quarters.1Q17
+            col_selector = lambda date: years_cols.get_group(
+                date.year, 'quarters', self._quarter_name(date), 'quarter'
+            )
+            # chop quarterly
+            self._annual_summary_detail(
+                sheet,
+                qtr_timeline,
+                output_rows,
+                output_cols,
+                col_selector=col_selector
+            )
+
+        # Fill output: annual summary timeline
         key = model.time_line.summary_builder.ANNUAL_KEY
         sum_timeline = model.time_line.summary_builder.summaries[key]
+        # column selector: date -> years_cols.2017.year
+        col_selector = lambda date: years_cols.get_group(
+            date.year, 'year'
+        )
+        self._annual_summary_detail(
+            sheet,
+            sum_timeline,
+            output_rows,
+            output_cols,
+            col_selector=col_selector,
+        )
 
-        # Print values to spreadsheet
+        # Styling and formatting that's left
+        sheet_style.style_sheet(sheet, label_areas=False)
+
+        # Make pretty border
+        output_rows.add_group('spacer_end', size=1)
+        output_rows.calc_size()
+        cell_styles.format_border_group(
+            sheet=sheet,
+            st_col=output_cols.number(),
+            ed_col=output_cols.number() + output_cols.size - 1,
+            st_row=output_rows.number(),
+            ed_row=output_rows.number() + output_rows.size - 1,
+            border_style='thin'
+        )
+
+        # Label financial statements
+        statement_rowgroup = output_rows.get_group('statements')
+        for statement_rows in statement_rowgroup.groups:
+            # get title from title row
+            header = statement_rows.get_group('title')
+            # the actual title is carried in the extra 'title' parameter
+            label = header.extra['title']
+            row = header.number()
+            col = label_cols.number()
+            cell_styles.format_area_label(sheet, label, row, col_num=col)
+
+        # Spacer column width, 2 cols on left and right of output
+        for spacer in (colspacer_tip, colspacer_end):
+            letter = get_column_letter(spacer.number())
+            column = sheet.column_dimensions[letter]
+            column.width = 4
+
+        sheet.sheet_properties.tabColor = chef_settings.SUMMARY_TAB_COLOR
+
+    def _quarter_name(self, date):
+        """
+
+
+        ModelChef._quarter_name() -> str
+
+        Convenience: datetime.date -> '1Q17'.
+        """
+        return '{}Q{:02d}'.format(1 + (date.month - 1) // 3, date.year % 100)
+
+    def _year_headers(self, sheet, years_cols, year_headrow):
+        """
+
+
+        ModelChef._year_headers() -> None
+
+        --``years_cols`` main column header container
+        --``year_headrow`` header row, size 1
+
+        Sets up column header layout at the intersection of ``year_headrow``
+        and year_colgroup in ``years_cols``.
+        """
+        for year_colgroup in years_cols.groups:
+            # set width of the column holding annual numbers
+            year_col = year_colgroup.get_group('year')
+            address = year_headrow.get_corner_address(year_col)
+            cell = sheet.cell(address)
+            column = sheet.column_dimensions[cell.column]
+            column.width = chef_settings.COLUMN_WIDTH
+
+            # set year label at the start of year block
+            address = year_headrow.get_corner_address(year_colgroup)
+            cell = sheet.cell(address)
+            cell.value = year_colgroup.name
+            cell_styles.format_header_label(cell, alignment='right')
+
+            # merge header cells
+            if year_colgroup.size > 1:
+                stretch = year_headrow.get_range_address(year_colgroup)
+                sheet.merge_cells(stretch)
+
+    def _quarter_headers(self, sheet, years_cols, qtr_headrow):
+        """
+
+
+        ModelChef._quarter_headers() -> None
+
+        --``years_cols`` main column header container
+        --``qtr_headrow`` header row, size 1
+
+        Sets up column header layout at the intersection of ``qtr_headrow``
+        and 'quarters' in ``years_cols``.
+        """
+        # set width of the column holding quarterly numbers
+        for qtr_colgroup in years_cols.find_all(
+            None, 'quarters', None
+        ):
+            qtr_col = qtr_colgroup.get_group('quarter')
+            address = qtr_headrow.get_corner_address(qtr_col)
+            cell = sheet.cell(address)
+            column = sheet.column_dimensions[cell.column]
+            column.width = chef_settings.COLUMN_WIDTH
+            column.outlineLevel = 1
+            column.hidden = True
+
+            # set quarter label at the start of quarterly block
+            address = qtr_headrow.get_corner_address(qtr_colgroup)
+            cell = sheet.cell(address)
+            cell.value = qtr_colgroup.name
+            cell_styles.format_subheader_label(cell, alignment='right')
+            column = sheet.column_dimensions[cell.column]
+            column.width = chef_settings.COLUMN_WIDTH
+
+            # merge header cells
+            if qtr_colgroup.size > 1:
+                stretch = qtr_headrow.get_range_address(qtr_colgroup)
+                sheet.merge_cells(stretch)
+
+    def _month_headers(self, sheet, years_cols, mon_headrow):
+        """
+
+
+        ModelChef._month_headers() -> None
+
+        --``years_cols`` main column header container
+        --``mon_headrow`` header row, size 1
+
+        Sets up column header layout at the intersection of ``mon_headrow``
+        and month's location in ``years_cols``.
+        """
+        # iterate over all locators of the form:
+        # 2017.quarters.1Q17.months.2017-02-28
+        for mon_col in years_cols.find_all(
+            None, 'quarters', None, 'months', None
+        ):
+            address = mon_headrow.get_corner_address(mon_col)
+            cell = sheet.cell(address)
+            cell.value = mon_col.name
+            cell_styles.format_subheader_label(
+                cell,
+                alignment='right',
+                color=LOWHEADER_COLOR
+            )
+            column = sheet.column_dimensions[cell.column]
+            column.width = chef_settings.COLUMN_WIDTH
+            column.outlineLevel = 1 + chef_settings.SUMMARY_INCLUDES_QUARTERS
+            column.hidden = True
+
+    def _annual_summary_headers(
+        self, sheet, timeline, output_rows, output_cols
+    ):
+        """
+
+
+        ModelChef._annual_summary_headers() -> None
+
+        --``timeline`` quarterly summary timeline
+
+        Create the layout for column headers on annual summary sheet.
+        Fill in year, quarter and month labels in headers.
+        """
+        # column group for years
+        years_cols = output_cols.get_group('years')
+        # row for years headers
+        year_headrow = output_rows.add_group('years', offset=1, size=1)
+        if chef_settings.SUMMARY_INCLUDES_QUARTERS:
+            # row for quarter headers, if needed
+            qtr_headrow = output_rows.add_group('quarters', size=1)
+        if chef_settings.SUMMARY_INCLUDES_MONTHS:
+            # row for month headers, if needed
+            mon_headrow = output_rows.add_group('months', size=1)
+
+        # actual header labels, years and (possibly) quarters and months
+        # nested in the form: years.2017.quarters.1Q17.months.2017-01-01
+        for date in sorted(timeline.keys()):
+            # container for quarters (if requested) and year
+            year_colgroup = years_cols.add_group(date.year)
+            # label for quarter column
+            qtr_name = self._quarter_name(date)
+            # sub-container for quarters:
+            # years.2017.quarters.1Q17
+            qtr_colgroup = year_colgroup.add_group('quarters', qtr_name)
+            if chef_settings.SUMMARY_INCLUDES_MONTHS:
+                # terminal leaf for monthly values
+                # years.2017.quarters.1Q17.months.2017-01-31
+                qtr_colgroup.add_group('months', date, size=1)
+            if chef_settings.SUMMARY_INCLUDES_QUARTERS:
+                # terminal leaf for quarterly values, after months
+                # years.2017.quarters.1Q17.quarter
+                qtr_colgroup.add_group('quarter', size=1)
+            # terminal leaf for year itself, after quarters
+            # years.2017.year
+            year_colgroup.add_group('year', size=1)
+        # column layout is known at this point, calculate all col locations
+        output_cols.calc_size()
+
+        # fill out the headers, now that the column positions are known
+        if chef_settings.SUMMARY_INCLUDES_MONTHS:
+            self._month_headers(sheet, years_cols, mon_headrow)
+
+        if chef_settings.SUMMARY_INCLUDES_QUARTERS:
+            self._quarter_headers(sheet, years_cols, qtr_headrow)
+
+        self._year_headers(sheet, years_cols, year_headrow)
+
+    def _annual_summary_detail(
+        self, sheet, timeline, output_rows, output_cols, col_selector
+    ):
+        """
+
+
+        ModelChef._annual_summary_detail() -> None
+
+        Fills in the periodic data on the annual summary sheet. Period is
+        specified by ``col_selector``, which finds the matching output column
+        in column headers, and needs to match the ``timeline``.
+        """
+        complete_label_rows = output_rows.get_group('complete_label')
+        available_months_rows = output_rows.get_group('available_months')
+
         set_labels = True
-        col_use = val_col
-        for date in sorted(sum_timeline.keys()):
-            sheet.bb.current_row = start_row
+        for date in timeline.keys():
+            column = col_selector(date)
 
-            summary = sum_timeline.find_period(date)
+            summary = timeline.find_period(date)
             unit = summary.content
+            unit.xl.set_sheet(sheet)
+            sheet.bb.outline_level = 0
 
-            cell = sheet.cell(get_column_letter(col_use)+str(start_row))
+            # Complete T/F
+            address = complete_label_rows.get_corner_address(column)
+            cell = sheet.cell(address)
             cell.value = unit.complete
             cell.alignment = Alignment(horizontal='right', vertical='center')
 
-            cell = sheet.cell(get_column_letter(col_use)+str(start_row+1))
+            # Available months
+            address = available_months_rows.get_corner_address(column)
+            cell = sheet.cell(address)
             cell.value = unit.periods_used
             cell.alignment = Alignment(horizontal='right', vertical='center')
 
-            sheet_style.set_column_width(sheet, col_use)
-            sheet.bb.consolidation_size = 12
-
-            unit.xl.set_sheet(sheet)
-
-            cell = sheet[get_column_letter(col_use)+str(header_row)]
-            cell.value = date.year
-            cell_styles.format_header_label(cell, alignment='right')
-
-            fins_dict = dict()
-            sheet.bb.outline_level = 0
-            sheet.bb.current_row += 1
-
+            # Statements
+            statement_rowgroup = output_rows.add_group('statements', offset=1)
             for statement in unit.financials.ordered:
-                sheet.bb.current_row += 1
                 if statement is not None:
                     if statement is unit.financials.ending:
-                        statement_row = sheet.bb.current_row + 1
-                        fins_dict["Starting Balance Sheet"] = statement_row
-
                         line_chef.chop_summary_statement(
                             sheet=sheet,
                             statement=unit.financials.starting,
-                            column=col_use,
-                            set_labels=set_labels)
-                        sheet.bb.current_row += 1
-
-                    statement_row = sheet.bb.current_row + 1
-                    fins_dict[statement.name] = statement_row
-
+                            column=column.number(),
+                            row_container=statement_rowgroup,
+                            col_container=output_cols,
+                            set_labels=set_labels,
+                            title='starting balance sheet',
+                        )
                     line_chef.chop_summary_statement(
                         sheet=sheet,
                         statement=statement,
-                        column=col_use,
-                        set_labels=set_labels)
-
-            set_labels = False
-            col_use += 1
-
-        # Label financial statements
-        for statement, row in fins_dict.items():
-            cell_styles.format_area_label(sheet, statement, row,
-                                          col_num=label_col)
-        # Make pretty border
-        cell_styles.format_border_group(sheet=sheet,
-                                        st_col=label_col-1,
-                                        ed_col=label_col+10,
-                                        st_row=start_row-3,
-                                        ed_row=sheet.bb.current_row,
-                                        border_style='thin')
-
-        sheet.sheet_properties.tabColor = chef_settings.SUMMARY_TAB_COLOR
+                        column=column.number(),
+                        row_container=statement_rowgroup,
+                        col_container=output_cols,
+                        set_labels=set_labels,
+                    )
 
     def _build_foundation(self, model):
         """
 
 
         ModelChef._build_foundation() -> BB_Workbook
-        
+
 
         Return a workbook with:
            cover [not implemented yet]
            scenarios
            timeline
-        """       
+        """
         book = Workbook()
-
+        book.properties.creator = chef_settings.WORKBOOK_AUTHOR
 
         self._create_cover_tab(book, model)
         self._create_scenarios_tab(book, model)
@@ -376,9 +617,9 @@ class ModelChef:
 
         ModelChef._create_scenarios_tab() -> BB_Worksheet
 
-        
+
         Return a worksheet that lays out the assumptions used by the model in
-        various scenarios. 
+        various scenarios.
         """
         my_tab = book.create_sheet(tab_names.SCENARIOS)
 
@@ -517,12 +758,12 @@ class ModelChef:
         scenario (on the scenarios sheet) by default. If a period specifies its
         own value for a parameter, routine will overwrite the link with a
         hard-coded value.
-        
-        Method expects book to include a completed scenarios sheet. 
-        """        
+
+        Method expects book to include a completed scenarios sheet.
+        """
         scenarios = book[tab_names.SCENARIOS]
         scenarios_area = scenarios.bb.parameters
-        
+
         my_tab = book.create_sheet(tab_names.TIME_LINE)
 
         parameters = my_tab.bb.add_area(field_names.PARAMETERS)
@@ -534,10 +775,10 @@ class ModelChef:
         sheet_style.set_column_width(my_tab, local_master_column)
 
         alpha_master_column = get_column_letter(local_master_column)
-        
+
         parameters.columns.by_name[field_names.LABELS] = local_labels_column
         parameters.columns.by_name[field_names.MASTER] = local_master_column
-        
+
         header_row = 3
         time_line.rows.by_name[field_names.LABELS] = header_row
         my_tab.bb.current_row = header_row
@@ -557,11 +798,11 @@ class ModelChef:
 
             row_number = scenarios_area.rows.get_position(param_name)
             # Get the correct relative position
-            
+
             source_coordinates = external_coordinates.copy()
             source_coordinates["row"] = row_number
 
-            active_row = header_row + row_number 
+            active_row = header_row + row_number
             my_tab.bb.parameters.rows.by_name[param_name] = active_row
             # TO DO: Think about whether we should be keeping track of the row
             # number differently here.
@@ -570,7 +811,7 @@ class ModelChef:
             # sheet
             label_cell = my_tab.cell(column=local_labels_column,
                                      row=active_row)
-            
+
             cos = source_coordinates.copy()
             cos["alpha_column"] = get_column_letter(source_label_column)
 
@@ -589,8 +830,8 @@ class ModelChef:
 
         my_tab.bb.current_row = active_row
         # Second, build a column for each period. Pull values from our local
-        # master column and overwrite them if necessary with direct values.        
-        
+        # master column and overwrite them if necessary with direct values.
+
         starting_column = local_master_column + 2
         active_column = starting_column
 
@@ -607,7 +848,7 @@ class ModelChef:
             # Need this to make sure the parameters Area looks as wide as the
             # timeline. Otherwise, other routines may think that the params
             # area is only one column wide.
-            
+
             header_cell = my_tab.cell(column=active_column, row=header_row)
             header_cell.value = period.end
             cell_styles.format_date(header_cell)
@@ -615,7 +856,7 @@ class ModelChef:
             # 1. Pulling the master values for each parameter.
             # my_tab.bb.current_row += 2
             existing_params = dict()
-            for k in my_tab.bb.parameters.rows.by_name.keys():
+            for k in my_tab.bb.parameters.rows.by_name:
                 # May write the column in undefined order
                 param_row = my_tab.bb.parameters.rows.by_name[k]
 
@@ -626,7 +867,7 @@ class ModelChef:
 
                 cos = dict(alpha_column=alpha_master_column, row=param_row)
                 link = link_template.format(**cos)
-                
+
                 param_cell.set_explicit_value(link,
                                               data_type=type_codes.FORMULA)
                 cell_styles.format_parameter(param_cell)
@@ -639,6 +880,7 @@ class ModelChef:
             existing_param_names = period.parameters.keys() & \
                                    parameters.rows.by_name.keys()
             new_param_names = period.parameters.keys() - existing_param_names
+
             # New parameters are specific to the period. We don't have a row
             # for them on the sheet yet, so we'll add them later.
 
@@ -649,8 +891,8 @@ class ModelChef:
                 m_cell = my_tab.cell(column=local_master_column,
                                      row=param_row)
 
+                param_cell = my_tab.cell(column=active_column, row=param_row)
                 if spec_value != m_cell.value:
-                    param_cell = my_tab.cell(column=active_column, row=param_row)
                     param_cell.value = spec_value
                     cell_styles.format_hardcoded(param_cell)
                 else:
@@ -676,7 +918,7 @@ class ModelChef:
 
             # Upgrade-S: For speed, can supply master and label column indices
             # to the add_items() routine.
-            
+
             active_column += 1
 
         # Freeze panes:

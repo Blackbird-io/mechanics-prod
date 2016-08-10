@@ -280,7 +280,8 @@ class SummaryBuilder:
                 raise bb_exceptions.BBAnalyticalError(c)
 
             statement = getattr(bu.financials, statement_name)
-            label = calendar.month_name[period.end.month]
+            # label = calendar.month_name[period.end.month]
+            label = format(period.end)
             for line in summary_statement.get_ordered():
                 new_line = statement.find_first(line.name)
                 self.get_line_summary(line, new_line, label=label)
@@ -485,11 +486,11 @@ class SummaryBuilder:
             except KeyError:
                 period = period.future
             else:
-                if not temp.life.alive or not temp.filled:
-                    period = period.future
-                else:
-                    period_found = True
-                    break
+                # if not temp.life.alive or not temp.filled:
+                #     period = period.future
+                # else:
+                period_found = True
+                break
 
             if not period:
                 break
@@ -528,11 +529,11 @@ class SummaryBuilder:
                     if not period:
                         break
                 else:
-                    if not temp.life.alive or not temp.filled:
-                        period = period.past
-                    else:
-                        period_found = True
-                        break
+                    # if not temp.life.alive or not temp.filled:
+                    #     period = period.past
+                    # else:
+                    period_found = True
+                    break
 
                 if not period:
                     break

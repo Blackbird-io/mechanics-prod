@@ -40,9 +40,10 @@ from .line_chef import LineChef
 from .sheet_style import SheetStyle
 from .tab_names import TabNames
 
-from chef_settings import SCENARIO_SELECTORS, VALUATION_TAB_COLOR
+from chef_settings import SCENARIO_SELECTORS, VALUATION_TAB_COLOR, \
+                            APPLY_COLOR_TO_DECEMBER, DECEMBER_COLOR
 from data_structures.modelling import common_events
-
+from openpyxl.styles import PatternFill
 
 
 
@@ -267,6 +268,16 @@ class UnitChef:
         sheet.bb.outline_level = 0
         group_lines(sheet, row=selector_row)
 
+        # color the December columns
+        if APPLY_COLOR_TO_DECEMBER:
+            for date, column in sheet.bb.time_line.columns.by_name.items():
+                if date.month == 12:
+                    for row in range(1, sheet.max_row+1):
+                        cell = sheet.cell(column=column, row=row)
+                        cell.fill = PatternFill(start_color=DECEMBER_COLOR,
+                                                end_color=DECEMBER_COLOR,
+                                                fill_type='solid')
+
         return sheet
 
     def chop_multi_valuation(self, *pargs, book, unit, index, recur=False):
@@ -297,7 +308,7 @@ class UnitChef:
             self._add_valuation_tab(book, unit, index=index)
 
     # *************************************************************************#
-    #                          NON-PUBLIC METHODS                             #
+    #                          NON-PUBLIC METHODS                              #
     # *************************************************************************#
 
     def _add_financials(self, *pargs, sheet, unit, column, set_labels=True):

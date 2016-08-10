@@ -41,6 +41,8 @@ from .data_types import TypeCodes
 # Constants
 HARDCODED_COLOR = '0070c0' #'1f5993'
 CALCULATION_COLOR = '707070'
+SUBHEADER_COLOR = '808080'
+LOWHEADER_COLOR = 'CCCCCC'
 
 # Module Globals
 number_formats = NumberFormats()
@@ -67,6 +69,8 @@ class CellStyles:
     format_line()         format text in line item cells
     format_parameter()    format number in parameter cells
     format_scenario_label()  format scenario label cells (black with white text)
+    format_header_label() white on black
+    format_consolidated_label() consolidated rows in italic
     format_scenario_selector_cell() format scenario selector cells
     format_border_group()  add thin border around group of cells
     ====================  =====================================================
@@ -185,6 +189,9 @@ class CellStyles:
         if line.xl.consolidated.cell:
             line.xl.consolidated.cell.number_format = use_format
 
+        for cell in line.xl.consolidated.array:
+            cell.number_format = use_format
+
         if line.xl.detailed.cell:
             line.xl.detailed.cell.number_format = use_format
 
@@ -221,15 +228,49 @@ class CellStyles:
         self.format_header_label(cell, alignment='center')
 
     @staticmethod
-    def format_header_label(cell, alignment=None):
+    def format_header_label(cell, alignment=None, color=BLACK):
+        """
 
+
+        CellStyles.format_header_label -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Headers at the top, white on black.
+        """
         if alignment:
             cell.alignment = Alignment(horizontal=alignment)
 
         cell.font = Font(color=WHITE, bold=True)
-        cell.fill = PatternFill(start_color=BLACK,
-                                end_color=BLACK,
+        cell.fill = PatternFill(start_color=color,
+                                end_color=color,
                                 fill_type='solid')
+
+    @staticmethod
+    def format_subheader_label(cell, alignment=None, color=SUBHEADER_COLOR):
+        """
+
+
+        CellStyles.format_subheader_label -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Looks like Header, but on a different background color.
+        """
+        CellStyles.format_header_label(cell, alignment, color)
+
+    @staticmethod
+    def format_consolidated_label(cell):
+        """
+
+
+        CellStyles.format_consolidated_labelr -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Format cells which are labels for consolidating logic.
+        """
+        cell.font = Font(italic=True)
 
     @staticmethod
     def format_scenario_selector_cells(sheet, label_col, selector_col, row):
@@ -307,7 +348,7 @@ class CellStyles:
             border = Border(top=cell.border.top)
             border.top = side
             cell.border = border
-        
+
         # SET LEFT BORDER
         col = st_col
         for r in range(st_row, ed_row+1):
