@@ -368,6 +368,9 @@ class Statement(Equalities, TagsMixIn):
 
         if add_details:
             for own_line in pool:
+                if check_include_details and not own_line.consolidate:
+                    continue
+
                 new_line = own_line.copy(check_include_details=check_include_details)
                 result.add_line(new_line, position=own_line.position)
             # Preserve relative order
