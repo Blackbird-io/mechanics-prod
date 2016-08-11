@@ -698,9 +698,13 @@ class AxisGroup:
             if group.groups:
                 group_size = group.calc_size()
             else:
-                group_size = group.size
+                # group without subgroups or size is allowed, counts as empty
+                group_size = group.size or 0
             # accumulate subgroup sizes into mysize
             mysize += group_size + (group.offset or 0)
+        # if all subgroups are empty, turn to self.size
+        if not mysize:
+            mysize = self.size or 0
         self.size = mysize
         return mysize
 
