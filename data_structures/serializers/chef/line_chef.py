@@ -40,7 +40,7 @@ from bb_exceptions import ExcelPrepError
 from chef_settings import (
     COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING,
     COMMENT_CUSTOM, BLANK_BETWEEN_TOP_LINES, FILTER_PARAMETERS,
-    SUMMARY_INCLUDES_MONTHS
+    SUMMARY_INCLUDES_MONTHS, SUMMARY_INCLUDES_QUARTERS,
 )
 from data_structures.modelling.line_item import LineItem
 from ._chef_tools import group_lines, check_alignment
@@ -416,8 +416,7 @@ class LineChef:
         return sheet
 
     def chop_summary_line(
-        self, sheet,
-        column, line, set_labels=True, indent=0
+        self, sheet, column, line, row_container, set_labels=True, indent=0
     ):
         """
 
@@ -440,85 +439,56 @@ class LineChef:
         in cell.
         """
 
-        details = line.get_ordered()
+        matter = row_container.add_group(
+            line.name,
+            # setting label and size here will insert the line into output
+            # even when it has no content, otherwise content overrides
+            label=indent * " " + line.name,
+            size=1
+        )
 
         # previous line may have requested a spacer after itself
         # or we want one ourselves
-        if line.xl.format.blank_row_before and not details:
+        if line.xl.format.blank_row_before and not line._details:
             sheet.bb.need_spacer = True
         if sheet.bb.need_spacer:
-            sheet.bb.current_row += 1
+            if not matter.offset:
+                matter.tip += 1
+                matter.offset = 1
             sheet.bb.need_spacer = False
 
-        if line.xl.derived.calculations:
-            self._add_derivation_logic(
-                sheet=sheet,
-                column=column,
-                line=line,
-                set_labels=set_labels,
-                indent=indent
-            )
-        else:
-            self._add_reference(
-                sheet=sheet,
-                column=column,
-                line=line,
-                set_labels=set_labels,
-                indent=indent
-            )
-
-            self._add_consolidation_reference_summary(
-                sheet=sheet,
-                column=column,
-                line=line,
-                set_labels=set_labels,
-                indent=indent + LineItem.TAB_WIDTH,
-            )
-
-        if details:
-            sub_indent = indent + LineItem.TAB_WIDTH
-            detail_summation = ""
-
-            for detail in details:
-                sheet.bb.outline_level = 0
-                self.chop_summary_line(
-                    sheet=sheet,
-                    column=column,
-                    line=detail,
-                    set_labels=set_labels,
-                    indent=sub_indent
-                )
-                link_template = formula_templates.ADD_COORDINATES
-                include = detail.xl.cell.parent is not sheet
-                cos = detail.xl.get_coordinates(include_sheet=include)
-                link = link_template.format(coordinates=cos)
-                detail_summation += link
-            else:
-                # Should group all the details here
-                sheet.bb.current_row += 1
-
-                subtotal_cell = sheet.cell(column=column,
-                                           row=sheet.bb.current_row)
-                subtotal_cell.set_explicit_value(detail_summation,
-                                                 data_type=type_codes.FORMULA)
-
-                line.xl.detailed.ending = sheet.bb.current_row - 1
-                line.xl.detailed.cell = subtotal_cell
-                line.xl.cell = subtotal_cell
-
-                if set_labels:
-                    label = indent * " " + line.tags.name
-                    self._set_label(sheet=sheet,
-                                    label=label,
-                                    row=sheet.bb.current_row)
-
-        if not line.xl.reference.source:
+        # sources of information for output
+        self._add_summary_reference(
+            sheet=sheet,
+            column=column,
+            line=line,
+            row_container=matter,
+            indent=indent,
+        )
+        self._add_consolidation_reference(
+            sheet=sheet,
+            column=column,
+            line=line,
+            row_container=matter,
+            indent=indent + LineItem.TAB_WIDTH,
+        )
+        self._add_detail(
+            sheet=sheet,
+            column=column,
+            line=line,
+            row_container=matter,
+            indent=indent,
+        )
+        # catch-all if no content has been added so far
+        if not matter.groups:
             self._combine_segments(
                 sheet=sheet,
                 column=column,
                 line=line,
                 set_labels=set_labels,
-                indent=indent)
+                indent=indent,
+                row_container=matter,
+            )
 
         cell_styles.format_line(line)
 
@@ -528,6 +498,7 @@ class LineChef:
         if line.xl.format.blank_row_after:
             sheet.bb.need_spacer = True
 
+        row_container.calc_size()
         return sheet
 
     def chop_summary_statement(
@@ -554,42 +525,195 @@ class LineChef:
         row_container.calc_size()
 
         # Sub-container for this statement
-        if not title:
-            title = statement.name
+        title = title or statement.name
         statement_rows = row_container.add_group(
             title,
             # add a spacer between self and previous statement, if not first
             offset=1 if row_container.groups else 0,
-            add_outline=True
         )
 
         # Add title row and statement body
-        header = statement_rows.add_group('title', size=1, title=title)
+        header = statement_rows.add_group('title', size=1, label=title)
         matter = statement_rows.add_group('lines')
-        # current line is at the header row
-        sheet.bb.current_row = header.number()
 
         # if previous line wants blank_row_after, or this one blank_row_before
         sheet.bb.need_spacer = False
-        for line in statement.get_ordered():
-            if BLANK_BETWEEN_TOP_LINES:
-                sheet.bb.current_row += 1
 
+        for line in statement.get_ordered():
             self.chop_summary_line(
                 sheet=sheet,
                 column=column,
                 line=line,
+                row_container=matter,
                 set_labels=set_labels,
             )
-
-        # determine container size from the number of written rows
-        matter.size = sheet.bb.current_row - header.number()
 
         return sheet
 
     # *************************************************************************#
     #                           NON-PUBLIC METHODS                             #
     # *************************************************************************#
+
+    def _add_summary_reference(
+        self, sheet, column, line, row_container, indent=0, update_cell=True
+    ):
+        """
+
+
+        LineChef._add_summary_reference() -> Worksheet
+
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``column`` must be a column number reference
+        --``line`` must be an instance of LineItem
+        --``indent`` is amount of indent
+        --``row_container`` coordinate anchor on the row axis
+
+        Adds a pointer to an existing cell. Differs from _add_reference in
+        adding references to derived as well as to reference cells.
+        """
+        source = None
+        if line.xl.derived.calculations:
+            source = line.xl
+        if line.xl.reference.source:
+            source = line.xl.reference.source.xl
+        if source:
+            label = indent * " " + line.name
+            row_container.add_group(line.name, size=1, label=label)
+            cell = sheet.cell(column=column, row=row_container.number())
+            include = source.cell.parent is not sheet
+            excel_str = "=" + source.get_coordinates(include_sheet=include)
+            cell.set_explicit_value(excel_str, data_type=type_codes.FORMULA)
+
+            line.xl.ending = row_container.number()
+            line.xl.reference.cell = source.cell
+
+            if update_cell:
+                line.xl.cell = cell
+
+        return sheet
+
+    def _add_consolidation_reference(
+        self, sheet, column, line, row_container, indent=0
+    ):
+        """
+
+
+        LineChef._add_consolidation_reference_summary() -> Worksheet
+
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``column`` must be a column number reference
+        --``line`` must be an instance of LineItem
+        --``indent`` is amount of indent
+        --``row_container`` coordinate anchor on the row axis
+
+        Expects line.xl.consolidated.sources to include full range of pointers
+        to source lines in relevant time periods.
+
+        Creates a sum formula linking directly to TimeLine inputs.
+
+        Returns Worksheet with consolidation logic added as Excel SUM.
+        """
+        if line.xl.consolidated.sources:
+            label = line.tags.name
+            label = ((indent - LineItem.TAB_WIDTH) * " ") + label
+            row_container.add_group(line.name, size=1, label=label)
+
+            sources = line.xl.consolidated.sources
+            labels = line.xl.consolidated.labels
+
+            line.xl.consolidated.starting = row_container.number()
+            line.xl.consolidated.ending = row_container.number()
+            line.xl.consolidated.array.clear()
+
+            source_lines = []
+            for label, source_line in zip(labels, sources):
+                # to reference this cell from the monthly summary
+                include = source_line.xl.cell.parent is not sheet
+                source_cos = source_line.xl.get_coordinates(
+                    include_sheet=include
+                )
+                cell = source_line.xl.cell
+
+                cell_info = dict(
+                    header_tag = label, coordinate = source_cos, cell=cell,
+                )
+                source_lines.append(cell_info)
+
+            if source_lines:
+                summation = '=' + '+'.join(
+                    source_line['coordinate'] for source_line in source_lines
+                )
+                line.xl.consolidated.array = [
+                    source_line['cell'] for source_line in source_lines
+                ]
+            else:
+                summation = ''
+
+            summation_cell = sheet.cell(
+                column=column, row=row_container.number()
+            )
+            summation_cell.set_explicit_value(
+                summation, data_type=type_codes.FORMULA
+            )
+
+            line.xl.consolidated.cell = summation_cell
+            line.xl.cell = summation_cell
+
+        return sheet
+
+    def _add_detail(
+        self, sheet, column, line, row_container, indent=0
+    ):
+        """
+
+
+        LineChef._add_detail() -> Worksheet
+
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``column`` must be a column number reference
+        --``line`` must be an instance of LineItem
+        --``indent`` is amount of indent
+        --``row_container`` coordinate anchor on the row axis
+
+        Displays detail sources.
+        """
+        details = line.get_ordered()
+        if details:
+            sub_indent = indent + LineItem.TAB_WIDTH
+            detail_summation = ""
+            detail_rows = row_container.add_group('details')
+
+            for detail in details:
+                self.chop_summary_line(
+                    sheet=sheet,
+                    column=column,
+                    line=detail,
+                    row_container=detail_rows,
+                    indent=sub_indent
+                )
+                link_template = formula_templates.ADD_COORDINATES
+                include = detail.xl.cell.parent is not sheet
+                cos = detail.xl.get_coordinates(include_sheet=include)
+                link = link_template.format(coordinates=cos)
+                detail_summation += link
+
+            # group all the details here
+            label = indent * " " + line.name
+            detail_endrow = row_container.add_group(
+                'details_summary', size=1, label=label
+            )
+            subtotal_cell = sheet.cell(
+                column=column, row=detail_endrow.number()
+            )
+            subtotal_cell.set_explicit_value(
+                detail_summation, data_type=type_codes.FORMULA
+            )
+
+            line.xl.detailed.ending = detail_endrow.tip
+            line.xl.detailed.cell = subtotal_cell
+            line.xl.cell = subtotal_cell
+
+        return sheet
 
     def _add_consolidation_logic(self, *pargs, sheet, column, line,
                                  set_labels=True, indent=0):
@@ -827,84 +951,6 @@ class LineChef:
             line.xl.consolidated.ending = sheet.bb.current_row
 
             sheet.bb.outline_level -= 1
-
-        return sheet
-
-    def _add_consolidation_reference_summary(
-        self, sheet,
-        column, line, set_labels=True, indent=0
-    ):
-        """
-
-
-        LineChef._add_consolidation_reference_summary() -> Worksheet
-
-        --``sheet`` must be an instance of openpyxl Worksheet
-        --``column`` must be a column number reference
-        --``line`` must be an instance of LineItem
-        --``set_labels`` must be a boolean; True will set labels for line
-        --``indent`` is amount of indent
-
-        Expects line.xl.consolidated.sources to include full range of pointers
-        to source lines in relevant time periods.
-
-        Creates a sum formula linking directly to TimeLine inputs.
-
-        Returns Worksheet with consolidation logic added as Excel SUM.
-        """
-        if line.xl.consolidated.sources:
-            sources = line.xl.consolidated.sources
-            labels = line.xl.consolidated.labels
-
-            sheet.bb.current_row += 1
-            line.xl.consolidated.starting = sheet.bb.current_row
-            line.xl.consolidated.array.clear()
-
-            source_lines = []
-            for label, source_line in zip(labels, sources):
-                # to reference this cell from the monthly summary
-                include = source_line.xl.cell.parent is not sheet
-                source_cos = source_line.xl.get_coordinates(
-                    include_sheet=include
-                )
-                cell = source_line.xl.cell
-
-                cell_info = dict(
-                    header_tag = label, coordinate = source_cos, cell=cell,
-                )
-                source_lines.append(cell_info)
-
-            # links to monthly values
-            source_lines = self._link_consolidation_reference(
-                sheet, source_lines
-            )
-
-            if source_lines:
-                summation = '=' + '+'.join(
-                    source_line['coordinate'] for source_line in source_lines
-                )
-                line.xl.consolidated.array = [
-                    source_line['cell'] for source_line in source_lines
-                ]
-            else:
-                summation = ''
-
-            summation_cell = sheet.cell(column=column,
-                                        row=sheet.bb.current_row)
-            summation_cell.set_explicit_value(summation,
-                                              data_type=type_codes.FORMULA)
-
-            line.xl.consolidated.cell = summation_cell
-            line.xl.cell = summation_cell
-
-            if set_labels:
-                label = line.tags.name
-                label = ((indent - LineItem.TAB_WIDTH) * " ") + label
-
-                self._set_label(sheet=sheet, label=label,
-                                row=sheet.bb.current_row)
-
-            line.xl.consolidated.ending = sheet.bb.current_row
 
         return sheet
 
@@ -1192,8 +1238,8 @@ class LineChef:
         return sheet
 
     def _add_reference(
-        self,
-        *pargs, sheet, column, line, set_labels=True, indent=0, update_cell=True
+        self, sheet, column, line,
+        set_labels=True, indent=0, update_cell=True, row_container=None
     ):
         """
 
@@ -1209,10 +1255,13 @@ class LineChef:
         Adds a single cell reference to a new cell.
         (e.g. new_cell.value = '=C18')
         """
-        if not line.xl.reference.source:
-            pass
-        else:
-            sheet.bb.current_row += 1
+        if line.xl.reference.source:
+            label = indent * " " + line.tags.name
+            if row_container:
+                row_container.add_group(line.name, size=1, label=label)
+                sheet.bb.current_row = row_container.number()
+            else:
+                sheet.bb.current_row += 1
             cell = sheet.cell(column=column, row=sheet.bb.current_row)
 
             ref_cell = line.xl.reference.source.xl.cell
@@ -1221,8 +1270,6 @@ class LineChef:
             excel_str = "=" + source.xl.get_coordinates(include_sheet=include)
 
             cell.set_explicit_value(excel_str, data_type=type_codes.FORMULA)
-
-            label = indent * " " + line.tags.name
 
             line.xl.ending = sheet.bb.current_row
             line.xl.reference.cell = ref_cell
@@ -1236,8 +1283,10 @@ class LineChef:
 
         return sheet
 
-    def _combine_segments(self, *pargs, sheet, column, line, set_labels=True,
-                          indent=0):
+    def _combine_segments(
+        self, sheet, column, line,
+        set_labels=True, indent=0, row_container=None
+    ):
         """
 
 
@@ -1255,17 +1304,19 @@ class LineChef:
             line.xl.detailed.cell or line.xl.reference.cell
 
         if not processed:
-            sheet.bb.current_row += 1
+            label = indent * " " + line.tags.name
+            if row_container:
+                row_container.add_group(line.name, size=1, label=label)
+                sheet.bb.current_row = row_container.number()
+            else:
+                sheet.bb.current_row += 1
             cell = sheet.cell(column=column, row=sheet.bb.current_row)
 
             # Blank or hard-coded line
             cell.value = line.value
             cell_styles.format_hardcoded(cell)
 
-            label = indent * " " + line.tags.name
-
             line.xl.ending = sheet.bb.current_row
-
             line.xl.cell = cell
 
             if set_labels:

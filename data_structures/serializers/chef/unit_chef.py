@@ -338,7 +338,7 @@ class UnitChef:
         """
         fins_dict = dict()
 
-        statement_group = sheet.bb.row_axis.add_group(
+        sheet.bb.row_axis.add_group(
             'statements',
             offset=sheet.bb.current_row + 1
         )
