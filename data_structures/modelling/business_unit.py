@@ -650,7 +650,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         self._derive("ending")
         # Derive() will overwrite ending balance sheet where appropriate
 
-    def _consolidate(self, statement_name, trace=False, recur_func=None):
+    def _consolidate(self, statement_name):
         """
 
 
