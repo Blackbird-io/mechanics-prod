@@ -394,6 +394,9 @@ def test_book(model, filename, log_filename=None):
 
     # get model and walk through time periods, bu's, statements, lines
     for t in model.time_line.values():
+        if t.end < model.time_line.current_period.end:
+            continue
+
         if t is model.time_line.current_period:
             # only check valuation for the company-level unit in the current
             # period

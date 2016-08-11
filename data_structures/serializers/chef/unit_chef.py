@@ -375,6 +375,12 @@ class UnitChef:
                     set_labels=set_labels,
                 )
 
+        # We're done with the first pass of chopping financials, now go back
+        # and try to resolve problem_line issues.
+        while sheet.bb.problem_lines:
+            dr_data, materials = sheet.bb.problem_lines.pop()
+            line_chef.attempt_reference_resolution(sheet, dr_data, materials)
+
         return fins_dict
 
     def _add_life_analysis(self, sheet, unit, active_column, set_labels=True):
