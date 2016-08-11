@@ -536,7 +536,7 @@ class Statement(Equalities, TagsMixIn):
         return result
 
     def increment(self, matching_statement, consolidating=False, xl_label=None,
-                  override=False, xl_only=False):
+                  override=False, xl_only=False, over_time=False):
         """
 
 
@@ -567,11 +567,12 @@ class Statement(Equalities, TagsMixIn):
                 # Option A
                 own_line.increment(external_line, consolidating=consolidating,
                                    xl_label=xl_label, override=override,
-                                   xl_only=xl_only)
+                                   xl_only=xl_only, over_time=over_time)
             else:
                 # Option B
                 if external_line.consolidate:
-                    local_copy = external_line.copy(check_include_details=True)
+                    chk = not over_time
+                    local_copy = external_line.copy(check_include_details=chk)
                     # Dont enforce rules to track old line.replicate() method
 
                     if consolidating:

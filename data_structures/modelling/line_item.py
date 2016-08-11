@@ -283,7 +283,8 @@ class LineItem(Statement):
         return new_line
 
     def increment(self, matching_line, signature=None, consolidating=False,
-                  xl_label=None, override=False, xl_only=False):
+                  xl_label=None, override=False, xl_only=False,
+                  over_time=False):
         """
 
 
@@ -298,17 +299,19 @@ class LineItem(Statement):
             if matching_line._details and matching_line.include_details:
                 Statement.increment(self, matching_line,
                                     consolidating=consolidating,
-                                    xl_label=xl_label,
+                                    xl_label=xl_label, over_time=over_time,
                                     override=override, xl_only=xl_only)
             else:
                 if self.consolidate:
                     self.xl.consolidated.sources.append(matching_line)
                     self.xl.consolidated.labels.append(xl_label)
         else:
-            if matching_line._details and matching_line.include_details:
+            send_to_statement = matching_line._details and \
+                                (matching_line.include_details or over_time)
+            if send_to_statement:
                 Statement.increment(self, matching_line,
                                     consolidating=consolidating,
-                                    xl_label=xl_label,
+                                    xl_label=xl_label, over_time=over_time,
                                     override=override, xl_only=xl_only)
                 # Use Statement method here because we're treating the matching
                 # line as a Statement too. We assume that its details represent
@@ -330,13 +333,15 @@ class LineItem(Statement):
                         # 3) if line exists, increment that line with the
                         # matching_line
                         own_line = self._details[con_line_name]
-                        own_line.increment(matching_line)
+                        own_line.increment(matching_line,
+                                           consolidating=consolidating)
                     else:
                         # 4) if line does NOT exist, make it and increment with
                         #  matching_line
                         new_line = LineItem(name=con_line_name)
                         self.append(new_line)
-                        new_line.increment(matching_line)
+                        new_line.increment(matching_line,
+                                           consolidating=consolidating)
                 else:
                     starting_value = self.value or 0
                     new_value = starting_value + matching_line.value
