@@ -508,7 +508,9 @@ class ModelChef:
 
         self._create_cover_tab(book, model)
         self._create_scenarios_tab(book, model)
-        self._create_time_line_tab(book, model)
+
+        import pdb
+        pdb.set_trace()
 
         return book
 
@@ -627,15 +629,12 @@ class ModelChef:
         # A          |  B      | C             | D     | E
         # param names|  blank  | active values | blank | blackbird values
 
-        starting_row = 3
+        starting_row = 2
 
         label_column = 2
-        in_effect_column = 4
-        custom_column = 6
-        base_case_column = 8
-
-        sheet_style.set_column_width(my_tab, in_effect_column)
-        sheet_style.set_column_width(my_tab, base_case_column)
+        in_effect_column = 12
+        custom_column = 4
+        base_case_column = 6
 
         area = my_tab.bb.add_area(field_names.PARAMETERS)
 
@@ -646,15 +645,15 @@ class ModelChef:
 
         current_row = starting_row
 
-        area.rows.by_name[field_names.ACTIVE_SCENARIO] = current_row
-
         book.set_scenario_names(model)
         scenario_columns = book.scenario_names[1:]
 
         add_scenario_selector(my_tab, label_column, current_row,
                               book.scenario_names)
-        selector_cell = my_tab.cell(row=current_row, column=in_effect_column)
+        selector_cell = my_tab.cell(row=current_row, column=custom_column)
+        selector_cell.value = field_names.CUSTOM
 
+        current_row += 3
         # Make scenario label cells
         custom_cell = my_tab.cell(column=custom_column, row=current_row)
         custom_cell.value = field_names.CUSTOM
@@ -668,6 +667,11 @@ class ModelChef:
                 # add columns for other cases to area
                 area.columns.by_name[s.lower()+"_case"] = base_case_column+i
 
+        active_label_cell = my_tab.cell(column=in_effect_column,
+                                        row=current_row)
+        active_label_cell.value = field_names.IN_EFFECT
+        cell_styles.format_scenario_label(active_label_cell)
+
         title_row = current_row
 
         # insert blank row
@@ -676,6 +680,20 @@ class ModelChef:
         # storing scenario values in model.time_line is obsolete now, transfer
         # existing values to model.scenarios
         base = model.time_line.parameters
+        base.update(model.time_line.current_period.parameters)
+
+        # now loop through the rest of the time periods and grab parameters
+        for per in model.time_line.values():
+            if per.end < model.time_line.current_period.end:
+                continue
+
+            existing_parms = set(base.keys())
+            tp_parms = set(per.parameters.keys())
+            new_parms = tp_parms - existing_parms
+
+            for p in new_parms:
+                base[p] = None
+
         ref_row = 3
 
         all_scenarios = dict()
@@ -734,212 +752,88 @@ class ModelChef:
                                              title_row,
                                              current_row-1)
 
-        for c in range(1, area.columns.ending+1):
-            sheet_style.set_column_width(my_tab, c)
-
-        sheet_style.style_sheet(my_tab)
-
-        my_tab.sheet_properties.tabColor = chef_settings.SCENARIO_TAB_COLOR
-
-        return my_tab
-
-    @staticmethod
-    def _create_time_line_tab(book, model):
-        """
+        cell_styles.format_border_group(my_tab,
+                                        in_effect_column,
+                                        in_effect_column,
+                                        title_row,
+                                        current_row - 1)
 
 
-        ModelChef._create_time_line_tab() -> BB_Worksheet
 
-
-        Add a sheet that spreads out the time periods and shows each period's
-        parameters.
-
-        By default, each period inherits all parameters from the active
-        scenario (on the scenarios sheet) by default. If a period specifies its
-        own value for a parameter, routine will overwrite the link with a
-        hard-coded value.
-
-        Method expects book to include a completed scenarios sheet.
-        """
-        scenarios = book[tab_names.SCENARIOS]
-        scenarios_area = scenarios.bb.parameters
-
-        my_tab = book.create_sheet(tab_names.TIME_LINE)
-
-        parameters = my_tab.bb.add_area(field_names.PARAMETERS)
-        time_line = my_tab.bb.add_area(field_names.TIMELINE)
-
-        # Pick starting positions
-        local_labels_column = 2
-        local_master_column = 4
-        sheet_style.set_column_width(my_tab, local_master_column)
-
-        alpha_master_column = get_column_letter(local_master_column)
-
-        parameters.columns.by_name[field_names.LABELS] = local_labels_column
-        parameters.columns.by_name[field_names.MASTER] = local_master_column
-
-        header_row = 3
-        time_line.rows.by_name[field_names.LABELS] = header_row
-        my_tab.bb.current_row = header_row
-
-        # First, pull the parameter names and active values from the scenarios
-        # tab into a local "label" and "master" column, respectively.
-        external_coordinates = dict()
-        external_coordinates["sheet"] = scenarios.title
-
-        source_label_column = scenarios_area.columns.\
-            get_position(field_names.LABELS)
-        source_value_column = scenarios_area.columns.\
-            get_position(field_names.VALUES)
-
-        for param_name in scenarios_area.rows.by_name:
-            # We can build the page in any order here
-
-            row_number = scenarios_area.rows.get_position(param_name)
-            # Get the correct relative position
-
-            source_coordinates = external_coordinates.copy()
-            source_coordinates["row"] = row_number
-
-            active_row = header_row + row_number
-            my_tab.bb.parameters.rows.by_name[param_name] = active_row
-            # TO DO: Think about whether we should be keeping track of the row
-            # number differently here.
-
-            # Label cell should link to the parameter name on the scenarios
-            # sheet
-            label_cell = my_tab.cell(column=local_labels_column,
-                                     row=active_row)
-
-            cos = source_coordinates.copy()
-            cos["alpha_column"] = get_column_letter(source_label_column)
-
-            link = formula_templates.ADD_CELL_FROM_SHEET.format(**cos)
-            label_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
-
-            # Master cell should link to the active value
-            master_cell = my_tab.cell(column=local_master_column,
-                                      row=active_row)
-
-            cos = source_coordinates.copy()
-            cos["alpha_column"] = get_column_letter(source_value_column)
-            link = formula_templates.ADD_CELL_FROM_SHEET.format(**cos)
-            master_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
-            cell_styles.format_parameter(master_cell)
-
-        my_tab.bb.current_row = active_row
-        # Second, build a column for each period. Pull values from our local
-        # master column and overwrite them if necessary with direct values.
-
-        starting_column = local_master_column + 2
-        active_column = starting_column
+        # Now add the timeline area
+        active_column = in_effect_column+2
+        tl_start = active_column
+        alpha_master_column = get_column_letter(in_effect_column)
 
         past, present, future = model.time_line.get_segments()
         covered_dates = present + future
         for end_date in covered_dates:
-
             period = model.time_line[end_date]
 
-            my_tab.bb.time_line.columns.by_name[period.end] = active_column
-            parameters.columns.by_name[period.end] = active_column
+            area.columns.by_name[period.end] = active_column
 
             sheet_style.set_column_width(my_tab, active_column)
             # Need this to make sure the parameters Area looks as wide as the
             # timeline. Otherwise, other routines may think that the params
             # area is only one column wide.
 
-            header_cell = my_tab.cell(column=active_column, row=header_row)
+            header_cell = my_tab.cell(column=active_column, row=title_row)
             header_cell.value = period.end
             cell_styles.format_date(header_cell)
+            col = chef_settings.TIMELINE_HEADER_COLOR
+            cell_styles.format_header_label(header_cell, font_color=WHITE,
+                                            color=col, bold=False)
 
-            # 1. Pulling the master values for each parameter.
-            # my_tab.bb.current_row += 2
-            existing_params = dict()
-            for k in my_tab.bb.parameters.rows.by_name:
+            for k in area.rows.by_name:
                 # May write the column in undefined order
-                param_row = my_tab.bb.parameters.rows.by_name[k]
-
+                param_row = area.rows.by_name[k]
                 param_cell = my_tab.cell(column=active_column, row=param_row)
-                cell_styles.format_parameter(param_cell)
 
-                link_template = formula_templates.ADD_CELL
+                master_cell = my_tab.cell(column=in_effect_column, row=param_row)
 
-                cos = dict(alpha_column=alpha_master_column, row=param_row)
-                link = link_template.format(**cos)
+                link2master = True
+                if k in period.parameters:
+                    param_cell.value = period.parameters[k]
 
-                param_cell.set_explicit_value(link,
-                                              data_type=type_codes.FORMULA)
-                cell_styles.format_parameter(param_cell)
+                    if param_cell.value != master_cell.value:
+                        cell_styles.format_hardcoded(param_cell)
+                        link2master = False
 
-                existing_params[k] = link
-
-            # 2. Overwrite links with hard-coded values where the period
-            #    specifies them. Add period-specific parameters.
-
-            existing_param_names = period.parameters.keys() & \
-                                   parameters.rows.by_name.keys()
-            new_param_names = period.parameters.keys() - existing_param_names
-
-            # New parameters are specific to the period. We don't have a row
-            # for them on the sheet yet, so we'll add them later.
-
-            for spec_name in existing_param_names:
-                spec_value = period.parameters[spec_name]
-
-                param_row = parameters.rows.get_position(spec_name)
-                m_cell = my_tab.cell(column=local_master_column,
-                                     row=param_row)
-
-                param_cell = my_tab.cell(column=active_column, row=param_row)
-                if spec_value != m_cell.value:
-                    param_cell.value = spec_value
-                    cell_styles.format_hardcoded(param_cell)
-                else:
+                if link2master:
+                    link_template = formula_templates.ADD_CELL
                     cos = dict(alpha_column=alpha_master_column, row=param_row)
                     link = link_template.format(**cos)
-                    param_cell.set_explicit_value(link,
-                                                  data_type=type_codes.FORMULA)
+
+                    param_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
 
                 cell_styles.format_parameter(param_cell)
-
-            new_params = dict()
-            for k in new_param_names:
-                new_params[k] = period.parameters[k]
-
-            my_tab.bb.current_row = parameters.rows.ending
-            unit_chef.add_items_to_area(
-                sheet=my_tab,
-                area=my_tab.bb.parameters,
-                items=new_params,
-                active_column=active_column,
-                format_func=cell_styles.format_parameter
-                )
-
-            # Upgrade-S: For speed, can supply master and label column indices
-            # to the add_items() routine.
 
             active_column += 1
 
-        # Freeze panes:
-        corner_row = my_tab.bb.time_line.rows.ending
-        corner_row += 1
+        tl_end = active_column - 1
 
-        corner_column = my_tab.bb.parameters.columns.get_position(field_names.MASTER)
-        corner_column += 1
+        for col in range(tl_start, tl_end+1):
+            alpha = get_column_letter(col)
+            my_tab.column_dimensions[alpha].outline_level = 1
 
-        corner_cell = my_tab.cell(column=corner_column, row=corner_row)
+        for col in range(base_case_column, in_effect_column+1):
+            alpha = get_column_letter(col)
+            my_tab.column_dimensions[alpha].outline_level = 1
+
+        for c in range(1, area.columns.ending+1):
+            sheet_style.set_column_width(my_tab, c)
+
+        sheet_style.set_column_width(my_tab, custom_column + 1, 12)
+        sheet_style.set_column_width(my_tab, in_effect_column + 1, 12)
+        sheet_style.set_column_width(my_tab, in_effect_column - 1, 12)
+
+        corner_col = area.columns.by_name[field_names.BASE_CASE]
+        corner_row = title_row+1
+        corner_cell = my_tab.cell(column=corner_col, row=corner_row)
         my_tab.freeze_panes = corner_cell
 
-        # Add selection cell
-        if SCENARIO_SELECTORS:
-            selector_row = my_tab.bb.parameters.rows.by_name[field_names.ACTIVE_SCENARIO]
-            add_scenario_selector(my_tab, local_labels_column, selector_row,
-                                  book.scenario_names)
-
-        sheet_style.style_sheet(my_tab)
-
-        my_tab.sheet_properties.tabColor = chef_settings.TIMELINE_TAB_COLOR
+        sheet_style.style_sheet(my_tab, label_areas=False)
+        my_tab.sheet_properties.tabColor = chef_settings.SCENARIO_TAB_COLOR
 
         return my_tab
 

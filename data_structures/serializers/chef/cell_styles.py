@@ -151,7 +151,6 @@ class CellStyles:
 
         Format cells containing hardcoded values to conform with Chef standard.
         """
-
         font = Font(color=HARDCODED_COLOR, bold=True)
         cell.font = font
 
@@ -228,7 +227,8 @@ class CellStyles:
         self.format_header_label(cell, alignment='center')
 
     @staticmethod
-    def format_header_label(cell, alignment=None, color=BLACK):
+    def format_header_label(cell, alignment=None, color=BLACK,
+                            font_color=WHITE, bold=True):
         """
 
 
@@ -241,7 +241,7 @@ class CellStyles:
         if alignment:
             cell.alignment = Alignment(horizontal=alignment)
 
-        cell.font = Font(color=WHITE, bold=True)
+        cell.font = Font(color=font_color, bold=bold)
         cell.fill = PatternFill(start_color=color,
                                 end_color=color,
                                 fill_type='solid')
@@ -299,7 +299,7 @@ class CellStyles:
         border.top = side
         border.bottom = side
         left_cell.border = border
-        left_cell.font = Font(bold=True)
+        left_cell.font = Font(bold=True, size=14)
         left_cell.value = "Active Scenario:"
 
         # Blank middle cell
@@ -320,6 +320,9 @@ class CellStyles:
         border.bottom = side
         right_cell.border = border
         right_cell.alignment = Alignment(horizontal='center')
+
+        font = Font(color=HARDCODED_COLOR, bold=True, size=14)
+        right_cell.font = font
 
     @staticmethod
     def format_border_group(sheet, st_col, ed_col, st_row, ed_row,
