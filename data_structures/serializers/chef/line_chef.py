@@ -137,8 +137,10 @@ class LineChef:
             cell.set_explicit_value(formula_string,
                                     data_type=type_codes.FORMULA)
 
-    def chop_line(self, *pargs, sheet, column, line, set_labels=True, indent=0,
-                  check=True):
+    def chop_line(
+        self, sheet, column, line, row_container,
+        set_labels=True, indent=0, check=True
+    ):
         """
 
 
@@ -419,7 +421,7 @@ class LineChef:
         return sheet
 
     def chop_statement(
-        self, sheet, column, statement, row_container, set_labels=True
+        self, sheet, column, statement, row_container=None, set_labels=True
     ):
         """
 
@@ -436,6 +438,11 @@ class LineChef:
 
         Method relies on sheet.bb.current_row being up-to-date.
         """
+        if not row_container:
+            row_container = sheet.bb.row_axis.add_group(
+                statement.name, offset=sheet.bb.current_row + 1
+            )
+            row_container.add_group('matter')
         matter = row_container.get_group('matter')
 
         if not BLANK_BETWEEN_TOP_LINES:
@@ -489,11 +496,11 @@ class LineChef:
         """
 
         matter = row_container.add_group(
-            line.name,
+            indent * " " + line.name,
             # setting label and size here will insert the line into output
-            # even when it has no content, otherwise content overrides
-            label=indent * " " + line.name,
-            size=1
+            # when it has no content, otherwise line without content is hidden
+            # label=indent * " " + line.name,
+            # size=1
         )
 
         # previous line may have requested a spacer after itself
@@ -519,7 +526,7 @@ class LineChef:
             column=column,
             line=line,
             row_container=matter,
-            indent=indent + LineItem.TAB_WIDTH,
+            indent=indent,
         )
         self._add_detail(
             sheet=sheet,
@@ -529,15 +536,13 @@ class LineChef:
             indent=indent,
         )
         # catch-all if no content has been added so far
-        if not matter.groups:
-            self._combine_segments(
-                sheet=sheet,
-                column=column,
-                line=line,
-                set_labels=set_labels,
-                indent=indent,
-                row_container=matter,
-            )
+        self._combine_segments(
+            sheet=sheet,
+            column=column,
+            line=line,
+            indent=indent,
+            row_container=matter,
+        )
 
         cell_styles.format_line(line)
 
@@ -625,9 +630,9 @@ class LineChef:
             source = line.xl
         if line.xl.reference.source:
             source = line.xl.reference.source.xl
-        if source:
+        if source and source.cell:
             label = indent * " " + line.name
-            row_container.add_group(line.name, size=1, label=label)
+            row_container.add_group(label, size=1, label=label)
             cell = sheet.cell(column=column, row=row_container.number())
             include = source.cell.parent is not sheet
             excel_str = "=" + source.get_coordinates(include_sheet=include)
@@ -663,9 +668,8 @@ class LineChef:
         Returns Worksheet with consolidation logic added as Excel SUM.
         """
         if line.xl.consolidated.sources:
-            label = line.tags.name
-            label = ((indent - LineItem.TAB_WIDTH) * " ") + label
-            row_container.add_group(line.name, size=1, label=label)
+            label = indent * " " + line.tags.name
+            row_container.add_group(label, size=1, label=label)
 
             sources = line.xl.consolidated.sources
             labels = line.xl.consolidated.labels
@@ -676,6 +680,8 @@ class LineChef:
 
             source_lines = []
             for label, source_line in zip(labels, sources):
+                if not source_line.xl.cell:
+                    continue
                 # to reference this cell from the monthly summary
                 include = source_line.xl.cell.parent is not sheet
                 source_cos = source_line.xl.get_coordinates(
@@ -749,7 +755,7 @@ class LineChef:
             # group all the details here
             label = indent * " " + line.name
             detail_endrow = row_container.add_group(
-                'details_summary', size=1, label=label
+                label, size=1, label=label
             )
             subtotal_cell = sheet.cell(
                 column=column, row=detail_endrow.number()
