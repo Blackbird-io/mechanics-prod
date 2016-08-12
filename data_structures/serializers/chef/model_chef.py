@@ -169,10 +169,7 @@ class ModelChef:
         # blank column at the end
         colspacer_end = output_cols.add_group('spacer_end', size=1)
 
-        # Annual and quarterly column headers, from quarterly summary
-        key = model.time_line.summary_builder.QUARTERLY_KEY
-        qtr_timeline = model.time_line.summary_builder.summaries[key]
-        # calculate the column layout for quarters and years
+        # Column headers
         self._annual_summary_headers(
             sheet, model.time_line, output_rows, output_cols
         )
@@ -221,6 +218,9 @@ class ModelChef:
 
         # Fill output: quarterly summary timeline
         if chef_settings.SUMMARY_INCLUDES_QUARTERS:
+            key = model.time_line.summary_builder.QUARTERLY_KEY
+            qtr_timeline = model.time_line.summary_builder.summaries[key]
+            # calculate the column layout for quarters and years
             # column selector: date -> years_cols.2017.quarters.1Q17
             col_selector = lambda date: years_cols.get_group(
                 date.year, 'quarters', self._quarter_name(date), 'quarter'
@@ -445,7 +445,10 @@ class ModelChef:
 
         # actual header labels, years and (possibly) quarters and months
         # nested in the form: years.2017.quarters.1Q17.months.2017-01-01
+        company = timeline.current_period.content
         for date, period in sorted(timeline.items()):
+            if date < company.period.end:
+                continue
             if not period.content:
                 continue
             # container for quarters (if requested) and year
@@ -496,8 +499,10 @@ class ModelChef:
         set_labels = True
         for date in timeline.keys():
             column = col_selector(date)
+            if not column:
+                continue
 
-            summary = timeline.find_period(date)
+            summary = timeline[date]
             unit = summary.content
             if not unit:
                 continue
@@ -527,7 +532,6 @@ class ModelChef:
                             column=column.number(),
                             row_container=statement_rowgroup,
                             col_container=output_cols,
-                            set_labels=set_labels,
                             title='starting balance sheet',
                         )
                     line_chef.chop_summary_statement(
@@ -536,7 +540,6 @@ class ModelChef:
                         column=column.number(),
                         row_container=statement_rowgroup,
                         col_container=output_cols,
-                        set_labels=set_labels,
                     )
 
     def _build_foundation(self, model):
