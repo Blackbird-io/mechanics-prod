@@ -113,6 +113,18 @@ class UnitChef:
 
     MAX_TITLE_CHARACTERS = 30
 
+    LABEL_COLUMN = 2
+    MASTER_COLUMN = 4
+    VALUE_COLUMN = 6
+
+    TITLE_ROW = 3
+    VALUES_START_ROW = 6
+
+    SCENARIO_ROW = 2
+    SCENARIO_COLUMN = 2
+
+
+
     def add_items_to_area(self, *pargs, sheet, area, items, active_column,
                           set_labels=True, format_func=None, hardcoded=False,
                           preference_order=[]):
@@ -208,8 +220,6 @@ class UnitChef:
         sheet = self._create_unit_sheet(book=book, unit=unit,
                                         index=before_kids)
         sheet.bb.outline_level += 1
-        for snapshot in unit:
-            self._add_unit_params(sheet=sheet, unit=snapshot)
 
         # 2.2.   spread life
         sheet.bb.current_row += 1
@@ -253,30 +263,19 @@ class UnitChef:
         for statement, row in fins_dict.items():
             cell_styles.format_area_label(sheet, statement, row)
 
-        # 2.6 add selector cell
-        selector_row = sheet.bb.parameters.rows.by_name[
-            field_names.ACTIVE_SCENARIO]
-        if SCENARIO_SELECTORS:
-            label_column = sheet.bb.parameters.columns.by_name[
-                field_names.LABELS]
-            add_scenario_selector(sheet, label_column, selector_row,
-                                  book.scenario_names)
-
-        sheet.bb.outline_level = 1
-        group_lines(sheet, row=selector_row + 1)
-
-        sheet.bb.outline_level = 0
-        group_lines(sheet, row=selector_row)
-
-        # color the December columns
-        if APPLY_COLOR_TO_DECEMBER:
-            for date, column in sheet.bb.time_line.columns.by_name.items():
-                if date.month == 12:
-                    for row in range(1, sheet.max_row+1):
-                        cell = sheet.cell(column=column, row=row)
-                        cell.fill = PatternFill(start_color=DECEMBER_COLOR,
-                                                end_color=DECEMBER_COLOR,
-                                                fill_type='solid')
+        # # 2.6 add selector cell IMPORT PDB import pdb
+        # selector_row = sheet.bb.parameters.rows.by_name[field_names.ACTIVE_SCENARIO]
+        # if SCENARIO_SELECTORS:
+        #     label_column = sheet.bb.parameters.columns.by_name[
+        #         field_names.LABELS]
+        #     add_scenario_selector(sheet, label_column, selector_row,
+        #                           book.scenario_names)
+        #
+        # sheet.bb.outline_level = 1
+        # group_lines(sheet, row=selector_row + 1)
+        #
+        # sheet.bb.outline_level = 0
+        # group_lines(sheet, row=selector_row)
 
         return sheet
 
@@ -361,13 +360,13 @@ class UnitChef:
         Method adds unit life for a single period to show unit state
         (alive/dead/etc.), age, etc.  Method assumes events are filled out.
         """
+        parameters = getattr(sheet.bb, field_names.PARAMETERS)
+        timeline = getattr(sheet.bb, field_names.TIMELINE)
 
         active_row = sheet.bb.current_row + 1
 
-        label_column = sheet.bb.parameters.columns.get_position(
-            field_names.LABELS)
-        time_line_row = sheet.bb.time_line.rows.get_position(
-            field_names.LABELS)
+        label_column = parameters.columns.get_position(field_names.LABELS)
+        time_line_row = timeline.rows.get_position(field_names.TITLE)
 
         fs = formula_templates
         set_label = line_chef._set_label
@@ -412,12 +411,9 @@ class UnitChef:
         group_lines(sheet, row=active_row)
 
         time_line = sheet.cell(column=active_column, row=time_line_row)
-        cell_styles.format_date(time_line)
 
         cells["ref_date"] = ref_date
-        formula = fs.LINK_TO_COORDINATES.format(
-            coordinates=time_line.coordinate)
-
+        formula = fs.LINK_TO_COORDINATES.format(coordinates=time_line.coordinate)
         ref_date.value = formula
 
         del formula
@@ -724,74 +720,88 @@ class UnitChef:
 
         return sheet
 
-    def _add_unit_params(self, *pargs, sheet, unit, set_labels=True):
+    def _add_unit_params(self, *pargs, sheet, unit, timeline_params,
+                         set_labels=True):
         """
 
 
         UnitChef._add_unit_params() -> Worksheet
 
-        Method adds unit parameters for a single period
-        Returns sheet with current row pointing to final param row
+        - Add any new unit parameters, place master value in MASTER column
+        - Check on timeline_params and update with hardcoded value as applicable
         """
-        parameters = sheet.bb.parameters
-        time_line = sheet.bb.time_line
+        parameters = getattr(sheet.bb, field_names.PARAMETERS)
+        time_line = getattr(sheet.bb, field_names.TIMELINE)
 
-        period_column = sheet.bb.time_line.columns.get_position(
-            unit.period.end)
+        period_column = time_line.columns.get_position(unit.period.end)
 
-        existing_param_names = unit.parameters.keys() & \
-                               parameters.rows.by_name.keys()
-        new_param_names = unit.parameters.keys() - existing_param_names
+        ex_params = unit.parameters.keys() & parameters.rows.by_name.keys()
+        new_params = unit.parameters.keys() - ex_params
 
-        for param_name in existing_param_names:
-            existing_row = sheet.bb.parameters.rows.get_position(param_name)
+        for param in timeline_params:
+            # check for updates
+            if param in unit.parameters:
+                this_row = parameters.rows.by_name[param]
+                this_col = period_column
+                cell = sheet.cell(column=this_col, row=this_row)
 
-            master_column_num = sheet.bb.parameters.columns.get_position(
-                field_names.MASTER)
-            master_column = get_column_letter(master_column_num)
-            master_value = sheet.cell(row=existing_row,
-                                      column=master_column_num).value
+                cell.value = unit.parameters[param]
+                cell_styles.format_hardcoded(cell)
 
-            data_cell = sheet.cell(column=period_column, row=existing_row)
+        unit_params = ex_params - timeline_params
 
-            period_value = unit.parameters[param_name]
+        template = formula_templates.LINK_TO_COORDINATES
+        for param in unit_params:
+            this_row = parameters.rows.by_name[param]
+            this_col = period_column
 
-            if period_value == master_value:
-                link_template = formula_templates.ADD_CELL
-                link = link_template.format(alpha_column=master_column,
-                                            row=existing_row)
-                data_cell.set_explicit_value(link,
-                                             data_type=type_codes.FORMULA)
-                cell_styles.format_parameter(data_cell)
+            master_cell = sheet.cell(row=this_row, column=self.MASTER_COLUMN)
+
+            cell = sheet.cell(column=this_col, row=this_row)
+            cell.value = unit.parameters[param]
+            cell_styles.format_parameter(cell)
+
+            # check if exists and matches MASTER, if so, link to MASTER,
+            # otherwise overwrite with hardcoded value
+            if cell.value == master_cell.value:
+                info = dict(coordinates=master_cell.coordinate)
+                link = template.format(**info)
+                cell.set_explicit_value(link, data_type=type_codes.FORMULA)
             else:
-                data_cell.value = period_value
-                cell_styles.format_parameter(data_cell)
-                cell_styles.format_hardcoded(data_cell)
+                cell_styles.format_hardcoded(cell)
 
-            group_lines(sheet, row=existing_row)
+        template = formula_templates.LINK_TO_COORDINATES
+        for param in new_params:
+            if parameters.rows.ending:
+                # there are existing parameters
+                this_row = parameters.rows.ending+1
+            else:
+                # there are NO existing parameters
+                this_row = self.VALUES_START_ROW
 
-        new_params = dict()
-        for k in new_param_names:
-            new_params[k] = unit.parameters[k]
+            this_col = period_column
 
-        ending_row = parameters.rows.ending or 0
-        if ending_row > 0:
-            sheet.bb.current_row = parameters.rows.ending
-        else:
-            sheet.bb.current_row = time_line.rows.ending + 1
+            parameters.rows.by_name[param] = this_row
 
-        self.add_items_to_area(
-            sheet=sheet,
-            area=parameters,
-            items=new_params,
-            active_column=period_column,
-            set_labels=True,
-            hardcoded=False
-        )
+            master_cell = sheet.cell(row=this_row, column=self.MASTER_COLUMN)
+            master_cell.value = unit.parameters[param]
+            cell_styles.format_parameter(master_cell)
+            cell_styles.format_hardcoded(master_cell)
 
-        # Always set labels for new items.
+            label_cell = sheet.cell(row=this_row, column=self.LABEL_COLUMN)
+            label_cell.value = param
+
+            cell = sheet.cell(column=this_col, row=this_row)
+            info = dict(coordinates=master_cell.coordinate)
+            link = template.format(**info)
+            cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+            cell_styles.format_parameter(cell)
+
+        for row in parameters.rows.by_name.values():
+            group_lines(sheet, row=row)
 
         sheet.bb.current_row = parameters.rows.ending
+
         return sheet
 
     def _add_valuation_tab(self, book, unit, index=None):
@@ -820,7 +830,6 @@ class UnitChef:
                                         current_only=True)
 
         sheet.bb.outline_level += 1
-        self._add_unit_params(sheet=sheet, unit=unit)
 
         # 1.1   set-up life
         sheet.bb.current_row += 1
@@ -846,20 +855,20 @@ class UnitChef:
         sheet_style.style_sheet(sheet)
         cell_styles.format_area_label(sheet, statement.name, statement_row)
 
-        # 1.6 add selector cell
-        selector_row = sheet.bb.parameters.rows.by_name[
-            field_names.ACTIVE_SCENARIO]
-        if SCENARIO_SELECTORS:
-            label_column = sheet.bb.parameters.columns.by_name[
-                field_names.LABELS]
-            add_scenario_selector(sheet, label_column, selector_row,
-                                  book.scenario_names)
-
-        sheet.bb.outline_level = 1
-        group_lines(sheet, row=selector_row + 1)
-
-        sheet.bb.outline_level = 0
-        group_lines(sheet, row=selector_row)
+        # # 1.6 add selector cell  #### IMPORT PDB import pdb
+        # selector_row = sheet.bb.parameters.rows.by_name[
+        #     field_names.ACTIVE_SCENARIO]
+        # if SCENARIO_SELECTORS:
+        #     label_column = sheet.bb.parameters.columns.by_name[
+        #         field_names.LABELS]
+        #     add_scenario_selector(sheet, label_column, selector_row,
+        #                           book.scenario_names)
+        #
+        # sheet.bb.outline_level = 1
+        # group_lines(sheet, row=selector_row + 1)
+        #
+        # sheet.bb.outline_level = 0
+        # group_lines(sheet, row=selector_row)
 
         sheet.sheet_properties.tabColor = VALUATION_TAB_COLOR
 
@@ -907,25 +916,21 @@ class UnitChef:
 
         # Hide sheets for units below a certain depth. The depth should be a
         # Chef-level constant. Use ``sheet_state := "hidden"`` to implement.
-        sheet.bb.outline_level += 1
-        self._link_to_time_line(book=book, sheet=sheet,
+        self._link_to_time_line(book=book, sheet=sheet, unit=unit,
                                 current_only=current_only)
-        self._add_unit_params(sheet=sheet, unit=unit)
+
         val_col = sheet.bb.time_line.columns.get_position(unit.period.end)
         sheet.bb.parameters.columns.by_name[field_names.VALUES] = val_col
-
-        sheet.bb.outline_level -= 1
         # At this point, sheet.bb.current_row will point to the last parameter.
 
         # Freeze panes:
         corner_row = sheet.bb.time_line.rows.ending
         corner_row += 1
 
-        corner_column = sheet.bb.parameters.columns.get_position(
-            field_names.MASTER)
-        corner_column += 1
+        corner_col = sheet.bb.parameters.columns.get_position(field_names.MASTER)
+        corner_col += 1
 
-        corner_cell = sheet.cell(column=corner_column, row=corner_row)
+        corner_cell = sheet.cell(column=corner_col, row=corner_row)
         sheet.freeze_panes = corner_cell
 
         # Return sheet
@@ -997,7 +1002,8 @@ class UnitChef:
 
         return local_sheet
 
-    def _link_to_time_line(self, *pargs, book, sheet, current_only=False):
+    def _link_to_time_line(self, *pargs, book, sheet, unit,
+                           current_only=False):
         """
 
 
@@ -1008,17 +1014,102 @@ class UnitChef:
         Force keyword-entry for book and sheet to make sure we feed in the
         right arguments.
         """
-        source = book.get_sheet_by_name(tab_names.TIME_LINE)
+        source = book.get_sheet_by_name(tab_names.SCENARIOS)
+        source_area = getattr(source.bb, field_names.TIMELINE)
 
-        sheet = self._link_to_area(source, sheet, field_names.TIMELINE,
-                                   current_only=current_only, num_cols=1)
+        param_area = sheet.bb.add_area(field_names.PARAMETERS)
+        timeline_area = sheet.bb.add_area(field_names.TIMELINE)
 
-        for column in sheet.bb.time_line.columns.by_name.values():
-            sheet_style.set_column_width(sheet, column)
+        # First add labels for parameters
+        active_row = self.VALUES_START_ROW
+        active_column = self.LABEL_COLUMN
+        param_area.columns.by_name[field_names.LABELS] = self.LABEL_COLUMN
+        param_area.columns.by_name[field_names.MASTER] = self.MASTER_COLUMN
 
-        sheet = self._link_to_area(source, sheet, field_names.PARAMETERS,
-                                   group=True, current_only=current_only,
-                                   num_cols=3)
+        template = formula_templates.ADD_CELL_FROM_SHEET
+        source_label_column = source_area.columns.by_name[field_names.LABELS]
+        src_col = get_column_letter(source_label_column)
+
+        src_params = set(source_area.rows.by_name.keys()) - {field_names.TITLE}
+
+        for param in sorted(src_params):
+            src_row = source_area.rows.by_name[param]
+            param_area.rows.by_name[param] = active_row
+            cell = sheet.cell(column=active_column, row=active_row)
+
+            info = dict(sheet=source.title, alpha_column=src_col, row=src_row)
+            link = template.format(**info)
+            cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+
+            active_row += 1
+
+        # Next add timeline header row and parameters from Scenarios tab
+
+        # save for later
+        time_params = param_area.rows.by_name.copy()
+        time_params = time_params.keys()
+        timeline_area.rows.by_name[field_names.TITLE] = self.TITLE_ROW
+
+        template = formula_templates.ADD_CELL_FROM_SHEET
+        src_vals = set(source_area.columns.by_name.keys())-{field_names.LABELS}
+
+        if current_only:
+            src_vals = [unit.period.end]
+
+        active_column = self.VALUE_COLUMN
+        for date in sorted(src_vals):
+            active_row = self.TITLE_ROW
+            src_row = source_area.rows.by_name[field_names.TITLE]
+
+            # make header cell
+            col_num = source_area.columns.by_name[date]
+            src_col = get_column_letter(col_num)
+
+            timeline_area.columns.by_name[date] = active_column
+            cell = sheet.cell(column=active_column, row=active_row)
+
+            info = dict(sheet=source.title, alpha_column=src_col, row=src_row)
+            link = template.format(**info)
+            cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+            cell_styles.format_date(cell)
+
+            # now link parameters to value cells
+            for param in src_params:
+                src_row = source_area.rows.by_name[param]
+                active_row = param_area.rows.by_name[param]
+
+                cell = sheet.cell(column=active_column, row=active_row)
+
+                info = dict(sheet=source.title, alpha_column=src_col,
+                            row=src_row)
+                link = template.format(**info)
+                cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+                cell_styles.format_parameter(cell)
+
+            active_column += 1
+
+        sheet.bb.outline_level += 1
+
+        # Add unit parameters and update TimeLine/Period params as necessary
+        self._add_unit_params(sheet=sheet, unit=unit,
+                              timeline_params=time_params)
+
+        if not current_only:
+            for snapshot in unit:
+                self._add_unit_params(sheet=sheet, unit=snapshot,
+                                      timeline_params=time_params)
+
+        sheet.bb.outline_level -= 1
+
+        # color the December columns
+        if APPLY_COLOR_TO_DECEMBER:
+            for date, column in sheet.bb.time_line.columns.by_name.items():
+                if date.month == 12:
+                    for row in range(1, sheet.max_row+1):
+                        cell = sheet.cell(column=column, row=row)
+                        cell.fill = PatternFill(start_color=DECEMBER_COLOR,
+                                                end_color=DECEMBER_COLOR,
+                                                fill_type='solid')
 
         return sheet
 

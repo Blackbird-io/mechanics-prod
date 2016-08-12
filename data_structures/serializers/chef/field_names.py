@@ -70,6 +70,7 @@ class FieldNames:
     LABELS = "labels"
     MASTER = "master"
     VALUES = "values"
+    TITLE = "title"
 
     # SCENARIOS
 
