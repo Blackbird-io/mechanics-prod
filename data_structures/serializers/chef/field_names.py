@@ -73,6 +73,7 @@ class FieldNames:
     TITLE = "title"
 
     # SCENARIOS
+    SELECTOR = "selector"
 
     ACTIVE_SCENARIO = "active_scenario"
     BASE_CASE = "base_case"
