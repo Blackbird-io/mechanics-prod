@@ -789,7 +789,7 @@ class UnitChef:
                 cell_styles.format_hardcoded(cell)
 
         template = formula_templates.LINK_TO_COORDINATES
-        for param in new_params:
+        for param in sorted(new_params):
             if parameters.rows.ending:
                 # there are existing parameters
                 this_row = parameters.rows.ending+1
