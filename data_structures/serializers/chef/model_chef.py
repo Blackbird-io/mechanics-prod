@@ -113,11 +113,9 @@ class ModelChef:
         unit_chef.chop_multi_valuation(book=book, unit=company, index=1,
                                        recur=False)
 
-        timeline = book.get_sheet_by_name("Timeline")
-        timeline.sheet_state = timeline.SHEETSTATE_HIDDEN
-
-        spacer_idx = book.get_index(timeline)
-        spacer_sheet = book.create_sheet("Monthly >>", spacer_idx+1)
+        temp_sheet = book.get_sheet_by_name(tab_names.SCENARIOS)
+        spacer_idx = book.get_index(temp_sheet)+1
+        spacer_sheet = book.create_sheet("Monthly >>", spacer_idx)
         spacer_sheet.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
         sheet_style.style_sheet(spacer_sheet)
 
@@ -509,9 +507,6 @@ class ModelChef:
         self._create_cover_tab(book, model)
         self._create_scenarios_tab(book, model)
 
-        import pdb
-        pdb.set_trace()
-
         return book
 
     def _create_cover_tab(self, book, model):
@@ -637,11 +632,14 @@ class ModelChef:
         base_case_column = 6
 
         area = my_tab.bb.add_area(field_names.PARAMETERS)
+        timeline = my_tab.bb.add_area(field_names.TIMELINE)
 
         area.columns.by_name[field_names.LABELS] = label_column
         area.columns.by_name[field_names.VALUES] = in_effect_column
         area.columns.by_name[field_names.CUSTOM_CASE] = custom_column
         area.columns.by_name[field_names.BASE_CASE] = base_case_column
+
+        timeline.columns.by_name[field_names.LABELS] = label_column
 
         current_row = starting_row
 
@@ -770,7 +768,7 @@ class ModelChef:
         for end_date in covered_dates:
             period = model.time_line[end_date]
 
-            area.columns.by_name[period.end] = active_column
+            timeline.columns.by_name[period.end] = active_column
 
             sheet_style.set_column_width(my_tab, active_column)
             # Need this to make sure the parameters Area looks as wide as the
@@ -784,9 +782,11 @@ class ModelChef:
             cell_styles.format_header_label(header_cell, font_color=WHITE,
                                             color=col, bold=False)
 
-            for k in area.rows.by_name:
+            timeline.rows.by_name = area.rows.by_name.copy()
+
+            for k in timeline.rows.by_name:
                 # May write the column in undefined order
-                param_row = area.rows.by_name[k]
+                param_row = timeline.rows.by_name[k]
                 param_cell = my_tab.cell(column=active_column, row=param_row)
 
                 master_cell = my_tab.cell(column=in_effect_column, row=param_row)
@@ -811,6 +811,8 @@ class ModelChef:
             active_column += 1
 
         tl_end = active_column - 1
+        timeline.rows.by_name[field_names.TITLE] = title_row
+
 
         for col in range(tl_start, tl_end+1):
             alpha = get_column_letter(col)
