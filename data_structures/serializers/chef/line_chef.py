@@ -1366,9 +1366,9 @@ class LineChef:
             line.xl.detailed.cell or line.xl.reference.cell
 
         if not processed:
-            label = indent * " " + line.tags.name
+            label = indent * " " + line.name
             if row_container:
-                row_container.add_group(line.name, size=1, label=label)
+                row_container.add_group(label, size=1, label=label)
                 sheet.bb.current_row = row_container.number()
             else:
                 sheet.bb.current_row += 1
