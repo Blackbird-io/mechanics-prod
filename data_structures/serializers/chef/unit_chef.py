@@ -121,8 +121,6 @@ class UnitChef:
     VALUES_START_ROW = 6
 
     SCENARIO_ROW = 2
-    SCENARIO_COLUMN = 2
-
 
 
     def add_items_to_area(self, *pargs, sheet, area, items, active_column,
@@ -263,19 +261,19 @@ class UnitChef:
         for statement, row in fins_dict.items():
             cell_styles.format_area_label(sheet, statement, row)
 
-        # # 2.6 add selector cell IMPORT PDB import pdb
-        # selector_row = sheet.bb.parameters.rows.by_name[field_names.ACTIVE_SCENARIO]
-        # if SCENARIO_SELECTORS:
-        #     label_column = sheet.bb.parameters.columns.by_name[
-        #         field_names.LABELS]
-        #     add_scenario_selector(sheet, label_column, selector_row,
-        #                           book.scenario_names)
-        #
-        # sheet.bb.outline_level = 1
-        # group_lines(sheet, row=selector_row + 1)
-        #
-        # sheet.bb.outline_level = 0
-        # group_lines(sheet, row=selector_row)
+        # # 2.6 add selector cell
+        #   Make scenario label cells
+        self._add_scenario_selector_logic(book, sheet)
+
+        # Color the December columns
+        if APPLY_COLOR_TO_DECEMBER:
+            for date, column in sheet.bb.time_line.columns.by_name.items():
+                if date.month == 12:
+                    for row in range(1, sheet.max_row+1):
+                        cell = sheet.cell(column=column, row=row)
+                        cell.fill = PatternFill(start_color=DECEMBER_COLOR,
+                                                end_color=DECEMBER_COLOR,
+                                                fill_type='solid')
 
         return sheet
 
@@ -584,18 +582,6 @@ class UnitChef:
 
                 cell_styles.format_date(active_cell)
 
-
-                # Have to first set the active cell and THEN compare it to master
-                # because our Excel interface may use a setter that transforms
-                # values. So:
-                #
-                # >>> cell.value = x
-                # >>> cell.value == x
-                # False
-                #
-                # because cell value setter changed x into a representation that
-                # plays better with spreadsheets.
-
         # Now add
         new_events = dict()
         for name in new_names:
@@ -612,6 +598,38 @@ class UnitChef:
         # Method will update current row to the last filled position.
 
         return sheet
+
+    def _add_scenario_selector_logic(self, book, sheet):
+        scen_tab = book.get_sheet_by_name(tab_names.SCENARIOS)
+        src_sheet = scen_tab.title
+        src_row = scen_tab.bb.general.rows.by_name[field_names.SELECTOR]
+
+        scen_area = getattr(scen_tab.bb, field_names.PARAMETERS)
+        num_col = scen_area.columns.by_name[field_names.CUSTOM_CASE]
+        src_col = get_column_letter(num_col)
+
+        info = dict(sheet=src_sheet, alpha_column=src_col, row=src_row)
+
+        active_label_cell = sheet.cell(column=self.LABEL_COLUMN,
+                                       row=self.SCENARIO_ROW)
+        active_label_cell.value = field_names.IN_EFFECT
+
+        template = formula_templates.LINK_TO_CELL_ON_SHEET
+        link = template.format(**info)
+        scen_cell = sheet.cell(column=self.MASTER_COLUMN,
+                               row=self.SCENARIO_ROW)
+        scen_cell.value = link
+
+        if SCENARIO_SELECTORS:
+            label_column = self.LABEL_COLUMN
+            add_scenario_selector(sheet, label_column, self.SCENARIO_ROW,
+                                  book.scenario_names)
+        else:
+            cell_styles.format_scenario_selector_cells(sheet,
+                                                       self.LABEL_COLUMN,
+                                                       self.MASTER_COLUMN,
+                                                       self.SCENARIO_ROW,
+                                                       active=False)
 
     def _add_unit_life(self, *pargs, sheet, unit, column=None,
                        set_labels=True):
@@ -855,20 +873,9 @@ class UnitChef:
         sheet_style.style_sheet(sheet)
         cell_styles.format_area_label(sheet, statement.name, statement_row)
 
-        # # 1.6 add selector cell  #### IMPORT PDB import pdb
-        # selector_row = sheet.bb.parameters.rows.by_name[
-        #     field_names.ACTIVE_SCENARIO]
-        # if SCENARIO_SELECTORS:
-        #     label_column = sheet.bb.parameters.columns.by_name[
-        #         field_names.LABELS]
-        #     add_scenario_selector(sheet, label_column, selector_row,
-        #                           book.scenario_names)
-        #
-        # sheet.bb.outline_level = 1
-        # group_lines(sheet, row=selector_row + 1)
-        #
-        # sheet.bb.outline_level = 0
-        # group_lines(sheet, row=selector_row)
+        # # 1.6 add selector cell
+        #   Make scenario label cells
+        self._add_scenario_selector_logic(book, sheet)
 
         sheet.sheet_properties.tabColor = VALUATION_TAB_COLOR
 
@@ -1086,6 +1093,8 @@ class UnitChef:
                 cell.set_explicit_value(link, data_type=type_codes.FORMULA)
                 cell_styles.format_parameter(cell)
 
+            sheet_style.set_column_width(sheet, active_column)
+
             active_column += 1
 
         sheet.bb.outline_level += 1
@@ -1100,16 +1109,6 @@ class UnitChef:
                                       timeline_params=time_params)
 
         sheet.bb.outline_level -= 1
-
-        # color the December columns
-        if APPLY_COLOR_TO_DECEMBER:
-            for date, column in sheet.bb.time_line.columns.by_name.items():
-                if date.month == 12:
-                    for row in range(1, sheet.max_row+1):
-                        cell = sheet.cell(column=column, row=row)
-                        cell.fill = PatternFill(start_color=DECEMBER_COLOR,
-                                                end_color=DECEMBER_COLOR,
-                                                fill_type='solid')
 
         return sheet
 

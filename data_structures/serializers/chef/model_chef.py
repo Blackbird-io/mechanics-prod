@@ -650,6 +650,7 @@ class ModelChef:
                               book.scenario_names)
         selector_cell = my_tab.cell(row=current_row, column=custom_column)
         selector_cell.value = field_names.CUSTOM
+        my_tab.bb.general.rows.by_name[field_names.SELECTOR] = current_row
 
         current_row += 3
         # Make scenario label cells
@@ -812,7 +813,6 @@ class ModelChef:
 
         tl_end = active_column - 1
         timeline.rows.by_name[field_names.TITLE] = title_row
-
 
         for col in range(tl_start, tl_end+1):
             alpha = get_column_letter(col)

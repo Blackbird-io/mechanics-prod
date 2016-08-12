@@ -273,7 +273,8 @@ class CellStyles:
         cell.font = Font(italic=True)
 
     @staticmethod
-    def format_scenario_selector_cells(sheet, label_col, selector_col, row):
+    def format_scenario_selector_cells(sheet, label_col, selector_col, row,
+                                       active=True):
         """
 
 
@@ -321,7 +322,12 @@ class CellStyles:
         right_cell.border = border
         right_cell.alignment = Alignment(horizontal='center')
 
-        font = Font(color=HARDCODED_COLOR, bold=True, size=14)
+        if active:
+            color = HARDCODED_COLOR
+        else:
+            color = BLACK
+
+        font = Font(color=color, bold=True, size=14)
         right_cell.font = font
 
     @staticmethod
