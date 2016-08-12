@@ -225,7 +225,8 @@ class SummaryBuilder:
         """
         if summary_line.sum_over_time:
             summary_line.increment(period_line, consolidating=True,
-                                   xl_label=label, override=True)
+                                   xl_label=label, override=True,
+                                   over_time=True)
         else:
             if summary_line._details:
                 for line in summary_line._details.values():
