@@ -32,6 +32,7 @@ LineChef              class with methods to chop BB statements into dynamic
 import calendar
 import openpyxl as xlio
 import re
+import itertools
 
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment
@@ -796,8 +797,8 @@ class LineChef:
         if not line.xl.consolidated.sources:
             pass
         else:
-            sources = line.xl.consolidated.sources.copy()
-            labels = line.xl.consolidated.labels.copy()
+            sources = line.xl.consolidated.sources
+            labels = line.xl.consolidated.labels
             required_rows = sheet.bb.consolidation_size
             n_sources = len(sources)
             links_per_cell = n_sources // required_rows
@@ -812,53 +813,40 @@ class LineChef:
             line.xl.consolidated.starting = sheet.bb.current_row
             line.xl.consolidated.array.clear()
 
-            count = 0
-            for rr in range(required_rows):
+            # chunker gives (label, source) pairs in chunks of "links_per_cell".
+            # Each hit returns a links_per_cell-sized tuple of (label, source).
+            chunker = itertools.repeat(zip(labels, sources), links_per_cell)
+            for source_list in itertools.zip_longest(*chunker):
+                batch_summation = ""
 
-                if sources:
-                    batch_summation = ""
-                    if rr == required_rows - 1:
-                        links_to_use = n_sources - count
-                    else:
-                        links_to_use = links_per_cell
+                for label, source_line in source_list:
+                    if label:
+                        sub_indent = indent + LineItem.TAB_WIDTH
+                        label_line = (sub_indent * " ") + label
+                    include = source_line.xl.cell.parent is not sheet
+                    source_cos = source_line.xl.get_coordinates(
+                        include_sheet=include
+                    )
+                    link = link_template.format(coordinates=source_cos)
+                    batch_summation += link
 
-                    for i in range(links_to_use):
+                if batch_summation:
+                    batch_cell = sheet.cell(column=column,
+                                            row=sheet.bb.current_row)
+                    batch_cell.set_explicit_value(
+                        batch_summation,
+                        data_type=type_codes.FORMULA
+                    )
 
-                        if sources:
-                            source_line = sources.pop(0)
+                    line.xl.consolidated.array.append(batch_cell)
 
-                            temp_label = labels.pop(0)
-                            if temp_label:
-                                sub_indent = indent + LineItem.TAB_WIDTH
-                                label_line = (sub_indent * " ") + temp_label
-                            # Can reverse sources for better performance.
-                            include = source_line.xl.cell.parent is not sheet
-                            source_cos = source_line.xl.get_coordinates(include_sheet=include)
-                            link = link_template.format(coordinates=source_cos)
-                            batch_summation += link
-                            count += 1
-                        else:
-                            break
-
-                        # Inner loop will only run once if ``sources`` is empty
-
-                    if batch_summation:
-                        batch_cell = sheet.cell(column=column,
-                                                row=sheet.bb.current_row)
-                        batch_cell.set_explicit_value(
-                            batch_summation,
-                            data_type=type_codes.FORMULA
+                    if label:
+                        self._set_label(
+                            sheet=sheet,
+                            label=label_line,
+                            row=sheet.bb.current_row,
+                            formatter=CellStyles.format_consolidated_label
                         )
-
-                        line.xl.consolidated.array.append(batch_cell)
-
-                        if temp_label:
-                            self._set_label(
-                                sheet=sheet,
-                                label=label_line,
-                                row=sheet.bb.current_row,
-                                formatter=CellStyles.format_consolidated_label
-                            )
 
                 self._group_lines(sheet)
 
@@ -1012,6 +1000,7 @@ class LineChef:
     def _link_consolidation_reference(self, sheet, source_lines):
         """
 
+        **DEPRECATED**
 
         LineChef._link_consolidation_reference() -> list
 
