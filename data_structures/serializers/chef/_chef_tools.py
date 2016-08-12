@@ -176,7 +176,7 @@ def add_scenario_selector(sheet, column, row, selections):
 
     selector_cell = sheet.cell(column=select_column, row=row)
     selector_cell.value = "Base"
-    cell_styles.format_hardcoded(selector_cell)
+
     dv.add(selector_cell)
     sheet.bb.scenario_selector = selector_cell.coordinate
 
