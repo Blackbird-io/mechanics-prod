@@ -445,7 +445,9 @@ class ModelChef:
 
         # actual header labels, years and (possibly) quarters and months
         # nested in the form: years.2017.quarters.1Q17.months.2017-01-01
-        for date in sorted(timeline.keys()):
+        for date, period in sorted(timeline.items()):
+            if not period.content:
+                continue
             # container for quarters (if requested) and year
             year_colgroup = years_cols.add_group(date.year)
             # label for quarter column
