@@ -814,7 +814,7 @@ class LineChef:
             line.xl.consolidated.array.clear()
 
             # chunker gives (label, source) pairs in chunks of "links_per_cell".
-            # Each hit returns a links_per_cell-sized tuple of (label, source).
+            # Each hit returns a links_per_cell-sized tuple of tuples.
             chunker = itertools.repeat(zip(labels, sources), links_per_cell)
             for source_list in itertools.zip_longest(*chunker):
                 batch_summation = ""
