@@ -500,6 +500,8 @@ class SummaryBuilder:
         month_count = None
 
         for period in time_line.iter_ordered(open=start, exit=end):
+            if period.end < time_line.current_period.end:
+                continue
             if bu_bbid in period.bu_directory:
                 # switch on start date
                 if new_st_date is None:
