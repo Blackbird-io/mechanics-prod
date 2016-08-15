@@ -698,7 +698,7 @@ class AxisGroup:
         for group in self.groups:
             group.tip = self.tip + mysize + (group.offset or 0)
             if group.groups:
-                group_size = group.calc_size(worker=render)
+                group_size = group.calc_size(render=render)
             else:
                 # group without subgroups or size is allowed, counts as empty
                 group_size = group.size or 0
