@@ -116,8 +116,7 @@ class ModelChef:
 
         temp_sheet = book.get_sheet_by_name(tab_names.SCENARIOS)
         spacer_idx = book.get_index(temp_sheet)+1
-        spacer_sheet = book.create_sheet("Monthly >>", spacer_idx)
-        spacer_sheet = book.create_sheet("Details >>", spacer_idx+1)
+        spacer_sheet = book.create_sheet("Details >>", spacer_idx)
         spacer_sheet.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
         sheet_style.style_sheet(spacer_sheet)
 
