@@ -353,13 +353,3 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         """
         self.bu_directory = {}
         self.ty_directory = {}
-        self.unit_parameters = Parameters()
-        
-    
-        
-
-        
-        
-
-
-      
