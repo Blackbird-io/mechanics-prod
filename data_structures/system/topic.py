@@ -88,7 +88,6 @@ class Topic:
     ====================  ======================================================
 
     DATA:
-    applied_drivers       dictionary of drivers applied by the topic, by name
     formulas              dictionary of formulas used by the topic, by name
     id                    instance of ID class
     MR                    instance of Messenger class
