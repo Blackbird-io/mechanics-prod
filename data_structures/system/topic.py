@@ -125,12 +125,8 @@ class Topic:
         self.id = ID()
         self.MR = Messenger()
         self.tags = Tags()
-        #
-        self.applied_drivers = None
         self.formulas = None
         self.questions = None
-        # drivers, formulas, qs, and scenes all configured by TopicManager
-        # directly when the module assembles the TopicCatalog
         self.record_on_exit = True
         self.scenarios = None
         self.source = None
