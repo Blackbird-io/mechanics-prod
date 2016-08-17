@@ -70,6 +70,7 @@ unit_chef = UnitChef()
 get_column_letter = xlio.utils.get_column_letter
 bounding_box = xlio.drawing.image.bounding_box
 
+
 # Classes
 class ModelChef:
     """
@@ -115,7 +116,7 @@ class ModelChef:
 
         temp_sheet = book.get_sheet_by_name(tab_names.SCENARIOS)
         spacer_idx = book.get_index(temp_sheet)+1
-        spacer_sheet = book.create_sheet("Monthly >>", spacer_idx)
+        spacer_sheet = book.create_sheet("Details >>", spacer_idx)
         spacer_sheet.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
         sheet_style.style_sheet(spacer_sheet)
 
@@ -166,10 +167,7 @@ class ModelChef:
         # blank column at the end
         colspacer_end = output_cols.add_group('spacer_end', size=1)
 
-        # Annual and quarterly column headers, from quarterly summary
-        key = model.time_line.summary_builder.QUARTERLY_KEY
-        qtr_timeline = model.time_line.summary_builder.summaries[key]
-        # calculate the column layout for quarters and years
+        # Column headers
         self._annual_summary_headers(
             sheet, model.time_line, output_rows, output_cols
         )
@@ -201,8 +199,26 @@ class ModelChef:
         cell.value = chef_settings.AVAILABLE_LABEL
         cell.alignment = Alignment(horizontal='left', vertical='center')
 
+        # Fill output: monthly summary timeline
+        if chef_settings.SUMMARY_INCLUDES_MONTHS:
+            # column selector: date -> years_cols.2017.quarters.1Q17.months.
+            col_selector = lambda date: years_cols.get_group(
+                date.year, 'quarters', self._quarter_name(date), 'months', date
+            )
+            # chop quarterly
+            self._annual_summary_detail(
+                sheet,
+                model.time_line,
+                output_rows,
+                output_cols,
+                col_selector=col_selector
+            )
+
         # Fill output: quarterly summary timeline
         if chef_settings.SUMMARY_INCLUDES_QUARTERS:
+            key = model.time_line.summary_builder.QUARTERLY_KEY
+            qtr_timeline = model.time_line.summary_builder.summaries[key]
+            # calculate the column layout for quarters and years
             # column selector: date -> years_cols.2017.quarters.1Q17
             col_selector = lambda date: years_cols.get_group(
                 date.year, 'quarters', self._quarter_name(date), 'quarter'
@@ -249,13 +265,9 @@ class ModelChef:
         # Label financial statements
         statement_rowgroup = output_rows.get_group('statements')
         for statement_rows in statement_rowgroup.groups:
-            # get title from title row
-            header = statement_rows.get_group('title')
-            # the actual title is carried in the extra 'title' parameter
-            label = header.extra['title']
-            row = header.number()
-            col = label_cols.number()
-            cell_styles.format_area_label(sheet, label, row, col_num=col)
+            self._annual_summary_labels(
+                sheet, statement_rows.groups, label_cols
+            )
 
         # Spacer column width, 2 cols on left and right of output
         for spacer in (colspacer_tip, colspacer_end):
@@ -264,6 +276,38 @@ class ModelChef:
             column.width = 4
 
         sheet.sheet_properties.tabColor = chef_settings.SUMMARY_TAB_COLOR
+
+    def _annual_summary_labels(self, sheet, groups, label_cols, level=0):
+        """
+
+
+        ModelChef._annual_summary_labels() -> None
+
+        Writes row labels on annual summary. To show up on the axis, a group
+        1. should have no subgroups
+        2. should have a label
+        """
+        for group in groups:
+            if group.groups:
+                self._annual_summary_labels(
+                    sheet, group.groups, label_cols, level=level+1
+                )
+            else:
+                label = group.extra.get('label')
+                if label:
+                    row = group.number()
+                    col = label_cols.number()
+                    if group.name == 'title' and level == 0:
+                        formatter = cell_styles.format_area_label
+                        formatter(sheet, label, row, col_num=col)
+                    else:
+                        line_chef._set_label(
+                            sheet=sheet,
+                            label=label,
+                            row=group.number(),
+                            column=col,
+                            overwrite=True,
+                        )
 
     def _quarter_name(self, date):
         """
@@ -399,7 +443,12 @@ class ModelChef:
 
         # actual header labels, years and (possibly) quarters and months
         # nested in the form: years.2017.quarters.1Q17.months.2017-01-01
-        for date in sorted(timeline.keys()):
+        company = timeline.current_period.content
+        for date, period in sorted(timeline.items()):
+            if date < company.period.end:
+                continue
+            if not period.content:
+                continue
             # container for quarters (if requested) and year
             year_colgroup = years_cols.add_group(date.year)
             # label for quarter column
@@ -448,9 +497,13 @@ class ModelChef:
         set_labels = True
         for date in timeline.keys():
             column = col_selector(date)
+            if not column:
+                continue
 
-            summary = timeline.find_period(date)
+            summary = timeline[date]
             unit = summary.content
+            if not unit:
+                continue
             unit.xl.set_sheet(sheet)
             sheet.bb.outline_level = 0
 
@@ -477,7 +530,6 @@ class ModelChef:
                             column=column.number(),
                             row_container=statement_rowgroup,
                             col_container=output_cols,
-                            set_labels=set_labels,
                             title='starting balance sheet',
                         )
                     line_chef.chop_summary_statement(
@@ -486,7 +538,6 @@ class ModelChef:
                         column=column.number(),
                         row_container=statement_rowgroup,
                         col_container=output_cols,
-                        set_labels=set_labels,
                     )
 
     def _build_foundation(self, model):
