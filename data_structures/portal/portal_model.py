@@ -48,7 +48,7 @@ class PortalModel(ReadyForPortal):
     Use to_portal() to generate clean dictionaries suitable for external
     delivery.
 
-    PortalQuestion objects do not rely on any QuestionManager functionality. 
+    PortalQuestion objects do not rely on any QuestionManager functionality.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -94,13 +94,13 @@ class PortalModel(ReadyForPortal):
 
         PortalModel.to_portal(seed) -> dict()
 
-        
+
         Method returns a dictionary object, keyed by attribute name for a
         standard, fresh instance of cls and carrying values from matching
         seed attributes.
 
         Method delegates work to ReadyForPortal.to_portal, then modifies the
-        output by manually extracting the industry. 
+        output by manually extracting the industry.
         """
         prelim = ReadyForPortal.to_portal(self)
         #prelim is a dictionary;
@@ -110,7 +110,7 @@ class PortalModel(ReadyForPortal):
                 result.update(seed.portal_data)
             #
             seed.portal_data.clear()
-            flattened = pickle.dumps(seed)
+            flattened = pickle.dumps(seed, protocol=4)
             result["e_model"] = flattened
             #
             result["industry"] = seed.interview.work_space.get("industry")
@@ -123,5 +123,5 @@ class PortalModel(ReadyForPortal):
         del result["_var_attrs"]
         #
         return result
-        
-    
+
+
