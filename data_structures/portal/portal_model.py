@@ -110,7 +110,7 @@ class PortalModel(ReadyForPortal):
                 result.update(seed.portal_data)
             #
             seed.portal_data.clear()
-            flattened = pickle.dumps(seed, protocol=4)
+            flattened = pickle.dumps(seed)
             result["e_model"] = flattened
             #
             result["industry"] = seed.interview.work_space.get("industry")
