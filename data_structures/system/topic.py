@@ -2,6 +2,7 @@
 # Property of Blackbird Logical Applications, LLC
 # Copyright Blackbird Logical Applications, LLC 2016
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
+
 # Blackbird Environment
 # Module: data_structures.system.topic
 """
@@ -88,7 +89,6 @@ class Topic:
     ====================  ======================================================
 
     DATA:
-    applied_drivers       dictionary of drivers applied by the topic, by name
     formulas              dictionary of formulas used by the topic, by name
     id                    instance of ID class
     MR                    instance of Messenger class
@@ -125,12 +125,8 @@ class Topic:
         self.id = ID()
         self.MR = Messenger()
         self.tags = Tags()
-        #
-        self.applied_drivers = None
         self.formulas = None
         self.questions = None
-        # drivers, formulas, qs, and scenes all configured by TopicManager
-        # directly when the module assembles the TopicCatalog
         self.record_on_exit = True
         self.scenarios = None
         self.source = None
