@@ -632,7 +632,8 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         ending_balance = self.financials.ending
         starting_balance = self.financials.starting
 
-        ending_balance.increment(starting_balance, consolidating=False)
+        ending_balance.increment(starting_balance, consolidating=False,
+                                 over_time=True)
         ending_balance.reset()
         # Our goal is to pick up shape, so clear values.
 
@@ -649,7 +650,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         self._derive("ending")
         # Derive() will overwrite ending balance sheet where appropriate
 
-    def _consolidate(self, statement_name, trace=False, recur_func=None):
+    def _consolidate(self, statement_name):
         """
 
 

@@ -70,13 +70,16 @@ class FieldNames:
     LABELS = "labels"
     MASTER = "master"
     VALUES = "values"
+    TITLE = "title"
 
     # SCENARIOS
+    SELECTOR = "selector"
 
     ACTIVE_SCENARIO = "active_scenario"
     BASE_CASE = "base_case"
     CUSTOM_CASE = "custom_case"
 
+    IN_EFFECT = 'Active'
     CUSTOM = "Custom"
     BASE = "Base"
 

@@ -283,7 +283,8 @@ class LineItem(Statement):
         return new_line
 
     def increment(self, matching_line, signature=None, consolidating=False,
-                  xl_label=None, override=False, xl_only=False):
+                  xl_label=None, override=False, xl_only=False,
+                  over_time=False):
         """
 
 
@@ -295,20 +296,24 @@ class LineItem(Statement):
         value.
         """
         if matching_line.value is None:
-            if matching_line._details and matching_line.include_details:
+            send_to_statement = matching_line._details and \
+                                (matching_line.include_details or over_time)
+            if send_to_statement:
                 Statement.increment(self, matching_line,
                                     consolidating=consolidating,
-                                    xl_label=xl_label,
+                                    xl_label=xl_label, over_time=over_time,
                                     override=override, xl_only=xl_only)
             else:
                 if self.consolidate:
                     self.xl.consolidated.sources.append(matching_line)
                     self.xl.consolidated.labels.append(xl_label)
         else:
-            if matching_line._details and matching_line.include_details:
+            send_to_statement = matching_line._details and \
+                                (matching_line.include_details or over_time)
+            if send_to_statement:
                 Statement.increment(self, matching_line,
                                     consolidating=consolidating,
-                                    xl_label=xl_label,
+                                    xl_label=xl_label, over_time=over_time,
                                     override=override, xl_only=xl_only)
                 # Use Statement method here because we're treating the matching
                 # line as a Statement too. We assume that its details represent
@@ -319,39 +324,49 @@ class LineItem(Statement):
                 if signature is None:
                     signature = self.SIGNATURE_FOR_INCREMENTATION
 
-                if self._details:
-                    # 1) determine the name for the consolidation line
-                    con_line_name = SPECIAL_CONSOLIDATION_LINE_PREFIX
-                    con_line_name += matching_line.name
-                    con_line_name += SPECIAL_CONSOLIDATION_LINE_SUFFIX
+                allowed = (consolidating and (self.consolidate or override)) \
+                          or not consolidating
 
-                    # 2) look in details for the consolidation line
-                    if con_line_name in self._details:
-                        # 3) if line exists, increment that line with the
-                        # matching_line
-                        own_line = self._details[con_line_name]
-                        own_line.increment(matching_line)
+                if allowed:
+                    if self._details:
+                        # 1) determine the name for the consolidation line
+                        con_line_name = SPECIAL_CONSOLIDATION_LINE_PREFIX
+                        con_line_name += matching_line.name
+                        con_line_name += SPECIAL_CONSOLIDATION_LINE_SUFFIX
+
+                        # 2) look in details for the consolidation line
+                        if con_line_name in self._details:
+                            # 3) if line exists, increment that line with the
+                            # matching_line
+                            own_line = self._details[con_line_name]
+
+                            own_line.increment(matching_line,
+                                               consolidating=consolidating,
+                                               xl_only=xl_only,
+                                               override=override)
+                        else:
+                            # 4) if line does NOT exist, make it and increment with
+                            #  matching_line
+                            new_line = LineItem(name=con_line_name)
+                            self.append(new_line)
+                            new_line.increment(matching_line,
+                                               consolidating=consolidating,
+                                               xl_only=xl_only,
+                                               override=override)
                     else:
-                        # 4) if line does NOT exist, make it and increment with
-                        #  matching_line
-                        new_line = LineItem(name=con_line_name)
-                        self.append(new_line)
-                        new_line.increment(matching_line)
-                else:
-                    starting_value = self.value or 0
-                    new_value = starting_value + matching_line.value
+                        starting_value = self.value or 0
+                        new_value = starting_value + matching_line.value
 
-                    if not xl_only:
-                        self.set_value(new_value, signature)
-
-                    allow_consolidation = self.consolidate or override
-                    if consolidating and allow_consolidation:
                         if not xl_only:
-                            self.tags.inherit_from(matching_line.tags)
-                            self._consolidated = True
+                            self.set_value(new_value, signature)
 
-                        self.xl.consolidated.sources.append(matching_line)
-                        self.xl.consolidated.labels.append(xl_label)
+                        if consolidating:
+                            if not xl_only:
+                                self.tags.inherit_from(matching_line.tags)
+                                self._consolidated = True
+
+                            self.xl.consolidated.sources.append(matching_line)
+                            self.xl.consolidated.labels.append(xl_label)
 
     def link_to(self, matching_line):
         """

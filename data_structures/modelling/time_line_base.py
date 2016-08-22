@@ -133,18 +133,35 @@ class TimelineBase(dict):
         """
 
 
-        TimelineBase.getOrdered() -> list
+        TimelineBase.get_ordered() -> list
 
 
         Method returns list of periods in instance, ordered from earliest to
         latest endpoint.
         """
-        result = []
-        for end_date in sorted(self.keys()):
-            period = self[end_date]
-            result.append(period)
+        return list(self.iter_ordered())
 
-        return result
+    def iter_ordered(self, open=None, exit=None, shut=None):
+        """
+
+
+        TimelineBase.iter_ordered() -> iter
+
+        --``open`` date, soft start, if falls in period, iteration starts
+        --``exit`` date, soft stop, if falls in period, last shown
+        --``shut`` date, hard stop, if not exact period end, iteration stops
+
+        Method iterates over periods in order, starting with the one in which
+        ``open`` falls, and ending with the one including ``exit``.
+        """
+        for end_date, period in sorted(self.items()):
+            if open and open > period.end:
+                continue
+            if exit and exit < period.start:
+                break
+            if shut and shut < period.end:
+                break
+            yield period
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
