@@ -117,13 +117,7 @@ class Statement(Equalities, TagsMixIn):
         self._consolidated = False
         self._details = dict()
         self.relationships = Relationships(self)
-
-        if spacing < 1:
-            raise error
-        if not isinstance(spacing, int):
-            raise error
-
-        self.POSITION_SPACING = spacing
+        self.POSITION_SPACING = max(1, int(spacing))
         self.id = ID() # does not get its own bbid, just holds namespace
 
     def __eq__(self, comparator, trace=False, tab_width=4):
