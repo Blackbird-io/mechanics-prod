@@ -364,15 +364,6 @@ class TimeLine(TimelineBase):
             self[date] = updated_period
             seed = updated_period
 
-    def extrapolate_future(self, seed=None):
-        """
-
-        **OBSOLETE**
-
-        Legacy interface for TimeLine.extrapolate()
-        """
-        return self.extrapolate(seed)
-
     def find_period(self, query):
         """
 
@@ -412,8 +403,6 @@ class TimeLine(TimelineBase):
         output[1] = list of ref period (len output[1] == 1)
         output[2] = list of keys for periods after ref_date
         """
-        result = None
-        #
         if not ref_date:
             ref_date = self.current_period.end
         ref_end = self._get_ref_end_date(ref_date)
