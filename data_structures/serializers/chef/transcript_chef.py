@@ -41,9 +41,6 @@ from .tab_names import TabNames
 
 
 
-# Constants
-NOTE_CAP = 'Note'
-
 # Module Globals
 cell_styles = CellStyles()
 sheet_style = SheetStyle()
@@ -66,6 +63,13 @@ class TranscriptChef:
     make_transcript_tab() adds transcript tab to Blackbird model workbook
     ====================  =====================================================
     """
+
+    NOTE_CAP = 'Note'
+    PROMPT_HEADER = 'Question'
+    CAPTION_HEADER = 'Element Caption'
+    TARGET_HEADER = 'Target Unit'
+    RESPONSE_HEADER = 'Response'
+    QUESTION_NAME_HEADER = 'Question Identifier'
 
     def make_transcript_excel(self, model, book, idx=1):
         """
@@ -92,11 +96,11 @@ class TranscriptChef:
         analysis_name = model.name.title()
 
         column_dict = dict()
-        column_dict['Question'] = 'C'
-        column_dict['Element Caption'] = 'D'
-        column_dict['Target Unit'] = 'E'
-        column_dict['Response'] = 'F'
-        column_dict['Question Identifier'] = 'G'
+        column_dict[self.PROMPT_HEADER] = 'C'
+        column_dict[self.CAPTION_HEADER] = 'D'
+        column_dict[self.TARGET_HEADER] = 'E'
+        column_dict[self.RESPONSE_HEADER] = 'F'
+        column_dict[self.QUESTION_NAME_HEADER] = 'G'
 
         sheet = self._prep_output_excel(book, analysis_name, column_dict, idx)
 
@@ -140,11 +144,11 @@ class TranscriptChef:
                 if isinstance(response, list):
                     response = 'Min: %s; Max: %s' % tuple(response)
 
-                answer['Question'] = prompt or ''
-                answer['Element Caption'] = main_cap or ''
-                answer['Target Unit'] = target or ''
-                answer['Response'] = response or ''
-                answer['Question Identifier'] = name or ''
+                answer[self.PROMPT_HEADER] = prompt or ''
+                answer[self.CAPTION_HEADER] = main_cap or ''
+                answer[self.TARGET_HEADER] = target or ''
+                answer[self.RESPONSE_HEADER] = response or ''
+                answer[self.QUESTION_NAME_HEADER] = name or ''
 
                 self._add_record_to_excel(sheet, column_dict, answer, current_row)
                 current_row += 1
@@ -155,11 +159,11 @@ class TranscriptChef:
                 pass
             else:
                 for note in notes:
-                    answer['Question'] = prompt or ''
-                    answer['Element Caption'] = NOTE_CAP
-                    answer['Target Unit'] = target or ''
-                    answer['Response'] = note or ''
-                    answer['Question Identifier'] = name or ''
+                    answer[self.PROMPT_HEADER] = prompt or ''
+                    answer[self.CAPTION_HEADER] = self.NOTE_CAP
+                    answer[self.TARGET_HEADER] = target or ''
+                    answer[self.RESPONSE_HEADER] = note or ''
+                    answer[self.QUESTION_NAME_HEADER] = name or ''
                     self._add_record_to_excel(sheet, column_dict, answer, current_row)
                     current_row += 1
 
