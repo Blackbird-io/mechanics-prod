@@ -474,6 +474,7 @@ class SheetData:
     current_row           int; holds index of the current row in the sheet
     current_column        int; holds index of the current column in the sheet
     consolidation_size    int; number of rows that consolidation area will take
+    need_spacer           bool;
     outline_level         int; holds the outline level for row grouping
     problem_lines         list; temp storage for lines with reference problems
     scenario_selector     str; holds string coordinates of selector cell
@@ -500,6 +501,8 @@ class SheetData:
 
         self.row_axis = AxisGroup(tip=0)
         self.col_axis = AxisGroup(tip=0)
+
+        self.need_spacer = False
 
     def add_area(self, area_name, overwrite=False):
         """
