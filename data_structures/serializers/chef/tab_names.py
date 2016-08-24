@@ -57,3 +57,4 @@ class TabNames:
     """
     SCENARIOS = "Drivers"
     TIME_LINE = "Timeline"
+    TRANSCRIPT = "Transcript"

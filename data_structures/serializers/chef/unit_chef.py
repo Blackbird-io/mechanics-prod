@@ -359,6 +359,7 @@ class UnitChef:
                           row_container=statement_rows,
                           set_labels=set_labels
                     )
+                    sheet.bb.need_spacer = False
 
                 statement_row = sheet.bb.current_row + 1
                 fins_dict[statement.tags.name] = statement_row

@@ -449,7 +449,6 @@ class LineChef:
         if not BLANK_BETWEEN_TOP_LINES:
             sheet.bb.current_row += 1
 
-        sheet.bb.need_spacer = False
         check = statement.name != 'ending balance sheet'
         for line in statement.get_ordered():
             if BLANK_BETWEEN_TOP_LINES:
@@ -468,7 +467,10 @@ class LineChef:
             )
 
         if len(statement.get_ordered()) == 0:
+            sheet.bb.need_spacer = True
             sheet.bb.current_row += 1
+        else:
+            sheet.bb.need_spacer = False
 
         return sheet
 

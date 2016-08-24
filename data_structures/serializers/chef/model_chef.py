@@ -49,6 +49,7 @@ from .formulas import FormulaTemplates
 from .line_chef import LineChef
 from .sheet_style import SheetStyle
 from .tab_names import TabNames
+from .transcript_chef import  TranscriptChef
 from .unit_chef import UnitChef
 
 
@@ -64,6 +65,7 @@ formula_templates = FormulaTemplates()
 line_chef = LineChef()
 sheet_style = SheetStyle()
 tab_names = TabNames()
+transcript_chef = TranscriptChef()
 type_codes = TypeCodes()
 unit_chef = UnitChef()
 
@@ -119,6 +121,8 @@ class ModelChef:
         spacer_sheet = book.create_sheet("Details >>", spacer_idx)
         spacer_sheet.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
         sheet_style.style_sheet(spacer_sheet)
+
+        transcript_chef.make_transcript_excel(model, book)
 
         self._format_line_borders(book)
 
