@@ -144,10 +144,13 @@ class TranscriptChef:
                 if isinstance(response, list):
                     response = 'Min: %s; Max: %s' % tuple(response)
 
+                if response is None:
+                    response = ''
+
                 answer[self.PROMPT_HEADER] = prompt or ''
                 answer[self.CAPTION_HEADER] = main_cap or ''
                 answer[self.TARGET_HEADER] = target or ''
-                answer[self.RESPONSE_HEADER] = response or ''
+                answer[self.RESPONSE_HEADER] = response
                 answer[self.QUESTION_NAME_HEADER] = name or ''
 
                 self._add_record_to_excel(sheet, column_dict, answer, current_row)
