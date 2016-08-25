@@ -67,14 +67,15 @@ class SummaryMaker:
     FUNCTIONS:
     copy                  copy of the object
     init_summaries        basic initialization of the summary dictionaries
-    get_balance_summary()    returns starting and ending balance summaries
-    get_financials_summary() returns summary of all financials over an interval
-    get_line_summary()       summarizes a line over time
-    get_statement_summary()  returns summary of a statement over an interval
-    make_annual_summaries()  makes annual summaries and stores on time_line
-    make_quarterly_summaries() makes quarterly summaries and stores on time_line
-    make_summaries()      makes periodic summaries and stores on time_line
-    update_summaries()    update previously calculated summaries
+    parse_period          receive a period from the outside, work on it
+    which_quarter         determine which quarter and year a period falls into
+    add                   monthly -> quarterly, quarterly -> summary
+    flush                 round out a summary
+    add_content           build a BU structure
+    summarize             summarize statements
+    add_statement_summary summarize a statement
+    add_line_summary      summarize lines, recursively
+    wrap                  finish up the very last summaries, cleanup
     ====================  =====================================================
     """
 
