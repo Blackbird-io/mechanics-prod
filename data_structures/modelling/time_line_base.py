@@ -183,4 +183,21 @@ class TimelineBase(dict):
         # have their own bbids.
         period.relationships.set_parent(self)
 
+        # dates of the past and future periods
+        period._past_end = None
+        period._next_end = None
+        for day, peer in self.items():
+            if day < period.end:
+                if not period._past_end or day > period._past_end:
+                    period._past_end = day
+            if day > period.end:
+                if not period._next_end or day < period._next_end:
+                    period._next_end = day
+        if period._past_end:
+            past_period = self[period._past_end]
+            past_period._next_end = period.end
+        if period._next_end:
+            next_period = self[period._next_end]
+            next_period._past_end = period.end
+
         return period

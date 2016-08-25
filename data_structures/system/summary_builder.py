@@ -84,7 +84,7 @@ class SummaryBuilder:
 
     @property
     def fiscal_year_end(self):
-        time_line = self.source_time_line
+        time_line = self.time_line
 
         if not self._fiscal_year_end:
             year = time_line.current_period.end.year
