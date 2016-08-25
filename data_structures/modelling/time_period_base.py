@@ -106,6 +106,72 @@ class TimePeriodBase(History):
         result = dots + "\n" + s + e + c + dots + "\n"
         return result
 
+    def __iter__(self):
+        """
+
+        __iter__() -> iterator of TimePeriodBase
+
+        Iteration starts with the period following this one and goes forward.
+        """
+        this = self
+        while this._next_end:
+            this = this.future
+            yield this
+
+    @property
+    def past(self):
+        """
+
+        ** property **
+
+        TimePeriodBase.past() -> TimePeriodBase
+
+        If parent TimelineBase.add_period() set a _past_day on us, use it
+        to locate the predecessor in parent's dictionary.
+        """
+        past_day = getattr(self, '_past_end', None)
+        if past_day:
+            return self.relationships.parent[past_day]
+
+    @past.setter
+    def past(self, value):
+        """
+
+        ** property setter **
+
+        TimePeriodBase.past() -> None
+
+        Noop. TimePeriods look each other up through parent TimeLine.
+        """
+        pass
+
+    @property
+    def future(self):
+        """
+
+        ** property **
+
+        TimePeriodBase.future() -> TimePeriodBase
+
+        If parent TimelineBase.add_period() set a _next_day on us, use it
+        to locate the successor in parent's dictionary.
+        """
+        next_day = getattr(self, '_next_end', None)
+        if next_day:
+            return self.relationships.parent[next_day]
+
+    @future.setter
+    def future(self, value):
+        """
+
+        ** property setter **
+
+        TimePeriodBase.future() -> None
+
+        Noop. TimePeriods look each other up through parent TimeLine.
+        """
+        pass
+
     def copy(self):
         """
 
