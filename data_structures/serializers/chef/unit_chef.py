@@ -142,7 +142,7 @@ class UnitChef:
         specify the label and master column.
         """
 
-        parameters = sheet.bb.parameters
+        parameters = getattr(sheet.bb, field_names.PARAMETERS)
         label_column = parameters.columns.get_position(field_names.LABELS)
         master_column = parameters.columns.get_position(field_names.MASTER)
 
@@ -222,8 +222,9 @@ class UnitChef:
         # 2.2.   spread life
         sheet.bb.current_row += 1
         sheet = self._add_unit_life(sheet=sheet, unit=unit)
+        param_area = getattr(sheet.bb, field_names.PARAMETERS)
         for snapshot in unit:
-            sheet.bb.current_row = sheet.bb.parameters.rows.ending + 1
+            sheet.bb.current_row = param_area.rows.ending + 1
             self._add_unit_life(sheet=sheet, unit=snapshot, set_labels=False)
         sheet.bb.outline_level -= 1
 
@@ -582,7 +583,7 @@ class UnitChef:
         Runs through add_items() [which is why we get name-based sorting]
         """
         events = sheet.bb.events
-        parameters = sheet.bb.parameters
+        parameters = getattr(sheet.bb, field_names.PARAMETERS)
 
         active_row = sheet.bb.current_row
         master_column = parameters.columns.get_position(field_names.MASTER)
@@ -728,7 +729,7 @@ class UnitChef:
             end = unit.period.end
             active_column = sheet.bb.time_line.columns.get_position(end)
 
-        parameters = sheet.bb.parameters
+        parameters = getattr(sheet.bb, field_names.PARAMETERS)
         master_column = parameters.columns.get_position(field_names.MASTER)
 
         if not getattr(sheet.bb, field_names.SIZE, None):
@@ -959,14 +960,15 @@ class UnitChef:
                                 current_only=current_only)
 
         val_col = sheet.bb.time_line.columns.get_position(unit.period.end)
-        sheet.bb.parameters.columns.by_name[field_names.VALUES] = val_col
+        param_area = getattr(sheet.bb, field_names.PARAMETERS)
+        param_area.columns.by_name[field_names.VALUES] = val_col
         # At this point, sheet.bb.current_row will point to the last parameter.
 
         # Freeze panes:
         corner_row = sheet.bb.time_line.rows.ending
         corner_row += 1
 
-        corner_col = sheet.bb.parameters.columns.get_position(field_names.MASTER)
+        corner_col = param_area.columns.get_position(field_names.MASTER)
         corner_col += 1
 
         corner_cell = sheet.cell(column=corner_col, row=corner_row)

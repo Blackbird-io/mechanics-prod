@@ -94,7 +94,7 @@ class FieldNames:
 
     # STANDARD AREAS
     TIMELINE = "time_line"
-    PARAMETERS = "parameters"
+    PARAMETERS = "drivers"
     GENERAL = "general"
     SIZE = "size"
 
