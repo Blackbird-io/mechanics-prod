@@ -1097,11 +1097,12 @@ class LineChef:
 
         Writes driver logic to Excel sheet. Will write to sheet.bb.current_row.
         """
-        private_data = sheet.bb.parameters.copy()
+        private_data = getattr(sheet.bb, field_names.PARAMETERS).copy()
         # Set up a private range that's going to include both "shared" period &
         # unit parameters from the column and "private" driver parameters.
 
-        cols = sheet.bb.parameters.columns
+        param_area = getattr(sheet.bb, field_names.PARAMETERS)
+        cols = param_area.columns
         label_column = cols.get_position(field_names.LABELS)
         period_column = column
 
@@ -1178,7 +1179,7 @@ class LineChef:
 
         materials = dict()
         materials["lines"] = line_coordinates
-        materials[field_names.PARAMETERS] = param_coordinates
+        materials['parameters'] = param_coordinates
 
         try:
             life_coordinates = self._rows_to_coordinates(
@@ -1462,7 +1463,8 @@ class LineChef:
         """
         if column is None:
             if getattr(sheet.bb, field_names.PARAMETERS, None):
-                cols = sheet.bb.parameters.columns
+                param_area = getattr(sheet.bb, field_names.PARAMETERS)
+                cols = param_area.columns
                 column = cols.get_position(field_names.LABELS)
             else:
                 column = 2

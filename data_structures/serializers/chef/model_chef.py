@@ -921,7 +921,8 @@ class ModelChef:
 
             # go through all lines in sheet.bb.line_directory and add border
             # formatting, if any
-            st_col = sheet.bb.parameters.columns.by_name[field_names.VALUES]
+            param_area = getattr(sheet.bb, field_names.PARAMETERS)
+            st_col = param_area.columns.by_name[field_names.VALUES]
             if 'time_line' in sheet.bb.area_names:
                 ed_col = min((sheet.bb.time_line.columns.ending,
                               sheet.max_column))
