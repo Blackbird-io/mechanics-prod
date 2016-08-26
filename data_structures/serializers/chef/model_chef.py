@@ -281,6 +281,11 @@ class ModelChef:
 
         sheet.sheet_properties.tabColor = chef_settings.SUMMARY_TAB_COLOR
 
+        corner_col = area.columns.by_name[field_names.VALUES] - 1
+        corner_row = complete_label_rows.number() - 1
+        corner_cell = sheet.cell(column=corner_col, row=corner_row)
+        sheet.freeze_panes = corner_cell
+
     def _annual_summary_labels(self, sheet, groups, label_cols, level=0):
         """
 
