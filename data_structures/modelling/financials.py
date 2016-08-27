@@ -200,7 +200,7 @@ class Financials:
             use_name = title or name
             statement = Statement(use_name)
 
-        setattr(self, name, statement)
+        self.__dict__[name] = statement
 
         if position:
             self._full_order.insert(position, name)
@@ -247,13 +247,18 @@ class Financials:
         Method starts with a shallow copy and then substitutes deep copies
         for the values of each attribute in instance.ORDER
         """
-        new_instance = copy.copy(self)
+        new_instance = Financials()
+        new_instance._full_order = self._full_order.copy()
+        new_instance._compute_order = self._compute_order.copy()
 
         for name in self.full_order:
-            own_statement = getattr(self, name, None)
+            own_statement = getattr(self, name)
             if own_statement is not None:
                 new_statement = own_statement.copy()
-                setattr(new_instance, name, new_statement)
+                new_instance.__dict__[name] = new_statement
+
+        new_instance.id = ID()
+        new_instance.register(self.id.namespace)
 
         return new_instance
 

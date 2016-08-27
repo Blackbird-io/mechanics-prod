@@ -135,7 +135,6 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
 
         if self.content:
             new_content = self.content.copy()
-
             result.set_content(new_content, updateID=False)
 
         result.tags = self.tags.copy()
