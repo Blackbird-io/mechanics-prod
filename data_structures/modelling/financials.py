@@ -77,27 +77,30 @@ class Financials:
         self.ending = BalanceSheet("Ending Balance Sheet")
         self.ledger = None
         self.id = ID()  # does not get its own bbid, just holds namespace
-        self.full_order = ["overview", "income", "cash", "starting", "ending",
+        self._full_order = ["overview", "income", "cash", "starting", "ending",
                            "ledger", "valuation"]
+        self._compute_order = ['overview', 'income', 'cash']
+
+
+    @property
+    def compute_order(self):
+        return self._compute_order.copy()
+
+    @property
+    def full_order(self):
+        return self._full_order.copy()
 
     @property
     def full_ordered(self):
         """
 
-
         **read-only property**
 
-
-        Return list of attribute values for all names in instance.FULL_ORDER.
+        Return list of attribute values for all names in instance.full_order.
         """
         result = []
 
-        try:
-            order = self.full_order
-        except AttributeError:
-            order = self.FULL_ORDER
-
-        for name in order:
+        for name in self.full_order:
             statement = getattr(self, name)
             result.append(statement)
 
@@ -109,32 +112,19 @@ class Financials:
 
     @property
     def order(self):
-        try:
-            order = self.full_order.copy()
-        except AttributeError:
-            order = list(self.FULL_ORDER.copy())
-
+        order = self.full_order
         order.remove('starting')
         order.remove('valuation')
-        return order
 
-    @property
-    def FULL_ORDER(self):
-        """
-        OBSOLETE
-        """
-        return ("overview", "income", "cash", "starting", "ending",
-                           "ledger", "valuation")
+        return order
 
     @property
     def ordered(self):
         """
 
-
         **read-only property**
 
-
-        Return list of attribute values for all names in instance.ORDER.
+        Return list of attribute values for all names in instance.order
         """
         result = []
         for name in self.order:
@@ -181,13 +171,61 @@ class Financials:
         result += "\n"
         result += border
 
-        return result        
+        return result
+
+    def add_statement(self, name, statement=None, title=None, position=None,
+                      compute=True):
+        """
+
+        Financials.add_statement() -> None
+
+        --``name`` is the string name for the statement attribute
+        --``statement`` is optionally the statement to insert, if not provided
+                        a blank statement will be added
+        --``title`` is optionally the name to assign to the statement object,
+                    if not provided ``name`` will be used
+        --``position`` is optionally the index at which to insert the statement
+                       in instance.full_order
+        --``compute`` bool; default is True, whether or not to include the
+                      statement in computation order  during fill_out (will be
+                      computed between starting and ending balance sheets) or
+                      whether to compute manually after
+
+        Method adds a new statement to the instance and inserts it at specified
+        position in instance.full_order.  If no position is provided, the
+        new statement will be added at the end.
+        """
+
+        if not statement:
+            use_name = title or name
+            statement = Statement(use_name)
+
+        setattr(self, name, statement)
+
+        if position:
+            self._full_order.insert(position, name)
+        else:
+            self._full_order.append(name)
+
+        if compute:
+            # include statement to be computed during fill_out in the same
+            # order it is in full_order
+            full = set(self.full_order)
+            comp = set(self._compute_order) | {name}
+
+            rem_terms = full - comp
+
+            new_compute = self.full_order
+            for term in rem_terms:
+                new_compute.remove(term)
+
+            self._compute_order = new_compute
 
     def build_tables(self):
         """
 
 
-        StatementBundle.build_tables() -> None
+        Financials.build_tables() -> None
 
 
         Build tables for each defined statement.

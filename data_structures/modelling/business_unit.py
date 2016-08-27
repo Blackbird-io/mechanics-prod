@@ -403,7 +403,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         else:
             self._load_starting_balance()
 
-            for statement in ("overview", "income", "cash"):
+            for statement in self.financials.compute_order:
                 self.compute(statement)
 
             self._compute_ending_balance()
@@ -685,7 +685,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         Method delegates to Statement.increment() for actual consolidation work.
         """
         # Step Only: Actual consolidation
-        child_statement = getattr(sub.financials, statement_name)
+        child_statement = getattr(sub.financials, statement_name, None)
 
         if sub.life.conceived:
             xl_only = False
