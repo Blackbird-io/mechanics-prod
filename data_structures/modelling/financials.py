@@ -6,7 +6,8 @@
 # Module: data_structures.modelling.financials
 """
 
-Module defines Financials, a bundle of common statements. 
+Module defines Financials, a bundle of common statements with the ability to
+add custom statements as desired.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -18,7 +19,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-Financials            a StatementBundle with income, cash, balance and others.
+Financials            a dynamic class that holds standard and custom statements
 ====================  ==========================================================
 """
 
@@ -30,9 +31,7 @@ import bb_settings
 import copy
 
 from .statement import Statement
-
 from .statements import Overview, Income, CashFlow, BalanceSheet
-from .statement_bundle import StatementBundle
 from .equalities import Equalities
 
 from data_structures.system.bbid import ID
@@ -47,7 +46,7 @@ from data_structures.system.bbid import ID
 # n/a
 
 # Classes
-class Financials(StatementBundle):
+class Financials:
     """
 
     A StatementBundle that includes standard financial statements. 
@@ -68,11 +67,7 @@ class Financials(StatementBundle):
     copy                  return deep copy
     ====================  ======================================================
     """
-    ORDER = ("overview", "income", "cash", "ending", "ledger")
-    FULL_ORDER = ("overview", "income", "cash", "starting", "ending", "ledger",
-                  "valuation")
-    # tuple for immutability
-    
+
     def __init__(self):
         self.overview = Overview()
         self.income = Income()
@@ -82,10 +77,71 @@ class Financials(StatementBundle):
         self.ending = BalanceSheet("Ending Balance Sheet")
         self.ledger = None
         self.id = ID()  # does not get its own bbid, just holds namespace
+        self.full_order = ["overview", "income", "cash", "starting", "ending",
+                           "ledger", "valuation"]
+
+    @property
+    def full_ordered(self):
+        """
+
+
+        **read-only property**
+
+
+        Return list of attribute values for all names in instance.FULL_ORDER.
+        """
+        result = []
+
+        try:
+            order = self.full_order
+        except AttributeError:
+            order = self.FULL_ORDER
+
+        for name in order:
+            statement = getattr(self, name)
+            result.append(statement)
+
+        return result
 
     @property
     def has_valuation(self):
         return not self.valuation == Statement("Valuation")
+
+    @property
+    def order(self):
+        try:
+            order = self.full_order.copy()
+        except AttributeError:
+            order = list(self.FULL_ORDER.copy())
+
+        order.remove('starting')
+        order.remove('valuation')
+        return order
+
+    @property
+    def FULL_ORDER(self):
+        """
+        OBSOLETE
+        """
+        return ("overview", "income", "cash", "starting", "ending",
+                           "ledger", "valuation")
+
+    @property
+    def ordered(self):
+        """
+
+
+        **read-only property**
+
+
+        Return list of attribute values for all names in instance.ORDER.
+        """
+        result = []
+        for name in self.order:
+            statement = getattr(self, name)
+            result.append(statement)
+
+        return result
 
     def __str__(self):
         
@@ -117,18 +173,26 @@ class Financials(StatementBundle):
 
         result += border
 
-        self.ORDER = ("overview", "income", "cash", "starting", "ending",
-                      "ledger")
-
-        # Use a special tuple that includes all statements to block the default
-        # class order.
-        result += StatementBundle.__str__(self)
-        del self.ORDER
+        result = ""
+        for statement in self.full_ordered:
+            if statement is not None:
+                result += str(statement)
 
         result += "\n"
         result += border
 
         return result        
+
+    def build_tables(self):
+        """
+
+
+        StatementBundle.build_tables() -> None
+
+
+        Build tables for each defined statement.
+        """
+        self.run_on_all("build_tables")
 
     def copy(self):
         """
@@ -144,16 +208,11 @@ class Financials(StatementBundle):
         """
         new_instance = copy.copy(self)
 
-        self.ORDER = ("overview", "income", "cash", "starting", "ending",
-                      "ledger", "valuation")
-
-        for name in self.ORDER:
+        for name in self.full_order:
             own_statement = getattr(self, name, None)
             if own_statement is not None:
                 new_statement = own_statement.copy()
                 setattr(new_instance, name, new_statement)
-
-        del self.ORDER
 
         return new_instance
 
@@ -173,3 +232,42 @@ class Financials(StatementBundle):
         for statement in self.full_ordered:
             if statement:
                 statement.register(self.id.namespace)
+
+    def reset(self):
+        """
+
+
+        StatementBundle.reset() -> None
+
+
+        Reset each defined statement.
+        """
+        self.run_on_all("reset")
+
+    def run_on_all(self, action, *kargs, **pargs):
+        """
+
+
+        Bundle.run_on_all() -> None
+
+
+        Run ``statement.action(*kargs, **pargs)`` for all defined statements
+        in instance.ordered.
+
+        Expects ``action`` to be a string naming the statement method.
+        """
+        for statement in self.ordered:
+            if statement is not None:
+                routine = getattr(statement, action)
+                routine(*kargs, **pargs)
+
+    def summarize(self):
+        """
+
+
+        StatementBundle.summarize() -> None
+
+
+        Summarize each defined statement.
+        """
+        self.run_on_all("summarize")
