@@ -253,6 +253,7 @@ class Financials:
         new_instance = Financials()
         new_instance._full_order = self._full_order.copy()
         new_instance._compute_order = self._compute_order.copy()
+        new_instance._exclude_statements = self._exclude_statements.copy()
 
         for name in self.full_order:
             own_statement = getattr(self, name)
