@@ -86,6 +86,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         self.drivers = None
         self._set_drivers()
 
+        self.financials = None
         self.set_financials(fins)
         self.complete = False
 

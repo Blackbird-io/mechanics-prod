@@ -100,7 +100,7 @@ class Financials:
         """
         result = []
 
-        for name in self.full_order:
+        for name in self._full_order:
             statement = getattr(self, name)
             result.append(statement)
 
@@ -221,6 +221,9 @@ class Financials:
 
             self._compute_order = new_compute
 
+        if self.id.namespace:
+            statement.register(self.id.namespace)
+
     def build_tables(self):
         """
 
@@ -265,7 +268,7 @@ class Financials:
         Method sets namespace of instance, does not assign an actual ID.
         Registers statements on instance.
         """
-        self.id.set_namespace(self.id.namespace)
+        self.id.set_namespace(namespace)
 
         for statement in self.full_ordered:
             if statement:

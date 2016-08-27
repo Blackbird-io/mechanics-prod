@@ -127,9 +127,15 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         copy of the caller content. 
         """
 
-        result = TimePeriodBase.copy(self)
+        # result = TimePeriodBase.copy(self)
+        result = copy.copy(self)
+        result.relationships = self.relationships.copy()
+        result.start = copy.copy(self.start)
+        result.end = copy.copy(self.end)
+
         if self.content:
             new_content = self.content.copy()
+
             result.set_content(new_content, updateID=False)
 
         result.tags = self.tags.copy()
