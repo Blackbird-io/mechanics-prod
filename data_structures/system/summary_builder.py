@@ -187,13 +187,22 @@ class SummaryBuilder:
 
         # delegate to get_statement_summary and get_balance_summary
         # store results in a Financials() object
+        period = self.source_time_line[start]
+        bu = period.bu_directory[bu_bbid]
+
         fins_out = Financials()
-        for name in ["overview", "income", "cash"]:
+        for name in bu.financials.compute_order:
             new_statement = self.get_statement_summary(bu_bbid,
                                                        start,
                                                        end,
                                                        name)
-            fins_out.__dict__[name] = new_statement
+
+            if getattr(fins_out, name, None):
+                fins_out.__dict__[name] = new_statement
+            else:
+                idx = bu.financials.compute_order.index(name)
+                fins_out.add_statement(name, statement=new_statement,
+                                       position=idx)
 
         balances = self.get_balance_summary(bu_bbid, start, end)
 
@@ -249,15 +258,14 @@ class SummaryBuilder:
         """
         time_line = self.source_time_line
 
-        if statement_name not in ["overview", "income", "cash"]:
-            c = 'Method only works for overview, income, and cash statements'
-            raise bb_exceptions.BBAnalyticalError(c)
-
         # loop through time periods from start_date to end_date
         # pull business units out
         period = time_line[start]
-
         bu = period.bu_directory[bu_bbid]
+
+        if statement_name not in bu.financials.compute_order:
+            c = 'Method only works for statements in financials.compute_order'
+            raise bb_exceptions.BBAnalyticalError(c)
 
         statement = getattr(bu.financials, statement_name)
         summary_statement = statement.copy()
@@ -642,7 +650,7 @@ class SummaryBuilder:
 
         # delegate to get_statement_summary and get_balance_summary
         # store results in a Financials() object
-        for name in ["overview", "income", "cash"]:
+        for name in unit_summary.financials.compute_order:
             self._update_statement(unit_summary, start, end, name)
 
         self._update_balance_summary(unit_summary, start, end)
@@ -664,8 +672,8 @@ class SummaryBuilder:
         """
         bu_bbid = unit_summary.id.bbid
 
-        if statement_name not in ["overview", "income", "cash"]:
-            c = 'Method only works for overview, income, and cash statements'
+        if statement_name not in unit_summary.financials.compute_order:
+            c = 'Method only works for statements in financials.compute_order'
             raise bb_exceptions.BBAnalyticalError(c)
 
         # loop through time periods from start_date to end_date

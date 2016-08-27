@@ -80,6 +80,7 @@ class Financials:
         self._full_order = ["overview", "income", "cash", "starting", "ending",
                            "ledger", "valuation"]
         self._compute_order = ['overview', 'income', 'cash']
+        self._exclude_statements = ['valuation', 'starting']
 
 
     @property
@@ -113,8 +114,8 @@ class Financials:
     @property
     def order(self):
         order = self.full_order
-        order.remove('starting')
-        order.remove('valuation')
+        for name in self._exclude_statements:
+            order.remove(name)
 
         return order
 
@@ -220,6 +221,8 @@ class Financials:
                 new_compute.remove(term)
 
             self._compute_order = new_compute
+        else:
+            self._exclude_statements.append(name)
 
         if self.id.namespace:
             statement.register(self.id.namespace)
