@@ -28,7 +28,7 @@ Financials            a dynamic class that holds standard and custom statements
 
 # Imports
 import bb_settings
-import copy
+import weakref
 
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
@@ -70,19 +70,21 @@ class Financials:
     """
 
     def __init__(self, parent=None, period=None):
-        self.overview = Overview(parent=parent)
-        self.income = Income(parent=parent)
-        self.cash = CashFlow(parent=parent)
-        self.valuation = Statement("Valuation", parent=parent)
-        self.starting = BalanceSheet("Starting Balance Sheet", parent=parent)
-        self.ending = BalanceSheet("Ending Balance Sheet", parent=parent)
+        if parent:
+            parent = weakref.proxy(parent)
+        self.relationships = Relationships(self, parent=parent)
+        self.overview = Overview(parent=self)
+        self.income = Income(parent=self)
+        self.cash = CashFlow(parent=self)
+        self.valuation = Statement("Valuation", parent=self)
+        self.starting = BalanceSheet("Starting Balance Sheet", parent=self)
+        self.ending = BalanceSheet("Ending Balance Sheet", parent=self)
         self.ledger = None
         self.id = ID()  # does not get its own bbid, just holds namespace
         self._full_order = ["overview", "income", "cash", "starting", "ending",
                            "ledger", "valuation"]
         self._compute_order = ['overview', 'income', 'cash']
         self._exclude_statements = ['valuation', 'starting']
-
 
     @property
     def compute_order(self):
@@ -252,7 +254,6 @@ class Financials:
         for the values of each attribute in instance.ORDER
         """
         new_instance = Financials()
-        new_instance.relationships.owner = new_instance
         new_instance._full_order = self._full_order.copy()
         new_instance._compute_order = self._compute_order.copy()
         new_instance._exclude_statements = self._exclude_statements.copy()
