@@ -114,7 +114,7 @@ class TimePeriodBase(History):
         Iteration starts with the period following this one and goes forward.
         """
         this = self
-        while this._next_end:
+        while this.next_end:
             this = this.future
             yield this
 
@@ -129,7 +129,7 @@ class TimePeriodBase(History):
         If parent TimelineBase.add_period() set a _past_day on us, use it
         to locate the predecessor in parent's dictionary.
         """
-        past_day = getattr(self, '_past_end', None)
+        past_day = getattr(self, 'past_end', None)
         if past_day:
             return self.relationships.parent[past_day]
 
@@ -156,7 +156,7 @@ class TimePeriodBase(History):
         If parent TimelineBase.add_period() set a _next_day on us, use it
         to locate the successor in parent's dictionary.
         """
-        next_day = getattr(self, '_next_end', None)
+        next_day = getattr(self, 'next_end', None)
         if next_day:
             return self.relationships.parent[next_day]
 

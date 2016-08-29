@@ -6,7 +6,7 @@
 # Module: data_structures.modelling.financials
 """
 
-Module defines Financials, a bundle of common statements. 
+Module defines Financials, a bundle of common statements.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -29,13 +29,14 @@ Financials            a StatementBundle with income, cash, balance and others.
 import bb_settings
 import copy
 
-from .statement import Statement
+from data_structures.system.bbid import ID
+from data_structures.system.relationships import Relationships
 
+from .statement import Statement
 from .statements import Overview, Income, CashFlow, BalanceSheet
 from .statement_bundle import StatementBundle
 from .equalities import Equalities
 
-from data_structures.system.bbid import ID
 
 
 
@@ -50,7 +51,7 @@ from data_structures.system.bbid import ID
 class Financials(StatementBundle):
     """
 
-    A StatementBundle that includes standard financial statements. 
+    A StatementBundle that includes standard financial statements.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -72,23 +73,25 @@ class Financials(StatementBundle):
     FULL_ORDER = ("overview", "income", "cash", "starting", "ending", "ledger",
                   "valuation")
     # tuple for immutability
-    
-    def __init__(self):
-        self.overview = Overview()
-        self.income = Income()
-        self.cash = CashFlow()
-        self.valuation = Statement("Valuation")
-        self.starting = BalanceSheet("Starting Balance Sheet")
-        self.ending = BalanceSheet("Ending Balance Sheet")
+
+    def __init__(self, parent=None, period=None):
+        self.overview = Overview(parent=parent)
+        self.income = Income(parent=parent)
+        self.cash = CashFlow(parent=parent)
+        self.valuation = Statement("Valuation", parent=parent)
+        self.starting = BalanceSheet("Starting Balance Sheet", parent=parent)
+        self.ending = BalanceSheet("Ending Balance Sheet", parent=parent)
         self.ledger = None
         self.id = ID()  # does not get its own bbid, just holds namespace
+        self.relationships = Relationships(self, parent=parent)
+        self.period = period
 
     @property
     def has_valuation(self):
         return not self.valuation == Statement("Valuation")
 
     def __str__(self):
-        
+
         result = "\n"
 
         if Equalities.multi_getattr(self, "relationships.parent", None):
@@ -128,7 +131,7 @@ class Financials(StatementBundle):
         result += "\n"
         result += border
 
-        return result        
+        return result
 
     def copy(self):
         """
@@ -143,17 +146,13 @@ class Financials(StatementBundle):
         for the values of each attribute in instance.ORDER
         """
         new_instance = copy.copy(self)
+        new_instance.relationships.owner = new_instance
 
-        self.ORDER = ("overview", "income", "cash", "starting", "ending",
-                      "ledger", "valuation")
-
-        for name in self.ORDER:
+        for name in self.FULL_ORDER:
             own_statement = getattr(self, name, None)
             if own_statement is not None:
                 new_statement = own_statement.copy()
                 setattr(new_instance, name, new_statement)
-
-        del self.ORDER
 
         return new_instance
 

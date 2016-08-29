@@ -111,12 +111,12 @@ class Statement(Equalities, TagsMixIn):
     keyAttributes = ["_details"]
     # Should rename this comparable_attributes
 
-    def __init__(self, name=None, spacing=100):
+    def __init__(self, name=None, spacing=100, parent=None):
         TagsMixIn.__init__(self, name)
 
         self._consolidated = False
         self._details = dict()
-        self.relationships = Relationships(self)
+        self.relationships = Relationships(self, parent=parent)
         self.POSITION_SPACING = max(1, int(spacing))
         self.id = ID() # does not get its own bbid, just holds namespace
 
