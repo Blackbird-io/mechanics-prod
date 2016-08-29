@@ -423,7 +423,9 @@ class SummaryMaker:
         summary_unit.id = copy.deepcopy(template_bu.id)
         summary_unit.complete = False
         summary_unit.period = period
-        summary_unit.set_financials(Financials())
+        summary_unit.set_financials(
+            Financials(parent=summary_unit, period=period)
+        )
 
         if recur:
             for comp in template_bu.components.get_all():
@@ -468,6 +470,7 @@ class SummaryMaker:
             self.flush()
             timeline_summary = self.summaries[key]
             timeline_summary.summary_period = None
+            timeline_summary.source = None
         self.period_info.clear()
         self.period = None
 
