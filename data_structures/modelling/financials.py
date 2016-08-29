@@ -30,11 +30,12 @@ Financials            a dynamic class that holds standard and custom statements
 import bb_settings
 import copy
 
+from data_structures.system.bbid import ID
+from data_structures.system.relationships import Relationships
 from .statement import Statement
 from .statements import Overview, Income, CashFlow, BalanceSheet
 from .equalities import Equalities
 
-from data_structures.system.bbid import ID
 
 
 
@@ -49,7 +50,7 @@ from data_structures.system.bbid import ID
 class Financials:
     """
 
-    A StatementBundle that includes standard financial statements. 
+    A StatementBundle that includes standard financial statements.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -68,13 +69,13 @@ class Financials:
     ====================  ======================================================
     """
 
-    def __init__(self):
-        self.overview = Overview()
-        self.income = Income()
-        self.cash = CashFlow()
-        self.valuation = Statement("Valuation")
-        self.starting = BalanceSheet("Starting Balance Sheet")
-        self.ending = BalanceSheet("Ending Balance Sheet")
+    def __init__(self, parent=None, period=None):
+        self.overview = Overview(parent=parent)
+        self.income = Income(parent=parent)
+        self.cash = CashFlow(parent=parent)
+        self.valuation = Statement("Valuation", parent=parent)
+        self.starting = BalanceSheet("Starting Balance Sheet", parent=parent)
+        self.ending = BalanceSheet("Ending Balance Sheet", parent=parent)
         self.ledger = None
         self.id = ID()  # does not get its own bbid, just holds namespace
         self._full_order = ["overview", "income", "cash", "starting", "ending",
@@ -135,7 +136,7 @@ class Financials:
         return result
 
     def __str__(self):
-        
+
         result = "\n"
 
         if Equalities.multi_getattr(self, "relationships.parent", None):
@@ -251,19 +252,18 @@ class Financials:
         for the values of each attribute in instance.ORDER
         """
         new_instance = Financials()
+        new_instance.relationships.owner = new_instance
         new_instance._full_order = self._full_order.copy()
         new_instance._compute_order = self._compute_order.copy()
         new_instance._exclude_statements = self._exclude_statements.copy()
-
         for name in self.full_order:
             own_statement = getattr(self, name)
             if own_statement is not None:
                 new_statement = own_statement.copy()
-                new_instance.__dict__[name] = new_statement
+                setattr(new_instance, name, new_statement)
 
         new_instance.id = ID()
         new_instance.register(self.id.namespace)
-
         return new_instance
 
     def register(self, namespace):

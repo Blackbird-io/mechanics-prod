@@ -39,5 +39,5 @@ from ..statement import Statement
 
 # Classes
 class CashFlowStatement(Statement):
-    def __init__(self):
-        Statement.__init__(self, name="cash flow statement")
+    def __init__(self, parent=None):
+        Statement.__init__(self, name="cash flow statement", parent=parent)
