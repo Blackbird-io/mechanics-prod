@@ -28,6 +28,10 @@ Analyst               worker object, can run independently
 
 
 # Imports
+import logging
+
+import bb_settings
+
 from .interviewer import Interviewer
 from .yenta import Yenta
 
@@ -46,6 +50,8 @@ charlie_rose = Interviewer()
 larry_king = Interviewer()
 
 yenta = Yenta()
+
+logger = logging.getLogger(bb_settings.LOGNAME_MAIN)
 
 
 # Classes
@@ -186,6 +192,7 @@ class Analyst:
             elif self.status == TOPIC_NEEDED:
                 topic = yenta.select_topic(model)
                 if topic:
+                    logger.debug(topic.source)
                     message = topic.process(message)
                 else:
                     pass

@@ -28,9 +28,6 @@ Tags                  composition class that provides tagging and naming
 
 
 # imports
-import copy
-import bb_exceptions
-
 from tools.parsing import deCase
 
 
@@ -206,9 +203,9 @@ class Tags:
         if badTag in self._optional:
             self._optional.remove(badTag)
 
-    #*************************************************************************#
-    #                          NON-PUBLIC METHODS                             #
-    #*************************************************************************#
+    # *************************************************************************#
+    #                           NON-PUBLIC METHODS                             #
+    # *************************************************************************#
     def _copy_tags_to(self, target):
         """
 
