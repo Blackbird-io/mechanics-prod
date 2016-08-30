@@ -27,8 +27,11 @@ BusinessUnitBase      basic structure to hold business information
 
 
 # Imports
-import bb_exceptions
 import copy
+import logging
+
+import bb_settings
+import bb_exceptions
 
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
@@ -47,7 +50,8 @@ from .components_base import ComponentsBase
 # n/a
 
 # Globals
-# n/a
+logger = logging.getLogger(bb_settings.LOGNAME_MAIN)
+
 
 # Classes
 class BusinessUnitBase(HistoryLine, TagsMixIn):
@@ -203,6 +207,25 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
 
         self.financials = fins
 
+    def get_financials(self, period):
+        """
+
+
+        BusinessUnitBase.get_financials() -> Financials()
+
+        --``period`` TimePeriod
+
+        Returns this BUs financials in a given period.
+        """
+
+        financials = Financials.get_cached(self.id.bbid, period.end)
+        logger.debug(
+            '>> cached {} {} {} {}'.format(
+                self.id.bbid, period.end, Financials.get_cached.cache_info(), self.name
+            )
+        )
+        return financials
+
     # *************************************************************************#
     #                          NON-PUBLIC METHODS                              #
     # *************************************************************************#
@@ -237,7 +260,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
 
         return id_directory
 
-    def _derive_line(self, line):
+    def _derive_line(self, line, period):
         """
 
 
@@ -264,7 +287,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
             if key in self.drivers:
                 matching_drivers = self.drivers.get_drivers(key)
                 for driver in matching_drivers:
-                    driver.workOnThis(line, bu=self)
+                    driver.workOnThis(line, bu=self, period=period)
 
         # Repeat for any details
         if line._details:
@@ -274,7 +297,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
                     # Skip replicas to make sure we apply the driver only once
                     # A replica should never have any details
                 else:
-                    self._derive_line(detail)
+                    self._derive_line(detail, period)
 
     def _get_pretty_lines(self,
                           top_element="=",

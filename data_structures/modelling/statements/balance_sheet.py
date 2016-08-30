@@ -59,15 +59,15 @@ class BalanceSheet(Statement):
     extend()              append multiple lines to instance in order
     ====================  ======================================================
     """
-    def __init__(self, name, as_of=None):
-        
-        Statement.__init__(self, name)
+    def __init__(self, name, as_of=None, parent=None):
+
+        Statement.__init__(self, name, parent=parent)
 
         self.as_of = as_of
 
-        assets = LineItem(name="Assets")
-        liabilities = LineItem(name="Liabilities")
-        equity = LineItem(name="Equity")
+        assets = LineItem(name="Assets", parent=self)
+        liabilities = LineItem(name="Liabilities", parent=self)
+        equity = LineItem(name="Equity", parent=self)
 
         for line in [assets, liabilities, equity]:
             self.add_top_line(line)

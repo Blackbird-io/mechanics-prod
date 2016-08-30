@@ -124,9 +124,8 @@ class ComponentsBase(dict):
         result.by_name = dict()
 
         # fill container (automatically add names)
-        for C in self.getOrdered():
-            rC = C.copy()
-            result.add_item(rC)
+        for unit in self.get_ordered():
+            result.add_item(unit.copy())
 
         return result
 
@@ -148,9 +147,6 @@ class ComponentsBase(dict):
             pool = list(self.values())
 
         return pool
-
-    def getOrdered(self, order_by=None):
-        return self.get_ordered(order_by=order_by)
 
     def get_ordered(self, order_by=None):
         """

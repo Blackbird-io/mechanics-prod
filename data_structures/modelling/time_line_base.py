@@ -29,7 +29,7 @@ TimelineBase       collection of PeriodSummary objects indexed by end date
 # imports
 import copy
 
-from datetime import date, timedelta
+from datetime import date
 
 from data_structures.system.bbid import ID
 
@@ -182,5 +182,20 @@ class TimelineBase(dict):
         # Period has only a pointer to the Model.namespace_id; periods don't
         # have their own bbids.
         period.relationships.set_parent(self)
+
+        # end dates of the past and future periods
+        period.past_end = max(
+            (day for day in self.keys() if day < period.end), default=None
+        )
+        period.next_end = min(
+            (day for day in self.keys() if day > period.end), default=None
+        )
+        # link adjacent periods
+        if period.past_end:
+            past_period = self[period.past_end]
+            past_period.next_end = period.end
+        if period.next_end:
+            next_period = self[period.next_end]
+            next_period.past_end = period.end
 
         return period
