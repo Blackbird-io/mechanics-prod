@@ -41,7 +41,7 @@ import bb_settings
 import chef_settings
 from ._chef_tools import add_scenario_selector
 from .bb_workbook import BB_Workbook as Workbook
-from .cell_styles import CellStyles, LOWHEADER_COLOR
+from .cell_styles import CellStyles
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
@@ -127,7 +127,7 @@ class ModelChef:
 
         transcript_chef.make_transcript_excel(model, book)
 
-        self._format_line_borders(book)
+        CellStyles.format_line_borders(book)
 
         return book
 
@@ -305,12 +305,14 @@ class ModelChef:
         cell_styles.format_scenario_label(custom_cell)
 
         for i, s in enumerate(scenario_columns):
-            scen_cell = my_tab.cell(column=base_case_column+i, row=current_row)
+            scen_cell = my_tab.cell(
+                column=base_case_column + i, row=current_row
+            )
             scen_cell.value = s.title()
             cell_styles.format_scenario_label(scen_cell)
             if i > 0:
                 # add columns for other cases to area
-                area.columns.by_name[s.lower()+"_case"] = base_case_column+i
+                area.columns.by_name[s.lower() + "_case"] = base_case_column + i
 
         active_label_cell = my_tab.cell(column=in_effect_column,
                                         row=current_row)
@@ -362,7 +364,7 @@ class ModelChef:
 
             # Loop through scenarios and add values
             for i, s in enumerate(scenario_columns):
-                case_cell = my_tab.cell(column=base_case_column+i,
+                case_cell = my_tab.cell(column=base_case_column + i,
                                         row=current_row)
                 case_cell.value = all_scenarios[s].get(param_name, '')
                 cell_styles.format_parameter(case_cell)
@@ -378,35 +380,41 @@ class ModelChef:
 
             in_effect_cell = my_tab.cell(column=in_effect_column,
                                          row=current_row)
-            in_effect_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+            in_effect_cell.set_explicit_value(
+                link, data_type=type_codes.FORMULA
+            )
             cell_styles.format_parameter(in_effect_cell)
 
             current_row += 1
             ref_row += 1
 
         # Add cell outline formatting for Scenarios cells here
-        cell_styles.format_border_group(my_tab,
-                                             custom_column,
-                                             custom_column,
-                                             title_row,
-                                             current_row-1)
+        cell_styles.format_border_group(
+            my_tab,
+            custom_column,
+            custom_column,
+            title_row,
+            current_row - 1
+        )
 
-        cell_styles.format_border_group(my_tab,
-                                             base_case_column,
-                                             base_case_column+i,
-                                             title_row,
-                                             current_row-1)
+        cell_styles.format_border_group(
+            my_tab,
+            base_case_column,
+            base_case_column + i,
+            title_row,
+            current_row - 1
+        )
 
-        cell_styles.format_border_group(my_tab,
-                                        in_effect_column,
-                                        in_effect_column,
-                                        title_row,
-                                        current_row - 1)
-
-
+        cell_styles.format_border_group(
+            my_tab,
+            in_effect_column,
+            in_effect_column,
+            title_row,
+            current_row - 1
+        )
 
         # Now add the timeline area
-        active_column = in_effect_column+2
+        active_column = in_effect_column + 2
         tl_start = active_column
         alpha_master_column = get_column_letter(in_effect_column)
 
@@ -436,7 +444,9 @@ class ModelChef:
                 param_row = timeline.rows.by_name[k]
                 param_cell = my_tab.cell(column=active_column, row=param_row)
 
-                master_cell = my_tab.cell(column=in_effect_column, row=param_row)
+                master_cell = my_tab.cell(
+                    column=in_effect_column, row=param_row
+                )
 
                 link2master = True
                 if k in period.parameters:
@@ -451,7 +461,9 @@ class ModelChef:
                     cos = dict(alpha_column=alpha_master_column, row=param_row)
                     link = link_template.format(**cos)
 
-                    param_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+                    param_cell.set_explicit_value(
+                        link, data_type=type_codes.FORMULA
+                    )
 
                 cell_styles.format_parameter(param_cell)
 
@@ -460,15 +472,15 @@ class ModelChef:
         tl_end = active_column - 1
         timeline.rows.by_name[field_names.TITLE] = title_row
 
-        for col in range(tl_start, tl_end+1):
+        for col in range(tl_start, tl_end + 1):
             alpha = get_column_letter(col)
             my_tab.column_dimensions[alpha].outline_level = 1
 
-        for col in range(base_case_column, in_effect_column+1):
+        for col in range(base_case_column, in_effect_column + 1):
             alpha = get_column_letter(col)
             my_tab.column_dimensions[alpha].outline_level = 1
 
-        for c in range(1, area.columns.ending+1):
+        for c in range(1, area.columns.ending + 1):
             sheet_style.set_column_width(my_tab, c)
 
         sheet_style.set_column_width(my_tab, custom_column + 1, 12)
@@ -476,7 +488,7 @@ class ModelChef:
         sheet_style.set_column_width(my_tab, in_effect_column - 1, 12)
 
         corner_col = area.columns.by_name[field_names.BASE_CASE]
-        corner_row = title_row+1
+        corner_row = title_row + 1
         corner_cell = my_tab.cell(column=corner_col, row=corner_row)
         my_tab.freeze_panes = corner_cell
 
@@ -484,44 +496,3 @@ class ModelChef:
         my_tab.sheet_properties.tabColor = chef_settings.SCENARIO_TAB_COLOR
 
         return my_tab
-
-    @staticmethod
-    def _format_line_borders(book):
-        """
-
-
-        model_chef._format_line_borders() -> None
-
-        --``book`` is the workbook to format
-
-        Function manipulates workbook in place, adding borders to rows where
-        line items request them.
-        """
-        for sheet in book.worksheets:
-
-            if not getattr(sheet, 'bb', None):
-                continue
-
-            if not sheet.bb.line_directory:
-                continue
-
-            # go through all lines in sheet.bb.line_directory and add border
-            # formatting, if any
-            param_area = getattr(sheet.bb, field_names.PARAMETERS)
-            st_col = param_area.columns.by_name[field_names.VALUES]
-            if 'time_line' in sheet.bb.area_names:
-                ed_col = min((sheet.bb.time_line.columns.ending,
-                              sheet.max_column))
-            else:
-                ed_col = sheet.max_column - 1
-
-            for xl in sheet.bb.line_directory.values():
-                row = xl.cell.row
-                border = xl.format.border
-
-                if not border:
-                    continue
-
-                cell_styles.format_border_group(sheet, st_col=st_col,
-                                                ed_col=ed_col, st_row=row,
-                                                ed_row=row, border_style=border)

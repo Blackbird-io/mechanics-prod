@@ -28,12 +28,16 @@ CellStyles            standard styles for worksheet cells
 
 # Imports
 import openpyxl as xlio
+
 from openpyxl.styles import Border, Side, Font, Alignment, PatternFill
 from openpyxl.styles.colors import WHITE, BLACK
 
 from chef_settings import AREA_BORDER
+
 from .data_types import NumberFormats
 from .data_types import TypeCodes
+from .field_names import FieldNames
+
 
 
 
@@ -460,3 +464,43 @@ class CellStyles:
             border.left = side
             border.right = side
             cell.border = border
+
+    def format_line_borders(book):
+        """
+
+
+        CellStyles.format_line_borders() -> None
+
+        --``book`` is the workbook to format
+
+        Function manipulates workbook in place, adding borders to rows where
+        line items request them.
+        """
+        for sheet in book.worksheets:
+
+            if not getattr(sheet, 'bb', None):
+                continue
+
+            if not sheet.bb.line_directory:
+                continue
+
+            # go through all lines in sheet.bb.line_directory and add border
+            # formatting, if any
+            param_area = getattr(sheet.bb, FieldNames.PARAMETERS)
+            st_col = param_area.columns.by_name[FieldNames.VALUES]
+            if 'time_line' in sheet.bb.area_names:
+                ed_col = min((sheet.bb.time_line.columns.ending,
+                              sheet.max_column))
+            else:
+                ed_col = sheet.max_column - 1
+
+            for xl in sheet.bb.line_directory.values():
+                row = xl.cell.row
+                border = xl.format.border
+
+                if not border:
+                    continue
+
+                CellStyles.format_border_group(sheet, st_col=st_col,
+                                                ed_col=ed_col, st_row=row,
+                                                ed_row=row, border_style=border)
