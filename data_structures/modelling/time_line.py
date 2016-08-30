@@ -33,8 +33,7 @@ from datetime import date, datetime, timedelta
 
 import bb_settings
 
-from data_structures.system.bbid import ID
-from data_structures.system.summary_maker import SummaryMaker
+from data_structures.system.summary_builder import SummaryBuilder
 
 from .parameters import Parameters
 from .time_line_base import TimelineBase
@@ -274,7 +273,8 @@ class TimeLine(TimelineBase):
             seed.past.content.reset_financials()
             seed.past.content.fill_out()
 
-        self.summary_builder = SummaryMaker(self)
+        # init SummaryMaker now that TimeLine has been built
+        self.summary_builder = SummaryBuilder(self)
 
         # for the timing of extrapolation
         time_begin = datetime.now()
@@ -305,21 +305,17 @@ class TimeLine(TimelineBase):
                 time_total = (time_cease - time_begin).total_seconds()
                 logger.debug(
                     '{} -> {} extrapolation {:6.2f} sec, {:6.2f} total'.format(
-                    seed.end, period.end, time_stamp, time_total
-                ))
+                        seed.end, period.end, time_stamp, time_total
+                    ))
 
-            if bb_settings.MAKE_ANNUAL_SUMMARIES:
-                if period.end >= self.current_period.end:
-                    self.summary_builder.parse_period(period)
+        if bb_settings.MAKE_ANNUAL_SUMMARIES:
+            # if len(self.summary_builder.summaries) > 0:
+            #     self.summary_builder.update_summaries()
+            # else:
+            # generate or re-generate annual and quarterly summaries
+            self.summary_builder.make_quarterly_summaries()
+            self.summary_builder.make_annual_summaries()
 
-            # drop future periods that have been used up to keep size low
-            if bb_settings.DYNAMIC_EXTRAPOLATION:
-                if period.past and period.past.past:
-                    if period.past.past.end > self.current_period.end:
-                        period.past.content.reset_financials()
-                        period.past.past.clear()
-
-        self.summary_builder.wrap()
         self.has_been_extrapolated = True
 
     def extrapolate_all(self, seed=None):
@@ -361,12 +357,14 @@ class TimeLine(TimelineBase):
         """
         #
         if backward:
-            dates = reversed(dates)
+            dates = dates[::-1]
             # Reverse order, so go from newest to oldest
 
-        for i, date in enumerate(dates):
+        for i in range(len(dates)):
+
+            date = dates[i]
             # With default arguments, start work at the period immediately
-            # after the current period
+            # prior to the current period
 
             target_period = self[date]
             updated_period = seed.extrapolate_to(target_period)
