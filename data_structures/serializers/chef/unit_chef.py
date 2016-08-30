@@ -40,8 +40,10 @@ from .line_chef import LineChef
 from .sheet_style import SheetStyle
 from .tab_names import TabNames
 
-from chef_settings import SCENARIO_SELECTORS, VALUATION_TAB_COLOR, \
-                            APPLY_COLOR_TO_DECEMBER, DECEMBER_COLOR
+from chef_settings import (
+    SCENARIO_SELECTORS, VALUATION_TAB_COLOR, HIDE_LIFE_EVENTS,
+    APPLY_COLOR_TO_DECEMBER, DECEMBER_COLOR,
+)
 from data_structures.modelling import common_events
 from openpyxl.styles import PatternFill
 
@@ -220,13 +222,7 @@ class UnitChef:
         sheet.bb.outline_level += 1
 
         # 2.2.   spread life
-        sheet.bb.current_row += 1
-        sheet = self._add_unit_life(sheet=sheet, unit=unit)
-        param_area = getattr(sheet.bb, field_names.PARAMETERS)
-        for snapshot in unit:
-            sheet.bb.current_row = param_area.rows.ending + 1
-            self._add_unit_life(sheet=sheet, unit=snapshot, set_labels=False)
-        sheet.bb.outline_level -= 1
+        self.unit_life(sheet, unit)
 
         # 2.3. add unit size
         sheet.bb.current_row += 2
@@ -270,7 +266,7 @@ class UnitChef:
         if APPLY_COLOR_TO_DECEMBER:
             for date, column in sheet.bb.time_line.columns.by_name.items():
                 if date.month == 12:
-                    for row in range(1, sheet.max_row+1):
+                    for row in range(1, sheet.max_row + 1):
                         cell = sheet.cell(column=column, row=row)
                         cell.fill = PatternFill(start_color=DECEMBER_COLOR,
                                                 end_color=DECEMBER_COLOR,
@@ -293,7 +289,6 @@ class UnitChef:
 
         # 1.   Chop the children
         if recur:
-            before_kids = len(book.worksheets)
             children = unit.components.get_ordered()
 
             for child in children:
@@ -304,6 +299,32 @@ class UnitChef:
         # 2.6 add valuation tab, if any exists for unit
         if unit.financials.has_valuation:
             self._add_valuation_tab(book, unit, index=index)
+
+    def unit_life(self, sheet, unit):
+        """
+
+
+        UnitChef.unit_life() -> None
+
+        Method adds Life and Events sections to unit sheet and delegates to
+        _add_unit_life to write each time period.
+        """
+
+        sheet.bb.current_row += 1
+        sheet = self._add_unit_life(sheet=sheet, unit=unit)
+        param_area = getattr(sheet.bb, field_names.PARAMETERS)
+        for snapshot in unit:
+            sheet.bb.current_row = param_area.rows.ending + 1
+            self._add_unit_life(sheet=sheet, unit=snapshot, set_labels=False)
+        sheet.bb.outline_level -= 1
+
+        if HIDE_LIFE_EVENTS:
+            top_row = getattr(sheet.bb, 'first_life_row', None)
+            end_row = sheet.bb.current_row
+            if top_row and end_row:
+                for rownum in range(top_row, end_row + 2):
+                    row = sheet.row_dimensions[rownum]
+                    row.hidden = True
 
     # *************************************************************************#
     #                          NON-PUBLIC METHODS                              #
@@ -354,11 +375,11 @@ class UnitChef:
                         sheet, statement, title='Starting Balance Sheet'
                     )
                     line_chef.chop_starting_balance(
-                          sheet=sheet,
-                          unit=unit,
-                          column=column,
-                          row_container=statement_rows,
-                          set_labels=set_labels
+                        sheet=sheet,
+                        unit=unit,
+                        column=column,
+                        row_container=statement_rows,
+                        set_labels=set_labels
                     )
                     sheet.bb.need_spacer = False
 
@@ -444,7 +465,9 @@ class UnitChef:
         time_line = sheet.cell(column=active_column, row=time_line_row)
 
         cells["ref_date"] = ref_date
-        formula = fs.LINK_TO_COORDINATES.format(coordinates=time_line.coordinate)
+        formula = fs.LINK_TO_COORDINATES.format(
+            coordinates=time_line.coordinate
+        )
         ref_date.value = formula
 
         del formula
@@ -566,7 +589,7 @@ class UnitChef:
 
         group_lines(sheet, row=active_row)
 
-        sheet.bb.current_row = active_row+1
+        sheet.bb.current_row = active_row + 1
 
         # Return sheet
         return sheet
@@ -585,7 +608,6 @@ class UnitChef:
         events = sheet.bb.events
         parameters = getattr(sheet.bb, field_names.PARAMETERS)
 
-        active_row = sheet.bb.current_row
         master_column = parameters.columns.get_position(field_names.MASTER)
 
         existing_names = unit.life.events.keys() & events.rows.by_name.keys()
@@ -709,6 +731,7 @@ class UnitChef:
         )
 
         sheet.bb.current_row = sheet.bb.events.rows.ending
+        sheet.bb.first_life_row = first_life_row
 
         # Move current row down to the bottom (max_row() probably best here).
         return sheet
@@ -825,7 +848,7 @@ class UnitChef:
         for param in sorted(new_params):
             if parameters.rows.ending:
                 # there are existing parameters
-                this_row = parameters.rows.ending+1
+                this_row = parameters.rows.ending + 1
             else:
                 # there are NO existing parameters
                 this_row = self.VALUES_START_ROW
@@ -995,7 +1018,7 @@ class UnitChef:
         to the ``source_sheet``.  Will keep source formatting if
         ``keep_format`` is true.
         """
-        # <-------------------------------------------------------------------------------------------------------SHOULD BE PUBLIC ROUTINE
+        # <-- SHOULD BE PUBLIC ROUTINE
         source_area = getattr(source_sheet.bb, area_name)
         local_area = getattr(local_sheet.bb, area_name, None)
 
@@ -1092,7 +1115,8 @@ class UnitChef:
         timeline_area.rows.by_name[field_names.TITLE] = self.TITLE_ROW
 
         template = formula_templates.ADD_CELL_FROM_SHEET
-        src_vals = set(source_area.columns.by_name.keys())-{field_names.LABELS}
+        src_vals = \
+            set(source_area.columns.by_name.keys()) - {field_names.LABELS}
 
         if current_only:
             src_vals = [unit.period.end]
