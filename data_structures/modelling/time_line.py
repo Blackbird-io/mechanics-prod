@@ -27,14 +27,14 @@ TimeLine              collection of TimePeriod objects indexed by end date
 
 
 # imports
-import copy
+import logging
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 import bb_settings
 
 from data_structures.system.bbid import ID
-from data_structures.system.summary_builder import SummaryBuilder
+from data_structures.system.summary_maker import SummaryMaker
 
 from .parameters import Parameters
 from .time_line_base import TimelineBase
@@ -44,7 +44,8 @@ from .time_period import TimePeriod
 
 
 # globals
-# n/a
+logger = logging.getLogger(bb_settings.LOGNAME_MAIN)
+
 
 # classes
 class TimeLine(TimelineBase):
@@ -92,7 +93,7 @@ class TimeLine(TimelineBase):
 
         self.master = None
         self.parameters = Parameters()
-        self.summary_builder = SummaryBuilder(self)
+        self.summary_builder = None
         self.has_been_extrapolated = False
 
     @property
@@ -198,9 +199,6 @@ class TimeLine(TimelineBase):
                 #close loop:
                 back_end_date = curr_start_date - timedelta(1)
 
-        # Now link all of the periods.
-        self.link()
-
     def clear(self):
         """
 
@@ -276,21 +274,52 @@ class TimeLine(TimelineBase):
             seed.past.content.reset_financials()
             seed.past.content.fill_out()
 
-        seed_date = seed.end
+        self.summary_builder = SummaryMaker(self)
 
-        past, present, future = self.get_segments(seed_date)
-        self.extrapolate_dates(seed, future)
-        # Could run in parallel in simple mode by projecting
-        # each snapshot separately and then connecting them
+        # for the timing of extrapolation
+        time_begin = datetime.now()
 
-        if bb_settings.MAKE_ANNUAL_SUMMARIES:
-            # if len(self.summary_builder.summaries) > 0:
-            #     self.summary_builder.update_summaries()
-            # else:
-            # generate or re-generate annual and quarterly summaries
-            self.summary_builder.make_quarterly_summaries()
-            self.summary_builder.make_annual_summaries()
+        for period in self.iter_ordered(open=seed.end):
+            if period.end > seed.end:
 
+                # for the timing of this iteration
+                time_start = datetime.now()
+
+                # reset content and directories
+                period.clear()
+                # combine tags
+                period.tags = seed.tags.extrapolate_to(period.tags)
+                # propagate parameters from past to current
+                period.combine_parameters()
+                # copy and fill out content
+                if seed.content:
+                    new_content = seed.content.copy()
+                    period.set_content(new_content, updateID=False)
+                    period.content.reset_financials()
+                    period.content.fill_out()
+                seed = period
+
+                # log time spent in this step and total
+                time_cease = datetime.now()
+                time_stamp = (time_cease - time_start).total_seconds()
+                time_total = (time_cease - time_begin).total_seconds()
+                logger.debug(
+                    '{} -> {} extrapolation {:6.2f} sec, {:6.2f} total'.format(
+                    seed.end, period.end, time_stamp, time_total
+                ))
+
+            if bb_settings.MAKE_ANNUAL_SUMMARIES:
+                if period.end >= self.current_period.end:
+                    self.summary_builder.parse_period(period)
+
+            # drop future periods that have been used up to keep size low
+            if bb_settings.DYNAMIC_EXTRAPOLATION:
+                if period.past and period.past.past:
+                    if period.past.past.end > self.current_period.end:
+                        period.past.content.reset_financials()
+                        period.past.past.clear()
+
+        self.summary_builder.wrap()
         self.has_been_extrapolated = True
 
     def extrapolate_all(self, seed=None):
@@ -332,14 +361,12 @@ class TimeLine(TimelineBase):
         """
         #
         if backward:
-            dates = dates[::-1]
+            dates = reversed(dates)
             # Reverse order, so go from newest to oldest
 
-        for i in range(len(dates)):
-
-            date = dates[i]
+        for i, date in enumerate(dates):
             # With default arguments, start work at the period immediately
-            # prior to the current period
+            # after the current period
 
             target_period = self[date]
             updated_period = seed.extrapolate_to(target_period)
@@ -422,29 +449,6 @@ class TimeLine(TimelineBase):
         Legacy interface for TimeLine.get_ordered()
         """
         return self.get_ordered()
-
-    def link(self):
-        """
-
-
-        TimeLine.link() -> None
-
-
-        Connect adjacent periods to each other to form a history.
-        """
-
-        dates = sorted(self.keys())
-
-        for i in range(len(dates) - 1):
-            # Iterate until the second-to-last date
-
-            date_0 = dates[i]
-            date_1 = dates[i+1]
-
-            period_0 = self[date_0]
-            period_1 = self[date_1]
-
-            period_1.set_history(period_0)
 
     def revert_current(self):
         """
