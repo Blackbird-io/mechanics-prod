@@ -7,7 +7,7 @@
 # Module: data_structures.modelling.driver
 """
 
-Module defines Driver class. Drivers modify LineItems. 
+Module defines Driver class. Drivers modify LineItems.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -25,7 +25,7 @@ Driver                objects that modify lineitems from inside business units
 
 
 
- 
+
 # Imports
 import copy
 
@@ -52,20 +52,20 @@ class Driver(TagsMixIn):
 
     Drivers apply formulas to business units.
 
-    1) Each Driver applies one and only one formula. 
+    1) Each Driver applies one and only one formula.
 
     A Driver may apply the formula whenever the Driver works on a LineItem
-    that satisfies that Driver instance's workConditions. 
+    that satisfies that Driver instance's workConditions.
 
     To limit the size of extrapolated models, a Driver instance stores
     only a bbid for its formula, not the formula itself. When the Driver
     has to work, the Driver retrieves the formula from the formula catalog
     (managed by FormulaManager) and applies it to the relevant line and
-    business unit. 
+    business unit.
 
     When the Driver calls a formula, the Driver provides the formula with
     the target LineItem, the Driver's parentObject and signature, and an
-    arbitrary set of additional work parameters stored in Driver.data. 
+    arbitrary set of additional work parameters stored in Driver.data.
 
     Formulas generally compute the value of one LineItem based on data from
     other LineItems or BusinessUnit attributes.
@@ -77,7 +77,7 @@ class Driver(TagsMixIn):
     contain ONLY the items specified in workConditions.
 
     Setting the value for a workCondition key to None means that all objects
-    will match it. In other words, None is the absence of a workCondition. 
+    will match it. In other words, None is the absence of a workCondition.
 
     3) A BusinessUnit may contain several different Drivers applicable to a
     given line. In such an event, a BusinessUnit will construct a queue of
@@ -86,7 +86,7 @@ class Driver(TagsMixIn):
     position of 10 will run before one with position == 20.
 
     Drivers do not need to have consecutive positions to run. Queues should
-    generally be limited to 5 drivers per line. 
+    generally be limited to 5 drivers per line.
 
     4) A Topic should provide the Driver with a signature prior to injecting the
     Driver into a BusinessUnit. The driver signature should contain the Topic's
@@ -97,7 +97,7 @@ class Driver(TagsMixIn):
     BusinessUnits won't add a driver if the BU already contains a driver with
     the same id.
 
-    6) Topics and other modules should store any model-specific data used by 
+    6) Topics and other modules should store any model-specific data used by
     the driver's formula in the driver's ``data`` dictionary. For example, if a
     formula relies on average ticket price to compute revenue, ``data`` should
     contain something like "atp" : 4.
@@ -105,7 +105,7 @@ class Driver(TagsMixIn):
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
-    
+
     DATA:
     active                bool; is instance turned on
     conversion_table      dict; parameter name : formula argument
@@ -118,7 +118,7 @@ class Driver(TagsMixIn):
     workConditions        dict; criteria for objects driver will process
 
     FUNCTIONS:
-    __eq__                True for objects with the same work function              
+    __eq__                True for objects with the same work function
     __ne__                returns bool negative of __eq__
     __hash__              returns hash of instance bbid, raises error if blank
     copy()                returns a new instance w own objects in key places
@@ -132,16 +132,16 @@ class Driver(TagsMixIn):
     _FM = None
     # We will connect the class to the FormulaManager at the bottom of the
     # module. Driver objects will then be able to pull formulas directly
-    # from catalog. 
+    # from catalog.
 
     @classmethod
     def _disconnect(cls):
         cls._FM = None
-    
+
     @classmethod
     def _set_formula_manager(cls, new_FM):
         cls._FM = new_FM
-        
+
     def __init__(self, signature=None):
         TagsMixIn.__init__(self)
 
@@ -154,7 +154,7 @@ class Driver(TagsMixIn):
         # TopicManager will assign a specific uuid to the driver when
         # during topic catalog configuration. Each Driver gets an id within the
         # namespace of its defining topic.
-        
+
         self.position = 10
         # ``position`` must be an integer value between 0 and 100. used to sort
         # order in which drivers apply to a line.
@@ -195,7 +195,7 @@ class Driver(TagsMixIn):
         """
         result = not self.__eq__(comp, trace, tab_width)
         return result
-    
+
     def __hash__(self):
         """
 
@@ -203,7 +203,7 @@ class Driver(TagsMixIn):
         Driver.__hash__() -> obj
 
 
-        Method returns the hash of the instance's bbid. 
+        Method returns the hash of the instance's bbid.
         """
         if not self.id.bbid:
             c1 = "Driver.id.bbid blank. Driver expected to have filled bbid at"
@@ -211,14 +211,14 @@ class Driver(TagsMixIn):
             c = c1 + c2
             raise bb_exceptions.IDAssignmentError(c)
         return hash(self.id.bbid)
-    
+
         # Ideally, drivers should hash to a combination of the instance formula,
         # params, conversion table, and work conditions. These attributes define
         # what it means for the driver to be the same.
-        # 
+        #
         # The issue is that params and conversion table are mutable containers.
         # So either have to make them immutable or figure out some other
-        # approach. 
+        # approach.
 
     @property
     def summary_calculate(self):
@@ -241,7 +241,7 @@ class Driver(TagsMixIn):
 
 
         Configure instance for use.
-        
+
         Steps:
          -- set instance conversion_table
          -- set instance parameters to data, with overwrite permissions
@@ -253,8 +253,8 @@ class Driver(TagsMixIn):
         self._set_parameters(data, overwrite=True)
         # Overwrite any existing parameters on configuration. Do this to
         # make sure topics that reconfigure the same driver template can run
-        # multiple times. 
-        
+        # multiple times.
+
         self._set_formula(formula)
 
         # get namespace for driver
@@ -302,7 +302,7 @@ class Driver(TagsMixIn):
         result.parameters = copy.deepcopy(self.parameters)
         result.workConditions = copy.deepcopy(self.workConditions)
         return result
-        
+
     def setSignature(self, newSig):
         """
 
@@ -310,7 +310,7 @@ class Driver(TagsMixIn):
         Driver.setSignature() -> None
 
 
-        Method sets self.signature to the specified value. 
+        Method sets self.signature to the specified value.
         """
         self.signature = newSig
 
@@ -325,7 +325,7 @@ class Driver(TagsMixIn):
         arbitrarily many tags. Method stores each condition as a list. That is,
         self.workConditions["name"] = [nameCondition]. This approach allows for
         use of set operations for checking alignment without breaking
-        string-based tags. 
+        string-based tags.
 
         Setting the value for a given condition to None means all objects match
         that value. If all three conditions are set to None or an empty list,
@@ -334,7 +334,7 @@ class Driver(TagsMixIn):
         names = []
         parts = []
         tags = []
-        
+
         if nameCondition:
             names.append(nameCondition.casefold())
         else:
@@ -348,7 +348,7 @@ class Driver(TagsMixIn):
                 tags.append(tag.casefold())
             else:
                 tags.append(tag)
-                
+
         self.workConditions["name"]=names
         self.workConditions["partOf"]=parts
         self.workConditions["all"]=tags
@@ -358,7 +358,7 @@ class Driver(TagsMixIn):
 
 
         Driver.validate() -> bool
-        
+
 
         Check if instance is properly configured to do work.
 
@@ -367,7 +367,7 @@ class Driver(TagsMixIn):
          -- instance does not have a formula_bbid
          -- the formula_bbid specified for instance is not in catalog
          -- instance and parent don't supply adequate data (also throws
-            exception).        
+            exception).
         """
         result = True
         if len(self._FM.local_catalog.by_id) == 0:
@@ -376,19 +376,19 @@ class Driver(TagsMixIn):
         if result:
             if not self.formula_bbid:
                 result = False
-                
+
         if result:
             if self.formula_bbid not in self._FM.local_catalog.by_id:
                 result = False
 
         if check_data:
-            result = self._check_data(parent) 
+            result = self._check_data(parent)
         # Always check data, regardless of result. Function will throw
         # exception if the instance lacks required data for the its formula.
-        
+
         return result
-        
-    def workOnThis(self, line, bu):
+
+    def workOnThis(self, line, bu, period_end=None):
         """
 
 
@@ -409,7 +409,7 @@ class Driver(TagsMixIn):
                 # formula_catalog.issue() only performs dict retrieval and
                 # return for key.
 
-                params = self._build_params(parent=bu)
+                params = self._build_params(parent=bu, period_end=period_end)
 
                 if not bb_settings.PREP_FOR_EXCEL:
 
@@ -433,7 +433,7 @@ class Driver(TagsMixIn):
                     data_cluster.formula = output.steps
 
                     line.xl.derived.calculations.append(data_cluster)
-                
+
                 # Each function is "disposable", so we explicitly delete the
                 # pointer after each use.
                 del formula
@@ -444,8 +444,8 @@ class Driver(TagsMixIn):
 
         Driver.to_excel() -> DriverData
 
-        
-        Return a record set with instance parameters and conversion map. 
+
+        Return a record set with instance parameters and conversion map.
         """
         result = xl_mgmt.DriverData()
         result.conversion_map = self.conversion_table.copy()
@@ -461,13 +461,13 @@ class Driver(TagsMixIn):
 
             result.rows.append(row)
 
-        return result        
-    
+        return result
+
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
 
-    def _build_params(self, parent):
+    def _build_params(self, parent, period=None):
         """
 
 
@@ -477,41 +477,34 @@ class Driver(TagsMixIn):
         Prepare a parameter dictionary for the formula.
 
         Expects ``parent`` to be a business unit with a defined period pointer.
-        
+
         Method builds its result by collating parameters from the parent,
         parent's time_line and instance. Specific parameters trump general ones.
         Method then converts uniquely named global parameters to standard
         formula arguments using instance.conversion_table. Result includes both
         the original and converted keys.
         """
-        period = None
         time_line = None
-        
+
         if parent:
             period = parent.period
-            
-        if period:
             time_line = period.relationships.parent
-        
+            if period:
+                period = time_line[period.end]
+
         # Specific parameters trump general ones. Start with time_line, then
         # update for period (more specific) and driver (even more specific).
 
         params = dict()
 
-        try:
+        if time_line:
             params.update(time_line.parameters)
-        except AttributeError:
-            pass
-                                                 
-        try:
-            params.update(period.parameters)
-        except AttributeError:
-            pass
 
-        try:
+        if period:
+            params.update(period.parameters)
+
+        if parent:
             params.update(parent.parameters)
-        except AttributeError:
-            pass
 
         params.update(self.parameters)
 
@@ -580,10 +573,10 @@ class Driver(TagsMixIn):
         Throw DefinitionError if that's not the case.
         """
         result = False
-        
+
         known_params = self._build_params(parent)
         formula = self._FM.local_catalog.issue(self.formula_bbid)
-        
+
         for parameter in formula.required_data:
             if parameter not in known_params:
                 c = ""
@@ -595,7 +588,7 @@ class Driver(TagsMixIn):
             result = True
 
         return result
-    
+
     def _map_params_to_formula(self, params, conversion_table=None):
         """
 
@@ -604,16 +597,16 @@ class Driver(TagsMixIn):
 
 
         Return a dictionary that maps values from ``params`` to keys in the
-        conversion table.         
+        conversion table.
         """
         result = dict()
-        
+
         if conversion_table is None:
             conversion_table = self.conversion_table
 
         for param_name, var_name in conversion_table.items():
             result[var_name] = params[param_name]
-        
+
         return result
 
     def _set_formula(self, F):
@@ -640,7 +633,7 @@ class Driver(TagsMixIn):
         Driver._set_parameters() -> None
 
 
-        Add new_data to instance.parameters. 
+        Add new_data to instance.parameters.
         """
         new_data = copy.deepcopy(new_data)
         self.parameters.add(new_data, overwrite)

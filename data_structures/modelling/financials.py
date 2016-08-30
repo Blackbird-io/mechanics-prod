@@ -27,8 +27,12 @@ Financials            a dynamic class that holds standard and custom statements
 
 
 # Imports
-import bb_settings
 import weakref
+import logging
+
+from functools import lru_cache
+
+import bb_settings
 
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
@@ -39,12 +43,12 @@ from .equalities import Equalities
 
 
 
-
 # Constants
 # n/a
 
 # Globals
-# n/a
+logger = logging.getLogger(bb_settings.LOGNAME_MAIN)
+
 
 # Classes
 class Financials:
@@ -72,7 +76,6 @@ class Financials:
     def __init__(self, parent=None, period=None):
         if parent:
             parent = weakref.proxy(parent)
-        self.relationships = Relationships(self, parent=parent)
         self.overview = Overview(parent=self)
         self.income = Income(parent=self)
         self.cash = CashFlow(parent=self)
@@ -81,6 +84,8 @@ class Financials:
         self.ending = BalanceSheet("Ending Balance Sheet", parent=self)
         self.ledger = None
         self.id = ID()  # does not get its own bbid, just holds namespace
+        self.relationships = Relationships(self, parent=parent)
+        self.period = period
         self._full_order = ["overview", "income", "cash", "starting", "ending",
                            "ledger", "valuation"]
         self._compute_order = ['overview', 'income', 'cash']
@@ -176,6 +181,19 @@ class Financials:
         result += border
 
         return result
+
+    @staticmethod
+    @lru_cache(maxsize=128)
+    def get_cached(bu_bbid, period_end):
+        """
+
+
+        Financials.get_cached() -> None
+
+
+        Financials for bu_bbid and period. Cached by functools.
+        """
+        return Financials()
 
     def add_statement(self, name, statement=None, title=None, position=None,
                       compute=True):

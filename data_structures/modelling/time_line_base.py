@@ -190,4 +190,12 @@ class TimelineBase(dict):
         period.next_end = min(
             (day for day in self.keys() if day > period.end), default=None
         )
+        # link adjacent periods
+        if period.past_end:
+            past_period = self[period.past_end]
+            past_period.next_end = period.end
+        if period.next_end:
+            next_period = self[period.next_end]
+            next_period.past_end = period.end
+
         return period
