@@ -388,13 +388,18 @@ class SummaryMaker:
         # get BUs from time periods
         bu_bbid = self.bu_bbid
         # actual BU whose financials will be aggregated
-        source_bu = source.bu_directory[bu_bbid]
+        # source_bu = source.bu_directory[bu_bbid]
+        master_bu = source.relationships.parent.current_period.content
+        source_bu = source.relationships.parent.current_period.bu_directory[bu_bbid]
+
         # summary BU
         timeline_summary = self.summaries[self.onkey]
         summary_period = timeline_summary.summary_period
         target_bu = summary_period.bu_directory[bu_bbid]
 
-        source_statement = getattr(source_bu.financials, statement_name)
+        source_fins = source_bu.get_financials(source.end)
+        # source_statement = getattr(source_bu.financials, statement_name)
+        source_statement = getattr(source_fins, statement_name)
         target_statement = getattr(target_bu.financials, statement_name)
 
         # label by ISO end date of the source period
