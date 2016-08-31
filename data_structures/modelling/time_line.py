@@ -33,7 +33,7 @@ from datetime import date, datetime, timedelta
 
 import bb_settings
 
-from data_structures.system.summary_builder import SummaryBuilder
+from data_structures.system.summary_maker import SummaryMaker
 
 from .parameters import Parameters
 from .time_line_base import TimelineBase
@@ -274,7 +274,7 @@ class TimeLine(TimelineBase):
             seed.past.content.fill_out()
 
         # init SummaryMaker now that TimeLine has been built
-        self.summary_builder = SummaryBuilder(self)
+        self.summary_builder = SummaryMaker(self)
 
         # for the timing of extrapolation
         time_begin = datetime.now()
@@ -307,14 +307,24 @@ class TimeLine(TimelineBase):
                     '{} -> {} extrapolation {:6.2f} sec, {:6.2f} total'.format(
                         seed.end, period.end, time_stamp, time_total
                     ))
+            if bb_settings.MAKE_ANNUAL_SUMMARIES:
+                if period.end >= self.current_period.end:
+                    self.summary_builder.parse_period(period)
 
-        if bb_settings.MAKE_ANNUAL_SUMMARIES:
-            # if len(self.summary_builder.summaries) > 0:
-            #     self.summary_builder.update_summaries()
-            # else:
-            # generate or re-generate annual and quarterly summaries
-            self.summary_builder.make_quarterly_summaries()
-            self.summary_builder.make_annual_summaries()
+            # drop future periods that have been used up to keep size low
+            if bb_settings.DYNAMIC_EXTRAPOLATION:
+                if period.past and period.past.past:
+                    if period.past.past.end > self.current_period.end:
+                        period.past.content.reset_financials()
+                        period.past.past.clear()
+
+        # if bb_settings.MAKE_ANNUAL_SUMMARIES:
+        #     # if len(self.summary_builder.summaries) > 0:
+        #     #     self.summary_builder.update_summaries()
+        #     # else:
+        #     # generate or re-generate annual and quarterly summaries
+        #     self.summary_builder.make_quarterly_summaries()
+        #     self.summary_builder.make_annual_summaries()
 
         self.has_been_extrapolated = True
 

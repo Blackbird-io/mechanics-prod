@@ -220,10 +220,13 @@ class Model(TagsMixIn):
         instance. Method stores all portal data other than the Model in the
         output's .portal_data dictionary.
         """
+        import devhooks
         flat_model = portal_model["e_model"]
 
         if flat_model:
             M = pickle.loads(flat_model)
+            devhooks.log_time('e_model: {:,}'.format(len(flat_model)))
+            devhooks.log_time('unpickled')
         else:
             business_name = portal_model["business_name"]
             if not business_name:
