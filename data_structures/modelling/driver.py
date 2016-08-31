@@ -388,7 +388,7 @@ class Driver(TagsMixIn):
 
         return result
 
-    def workOnThis(self, line, bu, period_end=None):
+    def workOnThis(self, line, bu, period=None):
         """
 
 
@@ -409,7 +409,7 @@ class Driver(TagsMixIn):
                 # formula_catalog.issue() only performs dict retrieval and
                 # return for key.
 
-                params = self._build_params(parent=bu, period_end=period_end)
+                params = self._build_params(parent=bu, period=period)
 
                 if not bb_settings.PREP_FOR_EXCEL:
 
@@ -419,11 +419,15 @@ class Driver(TagsMixIn):
                     output = formula.func(line, bu, params, self.signature)
 
                     if not output.steps:
-                        c = "Formula did not return all required information"
-                        c += "\nName: %s" % formula.tags.name
-                        c += "\nBBID: %s" % self.formula_bbid
-                        c += "\nExcel formula template missing!"
-
+                        c = (
+                            "Formula did not return all required information\n"
+                            "Name: {name}\n"
+                            "BBID: {bbid}\n"
+                            "Excel formula template missing!"
+                        ).format(
+                            name=formula.tags.name,
+                            bbid=self.formula_bbid,
+                        )
                         raise bb_exceptions.ExcelPrepError(c)
 
                     data_cluster = self.to_excel()
