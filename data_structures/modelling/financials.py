@@ -37,7 +37,7 @@ import bb_settings
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
 from .statement import Statement
-from .statements import Overview, Income, CashFlow, BalanceSheet
+from .statements import BalanceSheet
 from .equalities import Equalities
 
 

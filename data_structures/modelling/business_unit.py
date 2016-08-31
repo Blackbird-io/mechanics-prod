@@ -401,6 +401,8 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         if self.filled:
             return
         else:
+            self.financials.relationships.set_parent(self)
+
             self._load_starting_balance()
 
             for statement in self.financials.compute_order:
