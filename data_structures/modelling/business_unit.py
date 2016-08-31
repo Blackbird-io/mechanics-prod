@@ -311,7 +311,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         self.drivers.add_item(newDriver, *otherKeys)
 
-    def compute(self, statement_name, period):
+    def compute(self, statement_name, period=None):
         """
 
 
@@ -322,6 +322,9 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         Method recursively runs consolidation and derivation logic on
         statements for instance and components.
         """
+
+        if not period:
+            period = self.period
 
         for unit in self.components.get_all():
             unit.compute(statement_name, period)
