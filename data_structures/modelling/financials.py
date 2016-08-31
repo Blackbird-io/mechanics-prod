@@ -27,14 +27,18 @@ Financials            a dynamic class that holds standard and custom statements
 
 
 # Imports
-import bb_settings
-import copy
+import weakref
+import logging
 
+from functools import lru_cache
+
+import bb_settings
+
+from data_structures.system.bbid import ID
+from data_structures.system.relationships import Relationships
 from .statement import Statement
 from .statements import Overview, Income, CashFlow, BalanceSheet
 from .equalities import Equalities
-
-from data_structures.system.bbid import ID
 
 
 
@@ -43,13 +47,14 @@ from data_structures.system.bbid import ID
 # n/a
 
 # Globals
-# n/a
+logger = logging.getLogger(bb_settings.LOGNAME_MAIN)
+
 
 # Classes
 class Financials:
     """
 
-    A StatementBundle that includes standard financial statements. 
+    A StatementBundle that includes standard financial statements.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -68,20 +73,25 @@ class Financials:
     ====================  ======================================================
     """
 
-    def __init__(self):
-        self.overview = Overview()
-        self.income = Income()
-        self.cash = CashFlow()
-        self.valuation = Statement("Valuation")
-        self.starting = BalanceSheet("Starting Balance Sheet")
-        self.ending = BalanceSheet("Ending Balance Sheet")
+    def __init__(self, parent=None, period=None):
+        if parent:
+            parent = weakref.proxy(parent)
+        self.overview = Statement(name="overview", parent=self)
+        self.income = Statement(name="income statement", parent=self)
+        self.cash = Statement(name="cash flow statement", parent=self)
+        self.valuation = Statement("Valuation", parent=self)
+        self.starting = BalanceSheet("Starting Balance Sheet", parent=self)
+        self.ending = BalanceSheet("Ending Balance Sheet", parent=self)
         self.ledger = None
         self.id = ID()  # does not get its own bbid, just holds namespace
-        self._full_order = ["overview", "income", "cash", "starting", "ending",
-                           "ledger", "valuation"]
+        self.relationships = Relationships(self, parent=parent)
+        self.period = period
+        self._full_order = [
+            "overview", "income", "cash", "starting", "ending",
+            "ledger", "valuation"
+        ]
         self._compute_order = ['overview', 'income', 'cash']
         self._exclude_statements = ['valuation', 'starting']
-
 
     @property
     def compute_order(self):
@@ -135,44 +145,56 @@ class Financials:
         return result
 
     def __str__(self):
-        
-        result = "\n"
-
         if Equalities.multi_getattr(self, "relationships.parent", None):
+            header = (
+                '{begin:^{width}}\n\n'
+                '{start:^{width}}\n'
+                '{close:^{width}}\n\n'
+            ).format(
+                width=bb_settings.SCREEN_WIDTH,
+                begin='Financial statements for {}'.format(
+                    self.relationships.parent.tags.name
+                ),
+                start='Period starting: {}'.format(
+                    self.relationships.parent.period.start
+                ),
+                close='Period ending:   {}'.format(
+                    self.relationships.parent.period.end
+                ),
+            )
+        else:
+            header = ''
 
-            header = "Financial statements for " + str(self.relationships.parent.tags.name)
-            header = header.center(bb_settings.SCREEN_WIDTH)
-            header += "\n\n"
-
-            starting = "Period starting: " + str(self.relationships.parent.period.starting)
-            starting = starting.center(bb_settings.SCREEN_WIDTH)
-            starting += "\n"
-
-            header += starting
-
-            ending = "Period ending:   " + str(self.relationships.parent.period.ending)
-            ending = ending.center(bb_settings.SCREEN_WIDTH)
-            ending += "\n"
-
-            header += ending
-            header += "\n"
-
-            result += header
-
-        border = "***"
-        border = border.center(bb_settings.SCREEN_WIDTH) + "\n\n"
-
-        result += border
-
-        result = ""
+        content = []
         for statement in self.full_ordered:
             if statement is not None:
-                result += str(statement)
+                content.append(str(statement))
 
-        result += "\n"
-        result += border
+        result = (
+            '{header}'
+            '{content}\n'
+            '{border:^{width}}\n\n'
+        ).format(
+            width=bb_settings.SCREEN_WIDTH,
+            header=header,
+            content=''.join(content),
+            border="***",
+        )
 
         return result
+
+    @staticmethod
+    @lru_cache(maxsize=128)
+    def get_cached(bu_bbid, period_end, summary=None):
+        """
+
+
+        Financials.get_cached() -> None
+
+
+        Financials for bu_bbid and period. Cached by functools.
+        """
+        return Financials()
 
     def add_statement(self, name, statement=None, title=None, position=None,
                       compute=True):
@@ -254,16 +276,14 @@ class Financials:
         new_instance._full_order = self._full_order.copy()
         new_instance._compute_order = self._compute_order.copy()
         new_instance._exclude_statements = self._exclude_statements.copy()
-
         for name in self.full_order:
             own_statement = getattr(self, name)
             if own_statement is not None:
                 new_statement = own_statement.copy()
-                new_instance.__dict__[name] = new_statement
+                setattr(new_instance, name, new_statement)
 
         new_instance.id = ID()
         new_instance.register(self.id.namespace)
-
         return new_instance
 
     def register(self, namespace):
