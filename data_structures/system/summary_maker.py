@@ -261,7 +261,7 @@ class SummaryMaker:
             enter = new_info['enter']
             close = new_info['close']
             summary_period = TimePeriodBase(enter, close)
-            summary_period.month_count = 0
+            summary_period.periods_used = 0
 
             # copy BU structure from time_line.current_period
             summary_unit = self.add_content(self.bu_bbid, summary_period)
@@ -330,6 +330,13 @@ class SummaryMaker:
             # add formula calculations
             self.derived_calculations()
 
+            # add period count
+            target_bu.periods_used = summary_period.periods_used
+            if self.onkey == self.QUARTERLY_KEY:
+                target_bu.complete = (target_bu.periods_used == 3)
+            elif self.onkey == self.ANNUAL_KEY:
+                target_bu.complete = (target_bu.periods_used == 12)
+
             # cascade from quarterly to annual
             if self.onkey == self.QUARTERLY_KEY:
                 self.onkey = self.ANNUAL_KEY
@@ -387,20 +394,20 @@ class SummaryMaker:
 
         # get BUs from time periods
         bu_bbid = self.bu_bbid
-        # actual BU whose financials will be aggregated
-        # source_bu = source.bu_directory[bu_bbid]
-        master_bu = source.relationships.parent.current_period.content
-        source_bu = source.relationships.parent.current_period.bu_directory[bu_bbid]
+        # source BU whose financials will be aggregated
+        source_bu = source.bu_directory[bu_bbid]
+        source_fins = source_bu.get_financials(source)
 
         # summary BU
         timeline_summary = self.summaries[self.onkey]
         summary_period = timeline_summary.summary_period
         target_bu = summary_period.bu_directory[bu_bbid]
+        target_fins = target_bu.get_financials(
+            summary_period, summary=self.onkey
+        )
 
-        source_fins = source_bu.get_financials(source.end)
-        # source_statement = getattr(source_bu.financials, statement_name)
         source_statement = getattr(source_fins, statement_name)
-        target_statement = getattr(target_bu.financials, statement_name)
+        target_statement = getattr(target_fins, statement_name)
 
         # label by ISO end date of the source period
         label = format(source.end)
@@ -417,7 +424,7 @@ class SummaryMaker:
         """
 
 
-        SummaryMaker.flush() -> None
+        SummaryMaker.add_content() -> None
 
         Create a BU to use as the summary holder.
         """
@@ -426,8 +433,8 @@ class SummaryMaker:
 
         # intentionally keeping source BU's bbid so we can find it later
         summary_unit.id = copy.deepcopy(template_bu.id)
-        summary_unit.complete = False
         summary_unit.period = period
+        summary_unit.periods_used = 0
         summary_unit.set_financials(
             Financials(parent=summary_unit, period=period)
         )
@@ -450,12 +457,12 @@ class SummaryMaker:
         timeline_summary = self.summaries[self.onkey]
         source = timeline_summary.source
         summary_period = timeline_summary.summary_period
-        summary_period.month_count += getattr(source, 'month_count', 1)
+        summary_period.periods_used += getattr(source, 'periods_used', 1)
 
         logger.debug('{}:{} -> {}:{} add to {} summary {}'.format(
             source.start, source.end,
             summary_period.start, summary_period.end,
-            self.onkey, summary_period.month_count
+            self.onkey, summary_period.periods_used
         ))
 
         for name in ["overview", "income", "cash"]:
@@ -535,6 +542,4 @@ class SummaryMaker:
         if summary_type is None:
             if getattr(obj, 'summary_calculate', False):
                 summary_type = 'derive'
-        if summary_type is None:
-            summary_type = 'sum'
         return summary_type

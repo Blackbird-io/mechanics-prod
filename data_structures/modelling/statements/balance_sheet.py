@@ -59,9 +59,9 @@ class BalanceSheet(Statement):
     extend()              append multiple lines to instance in order
     ====================  ======================================================
     """
-    def __init__(self, name, as_of=None):
-        
-        Statement.__init__(self, name)
+    def __init__(self, name, as_of=None, parent=None):
+
+        Statement.__init__(self, name, parent=parent)
 
         self.as_of = as_of
 
