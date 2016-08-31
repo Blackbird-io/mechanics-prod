@@ -41,7 +41,9 @@ from .sheet_style import SheetStyle
 from .tab_names import TabNames
 
 from chef_settings import SCENARIO_SELECTORS, VALUATION_TAB_COLOR, \
-                            APPLY_COLOR_TO_DECEMBER, DECEMBER_COLOR
+                            APPLY_COLOR_TO_DECEMBER, DECEMBER_COLOR, \
+                            HIDE_LIFE_EVENTS
+
 from data_structures.modelling import common_events
 from openpyxl.styles import PatternFill
 
@@ -122,10 +124,9 @@ class UnitChef:
 
     SCENARIO_ROW = 2
 
-
     def add_items_to_area(self, *pargs, sheet, area, items, active_column,
                           set_labels=True, format_func=None, hardcoded=False,
-                          preference_order=[]):
+                          preference_order=[], group=True):
         """
 
 
@@ -181,7 +182,10 @@ class UnitChef:
                 format_func(current_cell)
 
             sheet.bb.current_row = new_row
-            group_lines(sheet)
+
+            if group:
+                group_lines(sheet)
+
             new_row += 1
 
         return sheet
@@ -439,7 +443,9 @@ class UnitChef:
 
         ref_date = sheet.cell(column=active_column, row=active_row)
         cell_styles.format_date(ref_date)
-        group_lines(sheet, row=active_row)
+
+        if not HIDE_LIFE_EVENTS:
+            group_lines(sheet, row=active_row)
 
         time_line = sheet.cell(column=active_column, row=time_line_row)
 
@@ -451,7 +457,9 @@ class UnitChef:
         # Make sure each cell gets its own formula by deleting F after use.
 
         # Move down one row
-        group_lines(sheet, row=active_row + 1)
+        if not HIDE_LIFE_EVENTS:
+            group_lines(sheet, row=active_row + 1)
+
         active_row += 1
 
         # 1. Add period start date
@@ -467,12 +475,18 @@ class UnitChef:
         start_date = sheet.cell(column=active_column, row=active_row)
 
         cell_styles.format_date(start_date)
-        group_lines(sheet, row=active_row)
+
+        if not HIDE_LIFE_EVENTS:
+            group_lines(sheet, row=active_row)
+
         cell_styles.format_date(start_date)
         start_date.value = unit.period.start
 
         # Move down two rows (to leave one blank)
-        group_lines(sheet, row=active_row + 1)
+
+        if not HIDE_LIFE_EVENTS:
+            group_lines(sheet, row=active_row + 1)
+
         active_row += 2
 
         # 2. Add age
@@ -487,7 +501,9 @@ class UnitChef:
 
         age = sheet.cell(column=active_column, row=active_row)
         cell_styles.format_parameter(age)
-        group_lines(sheet, row=active_row)
+
+        if not HIDE_LIFE_EVENTS:
+            group_lines(sheet, row=active_row)
 
         cells["age"] = age
         cos = {k: v.coordinate for k, v in cells.items()}
@@ -511,7 +527,9 @@ class UnitChef:
 
         alive = sheet.cell(column=active_column, row=active_row)
         cell_styles.format_parameter(alive)
-        group_lines(sheet, row=active_row)
+
+        if not HIDE_LIFE_EVENTS:
+            group_lines(sheet, row=active_row)
 
         cells["alive"] = alive
         cos["alive"] = alive.coordinate
@@ -536,7 +554,9 @@ class UnitChef:
 
         span = sheet.cell(column=active_column, row=active_row)
         cell_styles.format_parameter(span)
-        group_lines(sheet, row=active_row)
+
+        if not HIDE_LIFE_EVENTS:
+            group_lines(sheet, row=active_row)
 
         cells[field_names.SPAN] = span
         cos[field_names.SPAN] = span.coordinate
@@ -564,7 +584,8 @@ class UnitChef:
 
         percent.set_explicit_value(formula, data_type=type_codes.FORMULA)
 
-        group_lines(sheet, row=active_row)
+        if not HIDE_LIFE_EVENTS:
+            group_lines(sheet, row=active_row)
 
         sheet.bb.current_row = active_row+1
 
@@ -604,7 +625,8 @@ class UnitChef:
 
             active_cell.value = event_date
 
-            group_lines(sheet, existing_row)
+            if not HIDE_LIFE_EVENTS:
+                group_lines(sheet, existing_row)
 
             if master_cell.value == active_cell.value:
                 link_template = formula_templates.ADD_COORDINATES
@@ -620,13 +642,15 @@ class UnitChef:
         for name in new_names:
             new_events[name] = unit.life.events[name]
 
+        group = not HIDE_LIFE_EVENTS
         self.add_items_to_area(
             sheet=sheet,
             area=events,
             items=new_events,
             active_column=active_column,
             format_func=cell_styles.format_date,
-            preference_order=unit.life.ORDER
+            preference_order=unit.life.ORDER,
+            group=group
         )
         # Method will update current row to the last filled position.
 
@@ -709,6 +733,14 @@ class UnitChef:
         )
 
         sheet.bb.current_row = sheet.bb.events.rows.ending
+
+        if HIDE_LIFE_EVENTS:
+            top_row = first_life_row
+            end_row = sheet.bb.current_row
+            if top_row and end_row:
+                for rownum in range(top_row, end_row + 2):
+                    row = sheet.row_dimensions[rownum]
+                    row.hidden = True
 
         # Move current row down to the bottom (max_row() probably best here).
         return sheet
