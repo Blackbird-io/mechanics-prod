@@ -153,6 +153,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
             params.update(period_params)
 
         return params
+
     @property
     def stage(self):
         """
@@ -225,7 +226,9 @@ class BusinessUnit(BusinessUnitBase, Equalities):
     def __hash__(self):
         return self.id.__hash__()
 
-    def add_component(self, bu, update_id=True, register_in_period=True, overwrite=False):
+    def add_component(
+            self, bu, update_id=True, register_in_period=True, overwrite=False
+    ):
         """
 
 
@@ -306,7 +309,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         self.drivers.add_item(newDriver, *otherKeys)
 
-    def compute(self, statement_name):
+    def compute(self, statement_name, period=None):
         """
 
 
@@ -318,11 +321,14 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         statements for instance and components.
         """
 
-        for unit in self.components.get_all():
-            unit.compute(statement_name)
+        if not period:
+            period = self.period
 
-        self._consolidate(statement_name)
-        self._derive(statement_name)
+        for unit in self.components.get_all():
+            unit.compute(statement_name, period=period)
+
+        self._consolidate(statement_name, period)
+        self._derive(statement_name, period)
 
     def copy(self):
         """
@@ -551,9 +557,10 @@ class BusinessUnit(BusinessUnitBase, Equalities):
             if recur:
                 unit.synchronize()
 
-    #*************************************************************************#
-    #                          NON-PUBLIC METHODS                             #
-    #*************************************************************************#
+    # *************************************************************************#
+    #                           NON-PUBLIC METHODS                             #
+    # *************************************************************************#
+
     def _build_directory(self, recur=True, overwrite=True):
         """
 
@@ -565,18 +572,20 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         return id_directory, ty_directory
         """
 
-        #return a dict of bbid:unit
+        # return a dict of bbid:unit
         id_directory = dict()
         ty_directory = dict()
         if recur:
             for unit in self.components.values():
-                lower_level = unit._build_directory(recur=True, overwrite=overwrite)
+                lower_level = unit._build_directory(
+                    recur=True, overwrite=overwrite
+                )
                 lower_ids = lower_level[0]
                 lower_ty = lower_level[1]
                 id_directory.update(lower_ids)
                 ty_directory.update(lower_ty)
 
-            #update the directory for each unit in self
+            # update the directory for each unit in self
         if self.id.bbid in id_directory:
             if not overwrite:
                 c = "Can not overwrite existing bbid"
@@ -589,6 +598,14 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         return id_directory, ty_directory
 
     def _check_start_balance(self):
+        """
+
+
+        BusinessUnit._check_start_balance() -> None
+
+        Compares starting and ending balances. Adds missing lines to starting
+        balance to keep layout consistent.
+        """
 
         pool = self.components.get_all()
         for unit in pool:
@@ -605,6 +622,15 @@ class BusinessUnit(BusinessUnitBase, Equalities):
                                                   position=end_line.position)
 
     def _check_line(self, start_line, end_line):
+        """
+
+
+        BusinessUnit._check_line() -> None
+
+        Compares starting and ending balances. Adds missing lines to starting
+        balance to keep layout consistent.
+        """
+
         if end_line._details:
             for end in end_line.get_ordered():
                 start = start_line.find_first(end.name)
@@ -615,11 +641,11 @@ class BusinessUnit(BusinessUnitBase, Equalities):
                     new_line.clear(force=True)
                     start_line.add_line(new_line, position=end.position)
 
-    def _compute_ending_balance(self):
+    def _compute_ending_balance(self, period=None):
         """
 
 
-        BusinessUnit.computer_balances() -> None
+        BusinessUnit._compute_ending_balance() -> None
 
 
         Method recursively fills out balance sheets for instance and components.
@@ -651,7 +677,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         self._derive("ending")
         # Derive() will overwrite ending balance sheet where appropriate
 
-    def _consolidate(self, statement_name):
+    def _consolidate(self, statement_name, period=None):
         """
 
 
@@ -669,7 +695,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         for unit in pool:
             self._consolidate_unit(unit, statement_name)
 
-    def _consolidate_unit(self, sub, statement_name):
+    def _consolidate_unit(self, sub, statement_name, period=None):
         """
 
 
@@ -795,16 +821,15 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         alt_corner = "?"
         alt_element = " "
         #
-        ##formatting rules
+        # formatting rules
         template = "%s %s : %s %s"
-        empty_line = template % (side_element,
-                                     ("x" * field_width),
-                                     "",
-                                     side_element)
-        #empty_line should equal " | xxxxxxxx :  |"
+        empty_line = template % (
+            side_element, ("x" * field_width), "", side_element
+        )
+        # empty_line should equal " | xxxxxxxx :  |"
         data_width = box_width - len(empty_line)
         #
-        ##fields:
+        # fields:
         fields = ["NAME",
                   "ID",
                   "DOB",
@@ -814,11 +839,11 @@ class BusinessUnit(BusinessUnitBase, Equalities):
                   "FILL",
                   "SIZE",
                   "COMPS"]
-        ##data
+        # data
         data = {}
         unit_name = str(self.tags.name)
         if len(unit_name) > data_width:
-            #abbreviate unit name if its too long
+            # abbreviate unit name if its too long
             unit_name_parts = unit_name.split()
             if len(unit_name_parts) > 1:
                 last_part = unit_name_parts[-1]
@@ -831,7 +856,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         id_dots = "..."
         tail_width = data_width - len(id_dots)
-        id_tail  = str(self.id.bbid)[(tail_width * -1):]
+        id_tail = str(self.id.bbid)[-tail_width:]
         data["ID"] = id_dots + id_tail
 
         date_of_birth = self.life.events.get(self.life.KEY_BIRTH)
@@ -862,8 +887,8 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         data["SIZE"] = str(self.size)[:data_width]
         #
-        ##assemble the real thing
-        ##DONT FORGET TO rjust(data_width)
+        # assemble the real thing
+        # DONT FORGET TO rjust(data_width)
         #
         lines = []
         top_border = reg_corner + top_element * (box_width - 2) + reg_corner
@@ -876,7 +901,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
                                    side_element)
             lines.append(new_line)
         #
-        #add a bottom border symmetrical to the top
+        # add a bottom border symmetrical to the top
         lines.append(top_border)
 
         # Post-processing (dashed lines for units scheduled to open in the
@@ -905,14 +930,14 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
                 alt_lines = []
                 line_count = len(lines)
-                down_start = int((box_width - line_count)/2)
-                #X is line_count lines wide
+                down_start = int((box_width - line_count) / 2)
+                # X is line_count lines wide
                 up_start = down_start + line_count
 
                 for i in range(line_count):
                     #
-                    #replace the character at (down_start + i) with "\"
-                    #replace the character at (up_start - i) with "/"
+                    # replace the character at (down_start + i) with "\"
+                    # replace the character at (up_start - i) with "/"
                     #
                     line = lines[i]
                     #
@@ -932,7 +957,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         return lines
 
-    def _load_starting_balance(self):
+    def _load_starting_balance(self, period=None):
         """
 
 
@@ -989,14 +1014,18 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         if not overwrite:
             if self.id.bbid in self.period.bu_directory:
-                c1 = "TimePeriod.bu_directory already contains an object with "
-                c2 = "the same bbid as this unit. \n"
-                c3 = "unit id:         %s\n" % self.id.bbid
-                c4 = "known unit name: %s\n"
-                c4 = c4 % self.period.bu_directory[self.id.bbid].tags.name
-                c5 = "new unit name:   %s\n\n" % self.tags.name
+                c = (
+                    "TimePeriod.bu_directory already contains an object with "
+                    "the same bbid as this unit. \n"
+                    "unit id:         {bbid}\n"
+                    "known unit name: {name}\n"
+                    "new unit name:   {mine}\n\n"
+                ).format(
+                    bbid=self.id.bbid,
+                    name=self.period.bu_directory[self.id.bbid].tags.name,
+                    mine=self.tags.name,
+                )
                 print(self.period.bu_directory)
-                c = c1+c2+c3+c4+c5
                 raise bb_exceptions.IDCollisionError(c)
 
         # Check for collisions first, then register if none arise.
