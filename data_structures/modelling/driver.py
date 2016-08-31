@@ -401,7 +401,11 @@ class Driver(TagsMixIn):
 
         Method is a no-op if instance is not active.
         """
-        if self.active and not line.hardcoded and not line.has_been_consolidated:
+        if all((
+            self.active,
+            not line.hardcoded,
+            not line.has_been_consolidated,
+        )):
             if self._can_work_on_this(line):
                 line.clear()
 
@@ -409,7 +413,7 @@ class Driver(TagsMixIn):
                 # formula_catalog.issue() only performs dict retrieval and
                 # return for key.
 
-                params = self._build_params(parent=bu, period=None)
+                params = self._build_params(parent=bu, period=period)
 
                 if not bb_settings.PREP_FOR_EXCEL:
 
@@ -419,11 +423,15 @@ class Driver(TagsMixIn):
                     output = formula.func(line, bu, params, self.signature)
 
                     if not output.steps:
-                        c = "Formula did not return all required information"
-                        c += "\nName: %s" % formula.tags.name
-                        c += "\nBBID: %s" % self.formula_bbid
-                        c += "\nExcel formula template missing!"
-
+                        c = (
+                            "Formula did not return all required information\n"
+                            "Name: {name}\n"
+                            "BBID: {bbid}\n"
+                            "Excel formula template missing!"
+                        ).format(
+                            name=formula.tags.name,
+                            bbid=self.formula_bbid,
+                        )
                         raise bb_exceptions.ExcelPrepError(c)
 
                     data_cluster = self.to_excel()
@@ -463,9 +471,9 @@ class Driver(TagsMixIn):
 
         return result
 
-    #*************************************************************************#
-    #                          NON-PUBLIC METHODS                             #
-    #*************************************************************************#
+    # *************************************************************************#
+    #                           NON-PUBLIC METHODS                             #
+    # *************************************************************************#
 
     def _build_params(self, parent, period=None):
         """
@@ -538,7 +546,9 @@ class Driver(TagsMixIn):
 
         # must be careful not to split strings (names) into letters with set()
         if self.workConditions["name"]:
-            if not set(self.workConditions["name"]).issubset([line.name] + [None]):
+            if not set(self.workConditions["name"]).issubset(
+                [line.name] + [None]
+            ):
                 return False
 
         if self.workConditions["partOf"]:

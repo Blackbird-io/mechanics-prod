@@ -105,9 +105,9 @@ class LineItem(Statement):
 
     TAB_WIDTH = 3
 
-    def __init__(self, name=None, value=None):
+    def __init__(self, name=None, value=None, parent=None):
 
-        Statement.__init__(self, name)
+        Statement.__init__(self, name, parent=parent)
         # We intentionally use inheritance for the Statement relationship here
         # because then the .find_ and .add_ methods map right on top of each
         # other by default.
