@@ -492,7 +492,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         each of the components. Method sets instance.filled to False.
         """
         self.filled = False
-        # print("set ``filled`` to False for bbid\n%s\n" % self.id.bbid)
         self.financials.reset()
         if recur:
             pool = self.components.get_all()
@@ -952,6 +951,10 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         if self.past:
             self.financials.starting = self.past.financials.ending
+            # bal_start = self.past.financials.ending.copy()
+            # bal_start.link_to(self.past.financials.ending)
+            # bal_start.set_name('starting balance sheet')
+            # self.financials.starting = bal_start
             # Connect to the past
 
     def _register_in_period(self, recur=True, overwrite=True):

@@ -322,10 +322,12 @@ class SummaryMaker:
             summary_before = summary_period.past
             if summary_before:
                 before_bu = summary_before.bu_directory[self.bu_bbid]
-                bal_enter = before_bu.financials.ending.copy()
-                bal_enter.link_to(before_bu.financials.ending)
-                bal_enter.set_name('starting balance sheet')
-                target_bu.financials.starting = bal_enter
+                # bal_enter = before_bu.financials.ending.copy()
+                # bal_enter.reset()
+                # bal_enter.link_to(before_bu.financials.ending)
+                # bal_enter.set_name('starting balance sheet')
+                # target_bu.financials.starting = bal_enter
+                target_bu.financials.starting = before_bu.financials.ending
 
             # add formula calculations
             self.derived_calculations()
