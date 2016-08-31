@@ -107,6 +107,7 @@ class Topic:
     choose_scenario()     selects scenario by question id
     get_first_answer()    pulls out item from activeResponse[0]["response"][0]
     get_second_answer()   pulls out item from activeResponse[0]["response"][1]
+    get_table_responses() pulls table output into a more useable format
     process()             unpacks message, apply scenario, return new message
     record_work()         increment quality for lineItems in work_plan
     reset_work_plan()     sets work_plan to a blank dictionary
@@ -222,6 +223,31 @@ class Topic:
         """
         first_element = self.MR.activeResponse[0]
         answer = first_element["response"][1]
+        return answer
+
+    def get_table_responses(self):
+        """
+
+        Topic.get_table_responses() -> list
+
+        Method returns a list of dictionaries containing key (main_caption):
+        value (response) pairings for all rows in table.
+
+        Example output:
+            [{'commodity name': 'beef', 'cost per ticket': 2.0},
+             {'commodity name': 'lettuce', 'cost per ticket': 0.5},
+             {'commodity name': 'pickles', 'cost per ticket': 0.15}]
+        """
+        full_response_array = self.MR.activeResponse
+
+        answer = list()
+        for array in full_response_array:
+            temp_dict = dict()
+            for elem in array:
+                temp_dict[elem['main_caption']] = elem['response'][0]
+
+            answer.append(temp_dict)
+
         return answer
 
     def process(self, message_1):
