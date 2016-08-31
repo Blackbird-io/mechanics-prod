@@ -728,7 +728,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
                 xl_label=sub.name,
             )
 
-    def _derive(self, statement_name):
+    def _derive(self, statement_name, period=None):
         """
 
 

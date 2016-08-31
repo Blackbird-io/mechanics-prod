@@ -224,6 +224,10 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
 
         financials = self.financials
 
+        # financials = Financials.get_cached(self.id.bbid, period.end, summary)
+        # financials.relationships.set_parent(self)
+        # financials.period = period
+
         return financials
 
     # *************************************************************************#
