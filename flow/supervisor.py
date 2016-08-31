@@ -127,7 +127,9 @@ def process(message):
     # returns messages with user-facing questions and a final (M,_,END) with the
     # completed model.
     #
+    import devhooks
     MR.prep(message)
+    devhooks.log_time('after prep')
     # only purpose of MR here is to allow an admin to look inside the engine at
     # run time and see what went in/came out.
     #
@@ -136,7 +138,9 @@ def process(message):
         message = grant_hill.process(message)
     #
     seth_klarman = Analyst()
+    devhooks.log_time('setup analyst')
     message = seth_klarman.process(message)
+    devhooks.log_time('after analyst')
     MR.clear()
 
     return message

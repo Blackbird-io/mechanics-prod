@@ -388,19 +388,22 @@ class SummaryMaker:
         # get BUs from time periods
         bu_bbid = self.bu_bbid
         # actual BU whose financials will be aggregated
-        # source_bu = source.bu_directory[bu_bbid]
-        master_bu = source.relationships.parent.current_period.content
-        source_bu = source.relationships.parent.current_period.bu_directory[bu_bbid]
+        # source_bu = source.relationships.parent.current_period.content
+        # source_fins = source_bu.get_financials(source.end)
+
+        source_bu = source.bu_directory[bu_bbid]
+        source_fins = source_bu.get_financials(source)
 
         # summary BU
         timeline_summary = self.summaries[self.onkey]
         summary_period = timeline_summary.summary_period
         target_bu = summary_period.bu_directory[bu_bbid]
+        target_fins = target_bu.get_financials(
+            summary_period, summary=self.onkey
+        )
 
-        source_fins = source_bu.get_financials(source.end)
-        # source_statement = getattr(source_bu.financials, statement_name)
         source_statement = getattr(source_fins, statement_name)
-        target_statement = getattr(target_bu.financials, statement_name)
+        target_statement = getattr(target_fins, statement_name)
 
         # label by ISO end date of the source period
         label = format(source.end)
@@ -412,6 +415,11 @@ class SummaryMaker:
                 target_line.clear(recur=True, force=True)
                 target_statement.add_line(target_line)
             self.add_line_summary(source_line, target_line, label=label)
+
+        logger.debug(source_statement)
+        logger.debug(target_statement)
+        logger.debug(source_fins)
+        logger.debug(target_fins)
 
     def add_content(self, bu_bbid, period, recur=False):
         """

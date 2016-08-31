@@ -86,8 +86,10 @@ class Financials:
         self.id = ID()  # does not get its own bbid, just holds namespace
         self.relationships = Relationships(self, parent=parent)
         self.period = period
-        self._full_order = ["overview", "income", "cash", "starting", "ending",
-                           "ledger", "valuation"]
+        self._full_order = [
+            "overview", "income", "cash", "starting", "ending",
+            "ledger", "valuation"
+        ]
         self._compute_order = ['overview', 'income', 'cash']
         self._exclude_statements = ['valuation', 'starting']
 
@@ -151,6 +153,22 @@ class Financials:
             header = "Financial statements for " + str(self.relationships.parent.tags.name)
             header = header.center(bb_settings.SCREEN_WIDTH)
             header += "\n\n"
+            header = (
+                '{begin:|{width}}\n\n'
+                '{start:|{width}}\n'
+                '{close:|{width}}\n\n'
+            ).format(
+                width=bb_settings.SCREEN_WIDTH,
+                begin='Financial statements for {}'.format(
+                    self.relationships.parent.tags.name
+                ),
+                start='Period starting: {}'.format(
+                    self.relationships.parent.period.starting
+                ),
+                close='Period ending:   {}'.format(
+                    self.relationships.parent.period.ending
+                ),
+            )
 
             starting = "Period starting: " + str(self.relationships.parent.period.starting)
             starting = starting.center(bb_settings.SCREEN_WIDTH)
@@ -166,6 +184,10 @@ class Financials:
             header += "\n"
 
             result += header
+        else:
+            logger.debug(self.relationships.parent)
+            logger.debug(self.period)
+            quit()
 
         border = "***"
         border = border.center(bb_settings.SCREEN_WIDTH) + "\n\n"
@@ -184,7 +206,7 @@ class Financials:
 
     @staticmethod
     @lru_cache(maxsize=128)
-    def get_cached(bu_bbid, period_end):
+    def get_cached(bu_bbid, period_end, summary=None):
         """
 
 

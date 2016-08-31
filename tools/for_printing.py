@@ -60,7 +60,7 @@ def format_as_line(obj,
     attributes off the object.
 
     If ``header`` is True, function will hide dots and value in the output. The
-    setting is useful for displaying headers before a bunch of details. 
+    setting is useful for displaying headers before a bunch of details.
 
     EXAMPLE 1:
 
@@ -69,7 +69,7 @@ def format_as_line(obj,
     revenue............................................................5
 
     EXAMPLE 2:
-    
+
     >>>class New:
     ...     def __init__(self, name, value):
                 self.name = name
@@ -87,21 +87,20 @@ def format_as_line(obj,
 
     # where args are blank, check for obj data
     if name is None:
-        name = None
-        if getattr(obj, "tags", None):
-            name = getattr(obj.tags, "name", None)
+        name = getattr(obj.tags, "name", None)
 
     if value is None:
         if not header:
             value = getattr(obj, "value", None)
+
     # add a trailing space to any nonempty prefix
-    if not prefix == "":
+    if prefix != "":
         prefix += " "
 
     # format value
     try:
         value = "%.2F" % value
-    except (TypeError,ValueError):
+    except (TypeError, ValueError):
         value = str(value)
     #
     max_chars = width - left_tab - right_tab
@@ -110,7 +109,7 @@ def format_as_line(obj,
     #
     if not header:
         result = prefix + str(name)+ dots + value
-    else:    
+    else:
         result = prefix + str(name) + header_mark
     left_tabbed = result.rjust(left_tab+len(result))
     result = left_tabbed.ljust(right_tab+len(left_tabbed))
@@ -130,12 +129,12 @@ def format_completed(obj, **kargs):
     Function shows line as complete iff obj.guide.complete is True. In all other
     cases, function shows line as incomplete. Function intercepts attribute
     errors for objects without a ``guide`` attribute.
-    
+
     Function only sets the ``value`` key in kargs; format_as_line() then does
-    all of the real formatting work. 
+    all of the real formatting work.
 
     EXAMPLE:
-    
+
     ...
     >>>metric_1
     <Guide object at 0x00065670>
@@ -165,4 +164,4 @@ def format_completed(obj, **kargs):
     return result
 
 
-    
+

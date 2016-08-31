@@ -8,7 +8,7 @@
 
 """
 
-Module provides convenience functions for parsing user data. 
+Module provides convenience functions for parsing user data.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -48,31 +48,12 @@ def monthsToSeconds(months):
     seconds = months * secondsPerMonth
     return seconds
 
+
 def secondsToMonths(seconds):
     secondsPerMonth = 365/12*24*60*60
     months = seconds / secondsPerMonth
-    return months    
+    return months
 
-##def locateByName(container,startingMark,endingMark):
-##    """
-##    iterates through container, returns tuple of locations
-##    """
-##    options = iter(container)
-##    startMarkIndex = None
-##    endMarkIndex = None
-##    while startMarkIndex == None or endMarkIndex == None:
-##        item = options.__next__()
-##        #may raise an error if the bookmarks are not found before container is exhausted
-##        #will raise error if iterating through list where items dont have a name attr
-##        if item.name == BLACKBIRDSTAMP + startingMark:
-##            startMarkIndex = container.index(item)
-##        elif item.name == BLACKBIRDSTAMP + endingMark:
-##            endMarkIndex = container.index(item)
-##        else:
-##            continue
-##    return (startMarkIndex, endMarkIndex)
-###NOTE: ABOVE FUNCTION IS NOT FLEXIBLE AND SHOULD BE REVISITED
-####  DELETE WHEN TESTED <--------------------------------------------------------
 
 def locateByTag(container, *targetTags):
     """
@@ -110,9 +91,10 @@ def findByTag(container, *targetTags):
         raise bb_exceptions.StructureError("no matching object found")
     return result
 
+
 def excludeByTag(container, *badTags):
     """
-    Method returns a shallow copy of the container and its contents, minus objects with bad tags. 
+    Method returns a shallow copy of the container and its contents, minus objects with bad tags.
     badTags catchall picks up one or more specified bad tags by position.
     Works on list-type containers carrying tagged objects
     """
@@ -126,6 +108,7 @@ def excludeByTag(container, *badTags):
             #if any tags in badTags are also in item's tags
             WIP.remove(item)
     return WIP
+
 
 def includeByTag(container, *goodTags):
     """
@@ -149,7 +132,8 @@ def includeByTag(container, *goodTags):
 ##        result.append(missingAttributeCatcher(item,"name",missing))
 ##    return result
 ####  DELETE WHEN TESTED <--------------------------------------------------------
-    
+
+
 def padAndZip(*thingsToZip, padding = None, trace = False):
     """
     zips any number of iterables together
@@ -204,7 +188,7 @@ def padAndZip(*thingsToZip, padding = None, trace = False):
 ##def listAttributes(obj):
 ##    """
 ##    Function identifies the object's non-system attributes.
-##    Returns a list of strings, each of which is an attribute name. 
+##    Returns a list of strings, each of which is an attribute name.
 ##    """
 ##    allAttributes = dir(obj)
 ##    result = []
@@ -215,12 +199,14 @@ def padAndZip(*thingsToZip, padding = None, trace = False):
 ##            result.append(attr)
 ##    return result
 
+
 def stripCase(obj,attr = "all"):
     """
     returns a list of caseless equivalents for all items in obj.attr
     obj.attr must be iterable
     if attr is specified as None, function iterates through obj itself
-    if an item cannot be casefolded, function will append original version of the item
+    if an item cannot be casefolded, function will append original version
+    of the item.
     """
     caseLess = []
     if attr:
@@ -238,11 +224,12 @@ def stripCase(obj,attr = "all"):
         caseLess.append(oLess)
     return caseLess
 
+
 def deCase(obj):
     """
 
     If the object supports casefolding, returns casefolded object; otherwise,
-    returns the object without modification. 
+    returns the object without modification.
     """
     result = obj
     try:
@@ -262,13 +249,14 @@ def seconds_from_iso(string):
 
     Function takes a string in "YYYY-MM-DD" format and returns a POSIX timestamp
     representing seconds since Epoch. Function ignores any whitespace around the
-    POSIX data. 
+    POSIX data.
     """
     calendar = date_from_iso(string)
     to_time = calendar.timetuple()
     result = time.mktime(to_time)
     #
     return result
+
 
 def date_from_iso(string):
     """
@@ -278,12 +266,13 @@ def date_from_iso(string):
 
 
     Function takes a string in "YYYY-MM-DD" format and returns an instance of
-    datetime.date. Function ignores any whitespace around the POSIX data. 
+    datetime.date. Function ignores any whitespace around the POSIX data.
     """
     elements = [int(x) for x in string.split("-")]
     result = datetime.date(*elements)
     #
     return result
+
 
 def seconds_from_years(yrs):
     """
@@ -298,8 +287,7 @@ def seconds_from_years(yrs):
     result = yrs * 365 * 24 * 60 * 60
     return result
 
+
 def walk(d):
     for k in sorted(d.keys()):
         yield d[k]
-
-    

@@ -207,23 +207,29 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
 
         self.financials = fins
 
-    def get_financials(self, period):
+    def get_financials(self, period, summary=None):
         """
 
 
         BusinessUnitBase.get_financials() -> Financials()
 
         --``period`` TimePeriod
+        --``summary`` str, one of the keys of SummaryMaker
 
         Returns this BUs financials in a given period.
         """
 
-        financials = Financials.get_cached(self.id.bbid, period.end)
-        logger.debug(
-            '>> cached {} {} {} {}'.format(
-                self.id.bbid, period.end, Financials.get_cached.cache_info(), self.name
-            )
-        )
+        financials = Financials.get_cached(self.id.bbid, period.end, summary)
+        financials.relationships.set_parent(self)
+        financials.period = period
+
+        if self.period == period:
+            self.financials = financials
+        # logger.debug(
+        #     '>> cached {} {} {} {}'.format(
+        #         self.id.bbid, period.end, Financials.get_cached.cache_info(), self.name
+        #     )
+        # )
         return financials
 
     # *************************************************************************#
