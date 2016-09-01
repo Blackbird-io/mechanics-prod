@@ -9,7 +9,7 @@
 """
 
 This module defines the Yenta class. Yenta objects select the best topic to
-analyze a given part of the model at a particular point in time. 
+analyze a given part of the model at a particular point in time.
 ====================  ==========================================================
 Object                Description
 ====================  ==========================================================
@@ -63,7 +63,7 @@ class Yenta():
     methods for fit scoring algorithms.
 
     Yenta sees only those topics found in its TopicManager's local_catalog.
-    
+
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -86,7 +86,7 @@ class Yenta():
     ====================  ======================================================
     """
     TM = None
-    
+
     @classmethod
     def disconnect(cls):
         """
@@ -97,10 +97,10 @@ class Yenta():
 
         **CLASS METHOD**
 
-        Method clears class TopicManager pointer (sets class.TM to None). 
+        Method clears class TopicManager pointer (sets class.TM to None).
         """
         cls.TM = None
-        
+
     @classmethod
     def set_topic_manager(cls,new_TM):
         """
@@ -114,10 +114,10 @@ class Yenta():
         Method sets class TopicManager pointer to new_TM.
         """
         cls.TM = new_TM
-        
+
     def __init__(self):
         self.scores = dict()
-        self.work = None  
+        self.work = None
 
     def check_topic_name(self, target, model, topic_name, combined = True):
         """
@@ -129,7 +129,7 @@ class Yenta():
 
         Method returns a bool result and a dictionary tracing the selection
         process. Method finds partial matches.
-        
+
         """
 
         result = False
@@ -182,7 +182,7 @@ class Yenta():
             for (n, tag) in enumerate(sorted(missing_on_target)):
                 line = "\t%s. %s\n" % (n, tag)
                 print(line)
-            print("\n")        
+            print("\n")
 
         return result, work
 
@@ -202,7 +202,7 @@ class Yenta():
         The ``pool`` argument takes a list of bbids to review. If pool is None,
         method will use a sorted set of keys to the active topic catalog
         instead. That is, without a specific pool, method will review all topics
-        in catalog for eligibility. 
+        in catalog for eligibility.
 
         To determine eligibility, method retrieves the topic that corresponds to
         to each bbid in pool from the topic catalog. Method then checks:
@@ -215,8 +215,8 @@ class Yenta():
         Eligible topics are those that satisfy both conditions. If ``combined``
         is True, method evaluates condition (2) with respect to target's
         combined profile. In other words, if ``combined`` is True, method will
-        check whether a given topic fits the whole model.         
-        
+        check whether a given topic fits the whole model.
+
         NOTE: Method skips topics whose bbids appear in model's used set.
 
         If ``trace`` is True, method saves work (criteria and missing pieces for
@@ -300,19 +300,19 @@ class Yenta():
         raw score and the total number of tags on that topic. Relative scores
         represent that quality of fit for a given topic, measured against
         that topic's best possible outcome. Yenta's tie_breaker() routine
-        uses relative scores to select the best candidates when two or more 
-        candidates have the same raw match score. 
+        uses relative scores to select the best candidates when two or more
+        candidates have the same raw match score.
 
         Method can score candidates in both pre-screened and raw pools. In a
         pre-screened pool, each candidates carries all target requiredTags.
         Target's required tags therefore increase each candidate's match score
         by the same integer. As a result, candidate rankings in an
         **all-eligible** pool will remain stable between counts that include
-        required tags and those that do not. 
+        required tags and those that do not.
 
         If ``combined`` is True, method adds tags from target's senior objects
         to the scoring criteria. Method uses the following senior objects:
-        
+
         -- the model
         -- target.parent (usually a more general line item or an instance of
            Financials)
@@ -370,7 +370,7 @@ class Yenta():
         Yenta.reset() -> None
 
 
-        Method sets instance.scores to a blank dictionary. 
+        Method sets instance.scores to a blank dictionary.
         """
         self.scores = {}
 
@@ -383,7 +383,7 @@ class Yenta():
 
         Method returns the topic that best matches the model's focal point.
 
-        Method delegates selection logic to simple_select(). 
+        Method delegates selection logic to simple_select().
         """
         self.reset()
         new_topic = self.simple_select(model)
@@ -395,14 +395,14 @@ class Yenta():
 
         Yenta.simple_select(model) -> Topic or None
 
-        
+
         Method returns a clean instance of a topic that fits the current
         stage focal point better than any other candidates.
 
         Method computes best fit against all topics in the catalog.
 
         Method returns None if no topics in catalog are eligible to work on the
-        model's focal point. 
+        model's focal point.
 
         Method uses local best fit to make selection run faster. To select the
         best fit globally, clients can manually empty the cache on the focal
@@ -411,13 +411,13 @@ class Yenta():
         strictly equivalent to the first, however, since earlier (cached)
         candidates could change the target at run-time in a way that alters
         selection criteria (e.g., by adding tags).
-        
+
         Selection algorithm:
 
         (1) select all topics that contain each of target's required tags
         (2) rank the eligible topics by the total number of tags they match
         (3) break ties by selecting the topic with the highest relative match
-        
+
         """
         best = None
         chosen_bbid = None
@@ -448,7 +448,7 @@ class Yenta():
             fp.guide.selection.record_dry_run()
 
         return chosen_topic
-        
+
     def tie_breaker(self, candidates):
         """
 
@@ -459,7 +459,7 @@ class Yenta():
         Method returns the bbid of the candidate with the highest relative
         match score. Method uses Yenta.scores state to locate relative match
         scores for each candidate. Method expects ``candidates`` to be an
-        iterable of bbids. 
+        iterable of bbids.
         """
         winner = None
         top_rel_score = 0
@@ -472,7 +472,7 @@ class Yenta():
                 continue
 
         return winner
-        
+
 # Connect Yenta class to TopicManager so Yenta can access catalog
 TopicManager.populate()
 Yenta.set_topic_manager(TopicManager)
