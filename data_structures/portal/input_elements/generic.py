@@ -122,11 +122,13 @@ class GenericInput(ReadyForPortal):
                          "size",
                          "toggle_caption_false",
                          "toggle_caption_true",
-                         "user_can_add")
+                         "user_can_add",
+                         "fixed_rows")
             #tuple for immutability
         else:
             var_attrs = set(var_attrs) | {"_active",
-                                          "response"}
+                                          "response",
+                                          "fixed_rows"}
             var_attrs = tuple(sorted(var_attrs))
         #
         ReadyForPortal.__init__(self, var_attrs)
@@ -150,6 +152,7 @@ class GenericInput(ReadyForPortal):
         self.__dict__["toggle_caption_false"] = None
         self.__dict__["toggle_caption_true"] = None
         self.__dict__["user_can_add"] = False
+        self.__dict__["fixed_rows"] = None
         #set default values manually through dict to make sure they do not
         #bounce when a subclass passes in a smaller attribute whitelist
 
@@ -168,40 +171,6 @@ class GenericInput(ReadyForPortal):
             result = result + line
         return result
 
-##    # Property doesnt work because an ancestor (Schema) overloads __setattr__
-##    # and __setattr__ trumps virtual attribute setting.
-##
-##    @property
-##    def input_sub_type(self):
-##        """
-##
-##
-##        **property**
-##
-##
-##        Property returns instance _input_sub_type.
-##
-##        Property setter accepts values in class._sub_types. Setter raises
-##        QuestionFormatError otherwise.
-##
-##        Deleter sets value to None
-##        """
-##        return self._input_sub_type
-##
-##    @input_sub_type.setter
-##    def input_sub_type(self, value):
-##        if value in self._sub_types:
-##            self.__dict__["_input_sub_type"] = value
-##        else:
-##            c = "Cannot set sub type to ``%s``.\n"
-##            c += "Permitted subtypes for instance:\n\t%s\n"
-##            c = c % (value, self._sub_types)
-##            raise bb_exceptions.QuestionFormatError(c)
-##
-##    @input_sub_type.deleter
-##    def input_sub_type(self):
-##        self._input_sub_type = None
-
     def check_response(self, proposed_response):
         """
 
@@ -216,7 +185,7 @@ class GenericInput(ReadyForPortal):
         list with a length of at least 1.        
         """
         result = None
-        if (isinstance(proposed_response,list) and len(proposed_response) > 0):
+        if isinstance(proposed_response,list) and len(proposed_response) > 0:
             result = True
         else:
             result = False
