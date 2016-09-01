@@ -184,12 +184,18 @@ class TimelineBase(dict):
         period.relationships.set_parent(self)
 
         # end dates of the past and future periods
-        period.past_end = max(
-            (day for day in self.keys() if day < period.end), default=None
-        )
-        period.next_end = min(
-            (day for day in self.keys() if day > period.end), default=None
-        )
+        try:
+            period.past_end = max(
+                (day for day in self.keys() if day < period.end)
+            )
+        except:
+            period.past_end = None
+        try:
+            period.next_end = min(
+                (day for day in self.keys() if day > period.end)
+            )
+        except:
+            period.next_end = None
         # link adjacent periods
         if period.past_end:
             past_period = self[period.past_end]
