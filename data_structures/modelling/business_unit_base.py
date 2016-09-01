@@ -203,7 +203,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         instance.
         """
         if fins is None:
-            fins = Financials()
+            fins = Financials(parent=self)
 
         self.financials = fins
 
@@ -219,17 +219,15 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         Returns this BUs financials in a given period.
         """
 
-        financials = Financials.get_cached(self.id.bbid, period.end, summary)
-        financials.relationships.set_parent(self)
-        financials.period = period
+        if not summary:
+            summary = getattr(self, 'summary', None)
 
-        if self.period == period:
-            self.financials = financials
-        # logger.debug(
-        #     '>> cached {} {} {} {}'.format(
-        #         self.id.bbid, period.end, Financials.get_cached.cache_info(), self.name
-        #     )
-        # )
+        financials = self.financials
+
+        # financials = Financials.get_cached(self.id.bbid, period.end, summary)
+        # financials.relationships.set_parent(self)
+        # financials.period = period
+
         return financials
 
     # *************************************************************************#
@@ -266,7 +264,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
 
         return id_directory
 
-    def _derive_line(self, line, period):
+    def _derive_line(self, line, period=None):
         """
 
 

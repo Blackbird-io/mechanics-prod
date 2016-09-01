@@ -401,7 +401,11 @@ class Driver(TagsMixIn):
 
         Method is a no-op if instance is not active.
         """
-        if self.active and not line.hardcoded and not line.has_been_consolidated:
+        if all((
+            self.active,
+            not line.hardcoded,
+            not line.has_been_consolidated,
+        )):
             if self._can_work_on_this(line):
                 line.clear()
 
@@ -467,9 +471,9 @@ class Driver(TagsMixIn):
 
         return result
 
-    #*************************************************************************#
-    #                          NON-PUBLIC METHODS                             #
-    #*************************************************************************#
+    # *************************************************************************#
+    #                           NON-PUBLIC METHODS                             #
+    # *************************************************************************#
 
     def _build_params(self, parent, period=None):
         """
@@ -490,26 +494,22 @@ class Driver(TagsMixIn):
         """
         time_line = None
 
-        if parent:
+        if parent and not period:
             period = parent.period
+
+        if period:
             time_line = period.relationships.parent
-            if period:
-                period = time_line[period.end]
 
         # Specific parameters trump general ones. Start with time_line, then
         # update for period (more specific) and driver (even more specific).
 
         params = dict()
-
-        if time_line:
+        if time_line and hasattr(time_line, 'parameters'):
             params.update(time_line.parameters)
-
-        if period:
+        if period and hasattr(period, 'parameters'):
             params.update(period.parameters)
-
-        if parent:
+        if parent and hasattr(parent, 'parameters'):
             params.update(parent.parameters)
-
         params.update(self.parameters)
 
         converted = self._map_params_to_formula(params)
@@ -546,7 +546,9 @@ class Driver(TagsMixIn):
 
         # must be careful not to split strings (names) into letters with set()
         if self.workConditions["name"]:
-            if not set(self.workConditions["name"]).issubset([line.name] + [None]):
+            if not set(self.workConditions["name"]).issubset(
+                [line.name] + [None]
+            ):
                 return False
 
         if self.workConditions["partOf"]:
