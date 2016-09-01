@@ -145,6 +145,8 @@ class FullQuestion:
         self.context = dict()
         self.custom_prompt = None
 
+        self.extra_rows = True
+
     class _ProgressDescriptor:
         """
 
@@ -319,7 +321,7 @@ class FullQuestion:
         self.input_array.clear()
         array_spec = copy.deepcopy(array_spec)
         #make a deep copy so can modify array itself or element dictionaries
-        #
+
         for i in range(len(array_spec)):
             e_spec = array_spec[i]
             try:
