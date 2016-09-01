@@ -437,6 +437,7 @@ class SummaryMaker:
         summary_unit.id = copy.deepcopy(template_bu.id)
         summary_unit.period = period
         summary_unit.periods_used = 0
+        summary_unit.summary_level = self.onkey
         summary_unit.set_financials(
             Financials(parent=summary_unit, period=period)
         )
