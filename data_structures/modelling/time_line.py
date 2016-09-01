@@ -226,9 +226,11 @@ class TimeLine(TimelineBase):
         Clear content from all periods after seed. Method expects a period as
         ``seed``, will use instance.current_period if seed is None.
         """
-        past, present, future = self.get_segments(seed.end)
-        for date in future:
-            self[date].clear()
+        if seed is None:
+            seed = self.current_period
+        for period in self.iter_ordered():
+            if period.end > seed.end:
+                period.clear()
 
     def copy(self):
         """
@@ -276,15 +278,8 @@ class TimeLine(TimelineBase):
         # init SummaryMaker now that TimeLine has been built
         self.summary_builder = SummaryMaker(self)
 
-        # for the timing of extrapolation
-        time_begin = datetime.now()
-
         for period in self.iter_ordered(open=seed.end):
             if period.end > seed.end:
-
-                # for the timing of this iteration
-                time_start = datetime.now()
-
                 # reset content and directories
                 period.clear()
                 # combine tags
@@ -299,14 +294,6 @@ class TimeLine(TimelineBase):
                     period.content.fill_out()
                 seed = period
 
-                # log time spent in this step and total
-                time_cease = datetime.now()
-                time_stamp = (time_cease - time_start).total_seconds()
-                time_total = (time_cease - time_begin).total_seconds()
-                logger.debug(
-                    '{} -> {} extrapolation {:6.2f} sec, {:6.2f} total'.format(
-                        seed.end, period.end, time_stamp, time_total
-                    ))
             if bb_settings.MAKE_ANNUAL_SUMMARIES:
                 if period.end >= self.current_period.end:
                     self.summary_builder.parse_period(period)
@@ -479,9 +466,9 @@ class TimeLine(TimelineBase):
         ref_period = self.find_period(ref_date)
         self.current_period = ref_period
 
-    #*************************************************************************#
-    #                          NON-PUBLIC METHODS                             #
-    #*************************************************************************#
+    # *************************************************************************#
+    #                           NON-PUBLIC METHODS                             #
+    # *************************************************************************#
 
     def _get_fwd_start_date(self, ref_date):
         """
