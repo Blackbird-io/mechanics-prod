@@ -32,6 +32,7 @@ import logging
 
 import bb_settings
 import bb_exceptions
+import tools.for_printing as views
 
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
@@ -157,7 +158,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         # Get string list, slap a new-line at the end of every line and return
         # a string with all the lines joined together.
         if not lines:
-            lines = self._get_pretty_lines()
+            lines = views.view_as_unit(self)
 
         # Add empty strings for header and footer padding
         lines.insert(0, "")
