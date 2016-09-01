@@ -67,6 +67,7 @@ class TranscriptChef:
     NOTE_CAP = 'Note'
     PROMPT_HEADER = 'Question'
     CAPTION_HEADER = 'Element Caption'
+    TABLE_CAPTION = 'table entry'
     TARGET_HEADER = 'Target Unit'
     RESPONSE_HEADER = 'Response'
     QUESTION_NAME_HEADER = 'Question Identifier'
@@ -128,33 +129,67 @@ class TranscriptChef:
             if not response_array:
                 continue
 
-            for i in range(len(response_array)):
-                answer = column_dict.copy()
+            if q['input_type'] == 'table':
+                # outer for loop loops through table rows
+                for regular_response in response_array:
+                    answer = column_dict.copy()
+                    answer[self.PROMPT_HEADER] = prompt or ''
+                    answer[self.CAPTION_HEADER] = self.TABLE_CAPTION
+                    answer[self.TARGET_HEADER] = target or ''
+                    answer[self.QUESTION_NAME_HEADER] = name or ''
 
-                main_cap = response_array[i][mc]
-                response = response_array[i][rs][0]
-                input_type = response_array[i][it]
+                    response_out = ''
+                    # innner for loop loops over columns
+                    for i in range(len(regular_response)):
 
-                if response is None and input_type == 'bool':
-                    response = False
+                        main_cap = regular_response[i][mc]
+                        response = regular_response[i][rs][0]
+                        input_type = regular_response[i][it]
 
-                if isinstance(response, datetime.date):
-                    response = response.strftime('%Y-%m-%d')
+                        if response is None and input_type == 'bool':
+                            response = False
 
-                if isinstance(response, list):
-                    response = 'Min: %s; Max: %s' % tuple(response)
+                        if isinstance(response, datetime.date):
+                            response = response.strftime('%Y-%m-%d')
 
-                if response is None:
-                    response = ''
+                        if response is None:
+                            response = ''
 
-                answer[self.PROMPT_HEADER] = prompt or ''
-                answer[self.CAPTION_HEADER] = main_cap or ''
-                answer[self.TARGET_HEADER] = target or ''
-                answer[self.RESPONSE_HEADER] = response
-                answer[self.QUESTION_NAME_HEADER] = name or ''
+                        response_out += '%s: %s; ' % (main_cap, response)
 
-                self._add_record_to_excel(sheet, column_dict, answer, current_row)
-                current_row += 1
+                    answer[self.RESPONSE_HEADER] = response_out.strip()
+                    self._add_record_to_excel(sheet, column_dict, answer,
+                                              current_row)
+                    current_row += 1
+            else:
+                for i in range(len(response_array)):
+                    answer = column_dict.copy()
+
+                    main_cap = response_array[i][mc]
+                    response = response_array[i][rs][0]
+                    input_type = response_array[i][it]
+
+                    if response is None and input_type == 'bool':
+                        response = False
+
+                    if isinstance(response, datetime.date):
+                        response = response.strftime('%Y-%m-%d')
+
+                    if isinstance(response, list):
+                        response = 'Min: %s; Max: %s' % tuple(response)
+
+                    if response is None:
+                        response = ''
+
+                    answer[self.PROMPT_HEADER] = prompt or ''
+                    answer[self.CAPTION_HEADER] = main_cap or ''
+                    answer[self.TARGET_HEADER] = target or ''
+                    answer[self.RESPONSE_HEADER] = response
+                    answer[self.QUESTION_NAME_HEADER] = name or ''
+
+                    self._add_record_to_excel(sheet, column_dict, answer,
+                                              current_row)
+                    current_row += 1
 
             try:
                 notes = q['notes']
