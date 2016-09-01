@@ -43,7 +43,7 @@ from .field_names import FieldNames
 
 
 # Constants
-HARDCODED_COLOR = '0070c0'  # '1f5993'
+HARDCODED_COLOR = '0070c0' #'1f5993'
 CALCULATION_COLOR = '707070'
 SUBHEADER_COLOR = '808080'
 LOWHEADER_COLOR = 'CCCCCC'
@@ -52,7 +52,6 @@ LOWHEADER_COLOR = 'CCCCCC'
 number_formats = NumberFormats()
 type_codes = TypeCodes()
 get_column_letter = xlio.utils.get_column_letter
-
 
 # Classes
 class CellStyles:

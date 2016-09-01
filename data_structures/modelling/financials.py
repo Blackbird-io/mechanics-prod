@@ -37,7 +37,7 @@ import bb_settings
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
 from .statement import Statement
-from .statements import Overview, Income, CashFlow, BalanceSheet
+from .statements import BalanceSheet
 from .equalities import Equalities
 
 
@@ -76,9 +76,9 @@ class Financials:
     def __init__(self, parent=None, period=None):
         if parent:
             parent = weakref.proxy(parent)
-        self.overview = Overview(parent=self)
-        self.income = Income(parent=self)
-        self.cash = CashFlow(parent=self)
+        self.overview = Statement(name="overview", parent=self)
+        self.income = Statement(name="income statement", parent=self)
+        self.cash = Statement(name="cash flow statement", parent=self)
         self.valuation = Statement("Valuation", parent=self)
         self.starting = BalanceSheet("Starting Balance Sheet", parent=self)
         self.ending = BalanceSheet("Ending Balance Sheet", parent=self)
@@ -145,62 +145,41 @@ class Financials:
         return result
 
     def __str__(self):
-
-        result = "\n"
-
         if Equalities.multi_getattr(self, "relationships.parent", None):
-
-            header = "Financial statements for " + str(self.relationships.parent.tags.name)
-            header = header.center(bb_settings.SCREEN_WIDTH)
-            header += "\n\n"
             header = (
-                '{begin:|{width}}\n\n'
-                '{start:|{width}}\n'
-                '{close:|{width}}\n\n'
+                '{begin:^{width}}\n\n'
+                '{start:^{width}}\n'
+                '{close:^{width}}\n\n'
             ).format(
                 width=bb_settings.SCREEN_WIDTH,
                 begin='Financial statements for {}'.format(
                     self.relationships.parent.tags.name
                 ),
                 start='Period starting: {}'.format(
-                    self.relationships.parent.period.starting
+                    self.relationships.parent.period.start
                 ),
                 close='Period ending:   {}'.format(
-                    self.relationships.parent.period.ending
+                    self.relationships.parent.period.end
                 ),
             )
-
-            starting = "Period starting: " + str(self.relationships.parent.period.starting)
-            starting = starting.center(bb_settings.SCREEN_WIDTH)
-            starting += "\n"
-
-            header += starting
-
-            ending = "Period ending:   " + str(self.relationships.parent.period.ending)
-            ending = ending.center(bb_settings.SCREEN_WIDTH)
-            ending += "\n"
-
-            header += ending
-            header += "\n"
-
-            result += header
         else:
-            logger.debug(self.relationships.parent)
-            logger.debug(self.period)
-            quit()
+            header = ''
 
-        border = "***"
-        border = border.center(bb_settings.SCREEN_WIDTH) + "\n\n"
-
-        result += border
-
-        result = ""
+        content = []
         for statement in self.full_ordered:
             if statement is not None:
-                result += str(statement)
+                content.append(str(statement))
 
-        result += "\n"
-        result += border
+        result = (
+            '{header}'
+            '{content}\n'
+            '{border:^{width}}\n\n'
+        ).format(
+            width=bb_settings.SCREEN_WIDTH,
+            header=header,
+            content=''.join(content),
+            border="***",
+        )
 
         return result
 

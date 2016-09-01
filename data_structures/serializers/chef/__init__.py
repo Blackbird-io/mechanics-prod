@@ -4,4 +4,4 @@
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 # Blackbird Environment
-# Module: serializers.chef
+# Module: data_structures.serializers.chef

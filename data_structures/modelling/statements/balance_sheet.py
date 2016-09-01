@@ -65,9 +65,9 @@ class BalanceSheet(Statement):
 
         self.as_of = as_of
 
-        assets = LineItem(name="Assets", parent=self)
-        liabilities = LineItem(name="Liabilities", parent=self)
-        equity = LineItem(name="Equity", parent=self)
+        assets = LineItem(name="Assets")
+        liabilities = LineItem(name="Liabilities")
+        equity = LineItem(name="Equity")
 
         for line in [assets, liabilities, equity]:
             self.add_top_line(line)

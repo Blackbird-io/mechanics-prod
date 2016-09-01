@@ -261,7 +261,7 @@ class SummaryMaker:
             enter = new_info['enter']
             close = new_info['close']
             summary_period = TimePeriodBase(enter, close)
-            summary_period.month_count = 0
+            summary_period.periods_used = 0
 
             # copy BU structure from time_line.current_period
             summary_unit = self.add_content(self.bu_bbid, summary_period)
@@ -322,13 +322,22 @@ class SummaryMaker:
             summary_before = summary_period.past
             if summary_before:
                 before_bu = summary_before.bu_directory[self.bu_bbid]
-                bal_enter = before_bu.financials.ending.copy()
-                bal_enter.link_to(before_bu.financials.ending)
-                bal_enter.set_name('starting balance sheet')
-                target_bu.financials.starting = bal_enter
+                # bal_enter = before_bu.financials.ending.copy()
+                # bal_enter.reset()
+                # bal_enter.link_to(before_bu.financials.ending)
+                # bal_enter.set_name('starting balance sheet')
+                # target_bu.financials.starting = bal_enter
+                target_bu.financials.starting = before_bu.financials.ending
 
             # add formula calculations
             self.derived_calculations()
+
+            # add period count
+            target_bu.periods_used = summary_period.periods_used
+            if self.onkey == self.QUARTERLY_KEY:
+                target_bu.complete = (target_bu.periods_used == 3)
+            elif self.onkey == self.ANNUAL_KEY:
+                target_bu.complete = (target_bu.periods_used == 12)
 
             # cascade from quarterly to annual
             if self.onkey == self.QUARTERLY_KEY:
@@ -387,10 +396,7 @@ class SummaryMaker:
 
         # get BUs from time periods
         bu_bbid = self.bu_bbid
-        # actual BU whose financials will be aggregated
-        # source_bu = source.relationships.parent.current_period.content
-        # source_fins = source_bu.get_financials(source.end)
-
+        # source BU whose financials will be aggregated
         source_bu = source.bu_directory[bu_bbid]
         source_fins = source_bu.get_financials(source)
 
@@ -416,16 +422,11 @@ class SummaryMaker:
                 target_statement.add_line(target_line)
             self.add_line_summary(source_line, target_line, label=label)
 
-        logger.debug(source_statement)
-        logger.debug(target_statement)
-        logger.debug(source_fins)
-        logger.debug(target_fins)
-
     def add_content(self, bu_bbid, period, recur=False):
         """
 
 
-        SummaryMaker.flush() -> None
+        SummaryMaker.add_content() -> None
 
         Create a BU to use as the summary holder.
         """
@@ -434,8 +435,8 @@ class SummaryMaker:
 
         # intentionally keeping source BU's bbid so we can find it later
         summary_unit.id = copy.deepcopy(template_bu.id)
-        summary_unit.complete = False
         summary_unit.period = period
+        summary_unit.periods_used = 0
         summary_unit.set_financials(
             Financials(parent=summary_unit, period=period)
         )
@@ -458,12 +459,12 @@ class SummaryMaker:
         timeline_summary = self.summaries[self.onkey]
         source = timeline_summary.source
         summary_period = timeline_summary.summary_period
-        summary_period.month_count += getattr(source, 'month_count', 1)
+        summary_period.periods_used += getattr(source, 'periods_used', 1)
 
         logger.debug('{}:{} -> {}:{} add to {} summary {}'.format(
             source.start, source.end,
             summary_period.start, summary_period.end,
-            self.onkey, summary_period.month_count
+            self.onkey, summary_period.periods_used
         ))
 
         for name in ["overview", "income", "cash"]:
@@ -543,6 +544,4 @@ class SummaryMaker:
         if summary_type is None:
             if getattr(obj, 'summary_calculate', False):
                 summary_type = 'derive'
-        if summary_type is None:
-            summary_type = 'sum'
         return summary_type
