@@ -32,10 +32,12 @@ ModelChef             chop Blackbird Engine model into a dynamic Excel workbook
 
 
 # Imports
+import logging
 import openpyxl as xlio
 
 from openpyxl.styles import Font, Alignment
 
+import bb_settings
 import chef_settings
 
 from .cell_styles import CellStyles, LOWHEADER_COLOR
@@ -68,6 +70,7 @@ unit_chef = UnitChef()
 get_column_letter = xlio.utils.get_column_letter
 bounding_box = xlio.drawing.image.bounding_box
 
+logger = logging.getLogger(bb_settings.LOGNAME_MAIN)
 
 # Classes
 class SummaryChef:
@@ -462,15 +465,15 @@ class SummaryChef:
         complete_label_rows = output_rows.get_group('complete_label')
         available_months_rows = output_rows.get_group('available_months')
 
-        for date in timeline.keys():
-            column = col_selector(date)
+        for period in timeline.iter_ordered():
+            column = col_selector(period.end)
             if not column:
                 continue
 
-            summary = timeline[date]
-            unit = summary.content
-            if not unit:
+            unit = period.content
+            if not (unit and hasattr(unit, 'xl')):
                 continue
+
             unit.xl.set_sheet(sheet)
             sheet.bb.outline_level = 0
 
