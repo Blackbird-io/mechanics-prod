@@ -27,7 +27,6 @@ Financials            a dynamic class that holds standard and custom statements
 
 
 # Imports
-import weakref
 import logging
 
 from functools import lru_cache
@@ -74,8 +73,6 @@ class Financials:
     """
 
     def __init__(self, parent=None, period=None):
-        if parent:
-            parent = weakref.proxy(parent)
         self.overview = Statement(name="overview", parent=self)
         self.income = Statement(name="income statement", parent=self)
         self.cash = Statement(name="cash flow statement", parent=self)

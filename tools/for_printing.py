@@ -187,7 +187,7 @@ def view_as_unit(
     """
 
     reg_corner = "+"
-    data_width = box_width - field_width - 2 * len(side_element) - 4
+    data_width = box_width - field_width - 2 * len(side_element) - 5
     # formatting rules
     template = (
         "{side} {{0:<{0}}} : {{1:>{1}}} {side}"
