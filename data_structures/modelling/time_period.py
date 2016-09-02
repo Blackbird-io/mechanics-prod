@@ -164,7 +164,7 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
 
         if self.past:
             # augment our parameters with past parameters
-            comb = self.past.unit_parameters.copy()
+            comb = self.past.parameters.copy()
             # ours dominate
             comb.update(self.parameters)
             self.parameters.update(comb)
