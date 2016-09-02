@@ -37,6 +37,7 @@ from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
 from .statement import Statement
 from .statements import BalanceSheet
+from .statements import CashFlow
 from .equalities import Equalities
 
 
@@ -75,7 +76,7 @@ class Financials:
     def __init__(self, parent=None, period=None):
         self.overview = Statement(name="overview", parent=self)
         self.income = Statement(name="income statement", parent=self)
-        self.cash = Statement(name="cash flow statement", parent=self)
+        self.cash = CashFlow(parent=self)
         self.valuation = Statement("Valuation", parent=self)
         self.starting = BalanceSheet("Starting Balance Sheet", parent=self)
         self.ending = BalanceSheet("Ending Balance Sheet", parent=self)

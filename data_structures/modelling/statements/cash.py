@@ -42,10 +42,13 @@ class CashFlowStatement(Statement):
     def __init__(self, parent=None):
         Statement.__init__(self, name="cash flow statement", parent=parent)
 
+        net_cash_line = LineItem('total net cash flow')
+        self.add_top_line(net_cash_line)
+
         operating = LineItem(name="cash from operations")
         investing = LineItem(name="cash from investing")
         financing = LineItem(name="cash from financing")
 
         for line in [operating, investing, financing]:
             line.xl.format.blank_row_after = True
-            self.add_top_line(line)
+            net_cash_line.append(line)
