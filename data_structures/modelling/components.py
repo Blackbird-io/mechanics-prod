@@ -7,7 +7,7 @@
 # Module: data_structures.modelling.components
 """
 
-Module defines Components class, a container for business units. 
+Module defines Components class, a container for business units.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -49,7 +49,7 @@ class Components(ComponentsBase, TagsMixIn, Equalities):
     support inheritance and extrapolation. Specifically, the tags on a
     Components instance, when maintained properly, should show whether any of
     the business units within that instance requires special extrapolation.
-    
+
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -65,7 +65,7 @@ class Components(ComponentsBase, TagsMixIn, Equalities):
     find_bbid()           return bbid that contains a known string
     get_all()             returns list of all units in instance
     get_living()          returns a bbid:bu dict of all bus that are alive
-    getOrdered()          legacy interface for get_ordered() 
+    getOrdered()          legacy interface for get_ordered()
     get_ordered()         returns a list of values, ordered by key
     get_tagged()          return a dict of units with tags
     refresh_names()       clear and rebuild name-to-bbid dictionary
@@ -82,7 +82,7 @@ class Components(ComponentsBase, TagsMixIn, Equalities):
     keyAttributes = []
     #keyAttributes should remain an explicit empty list to maintain dictionary
     #comparison logic
-        
+
     def __init__(self, name="Components"):
         ComponentsBase.__init__(self)
         TagsMixIn.__init__(self, name)
@@ -94,11 +94,11 @@ class Components(ComponentsBase, TagsMixIn, Equalities):
 
         Components.__eq__(comparator[, trace = False[, tab_width = 4]]) -> bool
 
-        
+
         Call Equalities.__eq__ explicitly to bypass dict.__eq__ and support
-        tracing.    
+        tracing.
         """
-        return Equalities.__eq__(self,comparator, trace, tab_width)
+        return Equalities.__eq__(self, comparator, trace, tab_width)
 
     def __ne__(self, comparator, trace = False, tab_width = 4):
         """
@@ -107,7 +107,7 @@ class Components(ComponentsBase, TagsMixIn, Equalities):
         Components.__ne__(comparator, [trace = False[, tab_width = 4]]) -> bool
 
 
-        Explicit call to Equalities.__ne__ 
+        Explicit call to Equalities.__ne__
         """
         return Equalities.__ne__(self, comparator, trace, tab_width)
 
@@ -120,7 +120,7 @@ class Components(ComponentsBase, TagsMixIn, Equalities):
 
         Method returns a deep copy of components. Uses Tags.copy() to create a
         shell. Method then sets result.by_name to a blank dictionary and adds a
-        copy of each unit in the instance to the result. 
+        copy of each unit in the instance to the result.
         """
         result = ComponentsBase.copy(self)
         result.tags = self.tags.copy()
@@ -136,7 +136,7 @@ class Components(ComponentsBase, TagsMixIn, Equalities):
 
         Method returns first bbid in instance keys that contains the snippet.
         Snippet should be a string. Method returns None if no id in instance
-        contains snippet. 
+        contains snippet.
         """
         result = None
         for bbid in self:
@@ -166,7 +166,7 @@ class Components(ComponentsBase, TagsMixIn, Equalities):
                 continue
         #
         return result
-    
+
     def getOrdered(self):
         """
 
@@ -186,12 +186,12 @@ class Components(ComponentsBase, TagsMixIn, Equalities):
 
 
         Return a dictionary of units (by bbid) that carry the specified tags.
-        
+
         If ``pool`` is None, uses instance.values(). Delegates all selection
         work to tools.for_tag_operations.get_tagged()
 
         If ``recur`` is True, method runs recursively through all values in
-        pool first, then adds in results from this level. 
+        pool first, then adds in results from this level.
         """
         result = {}
         if not pool:
@@ -213,8 +213,8 @@ class Components(ComponentsBase, TagsMixIn, Equalities):
 
 
         Method clears and rebuilds the instance by_name dictionary for all units
-        in instance. 
-        """   
+        in instance.
+        """
         self.by_name.clear()
         for bu in self.values():
             if bu.tags.name:
