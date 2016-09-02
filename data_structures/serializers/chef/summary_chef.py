@@ -471,7 +471,7 @@ class SummaryChef:
                 continue
 
             unit = period.content
-            if not (unit and hasattr(unit, 'xl')):
+            if not (unit):
                 continue
 
             unit.xl.set_sheet(sheet)
