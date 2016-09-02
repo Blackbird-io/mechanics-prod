@@ -97,6 +97,7 @@ class TimelineBase(dict):
         result = copy.copy(self)
         for key, value in self.items():
             result[key] = value.copy()
+            result[key].relationships.set_parent(result)
 
         return result
 

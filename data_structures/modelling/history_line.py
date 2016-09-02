@@ -64,7 +64,7 @@ class HistoryLine:
                           timeline
     ====================  =====================================================
     """
-    
+
     def __init__(
             self,
             locator_attribute='bu_directory',
@@ -129,6 +129,11 @@ class HistoryLine:
 
     @past.setter
     def past(self, value):
+        """
+
+        **property setter**
+
+        """
         if self.period:
             bbid = self.id.bbid
             period_past = self.period.past
@@ -161,6 +166,12 @@ class HistoryLine:
 
     @future.setter
     def future(self, value):
+        """
+
+        **property setter**
+
+        """
+
         if self.period:
             bbid = self.id.bbid
             period_next = self.period.future
@@ -178,6 +189,7 @@ class HistoryLine:
         This object should have a .period attribute to access its parent
         TimePeriod.
         """
+
         if self.period:
             bbid = self.id.bbid
 
