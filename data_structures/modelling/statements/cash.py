@@ -27,7 +27,7 @@ CashFlowStatement     statement that may contain specialized info
 
 # Imports
 from ..statement import Statement
-
+from ..line_item import LineItem
 
 
 
@@ -41,3 +41,11 @@ from ..statement import Statement
 class CashFlowStatement(Statement):
     def __init__(self, parent=None):
         Statement.__init__(self, name="cash flow statement", parent=parent)
+
+        operating = LineItem(name="cash from operations")
+        investing = LineItem(name="cash from investing")
+        financing = LineItem(name="cash from financing")
+
+        for line in [operating, investing, financing]:
+            line.xl.format.blank_row_after = True
+            self.add_top_line(line)
