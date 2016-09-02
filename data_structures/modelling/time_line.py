@@ -32,6 +32,7 @@ import logging
 from datetime import date, datetime, timedelta
 
 import bb_settings
+import tools.for_printing as views
 
 from data_structures.system.summary_maker import SummaryMaker
 
@@ -243,7 +244,10 @@ class TimeLine(TimelineBase):
         """
         result = TimelineBase.copy(self)
         result.has_been_extrapolated = self.has_been_extrapolated
-        result.summary_builder = self.summary_builder.copy()
+
+        if self.summary_builder:
+            result.summary_builder = self.summary_builder.copy()
+            
         result.summary_builder.time_line = result
 
         if self.current_period:
@@ -547,7 +551,7 @@ class TimeLine(TimelineBase):
         underscore = "_"
         bu_lines = list()
         if self.current_period.content:
-            bu_lines = self.current_period.content._get_pretty_lines()
+            bu_lines = views.view_as_unit(self.current_period.content)
         bu_width = 20
         # default width should be a setting (probably same as bu view)
         if bu_lines:
