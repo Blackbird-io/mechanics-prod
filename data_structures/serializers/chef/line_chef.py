@@ -355,6 +355,8 @@ class LineChef:
                                     label=label,
                                     row=sheet.bb.current_row,
                                     column=label_column)
+
+            cell_styles.format_line(line)
         else:
             if line.xl.cell:
                 # here just link the current cell to the cell in line.xl.cell
@@ -366,6 +368,9 @@ class LineChef:
                     line=line,
                     set_labels=set_labels,
                     indent=indent)
+
+                cell_styles.format_line(line)
+
                 line.xl.reference.source = None
                 line.xl.reference.cell = None
                 line.xl.cell = old_cell
@@ -377,7 +382,7 @@ class LineChef:
                     set_labels=set_labels,
                     indent=indent)
 
-        cell_styles.format_line(line)
+                cell_styles.format_line(line)
 
         if line.xl.format.blank_row_after:
             sheet.bb.current_row += 1
