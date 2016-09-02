@@ -247,8 +247,7 @@ class TimeLine(TimelineBase):
 
         if self.summary_builder:
             result.summary_builder = self.summary_builder.copy()
-            
-        result.summary_builder.time_line = result
+            result.summary_builder.time_line = result
 
         if self.current_period:
             result._current_period = result[self.current_period.end]
