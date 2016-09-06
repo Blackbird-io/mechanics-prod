@@ -37,7 +37,7 @@ import itertools
 from openpyxl.comments import Comment
 from openpyxl.styles import Alignment
 
-from bb_exceptions import ExcelPrepError
+from bb_exceptions import ExcelPrepError, BBAnalyticalError
 from chef_settings import (
     COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING,
     COMMENT_CUSTOM, BLANK_BETWEEN_TOP_LINES, FILTER_PARAMETERS,
@@ -173,6 +173,14 @@ class LineChef:
             sheet.bb.current_row += 1
             sheet.bb.need_spacer = False
 
+        # a line with own content should have no children with own content,
+        # and should not consolidate
+        line.has_own_content = any((
+            len(details) > 0,
+            line.xl.derived.calculations,
+            line.hardcoded,
+        ))
+
         sheet.bb.current_row = row_container.tip
 
         row_group = row_container.add_group('reference')
@@ -195,15 +203,19 @@ class LineChef:
         )
         row_group.size = sheet.bb.current_row - row_group.tip
 
-        row_group = row_container.add_group('consolidation')
-        self._add_consolidation_logic(
-            sheet=sheet,
-            column=column,
-            line=line,
-            set_labels=set_labels,
-            indent=indent + LineItem.TAB_WIDTH
-        )
-        row_group.size = sheet.bb.current_row - row_group.tip
+        if line.has_own_content:
+            # throw an error if any of consolidation sources have content
+            self._validate_consolidation(sheet, line)
+        else:
+            row_group = row_container.add_group('consolidation')
+            self._add_consolidation_logic(
+                sheet=sheet,
+                column=column,
+                line=line,
+                set_labels=set_labels,
+                indent=indent + LineItem.TAB_WIDTH
+            )
+            row_group.size = sheet.bb.current_row - row_group.tip
 
         if details:
             sub_indent = indent + LineItem.TAB_WIDTH
@@ -777,6 +789,31 @@ class LineChef:
             line.xl.cell = subtotal_cell
 
         return sheet
+
+    def _validate_consolidation(self, sheet, line):
+        """
+
+
+        LineChef._validate_consolidation() -> None
+
+        --``line`` must be an instance of LineItem
+
+        Throws an error if all are true:
+        1. ``line`` has own content: details, drivers, or value.
+        2. ``line`` has consolidation sources.
+        3. sources have own content.
+        """
+
+        if line.has_own_content:
+            for sub in line.xl.consolidated.sources:
+                if sub.has_own_content:
+                    c = (
+                        'line "{}" on sheet "{}" has content '
+                        'but also tries to consolidate line "{} '
+                        'which has its own content'
+                    ).format(line.name, sheet.title, sub.name)
+
+                    raise BBAnalyticalError(c)
 
     def _add_consolidation_logic(self, *pargs, sheet, column, line,
                                  set_labels=True, indent=0):
