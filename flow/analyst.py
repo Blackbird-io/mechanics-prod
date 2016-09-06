@@ -192,7 +192,7 @@ class Analyst:
             elif self.status == TOPIC_NEEDED:
                 topic = yenta.select_topic(model)
                 if topic:
-                    logger.debug(topic.source)
+                    logger.info(topic.source)
                     message = topic.process(message)
                 else:
                     pass
