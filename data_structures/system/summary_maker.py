@@ -268,14 +268,14 @@ class SummaryMaker:
 
             # special handling of the first time period starting balance:
             # link to the starting balance of the first source period
-            # if len(timeline_summary) == 0:
-            #     source_bu = source.bu_directory[self.bu_bbid]
-            #     bal_enter = source_bu.financials.starting.copy()
-            #     bal_enter.link_to(source_bu.financials.starting)
-            #     summary_unit.financials.starting = bal_enter
+            if len(timeline_summary) == 0:
+                source_bu = source.bu_directory[self.bu_bbid]
+                bal_enter = source_bu.financials.starting.copy()
+                bal_enter.link_to(source_bu.financials.starting)
+                summary_unit.financials.starting = bal_enter
 
             # add to timeline
-            # summary_period.set_content(summary_unit)
+            summary_period.set_content(summary_unit)
             timeline_summary.add_period(summary_period)
             timeline_summary.summary_period = summary_period
 
