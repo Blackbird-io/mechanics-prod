@@ -271,16 +271,17 @@ class TimeLine(TimelineBase):
         if seed is None:
             seed = self.current_period
 
-        seed.content.reset_financials()
-        seed.content.fill_out()
+        # seed.content.reset_financials()
+        # seed.content.fill_out()
 
-        if seed.past.content:
-            seed.past.content.reset_financials()
-            seed.past.content.fill_out()
+        # if seed.past.content:
+        #     seed.past.content.reset_financials()
+        #     seed.past.content.fill_out()
 
         # init SummaryMaker now that TimeLine has been built
         self.summary_builder = SummaryMaker(self)
 
+        counter = 0
         for period in self.iter_ordered(open=seed.end):
             if period.end > seed.end:
                 # reset content and directories
@@ -290,11 +291,11 @@ class TimeLine(TimelineBase):
                 # propagate parameters from past to current
                 period.combine_parameters()
                 # copy and fill out content
-                if seed.content:
-                    new_content = seed.content.copy()
-                    period.set_content(new_content, updateID=False)
-                    period.content.reset_financials()
-                    period.content.fill_out()
+                # if seed.content:
+                #     new_content = seed.content.copy()
+                #     period.set_content(new_content, updateID=False)
+                #     period.content.reset_financials()
+                #     period.content.fill_out()
                 seed = period
 
             if bb_settings.MAKE_ANNUAL_SUMMARIES:
