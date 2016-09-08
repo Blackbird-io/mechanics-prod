@@ -28,6 +28,8 @@ Catalog
 #imports:
 import bb_exceptions
 
+from tools import CasefoldDict
+
 
 
 
@@ -40,13 +42,13 @@ class Catalog:
 
     Class provides standard template for object catalogs. Catalogs allow human
     and machine users to rapidly locate a desired object. Blackbird catalogs
-    generally key objects by bbid (type-3 uuid). 
+    generally key objects by bbid (type-3 uuid).
 
     Because bbids look like random strings of 16 characters, humans generally
     find them unwieldy and meaningless. To make catalog content easy for human
     users to access, the Catalog object should also maintain a reverse look-up
     table that maps easy-to-read-and-remember attributes to object bbids.
-    
+
     ==========================  ================================================
     Attribute                   Description
     ==========================  ================================================
@@ -63,10 +65,10 @@ class Catalog:
     """
     def __init__(self):
         self.by_id = {}
-        self.by_name = {}
+        self.by_name = CasefoldDict()
         self.populated = False
 
-    def issue(self,bbid):
+    def issue(self, bbid):
         """
 
 
@@ -86,7 +88,7 @@ class Catalog:
 
 
         Method registers obj in instance.by_id under obj.id.bbid, and in
-        instance.by_name under each key specified in reverse_keys. 
+        instance.by_name under each key specified in reverse_keys.
         """
         if not overwrite:
             if obj.id.bbid in self.by_id:
@@ -102,7 +104,8 @@ class Catalog:
                 self.by_name[k] = obj.id.bbid
             else:
                 #cannot register unintentionally under blank key
-                c = ""
-                c += "Catalog prohibits registration under None or other \n"
-                c += "objects with False values."
+                c = (
+                    "Catalog prohibits registration under None or other \n"
+                    "objects with False values."
+                )
                 raise bb_exceptions.CatalogError(c)
