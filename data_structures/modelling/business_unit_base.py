@@ -208,7 +208,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
 
         self.financials = fins
 
-    def get_financials(self, period, summary=None):
+    def get_financials(self, period=None):
         """
 
 
@@ -220,15 +220,15 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         Returns this BUs financials in a given period.
         """
 
-        if not summary:
-            summary = getattr(self, 'summary', None)
-
-        financials = self.financials
-
-        # financials = Financials.get_cached(self.id.bbid, period.end, summary)
-        # financials.relationships.set_parent(self)
-        # financials.period = period
-
+        if not period:
+            return self.financials
+        else:
+            summary = getattr(period, 'summary', None)
+            financials = Financials.get_cached(
+                self.id.bbid, period.end, summary
+            )
+            financials.relationships.set_parent(self)
+            financials.period = period
         return financials
 
     # *************************************************************************#
@@ -284,8 +284,8 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         """
 
         # look for drivers based on line name, line parent name, all line tags
-        keys = [line.tags.name.casefold()]
-        keys.append(line.relationships.parent.name.casefold())
+        keys = [line.tags.name]
+        keys.append(line.relationships.parent.name)
         keys.extend(line.tags.all)
 
         for key in keys:

@@ -28,7 +28,7 @@ Tags                  composition class that provides tagging and naming
 
 
 # imports
-from tools.parsing import deCase
+# n/a
 
 
 
@@ -136,8 +136,6 @@ class Tags:
         --``source`` is another Tags instance from which to inherit tags
 
         Method adds tags found on the source to self as optional tags.
-
-        This method evaluates tags as casefolded objects to the extent possible.
         """
 
         # source tags is now **unordered**
@@ -155,7 +153,7 @@ class Tags:
         Method for setting the name of an object.
         """
 
-        self._name = deCase(name)
+        self._name = name
 
     def add(self, *newTags, field="opt"):
         """
@@ -169,8 +167,6 @@ class Tags:
         -- "req" means tags will be added to instance._required
         -- "opt" [ default ] means tags will be added to instance._optional
 
-        NOTE: Method automatically **decases** all tags.
-
         Tags should generally be optional. When in doubt, add more tags.
         """
         attrs = {}
@@ -182,8 +178,6 @@ class Tags:
         real_thing = getattr(self, attrs[field])
 
         for tag in newTags:
-            # NOTE: automatically decase tags!
-            tag = deCase(tag)
             real_thing.add(tag)
 
     def remove(self, badTag):

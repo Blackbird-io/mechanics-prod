@@ -8,7 +8,7 @@
 
 """
 
-Module provides convenience functions for parsing user data. 
+Module provides convenience functions for parsing user data.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -51,7 +51,7 @@ def monthsToSeconds(months):
 def secondsToMonths(seconds):
     secondsPerMonth = 365/12*24*60*60
     months = seconds / secondsPerMonth
-    return months    
+    return months
 
 ##def locateByName(container,startingMark,endingMark):
 ##    """
@@ -98,7 +98,7 @@ def findByTag(container, *targetTags):
     """
     criteria = set()
     for tag in targetTags:
-        criteria.add(tag.casefold())
+        criteria.add(tag)
     result = None
     for item in container:
         if criteria.issubset(set(item.tags.all)):
@@ -112,7 +112,7 @@ def findByTag(container, *targetTags):
 
 def excludeByTag(container, *badTags):
     """
-    Method returns a shallow copy of the container and its contents, minus objects with bad tags. 
+    Method returns a shallow copy of the container and its contents, minus objects with bad tags.
     badTags catchall picks up one or more specified bad tags by position.
     Works on list-type containers carrying tagged objects
     """
@@ -149,7 +149,7 @@ def includeByTag(container, *goodTags):
 ##        result.append(missingAttributeCatcher(item,"name",missing))
 ##    return result
 ####  DELETE WHEN TESTED <--------------------------------------------------------
-    
+
 def padAndZip(*thingsToZip, padding = None, trace = False):
     """
     zips any number of iterables together
@@ -204,7 +204,7 @@ def padAndZip(*thingsToZip, padding = None, trace = False):
 ##def listAttributes(obj):
 ##    """
 ##    Function identifies the object's non-system attributes.
-##    Returns a list of strings, each of which is an attribute name. 
+##    Returns a list of strings, each of which is an attribute name.
 ##    """
 ##    allAttributes = dir(obj)
 ##    result = []
@@ -242,7 +242,7 @@ def deCase(obj):
     """
 
     If the object supports casefolding, returns casefolded object; otherwise,
-    returns the object without modification. 
+    returns the object without modification.
     """
     result = obj
     try:
@@ -262,7 +262,7 @@ def seconds_from_iso(string):
 
     Function takes a string in "YYYY-MM-DD" format and returns a POSIX timestamp
     representing seconds since Epoch. Function ignores any whitespace around the
-    POSIX data. 
+    POSIX data.
     """
     calendar = date_from_iso(string)
     to_time = calendar.timetuple()
@@ -278,7 +278,7 @@ def date_from_iso(string):
 
 
     Function takes a string in "YYYY-MM-DD" format and returns an instance of
-    datetime.date. Function ignores any whitespace around the POSIX data. 
+    datetime.date. Function ignores any whitespace around the POSIX data.
     """
     elements = [int(x) for x in string.split("-")]
     result = datetime.date(*elements)
@@ -302,4 +302,4 @@ def walk(d):
     for k in sorted(d.keys()):
         yield d[k]
 
-    
+

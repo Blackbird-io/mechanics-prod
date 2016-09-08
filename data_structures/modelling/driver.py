@@ -336,16 +336,16 @@ class Driver(TagsMixIn):
         tags = []
 
         if nameCondition:
-            names.append(nameCondition.casefold())
+            names.append(nameCondition)
         else:
             names.append(nameCondition)
         if partCondition:
-            parts.append(partCondition.casefold())
+            parts.append(partCondition)
         else:
             parts.append(partCondition)
         for tag in tagConditions:
             if tag:
-                tags.append(tag.casefold())
+                tags.append(tag)
             else:
                 tags.append(tag)
 
