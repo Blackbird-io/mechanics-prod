@@ -225,7 +225,7 @@ class Yenta():
         eligibles = []
 
         targ_criterion = target.tags.required | {target.name}
-        targ_criterion = targ_criterion - {None}
+        targ_criterion = set(c.casefold() for c in targ_criterion if c)
 
         # UPGRADE-F: Can make selection process more open-ended by also removing
         # the target name from criterion. As is, naming binding creates a sort of

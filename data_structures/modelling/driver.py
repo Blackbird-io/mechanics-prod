@@ -258,12 +258,11 @@ class Driver(TagsMixIn):
         self._set_formula(formula)
 
         # get namespace for driver
-        base = self.name or formula.tags.name
+        base = self.name or formula.tags.name.casefold()
         for k, wc in self.workConditions.items():
-            wc = set(wc) - {None}
+            wc = set(c.casefold() for c in wc if c is not None)
             if wc:
-                tmp = '||WorkConditions||'+k+':'
-                tmp += ','.join(wc)
+                tmp = '||WorkConditions||{}:{}'.format(k, ','.join(wc))
                 base += tmp
 
         self.id.set_namespace(formula.id.namespace)
@@ -547,13 +546,13 @@ class Driver(TagsMixIn):
         # must be careful not to split strings (names) into letters with set()
         if self.workConditions["name"]:
             if not set(self.workConditions["name"]).issubset(
-                [line.name] + [None]
+                set((None, line.name.casefold()))
             ):
                 return False
 
         if self.workConditions["partOf"]:
             try:
-                part_of = set([line.relationships.parent.name]) | {None}
+                part_of = set((None, line.relationships.parent.name))
             except AttributeError:
                 part_of = {None}
 
@@ -561,7 +560,7 @@ class Driver(TagsMixIn):
                 return False
 
         if self.workConditions["all"]:
-            all_tags = line.tags.all | set([line.name]) | {None}
+            all_tags = line.tags.all | set((None, line.name.casefold()))
 
             if not set(self.workConditions["all"]).issubset(all_tags):
                 return False

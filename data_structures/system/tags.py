@@ -155,7 +155,7 @@ class Tags:
         Method for setting the name of an object.
         """
 
-        self._name = deCase(name)
+        self._name = name
 
     def add(self, *newTags, field="opt"):
         """
