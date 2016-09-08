@@ -8,7 +8,7 @@
 """
 
 Module defines DriversContainer class, a Components-type container for Driver
-objects. 
+objects.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -45,7 +45,7 @@ from .driver import Driver
 
 #classes
 class DrContainer(Components, TagsMixIn):
-    """ 
+    """
 
     The DrContainer class provides organization and storage for drivers that
     work on a particular business unit.
@@ -55,7 +55,7 @@ class DrContainer(Components, TagsMixIn):
 
     The main dictionary stores records of known drivers for each key. The keys
     are usually tags or line names. The records are a dictionary of position to
-    driver bbid. 
+    driver bbid.
 
     The directory stores driver objects keyed by bbid. When a client needs to
     access the actual drivers for a given line, she calls the get_drivers()
@@ -68,11 +68,11 @@ class DrContainer(Components, TagsMixIn):
 
     NOTE: Equivalence (``==``) operations on DrContainers run through
     dict.__eq__ and compare only the main content (keys and sets of bbids), not
-    the actual driver objects associated with those bbids. 
+    the actual driver objects associated with those bbids.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
-    
+
     DATA:
     dr_blank              empty Driver() object for checking driver registration
     dr_directory          dictionary of bbid:driver objects
@@ -86,14 +86,14 @@ class DrContainer(Components, TagsMixIn):
     setPartOf()           sets parentObject for instance **and** drivers
     ====================  ======================================================
     """
-    
+
     def __init__(self, name="DrContainer"):
         Components.__init__(self, name)
         TagsMixIn.__init__(self, name)
 
         self[None] = set()
         self.dr_blank = Driver()
-        self.dr_directory = {}        
+        self.dr_directory = {}
 
     def add_item(self, new_driver, *other_keys):
         """
@@ -103,7 +103,7 @@ class DrContainer(Components, TagsMixIn):
 
 
         Method creates sets of bbids for drivers associated with a specific tag.
-        
+
         Method registers the driver's bbid under the driver's
         workConditons["name"] and ["all"] keys. Method will skip
         registration for a workConditions key if that workCondition is empty
@@ -112,7 +112,7 @@ class DrContainer(Components, TagsMixIn):
         as part of the ``otherKeys`` argument.
 
         Method also adds the driver to the instance's dr_directory.
-        
+
         Upon registration, Method updates driver's parentObject attribute to
         point to the instance's parentObject (ie, the business unit housing this
         particular DrContainer).
@@ -122,7 +122,7 @@ class DrContainer(Components, TagsMixIn):
         if not self.relationships.parent:
             c = "Cannot add driver. DrContainer does not have a parent object."
             raise bb_exceptions.IOPMechanicalError(c)
-        
+
         if not new_driver.id.bbid:
             c = "Cannot add driver that does not have a valid bbid."
             raise bb_exceptions.IDError(c)
@@ -142,24 +142,22 @@ class DrContainer(Components, TagsMixIn):
         keys = keys - set(self.dr_blank.workConditions["name"])
         #  driver.workConditions[x] == "FAIL" by default
 
-        applied_keys = {key.casefold() for key in keys}
-        
-        for decased_key in applied_keys:
-            record = self.setdefault(decased_key, dict())
+        for key in keys:
+            record = self.setdefault(key, dict())
             if new_driver.position in record:
-                c = "A single record can only have one driver with a given position."
-                c += "\n position %s already exists for key ``%s``"
-                c = c % (new_driver.position, decased_key)
-                c += "\n unable to insert driver ``%s``"
-                c = c % new_driver.tags.name
-                #
+                c = (
+                    "A single record can only have one driver "
+                    "with a given position.\n"
+                    "position {} already exists for key ``{}``\n"
+                    "unable to insert driver ``{}``"
+                ).format(new_driver.position, key, new_driver.tags.name)
                 for num, item in enumerate(self.items()):
                     print(num, " ", item, "\n")
                 print()
-                print(self[decased_key])
+                print(self[key])
                 raise Exception(c)
             else:
-                record[new_driver.position] = new_driver.id.bbid        
+                record[new_driver.position] = new_driver.id.bbid
 
     def copy(self):
         """
@@ -174,7 +172,7 @@ class DrContainer(Components, TagsMixIn):
         the original directory.
 
         ```` toggles whether driver copies in the copy.dr_directory
-        comply with any applicable tag rules. 
+        comply with any applicable tag rules.
         """
         #
         # Make container
@@ -187,7 +185,7 @@ class DrContainer(Components, TagsMixIn):
         #
         # Configure and fill the container
         result.dr_blank = self.dr_blank.copy()
-        
+
         for (k, position_dict) in self.items():
             result[k] = position_dict.copy()
             # Set-specific copy; new set of same bbids
@@ -195,9 +193,9 @@ class DrContainer(Components, TagsMixIn):
         for (bbid,dr) in self.dr_directory.items():
             result.dr_directory[bbid] = dr.copy()
         #
-        # Return 
+        # Return
         return result
-        
+
     def get_drivers(self, tag):
         """
 
@@ -211,7 +209,7 @@ class DrContainer(Components, TagsMixIn):
         result = []
         available = self[tag]
         # ``available`` is a int:bbid dictionary
-        
+
         for position, bbid in sorted(available.items()):
             # Lambda may be faster here, not using for clarity
             bbid = available[position]
@@ -263,7 +261,7 @@ class DrContainer(Components, TagsMixIn):
 
 
         Method runs Tags.setPartOf() on the instance, and, if ``recur`` is True,
-        all drivers in the instance. 
+        all drivers in the instance.
         """
         self.relationships.set_parent(parentObj)
         if recur:

@@ -321,9 +321,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         statements for instance and components.
         """
 
-        if not period:
-            period = self.period
-
         for unit in self.components.get_all():
             unit.compute(statement_name, period=period)
 
@@ -372,15 +369,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         result.interview = r_interview
 
         return result
-
-    def fillOut(self):
-        """
-
-        **OBSOLETE**
-
-        Legacy interface for fill_out().
-        """
-        return self.fill_out()
 
     def fill_out(self):
         """
