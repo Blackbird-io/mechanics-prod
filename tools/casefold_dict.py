@@ -85,3 +85,12 @@ class CasefoldDict(dict):
         """
 
         return dict.__contains__(self, self.__keytransform__(key))
+
+
+    def pop(self, key, default=None):
+        """
+
+        CasefoldDict.pop() -> obj
+        """
+
+        return dict.pop(self, self.__keytransform__(key), default)
