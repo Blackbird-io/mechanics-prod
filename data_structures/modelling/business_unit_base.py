@@ -153,7 +153,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
 
         Method concatenates each line in ``lines``, adds a new-line character at
         the end, and returns a string ready for printing. If ``lines`` is None,
-        method calls _get_pretty_lines() on instance.
+        method calls views.view_as_unit() on instance.
         """
         # Get string list, slap a new-line at the end of every line and return
         # a string with all the lines joined together.
@@ -208,7 +208,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
 
         self.financials = fins
 
-    def get_financials(self, period, summary=None):
+    def get_financials(self, period=None):
         """
 
 
@@ -220,11 +220,9 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         Returns this BUs financials in a given period.
         """
 
-        if not summary:
-            summary = getattr(self, 'summary', None)
-
         financials = self.financials
 
+        # summary = getattr(period, 'summary', None)
         # financials = Financials.get_cached(self.id.bbid, period.end, summary)
         # financials.relationships.set_parent(self)
         # financials.period = period
@@ -303,82 +301,6 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
                     # A replica should never have any details
                 else:
                     self._derive_line(detail, period)
-
-    def _get_pretty_lines(self,
-                          top_element="=",
-                          side_element="|",
-                          box_width=23,
-                          field_width=5):
-        """
-
-
-        BusinessUnitBase._get_pretty_lines() -> list
-
-
-        Method returns a list of strings that displays a box if printed in
-        order. Line ends are naked (i.e, lines do **not** terminate in a
-        new-line character).
-
-        Box format:
-
-        +=====================+
-        | NAME  : Baltimore-4 |
-        | ID    : ...x65-0b78 |
-        | COMPS :          45 |
-        +=====================+
-
-        """
-        reg_corner = "+"
-        # formatting rules
-        template = "%s %s : %s %s"
-        empty_line = template % (side_element,
-                                 ("x" * field_width),
-                                 "",
-                                 side_element)
-        # empty_line should equal " | xxxxxxxx :  |"
-        data_width = box_width - len(empty_line)
-
-        # fields:
-        fields = ["NAME",
-                  "ID",
-                  "COMPS"]
-        # data
-        data = {}
-        unit_name = str(self.tags.name)
-        if len(unit_name) > data_width:
-            # abbreviate unit name if its too long
-            unit_name_parts = unit_name.split()
-            if len(unit_name_parts) > 1:
-                last_part = unit_name_parts[-1]
-                initials = ""
-                for part in unit_name_parts[:-1]:
-                    initial = part[:1] + "."
-                    initials = initials + initial
-                unit_name = initials + last_part
-        data["NAME"] = unit_name[:data_width]
-
-        id_dots = "..."
-        tail_width = data_width - len(id_dots)
-        id_tail = str(self.id.bbid)[(tail_width * -1):]
-        data["ID"] = id_dots + id_tail
-
-        data["COMPS"] = str(len(self.components.get_all()))
-
-        lines = []
-        top_border = reg_corner + top_element * (box_width - 2) + reg_corner
-        lines.append(top_border)
-
-        for field in fields:
-            new_line = template % (side_element,
-                                   field.ljust(field_width),
-                                   data[field].rjust(data_width),
-                                   side_element)
-            lines.append(new_line)
-
-        # add a bottom border symmetrical to the top
-        lines.append(top_border)
-
-        return lines
 
     def _register_in_period(self, period, recur=True, overwrite=True):
         """
