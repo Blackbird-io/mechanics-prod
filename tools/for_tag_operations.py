@@ -9,7 +9,7 @@
 """
 
 Module includes convenience functions for identifying objects based on the tags
-they carry. 
+they carry.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -47,14 +47,14 @@ def build_basic_profile(target):
     build_basic_profile(target) -> set()
 
 
-    Return set of all tags on target, with None stripped out. 
+    Return set of all tags on target, with None stripped out.
     """
     try:
         criteria = target.tags.all | {target.tags.name}
     except AttributeError:
         raise
 
-    criteria = criteria - {None}
+    criteria = set(c.casefold() for c in criteria if c)
 
     return criteria
 
@@ -71,7 +71,7 @@ def build_combo_profile(target, model):
 
     When target is a LineItem, target's parent will usually be a line or a
     Financials object and its grandparent will usually be a line, Financials
-    object, or a BusinessUnit. 
+    object, or a BusinessUnit.
     """
 
     parent_rels = getattr(target, "relationships", None)
@@ -110,7 +110,7 @@ def build_combo_profile(target, model):
 
     criteria = criteria | set(tags_up_one) | set(tags_up_two) | path_tags
     criteria = criteria | set(model.tags.all) | {model.tags.name}
-    criteria = criteria - {None}
+    criteria = set(c.casefold() for c in criteria if c)
 
     return criteria
 
@@ -120,16 +120,16 @@ def get_tagged(container, *tags, catch_blank_ids=True):
 
 
     get_tagged(container, *tags) -> dict()
-    
+
 
     Return an {bbid:obj} dict of objects that have each of the specified tags.
 
     Container must be an iterable. If ``catch_blank_ids`` is True, function will
-    store all matching objects that are missing a bbid in a set at the None key. 
+    store all matching objects that are missing a bbid in a set at the None key.
 
     NOTE: Function evaluates ``tags`` as a set, so it will not differentiate
     between objects that carry that tag once and those that do so more than
-    once. 
+    once.
     """
     criterion = set(tags)
     result = dict()
