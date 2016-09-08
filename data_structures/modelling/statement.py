@@ -32,7 +32,6 @@ import bb_exceptions
 import bb_settings
 
 from data_structures.system.relationships import Relationships
-from data_structures.system.tags import Tags
 from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.system.bbid import ID
 
@@ -676,7 +675,7 @@ class Statement(Equalities, TagsMixIn):
         line.relationships.set_parent(self)
         line.register(namespace=self.id.namespace)
 
-        self._details[line.tags.name] = line
+        self._details[line.tags.name.casefold()] = line
 
     def _inspect_line_for_insertion(self, line):
         """
@@ -691,7 +690,7 @@ class Statement(Equalities, TagsMixIn):
             c = "Cannot add nameless lines."
             raise bb_exceptions.BBAnalyticalError(c)
 
-        if line.tags.name in self._details:
+        if line.tags.name.casefold() in self._details:
             c = "Implicit overwrites prohibited."
             raise bb_exceptions.BBAnalyticalError(c)
 
