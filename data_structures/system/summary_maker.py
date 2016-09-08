@@ -404,9 +404,7 @@ class SummaryMaker:
         timeline_summary = self.summaries[self.onkey]
         summary_period = timeline_summary.summary_period
         target_bu = summary_period.bu_directory[bu_bbid]
-        target_fins = target_bu.get_financials(
-            summary_period, summary=self.onkey
-        )
+        target_fins = target_bu.get_financials(summary_period)
 
         source_statement = getattr(source_fins, statement_name)
         target_statement = getattr(target_fins, statement_name)
