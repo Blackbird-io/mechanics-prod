@@ -142,6 +142,7 @@ class DrContainer(Components, TagsMixIn):
         keys = keys - set(self.dr_blank.workConditions["name"])
         #  driver.workConditions[x] == "FAIL" by default
 
+        keys = {key.casefold() for key in keys}
         for key in keys:
             record = self.setdefault(key, dict())
             if new_driver.position in record:

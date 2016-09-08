@@ -394,7 +394,7 @@ def view_as_unit(
                 seg_a = line[:(up_pos)]
                 seg_b = line[(up_pos + 1):]
                 line = seg_a + "/" + seg_b
-                line = line.casefold()
+                # line = line.casefold()
                 #
                 alt_lines.append(line)
             lines = alt_lines
