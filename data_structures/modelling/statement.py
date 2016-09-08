@@ -31,6 +31,7 @@ import copy
 import bb_exceptions
 import bb_settings
 
+from tools import CasefoldDict
 from data_structures.system.relationships import Relationships
 from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.system.bbid import ID
@@ -114,7 +115,7 @@ class Statement(Equalities, TagsMixIn):
         TagsMixIn.__init__(self, name)
 
         self._consolidated = False
-        self._details = dict()
+        self._details = CasefoldDict()
         self.relationships = Relationships(self, parent=parent)
         self.POSITION_SPACING = max(1, int(spacing))
         self.id = ID() # does not get its own bbid, just holds namespace
@@ -345,7 +346,7 @@ class Statement(Equalities, TagsMixIn):
 
         # Tags.copy returns a shallow copy of the instance w deep copies
         # of the instance tag attributes.
-        result._details = dict()
+        result._details = CasefoldDict()
         # Clean dictionary
 
 
@@ -675,7 +676,7 @@ class Statement(Equalities, TagsMixIn):
         line.relationships.set_parent(self)
         line.register(namespace=self.id.namespace)
 
-        self._details[line.tags.name.casefold()] = line
+        self._details[line.tags.name] = line
 
     def _inspect_line_for_insertion(self, line):
         """
