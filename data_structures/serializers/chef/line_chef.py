@@ -857,9 +857,12 @@ class LineChef:
             line.xl.consolidated.starting = sheet.bb.current_row
             line.xl.consolidated.array.clear()
 
+            # the outer iter converts the sorted list into an iterator
+            # which is needed to chunk it by group
+            paired = iter(sorted(zip(labels, sources)))
             # chunker gives (label, source) pairs in chunks of "links_per_cell".
             # Each hit returns a links_per_cell-sized tuple of tuples.
-            chunker = itertools.repeat(zip(labels, sources), links_per_cell)
+            chunker = itertools.repeat(paired, links_per_cell)
             for source_list in itertools.zip_longest(*chunker):
                 batch_summation = ""
 
