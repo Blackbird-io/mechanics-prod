@@ -46,6 +46,8 @@ from .statement import Statement
 # Constants
 SPECIAL_CONSOLIDATION_LINE_PREFIX = ""
 SPECIAL_CONSOLIDATION_LINE_SUFFIX = " (consolidated)"
+SUMMARY_TYPES = ('derive', 'sum', 'average', 'ending', 'starting')
+
 
 # Classes
 class LineItem(Statement):
@@ -118,8 +120,7 @@ class LineItem(Statement):
         self.guide = Guide(priority=3, quality=1)
         self.log = []
         self.position = None
-        self._sum_over_time = True
-        self._summary_calculate = False
+        self.summary_type = 'sum'
         self._consolidate = True
         self._replica = False
         self._hardcoded = False
@@ -197,11 +198,11 @@ class LineItem(Statement):
         be summed over time and only the end point will be shown in summaries.
         If True, line item will be summed over time for summaries.
         """
-        return self._sum_over_time
+        return self.summary_type == 'sum'
 
     @sum_over_time.setter
     def sum_over_time(self, value):
-        self._sum_over_time = value
+        self.summary_type = 'sum' if value else None
 
     @property
     def value(self):

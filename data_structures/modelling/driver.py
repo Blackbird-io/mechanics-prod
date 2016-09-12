@@ -168,7 +168,7 @@ class Driver(TagsMixIn):
         # We set condition values to a default that must be overwritten to make
         # sure default configuration doesnt apply to every lineItem.
 
-        self._summary_calculate = False
+        self.summary_type = None
 
     def __eq__(self, comp, trace=False, tab_width=4):
         """
@@ -219,19 +219,6 @@ class Driver(TagsMixIn):
         # The issue is that params and conversion table are mutable containers.
         # So either have to make them immutable or figure out some other
         # approach.
-
-    @property
-    def summary_calculate(self):
-        """
-        Default value of summary_calculate is False.  If False, driver will not
-        be used in annual summary.  If true, driver will be used in annual
-        summary if a matching line exists.
-        """
-        return self._summary_calculate
-
-    @summary_calculate.setter
-    def summary_calculate(self, value):
-        self._summary_calculate = value
 
     def configure(self, data, formula, conversion_table=None):
         """

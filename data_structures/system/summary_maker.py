@@ -358,8 +358,11 @@ class SummaryMaker:
         Method summarizes a LineItem. Aggregation type is defined by
         source_line's attributes.
         """
-        summary_type = self.summary_type(target_line)
-        if summary_type == 'sum':
+        summary_type = target_line.summary_type
+        if summary_type == 'derive':
+            # driver will do the work
+            pass
+        elif summary_type == 'sum':
             target_line.increment(
                 source_line,
                 consolidating=True,
@@ -367,16 +370,35 @@ class SummaryMaker:
                 override=True,
                 over_time=True
             )
+        elif summary_type == 'first':
+            # use the first non-None showing up
+            if target_line.value is None:
+                target_line.set_value(
+                    source_line.value, "SummaryMaker", override=False
+                )
+                target_line.xl.reference.source = source_line
+        elif summary_type == 'last':
+            # assume period show up in order, last one overrides
+            target_line.set_value(
+                source_line.value, "SummaryMaker", override=True
+            )
+            target_line.xl.reference.source = source_line
+        elif summary_type:
+            c = 'we have not yet implemented summary_type: {}'.format(
+                summary_type
+            )
+            raise bb_exceptions.BBAnalyticalError(c)
         else:
             if target_line._details:
                 for new_line in target_line._details.values():
                     old_line = source_line.find_first(new_line.name)
                     self.add_line_summary(old_line, new_line, label=label)
             else:
+                # this is equivalent to 'last'
                 target_line.set_value(
                     source_line.value, "SummaryMaker", override=True
                 )
-            target_line.xl.reference.source = source_line
+                target_line.xl.reference.source = source_line
 
     def add_statement_summary(self, source, statement_name):
         """
@@ -511,8 +533,7 @@ class SummaryMaker:
         # "summary_calculate" or "summary_type" == derive
         # drivers to unit_summary.
         for bbid, dr in source_bu.drivers.dr_directory.items():
-            summary_type = self.summary_type(dr)
-            if summary_type == 'derive':
+            if dr.summary_type == 'derive':
                 target_bu.drivers.add_item(dr.copy())
 
         # apply derivations to target financials
@@ -520,27 +541,26 @@ class SummaryMaker:
         for statement in summary_fins.ordered:
             if statement:
                 for line in statement.get_full_ordered():
-                    summary_type = self.summary_type(line)
-                    if summary_type == 'derive':
+                    if line.summary_type == 'derive':
                         line.clear()
                         target_bu._derive_line(line)
 
-    def summary_type(self, obj):
-        """
-
-
-        SummaryMaker.summary_type() -> str
-
-        --``obj`` has 'summary_type', or 'sum_over_time', or 'summary_calculate'
-
-        Transitional method. Infers summary type from several potential sources.
-        Defaults to 'sum'.
-        """
-        summary_type = getattr(obj, 'summary_type', None)
-        if summary_type is None:
-            if getattr(obj, 'sum_over_time', False):
-                summary_type = 'sum'
-        if summary_type is None:
-            if getattr(obj, 'summary_calculate', False):
-                summary_type = 'derive'
-        return summary_type
+    # def summary_type(self, obj):
+    #     """
+    #
+    #
+    #     SummaryMaker.summary_type() -> str
+    #
+    #     --``obj`` has 'summary_type', or 'sum_over_time', or 'summary_calculate'
+    #
+    #     Transitional method. Infers summary type from several potential sources.
+    #     Defaults to 'sum'.
+    #     """
+    #     summary_type = getattr(obj, 'summary_type', None)
+    #     if summary_type is None:
+    #         if getattr(obj, 'sum_over_time', False):
+    #             summary_type = 'sum'
+    #     if summary_type is None:
+    #         if getattr(obj, 'summary_calculate', False):
+    #             summary_type = 'derive'
+    #     return summary_type
