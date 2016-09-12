@@ -454,14 +454,14 @@ class SummaryBuilder:
         # "summary_calculate" drivers to unit_summary
         for bbid in sorted(real_bu.drivers.dr_directory.keys()):
             dr = real_bu.drivers.dr_directory[bbid]
-            if dr.summary_calculate:
+            if dr.summary_type == 'derive':
                 unit_summary.drivers.add_item(dr.copy())
 
         summary_fins = unit_summary.financials
         for statement in summary_fins.ordered:
             if statement:
                 for line in statement.get_full_ordered():
-                    if line.summary_calculate:
+                    if line.summary_type == 'derive':
                         line.clear()
                         unit_summary._derive_line(line)
 
