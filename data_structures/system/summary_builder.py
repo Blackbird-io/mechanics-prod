@@ -451,7 +451,7 @@ class SummaryBuilder:
     def _do_summary_calculations(real_bu, unit_summary):
 
         # loop through drivers in real_bu.drivers and copy all
-        # "summary_calculate" drivers to unit_summary
+        # summary_type == 'derive' drivers to unit_summary
         for bbid in sorted(real_bu.drivers.dr_directory.keys()):
             dr = real_bu.drivers.dr_directory[bbid]
             if dr.summary_type == 'derive':

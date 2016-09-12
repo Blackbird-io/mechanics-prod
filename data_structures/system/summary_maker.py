@@ -530,8 +530,7 @@ class SummaryMaker:
         target_bu = summary_period.bu_directory[self.bu_bbid]
 
         # loop through drivers in real_bu.drivers and copy all
-        # "summary_calculate" or "summary_type" == derive
-        # drivers to unit_summary.
+        # "summary_type" == derive drivers to unit_summary.
         for bbid, dr in source_bu.drivers.dr_directory.items():
             if dr.summary_type == 'derive':
                 target_bu.drivers.add_item(dr.copy())
@@ -544,23 +543,3 @@ class SummaryMaker:
                     if line.summary_type == 'derive':
                         line.clear()
                         target_bu._derive_line(line)
-
-    # def summary_type(self, obj):
-    #     """
-    #
-    #
-    #     SummaryMaker.summary_type() -> str
-    #
-    #     --``obj`` has 'summary_type', or 'sum_over_time', or 'summary_calculate'
-    #
-    #     Transitional method. Infers summary type from several potential sources.
-    #     Defaults to 'sum'.
-    #     """
-    #     summary_type = getattr(obj, 'summary_type', None)
-    #     if summary_type is None:
-    #         if getattr(obj, 'sum_over_time', False):
-    #             summary_type = 'sum'
-    #     if summary_type is None:
-    #         if getattr(obj, 'summary_calculate', False):
-    #             summary_type = 'derive'
-    #     return summary_type
