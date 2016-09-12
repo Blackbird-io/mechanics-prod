@@ -179,19 +179,6 @@ class LineItem(Statement):
         return self._replica
 
     @property
-    def summary_calculate(self):
-        """
-        Default value of summary_calculate is False.  If False, line will be
-        dealt with per the value of "sum_over_time".  If True, line item will
-        be calculated with any relevant drivers that are "summary_calculate'.
-        """
-        return self._summary_calculate
-
-    @summary_calculate.setter
-    def summary_calculate(self, value):
-        self._summary_calculate = value
-
-    @property
     def sum_over_time(self):
         """
         Default value of sum_over_time is True.  If False, line.value will not
