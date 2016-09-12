@@ -146,8 +146,8 @@ class TimeLine(TimelineBase):
 
 
         Method creates a chain of TimePeriods with adjacent start and end
-        points. The chain is ``fwd`` periods long into the future and ``back``
-        periods long into the past.
+        points. The chain is at least ``fwd`` periods long into the future
+        and ``back`` periods long into the past. Forward chain ends on a Dec.
 
         Method expects ``ref_date`` to be a datetime.date object.
 
@@ -176,28 +176,30 @@ class TimeLine(TimelineBase):
         # Save known starting point for back chain build before fwd changes it.
 
         # Make fwd chain
-        for i in range(fwd):
-                #pick up where ref period analysis leaves off
-                curr_start_date = fwd_start_date
-                fwd_start_date = self._get_fwd_start_date(curr_start_date)
-                curr_end_date = fwd_start_date - timedelta(1)
-                fwd_period = TimePeriod(curr_start_date, curr_end_date)
-                self.add_period(fwd_period)
-                #
-                #first line picks up last value in function scope, so loop
-                #should be closed.
+        i = 0
+        while True:
+            # pick up where ref period analysis leaves off
+            curr_start_date = fwd_start_date
+            fwd_start_date = self._get_fwd_start_date(curr_start_date)
+            curr_end_date = fwd_start_date - timedelta(1)
+            fwd_period = TimePeriod(curr_start_date, curr_end_date)
+            self.add_period(fwd_period)
+            i += 1
+            if i >= fwd and fwd_period.end.month == 12:
+                break
+            # first line picks up last value in function scope, so loop
+            # should be closed.
 
         # Make back chain
         for i in range(back):
-                curr_end_date = back_end_date
-                curr_start_date = date(curr_end_date.year,
-                                       curr_end_date.month,
-                                       1)
-                back_period = TimePeriod(curr_start_date, curr_end_date)
-                self.add_period(back_period)
-                #
-                #close loop:
-                back_end_date = curr_start_date - timedelta(1)
+            curr_end_date = back_end_date
+            curr_start_date = date(
+                curr_end_date.year, curr_end_date.month, 1
+            )
+            back_period = TimePeriod(curr_start_date, curr_end_date)
+            self.add_period(back_period)
+            # close loop:
+            back_end_date = curr_start_date - timedelta(1)
 
     def clear(self):
         """
