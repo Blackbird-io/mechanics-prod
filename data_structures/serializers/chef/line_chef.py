@@ -458,7 +458,7 @@ class LineChef:
         """
         if not row_container:
             row_container = sheet.bb.row_axis.add_group(
-                statement.name, offset=sheet.bb.current_row + 1
+                statement.title, offset=sheet.bb.current_row + 1
             )
             row_container.add_group('matter')
         matter = row_container.get_group('matter')
@@ -472,7 +472,7 @@ class LineChef:
                 sheet.bb.current_row += 1
 
             offset = 1 if BLANK_BETWEEN_TOP_LINES else 0
-            line_rows = matter.add_group(line.name, offset=offset)
+            line_rows = matter.add_group(line.title, offset=offset)
 
             self.chop_line(
                 sheet=sheet,
@@ -599,7 +599,7 @@ class LineChef:
         row_container.calc_size()
 
         # Sub-container for this statement
-        title = title or statement.name
+        title = title or statement.title
         statement_rows = row_container.add_group(
             title,
             # add a spacer between self and previous statement, if not first
@@ -811,7 +811,7 @@ class LineChef:
                         'line "{}" on sheet "{}" has content '
                         'but also tries to consolidate line "{} '
                         'which has its own content'
-                    ).format(line.name, sheet.title, sub.name)
+                    ).format(line.title, sheet.title, sub.title)
 
                     raise BBAnalyticalError(c)
 
@@ -1271,7 +1271,7 @@ class LineChef:
             try:
                 formula = template.format(**materials)
             except Exception as X:
-                print("Name:     ", driver_data.name)
+                print("Name:     ", driver_data.title)
                 print("Template: ", driver_data.formula)
 
                 raise ExcelPrepError
