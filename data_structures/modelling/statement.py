@@ -691,8 +691,8 @@ class Statement(Equalities, TagsMixIn):
             c = "Cannot add nameless lines."
             raise bb_exceptions.BBAnalyticalError(c)
 
-        if line.tags.name.casefold() in self._details:
-            c = "Implicit overwrites prohibited."
+        if line.tags.name in self._details:
+            c = "Implicit overwrites prohibited: {}".format(line.tags.name)
             raise bb_exceptions.BBAnalyticalError(c)
 
     def _get_ordered_items_debug(self):

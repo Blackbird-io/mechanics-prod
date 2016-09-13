@@ -451,7 +451,7 @@ class SummaryMaker:
         Create a BU to use as the summary holder.
         """
         template_bu = self.time_line.current_period.bu_directory[bu_bbid]
-        summary_unit = BusinessUnitBase(template_bu.name)
+        summary_unit = BusinessUnitBase(template_bu.tags.title)
 
         # intentionally keeping source BU's bbid so we can find it later
         summary_unit.id = copy.deepcopy(template_bu.id)

@@ -980,7 +980,7 @@ class UnitChef:
         """
 
         if not name:
-            name = unit.tags.name
+            name = unit.tags.title
 
         if name in book:
             rev_name = name + " ..." + str(unit.id.bbid)[-8:]

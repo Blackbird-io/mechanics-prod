@@ -77,11 +77,16 @@ class Tags:
         self._required = set()
         self._prohibited = set()
         self._name = None
+        self._title = None
         self.set_name(name)
 
     @property
     def name(self):
         return self._name
+
+    @property
+    def title(self):
+        return self._title
 
     @property
     def optional(self):
@@ -108,7 +113,7 @@ class Tags:
 
         Method returns a shallow copy of the instance.
         """
-        result = Tags(self.name)
+        result = Tags(self.title)
         self._copy_tags_to(result)
 
         return result
@@ -160,7 +165,21 @@ class Tags:
         Method for setting the name of an object.
         """
 
-        self._name = name
+        self._name = deCase(name)
+        self._title = name
+
+    def set_title(self, title):
+        """
+
+
+        Tags.set_title(title) -> None
+
+        --``title`` is the new title for the object described by Tags instance
+
+        Method for setting the title of an object.
+        """
+
+        self._title = title
 
     def add(self, *newTags, field="opt"):
         """

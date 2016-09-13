@@ -60,6 +60,10 @@ class TagsMixIn:
     def name(self):
         return self.tags.name
 
+    @property
+    def title(self):
+        return self.tags.title
+
     def set_name(self, new_name):
         """
 
@@ -71,3 +75,16 @@ class TagsMixIn:
         Method sets tags.name by delegating to tags.set_name().
         """
         self.tags.set_name(new_name)
+
+
+    def set_title(self, new_title):
+        """
+
+
+        TagsMixIn.set_title() -> None
+
+        --``new_title`` is the value to use for updating tags.title
+
+        Method sets tags.title by delegating to tags.set_title().
+        """
+        self.tags.set_title(new_title)

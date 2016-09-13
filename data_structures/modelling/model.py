@@ -246,7 +246,7 @@ class Model(TagsMixIn):
         Method creates a copy of instance and returns it.  Delegates to
         relevant classes to copy attributes.
         """
-        result = Model(self.name)
+        result = Model(self.tags.title)
         result._started = self._started
         result.portal_data = self.portal_data.copy()
         result.taxonomy = self.taxonomy.copy()

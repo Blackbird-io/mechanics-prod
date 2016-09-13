@@ -7,7 +7,7 @@
 #Module: flow.starter
 
 """
-Module defines a starter class for commencing Engine analysis. 
+Module defines a starter class for commencing Engine analysis.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -43,7 +43,7 @@ from data_structures.system.messenger import Messenger
 intro_line = LineItem("introduction")
 intro_line.tags.add("start", "configuration")
 intro_line.guide.quality.set_standard(2)
-    
+
 #classes
 class Starter:
     """
@@ -61,7 +61,7 @@ class Starter:
     process()             main interace, put togetherg (M, None, None) message
     ====================  ======================================================
     """
-        
+
     def __init__(self):
         self.MR = Messenger()
 
@@ -70,7 +70,7 @@ class Starter:
 
 
         Starter.process(message) -> message
-        
+
 
         Method always returns an (M,None,None) message. Method picks up any
         useful background information that the Portal sends along (e.g.,
@@ -106,7 +106,7 @@ class Starter:
             model.time_line.build(ref_date)
 
         if not model.time_line.current_period.content:
-            company = BusinessUnit(model.tags.name)
+            company = BusinessUnit(model.tags.title)
             model.time_line.current_period.set_content(company)
             model.target = model.time_line.current_period.content
 
@@ -124,4 +124,4 @@ class Starter:
         #SessionController will pass this message to an analyst, which will use Yenta
         #to select the best intro topic. As is, all models start with the same intro
         #topic, but in the future, the introduction can be customized by geography
-        #or business type (based on sign-up code, for example). 
+        #or business type (based on sign-up code, for example).

@@ -55,5 +55,5 @@ class Link(LineItem):
     ====================  =====================================================
     """
     def __init__(self, target):
-        LineItem.__init__(self, target.tags.name)
+        LineItem.__init__(self, target.tags.title)
         self.target = target

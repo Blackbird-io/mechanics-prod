@@ -282,7 +282,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         """
 
         # look for drivers based on line name, line parent name, all line tags
-        keys = [line.tags.name.casefold()]
+        keys = [line.tags.name]
         keys.append(line.relationships.parent.name.casefold())
         keys.extend(line.tags.all)
 
