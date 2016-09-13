@@ -713,7 +713,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
                 child_statement,
                 consolidating=True,
                 xl_only=xl_only,
-                xl_label=sub.name,
+                xl_label=sub.title,
             )
 
     def _derive(self, statement_name, period=None):
