@@ -258,6 +258,7 @@ class Yenta():
 
             missing_on_topic = targ_criterion - topic_profile
             missing_on_target = topic_criterion - targ_profile
+            prohibited_on_target = targ_profile & topic.tags.prohibited
 
             if trace:
                 work["scoring"][bbid] = dict()
@@ -266,7 +267,7 @@ class Yenta():
                 work["scoring"][bbid]["missing on topic"] = missing_on_topic
                 work["scoring"][bbid]["missing on target"] = missing_on_target
 
-            if any([missing_on_topic, missing_on_target]):
+            if any([missing_on_topic, missing_on_target, prohibited_on_target]):
                 continue
             else:
                 # all requirements satisfied, topic eligible

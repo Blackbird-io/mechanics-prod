@@ -75,6 +75,7 @@ class Tags:
     def __init__(self, name=None):
         self._optional = set()
         self._required = set()
+        self._prohibited = set()
         self._name = None
         self.set_name(name)
 
@@ -91,8 +92,12 @@ class Tags:
         return self._required.copy()
 
     @property
+    def prohibited(self):
+        return self._prohibited.copy()
+
+    @property
     def all(self):
-        return self._required | self._optional
+        return self._required | self._optional | self._prohibited
 
     def copy(self):
         """
@@ -178,6 +183,10 @@ class Tags:
         attrs["o"] = attrs["opt"] = attrs["optional"] = "_optional"
         attrs[0] = attrs["_required"] = attrs["r"]
         attrs[1] = attrs["_optional"] = attrs["o"]
+        attrs.update(
+            prohibited = '_prohibited',
+            p = '_prohibited',
+        )
 
         real_thing = getattr(self, attrs[field])
 
@@ -196,12 +205,10 @@ class Tags:
 
         Method to remove tags from an instance.
         """
-
-        if badTag in self._required:
-            self._required.remove(badTag)
-
-        if badTag in self._optional:
-            self._optional.remove(badTag)
+        badTag = deCase(badTag)
+        for source in (self._required, self._optional, self._prohibited):
+            if badTag in source:
+                source.remove(badTag)
 
     # *************************************************************************#
     #                           NON-PUBLIC METHODS                             #
@@ -218,7 +225,7 @@ class Tags:
 
         Method copies tags from instance to target, attribute by attribute.
         """
-        fields = ["_required", "_optional"]
+        fields = ["_required", "_optional", "_prohibited"]
         for attr in fields:
             source_tags = getattr(self, attr)
             for tag in source_tags:
