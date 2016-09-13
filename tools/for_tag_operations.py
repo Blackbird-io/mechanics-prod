@@ -75,16 +75,10 @@ def build_combo_profile(target, model):
     """
 
     parent_rels = getattr(target, "relationships", None)
-    if parent_rels:
-        parent = getattr(parent_rels, "parent")
-    else:
-        parent = None
+    parent = getattr(parent_rels, "parent", None)
 
     grandpa_rels = getattr(parent, "relationships", None)
-    if grandpa_rels:
-        grandpa = getattr(grandpa_rels, "parent")
-    else:
-        grandpa = None
+    grandpa = getattr(grandpa_rels, "parent", None)
 
     parent_tags = getattr(parent, "tags", None)
     parent_name = getattr(parent_tags, "name", None)
@@ -98,17 +92,14 @@ def build_combo_profile(target, model):
     if grandpa_name:
         tags_up_two.add(grandpa_name)
 
-    try:
-        criteria = target.tags.all | {target.tags.name}
-    except AttributeError:
-        raise
+    criteria = target.tags.all | {target.tags.name}
 
     try:
         path_tags = model.target.stage.path.tags.all
     except AttributeError:
-        path_tags = {None}
+        path_tags = set()
 
-    criteria = criteria | set(tags_up_one) | set(tags_up_two) | path_tags
+    criteria = criteria | tags_up_one | tags_up_two | path_tags
     criteria = criteria | set(model.tags.all) | {model.tags.name}
     criteria = set(c.casefold() for c in criteria if c)
 
