@@ -533,7 +533,7 @@ class Driver(TagsMixIn):
         # must be careful not to split strings (names) into letters with set()
         if self.workConditions["name"]:
             if not set(self.workConditions["name"]).issubset(
-                set((None, line.name.casefold()))
+                set((None, line.name))
             ):
                 return False
 
@@ -547,7 +547,7 @@ class Driver(TagsMixIn):
                 return False
 
         if self.workConditions["all"]:
-            all_tags = line.tags.all | set((None, line.name.casefold()))
+            all_tags = line.tags.all | set((None, line.name))
 
             if not set(self.workConditions["all"]).issubset(all_tags):
                 return False

@@ -264,7 +264,7 @@ class LineChef:
                 line.xl.cell = subtotal_cell
 
                 if set_labels:
-                    label = indent * " " + line.tags.name
+                    label = indent * " " + line.tags.title
                     self._set_label(sheet=sheet,
                                     label=label,
                                     row=sheet.bb.current_row)
@@ -362,7 +362,7 @@ class LineChef:
                     if not getattr(sheet.bb, field_names.PARAMETERS, None):
                         label_column = 1
 
-                    label = indent * " " + line.tags.name
+                    label = indent * " " + line.tags.title
                     self._set_label(sheet=sheet,
                                     label=label,
                                     row=sheet.bb.current_row,
@@ -516,7 +516,7 @@ class LineChef:
         """
 
         matter = row_container.add_group(
-            indent * " " + line.name,
+            indent * " " + line.title,
             # setting label and size here will insert the line into output
             # when it has no content, otherwise line without content is hidden
             # label=indent * " " + line.name,
@@ -651,7 +651,7 @@ class LineChef:
         if line.xl.reference.source:
             source = line.xl.reference.source.xl
         if source and source.cell:
-            label = indent * " " + line.name
+            label = indent * " " + line.title
             row_container.add_group(label, size=1, label=label)
             cell = sheet.cell(column=column, row=row_container.number())
             include = source.cell.parent is not sheet
@@ -688,7 +688,7 @@ class LineChef:
         Returns Worksheet with consolidation logic added as Excel SUM.
         """
         if line.xl.consolidated.sources:
-            label = indent * " " + line.tags.name
+            label = indent * " " + line.tags.title
             row_container.add_group(label, size=1, label=label)
 
             sources = line.xl.consolidated.sources
@@ -773,7 +773,7 @@ class LineChef:
                 detail_summation += link
 
             # group all the details here
-            label = indent * " " + line.name
+            label = indent * " " + line.title
             detail_endrow = row_container.add_group(
                 label, size=1, label=label
             )
@@ -919,7 +919,7 @@ class LineChef:
             line.xl.cell = summation_cell
 
             if set_labels:
-                label = line.tags.name
+                label = line.tags.title
                 label = ((indent - LineItem.TAB_WIDTH) * " ") + label
                 self._set_label(sheet=sheet, label=label,
                                 row=sheet.bb.current_row)
@@ -1032,7 +1032,7 @@ class LineChef:
             line.xl.cell = summation_cell
 
             if set_labels:
-                label = line.tags.name
+                label = line.tags.title
                 label = ((indent - LineItem.TAB_WIDTH) * " ") + label
 
                 self._set_label(sheet=sheet, label=label,
@@ -1330,7 +1330,7 @@ class LineChef:
 
                 if set_labels:
                     label = ((indent - LineItem.TAB_WIDTH) * " ") \
-                        + line.tags.name
+                        + line.tags.title
                     self._set_label(sheet=sheet, label=label,
                                     row=sheet.bb.current_row)
 
@@ -1355,9 +1355,9 @@ class LineChef:
         (e.g. new_cell.value = '=C18')
         """
         if line.xl.reference.source:
-            label = indent * " " + line.tags.name
+            label = indent * " " + line.tags.title
             if row_container:
-                row_container.add_group(line.name, size=1, label=label)
+                row_container.add_group(line.title, size=1, label=label)
                 sheet.bb.current_row = row_container.number()
             else:
                 sheet.bb.current_row += 1
@@ -1403,7 +1403,7 @@ class LineChef:
             line.xl.detailed.cell or line.xl.reference.cell
 
         if not processed:
-            label = indent * " " + line.name
+            label = indent * " " + line.title
             if row_container:
                 row_container.add_group(label, size=1, label=label)
                 sheet.bb.current_row = row_container.number()
