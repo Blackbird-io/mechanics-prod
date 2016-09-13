@@ -33,7 +33,6 @@ import bb_settings
 import bb_exceptions
 import tools.for_printing as printing_tools
 
-from tools import CasefoldDict
 from data_structures.guidance.guide import Guide
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
@@ -559,7 +558,7 @@ class LineItem(Statement):
         # somehow get reset to None, the lineitem could get behind and the
         # entire financials unit could lose a special processing trigger.
 
-        replica._details = CasefoldDict()
+        replica._details = dict()
         replica.xl = xl_mgmt.LineData()
         replica.xl.format = self.xl.format.copy()
         replica.set_consolidate(self._consolidate)

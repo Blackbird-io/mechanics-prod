@@ -28,8 +28,6 @@ Catalog
 #imports:
 import bb_exceptions
 
-from tools import CasefoldDict
-
 
 
 
@@ -65,7 +63,7 @@ class Catalog:
     """
     def __init__(self):
         self.by_id = {}
-        self.by_name = CasefoldDict()
+        self.by_name = dict()
         self.populated = False
 
     def issue(self, bbid):

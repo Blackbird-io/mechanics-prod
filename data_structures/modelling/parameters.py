@@ -63,17 +63,19 @@ class Parameters(dict):
 
 
         Add new_data to instance. If overwrite is False, throw [ ] if new_data
-        contains keys that already exist in instance. 
+        contains keys that already exist in instance.
         """
-        if overwrite:
-            self.update(new_data)
-        else:
+        if not overwrite:
             existing = new_data.keys() & self.keys()
             if existing:
-                c = "New params overlap with existing keys. Implicit overwrite prohibited."
+                c = (
+                    "New params overlap with existing keys. "
+                    "Implicit overwrite prohibited:\n{}"
+                ).format(sorted(existing))
                 raise bb_exceptions.DefinitionError(existing, c)
-            else:
-                self.update(new_data)
+        for k,v in new_data.items():
+            if 'washington' in k: raise ValueError(v)
+        self.update(new_data)
 
     def copy(self):
         """
