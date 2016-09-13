@@ -245,7 +245,7 @@ class Driver(TagsMixIn):
         self._set_formula(formula)
 
         # get namespace for driver
-        base = self.name or formula.tags.name.casefold()
+        base = self.name or formula.tags.name
         for k, wc in self.workConditions.items():
             wc = set(c.casefold() for c in wc if c is not None)
             if wc:

@@ -34,7 +34,6 @@ import bb_exceptions
 import bb_settings
 import tools.for_printing as views
 
-from tools import CasefoldDict
 from data_structures.system.relationships import Relationships
 
 
@@ -66,7 +65,7 @@ class ComponentsBase(dict):
 
     def __init__(self):
         dict.__init__(self)
-        self.by_name = CasefoldDict()
+        self.by_name = dict()
         self.relationships = Relationships(self)
 
     def __str__(self, lines=None):
