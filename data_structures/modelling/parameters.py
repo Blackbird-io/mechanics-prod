@@ -73,8 +73,6 @@ class Parameters(dict):
                     "Implicit overwrite prohibited:\n{}"
                 ).format(sorted(existing))
                 raise bb_exceptions.DefinitionError(existing, c)
-        for k,v in new_data.items():
-            if 'washington' in k: raise ValueError(v)
         self.update(new_data)
 
     def copy(self):
