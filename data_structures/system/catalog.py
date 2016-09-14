@@ -107,3 +107,18 @@ class Catalog:
                     "objects with False values."
                 )
                 raise bb_exceptions.CatalogError(c)
+
+    def get_tags(self, key):
+        """
+
+
+        Catalog.get_tags(key) -> Tags
+
+        --``key`` can be either object name or bbid.
+
+        Method locates catalog entry and returns its tags.
+        """
+        if key not in self.by_id:
+            key = self.by_name[key]
+        entry = self.by_id[key]
+        return entry.tags

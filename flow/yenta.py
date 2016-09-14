@@ -186,6 +186,7 @@ class Yenta():
 
         return result, work
 
+    @profile
     def find_eligible(self, target, model, pool=None, combined=True,
                       trace=False):
         """
@@ -252,14 +253,14 @@ class Yenta():
             work["scoring"] = dict()
 
         for bbid in pool:
-            topic = self.TM.local_catalog.issue(bbid)
-            topic_criterion = topic.tags.required - {None}
-            topic_profile = build_basic_profile(topic)
+            topic_tags = self.TM.local_catalog.get_tags(bbid)
+            topic_criterion = topic_tags.required - {None}
+            topic_profile = topic_tags.all | {topic_tags.name}
 
             missing_on_topic = targ_criterion - topic_profile
             missing_on_target = topic_criterion - targ_profile
             prohibited_on_topic = topic_profile & target.tags.prohibited
-            prohibited_on_target = targ_profile & topic.tags.prohibited
+            prohibited_on_target = targ_profile & topic_tags.prohibited
 
             if trace:
                 work["scoring"][bbid] = dict()
