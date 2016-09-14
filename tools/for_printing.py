@@ -89,9 +89,8 @@ def format_as_line(obj,
 
     # where args are blank, check for obj data
     if name is None:
-        name = None
         if getattr(obj, "tags", None):
-            name = getattr(obj.tags, "name", None)
+            name = getattr(obj.tags, "title", None)
 
     if value is None:
         if not header:
@@ -203,7 +202,7 @@ def view_as_base(
     data = {}
 
     # name
-    data["NAME"] = _compact_name(company.name, data_width)
+    data["NAME"] = _compact_name(company.title, data_width)
 
     id_dots = "..."
     tail_width = data_width - len(id_dots)
@@ -302,7 +301,7 @@ def view_as_unit(
               "COMPS"]
     # data
     data = {}
-    data["NAME"] = _compact_name(company.tags.name, data_width)
+    data["NAME"] = _compact_name(company.tags.title, data_width)
 
     id_dots = "..."
     tail_width = data_width - len(id_dots)
