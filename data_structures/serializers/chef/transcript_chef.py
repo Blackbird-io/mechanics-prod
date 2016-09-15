@@ -46,6 +46,27 @@ cell_styles = CellStyles()
 sheet_style = SheetStyle()
 tab_names = TabNames()
 
+# Constants
+ADDABLE_CAPTION = ' (addable input)'
+NOTE_CAP = 'Note'
+TABLE_CAPTION = 'table entry'
+
+USAGE_NOTE = 'To ensure compatibility with website script functionality, ' \
+             'adjust only values in "Response" column. Within "Response" ' \
+             'column, maintain given formatting for ranges, dates, etc.'
+
+IA = 'input_array'
+IST = 'input_sub_type'
+IT = 'input_type'
+LV = 'line_value'
+MC = 'main_caption'
+NAME = 'name'
+PROM = 'prompt'
+RA = 'response_array'
+RS = 'response'
+TARG = 'target'
+
+
 
 # Classes
 class TranscriptChef:
@@ -64,13 +85,18 @@ class TranscriptChef:
     ====================  =====================================================
     """
 
-    NOTE_CAP = 'Note'
     PROMPT_HEADER = 'Question'
     CAPTION_HEADER = 'Element Caption'
-    TABLE_CAPTION = 'table entry'
     TARGET_HEADER = 'Target Unit'
     RESPONSE_HEADER = 'Response'
     QUESTION_NAME_HEADER = 'Question Identifier'
+
+    COLUMN_DICT = dict()
+    COLUMN_DICT[PROMPT_HEADER] = 'C'
+    COLUMN_DICT[CAPTION_HEADER] = 'D'
+    COLUMN_DICT[TARGET_HEADER] = 'E'
+    COLUMN_DICT[RESPONSE_HEADER] = 'F'
+    COLUMN_DICT[QUESTION_NAME_HEADER] = 'G'
 
     def make_transcript_excel(self, model, book, idx=1):
         """
@@ -96,116 +122,13 @@ class TranscriptChef:
 
         analysis_name = model.name.title()
 
-        column_dict = dict()
-        column_dict[self.PROMPT_HEADER] = 'C'
-        column_dict[self.CAPTION_HEADER] = 'D'
-        column_dict[self.TARGET_HEADER] = 'E'
-        column_dict[self.RESPONSE_HEADER] = 'F'
-        column_dict[self.QUESTION_NAME_HEADER] = 'G'
-
-        sheet = self._prep_output_excel(book, analysis_name, column_dict, idx)
-
-        mc = "main_caption"
-        rs = "response"
-        it = 'input_type'
+        sheet = self._prep_output_excel(book, analysis_name, idx)
 
         current_row = 8
         for q in transcript:
-            try:
-                target = q['target']
-            except KeyError:
-                target = None
-                prompt = q['prompt']
-                name = None
-            else:
-                name = q['name']
-                prompt = q['prompt']
+            current_row = self._prep_question_output(sheet, q, current_row)
 
-            response_array = q['response_array']
-
-            if q['input_type'] == 'end':
-                continue
-
-            if not response_array:
-                continue
-
-            if q['input_type'] == 'table':
-                # outer for loop loops through table rows
-                for regular_response in response_array:
-                    answer = column_dict.copy()
-                    answer[self.PROMPT_HEADER] = prompt or ''
-                    answer[self.CAPTION_HEADER] = self.TABLE_CAPTION
-                    answer[self.TARGET_HEADER] = target or ''
-                    answer[self.QUESTION_NAME_HEADER] = name or ''
-
-                    response_out = ''
-                    # innner for loop loops over columns
-                    for i in range(len(regular_response)):
-
-                        main_cap = regular_response[i][mc]
-                        response = regular_response[i][rs][0]
-                        input_type = regular_response[i][it]
-
-                        if response is None and input_type == 'bool':
-                            response = False
-
-                        if isinstance(response, datetime.date):
-                            response = response.strftime('%Y-%m-%d')
-
-                        if response is None:
-                            response = ''
-
-                        response_out += '%s: %s; ' % (main_cap, response)
-
-                    answer[self.RESPONSE_HEADER] = response_out.strip()
-                    self._add_record_to_excel(sheet, column_dict, answer,
-                                              current_row)
-                    current_row += 1
-            else:
-                for i in range(len(response_array)):
-                    answer = column_dict.copy()
-
-                    main_cap = response_array[i][mc]
-                    response = response_array[i][rs][0]
-                    input_type = response_array[i][it]
-
-                    if response is None and input_type == 'bool':
-                        response = False
-
-                    if isinstance(response, datetime.date):
-                        response = response.strftime('%Y-%m-%d')
-
-                    if isinstance(response, list):
-                        response = 'Min: %s; Max: %s' % tuple(response)
-
-                    if response is None:
-                        response = ''
-
-                    answer[self.PROMPT_HEADER] = prompt or ''
-                    answer[self.CAPTION_HEADER] = main_cap or ''
-                    answer[self.TARGET_HEADER] = target or ''
-                    answer[self.RESPONSE_HEADER] = response
-                    answer[self.QUESTION_NAME_HEADER] = name or ''
-
-                    self._add_record_to_excel(sheet, column_dict, answer,
-                                              current_row)
-                    current_row += 1
-
-            try:
-                notes = q['notes']
-            except KeyError:
-                pass
-            else:
-                for note in notes:
-                    answer[self.PROMPT_HEADER] = prompt or ''
-                    answer[self.CAPTION_HEADER] = self.NOTE_CAP
-                    answer[self.TARGET_HEADER] = target or ''
-                    answer[self.RESPONSE_HEADER] = note or ''
-                    answer[self.QUESTION_NAME_HEADER] = name or ''
-                    self._add_record_to_excel(sheet, column_dict, answer, current_row)
-                    current_row += 1
-
-        for col in column_dict.values():
+        for col in self.COLUMN_DICT.values():
             num_col = string.ascii_uppercase.find(col.upper()) + 1
             cell_styles.format_border_group(sheet=sheet,
                                             st_col=num_col,
@@ -219,6 +142,10 @@ class TranscriptChef:
         sheet_style.style_sheet(sheet, label_areas=False)
         sheet.sheet_properties.tabColor = chef_settings.TRANSCRIPT_TAB_COLOR
 
+    # ************************************************************************#
+    #                         NON-PUBLIC METHODS                              #
+    # ************************************************************************#
+
     @staticmethod
     def _add_note_to_excel(sheet, row):
         # set label cell
@@ -228,18 +155,32 @@ class TranscriptChef:
 
         # set note
         cell = sheet['C' + str(row)]
-        cell.value = 'To ensure compatibility with website script functionality, adjust only values in "Response" ' \
-                     'column. Within "Response" column, maintain given formatting for ranges, dates, etc.'
+        cell.value = USAGE_NOTE
 
-    @staticmethod
-    def _add_record_to_excel(sheet, master_dict, answer_dict, row):
-        for key, column in master_dict.items():
+    def _add_record_to_excel(self, sheet, answer_dict, row):
+        for key, column in self.COLUMN_DICT.items():
             cell = sheet[column + str(row)]
             cell.value = answer_dict[key]
             cell.alignment = Alignment(horizontal='left')
 
     @staticmethod
-    def _prep_output_excel(wb, name, column_dict, index):
+    def _format_response(response):
+        response_out = response[RS][0]
+        input_type = response[IT]
+
+        if response_out is None and input_type == 'bool':
+            response_out = False
+
+        if isinstance(response_out, datetime.date):
+            response_out = response_out.strftime('%Y-%m-%d')
+
+        # range
+        if isinstance(response_out, list):
+            response_out = 'Min: %s; Max: %s' % tuple(response_out)
+
+        return response_out
+
+    def _prep_output_excel(self, wb, name, index):
         title_txt = 'INTERVIEW TRANSCRIPT'
 
         column_widths = dict()
@@ -253,7 +194,6 @@ class TranscriptChef:
 
         date = datetime.date.today()
         date_str = '%s-%s-%s' % (date.month, date.day, date.year)
-        title = name + ' ' + date_str
 
         sheet = wb.create_sheet(name=tab_names.TRANSCRIPT, index=index)
 
@@ -282,7 +222,7 @@ class TranscriptChef:
         cell = sheet['C5']
         cell.value = date_str
 
-        for title, col in column_dict.items():
+        for title, col in self.COLUMN_DICT.items():
             cos = col + '7'
             cell = sheet[cos]
             cell.value = title
@@ -297,3 +237,115 @@ class TranscriptChef:
         sheet.column_dimensions['G'].hidden = True
 
         return sheet
+    
+    def _prep_question_output(self, sheet, q, row):
+        try:
+            target = q[TARG]
+        except KeyError:
+            target = None
+            prompt = q[PROM]
+            name = None
+        else:
+            name = q[NAME]
+            prompt = q[PROM]
+    
+        response_array = q[RA]
+    
+        if q[IT] == 'end':
+            return row
+    
+        if not response_array:
+            return row
+    
+        if q[IT] == 'table':
+            # outer for loop loops through table rows
+            for response in response_array:
+                row = self._prep_response_output(response=response,
+                                                 prompt=prompt,
+                                                 target=target,
+                                                 name=name,
+                                                 current_row=row,
+                                                 sheet=sheet,
+                                                 table=True)
+        else:
+            for response in response_array:
+                temp_inp = response[IT]
+                temp_res = response[RS]
+    
+                if len(temp_res) > 1 and temp_inp != 'range':
+                    # addable input
+                    use_res = response.copy()
+                    use_res[MC] += ADDABLE_CAPTION
+                    for r in temp_res:
+                        # use a copy of the response array and replace the response
+                        # value for each value added by user so each gets its own
+                        # row
+                        use_res[RS] = [r]
+                        row = self._prep_response_output(response=use_res,
+                                                         prompt=prompt,
+                                                         target=target,
+                                                         name=name,
+                                                         current_row=row,
+                                                         sheet=sheet,
+                                                         table=False)
+                else:
+                    # regular input
+                    row = self._prep_response_output(response=response,
+                                                     prompt=prompt,
+                                                     target=target,
+                                                     name=name,
+                                                     current_row=row,
+                                                     sheet=sheet,
+                                                     table=False)
+
+        try:
+            notes = q['notes']
+        except KeyError:
+            # clp output, question does not have notes
+            pass
+        else:
+            for note in notes:
+                answer = self.COLUMN_DICT.copy()
+                answer[self.PROMPT_HEADER] = prompt or ''
+                answer[self.CAPTION_HEADER] = NOTE_CAP
+                answer[self.TARGET_HEADER] = target or ''
+                answer[self.RESPONSE_HEADER] = note or ''
+                answer[self.QUESTION_NAME_HEADER] = name or ''
+                self._add_record_to_excel(sheet, answer, row)
+                row += 1
+    
+        return row
+
+    def _prep_response_output(self, response, prompt, target, name,
+                              current_row, sheet, table=False):
+        answer = self.COLUMN_DICT.copy()
+        answer[self.PROMPT_HEADER] = prompt or ''
+        answer[self.TARGET_HEADER] = target or ''
+        answer[self.QUESTION_NAME_HEADER] = name or ''
+    
+        # inner for loop loops over columns
+        if table:
+            response_array = response
+            for response in response_array:
+                caption = response[MC]
+                response_out = self._format_response(response)
+                if response_out is None:
+                    continue
+    
+                response_out += '%s: %s; ' % (caption, response_out)
+                answer[self.CAPTION_HEADER] = TABLE_CAPTION
+        else:
+            caption = response[MC]
+            response_out = self._format_response(response)
+    
+            if response_out is None:
+                return current_row
+    
+            answer[self.CAPTION_HEADER] = caption or ''
+    
+        answer[self.RESPONSE_HEADER] = response_out
+    
+        self._add_record_to_excel(sheet, answer, current_row)
+        current_row += 1
+    
+        return current_row
