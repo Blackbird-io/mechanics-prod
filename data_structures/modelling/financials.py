@@ -340,3 +340,19 @@ class Financials:
         Summarize each defined statement.
         """
         self.run_on_all("summarize")
+
+
+    def peer_locator(self):
+        """
+
+
+        Financials.peer_locator() -> Financials
+
+        Given a parent container from another time period, return a function
+        locating a copy of ourselves within that container.
+        """
+
+        def locator(bu, **kargs):
+            peer = bu.get_financials(kargs['period'])
+            return peer
+        return locator

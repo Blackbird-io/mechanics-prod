@@ -629,7 +629,7 @@ class Statement(Equalities, TagsMixIn):
 
         Clear all values, preserve line shape.
         """
-        #clears values, not shape
+        # clears values, not shape
         if bb_settings.DEBUG_MODE:
             pool = self.get_ordered()
         else:
@@ -637,6 +637,23 @@ class Statement(Equalities, TagsMixIn):
 
         for line in pool:
             line.clear(recur=True)
+
+    def peer_locator(self):
+        """
+
+
+        Statement.peer_locator() -> Statement
+
+        Given a parent container from another time period, return a function
+        locating a copy of ourselves within that container.
+        """
+
+        def locator(financials, **kargs):
+            for stub in financials._full_order:
+                peer = getattr(financials, stub)
+                if peer.name == self.name:
+                    return peer
+        return locator
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
