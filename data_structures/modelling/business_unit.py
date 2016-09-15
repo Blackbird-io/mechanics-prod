@@ -545,6 +545,24 @@ class BusinessUnit(BusinessUnitBase, Equalities):
             if recur:
                 unit.synchronize()
 
+    def peer_locator(self):
+        """
+
+
+        BusinessUnit.peer_locator() -> BusinessUnit
+
+        Given a parent container from another time period, return a function
+        locating a copy of ourselves within that container.
+        """
+
+        def locator(time_period, create=True, **kargs):
+            if self.id.bbid not in time_period.bu_directory:
+                if create and time_period.end == self.period.past_end:
+                    self.make_past()
+            peer = time_period.bu_directory.get(self.id.bbid)
+            return peer
+        return locator
+
     # *************************************************************************#
     #                           NON-PUBLIC METHODS                             #
     # *************************************************************************#
