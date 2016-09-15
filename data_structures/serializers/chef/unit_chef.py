@@ -925,7 +925,7 @@ class UnitChef:
         if not index:
             index = len(book.worksheets)
 
-        if index == 1:
+        if index == 2:
             name = "Valuation"
         else:
             name = unit.name + ' val'
