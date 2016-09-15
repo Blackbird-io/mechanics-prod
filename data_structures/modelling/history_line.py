@@ -197,3 +197,46 @@ class HistoryLine:
             for period in self.period:
                 locator = getattr(period, self._locator_attribute)
                 yield locator.get(bbid)
+
+
+    def get_past(self, create=True):
+        """
+
+        HistoryLine.get_past() -> HistoryLine
+
+        """
+
+        # a sequence of calls needed to find self starting from TimePeriod
+        locator_stack = []
+        origin = self
+        period = None
+        while True:
+            # getter's signature:
+            # getter(parent_container, period=period)
+            # returns a matching copy of object in another period
+            getter = origin.peer_locator()
+            locator_stack.append(getter)
+            period = getattr(origin, 'period', None)
+            if period:
+                break
+            # otherwise step higher
+            origin = origin.relationships.parent
+        # one step back in time
+        if period and period.past_end:
+            # start with TimePeriod
+            origin = period.past
+            # walk down the tree to find peer object
+            while locator_stack:
+                getter = locator_stack.pop()
+                # getter knows how to find own peer
+                # from peer's parent, which is origin at this point
+                origin = getter(origin, period=period.past, create=create)
+                # we get None if no peer exists and create=False
+                if origin is None:
+                    break
+            return origin
+        else:
+            raise DefinitionError(
+                'This object does not have an ancestor '
+                'with TimePeriod attached as .period: {}'.format(self)
+            )

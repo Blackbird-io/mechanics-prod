@@ -38,6 +38,7 @@ from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
 
 from .statement import Statement
+from .history_line import HistoryLine
 
 
 
@@ -49,7 +50,7 @@ SUMMARY_TYPES = ('derive', 'sum', 'average', 'ending', 'starting')
 
 
 # Classes
-class LineItem(Statement):
+class LineItem(Statement, HistoryLine):
     """
 
     A LineItem is a Statement that can have a value and a position.
@@ -462,6 +463,25 @@ class LineItem(Statement):
 
         log_entry = (signature, time.time(), value)
         self.log.append(log_entry)
+
+    def peer_locator(self):
+        """
+
+
+        LineItem.peer_locator() -> LineItem
+
+        Given a parent container from another time period, return a function
+        locating a copy of ourselves within that container.
+        """
+
+        def locator(statement, create=True, **kargs):
+            peer = statement.find_first(self.name)
+            if create and not peer:
+                peer = self.copy()
+                peer.clear()
+                statement.add_line(peer)
+            return peer
+        return locator
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
