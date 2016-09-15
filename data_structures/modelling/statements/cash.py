@@ -42,7 +42,7 @@ class CashFlowStatement(Statement):
     def __init__(self, parent=None):
         Statement.__init__(self, name="cash flow statement", parent=parent)
 
-        net_cash_line = LineItem('total net cash flow')
+        net_cash_line = LineItem('Total net cash flow')
         self.add_top_line(net_cash_line)
 
         operating = LineItem(name="Cash from operations")
