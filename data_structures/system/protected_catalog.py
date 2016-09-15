@@ -43,7 +43,7 @@ class ProtectedCatalog(StandardCatalog):
     looks up questions by both name and bbid and returns a copy of the matching
     entry. FullQuestion objects are stateful in ``input_array`` and ``context``.
     Issuing a copy instead of the original makes sure that the Engine can ask
-    two or more custom versions of the same question in parallel processes.     
+    two or more custom versions of the same question in parallel processes.
     ==========================  ================================================
     Attribute                   Description
     ==========================  ================================================
@@ -66,7 +66,7 @@ class ProtectedCatalog(StandardCatalog):
 
 
         Method locates catalog entry and returns its copy. ``key`` can be either
-        object name or bbid. 
+        object name or bbid.
         """
         result = None
         entry = None
@@ -77,6 +77,6 @@ class ProtectedCatalog(StandardCatalog):
             #key not in main table, check if it's a name
             q_bbid = self.by_name[key]
             entry = StandardCatalog.issue(self, q_bbid)
-        result = entry.copy()    
+        result = entry.copy()
         #
         return result

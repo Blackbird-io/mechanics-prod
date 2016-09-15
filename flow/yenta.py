@@ -186,7 +186,6 @@ class Yenta():
 
         return result, work
 
-    @profile
     def find_eligible(self, target, model, pool=None, combined=True,
                       trace=False):
         """

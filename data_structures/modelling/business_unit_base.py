@@ -206,6 +206,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         if fins is None:
             fins = Financials(parent=self)
 
+        fins.relationships.set_parent(self)
         self.financials = fins
 
     def get_financials(self, period=None):
