@@ -278,6 +278,7 @@ class Financials:
             own_statement = getattr(self, name)
             if own_statement is not None:
                 new_statement = own_statement.copy()
+                new_statement.relationships.set_parent(new_instance)
                 setattr(new_instance, name, new_statement)
 
         new_instance.id = ID()
