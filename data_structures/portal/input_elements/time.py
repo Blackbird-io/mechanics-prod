@@ -109,19 +109,28 @@ class TimeInput(NumberInput):
                     result = False
                     break
         return result
-    
-    def format_response(self,raw_response):
+
+    def format_response(self, raw_response):
         """
 
 
-        TimeInput.format_response(raw_response) -> list
+        GenericInput.format_response(raw_response) -> list
 
-        
-        Method splits raw_response by comma and returns list of entries. 
+
+        Method turns raw_response into an object that satisfies the Engine API
+        specifications for a ResponseElement of the instance's input type and
+        sub_type.
+
+        The default, most-basic version of a ResponseElement-compatible object
+        is a len-1 list of the raw_response.
+
+        Descendant classes may customize the first step of the routine to
+        include more complex processing. For example, a range class would split
+        the string along a comma into two component strings.
         """
-        result = raw_response.split(",")
-        return result
+        if self.user_can_add:
+            adj_response = raw_response
+        else:
+            adj_response = [raw_response]
 
-
-
-
+        return adj_response
