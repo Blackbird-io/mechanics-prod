@@ -185,7 +185,7 @@ class GenericInput(ReadyForPortal):
         list with a length of at least 1.        
         """
         result = None
-        if isinstance(proposed_response,list) and len(proposed_response) > 0:
+        if isinstance(proposed_response, list) and len(proposed_response) > 0:
             result = True
         else:
             result = False
@@ -224,7 +224,11 @@ class GenericInput(ReadyForPortal):
         include more complex processing. For example, a range class would split
         the string along a comma into two component strings. 
         """
-        adj_response = [raw_response]
+        if self.user_can_add:
+            adj_response = raw_response
+        else:
+            adj_response = [raw_response]
+
         return adj_response
             
     def set_response(self, proposed_response, target):
@@ -255,11 +259,14 @@ class GenericInput(ReadyForPortal):
         #
         #blocks covering ResponseElement objects (vs plain dictionaries)
         #commented out
-        #
-##        if not target:
-##            target = self
-        #
+
         try:
+
+            if self.user_can_add:
+                # make a list of the proposed responses
+                proposed_response = proposed_response.split(',')
+                proposed_response = [r.strip() for r in proposed_response]
+
             adj_response = self.format_response(proposed_response)
             if self.check_response(adj_response):
                 #

@@ -129,7 +129,7 @@ class NumberInput(GenericInput):
                     break
         return result
     
-    def format_response(self,raw_response):
+    def format_response(self, raw_response):
         """
 
 
@@ -139,8 +139,12 @@ class NumberInput(GenericInput):
         Method returns a list of the decimal.Decimal objects that corresponds to
         the comma-separated values in the raw_response. 
         """
-        
-        result = [decimal.Decimal(n) for n in raw_response.split(",")]
+
+        if self.user_can_add:
+            result = [decimal.Decimal(n) for n in raw_response]
+        else:
+            result = [decimal.Decimal(n) for n in raw_response.split(',')]
+
         result = [self.round_to_step(n) for n in result]
         #
         return result
