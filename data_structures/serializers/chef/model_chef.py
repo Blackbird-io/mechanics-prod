@@ -116,7 +116,7 @@ class ModelChef:
             summary_chef = SummaryChef()
             summary_chef.add_annual_summary(book, model)
 
-        unit_chef.chop_multi_valuation(book=book, unit=company, index=1,
+        unit_chef.chop_multi_valuation(book=book, unit=company, index=2,
                                        recur=False)
 
         temp_sheet = book.get_sheet_by_name(tab_names.SCENARIOS)
@@ -125,7 +125,7 @@ class ModelChef:
         spacer_sheet.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
         sheet_style.style_sheet(spacer_sheet)
 
-        transcript_chef.make_transcript_excel(model, book)
+        transcript_chef.make_transcript_excel(model, book, idx=3)
 
         CellStyles.format_line_borders(book)
 
