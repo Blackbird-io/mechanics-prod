@@ -115,7 +115,7 @@ class HistoryLine:
         This object should have a .period attribute to access its parent
         TimePeriod.
         """
-        if self.period:
+        if getattr(self, 'period', None):
             bbid = self.id.bbid
             period_past = self.period.past
             if period_past:
@@ -124,8 +124,6 @@ class HistoryLine:
             else:
                 unit_past = None
             return unit_past
-        else:
-            raise DefinitionError('Call out of context')
 
     @past.setter
     def past(self, value):
@@ -152,7 +150,7 @@ class HistoryLine:
         This object should have a .period attribute to access its parent
         TimePeriod.
         """
-        if self.period:
+        if getattr(self, 'period', None):
             bbid = self.id.bbid
             period_next = self.period.future
             if period_next:
@@ -161,8 +159,6 @@ class HistoryLine:
             else:
                 unit_next = None
             return unit_next
-        else:
-            raise DefinitionError('Call out of context')
 
     @future.setter
     def future(self, value):
