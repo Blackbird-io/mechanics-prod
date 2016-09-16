@@ -326,13 +326,14 @@ class TranscriptChef:
         # inner for loop loops over columns
         if table:
             response_array = response
+            response_out = ''
             for response in response_array:
                 caption = response[MC]
-                response_out = self._format_response(response)
-                if response_out is None:
+                temp_response = self._format_response(response)
+                if temp_response is None:
                     continue
-    
-                response_out += '%s: %s; ' % (caption, response_out)
+
+                response_out += '%s: %s; ' % (caption, temp_response)
                 answer[self.CAPTION_HEADER] = TABLE_CAPTION
         else:
             caption = response[MC]
