@@ -70,6 +70,8 @@ class TimePeriodBase(History):
     content               pointer to content, usually a business unit
     end                   datetime.date; last date in period
     id                    instance of ID class
+    next_end              datetime.date; end of following period
+    past_end              datetime.date; end of preceding period
     relationships         instance of Relationships class
     start                 datetime.date; first date in period.
 
@@ -92,6 +94,9 @@ class TimePeriodBase(History):
         self.content = content
         self.id = ID()
         self.relationships = Relationships(self)
+
+        self.past_end = None
+        self.next_end = None
 
         # The current approach to indexing units within a period assumes that
         # Blackbird will rarely remove existing units from a model. both
@@ -132,6 +137,8 @@ class TimePeriodBase(History):
         past_day = getattr(self, 'past_end', None)
         if past_day:
             return self.relationships.parent[past_day]
+        else:
+            return None
 
     @past.setter
     def past(self, value):
@@ -159,6 +166,8 @@ class TimePeriodBase(History):
         next_day = getattr(self, 'next_end', None)
         if next_day:
             return self.relationships.parent[next_day]
+        else:
+            return None
 
     @future.setter
     def future(self, value):

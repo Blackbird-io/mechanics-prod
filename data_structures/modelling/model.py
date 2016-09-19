@@ -233,6 +233,21 @@ class Model(TagsMixIn):
         del M.portal_data["e_model"]
         return M
 
+    def change_ref_date(self, ref_date):
+        if self.time_line.has_been_extrapolated:
+            return
+
+        new_tl = TimeLine()
+        new_tl.parameters = self.time_line.parameters.copy()
+        new_tl.master = self.time_line.master.copy()
+        new_tl.build(ref_date=ref_date)
+
+        old_tl = self.time_line
+
+        self.time_line = new_tl
+        self.time_line.id.set_namespace(self.id.bbid)
+        self.time_line.current_period.set_content(old_tl.current_period.content)
+
     def clear_excel(self):
         self.time_line.clear_excel()
 
