@@ -121,4 +121,4 @@ class Catalog:
         if key not in self.by_id:
             key = self.by_name[key]
         entry = self.by_id[key]
-        return entry.tags
+        return entry.tags.copy()
