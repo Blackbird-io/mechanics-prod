@@ -32,6 +32,7 @@ ModelChef             chop Blackbird Engine model into a dynamic Excel workbook
 
 
 # Imports
+import datetime
 import os
 import openpyxl as xlio
 from openpyxl.styles import Font, Alignment, PatternFill
@@ -169,17 +170,17 @@ class ModelChef:
         company = model.time_line.current_period.content
 
         sheet = book.active
-        sheet.title = chef_settings.COVER_TITLE
+        sheet.title = tab_names.COVER
         sheet_style.style_sheet(sheet, label_areas=False)
 
         row = sheet.row_dimensions[1]
         row.height = 9
 
-        for r in range(8, 23):
+        for r in range(8, 24):
             row = sheet.row_dimensions[r]
             row.height = 21.75
 
-        row = sheet.row_dimensions[18]
+        row = sheet.row_dimensions[19]
         row.height = 9
 
         column = sheet.column_dimensions['A']
@@ -201,7 +202,7 @@ class ModelChef:
 
             sheet.add_image(img)
 
-        cell_styles.format_border_group(sheet, 2, 8, 9, 22,
+        cell_styles.format_border_group(sheet, 2, 8, 9, 23,
                                         border_style='double')
 
         cell = sheet.cell('E11')
@@ -215,12 +216,22 @@ class ModelChef:
         cell.font = Font(size=12, bold=True)
 
         cell = sheet.cell('D15')
+        cell.value = chef_settings.REF_DATE_LABEL
+        cell.alignment = Alignment(horizontal='left')
+        cell.font = Font(size=12, bold=True)
+
+        cell = sheet.cell('D16')
         cell.value = chef_settings.QCOUNT_LABEL
         cell.alignment = Alignment(horizontal='left')
         cell.font = Font(size=12, bold=True)
 
-        cell = sheet.cell('F14')
-        cell.value = model.time_line.current_period.end
+        cell = sheet.cell(chef_settings.COVER_DATE_CELL)
+        cell.value = datetime.date.today()
+        cell.alignment = Alignment(horizontal='right')
+        cell.font = Font(size=12)
+
+        cell = sheet.cell('F15')
+        cell.value = model.time_line.ref_date
         cell.alignment = Alignment(horizontal='right')
         cell.font = Font(size=12)
 
@@ -231,26 +242,26 @@ class ModelChef:
             if q:
                 questions.append(q['prompt'])
 
-        cell = sheet.cell('F15')
+        cell = sheet.cell('F16')
         cell.value = len(questions)
         cell.alignment = Alignment(horizontal='right')
         cell.font = Font(size=12)
 
-        cell = sheet.cell('C17')
+        cell = sheet.cell('C18')
         cell.value = chef_settings.ESTIMATED_LABEL
         cell.font = Font(color=WHITE, size=11, bold=True)
         cell.fill = PatternFill(start_color=BLACK,
                                 end_color=BLACK,
                                 fill_type='solid')
         cell.alignment = Alignment(horizontal='center', vertical='center')
-        sheet.merge_cells('C17:G17')
+        sheet.merge_cells('C18:G18')
 
-        cell = sheet.cell('C19')
+        cell = sheet.cell('C20')
         cell.value = chef_settings.DISCLAIMER_TEXT
         cell.font = Font(size=10)
         cell.alignment = Alignment(horizontal='center', vertical='center',
                                    wrap_text=True)
-        sheet.merge_cells('C19:G21')
+        sheet.merge_cells('C20:G22')
 
         sheet.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
 
