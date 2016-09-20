@@ -46,7 +46,7 @@ from .history_line import HistoryLine
 # Constants
 SPECIAL_CONSOLIDATION_LINE_PREFIX = ""
 SPECIAL_CONSOLIDATION_LINE_SUFFIX = " (consolidated)"
-SUMMARY_TYPES = ('derive', 'sum', 'average', 'ending', 'starting')
+SUMMARY_TYPES = ('skip', 'derive', 'sum', 'average', 'ending', 'starting')
 
 
 # Classes
@@ -120,7 +120,10 @@ class LineItem(Statement, HistoryLine):
         self.guide = Guide(priority=3, quality=1)
         self.log = []
         self.position = None
+        # summary_type determines how the line is summarized
         self.summary_type = 'sum'
+        # summary_count is used for summary_type == 'average'
+        self.summary_count = 0
         self._consolidate = True
         self._replica = False
         self._hardcoded = False
@@ -241,6 +244,8 @@ class LineItem(Statement, HistoryLine):
             # Start with a clean slate for Excel tracking, except for
             # number format
 
+            self.summary_count = 0
+
     def copy(self, check_include_details=False):
         """
 
@@ -326,8 +331,7 @@ class LineItem(Statement, HistoryLine):
                                        xl_only=xl_only,
                                        override=override)
                 else:
-                    starting_value = self.value or 0
-                    new_value = starting_value + matching_line.value
+                    new_value = self.increment_value(matching_line)
 
                     if not xl_only:
                         self.set_value(new_value, signature)
@@ -339,6 +343,28 @@ class LineItem(Statement, HistoryLine):
 
                         self.xl.consolidated.sources.append(matching_line)
                         self.xl.consolidated.labels.append(xl_label)
+
+    def increment_value(self, matching_line):
+        """
+
+
+        LineItem.increment_value() -> float
+
+        --``matching_line`` is another LineItem
+
+        Add matching_line's value to self in a manner consistent with out
+        summary_type.
+        """
+
+        old_value = self.value or 0
+        if self.summary_type == 'average':
+            new_value = (
+                old_value * self.summary_count + matching_line.value
+                ) / (self.summary_count + 1)
+            self.summary_count += 1
+        else:
+            new_value = old_value + matching_line.value
+        return new_value
 
     def link_to(self, matching_line):
         """
