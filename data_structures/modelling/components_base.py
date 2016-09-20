@@ -143,9 +143,11 @@ class ComponentsBase(dict):
         """
 
         # return ordered list always
-        pool = self.get_ordered()
+        result = []
+        for k in sorted(self.keys()):
+            result.append(self[k])
 
-        return pool
+        return result
 
     def get_ordered(self, order_by=None):
         """
