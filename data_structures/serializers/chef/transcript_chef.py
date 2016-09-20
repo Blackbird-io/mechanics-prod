@@ -219,7 +219,7 @@ class TranscriptChef:
         cell.value = 'Date:'
         cell.font = Font(bold=True)
 
-        cell = sheet['C5']
+        cell = sheet[chef_settings.TRANS_DATE_CELL]
         cell.value = date_str
 
         for title, col in self.COLUMN_DICT.items():
