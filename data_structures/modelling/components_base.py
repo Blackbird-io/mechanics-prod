@@ -142,11 +142,8 @@ class ComponentsBase(dict):
         unordered otherwise.
         """
 
-        if bb_settings.DEBUG_MODE:
-            # Use stable order to simplify debugging
-            pool = self.get_ordered()
-        else:
-            pool = list(self.values())
+        # return ordered list always
+        pool = self.get_ordered()
 
         return pool
 
