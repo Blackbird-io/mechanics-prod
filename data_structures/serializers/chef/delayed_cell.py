@@ -16,7 +16,7 @@ DATA:
 n/a
 
 FUNCTIONS:
-resolve_cells         makes actual cells from DelayedCell's on a sheet
+n/a
 
 CLASSES:
 DelayedCell           defines an openpyxl cell whose location is not known yet
@@ -55,13 +55,9 @@ class DelayedCell:
     n/a
 
     FUNCTIONS:
-    attempt_reference_resolution() tries to resolve missing line refs in formulas
-    chop_line()           writes LineItems to Excel
-    chop_startbal_line()  writes LineItems from Starting Balance Sheet to Excel
-    chop_starting_balance() writes Starting Balance Sheet to Excel
-    chop_statement()      writes Statements to Excel (except Starting Balance)
-    chop_summary_line()   writes LineItems from financial summaries to Excel
-    chop_summary_statement() writes financial summary statements to Excel
+    from_cell()           wraps a real cell into a DelayedCell
+    set_resolved()        replaces a DelayedCell with a real one
+    resolve()             computes a real cell from a DelayedCell
     ====================  =====================================================
     """
 
@@ -135,6 +131,14 @@ class DelayedCell:
             self.formatter(cell)
 
     def resolve(self):
+        """
+
+        resolve() -> None
+
+        Must be run after AxisGroup.set_size(), i.e. when all locations are
+        known. Determines our position on the sheet, computes our formula
+        and create the actual Excel cell with contents.
+        """
         self.rownum = self.row_container.number()
         self.colnum = self.col_container.number()
         target_cell = self.sheet.cell(
