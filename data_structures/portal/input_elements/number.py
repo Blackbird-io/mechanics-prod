@@ -108,12 +108,12 @@ class NumberInput(GenericInput):
         and that for each item in response, r_min <= item <= r_max.
         """
         result = True
-        lo = decimal.Decimal("-Infinity")
-        hi = decimal.Decimal("Infinity")
+        lo = float("-Infinity")
+        hi = float("Infinity")
         if self.r_min:
-            lo = decimal.Decimal(self.r_min)
+            lo = float(self.r_min)
         if self.r_max:
-            hi = decimal.Decimal(self.r_max)
+            hi = float(self.r_max)
         entry_count = len(proposed_response)
         if entry_count < 1:
             result = False
@@ -141,9 +141,9 @@ class NumberInput(GenericInput):
         """
 
         if self.user_can_add:
-            result = [decimal.Decimal(n) for n in raw_response]
+            result = [float(n) for n in raw_response]
         else:
-            result = [decimal.Decimal(n) for n in raw_response.split(',')]
+            result = [float(n) for n in raw_response.split(',')]
 
         result = [self.round_to_step(n) for n in result]
         #
@@ -170,7 +170,7 @@ class NumberInput(GenericInput):
             hi = self.r_max
             #
             step = (hi - lo) / self.r_steps
-            step = decimal.Decimal(step)
+            step = float(step)
             remainder = value % step
             #
             if remainder > (step / 2):
