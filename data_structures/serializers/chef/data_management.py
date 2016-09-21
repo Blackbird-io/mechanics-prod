@@ -42,6 +42,7 @@ import copy
 
 from openpyxl.styles import Side
 from openpyxl.utils import get_column_letter
+from collections import OrderedDict
 
 from bb_exceptions import ExcelPrepError
 
@@ -357,6 +358,7 @@ class LineFormat:
 
         return result
 
+
 class Lookup(Range):
     """
 
@@ -633,6 +635,9 @@ class AxisGroup:
 
         # any extra information, e.g. labels
         self.extra = {}
+        # cells will be remembered in order added
+        self.cells = OrderedDict()
+        # everything else sent to constructor is put into extra
         for k, v in kargs.items():
             if k not in self.__dict__:
                 self.extra[k] = v
