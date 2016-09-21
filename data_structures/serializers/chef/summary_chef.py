@@ -49,7 +49,7 @@ from .sheet_style import SheetStyle
 from .tab_names import TabNames
 from .transcript_chef import TranscriptChef
 from .unit_chef import UnitChef
-from .delayed_cell import DelayedCell, resolve_cells
+from .delayed_cell import resolve_cells
 
 
 
@@ -209,12 +209,17 @@ class SummaryChef:
             col_selector=col_selector,
         )
 
+        # blank row before bottom border
+        output_rows.add_group('spacer_end', size=1)
+
+        # calculate axis locations and resolve the cell addresses
+        output_rows.calc_size()
+        resolve_cells(sheet)
+
         # Styling and formatting that's left
         sheet_style.style_sheet(sheet, label_areas=False)
 
         # Make pretty border
-        output_rows.add_group('spacer_end', size=1)
-        output_rows.calc_size()
         cell_styles.format_border_group(
             sheet=sheet,
             st_col=output_cols.number(),
@@ -243,9 +248,6 @@ class SummaryChef:
         corner_row = complete_label_rows.number() - 1
         corner_cell = sheet.cell(column=corner_col, row=corner_row)
         sheet.freeze_panes = corner_cell
-
-        # calculate axis locations and resolve the cell addresses
-        sheet.bb.row_axis.calc_size(render=DelayedCell.resolve_row)
 
     # *************************************************************************#
     #                           NON-PUBLIC METHODS                             #
@@ -492,24 +494,12 @@ class SummaryChef:
             # Statements
             statement_rowgroup = output_rows.add_group('statements', offset=1)
             for name, statement in unit.financials.chef_ordered():
+                # to handle the hard link from starting to ending financials
                 if name == 'starting':
                     title = 'Starting Balance Sheet'
                 else:
                     title = statement.title
-                # statement_rows = self._add_statement_rows(
-                #     sheet, statement, title=title
-                # )
-
                 if statement is not None:
-                    # if statement is unit.financials.ending:
-                    #     line_chef.chop_summary_statement(
-                    #         sheet=sheet,
-                    #         statement=unit.financials.starting,
-                    #         column=column.number(),
-                    #         row_container=statement_rowgroup,
-                    #         col_container=output_cols,
-                    #         title='starting balance sheet',
-                    #     )
                     line_chef.chop_summary_statement(
                         sheet=sheet,
                         statement=statement,
