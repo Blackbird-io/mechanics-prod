@@ -49,7 +49,6 @@ from .sheet_style import SheetStyle
 from .tab_names import TabNames
 from .transcript_chef import TranscriptChef
 from .unit_chef import UnitChef
-from .delayed_cell import resolve_cells
 
 
 
@@ -214,7 +213,7 @@ class SummaryChef:
 
         # calculate axis locations and resolve the cell addresses
         output_rows.calc_size()
-        resolve_cells(sheet)
+        output_rows.resolve_cells()
 
         # Styling and formatting that's left
         sheet_style.style_sheet(sheet, label_areas=False)
@@ -494,12 +493,12 @@ class SummaryChef:
             # Statements
             statement_rowgroup = output_rows.add_group('statements', offset=1)
             for name, statement in unit.financials.chef_ordered():
-                # to handle the hard link from starting to ending financials
-                if name == 'starting':
-                    title = 'Starting Balance Sheet'
-                else:
-                    title = statement.title
                 if statement is not None:
+                    # to handle the hard link from starting to ending financials
+                    if name == 'starting':
+                        title = 'Starting Balance Sheet'
+                    else:
+                        title = statement.title
                     line_chef.chop_summary_statement(
                         sheet=sheet,
                         statement=statement,
