@@ -211,7 +211,7 @@ class TranscriptChef:
         cell.value = 'Company:'
         cell.font = Font(bold=True)
 
-        cell = sheet['C4']
+        cell = sheet[chef_settings.TRANS_COMP_CELL]
         cell.value = name
 
         # set date cell and label
