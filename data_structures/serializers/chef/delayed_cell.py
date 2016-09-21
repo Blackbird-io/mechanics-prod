@@ -144,11 +144,6 @@ class DelayedCell:
         if self.template is not None:
             # formula inputs: some_name = 'sheet1'!A1
             parsed = {}
-
-            # zx = 'urban' in self.line.title
-            # if zx and self.colnum < 40:
-            #     print(self.line.title, self.sheet.title, self.rownum, self.colnum)
-
             for name, source_cell in self.inputs.items():
                 if not source_cell.cell:
                     source_cell.resolve()
@@ -161,10 +156,6 @@ class DelayedCell:
                 else:
                     sname = ''
                 parsed[name] = '{}{}{}'.format(sname, col, row)
-
-                # if zx and self.colnum < 40:
-                #     print(' ', name, source_cell.line.name, parsed[name])
-
             formula = self.template.format(**parsed)
             target_cell.set_explicit_value(
                 formula, data_type=TypeCodes.FORMULA
@@ -173,27 +164,3 @@ class DelayedCell:
             target_cell.value = self.value
 
         self.set_resolved(target_cell)
-
-        # if zx and self.colnum < 40:
-        #     print(' ', formula, target_cell)
-
-
-def resolve_cells(sheet, row_container=None):
-    """
-
-    Args:
-        sheet:
-        row_container:
-
-    Returns:
-
-    """
-    if row_container is None:
-        row_container = sheet.bb.row_axis
-    for rowgroup in row_container.groups:
-        if rowgroup.groups:
-            resolve_cells(sheet, rowgroup)
-        for path, soft_cell in rowgroup.cells.items():
-            if not soft_cell.cell:
-                soft_cell.resolve()
-        rowgroup.cells.clear()
