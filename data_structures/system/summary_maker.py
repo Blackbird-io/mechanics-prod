@@ -168,6 +168,15 @@ class SummaryMaker:
             self.summaries[key] = timeline_summary
 
     def parse_period(self, period):
+        """
+
+
+        SummaryMaker.fiscal_year_end() -> None
+
+        --``period`` monthly TimePeriod on the original time_line
+
+        Main responder. Passes ``period`` to quarterly and annual summaries.
+        """
         if not self.bu_bbid:
             self.bu_bbid = self.time_line.current_period.content.id.bbid
         self.period = period
