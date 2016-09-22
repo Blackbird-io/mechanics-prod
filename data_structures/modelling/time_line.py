@@ -315,16 +315,6 @@ class TimeLine(TimelineBase):
 
         self.has_been_extrapolated = True
 
-    def extrapolate_all(self, seed=None):
-        """
-
-        **OBSOLETE**
-
-        Backwards extrapolation is obsolete.
-        Legacy interface for TimeLine.extrapolate()
-        """
-        return self.extrapolate(seed)
-
     def extrapolate_dates(self, seed, dates, backward=False):
         """
 
