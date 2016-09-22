@@ -458,8 +458,9 @@ class LineChef:
         """
         if not row_container:
             row_container = sheet.bb.row_axis.add_group(
-                statement.title, offset=sheet.bb.current_row + 1
+                'body', 'statements', statement.title,
             )
+            row_container.tip = sheet.bb.current_row + 1
             row_container.add_group('matter')
         matter = row_container.get_group('matter')
 

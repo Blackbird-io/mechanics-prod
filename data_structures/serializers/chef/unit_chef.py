@@ -312,11 +312,15 @@ class UnitChef:
         _add_unit_life to write each time period.
         """
 
-        sheet.bb.current_row += 1
-        sheet = self._add_unit_life(sheet=sheet, unit=unit)
         param_area = getattr(sheet.bb, field_names.PARAMETERS)
+        if param_area.rows.ending:
+            start_row = param_area.rows.ending + 1
+        else:
+            start_row = self.VALUES_START_ROW - 2
+        sheet.bb.current_row = start_row
+        sheet = self._add_unit_life(sheet=sheet, unit=unit)
         for snapshot in unit:
-            sheet.bb.current_row = param_area.rows.ending + 1
+            sheet.bb.current_row = start_row
             self._add_unit_life(sheet=sheet, unit=snapshot, set_labels=False)
         sheet.bb.outline_level -= 1
 
@@ -338,7 +342,7 @@ class UnitChef:
         UnitChef._add_statement() -> AxisGroup
 
         """
-        statement_group = sheet.bb.row_axis.get_group('statements')
+        statement_group = sheet.bb.row_axis.get_group('body', 'statements')
         statement_group.calc_size()
 
         offset = 1 if statement_group.size else 0
@@ -359,9 +363,10 @@ class UnitChef:
         """
         fins_dict = dict()
 
-        sheet.bb.row_axis.add_group(
+        body_rows = sheet.bb.row_axis.get_group('body')
+        body_rows.add_group(
             'statements',
-            offset=sheet.bb.current_row + 1
+            offset=sheet.bb.current_row - body_rows.tip + 1
         )
 
         for statement in unit.financials.ordered:
@@ -756,15 +761,6 @@ class UnitChef:
         sheet.bb.current_row = sheet.bb.events.rows.ending
         sheet.bb.first_life_row = first_life_row
 
-        if HIDE_LIFE_EVENTS:
-            top_row = first_life_row
-            end_row = sheet.bb.current_row
-            if top_row and end_row:
-                for rownum in range(top_row, end_row + 2):
-                    row = sheet.row_dimensions[rownum]
-                    row.hidden = True
-
-        # Move current row down to the bottom (max_row() probably best here).
         return sheet
 
     def _add_unit_size(self, *pargs, sheet, unit, column=None,
@@ -905,7 +901,7 @@ class UnitChef:
         for row in parameters.rows.by_name.values():
             group_lines(sheet, row=row)
 
-        sheet.bb.current_row = parameters.rows.ending
+        sheet.bb.current_row = parameters.rows.ending or self.VALUES_START_ROW
 
         return sheet
 
@@ -1010,6 +1006,14 @@ class UnitChef:
 
         # Hide sheets for units below a certain depth. The depth should be a
         # Chef-level constant. Use ``sheet_state := "hidden"`` to implement.
+
+        head_rows = sheet.bb.row_axis.add_group('head', size=self.TITLE_ROW)
+        head_cols = sheet.bb.col_axis.add_group('head', size=self.MASTER_COLUMN)
+        sheet.bb.row_axis.add_group('top_spacer', size=1)
+        sheet.bb.col_axis.add_group('top_spacer', size=1)
+        body_rows = sheet.bb.row_axis.add_group('body')
+        body_cols = sheet.bb.col_axis.add_group('body')
+
         self._link_to_time_line(book=book, sheet=sheet, unit=unit,
                                 current_only=current_only)
 
