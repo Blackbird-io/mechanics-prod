@@ -431,15 +431,6 @@ class TimeLine(TimelineBase):
         result = [past_dates, [ref_end], future_dates]
         return result
 
-    def getOrdered(self):
-        """
-
-        **OBSOLETE**
-
-        Legacy interface for TimeLine.get_ordered()
-        """
-        return self.get_ordered()
-
     def revert_current(self):
         """
 
