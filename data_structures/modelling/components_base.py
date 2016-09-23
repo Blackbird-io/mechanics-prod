@@ -142,10 +142,13 @@ class ComponentsBase(dict):
         unordered otherwise.
         """
 
-        # return ordered list always
-        result = []
-        for k in sorted(self.keys()):
-            result.append(self[k])
+        if bb_settings.DEBUG_MODE:
+            # return ordered list
+            result = []
+            for k in sorted(self.keys()):
+                result.append(self[k])
+        else:
+            result = list(self.values())
 
         return result
 
