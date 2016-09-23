@@ -88,6 +88,9 @@ class Financials:
             "overview", "income", "cash", "starting", "ending",
             "ledger", "valuation"
         ]
+        self._chef_order = [
+            "overview", "income", "cash", "starting", "ending", "ownership"
+        ]
         self._compute_order = ['overview', 'income', 'cash']
         self._exclude_statements = ['valuation', 'starting']
 
@@ -182,7 +185,7 @@ class Financials:
         return result
 
     @staticmethod
-    @lru_cache(maxsize=128)
+    @lru_cache(maxsize=512)
     def get_cached(bu_bbid, period_end, summary=None):
         """
 
@@ -193,6 +196,17 @@ class Financials:
         Financials for bu_bbid and period. Cached by functools.
         """
         return Financials()
+
+    def chef_ordered(self):
+        """
+
+        Financials.chef_ordered() -> iter(Statement)
+
+        Method yields own statements in order displayed on a spreadsheet.
+        """
+
+        for name in self._chef_order:
+            yield name, getattr(self, name, None)
 
     def add_statement(self, name, statement=None, title=None, position=None,
                       compute=True):

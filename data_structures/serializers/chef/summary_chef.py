@@ -44,7 +44,7 @@ from .cell_styles import CellStyles, LOWHEADER_COLOR
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
-from .line_chef import LineChef
+from .summary_line_chef import SummaryLineChef
 from .sheet_style import SheetStyle
 from .tab_names import TabNames
 from .transcript_chef import TranscriptChef
@@ -60,7 +60,7 @@ from .unit_chef import UnitChef
 cell_styles = CellStyles()
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
-line_chef = LineChef()
+line_chef = SummaryLineChef()
 sheet_style = SheetStyle()
 tab_names = TabNames()
 transcript_chef = TranscriptChef()
@@ -85,8 +85,7 @@ class SummaryChef:
     n/a
 
     FUNCTIONS:
-    chop_model()          returns BB_Workbook containing an Excel workbook with
-                          dynamic links
+    add_annual_summary()  adds a summary to book
     ====================  =====================================================
     """
 
@@ -209,12 +208,17 @@ class SummaryChef:
             col_selector=col_selector,
         )
 
+        # blank row before bottom border
+        output_rows.add_group('spacer_end', size=1)
+
+        # calculate axis locations and resolve the cell addresses
+        output_rows.calc_size()
+        output_rows.resolve_cells()
+
         # Styling and formatting that's left
         sheet_style.style_sheet(sheet, label_areas=False)
 
         # Make pretty border
-        output_rows.add_group('spacer_end', size=1)
-        output_rows.calc_size()
         cell_styles.format_border_group(
             sheet=sheet,
             st_col=output_cols.number(),
@@ -257,13 +261,15 @@ class SummaryChef:
         Writes row labels on annual summary. To show up on the axis, a group
         1. should have no subgroups
         2. should have a label
+        To add a title row for a group with subgroups, create a one-row
+        'title' subgroup.
         """
         for group in groups:
             if group.groups:
                 self._annual_summary_labels(
                     sheet, group.groups, label_cols, level=level + 1
                 )
-            else:
+            elif group.size:
                 label = group.extra.get('label')
                 if label:
                     row = group.number()
@@ -272,13 +278,8 @@ class SummaryChef:
                         formatter = cell_styles.format_area_label
                         formatter(sheet, label, row, col_num=col)
                     else:
-                        line_chef._set_label(
-                            sheet=sheet,
-                            label=label,
-                            row=group.number(),
-                            column=col,
-                            overwrite=True,
-                        )
+                        label_cell = sheet.cell(row=row, column=col)
+                        label_cell.value = label
 
     def _quarter_name(self, date):
         """
@@ -491,21 +492,17 @@ class SummaryChef:
 
             # Statements
             statement_rowgroup = output_rows.add_group('statements', offset=1)
-            for statement in unit.financials.ordered:
+            for name, statement in unit.financials.chef_ordered():
                 if statement is not None:
-                    if statement is unit.financials.ending:
-                        line_chef.chop_summary_statement(
-                            sheet=sheet,
-                            statement=unit.financials.starting,
-                            column=column.number(),
-                            row_container=statement_rowgroup,
-                            col_container=output_cols,
-                            title='starting balance sheet',
-                        )
+                    # to handle the hard link from starting to ending financials
+                    if name == 'starting':
+                        title = 'Starting Balance Sheet'
+                    else:
+                        title = statement.title
                     line_chef.chop_summary_statement(
                         sheet=sheet,
                         statement=statement,
-                        column=column.number(),
                         row_container=statement_rowgroup,
-                        col_container=output_cols,
+                        col_container=column,
+                        title=title,
                     )
