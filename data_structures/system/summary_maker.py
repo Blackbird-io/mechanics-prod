@@ -168,6 +168,15 @@ class SummaryMaker:
             self.summaries[key] = timeline_summary
 
     def parse_period(self, period):
+        """
+
+
+        SummaryMaker.fiscal_year_end() -> None
+
+        --``period`` monthly TimePeriod on the original time_line
+
+        Main responder. Passes ``period`` to quarterly and annual summaries.
+        """
         if not self.bu_bbid:
             self.bu_bbid = self.time_line.current_period.content.id.bbid
         self.period = period
@@ -358,11 +367,12 @@ class SummaryMaker:
         Method summarizes a LineItem. Aggregation type is defined by
         source_line's attributes.
         """
+
         summary_type = target_line.summary_type
-        if summary_type == 'derive':
-            # driver will do the work
+        if summary_type in ('derive', 'skip'):
+            # driver will do the work if 'derive'
             pass
-        elif summary_type == 'sum':
+        elif summary_type in ('sum', 'average'):
             target_line.increment(
                 source_line,
                 consolidating=True,
@@ -434,6 +444,8 @@ class SummaryMaker:
         # label by ISO end date of the source period
         label = format(source.end)
         for source_line in source_statement.get_ordered():
+            if source_line.summary_type == 'skip':
+                continue
             target_line = target_statement.find_first(source_line.name)
             if not target_line:
                 target_line = source_line.copy()
