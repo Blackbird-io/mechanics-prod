@@ -349,11 +349,10 @@ class Statement(Equalities, TagsMixIn):
         # Clean dictionary
 
 
-        # if bb_settings.DEBUG_MODE:
-        #     pool = self.get_ordered()
-        # else:
-        #     pool = self._details.values()
-        pool = self.get_ordered()
+        if bb_settings.DEBUG_MODE:
+            pool = self.get_ordered()
+        else:
+            pool = self._details.values()
 
         add_details = True
         if check_include_details:
@@ -544,15 +543,13 @@ class Statement(Equalities, TagsMixIn):
 
         If ``consolidating`` is True, method sets obj._consolidated = True.
         """
-        # if bb_settings.DEBUG_MODE:
-        #     pool = matching_statement._get_ordered_items_debug()
-        # else:
-        #     pool = matching_statement._details.items()
-        pool = matching_statement.get_ordered()
+        if bb_settings.DEBUG_MODE:
+            pool = matching_statement._get_ordered_items_debug()
+        else:
+            pool = matching_statement._details.items()
 
         # for name, external_line in pool:
-        for external_line in pool:
-            name = external_line.name
+        for name, external_line in pool:
             # ORDER SHOULD NOT MATTER HERE
 
             # If we get here, the line has survived screening. We now have two
@@ -634,11 +631,10 @@ class Statement(Equalities, TagsMixIn):
         Clear all values, preserve line shape.
         """
         # clears values, not shape
-        # if bb_settings.DEBUG_MODE:
-        #     pool = self.get_ordered()
-        # else:
-        #     pool = self._details.values()
-        pool = self.get_ordered()
+        if bb_settings.DEBUG_MODE:
+            pool = self.get_ordered()
+        else:
+            pool = self._details.values()
 
         for line in pool:
             line.clear(recur=True)
@@ -758,11 +754,10 @@ class Statement(Equalities, TagsMixIn):
         ordered = list()
         by_position = dict()
 
-        # if bb_settings.DEBUG_MODE:
-        #     pool = self.get_ordered()
-        # else:
-        #     pool = self._details.values()
-        pool = self.get_ordered()
+        if bb_settings.DEBUG_MODE:
+            pool = self.get_ordered()
+        else:
+            pool = self._details.values()
 
         for line in pool:
             entry = by_position.setdefault(line.position, list())
