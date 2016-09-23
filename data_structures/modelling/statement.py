@@ -562,9 +562,11 @@ class Statement(Equalities, TagsMixIn):
 
             if own_line:
                 # Option A
-                own_line.increment(external_line, consolidating=consolidating,
-                                   xl_label=xl_label, override=override,
-                                   xl_only=xl_only, over_time=over_time)
+                allowed = own_line.consolidate or not consolidating
+                if allowed:
+                    own_line.increment(external_line, consolidating=consolidating,
+                                       xl_label=xl_label, override=override,
+                                       xl_only=xl_only, over_time=over_time)
             else:
                 # Option B
                 if external_line.consolidate:
