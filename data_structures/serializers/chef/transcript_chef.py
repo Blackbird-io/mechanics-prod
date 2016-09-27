@@ -34,6 +34,7 @@ from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.styles.colors import WHITE, BLACK
 import string
 
+from .bb_workbook import BB_Workbook as Workbook
 from .cell_styles import CellStyles
 from .sheet_style import SheetStyle
 from .tab_names import TabNames
@@ -98,7 +99,7 @@ class TranscriptChef:
     COLUMN_DICT[RESPONSE_HEADER] = 'F'
     COLUMN_DICT[QUESTION_NAME_HEADER] = 'G'
 
-    def make_transcript_excel(self, model, book, idx=1):
+    def make_transcript_excel(self, model, book=None, idx=1):
         """
 
 
@@ -112,6 +113,18 @@ class TranscriptChef:
         analysis' interview.
         """
 
+        if not book:
+            book = Workbook()
+            sheet = book.active
+
+            date = datetime.date.today()
+            date_str = '%s-%s-%s' % (date.month, date.day, date.year)
+            title = model.name + ' ' + date_str
+
+            sheet.title = title
+        else:
+            sheet = book.create_sheet(name=tab_names.TRANSCRIPT, index=idx)
+
         # get length of interview
         transcript = list()
         for i in model.transcript:
@@ -121,8 +134,7 @@ class TranscriptChef:
                 transcript.append(q)
 
         analysis_name = model.name.title()
-
-        sheet = self._prep_output_excel(book, analysis_name, idx)
+        sheet = self._prep_output_excel(sheet, analysis_name)
 
         current_row = 8
         for q in transcript:
@@ -141,6 +153,8 @@ class TranscriptChef:
 
         sheet_style.style_sheet(sheet, label_areas=False)
         sheet.sheet_properties.tabColor = chef_settings.TRANSCRIPT_TAB_COLOR
+
+        return book
 
     # ************************************************************************#
     #                         NON-PUBLIC METHODS                              #
@@ -180,7 +194,7 @@ class TranscriptChef:
 
         return response_out
 
-    def _prep_output_excel(self, wb, name, index):
+    def _prep_output_excel(self, sheet, name):
         title_txt = 'INTERVIEW TRANSCRIPT'
 
         column_widths = dict()
@@ -194,8 +208,6 @@ class TranscriptChef:
 
         date = datetime.date.today()
         date_str = '%s-%s-%s' % (date.month, date.day, date.year)
-
-        sheet = wb.create_sheet(name=tab_names.TRANSCRIPT, index=index)
 
         for col, wid in column_widths.items():
             sheet.column_dimensions[col].width = wid
@@ -211,7 +223,7 @@ class TranscriptChef:
         cell.value = 'Company:'
         cell.font = Font(bold=True)
 
-        cell = sheet['C4']
+        cell = sheet[chef_settings.TRANS_COMP_CELL]
         cell.value = name
 
         # set date cell and label
@@ -219,7 +231,7 @@ class TranscriptChef:
         cell.value = 'Date:'
         cell.font = Font(bold=True)
 
-        cell = sheet['C5']
+        cell = sheet[chef_settings.TRANS_DATE_CELL]
         cell.value = date_str
 
         for title, col in self.COLUMN_DICT.items():

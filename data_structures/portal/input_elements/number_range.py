@@ -104,12 +104,12 @@ class NumberRangeInput(GenericInput):
         and that for each (a,b) item in response, r_min <= a <= b <= r_max.
         """
         result = True
-        lo = decimal.Decimal("-Infinity")
-        hi = decimal.Decimal("Infinity")
+        lo = float("-Infinity")
+        hi = float("Infinity")
         if self.r_min:
-            lo = decimal.Decimal(self.r_min)
+            lo = float(self.r_min)
         if self.r_max:
-            hi = decimal.Decimal(self.r_max)
+            hi = float(self.r_max)
         entry_count = len(proposed_response)
         if entry_count < 1:
             result = False
@@ -141,7 +141,7 @@ class NumberRangeInput(GenericInput):
         result = []
         for pair_of_strings in adj_response:
             (a,b) = pair_of_strings.split(",")
-            pair_of_decimals = [decimal.Decimal(a), decimal.Decimal(b)]
+            pair_of_decimals = [float(a), float(b)]
             #decimal ignores white space
             result.append(pair_of_decimals)
         return result

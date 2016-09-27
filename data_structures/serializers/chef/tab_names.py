@@ -55,6 +55,7 @@ class TabNames:
     n/a
     ====================  ======================================================
     """
+    COVER = "Cover"
     SCENARIOS = "Drivers"
     TIME_LINE = "Timeline"
     TRANSCRIPT = "Transcript"

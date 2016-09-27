@@ -95,6 +95,7 @@ class Model(TagsMixIn):
     valuation             P; pointer to current period valuation
 
     FUNCTIONS:
+    change_ref_date()     updates timeline to use new reference date
     copy()                returns a copy of Model instance
     from_portal()         class method, extracts model out of API-format
     start()               sets _started and started to True
@@ -232,6 +233,34 @@ class Model(TagsMixIn):
         M.portal_data.update(portal_model)
         del M.portal_data["e_model"]
         return M
+
+    def change_ref_date(self, ref_date):
+        """
+
+
+        Model.change_ref_date() -> None
+
+        --``ref_date`` is datetime.date to use as the reference date for updated
+                       timeline
+
+        Method updates time_line to use adjusted ref_date.
+        """
+
+        if self.time_line.has_been_extrapolated:
+            return
+
+        new_tl = TimeLine()
+        new_tl.parameters = self.time_line.parameters.copy()
+        new_tl.master = self.time_line.master.copy()
+        new_tl.build(ref_date=ref_date)
+
+        old_tl = self.time_line
+
+        self.time_line = new_tl
+        self.time_line.id.set_namespace(self.id.bbid)
+        self.time_line.current_period.set_content(old_tl.current_period.content)
+
+        del old_tl
 
     def clear_excel(self):
         self.time_line.clear_excel()
