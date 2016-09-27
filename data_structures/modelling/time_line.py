@@ -66,6 +66,7 @@ class TimeLine(TimelineBase):
     id                    instance of PlatformComponents.ID class, for interface
     master                TimePeriod; unit templates that fall outside of time
     parameters            Parameters object, specifies shared parameters
+    ref_date              datetime.date; reference date for the model
     summary_builder       SummaryBuilder; makes financial summaries
 
     FUNCTIONS:
@@ -95,6 +96,7 @@ class TimeLine(TimelineBase):
         self.parameters = Parameters()
         self.summary_builder = None
         self.has_been_extrapolated = False
+        self.ref_date = None
 
     @property
     def current_period(self):
@@ -156,6 +158,9 @@ class TimeLine(TimelineBase):
         """
         if not ref_date:
             ref_date = date.today()
+
+        self.ref_date = ref_date
+
         ref_month = ref_date.month
         ref_year = ref_date.year
 

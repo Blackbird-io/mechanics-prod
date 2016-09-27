@@ -158,8 +158,11 @@ class Components(ComponentsBase, TagsMixIn, Equalities):
         Method returns a dictionary by bbid of every object in instance that
         has life.alive == True.
         """
-        result = dict()
-        for (bbid, bu) in self.items():
+        from collections import OrderedDict
+
+        result = OrderedDict()
+
+        for (bbid, bu) in sorted(self.items()):
             if bu.life.alive:
                 result[bbid] = bu
             else:
@@ -195,7 +198,7 @@ class Components(ComponentsBase, TagsMixIn, Equalities):
         """
         result = {}
         if not pool:
-            pool = self.values()
+            pool = self.get_ordered()
         if recur:
             for bu in pool:
                 one_down = bu.components.get_tagged(*tags, recur=recur)

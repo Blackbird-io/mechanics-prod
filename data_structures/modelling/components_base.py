@@ -143,12 +143,14 @@ class ComponentsBase(dict):
         """
 
         if bb_settings.DEBUG_MODE:
-            # Use stable order to simplify debugging
-            pool = self.get_ordered()
+            # return ordered list
+            result = []
+            for k in sorted(self.keys()):
+                result.append(self[k])
         else:
-            pool = list(self.values())
+            result = list(self.values())
 
-        return pool
+        return result
 
     def get_ordered(self, order_by=None):
         """

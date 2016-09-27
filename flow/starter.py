@@ -80,13 +80,11 @@ class Starter:
         new model. Method then starts the model and builds out a time line
         around either the current or globally fixed reference date.
         """
-        if bb_settings.fix_ref_date == True:
-            ref_date = bb_settings.t0
-        else:
-            ref_date = datetime.date.today()
-        #
+
+        ref_date = datetime.date.today()
+
         self.MR.prep(message)
-        #
+
         model = message[0]
         if model:
             model_name = model.portal_data["business_name"]
@@ -106,7 +104,7 @@ class Starter:
             model.time_line.build(ref_date)
 
         if not model.time_line.current_period.content:
-            company = BusinessUnit(model.tags.title)
+            company = BusinessUnit(model.tags.name)
             model.time_line.current_period.set_content(company)
             model.target = model.time_line.current_period.content
 
