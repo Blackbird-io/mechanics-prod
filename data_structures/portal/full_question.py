@@ -60,7 +60,7 @@ class FullQuestion:
     """
 
     Class defines object that stores all details relevant to both Engine in
-    Portal environments for asking user a question. 
+    Portal environments for asking user a question.
 
     The QuestionManager creates a FullQuestion for every module in the
     QuestionWarehouse and stores that FullQuestion in its catalog.
@@ -76,7 +76,7 @@ class FullQuestion:
     elements manually; they can just toggle the ``_active`` setting.
 
     See the Engine-Wrapper API for more details on how the Portal responds to
-    various FullQuestion attributes. 
+    various FullQuestion attributes.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -98,7 +98,7 @@ class FullQuestion:
     tags                  obj; instance of Platform.Tags, for naming & feedback
     topic_name            string; appears in user-facing browser outline
     transcribe            bool; whether portal should show question to lenders
-    
+
     FUNCTIONS:
     build_basic_array()   build an array for single-type elements
     build_custom_array()  build an array of elements from spec; can be mixed
@@ -122,8 +122,8 @@ class FullQuestion:
     _klasses["number-range"] = NumberRangeInput
     _klasses["time"] = TimeInput
     _klasses["time-range"]= TimeRangeInput
-    _klasses["text"] = TextInput    
-    
+    _klasses["text"] = TextInput
+
     def __init__(self):
         self.id = ID()
         self.tags = Tags()
@@ -152,7 +152,7 @@ class FullQuestion:
 
         Descriptor for ``progress`` attribute. Limits value to [0,100] range,
         stores it as integer on instance._progress.
-        
+
         """
         def __get__(self,instance,owner):
             return instance._progress
@@ -165,16 +165,16 @@ class FullQuestion:
                 raise bb_exceptions.ManagedAttributeError(c)
 
     progress = _ProgressDescriptor()
-        
+
     def _check_length(self):
         """
 
 
         FullQuestion._check_length() -> bool
 
-        
+
         Return True if the number of elements in instance's input_array is less
-        than or equal to the maximum permitted, False otherwise. 
+        than or equal to the maximum permitted, False otherwise.
         """
         result = False
         if len(self.input_array) <= self._MAX_ELEMENTS:
@@ -187,7 +187,7 @@ class FullQuestion:
             c = c % (self.tags.name, self.source)
             raise bb_exceptions.QuestionFormatError(c)
         #
-        return result            
+        return result
 
     def _check_type(self):
         """
@@ -201,7 +201,7 @@ class FullQuestion:
 
         NOTE: Method will return False if elements are homogenous but instance
         type is set to ``mixed``. We do this to encourage disciplined question
-        crafting. Otherwise, we may start to always label questions ``mixed``. 
+        crafting. Otherwise, we may start to always label questions ``mixed``.
         """
         result = False
         #
@@ -244,7 +244,7 @@ class FullQuestion:
             raise bb_exceptions.QuestionFormatError(c)
 
         return result
-    
+
     def _set_type(self, input_type, input_sub_type=None):
         """
 
@@ -272,7 +272,7 @@ class FullQuestion:
                     c = "``%s`` is not a valid %s subtype."
                     c = c % (input_sub_type, input_type)
                     raise bb_exceptions.QuestionFormatError(c)
-                
+
     def build_basic_array(self, input_type, input_sub_type=None,
                           active_count=1):
         """
@@ -282,9 +282,9 @@ class FullQuestion:
 
 
         Clear existing contents, then add the maximum permitted number of
-        type-specific elements and set the instance type accordingly. 
-        
-        Method sets _active == True for the first ``active_count`` elements. 
+        type-specific elements and set the instance type accordingly.
+
+        Method sets _active == True for the first ``active_count`` elements.
         """
         self.input_array.clear()
         base_klass = self._klasses[input_type]
@@ -305,18 +305,18 @@ class FullQuestion:
 
         FullQuestion.build_custom_array() -> None
 
-                                       
+
         Clear existing contents, then add elements as specified in spec.
 
         Spec may be partial or complete. Method uses question-level type and
-        sub_type to try and build out the array for partial specs. 
+        sub_type to try and build out the array for partial specs.
 
         Method expects spec to follow API InputElement schema. Method sets
         all elements to _active == True by default. Spec can override that
         setting.
 
         Method passes ``ignore_fixed`` value to element.update(): if True,
-        update will only update attributes in element._var_attrs. 
+        update will only update attributes in element._var_attrs.
         """
         self.input_array.clear()
         array_spec = copy.deepcopy(array_spec)
@@ -327,12 +327,12 @@ class FullQuestion:
             try:
                 e_type = e_spec.pop("input_type")
             except KeyError:
-                e_type = input_type            
+                e_type = input_type
             element = self._klasses[e_type]()
             #
             try:
                 e_sub_type = e_spec.pop("input_sub_type")
-                #details may not 
+                #details may not
             except KeyError:
                 e_sub_type = input_sub_type
             element.set_sub_type(e_sub_type)
@@ -345,7 +345,7 @@ class FullQuestion:
             self.input_array.append(element)
         #
         self._set_type(input_type, input_sub_type)
-                
+
     def check(self):
         """
 
@@ -354,11 +354,11 @@ class FullQuestion:
 
 
         Return True if both check_types() and check_length() are True, False
-        otherwise. 
+        otherwise.
         """
         result = all([self._check_type(), self._check_length()])
         return result
-    
+
     def copy(self):
         """
 
@@ -418,16 +418,18 @@ class FullQuestion:
                 self.prompt = self.basic_prompt
         else:
             self.prompt = self.basic_prompt
-    
-        try:
-            self.short = self.short.format(**self.context)
-        except KeyError:
-            pass
 
-        try:
-            self.comment = self.comment.format(**self.context)
-        except KeyError:
-            pass
+        if self.short:
+            try:
+                self.short = self.short.format(**self.context)
+            except KeyError:
+                pass
+
+        if self.comment:
+            try:
+                self.comment = self.comment.format(**self.context)
+            except KeyError:
+                pass
 
     def update(self, mini_q):
         """
@@ -440,7 +442,7 @@ class FullQuestion:
         attributes on instance to the mini_q value. Method skips skip_attrs.
 
         NOTE: skip_attrs == ["id","tags"]
-        If implementing runtime-to-catalog tag inheritance, adjust skip_attrs. 
+        If implementing runtime-to-catalog tag inheritance, adjust skip_attrs.
         """
         skip_attrs = ["id","tags"]
         for (attr_name, attr_val) in mini_q.__dict__.items():
