@@ -177,6 +177,7 @@ class SummaryMaker:
 
         Main responder. Passes ``period`` to quarterly and annual summaries.
         """
+        period.summary = None
         if not self.bu_bbid:
             self.bu_bbid = self.time_line.current_period.content.id.bbid
         self.period = period
@@ -270,7 +271,10 @@ class SummaryMaker:
             enter = new_info['enter']
             close = new_info['close']
             summary_period = TimePeriodBase(enter, close)
+            # counter of months used in the summary
             summary_period.periods_used = 0
+            # what sort of timeline does the period belong to
+            summary_period.summary = self.onkey
 
             # copy BU structure from time_line.current_period
             summary_unit = self.add_content(self.bu_bbid, summary_period)
@@ -367,7 +371,6 @@ class SummaryMaker:
         Method summarizes a LineItem. Aggregation type is defined by
         source_line's attributes.
         """
-
         summary_type = target_line.summary_type
         if summary_type in ('derive', 'skip'):
             # driver will do the work if 'derive'
@@ -422,10 +425,6 @@ class SummaryMaker:
         Method adds items from ``statement_name`` in source financials to
         target summary financials.
         """
-        if statement_name not in ["overview", "income", "cash"]:
-            c = 'Method only works for overview, income, and cash statements'
-            raise bb_exceptions.BBAnalyticalError(c)
-
         # get BUs from time periods
         bu_bbid = self.bu_bbid
         # source BU whose financials will be aggregated
@@ -438,8 +437,13 @@ class SummaryMaker:
         target_bu = summary_period.bu_directory[bu_bbid]
         target_fins = target_bu.get_financials(summary_period)
 
-        source_statement = getattr(source_fins, statement_name)
-        target_statement = getattr(target_fins, statement_name)
+        source_statement = getattr(source_fins, statement_name, None)
+        target_statement = getattr(target_fins, statement_name, None)
+        if not source_statement:
+            return
+        if not target_statement:
+            target_fins.add_statement(statement_name)
+            target_statement = getattr(target_fins, statement_name)
 
         # label by ISO end date of the source period
         label = format(source.end)
@@ -500,7 +504,7 @@ class SummaryMaker:
             self.onkey, summary_period.periods_used
         ))
 
-        for name in ["overview", "income", "cash"]:
+        for name in ["overview", "income", "cash", "ownership"]:
             self.add_statement_summary(source, name)
 
     def wrap(self):
