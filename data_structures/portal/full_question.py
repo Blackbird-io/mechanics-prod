@@ -419,6 +419,16 @@ class FullQuestion:
         else:
             self.prompt = self.basic_prompt
     
+        try:
+            self.short = self.short.format(**self.context)
+        except KeyError:
+            pass
+
+        try:
+            self.comment = self.comment.format(**self.context)
+        except KeyError:
+            pass
+
     def update(self, mini_q):
         """
 
