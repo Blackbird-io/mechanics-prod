@@ -29,8 +29,6 @@ Financials            a dynamic class that holds standard and custom statements
 # Imports
 import logging
 
-from functools import lru_cache
-
 import bb_settings
 
 from data_structures.system.bbid import ID
@@ -183,19 +181,6 @@ class Financials:
         )
 
         return result
-
-    @staticmethod
-    @lru_cache(maxsize=512)
-    def get_cached(bu_bbid, period_end, summary=None):
-        """
-
-
-        Financials.get_cached() -> None
-
-
-        Financials for bu_bbid and period. Cached by functools.
-        """
-        return Financials()
 
     def chef_ordered(self):
         """
