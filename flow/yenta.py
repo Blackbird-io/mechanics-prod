@@ -86,6 +86,8 @@ class Yenta():
     ====================  ======================================================
     """
     TM = None
+    # for monitoring topic selection between questions
+    diary = []
 
     @classmethod
     def disconnect(cls):
@@ -239,15 +241,14 @@ class Yenta():
         #
         if not pool:
             pool = self.TM.local_catalog.by_id.keys()
-        #
-        pool = set(pool) - model.target.used
         pool = sorted(pool)
         # sort pool into list to maintain stable evaluation order and results
 
+        work = dict()
+        work["target criterion"] = targ_criterion.copy()
+        work["target profile"] = targ_profile.copy()
+        work["eligibles"] = dict()
         if trace:
-            work = dict()
-            work["target criterion"] = targ_criterion.copy()
-            work["target profile"] = targ_profile.copy()
             work["revised pool"] = pool.copy()
             work["scoring"] = dict()
 
@@ -260,6 +261,7 @@ class Yenta():
             missing_on_target = topic_criterion - targ_profile
             prohibited_on_topic = topic_profile & target.tags.prohibited
             prohibited_on_target = targ_profile & topic_tags.prohibited
+            used = bbid in model.target.used
 
             if trace:
                 work["scoring"][bbid] = dict()
@@ -273,14 +275,19 @@ class Yenta():
                 missing_on_target,
                 prohibited_on_topic,
                 prohibited_on_target,
+                used,
             )):
                 continue
             else:
                 # all requirements satisfied, topic eligible
                 eligibles.append(bbid)
-        if trace:
-            self.trace = work
+                work["eligibles"][bbid] = {
+                    'topic criterion': topic_criterion,
+                    'topic profile': topic_profile,
+                }
 
+        self.trace = work
+        self.diary.append(work)
         return eligibles
 
     def pick_best(self, target, model, candidates, combined=True):
@@ -363,7 +370,15 @@ class Yenta():
             if raw_score >= best_raw_score:
                 best_raw_score = raw_score
 
-        for scored_bbid, [known_raw_score, known_rel_score] in self.scores.items():
+            self.trace['eligibles'][bbid].update(
+                topic=topic,
+                raw_score=raw_score,
+                rel_score=rel_score,
+            )
+
+        for (
+            scored_bbid, [known_raw_score, known_rel_score]
+        ) in self.scores.items():
             if known_raw_score >= best_raw_score:
                 best_candidates.append(scored_bbid)
             else:
@@ -454,6 +469,7 @@ class Yenta():
         else:
             fp.guide.selection.record_dry_run()
 
+        self.trace["chosen topic"] = chosen_topic
         return chosen_topic
 
     def tie_breaker(self, candidates):

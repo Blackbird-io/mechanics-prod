@@ -180,6 +180,7 @@ class Analyst:
         message = self.choose_direction(message, *pargs, **kargs)
         # use choose_direction() to for substantive work. method also weeds
         # out messages that are ready for portal delivery right away.
+        yenta.diary.clear()
         while self.status in [TOPIC_NEEDED, PENDING_RESPONSE]:
             #
             model = message[0]
@@ -187,13 +188,13 @@ class Analyst:
             if self.status == PENDING_RESPONSE:
                 topic_bbid = model.transcript[-1][0]["topic_bbid"]
                 topic = yenta.TM.local_catalog.issue(topic_bbid)
-                logger.info(topic.source)
+                logger.info('{} {}'.format(self.status, topic.source))
                 message = topic.process(message)
             #
             elif self.status == TOPIC_NEEDED:
                 topic = yenta.select_topic(model)
                 if topic:
-                    logger.info(topic.source)
+                    logger.info('{} {}'.format(self.status, topic.source))
                     message = topic.process(message)
                 else:
                     pass
