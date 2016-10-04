@@ -221,12 +221,8 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         Returns this BUs financials in a given period.
         """
 
+        summary = getattr(period, 'summary', None)
         financials = self.financials
-
-        # summary = getattr(period, 'summary', None)
-        # financials = Financials.get_cached(self.id.bbid, period.end, summary)
-        # financials.relationships.set_parent(self)
-        # financials.period = period
 
         return financials
 

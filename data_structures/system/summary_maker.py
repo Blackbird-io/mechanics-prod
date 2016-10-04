@@ -86,7 +86,6 @@ class SummaryMaker:
         self._fiscal_year_end = None
         self.time_line = timeline
         self.bu_bbid = None
-        self.period_info = dict()
         self.init_summaries()
 
     @property
@@ -157,6 +156,8 @@ class SummaryMaker:
         Basic initialization of the summary dictionaries.
         """
         self.summaries = dict()
+        self.complete_periods = dict()
+        self.period_sources = dict()
         for key, periods in (
             (self.QUARTERLY_KEY, 3),
             (self.ANNUAL_KEY, 12),
@@ -166,6 +167,8 @@ class SummaryMaker:
             # output quarter or year being currently processed
             timeline_summary.summary_period = None
             self.summaries[key] = timeline_summary
+            self.complete_periods[key] = periods
+            self.period_sources[key] = dict()
 
     def parse_period(self, period):
         """
@@ -227,22 +230,20 @@ class SummaryMaker:
         # last day of this quarter
         qt_close = qt_start + relativedelta(months=3) - relativedelta(days=1)
         # where am i in the quarter and in the year
-        info = {
-            self.QUARTERLY_KEY: {
-                'period': (yr_close.year, qt_num),
-                'enter': qt_start,
-                'close': qt_close,
-                'into': qt_into,
-            },
-            self.ANNUAL_KEY: {
-                'period': yr_close.year,
-                'enter': yr_start,
-                'close': yr_close,
-                'into': yr_into,
-            },
+        # month end -> quarter info
+        self.period_sources[self.QUARTERLY_KEY][period.end] = {
+            'period': (yr_close.year, qt_num),
+            'enter': qt_start,
+            'close': qt_close,
+            'into': qt_into,
         }
-        self.period_info = info
-        return info
+        # quarter end -> annual info
+        self.period_sources[self.ANNUAL_KEY][qt_close] = {
+             'period': yr_close.year,
+             'enter': yr_start,
+             'close': yr_close,
+             'into': yr_into,
+        }
 
     def add(self, source):
         """
@@ -267,7 +268,7 @@ class SummaryMaker:
             self.flush()
 
             # create next target period
-            new_info = self.period_info[self.onkey]
+            new_info = self.period_sources[self.onkey][source.end]
             enter = new_info['enter']
             close = new_info['close']
             summary_period = TimePeriodBase(enter, close)
@@ -347,10 +348,8 @@ class SummaryMaker:
 
             # add period count
             target_bu.periods_used = summary_period.periods_used
-            if self.onkey == self.QUARTERLY_KEY:
-                target_bu.complete = (target_bu.periods_used == 3)
-            elif self.onkey == self.ANNUAL_KEY:
-                target_bu.complete = (target_bu.periods_used == 12)
+            full = (target_bu.periods_used == self.complete_periods[self.onkey])
+            target_bu.complete = full
 
             # cascade from quarterly to annual
             if self.onkey == self.QUARTERLY_KEY:
@@ -372,7 +371,11 @@ class SummaryMaker:
         source_line's attributes.
         """
         summary_type = target_line.summary_type
-        if summary_type in ('derive', 'skip'):
+        if target_line._details:
+            for new_line in target_line._details.values():
+                old_line = source_line.find_first(new_line.name)
+                self.add_line_summary(old_line, new_line, label=label)
+        elif summary_type in ('derive', 'skip'):
             # driver will do the work if 'derive'
             pass
         elif summary_type in ('sum', 'average'):
@@ -402,16 +405,11 @@ class SummaryMaker:
             )
             raise bb_exceptions.BBAnalyticalError(c)
         else:
-            if target_line._details:
-                for new_line in target_line._details.values():
-                    old_line = source_line.find_first(new_line.name)
-                    self.add_line_summary(old_line, new_line, label=label)
-            else:
-                # this is equivalent to 'last'
-                target_line.set_value(
-                    source_line.value, "SummaryMaker", override=True
-                )
-                target_line.xl.reference.source = source_line
+            # this is equivalent to 'last'
+            target_line.set_value(
+                source_line.value, "SummaryMaker", override=True
+            )
+            target_line.xl.reference.source = source_line
 
     def add_statement_summary(self, source, statement_name):
         """
@@ -522,7 +520,7 @@ class SummaryMaker:
             timeline_summary = self.summaries[key]
             timeline_summary.summary_period = None
             timeline_summary.source = None
-        self.period_info.clear()
+        self.period_sources = None
         self.period = None
 
     # *************************************************************************#
