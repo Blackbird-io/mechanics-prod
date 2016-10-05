@@ -158,7 +158,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         # Get string list, slap a new-line at the end of every line and return
         # a string with all the lines joined together.
         if not lines:
-            lines = views.view_as_unit(self)
+            lines = views.view_as_base(self)
 
         # Add empty strings for header and footer padding
         lines.insert(0, "")
