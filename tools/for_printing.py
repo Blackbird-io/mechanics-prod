@@ -308,32 +308,61 @@ def view_as_unit(
     id_tail = str(company.id.bbid)[-tail_width:]
     data["ID"] = id_dots + id_tail
 
-    date_of_birth = company.life.events.get(company.life.KEY_BIRTH)
+    try:
+        date_of_birth = company.life.events.get(company.life.KEY_BIRTH)
+    except AttributeError:
+        date_of_birth = None
+
     if date_of_birth:
         dob = date_of_birth.isoformat()
     else:
         dob = "n/a"
     data["DOB"] = dob
 
-    if company.life.percent is not None:
-        life = '{}%'.format(round(company.life.percent))
+    try:
+        percent = company.life.percent
+    except AttributeError:
+        percent = None
+
+    if percent is not None:
+        life = '{}%'.format(round(percent))
     else:
         life = "n/a"
     data["LIFE"] = life
 
-    event_name = company.life.get_latest()[0]
+    try:
+        event_name = company.life.get_latest()[0]
+    except AttributeError:
+        event_name = None
+
     event_name = event_name or "n/a"
     # Choose empty string if life has no events yet
     data["EVENT"] = event_name[:data_width]
 
-    unit_type = str(company.type)[:data_width]
-    data["TYPE"] = unit_type.upper()
+    try:
+        unit_type = str(company.type)[:data_width]
+    except AttributeError:
+        unit_type = "n/a"
+    else:
+        unit_type = unit_type.upper()
 
-    data["FILL"] = str(company.filled)
+    data["TYPE"] = unit_type
 
-    data["COMPS"] = str(len(company.components.get_living()))
+    try:
+        data["FILL"] = str(company.filled)
+    except AttributeError:
+        data["FILL"] = "n/a"
 
-    data["SIZE"] = str(company.size)[:data_width]
+    try:
+        data["COMPS"] = str(len(company.components.get_living()))
+    except AttributeError:
+        data["COMPS"] = "n/a"
+
+    try:
+        data["SIZE"] = str(company.size)[:data_width]
+    except AttributeError:
+        data["SIZE"] = "n/a"
+
     #
     # assemble the real thing
     lines = []
@@ -349,54 +378,56 @@ def view_as_unit(
 
     # Post-processing (dashed lines for units scheduled to open in the
     # future, x's for units that have already closed)
+    try:
+        if company.life.ref_date and date_of_birth:
+            if company.life.ref_date < date_of_birth:
+                #
+                alt_width = int(box_width / 2) + 1
+                alt_border = (top_element + alt_element) * alt_width
+                alt_border = alt_border[:(box_width - 2)]
+                alt_border = alt_corner + alt_border + alt_corner
+                #
+                core_lines = lines[1:-1]
+                for i in range(0, len(core_lines), 2):
+                    line = core_lines[i]
+                    core_symbols = line[1:-1]
+                    line = alt_element + core_symbols + alt_element
+                    core_lines[i] = line
+                #
+                lines = [alt_border] + core_lines + [alt_border]
 
-    if company.life.ref_date and date_of_birth:
-        if company.life.ref_date < date_of_birth:
-            #
-            alt_width = int(box_width / 2) + 1
-            alt_border = (top_element + alt_element) * alt_width
-            alt_border = alt_border[:(box_width - 2)]
-            alt_border = alt_corner + alt_border + alt_corner
-            #
-            core_lines = lines[1:-1]
-            for i in range(0, len(core_lines), 2):
-                line = core_lines[i]
-                core_symbols = line[1:-1]
-                line = alt_element + core_symbols + alt_element
-                core_lines[i] = line
-            #
-            lines = [alt_border] + core_lines + [alt_border]
+        date_of_death = company.life.events.get(company.life.KEY_DEATH)
+        if company.life.ref_date and date_of_death:
+            if company.life.ref_date > date_of_death:
 
-    date_of_death = company.life.events.get(company.life.KEY_DEATH)
-    if company.life.ref_date and date_of_death:
-        if company.life.ref_date > date_of_death:
+                alt_lines = []
+                line_count = len(lines)
+                down_start = int((box_width - line_count) / 2)
+                # X is line_count lines wide
+                up_start = down_start + line_count
 
-            alt_lines = []
-            line_count = len(lines)
-            down_start = int((box_width - line_count) / 2)
-            # X is line_count lines wide
-            up_start = down_start + line_count
-
-            for i in range(line_count):
-                #
-                # replace the character at (down_start + i) with "\"
-                # replace the character at (up_start - i) with "/"
-                #
-                line = lines[i]
-                #
-                down_pos = (down_start + i)
-                seg_a = line[: (down_pos)]
-                seg_b = line[(down_pos + 1):]
-                line = seg_a + "\\" + seg_b
-                #
-                up_pos = (up_start - i)
-                seg_a = line[:(up_pos)]
-                seg_b = line[(up_pos + 1):]
-                line = seg_a + "/" + seg_b
-                # line = line.casefold()
-                #
-                alt_lines.append(line)
-            lines = alt_lines
+                for i in range(line_count):
+                    #
+                    # replace the character at (down_start + i) with "\"
+                    # replace the character at (up_start - i) with "/"
+                    #
+                    line = lines[i]
+                    #
+                    down_pos = (down_start + i)
+                    seg_a = line[: (down_pos)]
+                    seg_b = line[(down_pos + 1):]
+                    line = seg_a + "\\" + seg_b
+                    #
+                    up_pos = (up_start - i)
+                    seg_a = line[:(up_pos)]
+                    seg_b = line[(up_pos + 1):]
+                    line = seg_a + "/" + seg_b
+                    # line = line.casefold()
+                    #
+                    alt_lines.append(line)
+                lines = alt_lines
+    except AttributeError:
+        pass
 
     return lines
 
