@@ -69,7 +69,7 @@ line_chef = LineChef()
 
 
 transcript_chef = TranscriptChef()
-type_codes = TypeCodes()
+
 unit_chef = UnitChef()
 
 get_column_letter = xlio.utils.get_column_letter
@@ -392,7 +392,7 @@ class ModelChef:
             in_effect_cell = my_tab.cell(column=in_effect_column,
                                          row=current_row)
             in_effect_cell.set_explicit_value(
-                link, data_type=type_codes.FORMULA
+                link, data_type=TypeCodes.FORMULA
             )
             CellStyles.format_parameter(in_effect_cell)
 
@@ -473,7 +473,7 @@ class ModelChef:
                     link = link_template.format(**cos)
 
                     param_cell.set_explicit_value(
-                        link, data_type=type_codes.FORMULA
+                        link, data_type=TypeCodes.FORMULA
                     )
 
                 CellStyles.format_parameter(param_cell)

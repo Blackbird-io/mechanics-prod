@@ -60,7 +60,7 @@ from .formulas import FormulaTemplates
 
 
 formula_templates = FormulaTemplates()
-type_codes = TypeCodes()
+
 
 get_column_letter = xlio.utils.get_column_letter
 
@@ -136,7 +136,7 @@ class LineChef:
                 raise ExcelPrepError
 
             cell.set_explicit_value(formula_string,
-                                    data_type=type_codes.FORMULA)
+                                    data_type=TypeCodes.FORMULA)
 
     def chop_line(
         self, sheet, column, line, row_container,
@@ -257,7 +257,7 @@ class LineChef:
                 subtotal_cell = sheet.cell(column=column,
                                            row=sheet.bb.current_row)
                 subtotal_cell.set_explicit_value(detail_summation,
-                                                 data_type=type_codes.FORMULA)
+                                                 data_type=TypeCodes.FORMULA)
 
                 line.xl.detailed.ending = sheet.bb.current_row
                 line.xl.detailed.cell = subtotal_cell
@@ -351,7 +351,7 @@ class LineChef:
                 subtotal_cell = sheet.cell(column=column,
                                            row=sheet.bb.current_row)
                 subtotal_cell.set_explicit_value(detail_summation,
-                                                 data_type=type_codes.FORMULA)
+                                                 data_type=TypeCodes.FORMULA)
 
                 line.xl.detailed.ending = sheet.bb.current_row
                 line.xl.detailed.cell = subtotal_cell
@@ -541,7 +541,7 @@ class LineChef:
                 column=column, row=detail_endrow.number()
             )
             subtotal_cell.set_explicit_value(
-                detail_summation, data_type=type_codes.FORMULA
+                detail_summation, data_type=TypeCodes.FORMULA
             )
 
             line.xl.detailed.ending = detail_endrow.tip
@@ -642,7 +642,7 @@ class LineChef:
                                             row=sheet.bb.current_row)
                     batch_cell.set_explicit_value(
                         batch_summation,
-                        data_type=type_codes.FORMULA
+                        data_type=TypeCodes.FORMULA
                     )
 
                     line.xl.consolidated.array.append(batch_cell)
@@ -673,7 +673,7 @@ class LineChef:
             summation_cell = sheet.cell(column=column,
                                         row=sheet.bb.current_row)
             summation_cell.set_explicit_value(summation,
-                                              data_type=type_codes.FORMULA)
+                                              data_type=TypeCodes.FORMULA)
 
             line.xl.consolidated.cell = summation_cell
             line.xl.cell = summation_cell
@@ -882,7 +882,7 @@ class LineChef:
 
             calc_cell = sheet.cell(column=period_column,
                                    row=sheet.bb.current_row)
-            calc_cell.set_explicit_value(formula, data_type=type_codes.FORMULA)
+            calc_cell.set_explicit_value(formula, data_type=TypeCodes.FORMULA)
 
             # add current step to materials dictionary
             materials["steps"][key] = calc_cell.coordinate
@@ -972,7 +972,7 @@ class LineChef:
             source = line.xl.reference.source
             excel_str = "=" + source.xl.get_coordinates(include_sheet=include)
 
-            cell.set_explicit_value(excel_str, data_type=type_codes.FORMULA)
+            cell.set_explicit_value(excel_str, data_type=TypeCodes.FORMULA)
 
             line.xl.ending = sheet.bb.current_row
             line.xl.reference.cell = ref_cell

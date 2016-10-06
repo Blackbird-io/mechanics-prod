@@ -61,7 +61,7 @@ from .delayed_cell import DelayedCell
 
 
 formula_templates = FormulaTemplates()
-type_codes = TypeCodes()
+
 
 get_column_letter = xlio.utils.get_column_letter
 
