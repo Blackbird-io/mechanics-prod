@@ -29,14 +29,10 @@ LineChef              class with methods to chop BB statements into dynamic
 
 
 # Imports
-import calendar
 import openpyxl as xlio
-import re
 import itertools
 
 from openpyxl.comments import Comment
-from openpyxl.styles import Alignment
-
 from bb_exceptions import ExcelPrepError, BBAnalyticalError
 from chef_settings import (
     COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING,
@@ -44,7 +40,8 @@ from chef_settings import (
     SUMMARY_INCLUDES_MONTHS, SUMMARY_INCLUDES_QUARTERS,
 )
 from data_structures.modelling.line_item import LineItem
-from ._chef_tools import group_lines, check_alignment
+from ._chef_tools import group_lines, check_alignment, set_label, \
+    set_param_rows, rows_to_coordinates
 from .cell_styles import CellStyles
 from .data_types import TypeCodes
 from .field_names import FieldNames
@@ -57,13 +54,7 @@ from .formulas import FormulaTemplates
 # n/a
 
 # Module Globals
-
-
-
-
-
 get_column_letter = xlio.utils.get_column_letter
-
 
 # Classes
 class LineChef:
@@ -265,7 +256,7 @@ class LineChef:
 
                 if set_labels:
                     label = indent * " " + line.tags.title
-                    self._set_label(sheet=sheet,
+                    set_label(sheet=sheet,
                                     label=label,
                                     row=sheet.bb.current_row)
 
@@ -363,7 +354,7 @@ class LineChef:
                         label_column = 1
 
                     label = indent * " " + line.tags.title
-                    self._set_label(sheet=sheet,
+                    set_label(sheet=sheet,
                                     label=label,
                                     row=sheet.bb.current_row,
                                     column=label_column)
@@ -648,7 +639,7 @@ class LineChef:
                     line.xl.consolidated.array.append(batch_cell)
 
                     if label:
-                        self._set_label(
+                        set_label(
                             sheet=sheet,
                             label=label_line,
                             row=sheet.bb.current_row,
@@ -681,7 +672,7 @@ class LineChef:
             if set_labels:
                 label = line.tags.title
                 label = ((indent - LineItem.TAB_WIDTH) * " ") + label
-                self._set_label(sheet=sheet, label=label,
+                set_label(sheet=sheet, label=label,
                                 row=sheet.bb.current_row)
 
             line.xl.consolidated.ending = sheet.bb.current_row
@@ -709,7 +700,7 @@ class LineChef:
         if not line.xl.derived.calculations:
             pass
         else:
-            self._set_param_rows(line, sheet)
+            set_param_rows(line, sheet)
             sheet.bb.outline_level += 1
             for data_cluster in line.xl.derived.calculations:
 
@@ -765,7 +756,7 @@ class LineChef:
 
                 indented_label = (indent * " ") + private_label
 
-                self._set_label(
+                set_label(
                     sheet=sheet,
                     label=indented_label,
                     row=sheet.bb.current_row,
@@ -799,7 +790,7 @@ class LineChef:
             # Will add a blank row after all the columns
 
         # Transform the range values from rows to coordinates
-        param_coordinates = self._rows_to_coordinates(
+        param_coordinates = rows_to_coordinates(
             lookup=private_data.rows,
             column=period_column)
 
@@ -831,7 +822,7 @@ class LineChef:
         materials['parameters'] = param_coordinates
 
         try:
-            life_coordinates = self._rows_to_coordinates(
+            life_coordinates = rows_to_coordinates(
                 lookup=sheet.bb.life.rows,
                 column=period_column)
         except AttributeError:
@@ -840,7 +831,7 @@ class LineChef:
             materials["life"] = life_coordinates
 
         try:
-            event_coordinates = self._rows_to_coordinates(
+            event_coordinates = rows_to_coordinates(
                 lookup=sheet.bb.events.rows,
                 column=period_column)
         except AttributeError:
@@ -850,7 +841,7 @@ class LineChef:
 
         try:
             size = getattr(sheet.bb, FieldNames.SIZE)
-            size_coordinates = self._rows_to_coordinates(lookup=size.rows,
+            size_coordinates = rows_to_coordinates(lookup=size.rows,
                                                          column=period_column)
         except AttributeError:
             pass
@@ -924,7 +915,7 @@ class LineChef:
 
                 if set_labels:
                     label = (indent * " ") + key
-                    self._set_label(sheet=sheet, label=label,
+                    set_label(sheet=sheet, label=label,
                                     row=sheet.bb.current_row)
 
                 sheet.bb.current_row += 1
@@ -935,7 +926,7 @@ class LineChef:
                 if set_labels:
                     label = ((indent - LineItem.TAB_WIDTH) * " ") \
                         + line.tags.title
-                    self._set_label(sheet=sheet, label=label,
+                    set_label(sheet=sheet, label=label,
                                     row=sheet.bb.current_row)
 
         return sheet
@@ -981,7 +972,7 @@ class LineChef:
                 line.xl.cell = cell
 
             if set_labels:
-                self._set_label(label=label, sheet=sheet,
+                set_label(label=label, sheet=sheet,
                                 row=sheet.bb.current_row)
 
         return sheet
@@ -1023,7 +1014,7 @@ class LineChef:
             line.xl.cell = cell
 
             if set_labels:
-                self._set_label(label=label, sheet=sheet,
+                set_label(label=label, sheet=sheet,
                                 row=sheet.bb.current_row)
 
         return sheet
@@ -1050,127 +1041,3 @@ class LineChef:
             keys = driver_data.formula.keys()
 
         return keys
-
-    def _rows_to_coordinates(self, *pargs, lookup, column):
-        """
-
-
-        LineChef._rows_to_coordinates -> dict
-
-        --``lookup`` is a lookup table
-        --``column`` must be a column number reference
-
-        Method returns a dictionary of row name:row coordinate within the given
-        column.
-        """
-
-        result = dict()
-        alpha_column = get_column_letter(column)
-
-        for k in lookup.by_name:
-            row = lookup.get_position(k)
-            result[k] = alpha_column + str(row)
-
-        return result
-
-    def _set_label(self, *pargs, label, sheet, row, column=None,
-                   overwrite=False,
-                   formatter=None):
-        """
-
-
-        LineChef._set_label() -> Worksheet
-
-        --``label`` must be value to set as a cell label
-        --``sheet`` must be an instance of openpyxl Worksheet
-        --``row`` must be a row index where ``label`` should be written
-        --``column`` column index or None where ``label`` should be written
-        --``overwrite`` must be a boolean; True overwrites existing value,
-           if any; default is False
-        --``formatter`` method in cell_styles to be called on the label cell
-
-        Set (column, row) cell value to label. Throw exception if cell already
-        has a different label, unless ``overwrite`` is True.
-
-        If ``column`` is None, method attempts to locate the labels column in
-        the sheet.bb.parameters area.
-        """
-        if column is None:
-            if getattr(sheet.bb, FieldNames.PARAMETERS, None):
-                param_area = getattr(sheet.bb, FieldNames.PARAMETERS)
-                cols = param_area.columns
-                column = cols.get_position(FieldNames.LABELS)
-            else:
-                column = 2
-
-        label_cell = sheet.cell(column=column, row=row)
-        existing_label = label_cell.value
-
-        if overwrite or not existing_label:
-            label_cell.value = label
-        else:
-            if existing_label != label:
-
-                c = """
-                Something is wrong with our alignment. We are trying to
-                write a parameter to an existing row with a different label.
-                """
-                print(c)
-                print("Old Label:", existing_label)
-                print("New Label:", label)
-                print("Sheet:", sheet.title)
-                print("Row:", row)
-                print("Col:", column)
-
-                # raise ExcelPrepError(c)
-                # Check to make sure we are writing to the right row; if the
-                # label doesn't match, we are in trouble.
-
-        if formatter:
-            formatter(label_cell)
-
-        return sheet
-
-    @staticmethod
-    def _set_param_rows(line, sheet):
-        try:
-            template_xl = sheet.bb.line_directory[line.id.bbid]
-        except KeyError:
-            template_xl = None
-
-        if template_xl:
-            for check_data, driver_data in zip(template_xl.derived.calculations,
-                                               line.xl.derived.calculations):
-                if check_data.name != driver_data.name:
-                    c = "Formulas are not consistent for line over time!"
-                    raise ExcelPrepError(c)
-
-                driver_data.rows = check_data.rows
-        elif FILTER_PARAMETERS:
-            # get params to keep
-            for driver_data in line.xl.derived.calculations:
-                params_keep = []
-                for step in driver_data.formula.values():
-                    temp_step = [m.start() for m in re.finditer('parameters\[*',
-                                                                step)]
-
-                    for idx in temp_step:
-                        jnk = step[idx:]
-                        idx_end = jnk.find(']') + idx
-                        params_keep.append(step[idx + 11:idx_end])
-
-            # clean driver_data
-            new_rows = []
-            for item in driver_data.rows:
-                if item[FieldNames.LABELS] in params_keep:
-                    new_rows.append(item)
-
-                try:
-                    temp = driver_data.conversion_map[item[FieldNames.LABELS]]
-                except KeyError:
-                    pass
-                else:
-                    if temp in params_keep:
-                        new_rows.append(item)
-
-            driver_data.rows = new_rows
