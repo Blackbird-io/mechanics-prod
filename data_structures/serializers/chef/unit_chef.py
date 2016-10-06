@@ -64,7 +64,7 @@ bad_char_table = {ord(c): REPLACEMENT_CHAR for c in _INVALID_CHARS}
 
 
 
-formula_templates = FormulaTemplates()
+
 
 
 
@@ -172,7 +172,7 @@ class UnitChef:
 
             # Link the period to the master
             current_cell = sheet.cell(column=active_column, row=new_row)
-            link = formula_templates.ADD_COORDINATES
+            link = FormulaTemplates.ADD_COORDINATES
             link = link.format(coordinates=master_cell.coordinate)
             current_cell.set_explicit_value(link, data_type=TypeCodes.FORMULA)
             CellStyles.format_parameter(current_cell)
@@ -655,7 +655,7 @@ class UnitChef:
                 group_lines(sheet, existing_row)
 
             if master_cell.value == active_cell.value:
-                link_template = formula_templates.ADD_COORDINATES
+                link_template = FormulaTemplates.ADD_COORDINATES
                 link = link_template.format(coordinates=master_cell.coordinate)
 
                 active_cell.set_explicit_value(link,
@@ -697,7 +697,7 @@ class UnitChef:
                                        row=self.SCENARIO_ROW)
         active_label_cell.value = FieldNames.IN_EFFECT
 
-        template = formula_templates.LINK_TO_CELL_ON_SHEET
+        template = FormulaTemplates.LINK_TO_CELL_ON_SHEET
         link = template.format(**info)
         scen_cell = sheet.cell(column=self.MASTER_COLUMN,
                                row=self.SCENARIO_ROW)
@@ -811,7 +811,7 @@ class UnitChef:
         active_cell.value = unit.size
 
         if master_cell.value == active_cell.value:
-            link_template = formula_templates.ADD_COORDINATES
+            link_template = FormulaTemplates.ADD_COORDINATES
             link = link_template.format(coordinates=master_cell.coordinate)
 
             active_cell.set_explicit_value(link,
@@ -851,7 +851,7 @@ class UnitChef:
 
         unit_params = ex_params - timeline_params
 
-        template = formula_templates.LINK_TO_COORDINATES
+        template = FormulaTemplates.LINK_TO_COORDINATES
         for param in unit_params:
             this_row = parameters.rows.by_name[param]
             this_col = period_column
@@ -871,7 +871,7 @@ class UnitChef:
             else:
                 CellStyles.format_hardcoded(cell)
 
-        template = formula_templates.LINK_TO_COORDINATES
+        template = FormulaTemplates.LINK_TO_COORDINATES
         for param in sorted(new_params):
             if parameters.rows.ending:
                 # there are existing parameters
@@ -1088,7 +1088,7 @@ class UnitChef:
                 cos["row"] = source_row
                 cos["alpha_column"] = get_column_letter(source_column)
 
-                link = formula_templates.LINK_TO_CELL_ON_SHEET.format(**cos)
+                link = FormulaTemplates.LINK_TO_CELL_ON_SHEET.format(**cos)
                 local_cell.set_explicit_value(link,
                                               data_type=TypeCodes.FORMULA)
 
@@ -1125,7 +1125,7 @@ class UnitChef:
         param_area.columns.by_name[FieldNames.LABELS] = self.LABEL_COLUMN
         param_area.columns.by_name[FieldNames.MASTER] = self.MASTER_COLUMN
 
-        template = formula_templates.ADD_CELL_FROM_SHEET
+        template = FormulaTemplates.ADD_CELL_FROM_SHEET
         source_label_column = source_area.columns.by_name[FieldNames.LABELS]
         src_col = get_column_letter(source_label_column)
 
@@ -1149,7 +1149,7 @@ class UnitChef:
         time_params = time_params.keys()
         timeline_area.rows.by_name[FieldNames.TITLE] = self.TITLE_ROW
 
-        template = formula_templates.ADD_CELL_FROM_SHEET
+        template = FormulaTemplates.ADD_CELL_FROM_SHEET
         src_vals = \
             set(source_area.columns.by_name.keys()) - {FieldNames.LABELS}
 

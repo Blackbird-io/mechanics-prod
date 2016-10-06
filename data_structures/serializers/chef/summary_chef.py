@@ -59,7 +59,7 @@ from .unit_chef import UnitChef
 # Module Globals
 
 
-formula_templates = FormulaTemplates()
+
 line_chef = SummaryLineChef()
 
 

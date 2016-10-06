@@ -60,7 +60,7 @@ from .delayed_cell import DelayedCell
 # Module Globals
 
 
-formula_templates = FormulaTemplates()
+
 
 
 get_column_letter = xlio.utils.get_column_letter
