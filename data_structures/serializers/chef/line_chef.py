@@ -59,7 +59,7 @@ from .formulas import FormulaTemplates
 # Module Globals
 
 
-formula_templates = FormulaTemplates()
+
 
 
 get_column_letter = xlio.utils.get_column_letter
@@ -235,7 +235,7 @@ class LineChef:
                     check=check
                 )
 
-                link_template = formula_templates.ADD_COORDINATES
+                link_template = FormulaTemplates.ADD_COORDINATES
 
                 include = detail.xl.cell.parent is not sheet
                 cos = detail.xl.get_coordinates(include_sheet=include)
@@ -335,7 +335,7 @@ class LineChef:
                                         set_labels=set_labels,
                                         indent=sub_indent)
 
-                link_template = formula_templates.ADD_COORDINATES
+                link_template = FormulaTemplates.ADD_COORDINATES
 
                 include = detail.xl.cell.parent is not sheet
                 cos = detail.xl.get_coordinates(include_sheet=include)
@@ -526,7 +526,7 @@ class LineChef:
                     row_container=detail_rows,
                     indent=sub_indent
                 )
-                link_template = formula_templates.ADD_COORDINATES
+                link_template = FormulaTemplates.ADD_COORDINATES
                 include = detail.xl.cell.parent is not sheet
                 cos = detail.xl.get_coordinates(include_sheet=include)
                 link = link_template.format(coordinates=cos)
@@ -609,7 +609,7 @@ class LineChef:
             links_per_cell = max(1, links_per_cell)
             # Make sure we include at least 1 link per cell.
 
-            link_template = formula_templates.ADD_COORDINATES
+            link_template = FormulaTemplates.ADD_COORDINATES
 
             sheet.bb.current_row += 1
             sheet.bb.outline_level += 1
@@ -669,7 +669,7 @@ class LineChef:
                 "alpha_column": alpha_column
             }
 
-            summation = formula_templates.SUM_RANGE.format(**summation_params)
+            summation = FormulaTemplates.SUM_RANGE.format(**summation_params)
             summation_cell = sheet.cell(column=column,
                                         row=sheet.bb.current_row)
             summation_cell.set_explicit_value(summation,

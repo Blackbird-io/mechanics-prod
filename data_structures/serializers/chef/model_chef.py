@@ -56,7 +56,7 @@ IMAGE_PATH = os.path.join(
 )
 
 # Module Globals
-formula_templates = FormulaTemplates()
+
 line_chef = LineChef()
 transcript_chef = TranscriptChef()
 unit_chef = UnitChef()
