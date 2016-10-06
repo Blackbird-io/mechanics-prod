@@ -65,7 +65,7 @@ bad_char_table = {ord(c): REPLACEMENT_CHAR for c in _INVALID_CHARS}
 
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
-sheet_style = SheetStyle()
+
 tab_names = TabNames()
 type_codes = TypeCodes()
 
@@ -147,7 +147,7 @@ class UnitChef:
         label_column = parameters.columns.get_position(field_names.LABELS)
         master_column = parameters.columns.get_position(field_names.MASTER)
 
-        sheet_style.set_column_width(sheet, master_column)
+        SheetStyle.set_column_width(sheet, master_column)
 
         starting = sheet.bb.current_row or 0
         new_row = starting + 1
@@ -255,7 +255,7 @@ class UnitChef:
             # Main problem lies in consolidation logic.
 
         # 2.5 add area and statement labels and sheet formatting
-        sheet_style.style_sheet(sheet)
+        SheetStyle.style_sheet(sheet)
 
         for statement, row in fins_dict.items():
             CellStyles.format_area_label(sheet, statement, row)
@@ -942,7 +942,7 @@ class UnitChef:
         sheet.bb.current_row += 1
 
         current = sheet.bb.time_line.columns.get_position(unit.period.end)
-        sheet_style.set_column_width(sheet, current, width=22)
+        SheetStyle.set_column_width(sheet, current, width=22)
 
         statement_row = sheet.bb.current_row + 1
         statement = unit.financials.valuation
@@ -953,7 +953,7 @@ class UnitChef:
             set_labels=True)
 
         # 1.5 add area and statement labels and sheet formatting
-        sheet_style.style_sheet(sheet)
+        SheetStyle.style_sheet(sheet)
         CellStyles.format_area_label(sheet, statement.name, statement_row)
 
         # # 1.6 add selector cell
@@ -1186,7 +1186,7 @@ class UnitChef:
                 cell.set_explicit_value(link, data_type=type_codes.FORMULA)
                 CellStyles.format_parameter(cell)
 
-            sheet_style.set_column_width(sheet, active_column)
+            SheetStyle.set_column_width(sheet, active_column)
 
             active_column += 1
 

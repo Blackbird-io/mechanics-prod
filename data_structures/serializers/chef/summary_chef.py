@@ -61,7 +61,7 @@ from .unit_chef import UnitChef
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
 line_chef = SummaryLineChef()
-sheet_style = SheetStyle()
+
 tab_names = TabNames()
 transcript_chef = TranscriptChef()
 type_codes = TypeCodes()
@@ -216,7 +216,7 @@ class SummaryChef:
         output_rows.resolve_cells()
 
         # Styling and formatting that's left
-        sheet_style.style_sheet(sheet, label_areas=False)
+        SheetStyle.style_sheet(sheet, label_areas=False)
 
         # Make pretty border
         CellStyles.format_border_group(
