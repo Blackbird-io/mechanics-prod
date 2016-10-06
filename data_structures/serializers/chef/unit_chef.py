@@ -62,7 +62,7 @@ REPLACEMENT_CHAR = None
 bad_char_table = {ord(c): REPLACEMENT_CHAR for c in _INVALID_CHARS}
 # May be this should be on the UnitChef class itself
 
-cell_styles = CellStyles()
+
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
 sheet_style = SheetStyle()
@@ -167,15 +167,15 @@ class UnitChef:
             # Add the master value (from this period)
             master_cell = sheet.cell(column=master_column, row=new_row)
             master_cell.value = value
-            cell_styles.format_parameter(master_cell)
-            cell_styles.format_hardcoded(master_cell)
+            CellStyles.format_parameter(master_cell)
+            CellStyles.format_hardcoded(master_cell)
 
             # Link the period to the master
             current_cell = sheet.cell(column=active_column, row=new_row)
             link = formula_templates.ADD_COORDINATES
             link = link.format(coordinates=master_cell.coordinate)
             current_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
-            cell_styles.format_parameter(current_cell)
+            CellStyles.format_parameter(current_cell)
 
             if format_func:
                 format_func(master_cell)
@@ -258,7 +258,7 @@ class UnitChef:
         sheet_style.style_sheet(sheet)
 
         for statement, row in fins_dict.items():
-            cell_styles.format_area_label(sheet, statement, row)
+            CellStyles.format_area_label(sheet, statement, row)
 
         # # 2.6 add selector cell
         #   Make scenario label cells
@@ -446,9 +446,9 @@ class UnitChef:
             row=events.rows.get_position(common_events.KEY_CONCEPTION)
         )
 
-        cell_styles.format_date(birth)
-        cell_styles.format_date(death)
-        cell_styles.format_date(conception)
+        CellStyles.format_date(birth)
+        CellStyles.format_date(death)
+        CellStyles.format_date(conception)
 
         cells = dict()
         cells["birth"] = birth
@@ -466,7 +466,7 @@ class UnitChef:
             )
 
         ref_date = sheet.cell(column=active_column, row=active_row)
-        cell_styles.format_date(ref_date)
+        CellStyles.format_date(ref_date)
 
         if not HIDE_LIFE_EVENTS:
             group_lines(sheet, row=active_row)
@@ -500,12 +500,12 @@ class UnitChef:
 
         start_date = sheet.cell(column=active_column, row=active_row)
 
-        cell_styles.format_date(start_date)
+        CellStyles.format_date(start_date)
 
         if not HIDE_LIFE_EVENTS:
             group_lines(sheet, row=active_row)
 
-        cell_styles.format_date(start_date)
+        CellStyles.format_date(start_date)
         start_date.value = unit.period.start
 
         # Move down two rows (to leave one blank)
@@ -526,7 +526,7 @@ class UnitChef:
             )
 
         age = sheet.cell(column=active_column, row=active_row)
-        cell_styles.format_parameter(age)
+        CellStyles.format_parameter(age)
 
         if not HIDE_LIFE_EVENTS:
             group_lines(sheet, row=active_row)
@@ -552,7 +552,7 @@ class UnitChef:
             )
 
         alive = sheet.cell(column=active_column, row=active_row)
-        cell_styles.format_parameter(alive)
+        CellStyles.format_parameter(alive)
 
         if not HIDE_LIFE_EVENTS:
             group_lines(sheet, row=active_row)
@@ -579,7 +579,7 @@ class UnitChef:
             )
 
         span = sheet.cell(column=active_column, row=active_row)
-        cell_styles.format_parameter(span)
+        CellStyles.format_parameter(span)
 
         if not HIDE_LIFE_EVENTS:
             group_lines(sheet, row=active_row)
@@ -645,7 +645,7 @@ class UnitChef:
 
             master_cell = sheet.cell(column=master_column, row=existing_row)
             active_cell = sheet.cell(column=active_column, row=existing_row)
-            cell_styles.format_date(master_cell)
+            CellStyles.format_date(master_cell)
 
             event_date = unit.life.events[name]
 
@@ -661,7 +661,7 @@ class UnitChef:
                 active_cell.set_explicit_value(link,
                                                data_type=type_codes.FORMULA)
 
-                cell_styles.format_date(active_cell)
+                CellStyles.format_date(active_cell)
 
         # Now add
         new_events = dict()
@@ -674,7 +674,7 @@ class UnitChef:
             area=events,
             items=new_events,
             active_column=active_column,
-            format_func=cell_styles.format_date,
+            format_func=CellStyles.format_date,
             preference_order=unit.life.ORDER,
             group=group
         )
@@ -708,7 +708,7 @@ class UnitChef:
             add_scenario_selector(sheet, label_column, self.SCENARIO_ROW,
                                   book.scenario_names)
         else:
-            cell_styles.format_scenario_selector_cells(sheet,
+            CellStyles.format_scenario_selector_cells(sheet,
                                                        self.LABEL_COLUMN,
                                                        self.MASTER_COLUMN,
                                                        self.SCENARIO_ROW,
@@ -794,7 +794,7 @@ class UnitChef:
                 items=item_dict,
                 active_column=active_column,
                 set_labels=set_labels,
-                format_func=cell_styles.format_integer)
+                format_func=CellStyles.format_integer)
 
             size.rows.by_name[field_names.SIZE_LABEL] = sheet.bb.current_row
         else:
@@ -817,7 +817,7 @@ class UnitChef:
             active_cell.set_explicit_value(link,
                                            data_type=type_codes.FORMULA)
 
-        cell_styles.format_integer(active_cell)
+        CellStyles.format_integer(active_cell)
 
         return sheet
 
@@ -847,7 +847,7 @@ class UnitChef:
                 cell = sheet.cell(column=this_col, row=this_row)
 
                 cell.value = unit.parameters[param]
-                cell_styles.format_hardcoded(cell)
+                CellStyles.format_hardcoded(cell)
 
         unit_params = ex_params - timeline_params
 
@@ -860,7 +860,7 @@ class UnitChef:
 
             cell = sheet.cell(column=this_col, row=this_row)
             cell.value = unit.parameters[param]
-            cell_styles.format_parameter(cell)
+            CellStyles.format_parameter(cell)
 
             # check if exists and matches MASTER, if so, link to MASTER,
             # otherwise overwrite with hardcoded value
@@ -869,7 +869,7 @@ class UnitChef:
                 link = template.format(**info)
                 cell.set_explicit_value(link, data_type=type_codes.FORMULA)
             else:
-                cell_styles.format_hardcoded(cell)
+                CellStyles.format_hardcoded(cell)
 
         template = formula_templates.LINK_TO_COORDINATES
         for param in sorted(new_params):
@@ -886,8 +886,8 @@ class UnitChef:
 
             master_cell = sheet.cell(row=this_row, column=self.MASTER_COLUMN)
             master_cell.value = unit.parameters[param]
-            cell_styles.format_parameter(master_cell)
-            cell_styles.format_hardcoded(master_cell)
+            CellStyles.format_parameter(master_cell)
+            CellStyles.format_hardcoded(master_cell)
 
             label_cell = sheet.cell(row=this_row, column=self.LABEL_COLUMN)
             label_cell.value = param
@@ -896,7 +896,7 @@ class UnitChef:
             info = dict(coordinates=master_cell.coordinate)
             link = template.format(**info)
             cell.set_explicit_value(link, data_type=type_codes.FORMULA)
-            cell_styles.format_parameter(cell)
+            CellStyles.format_parameter(cell)
 
         for row in parameters.rows.by_name.values():
             group_lines(sheet, row=row)
@@ -954,7 +954,7 @@ class UnitChef:
 
         # 1.5 add area and statement labels and sheet formatting
         sheet_style.style_sheet(sheet)
-        cell_styles.format_area_label(sheet, statement.name, statement_row)
+        CellStyles.format_area_label(sheet, statement.name, statement_row)
 
         # # 1.6 add selector cell
         #   Make scenario label cells
@@ -1171,7 +1171,7 @@ class UnitChef:
             info = dict(sheet=source.title, alpha_column=src_col, row=src_row)
             link = template.format(**info)
             cell.set_explicit_value(link, data_type=type_codes.FORMULA)
-            cell_styles.format_date(cell)
+            CellStyles.format_date(cell)
 
             # now link parameters to value cells
             for param in src_params:
@@ -1184,7 +1184,7 @@ class UnitChef:
                             row=src_row)
                 link = template.format(**info)
                 cell.set_explicit_value(link, data_type=type_codes.FORMULA)
-                cell_styles.format_parameter(cell)
+                CellStyles.format_parameter(cell)
 
             sheet_style.set_column_width(sheet, active_column)
 

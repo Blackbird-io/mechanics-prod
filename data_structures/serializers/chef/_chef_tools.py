@@ -66,7 +66,7 @@ _VBS_FILENAME_BOOKMARK = "FILENAME_PLACEHOLDER"
 _VBS_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # Module Globals
-cell_styles = CellStyles()
+
 field_names = FieldNames()
 
 # Classes
@@ -181,7 +181,7 @@ def add_scenario_selector(sheet, column, row, selections):
     sheet.bb.scenario_selector = selector_cell.coordinate
 
     # Make label cells and drop-down selector
-    cell_styles.format_scenario_selector_cells(sheet,
+    CellStyles.format_scenario_selector_cells(sheet,
                                                column,
                                                select_column,
                                                row)

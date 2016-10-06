@@ -43,7 +43,7 @@ from .tab_names import TabNames
 
 
 # Module Globals
-cell_styles = CellStyles()
+
 sheet_style = SheetStyle()
 tab_names = TabNames()
 
@@ -142,7 +142,7 @@ class TranscriptChef:
 
         for col in self.COLUMN_DICT.values():
             num_col = string.ascii_uppercase.find(col.upper()) + 1
-            cell_styles.format_border_group(sheet=sheet,
+            CellStyles.format_border_group(sheet=sheet,
                                             st_col=num_col,
                                             ed_col=num_col,
                                             st_row=8,
