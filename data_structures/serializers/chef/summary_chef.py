@@ -64,7 +64,7 @@ line_chef = SummaryLineChef()
 
 
 transcript_chef = TranscriptChef()
-type_codes = TypeCodes()
+
 unit_chef = UnitChef()
 
 get_column_letter = xlio.utils.get_column_letter

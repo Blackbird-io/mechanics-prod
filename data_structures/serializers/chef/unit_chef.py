@@ -67,7 +67,7 @@ bad_char_table = {ord(c): REPLACEMENT_CHAR for c in _INVALID_CHARS}
 formula_templates = FormulaTemplates()
 
 
-type_codes = TypeCodes()
+
 
 get_column_letter = xlio.utils.get_column_letter
 
@@ -174,7 +174,7 @@ class UnitChef:
             current_cell = sheet.cell(column=active_column, row=new_row)
             link = formula_templates.ADD_COORDINATES
             link = link.format(coordinates=master_cell.coordinate)
-            current_cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+            current_cell.set_explicit_value(link, data_type=TypeCodes.FORMULA)
             CellStyles.format_parameter(current_cell)
 
             if format_func:
@@ -535,7 +535,7 @@ class UnitChef:
         cos = {k: v.coordinate for k, v in cells.items()}
         formula = fs.COMPUTE_AGE_IN_DAYS.format(**cos)
 
-        age.set_explicit_value(formula, data_type=type_codes.FORMULA)
+        age.set_explicit_value(formula, data_type=TypeCodes.FORMULA)
         del formula
 
         # Move row down
@@ -561,7 +561,7 @@ class UnitChef:
         cos["alive"] = alive.coordinate
         formula = fs.IS_ALIVE.format(**cos)
 
-        alive.set_explicit_value(formula, data_type=type_codes.FORMULA)
+        alive.set_explicit_value(formula, data_type=TypeCodes.FORMULA)
         del formula
 
         # Move row down
@@ -588,7 +588,7 @@ class UnitChef:
         cos[FieldNames.SPAN] = span.coordinate
         formula = fs.COMPUTE_SPAN_IN_DAYS.format(**cos)
 
-        span.set_explicit_value(formula, data_type=type_codes.FORMULA)
+        span.set_explicit_value(formula, data_type=TypeCodes.FORMULA)
         del formula
 
         # Move row down
@@ -608,7 +608,7 @@ class UnitChef:
 
         formula = fs.COMPUTE_AGE_IN_PERCENT.format(**cos)
 
-        percent.set_explicit_value(formula, data_type=type_codes.FORMULA)
+        percent.set_explicit_value(formula, data_type=TypeCodes.FORMULA)
 
         if not HIDE_LIFE_EVENTS:
             group_lines(sheet, row=active_row)
@@ -659,7 +659,7 @@ class UnitChef:
                 link = link_template.format(coordinates=master_cell.coordinate)
 
                 active_cell.set_explicit_value(link,
-                                               data_type=type_codes.FORMULA)
+                                               data_type=TypeCodes.FORMULA)
 
                 CellStyles.format_date(active_cell)
 
@@ -815,7 +815,7 @@ class UnitChef:
             link = link_template.format(coordinates=master_cell.coordinate)
 
             active_cell.set_explicit_value(link,
-                                           data_type=type_codes.FORMULA)
+                                           data_type=TypeCodes.FORMULA)
 
         CellStyles.format_integer(active_cell)
 
@@ -867,7 +867,7 @@ class UnitChef:
             if cell.value == master_cell.value:
                 info = dict(coordinates=master_cell.coordinate)
                 link = template.format(**info)
-                cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+                cell.set_explicit_value(link, data_type=TypeCodes.FORMULA)
             else:
                 CellStyles.format_hardcoded(cell)
 
@@ -895,7 +895,7 @@ class UnitChef:
             cell = sheet.cell(column=this_col, row=this_row)
             info = dict(coordinates=master_cell.coordinate)
             link = template.format(**info)
-            cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+            cell.set_explicit_value(link, data_type=TypeCodes.FORMULA)
             CellStyles.format_parameter(cell)
 
         for row in parameters.rows.by_name.values():
@@ -1090,7 +1090,7 @@ class UnitChef:
 
                 link = formula_templates.LINK_TO_CELL_ON_SHEET.format(**cos)
                 local_cell.set_explicit_value(link,
-                                              data_type=type_codes.FORMULA)
+                                              data_type=TypeCodes.FORMULA)
 
                 if keep_format:
                     source_cell = source_sheet.cell(column=source_column,
@@ -1138,7 +1138,7 @@ class UnitChef:
 
             info = dict(sheet=source.title, alpha_column=src_col, row=src_row)
             link = template.format(**info)
-            cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+            cell.set_explicit_value(link, data_type=TypeCodes.FORMULA)
 
             active_row += 1
 
@@ -1170,7 +1170,7 @@ class UnitChef:
 
             info = dict(sheet=source.title, alpha_column=src_col, row=src_row)
             link = template.format(**info)
-            cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+            cell.set_explicit_value(link, data_type=TypeCodes.FORMULA)
             CellStyles.format_date(cell)
 
             # now link parameters to value cells
@@ -1183,7 +1183,7 @@ class UnitChef:
                 info = dict(sheet=source.title, alpha_column=src_col,
                             row=src_row)
                 link = template.format(**info)
-                cell.set_explicit_value(link, data_type=type_codes.FORMULA)
+                cell.set_explicit_value(link, data_type=TypeCodes.FORMULA)
                 CellStyles.format_parameter(cell)
 
             SheetStyle.set_column_width(sheet, active_column)
