@@ -35,6 +35,7 @@ from ._chef_tools import group_lines
 from .cell_styles import CellStyles
 from .line_chef import LineChef
 from .sheet_style import SheetStyle
+from .unit_fins_chef import UnitFinsChef
 from .unit_info_chef import UnitInfoChef
 
 from chef_settings import (
@@ -58,6 +59,7 @@ REPLACEMENT_CHAR = None
 bad_char_table = {ord(c): REPLACEMENT_CHAR for c in _INVALID_CHARS}
 get_column_letter = xlio.utils.get_column_letter
 line_chef = LineChef()
+fins_chef = UnitFinsChef()
 info_chef = UnitInfoChef()
 
 # Classes
@@ -82,34 +84,14 @@ class UnitChef:
     ====================  =====================================================
 
     DATA:
-    MAX_CONSOLIDATION_ROWS = 15
-    MAX_LINKS_PER_CELL = 1
-
-    MAX_TITLE_CHARACTERS = 30
-    SHOW_GRID_LINES = False
-    ZOOM_SCALE = 80
+    n/a
 
     FUNCTIONS:
-    add_items_to_area()   adds dictionary items to specified area
     chop_multi()          returns sheet with a SheetData instance at sheet.bb,
                           also spreads financials, life, parameters of units
     chop_unit()           returns sheet with a SheetData instance at sheet.bb
     ====================  =====================================================
     """
-    MAX_CONSOLIDATION_ROWS = 15
-    MAX_LINKS_PER_CELL = 1
-
-    MAX_TITLE_CHARACTERS = 30
-
-    LABEL_COLUMN = 2
-    MASTER_COLUMN = 4
-    VALUE_COLUMN = 6
-
-    TITLE_ROW = 3
-    VALUES_START_ROW = 6
-
-    SCENARIO_ROW = 2
-
     def chop_multi(self, *pargs, book, unit):
         """
 
@@ -159,7 +141,7 @@ class UnitChef:
 
         # 2.4.  spread fins
         current = sheet.bb.time_line.columns.get_position(unit.period.end)
-        fins_dict = self._add_financials(sheet=sheet, unit=unit,
+        fins_dict = fins_chef.add_financials(sheet=sheet, unit=unit,
                                          column=current)
 
         for snapshot in unit:
@@ -168,8 +150,8 @@ class UnitChef:
                 snapshot.period.end)
             # Load balance from prior column!!!
 
-            self._add_financials(sheet=sheet, unit=snapshot, column=column,
-                                 set_labels=False)
+            fins_chef.add_financials(sheet=sheet, unit=snapshot, column=column,
+                                     set_labels=False)
 
             # Should make sure rows align here from one period to the next.
             # Main problem lies in consolidation logic.
@@ -220,141 +202,4 @@ class UnitChef:
 
         # 2.6 add valuation tab, if any exists for unit
         if unit.financials.has_valuation:
-            self._add_valuation_tab(book, unit, index=index)
-
-    # *************************************************************************#
-    #                          NON-PUBLIC METHODS                              #
-    # *************************************************************************#
-
-    def _add_statement_rows(self, sheet, statement, title=None):
-        """
-
-        UnitChef._add_statement() -> AxisGroup
-
-        """
-        statement_group = sheet.bb.row_axis.get_group('body', 'statements')
-        statement_group.calc_size()
-
-        offset = 1 if statement_group.size else 0
-        name = title or statement.name
-        statement_rows = statement_group.add_group(name, offset=offset)
-        statement_rows.add_group('title', title=name, size=1)
-        statement_rows.add_group('matter', size=0)
-
-        return statement_rows
-
-    def _add_financials(self, *pargs, sheet, unit, column, set_labels=True):
-        """
-
-        UnitChef._add_financials() -> dict
-
-        Method adds financials to worksheet and returns a dictionary of the
-        statements added to the worksheet and their starting rows
-        """
-        fins_dict = dict()
-
-        body_rows = sheet.bb.row_axis.get_group('body')
-        body_rows.add_group(
-            'statements',
-            offset=sheet.bb.current_row - body_rows.tip + 1
-        )
-
-        for statement in unit.financials.ordered:
-            if statement is not None:
-                sheet.bb.current_row += 1
-                sheet.bb.outline_level = 0
-
-                if statement is unit.financials.ending:
-                    statement_row = sheet.bb.current_row + 1
-                    fins_dict["Starting Balance Sheet"] = statement_row
-
-                    statement_rows = self._add_statement_rows(
-                        sheet, statement, title='Starting Balance Sheet'
-                    )
-                    line_chef.chop_starting_balance(
-                        sheet=sheet,
-                        unit=unit,
-                        column=column,
-                        row_container=statement_rows,
-                        set_labels=set_labels
-                    )
-                    sheet.bb.need_spacer = False
-
-                statement_row = sheet.bb.current_row + 1
-                fins_dict[statement.tags.name] = statement_row
-
-                statement_rows = self._add_statement_rows(sheet, statement)
-                line_chef.chop_statement(
-                    sheet=sheet,
-                    statement=statement,
-                    column=column,
-                    row_container=statement_rows,
-                    set_labels=set_labels,
-                )
-
-        # We're done with the first pass of chopping financials, now go back
-        # and try to resolve problem_line issues.
-        while sheet.bb.problem_lines:
-            dr_data, materials = sheet.bb.problem_lines.pop()
-            line_chef.attempt_reference_resolution(sheet, dr_data, materials)
-
-        return fins_dict
-
-    def _add_valuation_tab(self, book, unit, index=None):
-        """
-
-
-        UnitChef._add_valuation_tab() -> Worksheet
-
-        --``book`` must be a Workbook
-        --``unit`` must be an instance of BusinessUnit
-
-        Method creates a valuation tab and chops unit valuation statement.
-        """
-
-        # 1.0   set up the unit sheet and spread params
-        if not index:
-            index = len(book.worksheets)
-
-        if index == 2:
-            name = "Valuation"
-        else:
-            name = unit.name + ' val'
-
-        sheet = info_chef.create_unit_sheet(book=book, unit=unit,
-                                        index=index, name=name,
-                                        current_only=True)
-
-        sheet.bb.outline_level += 1
-
-        # 1.1   set-up life
-        sheet.bb.current_row += 1
-        sheet = info_chef.add_unit_life(sheet=sheet, unit=unit)
-        sheet.bb.outline_level -= 1
-
-        # 1.2  Add Valuation statement
-        sheet.bb.current_row = sheet.bb.events.rows.ending
-        sheet.bb.current_row += 1
-
-        current = sheet.bb.time_line.columns.get_position(unit.period.end)
-        SheetStyle.set_column_width(sheet, current, width=22)
-
-        statement_row = sheet.bb.current_row + 1
-        statement = unit.financials.valuation
-        line_chef.chop_statement(
-            sheet=sheet,
-            statement=statement,
-            column=current,
-            set_labels=True)
-
-        # 1.5 add area and statement labels and sheet formatting
-        SheetStyle.style_sheet(sheet)
-        CellStyles.format_area_label(sheet, statement.name, statement_row)
-
-        # # 1.6 add selector cell
-        #   Make scenario label cells
-        info_chef.add_scenario_selector_logic(book, sheet)
-
-        sheet.sheet_properties.tabColor = VALUATION_TAB_COLOR
-
-        return sheet
+            fins_chef.add_valuation_tab(book, unit, index=index)
