@@ -66,7 +66,7 @@ bad_char_table = {ord(c): REPLACEMENT_CHAR for c in _INVALID_CHARS}
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
 
-tab_names = TabNames()
+
 type_codes = TypeCodes()
 
 get_column_letter = xlio.utils.get_column_letter

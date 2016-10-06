@@ -62,7 +62,7 @@ field_names = FieldNames()
 formula_templates = FormulaTemplates()
 line_chef = SummaryLineChef()
 
-tab_names = TabNames()
+
 transcript_chef = TranscriptChef()
 type_codes = TypeCodes()
 unit_chef = UnitChef()

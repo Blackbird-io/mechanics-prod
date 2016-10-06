@@ -48,8 +48,10 @@ class TabNames:
     ====================  ======================================================
 
     DATA:
+    COVER                 "Cover"
     SCENARIOS             "Scenarios"
     TIME_LINE             "Timeline"
+    TRANSCRIPT            "Transcript"
 
     FUNCTIONS:
     n/a
