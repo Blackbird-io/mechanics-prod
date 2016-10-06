@@ -457,7 +457,7 @@ class RowData(dict):
     ====================  =====================================================
     """
 
-
+    field_names = FieldNames
 
     def __init__(self):
         self[FieldNames.VALUES] = None
