@@ -52,6 +52,7 @@ from .tab_names import TabNames
 from .transcript_chef import TranscriptChef
 from .unit_chef import UnitChef
 from .summary_chef import SummaryChef
+from .unit_structure import StructureChef
 
 
 
@@ -110,6 +111,9 @@ class ModelChef:
         book = self._build_foundation(model)
         now = model.time_line.current_period
         company = now.content
+
+        structure_chef = StructureChef()
+        structure_chef.chop(book, company, index=5)
 
         unit_chef.chop_multi(book=book, unit=company)
 
