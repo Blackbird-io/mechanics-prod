@@ -460,8 +460,8 @@ class RowData(dict):
 
 
     def __init__(self):
-        self[self.field_names.VALUES] = None
-        self[self.field_names.LABELS] = None
+        self[FieldNames.VALUES] = None
+        self[FieldNames.LABELS] = None
 
 
 class SheetData:
