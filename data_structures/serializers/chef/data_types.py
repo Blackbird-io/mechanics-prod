@@ -77,7 +77,10 @@ class NumberFormats:
     ====================  =====================================================
 
     DATA:
-    DATETIME              "yyyy-mm-dd"; format code for datetime
+    DEFAULT_DATE_FORMAT   "yyyy-mm-dd"; format code for datetime
+    DEFAULT_LINE_FORMAT   $#,###.##
+    DEFAULT_PARAMETER_FORMAT  "#,##0"
+    INTEGER_FORMAT         Excel number format
 
     FUNCTIONS:
     n/a
