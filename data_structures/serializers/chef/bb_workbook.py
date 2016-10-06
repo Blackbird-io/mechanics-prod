@@ -46,7 +46,7 @@ if COLLAPSE_ROWS or SCENARIO_SELECTORS:
 # n/a
 
 # Module Globals
-field_names = FieldNames()
+
 
 # Classes
 class BB_Workbook(xlio.Workbook):
@@ -131,7 +131,7 @@ class BB_Workbook(xlio.Workbook):
 
         Sets instance.scenario_names list.
         """
-        self.scenario_names = [field_names.CUSTOM, field_names.BASE]
+        self.scenario_names = [FieldNames.CUSTOM, FieldNames.BASE]
         self.scenario_names.extend(DEFAULT_SCENARIOS)
 
         for k in sorted(model.scenarios.keys()):

@@ -36,7 +36,7 @@ from .field_names import FieldNames
 
 
 # Module Globals
-field_names = FieldNames()
+
 
 # Classes
 class AxisGroup:

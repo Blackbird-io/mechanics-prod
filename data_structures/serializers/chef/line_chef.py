@@ -58,7 +58,7 @@ from .formulas import FormulaTemplates
 
 # Module Globals
 
-field_names = FieldNames()
+
 formula_templates = FormulaTemplates()
 type_codes = TypeCodes()
 
@@ -359,7 +359,7 @@ class LineChef:
 
                 if set_labels:
                     label_column = None
-                    if not getattr(sheet.bb, field_names.PARAMETERS, None):
+                    if not getattr(sheet.bb, FieldNames.PARAMETERS, None):
                         label_column = 1
 
                     label = indent * " " + line.tags.title
@@ -746,20 +746,20 @@ class LineChef:
 
         Writes driver logic to Excel sheet. Will write to sheet.bb.current_row.
         """
-        private_data = getattr(sheet.bb, field_names.PARAMETERS).copy()
+        private_data = getattr(sheet.bb, FieldNames.PARAMETERS).copy()
         # Set up a private range that's going to include both "shared" period &
         # unit parameters from the column and "private" driver parameters.
 
-        param_area = getattr(sheet.bb, field_names.PARAMETERS)
+        param_area = getattr(sheet.bb, FieldNames.PARAMETERS)
         cols = param_area.columns
-        label_column = cols.get_position(field_names.LABELS)
+        label_column = cols.get_position(FieldNames.LABELS)
         period_column = column
 
         for row_data in sorted(driver_data.rows,
-                               key=lambda x: x[field_names.LABELS]):
+                               key=lambda x: x[FieldNames.LABELS]):
 
-            private_label = row_data[field_names.LABELS]
-            private_value = row_data[field_names.VALUES]
+            private_label = row_data[FieldNames.LABELS]
+            private_value = row_data[FieldNames.VALUES]
 
             if private_label and set_labels:
 
@@ -849,7 +849,7 @@ class LineChef:
             materials["events"] = event_coordinates
 
         try:
-            size = getattr(sheet.bb, field_names.SIZE)
+            size = getattr(sheet.bb, FieldNames.SIZE)
             size_coordinates = self._rows_to_coordinates(lookup=size.rows,
                                                          column=period_column)
         except AttributeError:
@@ -1111,10 +1111,10 @@ class LineChef:
         the sheet.bb.parameters area.
         """
         if column is None:
-            if getattr(sheet.bb, field_names.PARAMETERS, None):
-                param_area = getattr(sheet.bb, field_names.PARAMETERS)
+            if getattr(sheet.bb, FieldNames.PARAMETERS, None):
+                param_area = getattr(sheet.bb, FieldNames.PARAMETERS)
                 cols = param_area.columns
-                column = cols.get_position(field_names.LABELS)
+                column = cols.get_position(FieldNames.LABELS)
             else:
                 column = 2
 
@@ -1177,11 +1177,11 @@ class LineChef:
             # clean driver_data
             new_rows = []
             for item in driver_data.rows:
-                if item[field_names.LABELS] in params_keep:
+                if item[FieldNames.LABELS] in params_keep:
                     new_rows.append(item)
 
                 try:
-                    temp = driver_data.conversion_map[item[field_names.LABELS]]
+                    temp = driver_data.conversion_map[item[FieldNames.LABELS]]
                 except KeyError:
                     pass
                 else:
