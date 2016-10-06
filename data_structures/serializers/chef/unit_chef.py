@@ -63,7 +63,7 @@ bad_char_table = {ord(c): REPLACEMENT_CHAR for c in _INVALID_CHARS}
 # May be this should be on the UnitChef class itself
 
 
-field_names = FieldNames()
+
 formula_templates = FormulaTemplates()
 
 
@@ -143,9 +143,9 @@ class UnitChef:
         specify the label and master column.
         """
 
-        parameters = getattr(sheet.bb, field_names.PARAMETERS)
-        label_column = parameters.columns.get_position(field_names.LABELS)
-        master_column = parameters.columns.get_position(field_names.MASTER)
+        parameters = getattr(sheet.bb, FieldNames.PARAMETERS)
+        label_column = parameters.columns.get_position(FieldNames.LABELS)
+        master_column = parameters.columns.get_position(FieldNames.MASTER)
 
         SheetStyle.set_column_width(sheet, master_column)
 
@@ -312,7 +312,7 @@ class UnitChef:
         _add_unit_life to write each time period.
         """
 
-        param_area = getattr(sheet.bb, field_names.PARAMETERS)
+        param_area = getattr(sheet.bb, FieldNames.PARAMETERS)
         if param_area.rows.ending:
             start_row = param_area.rows.ending + 1
         else:
@@ -419,13 +419,13 @@ class UnitChef:
         Method adds unit life for a single period to show unit state
         (alive/dead/etc.), age, etc.  Method assumes events are filled out.
         """
-        parameters = getattr(sheet.bb, field_names.PARAMETERS)
-        timeline = getattr(sheet.bb, field_names.TIMELINE)
+        parameters = getattr(sheet.bb, FieldNames.PARAMETERS)
+        timeline = getattr(sheet.bb, FieldNames.TIMELINE)
 
         active_row = sheet.bb.current_row + 1
 
-        label_column = parameters.columns.get_position(field_names.LABELS)
-        time_line_row = timeline.rows.get_position(field_names.TITLE)
+        label_column = parameters.columns.get_position(FieldNames.LABELS)
+        time_line_row = timeline.rows.get_position(FieldNames.TITLE)
 
         fs = formula_templates
         set_label = line_chef._set_label
@@ -456,10 +456,10 @@ class UnitChef:
         cells["conception"] = conception
 
         # 1. Add ref_date
-        sheet.bb.life.rows.by_name[field_names.REF_DATE] = active_row
+        sheet.bb.life.rows.by_name[FieldNames.REF_DATE] = active_row
         if set_labels:
             set_label(
-                label=field_names.REF_DATE,
+                label=FieldNames.REF_DATE,
                 sheet=sheet,
                 row=active_row,
                 column=label_column
@@ -489,10 +489,10 @@ class UnitChef:
         active_row += 1
 
         # 1. Add period start date
-        sheet.bb.life.rows.by_name[field_names.START_DATE] = active_row
+        sheet.bb.life.rows.by_name[FieldNames.START_DATE] = active_row
         if set_labels:
             set_label(
-                label=field_names.START_DATE,
+                label=FieldNames.START_DATE,
                 sheet=sheet,
                 row=active_row,
                 column=label_column
@@ -516,10 +516,10 @@ class UnitChef:
         active_row += 2
 
         # 2. Add age
-        sheet.bb.life.rows.by_name[field_names.AGE] = active_row
+        sheet.bb.life.rows.by_name[FieldNames.AGE] = active_row
         if set_labels:
             set_label(
-                label=field_names.AGE,
+                label=FieldNames.AGE,
                 sheet=sheet,
                 row=active_row,
                 column=label_column
@@ -542,10 +542,10 @@ class UnitChef:
         active_row += 1
 
         # 3. Add alive
-        life.rows.by_name[field_names.ALIVE] = active_row
+        life.rows.by_name[FieldNames.ALIVE] = active_row
         if set_labels:
             set_label(
-                label=field_names.ALIVE,
+                label=FieldNames.ALIVE,
                 sheet=sheet,
                 row=active_row,
                 column=label_column
@@ -569,10 +569,10 @@ class UnitChef:
 
         # 4. Add span (so we can use it as the denominator in our percent
         #    computation below).
-        life.rows.by_name[field_names.SPAN] = active_row
+        life.rows.by_name[FieldNames.SPAN] = active_row
         if set_labels:
             set_label(
-                label=field_names.SPAN,
+                label=FieldNames.SPAN,
                 sheet=sheet,
                 row=active_row,
                 column=label_column
@@ -584,8 +584,8 @@ class UnitChef:
         if not HIDE_LIFE_EVENTS:
             group_lines(sheet, row=active_row)
 
-        cells[field_names.SPAN] = span
-        cos[field_names.SPAN] = span.coordinate
+        cells[FieldNames.SPAN] = span
+        cos[FieldNames.SPAN] = span.coordinate
         formula = fs.COMPUTE_SPAN_IN_DAYS.format(**cos)
 
         span.set_explicit_value(formula, data_type=type_codes.FORMULA)
@@ -595,10 +595,10 @@ class UnitChef:
         active_row += 1
 
         # 5. Add percent
-        life.rows.by_name[field_names.PERCENT] = active_row
+        life.rows.by_name[FieldNames.PERCENT] = active_row
         if set_labels:
             set_label(
-                label=field_names.PERCENT,
+                label=FieldNames.PERCENT,
                 sheet=sheet,
                 row=active_row,
                 column=label_column
@@ -630,10 +630,10 @@ class UnitChef:
         Runs through add_items() [which is why we get name-based sorting]
         """
         events = sheet.bb.events
-        parameters = getattr(sheet.bb, field_names.PARAMETERS)
+        parameters = getattr(sheet.bb, FieldNames.PARAMETERS)
 
         active_row = sheet.bb.current_row
-        master_column = parameters.columns.get_position(field_names.MASTER)
+        master_column = parameters.columns.get_position(FieldNames.MASTER)
 
         existing_names = unit.life.events.keys() & events.rows.by_name.keys()
         new_names = unit.life.events.keys() - existing_names
@@ -683,19 +683,19 @@ class UnitChef:
         return sheet
 
     def _add_scenario_selector_logic(self, book, sheet):
-        scen_tab = book.get_sheet_by_name(tab_names.SCENARIOS)
+        scen_tab = book.get_sheet_by_name(TabNames.SCENARIOS)
         src_sheet = scen_tab.title
-        src_row = scen_tab.bb.general.rows.by_name[field_names.SELECTOR]
+        src_row = scen_tab.bb.general.rows.by_name[FieldNames.SELECTOR]
 
-        scen_area = getattr(scen_tab.bb, field_names.PARAMETERS)
-        num_col = scen_area.columns.by_name[field_names.CUSTOM_CASE]
+        scen_area = getattr(scen_tab.bb, FieldNames.PARAMETERS)
+        num_col = scen_area.columns.by_name[FieldNames.CUSTOM_CASE]
         src_col = get_column_letter(num_col)
 
         info = dict(sheet=src_sheet, alpha_column=src_col, row=src_row)
 
         active_label_cell = sheet.cell(column=self.LABEL_COLUMN,
                                        row=self.SCENARIO_ROW)
-        active_label_cell.value = field_names.IN_EFFECT
+        active_label_cell.value = FieldNames.IN_EFFECT
 
         template = formula_templates.LINK_TO_CELL_ON_SHEET
         link = template.format(**info)
@@ -779,14 +779,14 @@ class UnitChef:
             end = unit.period.end
             active_column = sheet.bb.time_line.columns.get_position(end)
 
-        parameters = getattr(sheet.bb, field_names.PARAMETERS)
-        master_column = parameters.columns.get_position(field_names.MASTER)
+        parameters = getattr(sheet.bb, FieldNames.PARAMETERS)
+        master_column = parameters.columns.get_position(FieldNames.MASTER)
 
-        if not getattr(sheet.bb, field_names.SIZE, None):
-            size = sheet.bb.add_area(field_names.SIZE)
+        if not getattr(sheet.bb, FieldNames.SIZE, None):
+            size = sheet.bb.add_area(FieldNames.SIZE)
 
             item_dict = dict()
-            item_dict[field_names.SIZE_LABEL] = unit.size
+            item_dict[FieldNames.SIZE_LABEL] = unit.size
 
             self.add_items_to_area(
                 sheet=sheet,
@@ -796,12 +796,12 @@ class UnitChef:
                 set_labels=set_labels,
                 format_func=CellStyles.format_integer)
 
-            size.rows.by_name[field_names.SIZE_LABEL] = sheet.bb.current_row
+            size.rows.by_name[FieldNames.SIZE_LABEL] = sheet.bb.current_row
         else:
-            size = getattr(sheet.bb, field_names.SIZE)
+            size = getattr(sheet.bb, FieldNames.SIZE)
 
         # Write values for existing events
-        existing_row = size.rows.get_position(field_names.SIZE_LABEL)
+        existing_row = size.rows.get_position(FieldNames.SIZE_LABEL)
 
         master_cell = sheet.cell(column=master_column,
                                  row=existing_row)
@@ -831,8 +831,8 @@ class UnitChef:
         - Add any new unit parameters, place master value in MASTER column
         - Check on timeline_params and update with hardcoded value as applicable
         """
-        parameters = getattr(sheet.bb, field_names.PARAMETERS)
-        time_line = getattr(sheet.bb, field_names.TIMELINE)
+        parameters = getattr(sheet.bb, FieldNames.PARAMETERS)
+        time_line = getattr(sheet.bb, FieldNames.TIMELINE)
 
         period_column = time_line.columns.get_position(unit.period.end)
 
@@ -1018,15 +1018,15 @@ class UnitChef:
                                 current_only=current_only)
 
         val_col = sheet.bb.time_line.columns.get_position(unit.period.end)
-        param_area = getattr(sheet.bb, field_names.PARAMETERS)
-        param_area.columns.by_name[field_names.VALUES] = val_col
+        param_area = getattr(sheet.bb, FieldNames.PARAMETERS)
+        param_area.columns.by_name[FieldNames.VALUES] = val_col
         # At this point, sheet.bb.current_row will point to the last parameter.
 
         # Freeze panes:
         corner_row = sheet.bb.time_line.rows.ending
         corner_row += 1
 
-        corner_col = param_area.columns.get_position(field_names.MASTER)
+        corner_col = param_area.columns.get_position(FieldNames.MASTER)
         corner_col += 1
 
         corner_cell = sheet.cell(column=corner_col, row=corner_row)
@@ -1113,23 +1113,23 @@ class UnitChef:
         Force keyword-entry for book and sheet to make sure we feed in the
         right arguments.
         """
-        source = book.get_sheet_by_name(tab_names.SCENARIOS)
-        source_area = getattr(source.bb, field_names.TIMELINE)
+        source = book.get_sheet_by_name(TabNames.SCENARIOS)
+        source_area = getattr(source.bb, FieldNames.TIMELINE)
 
-        param_area = sheet.bb.add_area(field_names.PARAMETERS)
-        timeline_area = sheet.bb.add_area(field_names.TIMELINE)
+        param_area = sheet.bb.add_area(FieldNames.PARAMETERS)
+        timeline_area = sheet.bb.add_area(FieldNames.TIMELINE)
 
         # First add labels for parameters
         active_row = self.VALUES_START_ROW
         active_column = self.LABEL_COLUMN
-        param_area.columns.by_name[field_names.LABELS] = self.LABEL_COLUMN
-        param_area.columns.by_name[field_names.MASTER] = self.MASTER_COLUMN
+        param_area.columns.by_name[FieldNames.LABELS] = self.LABEL_COLUMN
+        param_area.columns.by_name[FieldNames.MASTER] = self.MASTER_COLUMN
 
         template = formula_templates.ADD_CELL_FROM_SHEET
-        source_label_column = source_area.columns.by_name[field_names.LABELS]
+        source_label_column = source_area.columns.by_name[FieldNames.LABELS]
         src_col = get_column_letter(source_label_column)
 
-        src_params = set(source_area.rows.by_name.keys()) - {field_names.TITLE}
+        src_params = set(source_area.rows.by_name.keys()) - {FieldNames.TITLE}
 
         for param in sorted(src_params):
             src_row = source_area.rows.by_name[param]
@@ -1147,11 +1147,11 @@ class UnitChef:
         # save for later
         time_params = param_area.rows.by_name.copy()
         time_params = time_params.keys()
-        timeline_area.rows.by_name[field_names.TITLE] = self.TITLE_ROW
+        timeline_area.rows.by_name[FieldNames.TITLE] = self.TITLE_ROW
 
         template = formula_templates.ADD_CELL_FROM_SHEET
         src_vals = \
-            set(source_area.columns.by_name.keys()) - {field_names.LABELS}
+            set(source_area.columns.by_name.keys()) - {FieldNames.LABELS}
 
         if current_only:
             src_vals = [unit.period.end]
@@ -1159,7 +1159,7 @@ class UnitChef:
         active_column = self.VALUE_COLUMN
         for date in sorted(src_vals):
             active_row = self.TITLE_ROW
-            src_row = source_area.rows.by_name[field_names.TITLE]
+            src_row = source_area.rows.by_name[FieldNames.TITLE]
 
             # make header cell
             col_num = source_area.columns.by_name[date]

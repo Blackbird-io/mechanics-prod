@@ -59,7 +59,7 @@ from .delayed_cell import DelayedCell
 
 # Module Globals
 
-field_names = FieldNames()
+
 formula_templates = FormulaTemplates()
 type_codes = TypeCodes()
 

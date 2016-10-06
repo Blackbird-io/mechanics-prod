@@ -67,7 +67,7 @@ _VBS_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # Module Globals
 
-field_names = FieldNames()
+
 
 # Classes
 # n/a

@@ -123,7 +123,7 @@ class TranscriptChef:
 
             sheet.title = title
         else:
-            sheet = book.create_sheet(name=tab_names.TRANSCRIPT, index=idx)
+            sheet = book.create_sheet(name=TabNames.TRANSCRIPT, index=idx)
 
         # get length of interview
         transcript = list()

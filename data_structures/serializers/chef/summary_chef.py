@@ -58,7 +58,7 @@ from .unit_chef import UnitChef
 
 # Module Globals
 
-field_names = FieldNames()
+
 formula_templates = FormulaTemplates()
 line_chef = SummaryLineChef()
 
@@ -134,9 +134,9 @@ class SummaryChef:
         )
 
         # Add parameters area to set up label and value columns
-        area = sheet.bb.add_area(field_names.PARAMETERS)
-        area.columns.by_name[field_names.LABELS] = label_cols.number()
-        area.columns.by_name[field_names.VALUES] = years_cols.number()
+        area = sheet.bb.add_area(FieldNames.PARAMETERS)
+        area.columns.by_name[FieldNames.LABELS] = label_cols.number()
+        area.columns.by_name[FieldNames.VALUES] = years_cols.number()
 
         # Add row and label for Complete T/F
         complete_label_rows = output_rows.add_group(
@@ -243,7 +243,7 @@ class SummaryChef:
 
         sheet.sheet_properties.tabColor = chef_settings.SUMMARY_TAB_COLOR
 
-        corner_col = area.columns.by_name[field_names.VALUES] - 1
+        corner_col = area.columns.by_name[FieldNames.VALUES] - 1
         corner_row = complete_label_rows.number() - 1
         corner_cell = sheet.cell(column=corner_col, row=corner_row)
         sheet.freeze_panes = corner_cell

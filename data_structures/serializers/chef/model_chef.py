@@ -63,7 +63,7 @@ IMAGE_PATH = os.path.join(
 
 # Module Globals
 
-field_names = FieldNames()
+
 formula_templates = FormulaTemplates()
 line_chef = LineChef()
 
@@ -120,7 +120,7 @@ class ModelChef:
         unit_chef.chop_multi_valuation(book=book, unit=company, index=2,
                                        recur=False)
 
-        temp_sheet = book.get_sheet_by_name(tab_names.SCENARIOS)
+        temp_sheet = book.get_sheet_by_name(TabNames.SCENARIOS)
         spacer_idx = book.get_index(temp_sheet) + 1
         spacer_sheet = book.create_sheet("Details >>", spacer_idx)
         spacer_sheet.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
@@ -170,7 +170,7 @@ class ModelChef:
         company = model.time_line.current_period.content
 
         sheet = book.active
-        sheet.title = tab_names.COVER
+        sheet.title = TabNames.COVER
         SheetStyle.style_sheet(sheet, label_areas=False)
 
         row = sheet.row_dimensions[1]
@@ -275,7 +275,7 @@ class ModelChef:
         Return a worksheet that lays out the assumptions used by the model in
         various scenarios.
         """
-        my_tab = book.create_sheet(tab_names.SCENARIOS)
+        my_tab = book.create_sheet(TabNames.SCENARIOS)
 
         # Sheet map:
         # A          |  B      | C             | D     | E
@@ -288,15 +288,15 @@ class ModelChef:
         custom_column = 4
         base_case_column = 6
 
-        area = my_tab.bb.add_area(field_names.PARAMETERS)
-        timeline = my_tab.bb.add_area(field_names.TIMELINE)
+        area = my_tab.bb.add_area(FieldNames.PARAMETERS)
+        timeline = my_tab.bb.add_area(FieldNames.TIMELINE)
 
-        area.columns.by_name[field_names.LABELS] = label_column
-        area.columns.by_name[field_names.VALUES] = in_effect_column
-        area.columns.by_name[field_names.CUSTOM_CASE] = custom_column
-        area.columns.by_name[field_names.BASE_CASE] = base_case_column
+        area.columns.by_name[FieldNames.LABELS] = label_column
+        area.columns.by_name[FieldNames.VALUES] = in_effect_column
+        area.columns.by_name[FieldNames.CUSTOM_CASE] = custom_column
+        area.columns.by_name[FieldNames.BASE_CASE] = base_case_column
 
-        timeline.columns.by_name[field_names.LABELS] = label_column
+        timeline.columns.by_name[FieldNames.LABELS] = label_column
 
         current_row = starting_row
 
@@ -306,13 +306,13 @@ class ModelChef:
         add_scenario_selector(my_tab, label_column, current_row,
                               book.scenario_names)
         selector_cell = my_tab.cell(row=current_row, column=custom_column)
-        selector_cell.value = field_names.CUSTOM
-        my_tab.bb.general.rows.by_name[field_names.SELECTOR] = current_row
+        selector_cell.value = FieldNames.CUSTOM
+        my_tab.bb.general.rows.by_name[FieldNames.SELECTOR] = current_row
 
         current_row += 3
         # Make scenario label cells
         custom_cell = my_tab.cell(column=custom_column, row=current_row)
-        custom_cell.value = field_names.CUSTOM
+        custom_cell.value = FieldNames.CUSTOM
         CellStyles.format_scenario_label(custom_cell)
 
         for i, s in enumerate(scenario_columns):
@@ -327,7 +327,7 @@ class ModelChef:
 
         active_label_cell = my_tab.cell(column=in_effect_column,
                                         row=current_row)
-        active_label_cell.value = field_names.IN_EFFECT
+        active_label_cell.value = FieldNames.IN_EFFECT
         CellStyles.format_scenario_label(active_label_cell)
 
         title_row = current_row
@@ -355,7 +355,7 @@ class ModelChef:
         ref_row = 3
 
         all_scenarios = dict()
-        all_scenarios[field_names.BASE] = base
+        all_scenarios[FieldNames.BASE] = base
         all_scenarios.update(model.scenarios)
 
         for param_name in sorted(base.keys()):
@@ -481,7 +481,7 @@ class ModelChef:
             active_column += 1
 
         tl_end = active_column - 1
-        timeline.rows.by_name[field_names.TITLE] = title_row
+        timeline.rows.by_name[FieldNames.TITLE] = title_row
 
         for col in range(tl_start, tl_end + 1):
             alpha = get_column_letter(col)
@@ -498,7 +498,7 @@ class ModelChef:
         SheetStyle.set_column_width(my_tab, in_effect_column + 1, 12)
         SheetStyle.set_column_width(my_tab, in_effect_column - 1, 12)
 
-        corner_col = area.columns.by_name[field_names.BASE_CASE]
+        corner_col = area.columns.by_name[FieldNames.BASE_CASE]
         corner_row = title_row + 1
         corner_cell = my_tab.cell(column=corner_col, row=corner_row)
         my_tab.freeze_panes = corner_cell
