@@ -40,10 +40,7 @@ from .line_chef import LineChef
 from .sheet_style import SheetStyle
 from .tab_names import TabNames
 
-from chef_settings import (
-    SCENARIO_SELECTORS, VALUATION_TAB_COLOR, HIDE_LIFE_EVENTS,
-    APPLY_COLOR_TO_DECEMBER, DECEMBER_COLOR,
-)
+from chef_settings import SCENARIO_SELECTORS, HIDE_LIFE_EVENTS
 from data_structures.modelling import common_events
 
 
@@ -88,14 +85,14 @@ class UnitInfoChef:
     MAX_LINKS_PER_CELL = 1
 
     MAX_TITLE_CHARACTERS = 30
-    SHOW_GRID_LINES = False
-    ZOOM_SCALE = 80
 
     FUNCTIONS:
     add_items_to_area()   adds dictionary items to specified area
-    chop_multi()          returns sheet with a SheetData instance at sheet.bb,
-                          also spreads financials, life, parameters of units
-    chop_unit()           returns sheet with a SheetData instance at sheet.bb
+    add_unit_life()
+    add_scenario_selector_logic()
+    add_unit_size()
+    create_unit_sheet()
+    unit_life()
     ====================  =====================================================
     """
     MAX_CONSOLIDATION_ROWS = 15
@@ -777,72 +774,6 @@ class UnitInfoChef:
         sheet.bb.current_row = parameters.rows.ending or self.VALUES_START_ROW
 
         return sheet
-
-    def _link_to_area(self, source_sheet, local_sheet, area_name, group=False,
-                      keep_format=True, current_only=False, num_cols=1):
-        """
-
-
-        UnitChef._link_to_area() -> Worksheet
-
-        --``source_sheet`` must be a Worksheet
-        --``local_sheet`` must be a Worksheet
-        --``area_name`` must be the string name of an Area
-        --``group`` must be a boolean (NOT USED)
-        --``keep_format`` must be a boolean; whether or not to keep source
-            formatting
-
-        Method links area with the name ``area_name`` in the ``local_sheet ``
-        to the ``source_sheet``.  Will keep source formatting if
-        ``keep_format`` is true.
-        """
-        # <-- SHOULD BE PUBLIC ROUTINE
-        source_area = getattr(source_sheet.bb, area_name)
-        local_area = getattr(local_sheet.bb, area_name, None)
-
-        if local_area is None:
-            local_area = local_sheet.bb.add_area(area_name)
-
-        local_area.update(source_area)
-        coordinates = {"sheet": source_sheet.title}
-
-        for row in source_area.rows.by_name.values():
-            source_row = (source_area.rows.starting or 0) + row
-            local_row = (local_area.rows.starting or 0) + row
-
-            if group:
-                group_lines(local_sheet, row=local_row)
-
-            if current_only:
-                use_columns = sorted(source_area.columns.by_name.values())
-                use_columns = use_columns[0:num_cols]
-            else:
-                use_columns = source_area.columns.by_name.values()
-
-            for column in use_columns:
-
-                source_column = (source_area.columns.starting or 0) + column
-                local_column = (local_area.columns.starting or 0) + column
-
-                local_cell = local_sheet.cell(column=local_column,
-                                              row=local_row)
-
-                cos = coordinates.copy()
-                cos["row"] = source_row
-                cos["alpha_column"] = get_column_letter(source_column)
-
-                link = FormulaTemplates.LINK_TO_CELL_ON_SHEET.format(**cos)
-                local_cell.set_explicit_value(link,
-                                              data_type=TypeCodes.FORMULA)
-
-                if keep_format:
-                    source_cell = source_sheet.cell(column=source_column,
-                                                    row=source_row)
-                    local_cell.number_format = source_cell.number_format
-
-            local_sheet.bb.current_row = local_row
-
-        return local_sheet
 
     def _link_to_time_line(self, *pargs, book, sheet, unit,
                            current_only=False):
