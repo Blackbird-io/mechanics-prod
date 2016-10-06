@@ -31,12 +31,11 @@ UnitInfoChef          class containing methods to chop BusinessUnits into
 # Imports
 import openpyxl as xlio
 
-from ._chef_tools import add_scenario_selector, group_lines
+from ._chef_tools import add_scenario_selector, group_lines, set_label
 from .cell_styles import CellStyles
 from .data_types import TypeCodes
 from .field_names import FieldNames
 from .formulas import FormulaTemplates
-from .line_chef import LineChef
 from .sheet_style import SheetStyle
 from .tab_names import TabNames
 
@@ -57,7 +56,6 @@ REPLACEMENT_CHAR = None
 # from sheet titles.
 bad_char_table = {ord(c): REPLACEMENT_CHAR for c in _INVALID_CHARS}
 get_column_letter = xlio.utils.get_column_letter
-line_chef = LineChef()
 
 # Classes
 class UnitInfoChef:
@@ -437,7 +435,6 @@ class UnitInfoChef:
         time_line_row = timeline.rows.get_position(FieldNames.TITLE)
 
         fs = FormulaTemplates
-        set_label = line_chef._set_label
 
         events = sheet.bb.events
         life = sheet.bb.life

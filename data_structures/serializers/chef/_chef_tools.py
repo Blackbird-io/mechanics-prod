@@ -39,9 +39,11 @@ n/a
 # Imports
 import os
 import openpyxl as xlio
+import re
 import xlrd
 
-from chef_settings import SCENARIO_SELECTORS
+from bb_exceptions import ExcelPrepError
+from chef_settings import SCENARIO_SELECTORS, FILTER_PARAMETERS
 
 if SCENARIO_SELECTORS:
     import win32api
@@ -49,7 +51,6 @@ if SCENARIO_SELECTORS:
     import win32con
     import win32gui
     import win32process
-
 
 from openpyxl.worksheet.datavalidation import DataValidation
 
@@ -66,13 +67,12 @@ _VBS_FILENAME_BOOKMARK = "FILENAME_PLACEHOLDER"
 _VBS_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # Module Globals
-
-
+get_column_letter = xlio.utils.get_column_letter
 
 # Classes
 # n/a
 
-
+# Functions
 def add_links_to_selectors(filename, sources_dict):
     """
 
@@ -341,6 +341,131 @@ def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
 
     """
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+
+
+def rows_to_coordinates(*pargs, lookup, column):
+    """
+
+
+    LineChef._rows_to_coordinates -> dict
+
+    --``lookup`` is a lookup table
+    --``column`` must be a column number reference
+
+    Method returns a dictionary of row name:row coordinate within the given
+    column.
+    """
+
+    result = dict()
+    alpha_column = get_column_letter(column)
+
+    for k in lookup.by_name:
+        row = lookup.get_position(k)
+        result[k] = alpha_column + str(row)
+
+    return result
+
+
+def set_label(*pargs, label, sheet, row, column=None,
+              overwrite=False,
+              formatter=None):
+    """
+
+
+    LineChef._set_label() -> Worksheet
+
+    --``label`` must be value to set as a cell label
+    --``sheet`` must be an instance of openpyxl Worksheet
+    --``row`` must be a row index where ``label`` should be written
+    --``column`` column index or None where ``label`` should be written
+    --``overwrite`` must be a boolean; True overwrites existing value,
+       if any; default is False
+    --``formatter`` method in cell_styles to be called on the label cell
+
+    Set (column, row) cell value to label. Throw exception if cell already
+    has a different label, unless ``overwrite`` is True.
+
+    If ``column`` is None, method attempts to locate the labels column in
+    the sheet.bb.parameters area.
+    """
+    if column is None:
+        if getattr(sheet.bb, FieldNames.PARAMETERS, None):
+            param_area = getattr(sheet.bb, FieldNames.PARAMETERS)
+            cols = param_area.columns
+            column = cols.get_position(FieldNames.LABELS)
+        else:
+            column = 2
+
+    label_cell = sheet.cell(column=column, row=row)
+    existing_label = label_cell.value
+
+    if overwrite or not existing_label:
+        label_cell.value = label
+    else:
+        if existing_label != label:
+            c = """
+                Something is wrong with our alignment. We are trying to
+                write a parameter to an existing row with a different label.
+                """
+            print(c)
+            print("Old Label:", existing_label)
+            print("New Label:", label)
+            print("Sheet:", sheet.title)
+            print("Row:", row)
+            print("Col:", column)
+
+            # raise ExcelPrepError(c)
+            # Check to make sure we are writing to the right row; if the
+            # label doesn't match, we are in trouble.
+
+    if formatter:
+        formatter(label_cell)
+
+    return sheet
+
+
+def set_param_rows(line, sheet):
+    try:
+        template_xl = sheet.bb.line_directory[line.id.bbid]
+    except KeyError:
+        template_xl = None
+
+    if template_xl:
+        for check_data, driver_data in zip(template_xl.derived.calculations,
+                                           line.xl.derived.calculations):
+            if check_data.name != driver_data.name:
+                c = "Formulas are not consistent for line over time!"
+                raise ExcelPrepError(c)
+
+            driver_data.rows = check_data.rows
+    elif FILTER_PARAMETERS:
+        # get params to keep
+        for driver_data in line.xl.derived.calculations:
+            params_keep = []
+            for step in driver_data.formula.values():
+                temp_step = [m.start() for m in re.finditer('parameters\[*',
+                                                            step)]
+
+                for idx in temp_step:
+                    jnk = step[idx:]
+                    idx_end = jnk.find(']') + idx
+                    params_keep.append(step[idx + 11:idx_end])
+
+        # clean driver_data
+        new_rows = []
+        for item in driver_data.rows:
+            if item[FieldNames.LABELS] in params_keep:
+                new_rows.append(item)
+
+            try:
+                temp = driver_data.conversion_map[item[FieldNames.LABELS]]
+            except KeyError:
+                pass
+            else:
+                if temp in params_keep:
+                    new_rows.append(item)
+
+        driver_data.rows = new_rows
 
 
 def test_book(model, filename, log_filename=None):
