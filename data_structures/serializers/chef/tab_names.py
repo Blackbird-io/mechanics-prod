@@ -42,7 +42,7 @@ TabNames              standard tab names for Blackbird workbooks
 class TabNames:
     """
 
-    Dedicated data storage for standard tab names in our workbooks.   
+    Dedicated data storage for standard tab names in our workbooks.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -59,3 +59,4 @@ class TabNames:
     SCENARIOS = "Drivers"
     TIME_LINE = "Timeline"
     TRANSCRIPT = "Transcript"
+    STRUCTURE = "Components >>"
