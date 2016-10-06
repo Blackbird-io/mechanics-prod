@@ -45,7 +45,7 @@ from .tab_names import TabNames
 # Module Globals
 
 
-tab_names = TabNames()
+
 
 # Constants
 ADDABLE_CAPTION = ' (addable input)'
