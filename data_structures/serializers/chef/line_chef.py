@@ -655,7 +655,7 @@ class LineChef:
                             formatter=CellStyles.format_consolidated_label
                         )
 
-                self._group_lines(sheet)
+                group_lines(sheet)
 
                 # Move on to next row
                 line.xl.consolidated.ending = sheet.bb.current_row
@@ -714,7 +714,7 @@ class LineChef:
             for data_cluster in line.xl.derived.calculations:
 
                 sheet.bb.current_row += 1
-                self._group_lines(sheet)
+                group_lines(sheet)
 
                 self._add_driver_calculation(
                     sheet=sheet,
@@ -772,7 +772,7 @@ class LineChef:
                     column=label_column
                 )
 
-            self._group_lines(sheet)
+            group_lines(sheet)
 
             param_cell = sheet.cell(column=period_column,
                                     row=sheet.bb.current_row)
@@ -920,7 +920,7 @@ class LineChef:
                 sheet.bb.problem_lines.append(info)
 
             if count < n_items:
-                self._group_lines(sheet)
+                group_lines(sheet)
 
                 if set_labels:
                     label = (indent * " ") + key
@@ -930,7 +930,7 @@ class LineChef:
                 sheet.bb.current_row += 1
             else:
                 sheet.bb.outline_level = 0
-                self._group_lines(sheet)
+                group_lines(sheet)
 
                 if set_labels:
                     label = ((indent - LineItem.TAB_WIDTH) * " ") \
@@ -1050,21 +1050,6 @@ class LineChef:
             keys = driver_data.formula.keys()
 
         return keys
-
-
-    @staticmethod
-    def _group_lines(sheet):
-        """
-
-
-        LineChef._group_lines() -> None
-
-        --``sheet`` must be an instance of openpyxl Worksheet
-
-        Tell Excel to group lines and collapse
-        Delegates to method from _chef_tools
-        """
-        group_lines(sheet)
 
     def _rows_to_coordinates(self, *pargs, lookup, column):
         """
