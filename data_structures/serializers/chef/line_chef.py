@@ -57,7 +57,7 @@ from .formulas import FormulaTemplates
 # n/a
 
 # Module Globals
-cell_styles = CellStyles()
+
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
 type_codes = TypeCodes()
@@ -279,7 +279,7 @@ class LineChef:
                 indent=indent)
             segment_group.size = sheet.bb.current_row - segment_group.tip
 
-        cell_styles.format_line(line)
+        CellStyles.format_line(line)
 
         # for row alignment
         if check:
@@ -368,7 +368,7 @@ class LineChef:
                                     row=sheet.bb.current_row,
                                     column=label_column)
 
-            cell_styles.format_line(line)
+            CellStyles.format_line(line)
         else:
             if line.xl.cell:
                 # here just link the current cell to the cell in line.xl.cell
@@ -381,7 +381,7 @@ class LineChef:
                     set_labels=set_labels,
                     indent=indent)
 
-                cell_styles.format_line(line)
+                CellStyles.format_line(line)
 
                 line.xl.reference.source = None
                 line.xl.reference.cell = None
@@ -394,7 +394,7 @@ class LineChef:
                     set_labels=set_labels,
                     indent=indent)
 
-                cell_styles.format_line(line)
+                CellStyles.format_line(line)
 
         if line.xl.format.blank_row_after:
             sheet.bb.current_row += 1
@@ -777,8 +777,8 @@ class LineChef:
             param_cell = sheet.cell(column=period_column,
                                     row=sheet.bb.current_row)
 
-            cell_styles.format_parameter(param_cell)
-            cell_styles.format_hardcoded(param_cell)
+            CellStyles.format_parameter(param_cell)
+            CellStyles.format_hardcoded(param_cell)
 
             if isinstance(private_value, (list, set, dict, map)):
                 private_value = str(private_value)
@@ -904,7 +904,7 @@ class LineChef:
                 a = "LineChef"
                 calc_cell.comment = Comment(c, a)
 
-            cell_styles.format_calculation(calc_cell)
+            CellStyles.format_calculation(calc_cell)
             # If formula included a reference to the prior value of the line
             # itself, it's picked up here. Can now change line.xl.derived.final
 
@@ -1017,7 +1017,7 @@ class LineChef:
 
             # Blank or hard-coded line
             cell.value = line.value
-            cell_styles.format_hardcoded(cell)
+            CellStyles.format_hardcoded(cell)
 
             line.xl.ending = sheet.bb.current_row
             line.xl.cell = cell

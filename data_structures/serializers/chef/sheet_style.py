@@ -41,7 +41,7 @@ SHOW_GRID_LINES = False
 ZOOM_SCALE = 80
 
 # Module Globals
-cell_styles = CellStyles()
+
 field_names = FieldNames()
 get_column_letter = xlio.utils.get_column_letter
 
@@ -92,7 +92,7 @@ class SheetStyle:
                 continue
 
             row_num = min(area.rows.by_name.values()) - 1
-            cell_styles.format_area_label(sheet, name, row_num)
+            CellStyles.format_area_label(sheet, name, row_num)
 
     @staticmethod
     def set_column_width(sheet, column, width=COLUMN_WIDTH):

@@ -57,7 +57,7 @@ from .unit_chef import UnitChef
 # n/a
 
 # Module Globals
-cell_styles = CellStyles()
+
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
 line_chef = SummaryLineChef()
@@ -219,7 +219,7 @@ class SummaryChef:
         sheet_style.style_sheet(sheet, label_areas=False)
 
         # Make pretty border
-        cell_styles.format_border_group(
+        CellStyles.format_border_group(
             sheet=sheet,
             st_col=output_cols.number(),
             ed_col=output_cols.number() + output_cols.size - 1,
@@ -275,7 +275,7 @@ class SummaryChef:
                     row = group.number()
                     col = label_cols.number()
                     if group.name == 'title' and level == 0:
-                        formatter = cell_styles.format_area_label
+                        formatter = CellStyles.format_area_label
                         formatter(sheet, label, row, col_num=col)
                     else:
                         label_cell = sheet.cell(row=row, column=col)
@@ -315,7 +315,7 @@ class SummaryChef:
             address = year_headrow.get_corner_address(year_colgroup)
             cell = sheet.cell(address)
             cell.value = year_colgroup.name
-            cell_styles.format_header_label(cell, alignment='right')
+            CellStyles.format_header_label(cell, alignment='right')
 
             # merge header cells
             if year_colgroup.size > 1:
@@ -350,7 +350,7 @@ class SummaryChef:
             address = qtr_headrow.get_corner_address(qtr_colgroup)
             cell = sheet.cell(address)
             cell.value = qtr_colgroup.name
-            cell_styles.format_subheader_label(cell, alignment='right')
+            CellStyles.format_subheader_label(cell, alignment='right')
             column = sheet.column_dimensions[cell.column]
             column.width = chef_settings.COLUMN_WIDTH
 
@@ -379,7 +379,7 @@ class SummaryChef:
             address = mon_headrow.get_corner_address(mon_col)
             cell = sheet.cell(address)
             cell.value = mon_col.name
-            cell_styles.format_subheader_label(
+            CellStyles.format_subheader_label(
                 cell,
                 alignment='right',
                 color=LOWHEADER_COLOR

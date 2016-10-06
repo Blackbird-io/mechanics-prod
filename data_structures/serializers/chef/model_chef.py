@@ -62,7 +62,7 @@ IMAGE_PATH = os.path.join(
 )
 
 # Module Globals
-cell_styles = CellStyles()
+
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
 line_chef = LineChef()
@@ -202,7 +202,7 @@ class ModelChef:
 
             sheet.add_image(img)
 
-        cell_styles.format_border_group(sheet, 2, 8, 9, 23,
+        CellStyles.format_border_group(sheet, 2, 8, 9, 23,
                                         border_style='double')
 
         cell = sheet.cell('E11')
@@ -313,14 +313,14 @@ class ModelChef:
         # Make scenario label cells
         custom_cell = my_tab.cell(column=custom_column, row=current_row)
         custom_cell.value = field_names.CUSTOM
-        cell_styles.format_scenario_label(custom_cell)
+        CellStyles.format_scenario_label(custom_cell)
 
         for i, s in enumerate(scenario_columns):
             scen_cell = my_tab.cell(
                 column=base_case_column + i, row=current_row
             )
             scen_cell.value = s.title()
-            cell_styles.format_scenario_label(scen_cell)
+            CellStyles.format_scenario_label(scen_cell)
             if i > 0:
                 # add columns for other cases to area
                 area.columns.by_name[s.lower() + "_case"] = base_case_column + i
@@ -328,7 +328,7 @@ class ModelChef:
         active_label_cell = my_tab.cell(column=in_effect_column,
                                         row=current_row)
         active_label_cell.value = field_names.IN_EFFECT
-        cell_styles.format_scenario_label(active_label_cell)
+        CellStyles.format_scenario_label(active_label_cell)
 
         title_row = current_row
 
@@ -370,15 +370,15 @@ class ModelChef:
             case_cell = my_tab.cell(column=custom_column,
                                     row=current_row)
             case_cell.value = base[param_name]
-            cell_styles.format_hardcoded(case_cell)
-            cell_styles.format_parameter(case_cell)
+            CellStyles.format_hardcoded(case_cell)
+            CellStyles.format_parameter(case_cell)
 
             # Loop through scenarios and add values
             for i, s in enumerate(scenario_columns):
                 case_cell = my_tab.cell(column=base_case_column + i,
                                         row=current_row)
                 case_cell.value = all_scenarios[s].get(param_name, '')
-                cell_styles.format_parameter(case_cell)
+                CellStyles.format_parameter(case_cell)
 
             start_cos = custom_cell.coordinate
             end_cos = case_cell.coordinate
@@ -394,13 +394,13 @@ class ModelChef:
             in_effect_cell.set_explicit_value(
                 link, data_type=type_codes.FORMULA
             )
-            cell_styles.format_parameter(in_effect_cell)
+            CellStyles.format_parameter(in_effect_cell)
 
             current_row += 1
             ref_row += 1
 
         # Add cell outline formatting for Scenarios cells here
-        cell_styles.format_border_group(
+        CellStyles.format_border_group(
             my_tab,
             custom_column,
             custom_column,
@@ -408,7 +408,7 @@ class ModelChef:
             current_row - 1
         )
 
-        cell_styles.format_border_group(
+        CellStyles.format_border_group(
             my_tab,
             base_case_column,
             base_case_column + i,
@@ -416,7 +416,7 @@ class ModelChef:
             current_row - 1
         )
 
-        cell_styles.format_border_group(
+        CellStyles.format_border_group(
             my_tab,
             in_effect_column,
             in_effect_column,
@@ -443,9 +443,9 @@ class ModelChef:
 
             header_cell = my_tab.cell(column=active_column, row=title_row)
             header_cell.value = period.end
-            cell_styles.format_date(header_cell)
+            CellStyles.format_date(header_cell)
             col = chef_settings.TIMELINE_HEADER_COLOR
-            cell_styles.format_header_label(header_cell, font_color=WHITE,
+            CellStyles.format_header_label(header_cell, font_color=WHITE,
                                             color=col, bold=False)
 
             timeline.rows.by_name = area.rows.by_name.copy()
@@ -464,7 +464,7 @@ class ModelChef:
                     param_cell.value = period.parameters[k]
 
                     if param_cell.value != master_cell.value:
-                        cell_styles.format_hardcoded(param_cell)
+                        CellStyles.format_hardcoded(param_cell)
                         link2master = False
 
                 if link2master:
@@ -476,7 +476,7 @@ class ModelChef:
                         link, data_type=type_codes.FORMULA
                     )
 
-                cell_styles.format_parameter(param_cell)
+                CellStyles.format_parameter(param_cell)
 
             active_column += 1
 

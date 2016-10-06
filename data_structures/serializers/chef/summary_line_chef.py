@@ -58,7 +58,7 @@ from .delayed_cell import DelayedCell
 # n/a
 
 # Module Globals
-cell_styles = CellStyles()
+
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
 type_codes = TypeCodes()
@@ -380,7 +380,7 @@ class SummaryLineChef:
                 value=line.value,
                 row_container=matter,
                 col_container=col_container,
-                formatter=cell_styles.format_hardcoded,
+                formatter=CellStyles.format_hardcoded,
             )
 
         return sheet
