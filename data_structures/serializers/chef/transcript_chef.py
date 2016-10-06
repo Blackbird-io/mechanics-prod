@@ -44,7 +44,7 @@ from .tab_names import TabNames
 
 # Module Globals
 
-sheet_style = SheetStyle()
+
 tab_names = TabNames()
 
 # Constants
@@ -151,7 +151,7 @@ class TranscriptChef:
 
         self._add_note_to_excel(sheet, current_row + 1)
 
-        sheet_style.style_sheet(sheet, label_areas=False)
+        SheetStyle.style_sheet(sheet, label_areas=False)
         sheet.sheet_properties.tabColor = chef_settings.TRANSCRIPT_TAB_COLOR
 
         return book

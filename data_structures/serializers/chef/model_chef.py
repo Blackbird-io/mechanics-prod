@@ -66,7 +66,7 @@ IMAGE_PATH = os.path.join(
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
 line_chef = LineChef()
-sheet_style = SheetStyle()
+
 tab_names = TabNames()
 transcript_chef = TranscriptChef()
 type_codes = TypeCodes()
@@ -124,7 +124,7 @@ class ModelChef:
         spacer_idx = book.get_index(temp_sheet) + 1
         spacer_sheet = book.create_sheet("Details >>", spacer_idx)
         spacer_sheet.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
-        sheet_style.style_sheet(spacer_sheet)
+        SheetStyle.style_sheet(spacer_sheet)
 
         transcript_chef.make_transcript_excel(model, book, idx=3)
 
@@ -171,7 +171,7 @@ class ModelChef:
 
         sheet = book.active
         sheet.title = tab_names.COVER
-        sheet_style.style_sheet(sheet, label_areas=False)
+        SheetStyle.style_sheet(sheet, label_areas=False)
 
         row = sheet.row_dimensions[1]
         row.height = 9
@@ -436,7 +436,7 @@ class ModelChef:
 
             timeline.columns.by_name[period.end] = active_column
 
-            sheet_style.set_column_width(my_tab, active_column)
+            SheetStyle.set_column_width(my_tab, active_column)
             # Need this to make sure the parameters Area looks as wide as the
             # timeline. Otherwise, other routines may think that the params
             # area is only one column wide.
@@ -492,18 +492,18 @@ class ModelChef:
             my_tab.column_dimensions[alpha].outline_level = 1
 
         for c in range(1, area.columns.ending + 1):
-            sheet_style.set_column_width(my_tab, c)
+            SheetStyle.set_column_width(my_tab, c)
 
-        sheet_style.set_column_width(my_tab, custom_column + 1, 12)
-        sheet_style.set_column_width(my_tab, in_effect_column + 1, 12)
-        sheet_style.set_column_width(my_tab, in_effect_column - 1, 12)
+        SheetStyle.set_column_width(my_tab, custom_column + 1, 12)
+        SheetStyle.set_column_width(my_tab, in_effect_column + 1, 12)
+        SheetStyle.set_column_width(my_tab, in_effect_column - 1, 12)
 
         corner_col = area.columns.by_name[field_names.BASE_CASE]
         corner_row = title_row + 1
         corner_cell = my_tab.cell(column=corner_col, row=corner_row)
         my_tab.freeze_panes = corner_cell
 
-        sheet_style.style_sheet(my_tab, label_areas=False)
+        SheetStyle.style_sheet(my_tab, label_areas=False)
         my_tab.sheet_properties.tabColor = chef_settings.SCENARIO_TAB_COLOR
 
         return my_tab
