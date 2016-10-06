@@ -487,60 +487,6 @@ class LineChef:
     #                           NON-PUBLIC METHODS                             #
     # *************************************************************************#
 
-    def _add_detail(
-        self, sheet, column, line, row_container, indent=0
-    ):
-        """
-
-
-        LineChef._add_detail() -> Worksheet
-
-        --``sheet`` must be an instance of openpyxl Worksheet
-        --``column`` must be a column number reference
-        --``line`` must be an instance of LineItem
-        --``indent`` is amount of indent
-        --``row_container`` coordinate anchor on the row axis
-
-        Displays detail sources.
-        """
-        details = line.get_ordered()
-        if details:
-            sub_indent = indent + LineItem.TAB_WIDTH
-            detail_summation = ""
-            detail_rows = row_container.add_group('details')
-
-            for detail in details:
-                self.chop_summary_line(
-                    sheet=sheet,
-                    column=column,
-                    line=detail,
-                    row_container=detail_rows,
-                    indent=sub_indent
-                )
-                link_template = FormulaTemplates.ADD_COORDINATES
-                include = detail.xl.cell.parent is not sheet
-                cos = detail.xl.get_coordinates(include_sheet=include)
-                link = link_template.format(coordinates=cos)
-                detail_summation += link
-
-            # group all the details here
-            label = indent * " " + line.title
-            detail_endrow = row_container.add_group(
-                label, size=1, label=label
-            )
-            subtotal_cell = sheet.cell(
-                column=column, row=detail_endrow.number()
-            )
-            subtotal_cell.set_explicit_value(
-                detail_summation, data_type=TypeCodes.FORMULA
-            )
-
-            line.xl.detailed.ending = detail_endrow.tip
-            line.xl.detailed.cell = subtotal_cell
-            line.xl.cell = subtotal_cell
-
-        return sheet
-
     def _validate_consolidation(self, sheet, line):
         """
 
@@ -853,7 +799,7 @@ class LineChef:
         n_items = len(driver_data.formula.items())
         count = 0
 
-        formula_steps = self._get_formula_steps(driver_data, line, sheet)
+        formula_steps = self._get_formula_steps(sheet, line, driver_data)
         for key in formula_steps:
             count += 1
 
@@ -932,8 +878,8 @@ class LineChef:
         return sheet
 
     def _add_reference(
-        self, sheet, column, line,
-        set_labels=True, indent=0, update_cell=True, row_container=None
+        self, sheet, column, line, row_container=None,
+        set_labels=True, indent=0, update_cell=True
     ):
         """
 
@@ -978,8 +924,8 @@ class LineChef:
         return sheet
 
     def _combine_segments(
-        self, sheet, column, line,
-        set_labels=True, indent=0, row_container=None
+        self, sheet, column, line, row_container=None,
+        set_labels=True, indent=0
     ):
         """
 
@@ -1020,7 +966,7 @@ class LineChef:
         return sheet
 
     @staticmethod
-    def _get_formula_steps(driver_data, line, sheet):
+    def _get_formula_steps(sheet, line, driver_data):
         """
 
         Function gets and returns steps in formula calculation based on the
