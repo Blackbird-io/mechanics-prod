@@ -62,8 +62,7 @@ class SheetStyle:
     ====================  =====================================================
     """
 
-    @staticmethod
-    def style_sheet(sheet, label_areas=True):
+    def style_sheet(self, sheet, label_areas=True):
         """
 
 
@@ -76,22 +75,13 @@ class SheetStyle:
         Blackbird sheet styling.
         """
         if label_areas:
-            SheetStyle.label_areas(sheet)
+            self.label_areas(sheet)
 
         sheet.sheet_view.showGridLines = SHOW_GRID_LINES
         sheet.sheet_view.zoomScale = ZOOM_SCALE
 
     @staticmethod
     def label_areas(sheet):
-        """
-
-
-        SheetStyle.label_areas() -> None
-
-        --``sheet`` is an openpyxl worksheet
-
-        Method assigns labels to an Area object.
-        """
         areas_exclude = set((field_names.GENERAL, field_names.TIMELINE))
         areas = set(sheet.bb.area_names)
         areas = areas - areas_exclude
@@ -106,15 +96,5 @@ class SheetStyle:
 
     @staticmethod
     def set_column_width(sheet, column, width=COLUMN_WIDTH):
-        """
-
-
-        SheetStyle.set_column_width() -> None
-
-        --``sheet`` is an openpyxl worksheet
-        --``column`` int
-
-        Method sets column width.
-        """
         column = sheet.column_dimensions[get_column_letter(column)]
         column.width = width
