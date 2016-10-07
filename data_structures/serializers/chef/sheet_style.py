@@ -83,6 +83,15 @@ class SheetStyle:
 
     @staticmethod
     def label_areas(sheet):
+        """
+
+
+        SheetStyle.label_areas() -> None
+
+        --``sheet`` is an openpyxl worksheet
+
+        Method assigns labels to an Area object.
+        """
         areas_exclude = set((field_names.GENERAL, field_names.TIMELINE))
         areas = set(sheet.bb.area_names)
         areas = areas - areas_exclude
@@ -97,5 +106,15 @@ class SheetStyle:
 
     @staticmethod
     def set_column_width(sheet, column, width=COLUMN_WIDTH):
+        """
+
+
+        SheetStyle.set_column_width() -> None
+
+        --``sheet`` is an openpyxl worksheet
+        --``column`` int
+
+        Method sets column width.
+        """
         column = sheet.column_dimensions[get_column_letter(column)]
         column.width = width
