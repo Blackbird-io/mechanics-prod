@@ -311,13 +311,10 @@ class UnitChef:
         Method adds Life and Events sections to unit sheet and delegates to
         _add_unit_life to write each time period.
         """
-        body_rows = sheet.bb.row_axis.get_group('body')
+
         param_area = getattr(sheet.bb, field_names.PARAMETERS)
         if param_area.rows.ending:
             start_row = param_area.rows.ending + 1
-            body_rows.add_group(
-                'drivers', size=param_area.rows.ending - body_rows.tip
-            )
         else:
             start_row = self.VALUES_START_ROW - 2
         sheet.bb.current_row = start_row
