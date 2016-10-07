@@ -40,7 +40,7 @@ ParameterManager      manager class for unit parameters over time
 # n/a
 
 # Classes
-class BusinessFiat:
+class BusinessSudo:
     """
 
     Object describes a group of business activity. A business unit can be a
@@ -64,6 +64,7 @@ class BusinessFiat:
         self.id = bu.id
         self.xl = bu.xl
         self.tags = bu.tags
+        self.life = bu.life.copy()
         self.components = bu.components
         self.complete = True
         self.periods_used = 1

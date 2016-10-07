@@ -91,7 +91,7 @@ class TimePeriodBase(History):
 
         self.bu_directory = dict()
 
-        self.content = content
+        self._content = content
         self.id = ID()
         self.relationships = Relationships(self)
 
@@ -122,6 +122,44 @@ class TimePeriodBase(History):
         while this.next_end:
             this = this.future
             yield this
+
+    @property
+    def content(self):
+        """
+
+        ** property **
+
+        TimePeriodBase.past() -> TimePeriodBase
+
+        If parent TimelineBase.add_period() set a _past_day on us, use it
+        to locate the predecessor in parent's dictionary.
+        """
+        time_line = self.relationships.parent
+        now = time_line.current_period
+        bu = now._content
+        if bu:
+            # print(now.bu_directory)
+            # print(bu.id.bbid)
+            if bu.id.bbid not in self.bu_directory:
+                # unit = now.bu_directory[bu.id.bbid]
+                unit = bu.copy()
+                unit._fit_to_period(self)
+                self.bu_directory[bu.id.bbid] = unit
+            return self.bu_directory.get(bu.id.bbid)
+
+    @content.setter
+    def content(self, bu):
+        """
+
+        ** property **
+
+        TimePeriodBase.past() -> TimePeriodBase
+
+        If parent TimelineBase.add_period() set a _past_day on us, use it
+        to locate the predecessor in parent's dictionary.
+        """
+        self.set_content(bu)
+        # self._content = bu
 
     @property
     def past(self):
@@ -280,7 +318,7 @@ class TimePeriodBase(History):
         """
         self.register(bu, reset_directories=True)
         # Reset directories when setting the top node in the period.
-        self.content = bu
+        self._content = bu
 
     # *************************************************************************#
     #                          NON-PUBLIC METHODS                             #
