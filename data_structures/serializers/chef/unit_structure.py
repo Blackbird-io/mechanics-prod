@@ -30,7 +30,10 @@ StructureChef         class containing methods to display BusinessUnits
 # Imports
 from openpyxl.styles import Border, Side, Alignment
 
+import chef_settings
+
 from .tab_names import TabNames
+from .sheet_style import SheetStyle
 
 
 
@@ -64,7 +67,7 @@ class StructureChef:
     BOX_HEIGHT = 2
     BOX_ACROSS = 2
 
-    def chop(self, book, unit, index=5, level=0):
+    def chop(self, book, unit, level=0):
         """
 
 
@@ -76,8 +79,15 @@ class StructureChef:
         Method recursively walks through ``unit`` and components and displays
         a diagram of BU structure on an Excel sheet.
         """
+        # sheet location
+        ahead = book.get_sheet_by_name(TabNames.SCENARIOS)
+        index = book.get_index(ahead) + 1
+
         # sheet layout
         sheet = book.create_sheet(TabNames.STRUCTURE, index)
+        sheet.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
+        SheetStyle.style_sheet(sheet)
+
         header_rows = sheet.bb.row_axis.add_group('header', size=1)
         header_cols = sheet.bb.col_axis.add_group('header', size=1)
         body_rows = sheet.bb.row_axis.add_group('body')
