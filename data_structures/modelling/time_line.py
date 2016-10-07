@@ -303,7 +303,7 @@ class TimeLine(TimelineBase):
                 # copy and fill out content
                 if seed.content:
                     new_content = BusinessSudo(seed.content, period)
-                    period.set_content(new_content, updateID=False)
+                    # period.set_content(new_content, updateID=False)
                     period.content.reset_financials()
                     period.content.fill_out()
                 seed = period
