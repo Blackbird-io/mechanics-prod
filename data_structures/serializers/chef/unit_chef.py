@@ -311,12 +311,16 @@ class UnitChef:
         Method adds Life and Events sections to unit sheet and delegates to
         _add_unit_life to write each time period.
         """
+        body_rows = sheet.bb.row_axis.get_group('body')
+        parm_rows = body_rows.add_group('drivers')
 
         param_area = getattr(sheet.bb, field_names.PARAMETERS)
         if param_area.rows.ending:
             start_row = param_area.rows.ending + 1
+            parm_rows.size = param_area.rows.ending - body_rows.tip
         else:
             start_row = self.VALUES_START_ROW - 2
+            parm_rows.size = 0
         sheet.bb.current_row = start_row
         sheet = self._add_unit_life(sheet=sheet, unit=unit)
         for snapshot in unit:
@@ -364,9 +368,10 @@ class UnitChef:
         fins_dict = dict()
 
         body_rows = sheet.bb.row_axis.get_group('body')
+        parm_rows = body_rows.get_group('drivers')
         body_rows.add_group(
             'statements',
-            offset=sheet.bb.current_row - body_rows.tip + 1
+            offset=sheet.bb.current_row - body_rows.tip - parm_rows.size + 1
         )
 
         for statement in unit.financials.ordered:
