@@ -62,7 +62,8 @@ class SheetStyle:
     ====================  =====================================================
     """
 
-    def style_sheet(self, sheet, label_areas=True):
+    @staticmethod
+    def style_sheet(sheet, label_areas=True):
         """
 
 
@@ -75,7 +76,7 @@ class SheetStyle:
         Blackbird sheet styling.
         """
         if label_areas:
-            self.label_areas(sheet)
+            SheetStyle.label_areas(sheet)
 
         sheet.sheet_view.showGridLines = SHOW_GRID_LINES
         sheet.sheet_view.zoomScale = ZOOM_SCALE
