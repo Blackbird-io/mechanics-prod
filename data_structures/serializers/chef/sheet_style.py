@@ -76,6 +76,7 @@ class SheetStyle:
         many sheets but do not get labeled by default.
         """
         areas_exclude = set((FieldNames.GENERAL, FieldNames.TIMELINE))
+
         areas = set(sheet.bb.area_names)
         areas = areas - areas_exclude
 

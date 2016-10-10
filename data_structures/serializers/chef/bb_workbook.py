@@ -56,7 +56,7 @@ class BB_Workbook(xlio.Workbook):
 
     Class modifies standard workbook to include a SheetData record set on each
     sheet. As a result, we can do data lookups and reference builds faster and
-    more explicitly.     
+    more explicitly.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -69,7 +69,7 @@ class BB_Workbook(xlio.Workbook):
     save()                saves workbook to file and runs test on contents
     set_scenario_names()  sets scenario_names attribute
     ====================  ======================================================
-    """ 
+    """
     def __init__(self, *pargs, **kwargs):
         xlio.Workbook.__init__(self, *pargs, **kwargs)
         self.scenario_names = None
@@ -140,9 +140,9 @@ class BB_Workbook(xlio.Workbook):
             if k not in self.scenario_names:
                 self.scenario_names.append(k.title())
 
-    #*************************************************************************#
-    #                          NON-PUBLIC METHODS                             #
-    #*************************************************************************#
+    # *************************************************************************#
+    #                           NON-PUBLIC METHODS                             #
+    # *************************************************************************#
 
     def _get_sources_dict(self):
         """
@@ -157,7 +157,7 @@ class BB_Workbook(xlio.Workbook):
         for sheet in self.worksheets:
             if getattr(sheet, 'bb', None):
                 if sheet.bb.scenario_selector:
-                    idx = int(self.get_index(sheet))+1
+                    idx = int(self.get_index(sheet)) + 1
                     sheet_num = "Sheet%s" % idx
                     sources_dict[sheet_num] = (sheet.title,
                                                sheet.bb.scenario_selector)
