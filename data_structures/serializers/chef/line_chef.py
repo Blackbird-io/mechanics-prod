@@ -373,10 +373,6 @@ class LineChef:
         else:
             sheet.bb.need_spacer = False
 
-        if start_bal:
-            sheet.bb.need_spacer = True
-            sheet.bb.current_row += 1
-
         return sheet
 
     # *************************************************************************#
