@@ -25,6 +25,9 @@ close_excel_by_force  function closes Excel application by force
 collapse_groups       function opens an Excel file and collapses all groups
 group_lines           function adds row to outline group for pretty collapsing
 is_close              function for fuzzy equals between numeric values
+rows_to_coordinates   creates directory of row name:row coordinate in a column
+set_label             function sets the label for a given row
+set_param_rows        function sets the SSOT parameter rows for a line item
 
 CLASSES:
 n/a
@@ -350,8 +353,6 @@ def rows_to_coordinates(*pargs, lookup, column):
     --``lookup`` is a lookup table
     --``column`` must be a column number reference
 
-    Method returns a dictionary of row name:row coordinate within the given
-    column.
     """
 
     result = dict()
@@ -423,6 +424,17 @@ def set_label(*pargs, label, sheet, row, column=None,
 
 
 def set_param_rows(line, sheet):
+    """
+
+    set_param_rows() -> None
+
+    --``line`` is an instance of LineItem
+    --``sheet`` is an instance of Openpyxl worksheet
+
+    Function determines the SSOT parameters that the line's drivers will need
+    in perpetuity.  Template parameters are saved to the sheet's line directory
+    """
+
     try:
         template_xl = sheet.bb.line_directory[line.id.bbid]
     except KeyError:
