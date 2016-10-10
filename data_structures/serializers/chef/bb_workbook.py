@@ -31,7 +31,7 @@ import openpyxl as xlio
 
 from chef_settings import COLLAPSE_ROWS, DEFAULT_SCENARIOS, SCENARIO_SELECTORS
 
-from ._chef_tools import check_filename_ext, test_book
+from ._chef_tools import check_filename_ext
 from .data_management import SheetData
 from .field_names import FieldNames
 
