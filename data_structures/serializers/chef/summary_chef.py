@@ -42,6 +42,7 @@ from .cell_styles import CellStyles, LOWHEADER_COLOR
 from .field_names import FieldNames
 from .sheet_style import SheetStyle
 from .summary_line_chef import SummaryLineChef
+from .tab_names import TabNames
 from .transcript_chef import TranscriptChef
 from .unit_chef import UnitChef
 
@@ -91,7 +92,7 @@ class SummaryChef:
         """
         # Create summary tab
         tab_idx = 1
-        sheet = book.create_sheet(chef_settings.SUMMARY_TITLE, tab_idx)
+        sheet = book.create_sheet(TabNames.SUMMARIES, tab_idx)
 
         # 2x1 top left corner for company name
         header_rows = sheet.bb.row_axis.add_group('tab_header', size=2)
