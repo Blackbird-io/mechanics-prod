@@ -4,7 +4,7 @@
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 # Blackbird Environment
-# Module: serializers.chef.unit_chef
+# Module: serializers.chef.unit_fins_chef
 """
 
 Module defines a class that represents arbitrarily rich BusinessUnit instances
@@ -20,8 +20,8 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-UnitChef              class containing methods to chop BusinessUnits into
-                      dynamic Excel structures
+UnitFinsChef          class containing methods for chopping unit financials
+                      into dynamic Excel structures
 ====================  =========================================================
 """
 
@@ -77,24 +77,22 @@ class UnitFinsChef:
     ====================  =====================================================
 
     DATA:
-    MAX_CONSOLIDATION_ROWS = 15
-    MAX_LINKS_PER_CELL = 1
-
-    MAX_TITLE_CHARACTERS = 30
-    SHOW_GRID_LINES = False
-    ZOOM_SCALE = 80
+    # n/a
 
     FUNCTIONS:
-    add_items_to_area()   adds dictionary items to specified area
-    chop_multi()          returns sheet with a SheetData instance at sheet.bb,
-                          also spreads financials, life, parameters of units
-    chop_unit()           returns sheet with a SheetData instance at sheet.bb
+    add_financials()      adds dynamic Excel for given financials
+    add_valuation_tab()   creates and fills in valuation tab
     ====================  =====================================================
     """
     def add_financials(self, *pargs, sheet, unit, column, set_labels=True):
         """
 
-        UnitChef._add_financials() -> dict
+        UnitChef.add_financials() -> dict
+
+         --``sheet`` must be an instance of openpyxl Worksheet
+        --``unit`` must be an instance of BusinessUnit
+        --``column`` must be a column number reference
+        --``set_labels`` must be a boolean; True will set labels for line
 
         Method adds financials to worksheet and returns a dictionary of the
         statements added to the worksheet and their starting rows
@@ -151,6 +149,7 @@ class UnitFinsChef:
 
         --``book`` must be a Workbook
         --``unit`` must be an instance of BusinessUnit
+        --``index`` is optionally the index at which to insert the tab
 
         Method creates a valuation tab and chops unit valuation statement.
         """

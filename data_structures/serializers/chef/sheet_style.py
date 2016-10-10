@@ -30,6 +30,7 @@ SheetStyle            standard styles for worksheets
 import openpyxl as xlio
 
 from chef_settings import COLUMN_WIDTH
+
 from .cell_styles import CellStyles
 from .field_names import FieldNames
 

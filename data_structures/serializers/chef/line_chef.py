@@ -71,19 +71,23 @@ class LineChef:
     FUNCTIONS:
     attempt_reference_resolution() tries to resolve missing line refs in formulas
     chop_line()           writes LineItems to Excel
-    chop_startbal_line()  writes LineItems from Starting Balance Sheet to Excel
-    chop_starting_balance() writes Starting Balance Sheet to Excel
     chop_statement()      writes Statements to Excel (except Starting Balance)
-    chop_summary_line()   writes LineItems from financial summaries to Excel
-    chop_summary_statement() writes financial summary statements to Excel
     ====================  =====================================================
     """
 
     @staticmethod
     def attempt_reference_resolution(sheet, calc, materials):
         """
-        Make new method for reevaluating problem lines and updating
-         their line references.  Algorithm will look something like:
+
+        LineChef.attempt_reference_resolution() -> None
+
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``calc`` is a driver calculation
+        --``materials`` is the info dictionary used to assign line references
+                        for driver calculation
+
+        Method attempts to reevaluate problem lines and update their
+        problematic line references:
             - update line_coordinates dictionary (copy from below)
             - find first line where steps were written
             - reformat formulas using updated materials dict and save

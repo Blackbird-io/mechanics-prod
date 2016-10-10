@@ -30,6 +30,7 @@ BB_Workbook           workbook where each sheet has a SheetData record set
 import openpyxl as xlio
 
 from chef_settings import COLLAPSE_ROWS, DEFAULT_SCENARIOS, SCENARIO_SELECTORS
+
 from ._chef_tools import check_filename_ext, test_book
 from .data_management import SheetData
 from .field_names import FieldNames
@@ -46,6 +47,7 @@ if COLLAPSE_ROWS or SCENARIO_SELECTORS:
 # n/a
 
 # Module Globals
+# n/a
 
 
 # Classes
@@ -65,7 +67,7 @@ class BB_Workbook(xlio.Workbook):
     FUNCTIONS:
     create_sheet()        returns sheet with a SheetData instance at sheet.bb
     save()                saves workbook to file and runs test on contents
-    test()                test workbook against model
+    set_scenario_names()  sets scenario_names attribute
     ====================  ======================================================
     """ 
     def __init__(self, *pargs, **kwargs):
@@ -137,22 +139,6 @@ class BB_Workbook(xlio.Workbook):
         for k in sorted(model.scenarios.keys()):
             if k not in self.scenario_names:
                 self.scenario_names.append(k.title())
-
-    @staticmethod
-    def test(model, filename):
-        """
-
-
-        BB_WorkBook.test(filename) -> None
-
-        --``model`` must be a Chef-chopped Blackbird engine model
-        --``filename`` must be string path at which the workbook for the
-            chopped model has been saved.
-
-        Method initiates test of file contents against the model in memory.
-        """
-        # test the workbook against engine values
-        test_book(model, filename)
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
