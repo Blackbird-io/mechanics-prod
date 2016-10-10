@@ -29,7 +29,6 @@ TranscriptChef         add transcript tab to Blackbird model Excel workbook
 # Imports
 import chef_settings
 import datetime
-import os
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.styles.colors import WHITE, BLACK
 import string
@@ -249,7 +248,7 @@ class TranscriptChef:
         sheet.column_dimensions['G'].hidden = True
 
         return sheet
-    
+
     def _prep_question_output(self, sheet, q, row):
         try:
             target = q[TARG]
@@ -260,15 +259,15 @@ class TranscriptChef:
         else:
             name = q[NAME]
             prompt = q[PROM]
-    
+
         response_array = q[RA]
-    
+
         if q[IT] == 'end':
             return row
-    
+
         if not response_array:
             return row
-    
+
         if q[IT] == 'table':
             # outer for loop loops through table rows
             for response in response_array:
@@ -283,7 +282,7 @@ class TranscriptChef:
             for response in response_array:
                 temp_inp = response[IT]
                 temp_res = response[RS]
-    
+
                 if len(temp_res) > 1 and temp_inp != 'range':
                     # addable input
                     use_res = response.copy()
@@ -325,7 +324,7 @@ class TranscriptChef:
                 answer[self.QUESTION_NAME_HEADER] = name or ''
                 self._add_record_to_excel(sheet, answer, row)
                 row += 1
-    
+
         return row
 
     def _prep_response_output(self, response, prompt, target, name,
@@ -334,7 +333,7 @@ class TranscriptChef:
         answer[self.PROMPT_HEADER] = prompt or ''
         answer[self.TARGET_HEADER] = target or ''
         answer[self.QUESTION_NAME_HEADER] = name or ''
-    
+
         # inner for loop loops over columns
         if table:
             response_array = response
@@ -350,15 +349,15 @@ class TranscriptChef:
         else:
             caption = response[MC]
             response_out = self._format_response(response)
-    
+
             if response_out is None:
                 return current_row
-    
+
             answer[self.CAPTION_HEADER] = caption or ''
-    
+
         answer[self.RESPONSE_HEADER] = response_out
-    
+
         self._add_record_to_excel(sheet, answer, current_row)
         current_row += 1
-    
+
         return current_row

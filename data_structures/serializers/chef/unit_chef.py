@@ -229,13 +229,9 @@ class UnitChef:
         # 2.3. add unit size
         sheet.bb.current_row += 2
         self._add_unit_size(sheet=sheet, unit=unit, set_labels=True)
-        time_line = unit.period.relationships.parent
-        for p in time_line.iter_ordered():
-            if p.end > time_line.current_period.end:
-                snapshot = p.content
-                self._add_unit_size(
-                    sheet=sheet, unit=snapshot, set_labels=False
-                )
+        for snapshot in unit:
+            sheet.bb.current_row = sheet.bb.size.rows.ending
+            self._add_unit_size(sheet=sheet, unit=snapshot, set_labels=False)
 
         sheet.bb.outline_level += 1
         group_lines(sheet, sheet.bb.size.rows.ending)
@@ -246,18 +242,17 @@ class UnitChef:
         fins_dict = self._add_financials(sheet=sheet, unit=unit,
                                          column=current)
 
-        time_line = unit.period.relationships.parent
-        for p in time_line.iter_ordered():
-            if p.end > time_line.current_period.end:
-                snapshot = p.content
-                sheet.bb.current_row = sheet.bb.size.rows.ending
-                column = sheet.bb.time_line.columns.get_position(p.end)
-                self._add_financials(
-                    sheet=sheet, unit=snapshot, column=column, set_labels=False
-                )
+        for snapshot in unit:
+            sheet.bb.current_row = sheet.bb.size.rows.ending
+            column = sheet.bb.time_line.columns.get_position(
+                snapshot.period.end)
+            # Load balance from prior column!!!
 
-                # Should make sure rows align here from one period to the next.
-                # Main problem lies in consolidation logic.
+            self._add_financials(sheet=sheet, unit=snapshot, column=column,
+                                 set_labels=False)
+
+            # Should make sure rows align here from one period to the next.
+            # Main problem lies in consolidation logic.
 
         # 2.5 add area and statement labels and sheet formatting
         sheet_style.style_sheet(sheet)
@@ -316,21 +311,21 @@ class UnitChef:
         Method adds Life and Events sections to unit sheet and delegates to
         _add_unit_life to write each time period.
         """
+        body_rows = sheet.bb.row_axis.get_group('body')
+        parm_rows = body_rows.add_group('drivers')
 
         param_area = getattr(sheet.bb, field_names.PARAMETERS)
         if param_area.rows.ending:
             start_row = param_area.rows.ending + 1
+            parm_rows.size = param_area.rows.ending - body_rows.tip
         else:
             start_row = self.VALUES_START_ROW - 2
+            parm_rows.size = 0
         sheet.bb.current_row = start_row
         sheet = self._add_unit_life(sheet=sheet, unit=unit)
-        time_line = unit.period.relationships.parent
-        for p in time_line.iter_ordered():
-            if p.end > time_line.current_period.end:
-                snapshot = p.content
-                self._add_unit_life(
-                    sheet=sheet, unit=snapshot, set_labels=False
-                )
+        for snapshot in unit:
+            sheet.bb.current_row = start_row
+            self._add_unit_life(sheet=sheet, unit=snapshot, set_labels=False)
         sheet.bb.outline_level -= 1
 
         if HIDE_LIFE_EVENTS:
@@ -373,9 +368,10 @@ class UnitChef:
         fins_dict = dict()
 
         body_rows = sheet.bb.row_axis.get_group('body')
+        parm_rows = body_rows.get_group('drivers')
         body_rows.add_group(
             'statements',
-            offset=sheet.bb.current_row - body_rows.tip + 1
+            offset=sheet.bb.current_row - body_rows.tip - parm_rows.size + 1
         )
 
         for statement in unit.financials.ordered:
@@ -1206,13 +1202,9 @@ class UnitChef:
                               timeline_params=time_params)
 
         if not current_only:
-            time_line = unit.period.relationships.parent
-            for p in time_line.iter_ordered():
-                if p.end > time_line.current_period.end:
-                    snapshot = p.content
-                    self._add_unit_params(
-                        sheet=sheet, unit=snapshot, timeline_params=time_params
-                    )
+            for snapshot in unit:
+                self._add_unit_params(sheet=sheet, unit=snapshot,
+                                      timeline_params=time_params)
 
         sheet.bb.outline_level -= 1
 

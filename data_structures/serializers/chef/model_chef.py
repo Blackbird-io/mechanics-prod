@@ -52,6 +52,7 @@ from .tab_names import TabNames
 from .transcript_chef import TranscriptChef
 from .unit_chef import UnitChef
 from .summary_chef import SummaryChef
+from .unit_structure import StructureChef
 
 
 
@@ -111,6 +112,9 @@ class ModelChef:
         now = model.time_line.current_period
         company = now.content
 
+        structure_chef = StructureChef()
+        structure_chef.chop(book, company)
+
         unit_chef.chop_multi(book=book, unit=company)
 
         if bb_settings.MAKE_ANNUAL_SUMMARIES:
@@ -119,12 +123,6 @@ class ModelChef:
 
         unit_chef.chop_multi_valuation(book=book, unit=company, index=2,
                                        recur=False)
-
-        temp_sheet = book.get_sheet_by_name(tab_names.SCENARIOS)
-        spacer_idx = book.get_index(temp_sheet) + 1
-        spacer_sheet = book.create_sheet("Details >>", spacer_idx)
-        spacer_sheet.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
-        sheet_style.style_sheet(spacer_sheet)
 
         transcript_chef.make_transcript_excel(model, book, idx=3)
 

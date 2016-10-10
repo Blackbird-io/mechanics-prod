@@ -166,7 +166,6 @@ class SummaryMaker:
             timeline_summary.id.set_namespace(self.time_line.id.namespace)
             # output quarter or year being currently processed
             timeline_summary.summary_period = None
-            timeline_summary.current_period = None
             self.summaries[key] = timeline_summary
             self.complete_periods[key] = periods
             self.period_sources[key] = dict()
@@ -293,8 +292,6 @@ class SummaryMaker:
             summary_period.set_content(summary_unit)
             timeline_summary.add_period(summary_period)
             timeline_summary.summary_period = summary_period
-            if not timeline_summary.current_period:
-                timeline_summary.current_period = summary_period
 
             logger.debug('{}:{} -> {}:{} new {}'.format(
                 source.start, source.end,

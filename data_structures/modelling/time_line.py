@@ -39,7 +39,6 @@ from data_structures.system.summary_maker import SummaryMaker
 from .parameters import Parameters
 from .time_line_base import TimelineBase
 from .time_period import TimePeriod
-from .business_fiat import BusinessSudo
 
 
 
@@ -302,8 +301,8 @@ class TimeLine(TimelineBase):
                 period.combine_parameters()
                 # copy and fill out content
                 if seed.content:
-                    new_content = BusinessSudo(seed.content, period)
-                    # period.set_content(new_content, updateID=False)
+                    new_content = seed.content.copy()
+                    period.set_content(new_content, updateID=False)
                     period.content.reset_financials()
                     period.content.fill_out()
                 seed = period
