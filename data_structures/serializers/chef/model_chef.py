@@ -16,9 +16,7 @@ Attribute             Description
 ====================  =========================================================
 
 DATA:
-field_names           commonly used field names
-formula_templates     string templates for commonly used formulas
-tab_names             standard tab names
+n/a
 
 FUNCTIONS:
 n/a
@@ -38,7 +36,6 @@ import openpyxl as xlio
 import bb_settings
 import chef_settings
 from .cell_styles import CellStyles
-from .formulas import FormulaTemplates
 from .garnish_chef import GarnishChef
 from .line_chef import LineChef
 from .sheet_style import SheetStyle
@@ -56,7 +53,6 @@ IMAGE_PATH = os.path.join(
 )
 
 # Module Globals
-
 line_chef = LineChef()
 transcript_chef = TranscriptChef()
 unit_chef = UnitChef()

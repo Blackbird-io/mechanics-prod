@@ -21,7 +21,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-DataTypes             known cell data types
+TypeCodes             known cell data types
 NumberFormats         formats for numbers
 ====================  =========================================================
 """

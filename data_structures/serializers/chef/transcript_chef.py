@@ -29,10 +29,10 @@ TranscriptChef         add transcript tab to Blackbird model Excel workbook
 # Imports
 import chef_settings
 import datetime
-import os
+import string
+
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.styles.colors import WHITE, BLACK
-import string
 
 from .bb_workbook import BB_Workbook as Workbook
 from .cell_styles import CellStyles
@@ -43,15 +43,12 @@ from .tab_names import TabNames
 
 
 # Module Globals
-
-
-
+# n/a
 
 # Constants
 ADDABLE_CAPTION = ' (addable input)'
 NOTE_CAP = 'Note'
 TABLE_CAPTION = 'table entry'
-
 USAGE_NOTE = 'To ensure compatibility with website script functionality, ' \
              'adjust only values in "Response" column. Within "Response" ' \
              'column, maintain given formatting for ranges, dates, etc.'
@@ -66,8 +63,6 @@ PROM = 'prompt'
 RA = 'response_array'
 RS = 'response'
 TARG = 'target'
-
-
 
 # Classes
 class TranscriptChef:

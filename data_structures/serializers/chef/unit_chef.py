@@ -89,7 +89,8 @@ class UnitChef:
     FUNCTIONS:
     chop_multi()          returns sheet with a SheetData instance at sheet.bb,
                           also spreads financials, life, parameters of units
-    chop_unit()           returns sheet with a SheetData instance at sheet.bb
+    chop_multi_valuation() returns sheet with a SheetData instance at sheet.bb,
+                          makes and fills Valuation tab
     ====================  =====================================================
     """
     def chop_multi(self, *pargs, book, unit):
@@ -186,6 +187,8 @@ class UnitChef:
 
         --``book`` must be a Workbook
         --``unit`` must be an instance of BusinessUnit
+        --``index`` is optionally the index at which to insert the tab
+        --``recur`` bool; whether to chop valuation for lower units
 
         Method recursively walks through ``unit`` and components and will chop
         their valuation if any exists.

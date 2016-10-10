@@ -16,15 +16,13 @@ Attribute             Description
 ====================  =========================================================
 
 DATA:
-field_names           commonly used field names
-formula_templates     string templates for commonly used formulas
-tab_names             standard tab names
+n/a
 
 FUNCTIONS:
 n/a
 
 CLASSES:
-ModelChef             chop Blackbird Engine model into a dynamic Excel workbook
+SummaryChef           chop Blackbird Engine model into a dynamic Excel workbook
 ====================  =========================================================
 """
 
@@ -41,12 +39,9 @@ import bb_settings
 import chef_settings
 
 from .cell_styles import CellStyles, LOWHEADER_COLOR
-from .data_types import TypeCodes
 from .field_names import FieldNames
-from .formulas import FormulaTemplates
-from .summary_line_chef import SummaryLineChef
 from .sheet_style import SheetStyle
-from .tab_names import TabNames
+from .summary_line_chef import SummaryLineChef
 from .transcript_chef import TranscriptChef
 from .unit_chef import UnitChef
 
@@ -57,20 +52,14 @@ from .unit_chef import UnitChef
 # n/a
 
 # Module Globals
-
-
-
 line_chef = SummaryLineChef()
-
-
 transcript_chef = TranscriptChef()
-
 unit_chef = UnitChef()
 
 get_column_letter = xlio.utils.get_column_letter
 bounding_box = xlio.drawing.image.bounding_box
-
 logger = logging.getLogger(bb_settings.LOGNAME_MAIN)
+
 
 # Classes
 class SummaryChef:
@@ -95,6 +84,7 @@ class SummaryChef:
 
         ModelChef._add_annual_summary -> None
 
+        --``book`` is an instance ob BB_Workbook
         --``model`` is an instance of Blackbird Engine model
 
         Adds an annual summary tab.

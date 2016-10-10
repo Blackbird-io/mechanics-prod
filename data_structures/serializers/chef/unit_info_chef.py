@@ -20,8 +20,8 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-UnitInfoChef          class containing methods to chop BusinessUnits into
-                      dynamic Excel structures
+UnitInfoChef          class containing methods to ad BusinessUnit attributes
+                      (context info, e.g. life and parameters) to sheet
 ====================  =========================================================
 """
 
@@ -81,16 +81,15 @@ class UnitInfoChef:
     DATA:
     MAX_CONSOLIDATION_ROWS = 15
     MAX_LINKS_PER_CELL = 1
-
     MAX_TITLE_CHARACTERS = 30
 
     FUNCTIONS:
     add_items_to_area()   adds dictionary items to specified area
-    add_unit_life()
-    add_scenario_selector_logic()
-    add_unit_size()
-    create_unit_sheet()
-    unit_life()
+    add_unit_life()       adds unit life to sheet for a particular period
+    add_scenario_selector_logic() adds logic to use scenario selector to sheet
+    add_unit_size()       adds unit's size to sheet
+    create_unit_sheet()   creates tab for unit's information
+    unit_life()           adds unit life information over time
     ====================  =====================================================
     """
     MAX_CONSOLIDATION_ROWS = 15
@@ -108,7 +107,7 @@ class UnitInfoChef:
     SCENARIO_ROW = 2
 
     def add_items_to_area(self, *pargs, sheet, area, items, active_column,
-                          set_labels=True, format_func=None, hardcoded=False,
+                          set_labels=True, format_func=None,
                           preference_order=[], group=True):
         """
 
@@ -121,6 +120,8 @@ class UnitInfoChef:
         --``active_column`` must be current column index
         --``set_labels`` must be a boolean; whether or not to label row
         --``format_func`` is a function to use on cells for formatting
+        --``preference_order`` is optionally a specific ordering
+        --``group`` bool; whether to group the rows these items are added to
         Method adds names to Area in sorted order.  Method starts work after
         the current row and expects sheet to come with parameters unless you
         specify the label and master column.
@@ -180,8 +181,13 @@ class UnitInfoChef:
 
         UnitChef._add_unit_life() -> Worksheet
 
+         --``sheet`` must be an instance of openpyxl Worksheet
+        --``unit`` must be an instance of BusinessUnit
+        --``column`` must be a column number reference
+        --``set_labels`` must be a boolean; True will set labels for line
+
         Method adds life Area to unit sheet and delegates to
-        UnitChef._add_life_events() and UnitChef._add_lif_analysis()
+        UnitChef._add_life_events() and UnitChef._add_life_analysis()
         Expects to get sheet with current row pointing to a blank
         Will start writing on current row
         """
@@ -223,6 +229,16 @@ class UnitInfoChef:
         return sheet
 
     def add_scenario_selector_logic(self, book, sheet):
+        """
+
+        add_scenario_selector_logic() -> None
+
+        --``book`` must be a Workbook
+        --``sheet`` must be an instance of openpyxl Worksheet
+
+        Method adds logic to use scenario selector from unit tab.  Scenario
+        selector changes parameter values.
+        """
         scen_tab = book.get_sheet_by_name(TabNames.SCENARIOS)
         src_sheet = scen_tab.title
         src_row = scen_tab.bb.general.rows.by_name[FieldNames.SELECTOR]
@@ -260,6 +276,11 @@ class UnitInfoChef:
 
 
         UnitChef._add_unit_size() -> Worksheet
+
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``unit`` must be an instance of BusinessUnit
+        --``column`` must be a column number reference
+        --``set_labels`` must be a boolean; True will set labels for line
 
         Method adds "size" Area to unit sheet and populates it with values.
         Will start writing on current row.
@@ -320,6 +341,11 @@ class UnitInfoChef:
 
         UnitChef._create_unit_sheet() -> Worksheet
 
+        --``book`` must be a Workbook
+        --``unit`` must be an instance of BusinessUnit
+        --``index`` is optionally the index at which to insert the tab
+        --``name`` is the name to give the tab
+        --``current_only`` bool; whether to add all periods or only current
 
         Returns sheet with current row pointing to last parameter row
         """
