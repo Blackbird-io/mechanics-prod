@@ -107,37 +107,31 @@ class UnitFinsChef:
             offset=sheet.bb.current_row - body_rows.tip + 1
         )
 
-        for statement in unit.financials.ordered:
+        for name, statement in unit.financials.chef_ordered():
             if statement is not None:
                 sheet.bb.current_row += 1
                 sheet.bb.outline_level = 0
 
-                if statement is unit.financials.ending:
-                    statement_row = sheet.bb.current_row + 1
-                    fins_dict["Starting Balance Sheet"] = statement_row
-
-                    statement_rows = self._add_statement_rows(
-                        sheet, statement, title='Starting Balance Sheet'
-                    )
-                    line_chef.chop_starting_balance(
-                        sheet=sheet,
-                        unit=unit,
-                        column=column,
-                        row_container=statement_rows,
-                        set_labels=set_labels
-                    )
-                    sheet.bb.need_spacer = False
-
                 statement_row = sheet.bb.current_row + 1
-                fins_dict[statement.tags.name] = statement_row
 
-                statement_rows = self._add_statement_rows(sheet, statement)
+                if name == 'starting':
+                    title = 'Starting Balance Sheet'
+                    start_bal = True
+                else:
+                    title = statement.title
+                    start_bal = False
+
+                fins_dict[title] = statement_row
+                statement_rows = self._add_statement_rows(sheet, statement,
+                                                          title=title)
                 line_chef.chop_statement(
                     sheet=sheet,
                     statement=statement,
                     column=column,
                     row_container=statement_rows,
                     set_labels=set_labels,
+                    start_bal=start_bal,
+                    title=title,
                 )
 
         # We're done with the first pass of chopping financials, now go back

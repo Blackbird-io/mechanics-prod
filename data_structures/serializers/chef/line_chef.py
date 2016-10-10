@@ -131,7 +131,7 @@ class LineChef:
 
     def chop_line(
         self, sheet, column, line, row_container,
-        set_labels=True, indent=0, check=True
+        set_labels=True, indent=0, check=True, start_bal=False
     ):
         """
 
@@ -174,32 +174,19 @@ class LineChef:
 
         sheet.bb.current_row = row_container.tip
 
-        row_group = row_container.add_group('reference')
-        self._add_reference(
-            sheet=sheet,
-            column=column,
-            line=line,
-            set_labels=set_labels,
-            indent=indent
-        )
-        row_group.size = sheet.bb.current_row - row_group.tip
+        if not start_bal:
+            row_group = row_container.add_group('reference')
+            self._add_reference(
+                sheet=sheet,
+                column=column,
+                line=line,
+                set_labels=set_labels,
+                indent=indent
+            )
+            row_group.size = sheet.bb.current_row - row_group.tip
 
-        row_group = row_container.add_group('derivation')
-        self._add_derivation_logic(
-            sheet=sheet,
-            column=column,
-            line=line,
-            set_labels=set_labels,
-            indent=indent + LineItem.TAB_WIDTH
-        )
-        row_group.size = sheet.bb.current_row - row_group.tip
-
-        if line.has_own_content:
-            # throw an error if any of consolidation sources have content
-            self._validate_consolidation(sheet, line)
-        else:
-            row_group = row_container.add_group('consolidation')
-            self._add_consolidation_logic(
+            row_group = row_container.add_group('derivation')
+            self._add_derivation_logic(
                 sheet=sheet,
                 column=column,
                 line=line,
@@ -207,6 +194,20 @@ class LineChef:
                 indent=indent + LineItem.TAB_WIDTH
             )
             row_group.size = sheet.bb.current_row - row_group.tip
+
+            if line.has_own_content:
+                # throw an error if any of consolidation sources have content
+                self._validate_consolidation(sheet, line)
+            else:
+                row_group = row_container.add_group('consolidation')
+                self._add_consolidation_logic(
+                    sheet=sheet,
+                    column=column,
+                    line=line,
+                    set_labels=set_labels,
+                    indent=indent + LineItem.TAB_WIDTH
+                )
+                row_group.size = sheet.bb.current_row - row_group.tip
 
         if details:
             sub_indent = indent + LineItem.TAB_WIDTH
@@ -223,7 +224,8 @@ class LineChef:
                     row_container=detail_rows,
                     set_labels=set_labels,
                     indent=sub_indent,
-                    check=check
+                    check=check,
+                    start_bal=start_bal,
                 )
 
                 link_template = FormulaTemplates.ADD_COORDINATES
@@ -257,10 +259,41 @@ class LineChef:
                 if set_labels:
                     label = indent * " " + line.tags.title
                     set_label(sheet=sheet,
-                                    label=label,
-                                    row=sheet.bb.current_row)
+                              label=label,
+                              row=sheet.bb.current_row)
+        else:
+            if start_bal:
+                if line.xl.cell:
+                    row_group = row_container.add_group('reference')
 
-        if not line.xl.reference.source:
+                    # here just link the current cell to the cell in line.xl.cell
+                    old_cell = line.xl.cell
+                    line.xl.reference.source = line
+                    self._add_reference(
+                        sheet=sheet,
+                        column=column,
+                        line=line,
+                        set_labels=set_labels,
+                        indent=indent)
+
+                    CellStyles.format_line(line)
+
+                    line.xl.reference.source = None
+                    line.xl.reference.cell = None
+                    line.xl.cell = old_cell
+
+                    row_group.size = sheet.bb.current_row - row_group.tip
+                else:
+                    segment_group = row_container.add_group('segments')
+                    self._combine_segments(
+                        sheet=sheet,
+                        column=column,
+                        line=line,
+                        set_labels=set_labels,
+                        indent=indent)
+                    segment_group.size = sheet.bb.current_row - segment_group.tip
+
+        if not line.xl.reference.source and not start_bal:
             segment_group = row_container.add_group('segments')
             self._combine_segments(
                 sheet=sheet,
@@ -276,13 +309,15 @@ class LineChef:
         if check:
             check_alignment(line)
 
-        if line.id.bbid not in sheet.bb.line_directory.keys():
-            sheet.bb.line_directory[line.id.bbid] = line.xl
+        if check and not start_bal:
+            if line.id.bbid not in sheet.bb.line_directory.keys():
+                sheet.bb.line_directory[line.id.bbid] = line.xl
 
         if line.xl.format.blank_row_after:
             sheet.bb.need_spacer = True
 
         row_container.calc_size()
+
         return sheet
 
     def chop_startbal_line(self, *pargs, sheet, column, line, set_labels=True,
@@ -355,9 +390,9 @@ class LineChef:
 
                     label = indent * " " + line.tags.title
                     set_label(sheet=sheet,
-                                    label=label,
-                                    row=sheet.bb.current_row,
-                                    column=label_column)
+                              label=label,
+                              row=sheet.bb.current_row,
+                              column=label_column)
 
             CellStyles.format_line(line)
         else:
@@ -430,7 +465,8 @@ class LineChef:
         return sheet
 
     def chop_statement(
-        self, sheet, column, statement, row_container=None, set_labels=True
+        self, sheet, column, statement, row_container=None, set_labels=True,
+        start_bal=False, title=None
     ):
         """
 
@@ -447,12 +483,16 @@ class LineChef:
 
         Method relies on sheet.bb.current_row being up-to-date.
         """
+        if title is None:
+            title = statement.title
+
         if not row_container:
             row_container = sheet.bb.row_axis.add_group(
-                'body', 'statements', statement.title,
+                'body', 'statements', title,
             )
             row_container.tip = sheet.bb.current_row + 1
             row_container.add_group('matter')
+
         matter = row_container.get_group('matter')
 
         if not BLANK_BETWEEN_TOP_LINES:
@@ -472,7 +512,8 @@ class LineChef:
                 line=line,
                 row_container=line_rows,
                 set_labels=set_labels,
-                check=check
+                check=check,
+                start_bal=start_bal
             )
 
         if len(statement.get_ordered()) == 0:
@@ -619,7 +660,7 @@ class LineChef:
                 label = line.tags.title
                 label = ((indent - LineItem.TAB_WIDTH) * " ") + label
                 set_label(sheet=sheet, label=label,
-                                row=sheet.bb.current_row)
+                          row=sheet.bb.current_row)
 
             line.xl.consolidated.ending = sheet.bb.current_row
 
@@ -961,7 +1002,7 @@ class LineChef:
 
             if set_labels:
                 set_label(label=label, sheet=sheet,
-                                row=sheet.bb.current_row)
+                          row=sheet.bb.current_row)
 
         return sheet
 
