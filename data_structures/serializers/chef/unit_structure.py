@@ -28,6 +28,7 @@ StructureChef         class containing methods to display BusinessUnits
 
 
 # Imports
+from openpyxl.utils import get_column_interval
 from openpyxl.styles import Border, Side, Alignment
 
 import chef_settings
@@ -57,6 +58,7 @@ class StructureChef:
     DATA:
     BOX_HEIGHT            box sizing
     BOX_ACROSS            box sizing
+    SEP_ACROSS            width of columns between parent and children
 
     FUNCTIONS:
     chop()                creates a tab for unit structure
@@ -66,6 +68,7 @@ class StructureChef:
     """
     BOX_HEIGHT = 2
     BOX_ACROSS = 2
+    SEP_ACROSS = 4
 
     def chop(self, book, unit, level=0):
         """
@@ -97,7 +100,7 @@ class StructureChef:
         self.unit_box(sheet, unit, body_rows, body_cols, level=0)
         body_rows.calc_size()
         body_cols.calc_size()
-        self.layout(sheet, body_cols.groups)
+        self.layout(sheet, body_rows.groups)
 
     def unit_box(self, sheet, unit, row_container, col_container, level=0):
         """
@@ -107,32 +110,35 @@ class StructureChef:
 
         --``sheet`` must be a Worksheet
         --``unit`` must be an instance of BusinessUnit
+        --``row_container`` AxisGroup on the rows
+        --``col_container`` AxisGroup on the cols
 
         Method recursively walks through ``unit`` creating a nested column
         layout for unit boxes.
         """
-        # row is determined by depth
-        unit_rows = row_container.add_group(
+        # col is determined by depth
+        unit_cols = col_container.add_group(
             level,
             offset=2 if level else 0,
-            size=self.BOX_HEIGHT,
+            size=self.BOX_ACROSS,
         )
-        # column is determined by parent unit
-        unit_cols = col_container.add_group(
+        # row is determined by parent unit
+        unit_rows = row_container.add_group(
             unit.title,
-            offset=1 if col_container.groups else 0,
-            rows=unit_rows,
+            offset=1 if row_container.groups else 0,
             label=unit.title,
+            # intersection with the col axis
+            across=unit_cols,
         )
 
         children = unit.components.get_ordered()
         if children:
             for child in children:
                 self.unit_box(
-                    sheet, child, row_container, unit_cols, level=level + 1
+                    sheet, child, unit_rows, col_container, level=level + 1
                 )
         else:
-            unit_cols.size = self.BOX_ACROSS
+            unit_rows.size = self.BOX_HEIGHT
 
     def layout(self, sheet, groups, level=0):
         """
@@ -140,45 +146,53 @@ class StructureChef:
 
         StructureChef.layout() -> None
 
-        Method adds boxes.
+        --``sheet`` must be a Worksheet
+        --``groups`` list of AxisGroup on the row axis
+
+        Method adds boxes representing company structure.
         """
         for group in groups:
-            unit_rows = group.extra['rows']
+            across = group.extra['across']
             if group.groups:
                 self.layout(
                     sheet, group.groups, level=level + 1
                 )
-            self._make_cell(sheet, unit_rows, group)
+            self._make_cell(sheet, group, across)
 
     # *************************************************************************#
     #                          NON-PUBLIC METHODS                              #
     # *************************************************************************#
 
-    def _make_cell(self, sheet, row_container, col_container):
+    def _make_cell(self, sheet, group, across):
         """
 
         StructureChef._make_cell() -> None
 
-        """
-        center_col = int(col_container.size / 2) + col_container.number()
-        # for 2-col box, 1 left of center_col
-        col_tip = center_col - int(self.BOX_ACROSS / 2)
-        row = row_container.number()
-        label = col_container.extra.get('label')
+        --``sheet`` must be a Worksheet
+        --``group`` AxisGroup on the row axis for this company layout
 
-        # all the cells that will be mered into a combined cell
+        Method draws a box representing a business unit.
+        """
+        # for an even-sized cell, first edge of "center" is the middle of cell
+        center = int(group.size / 2) + group.number()
+        # for 2-cell box, 1 before of center
+        tip = center - int(self.BOX_HEIGHT / 2)
+        col = across.number()
+        label = group.extra.get('label')
+
+        # all the cells that will be merged into a combined cell, row-col
         box = []
         side = Side(border_style='double')
         border = Border(left=side, right=side, top=side, bottom=side)
         for yspan in range(self.BOX_HEIGHT):
             box.append([])
             for xspan in range(self.BOX_ACROSS):
-                c = sheet.cell(row=row + yspan, column=col_tip + xspan)
+                c = sheet.cell(row=tip + yspan, column=col + xspan)
                 c.border = border
                 box[-1].append(c)
         sheet.merge_cells(
-            start_row=row, start_column=col_tip,
-            end_row=row + 1, end_column=col_tip + 1
+            start_row=tip, start_column=col,
+            end_row=tip + 1, end_column=col + 1
         )
 
         # value and styling of the merged cell
@@ -188,39 +202,48 @@ class StructureChef:
             wrapText=True, vertical='center', horizontal='center'
         )
 
-        # draw connecting lines
-        col_container.extra['center'] = center_col
-        if col_container.groups:
-            self._child_line(
-                sheet, row + self.BOX_HEIGHT, center_col, col_container.groups
-            )
+        # hyperlink
+        link = "#'{}'!B2".format(label)
+        cell.hyperlink = link
 
-    def _child_line(self, sheet, row, center_col, groups):
+        # draw connecting lines to children, if present
+        group.extra['center'] = center
+        if group.groups:
+            self._child_line(sheet, group, across)
+
+    def _child_line(self, sheet, group, across):
         """
 
         StructureChef._child_line() -> None
 
         Draws lines from parent to children.
         """
-        # stem from parent down to children
+        # where the parent cell ends and the connection to children begins
+        center = group.extra['center']
+        tip = across.number() + self.BOX_ACROSS
+        # stem from parent to children
         side = Side(border_style='thick')
-        upper = sheet.cell(row=row, column=center_col)
-        upper.border = Border(left=side)
-        under = sorted(g.extra['center'] for g in groups)
+        upper = sheet.cell(row=center, column=tip)
+        upper.border = Border(top=side)
+        under = sorted(g.extra['center'] for g in group.groups)
 
         # stems from children up to parent
-        for col in under:
-            c = sheet.cell(row=row + 1, column=col)
+        for row in under:
+            c = sheet.cell(row=row, column=tip + 1)
             border = c.border.copy()
-            border.left = side
+            border.top = side
             c.border = border
 
         # branch on which children hang
         if len(under) > 1:
-            tipcol = min(under)
-            endcol = max(under)
-            for col in range(tipcol, endcol):
-                c = sheet.cell(row=row, column=col)
+            top = min(under)
+            end = max(under)
+            for row in range(top, end):
+                c = sheet.cell(row=row, column=tip + 1)
                 border = c.border.copy()
-                border.bottom = side
+                border.left = side
                 c.border = border
+
+        # col sizing
+        for c in get_column_interval(tip, tip + 1):
+            sheet.column_dimensions[c].width = self.SEP_ACROSS

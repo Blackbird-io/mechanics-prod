@@ -29,22 +29,8 @@ LineChef              class with methods to chop BB statements into dynamic
 
 
 # Imports
-import calendar
 import openpyxl as xlio
-import re
-import itertools
-
-from openpyxl.comments import Comment
-from openpyxl.styles import Alignment
-
-from bb_exceptions import ExcelPrepError, BBAnalyticalError
-from chef_settings import (
-    COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING,
-    COMMENT_CUSTOM, BLANK_BETWEEN_TOP_LINES, FILTER_PARAMETERS,
-    SUMMARY_INCLUDES_MONTHS, SUMMARY_INCLUDES_QUARTERS,
-)
 from data_structures.modelling.line_item import LineItem
-from ._chef_tools import group_lines, check_alignment
 from .cell_styles import CellStyles
 from .data_types import TypeCodes
 from .field_names import FieldNames
@@ -79,13 +65,8 @@ class SummaryLineChef:
     n/a
 
     FUNCTIONS:
-    attempt_reference_resolution() tries to resolve missing line refs in formulas
-    chop_line()           writes LineItems to Excel
-    chop_startbal_line()  writes LineItems from Starting Balance Sheet to Excel
-    chop_starting_balance() writes Starting Balance Sheet to Excel
-    chop_statement()      writes Statements to Excel (except Starting Balance)
-    chop_summary_line()   writes LineItems from financial summaries to Excel
     chop_summary_statement() writes financial summary statements to Excel
+    chop_summary_line()   writes LineItems from financial summaries to Excel
     ====================  =====================================================
     """
 
