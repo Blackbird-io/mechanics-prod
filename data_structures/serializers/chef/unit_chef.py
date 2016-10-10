@@ -142,7 +142,7 @@ class UnitChef:
         # 2.4.  spread fins
         current = sheet.bb.time_line.columns.get_position(unit.period.end)
         fins_dict = fins_chef.add_financials(sheet=sheet, unit=unit,
-                                         column=current)
+                                             column=current)
 
         for snapshot in unit:
             sheet.bb.current_row = sheet.bb.size.rows.ending
