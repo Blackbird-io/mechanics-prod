@@ -118,7 +118,7 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
 
         Method sets content to None and resets instance directories.
         """
-        # self.content = None
+        self.content = None
         self._reset_directories()
 
     def copy(self):
@@ -377,7 +377,7 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         """
         self.register(bu, updateID=updateID, reset_directories=True)
         # Reset directories when setting the top node in the period.
-        self._content = bu
+        self.content = bu
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
