@@ -30,7 +30,6 @@ SummaryLineChef       class with methods to chop BB statements into dynamic
 
 # Imports
 import openpyxl as xlio
-
 from data_structures.modelling.line_item import LineItem
 
 from .cell_styles import CellStyles
@@ -59,8 +58,8 @@ class SummaryLineChef:
     n/a
 
     FUNCTIONS:
-    chop_summary_line()   writes LineItems from financial summaries to Excel
     chop_summary_statement() writes financial summary statements to Excel
+    chop_summary_line()   writes LineItems from financial summaries to Excel
     ====================  =====================================================
     """
 
