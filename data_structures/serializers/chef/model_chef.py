@@ -112,6 +112,7 @@ class ModelChef:
         now = model.time_line.current_period
         company = now.content
 
+        # add a tab with unit structure map
         structure_chef = StructureChef()
         structure_chef.chop(book, company)
 
