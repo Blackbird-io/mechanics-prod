@@ -206,9 +206,3 @@ class UnitChef:
         # 2.6 add valuation tab, if any exists for unit
         if unit.financials.has_valuation:
             fins_chef.add_valuation_tab(book, unit, index=index)
-
-        body_rows = sheet.bb.row_axis.get_group('body')
-        parm_rows = body_rows.add_group('drivers')
-            parm_rows.size = param_area.rows.ending - body_rows.tip
-            parm_rows.size = 0
-        parm_rows = body_rows.get_group('drivers')
