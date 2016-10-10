@@ -54,7 +54,7 @@ class BB_Workbook(xlio.Workbook):
 
     Class modifies standard workbook to include a SheetData record set on each
     sheet. As a result, we can do data lookups and reference builds faster and
-    more explicitly.     
+    more explicitly.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -67,7 +67,7 @@ class BB_Workbook(xlio.Workbook):
     save()                saves workbook to file and runs test on contents
     test()                test workbook against model
     ====================  ======================================================
-    """ 
+    """
     def __init__(self, *pargs, **kwargs):
         xlio.Workbook.__init__(self, *pargs, **kwargs)
         self.scenario_names = None
@@ -154,9 +154,9 @@ class BB_Workbook(xlio.Workbook):
         # test the workbook against engine values
         test_book(model, filename)
 
-    #*************************************************************************#
-    #                          NON-PUBLIC METHODS                             #
-    #*************************************************************************#
+    # *************************************************************************#
+    #                           NON-PUBLIC METHODS                             #
+    # *************************************************************************#
 
     def _get_sources_dict(self):
         """
@@ -171,7 +171,7 @@ class BB_Workbook(xlio.Workbook):
         for sheet in self.worksheets:
             if getattr(sheet, 'bb', None):
                 if sheet.bb.scenario_selector:
-                    idx = int(self.get_index(sheet))+1
+                    idx = int(self.get_index(sheet)) + 1
                     sheet_num = "Sheet%s" % idx
                     sources_dict[sheet_num] = (sheet.title,
                                                sheet.bb.scenario_selector)

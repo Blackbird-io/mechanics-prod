@@ -298,12 +298,12 @@ class AxisGroup:
                     soft_cell.resolve()
             group.cells.clear()
 
-    #**************************************************************************#
+    # *************************************************************************#
     #                          NON-PUBLIC METHODS                              #
-    #**************************************************************************#
+    # *************************************************************************#
 
-    def _make_group(self,
-        name, size=None, offset=None, add_outline=False, **kargs
+    def _make_group(
+        self, name, size=None, offset=None, add_outline=False, **kargs
     ):
         """
 
