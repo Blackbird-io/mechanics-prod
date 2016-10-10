@@ -173,6 +173,7 @@ class LineChef:
         ))
 
         sheet.bb.current_row = row_container.tip
+        run_segments = True
 
         if not start_bal:
             row_group = row_container.add_group('reference')
@@ -261,39 +262,33 @@ class LineChef:
                     set_label(sheet=sheet,
                               label=label,
                               row=sheet.bb.current_row)
-        else:
+
             if start_bal:
-                if line.xl.cell:
-                    row_group = row_container.add_group('reference')
+                run_segments = False
+        elif start_bal:
+            if line.xl.cell:
+                row_group = row_container.add_group('reference')
 
-                    # here just link the current cell to the cell in line.xl.cell
-                    old_cell = line.xl.cell
-                    line.xl.reference.source = line
-                    self._add_reference(
-                        sheet=sheet,
-                        column=column,
-                        line=line,
-                        set_labels=set_labels,
-                        indent=indent)
+                # here just link the current cell to the cell in line.xl.cell
+                old_cell = line.xl.cell
+                line.xl.reference.source = line
+                self._add_reference(
+                    sheet=sheet,
+                    column=column,
+                    line=line,
+                    set_labels=set_labels,
+                    indent=indent)
 
-                    CellStyles.format_line(line)
+                CellStyles.format_line(line)
 
-                    line.xl.reference.source = None
-                    line.xl.reference.cell = None
-                    line.xl.cell = old_cell
+                line.xl.reference.source = None
+                line.xl.reference.cell = None
+                line.xl.cell = old_cell
 
-                    row_group.size = sheet.bb.current_row - row_group.tip
-                else:
-                    segment_group = row_container.add_group('segments')
-                    self._combine_segments(
-                        sheet=sheet,
-                        column=column,
-                        line=line,
-                        set_labels=set_labels,
-                        indent=indent)
-                    segment_group.size = sheet.bb.current_row - segment_group.tip
+                row_group.size = sheet.bb.current_row - row_group.tip
+                run_segments = False
 
-        if not line.xl.reference.source and not start_bal:
+        if not line.xl.reference.source and run_segments:
             segment_group = row_container.add_group('segments')
             self._combine_segments(
                 sheet=sheet,
@@ -317,150 +312,6 @@ class LineChef:
             sheet.bb.need_spacer = True
 
         row_container.calc_size()
-
-        return sheet
-
-    def chop_startbal_line(self, *pargs, sheet, column, line, set_labels=True,
-                           indent=0):
-        """
-
-
-        LineChef.chop_startbal_line() -> Worksheet
-
-        --``sheet`` must be an instance of openpyxl Worksheet
-        --``column`` must be a column number reference
-        --``line`` must be an instance of LineItem
-        --``set_labels`` must be a boolean; True will set labels for line
-        --``indent`` is amount of indent
-
-        Method walks through LineItems and their details and converts them to
-        dynamic links in Excel cells.  Method method links line to itself if
-        already chopped (starting balance sheets are pointed to previous period
-        ending balance sheets during BusinessUnit._load_balance()), or will
-        strictly print value.  Specific logic for starting balance sheet.
-
-        Method relies on sheet.bb.current_row being up-to-date.
-
-        Routines deliver sheet with the current_row pointing to the last filled
-        in cell.
-        """
-        details = line.get_ordered()
-
-        if line.xl.format.blank_row_before and not details:
-            sheet.bb.current_row += 1
-
-        if details:
-            sub_indent = indent + LineItem.TAB_WIDTH
-            detail_summation = ""
-
-            for detail in details:
-                sheet.bb.outline_level = 0
-                self.chop_startbal_line(sheet=sheet,
-                                        column=column,
-                                        line=detail,
-                                        set_labels=set_labels,
-                                        indent=sub_indent)
-
-                link_template = FormulaTemplates.ADD_COORDINATES
-
-                include = detail.xl.cell.parent is not sheet
-                cos = detail.xl.get_coordinates(include_sheet=include)
-                link = link_template.format(coordinates=cos)
-                detail_summation += link
-            else:
-                if line.xl.format.blank_row_before:
-                    sheet.bb.current_row += 1
-
-                # Should group all the details here
-                sheet.bb.current_row += 1
-
-                subtotal_cell = sheet.cell(column=column,
-                                           row=sheet.bb.current_row)
-                subtotal_cell.set_explicit_value(detail_summation,
-                                                 data_type=TypeCodes.FORMULA)
-
-                line.xl.detailed.ending = sheet.bb.current_row
-                line.xl.detailed.cell = subtotal_cell
-                line.xl.cell = subtotal_cell
-
-                if set_labels:
-                    label_column = None
-                    if not getattr(sheet.bb, FieldNames.PARAMETERS, None):
-                        label_column = 1
-
-                    label = indent * " " + line.tags.title
-                    set_label(sheet=sheet,
-                              label=label,
-                              row=sheet.bb.current_row,
-                              column=label_column)
-
-            CellStyles.format_line(line)
-        else:
-            if line.xl.cell:
-                # here just link the current cell to the cell in line.xl.cell
-                old_cell = line.xl.cell
-                line.xl.reference.source = line
-                self._add_reference(
-                    sheet=sheet,
-                    column=column,
-                    line=line,
-                    set_labels=set_labels,
-                    indent=indent)
-
-                CellStyles.format_line(line)
-
-                line.xl.reference.source = None
-                line.xl.reference.cell = None
-                line.xl.cell = old_cell
-            else:
-                self._combine_segments(
-                    sheet=sheet,
-                    column=column,
-                    line=line,
-                    set_labels=set_labels,
-                    indent=indent)
-
-                CellStyles.format_line(line)
-
-        if line.xl.format.blank_row_after:
-            sheet.bb.current_row += 1
-
-    def chop_starting_balance(
-        self, sheet, column, unit, row_container, set_labels=True
-    ):
-        """
-
-
-        LineChef.chop_starting_balance() -> Worksheet
-
-        --``sheet`` must be an instance of openpyxl Worksheet
-        --``column`` must be a column number reference
-        --``statement`` must be an instance of Statement
-        --``set_labels`` must be a boolean; True will set labels for line
-
-        Method walks through starting balance lines and delegates to
-        LineChef.chop_startbal_line() to add them as dynamic links in Excel.
-
-        Method relies on sheet.bb.current_row being up-to-date.  Method logic
-        specific to starting balance sheets.
-        """
-        statement = unit.financials.starting
-
-        if not BLANK_BETWEEN_TOP_LINES:
-            sheet.bb.current_row += 1
-
-        for line in statement.get_ordered():
-            if BLANK_BETWEEN_TOP_LINES:
-                sheet.bb.current_row += 1
-
-            line_rows = row_container.add_group(line.name)
-            self.chop_startbal_line(sheet=sheet,
-                                    column=column,
-                                    line=line,
-                                    set_labels=True)
-            line_rows.size = sheet.bb.current_row - line_rows.tip
-
-        sheet.bb.current_row += 1
 
         return sheet
 
@@ -521,6 +372,10 @@ class LineChef:
             sheet.bb.current_row += 1
         else:
             sheet.bb.need_spacer = False
+
+        if start_bal:
+            sheet.bb.need_spacer = True
+            sheet.bb.current_row += 1
 
         return sheet
 
