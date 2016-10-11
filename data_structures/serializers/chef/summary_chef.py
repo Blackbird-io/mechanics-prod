@@ -466,28 +466,24 @@ class SummaryChef:
             if not column:
                 continue
 
-            unit = period.content
-            if not (unit):
-                continue
-
-            unit.xl.set_sheet(sheet)
-            sheet.bb.outline_level = 0
+            # top-level unit is shown on the summary page
+            unit = self.model.get_company()
+            financials = self.model.get_financials(unit.id.bbid, period)
 
             # Complete T/F
             address = complete_label_rows.get_corner_address(column)
             cell = sheet.cell(address)
-            cell.value = unit.complete
+            cell.value = financials.complete
             cell.alignment = Alignment(horizontal='right', vertical='center')
 
             # Available months
             address = available_months_rows.get_corner_address(column)
             cell = sheet.cell(address)
-            cell.value = unit.periods_used
+            cell.value = financials.periods_used
             cell.alignment = Alignment(horizontal='right', vertical='center')
 
             # Statements
             statement_rowgroup = output_rows.add_group('statements', offset=1)
-            financials = self.model.get_financials(unit.id.bbid, period)
             for name, statement in financials.chef_ordered():
                 if statement is not None:
                     # to handle the hard link from starting to ending financials

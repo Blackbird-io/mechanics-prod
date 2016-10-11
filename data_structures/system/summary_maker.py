@@ -347,9 +347,10 @@ class SummaryMaker:
             self.derived_calculations()
 
             # add period count
-            target_bu.periods_used = summary_period.periods_used
-            full = (target_bu.periods_used == self.complete_periods[self.onkey])
-            target_bu.complete = full
+            fins = target_bu.financials
+            fins.periods_used = summary_period.periods_used
+            full = (fins.periods_used == self.complete_periods[self.onkey])
+            fins.complete = full
 
             # cascade from quarterly to annual
             if self.onkey == self.QUARTERLY_KEY:

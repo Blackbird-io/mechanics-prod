@@ -82,6 +82,12 @@ class Financials:
         self.id = ID()  # does not get its own bbid, just holds namespace
         self.relationships = Relationships(self, parent=parent)
         self.period = period
+        self.filled = False
+
+        # defaults for monthly; quarterly and annual need to overwrite
+        self.complete = True
+        self.periods_used = 1
+
         self._full_order = [
             "overview", "income", "cash", "starting", "ending",
             "ledger", "valuation"
