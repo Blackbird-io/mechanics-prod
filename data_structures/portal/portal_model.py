@@ -26,8 +26,7 @@ PortalModel        object that follows Engine-Wrapper API schema
 
 
 
-#imports
-import copy
+# imports
 import pickle
 
 from .ready_for_portal import ReadyForPortal
@@ -35,10 +34,10 @@ from .ready_for_portal import ReadyForPortal
 
 
 
-#globals
-#n/a
+# globals
+# n/a
 
-#classes
+# classes
 class PortalModel(ReadyForPortal):
     """
 
