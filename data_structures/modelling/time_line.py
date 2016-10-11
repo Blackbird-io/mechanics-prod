@@ -86,9 +86,10 @@ class TimeLine(TimelineBase):
     DEFAULT_PERIODS_FORWARD = 60
     DEFAULT_PERIODS_BACK = 1
 
-    def __init__(self):
+    def __init__(self, model):
         TimelineBase.__init__(self, interval=1)
 
+        self.model = model
         self._current_period = None
         self._old_current_period = None
 
@@ -286,7 +287,7 @@ class TimeLine(TimelineBase):
             seed.past.content.fill_out()
 
         # init SummaryMaker now that TimeLine has been built
-        self.summary_builder = SummaryMaker(self)
+        self.summary_builder = SummaryMaker(self.model)
 
         # import devhooks
         # devhooks.set_time()
@@ -321,8 +322,8 @@ class TimeLine(TimelineBase):
         if bb_settings.MAKE_ANNUAL_SUMMARIES:
             self.summary_builder.wrap()
 
-        # devhooks.picksize(self)
         # devhooks.log_time('in extrapolation')
+        # devhooks.picksize(self)
         self.has_been_extrapolated = True
 
     def extrapolate_dates(self, seed, dates, backward=False):
