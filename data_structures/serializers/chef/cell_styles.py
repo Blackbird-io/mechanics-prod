@@ -43,7 +43,7 @@ from .field_names import FieldNames
 
 
 # Constants
-HARDCODED_COLOR = '0070c0' #'1f5993'
+HARDCODED_COLOR = '0070c0'  # '1f5993'
 CALCULATION_COLOR = '707070'
 SUBHEADER_COLOR = '808080'
 LOWHEADER_COLOR = 'CCCCCC'
@@ -109,7 +109,7 @@ class CellStyles:
                                 data_type=TypeCodes.FORMULA_CACHE_STRING)
 
         if AREA_BORDER:
-            rows = sheet.iter_rows(row_offset=row_num-1)
+            rows = sheet.iter_rows(row_offset=row_num - 1)
             row = rows.__next__()
             for cell in row:
                 border = Border(top=cell.border.top)
@@ -318,7 +318,7 @@ class CellStyles:
         left_cell.value = "Active Scenario:"
 
         # Blank middle cell
-        blank_cell = sheet.cell(column=label_col+1, row=row)
+        blank_cell = sheet.cell(column=label_col + 1, row=row)
         border = Border(top=blank_cell.border.top,
                         bottom=blank_cell.border.bottom)
         border.top = side
@@ -366,7 +366,7 @@ class CellStyles:
 
         # SET TOP BORDER
         row = st_row
-        for c in range(st_col, ed_col+1):
+        for c in range(st_col, ed_col + 1):
             cell = sheet.cell(column=c, row=row)
             border = Border(top=cell.border.top)
             border.top = side
@@ -374,7 +374,7 @@ class CellStyles:
 
         # SET LEFT BORDER
         col = st_col
-        for r in range(st_row, ed_row+1):
+        for r in range(st_row, ed_row + 1):
             cell = sheet.cell(column=col, row=r)
             border = Border(left=cell.border.left)
             border.left = side
@@ -383,13 +383,13 @@ class CellStyles:
         # SET RIGHT BORDER
         col = ed_col
         if st_col != ed_col:
-            for r in range(st_row, ed_row+1):
+            for r in range(st_row, ed_row + 1):
                 cell = sheet.cell(column=col, row=r)
                 border = Border(right=cell.border.right)
                 border.right = side
                 cell.border = border
         else:
-            for r in range(st_row, ed_row+1):
+            for r in range(st_row, ed_row + 1):
                 cell = sheet.cell(column=col, row=r)
                 border = Border(right=cell.border.right,
                                 left=cell.border.left)
@@ -400,7 +400,7 @@ class CellStyles:
         # SET TOP AND BOTTOM BORDERS
         row = ed_row
         if st_row != ed_row:
-            for c in range(st_col, ed_col+1):
+            for c in range(st_col, ed_col + 1):
                 cell = sheet.cell(column=c, row=row)
                 border = Border(bottom=cell.border.bottom,
                                 left=cell.border.left,
@@ -409,7 +409,7 @@ class CellStyles:
                 border.bottom = side
                 cell.border = border
         else:
-            for c in range(st_col, ed_col+1):
+            for c in range(st_col, ed_col + 1):
                 cell = sheet.cell(column=c, row=row)
                 border = Border(bottom=cell.border.bottom,
                                 left=cell.border.left,

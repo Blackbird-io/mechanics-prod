@@ -37,7 +37,6 @@ from bb_exceptions import ExcelPrepError, BBAnalyticalError
 from chef_settings import (
     COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING,
     COMMENT_CUSTOM, BLANK_BETWEEN_TOP_LINES, FILTER_PARAMETERS,
-    SUMMARY_INCLUDES_MONTHS, SUMMARY_INCLUDES_QUARTERS,
 )
 from data_structures.modelling.line_item import LineItem
 from ._chef_tools import group_lines, check_alignment, set_label, \
