@@ -34,12 +34,9 @@ import os
 import openpyxl as xlio
 
 import bb_settings
-import chef_settings
 from .cell_styles import CellStyles
 from .garnish_chef import GarnishChef
 from .line_chef import LineChef
-from .sheet_style import SheetStyle
-from .tab_names import TabNames
 from .transcript_chef import TranscriptChef
 from .unit_chef import UnitChef
 from .summary_chef import SummaryChef
