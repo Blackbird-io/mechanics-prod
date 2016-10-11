@@ -194,18 +194,21 @@ class Model(TagsMixIn):
         #
         company = self.time_line.current_period.content
         if company:
-            #catch periods with empty content
+            # catch periods with empty content
             result = company.valuation
         #
         return result
 
     @valuation.setter
     def valuation(self, value):
-        c = "Assignment prohibited. ``model.valuation`` serves only as a pointer"
-        c += " to the current period company valuation."
+        c = (
+            "Assignment prohibited. "
+            "``model.valuation`` serves only as a pointer "
+            "to the current period company valuation."
+        )
         raise bb_exceptions.ManagedAttributeError(c)
 
-    #METHODS
+    # METHODS
     @classmethod
     def from_portal(cls, portal_model):
         """
@@ -370,5 +373,5 @@ class Model(TagsMixIn):
         Appends a tuple of (message ,time of call) to instance.transcript.
         """
         time_stamp = time.time()
-        record = (message,time_stamp)
+        record = (message, time_stamp)
         self.transcript.append(record)
