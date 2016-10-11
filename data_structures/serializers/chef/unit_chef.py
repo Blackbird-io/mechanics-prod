@@ -90,7 +90,7 @@ class UnitChef:
                           makes and fills Valuation tab
     ====================  =====================================================
     """
-    def chop_multi(self, *pargs, book, unit):
+    def chop_multi(self, book, unit):
         """
 
 
@@ -109,7 +109,7 @@ class UnitChef:
         children = unit.components.get_ordered()
 
         for child in children:
-            self.chop_multi(book=book, unit=child)
+            self.chop_multi(book, child)
 
         # 2.   Chop the parent
         #

@@ -90,14 +90,13 @@ class ModelChef:
         """
 
         book = GarnishChef.add_garnishes(model)
-        now = model.time_line.current_period
-        company = now.content
+        company = model.get_company()
 
         # add a tab with unit structure map
         structure_chef = StructureChef()
         structure_chef.chop(book, company)
 
-        unit_chef.chop_multi(book=book, unit=company)
+        unit_chef.chop_multi(book, company)
 
         if bb_settings.MAKE_ANNUAL_SUMMARIES:
             summary_chef = SummaryChef()
