@@ -79,7 +79,7 @@ class SummaryChef:
     ====================  =====================================================
     """
 
-    def add_annual_summary(self, book, model):
+    def add_annual_summary(self, model, book):
         """
 
 
@@ -99,9 +99,10 @@ class SummaryChef:
         header_cols = sheet.bb.col_axis.add_group('tab_header', size=1)
 
         # Add company name, top left of header section
+        company = model.get_company()
         address = header_rows.get_corner_address(header_cols)
         cell = sheet.cell(address)
-        cell.value = model.time_line.current_period.content.name.title()
+        cell.value = company.title
         cell.alignment = Alignment(horizontal='left', vertical='center')
         cell.font = Font(size=14, bold=True, underline='single')
 
@@ -120,8 +121,9 @@ class SummaryChef:
         colspacer_end = output_cols.add_group('spacer_end', size=1)
 
         # Column headers
+        time_line = model.get_timeline()
         self._annual_summary_headers(
-            sheet, model.time_line, output_rows, output_cols
+            sheet, time_line, output_rows, output_cols
         )
 
         # Add parameters area to set up label and value columns
@@ -154,26 +156,26 @@ class SummaryChef:
         # Fill output: monthly summary timeline
         if chef_settings.SUMMARY_INCLUDES_MONTHS:
             # column selector: date -> years_cols.2017.quarters.1Q17.months.
-            col_selector = lambda date: years_cols.get_group(
-                date.year, 'quarters', self._quarter_name(date), 'months', date
+            col_selector = lambda day: years_cols.get_group(
+                day.year, 'quarters', self._quarter_name(day), 'months', day
             )
             # chop quarterly
             self._annual_summary_detail(
                 sheet,
-                model.time_line,
+                time_line,
                 output_rows,
                 output_cols,
                 col_selector=col_selector
             )
 
-        # Fill output: quarterly summary timeline
+        # Fill output: quarterly summary timeline, may be excluded
         if chef_settings.SUMMARY_INCLUDES_QUARTERS:
-            key = model.time_line.summary_builder.QUARTERLY_KEY
-            qtr_timeline = model.time_line.summary_builder.summaries[key]
+            key = time_line.summary_builder.QUARTERLY_KEY
+            qtr_timeline = model.get_timeline(key)
             # calculate the column layout for quarters and years
             # column selector: date -> years_cols.2017.quarters.1Q17
-            col_selector = lambda date: years_cols.get_group(
-                date.year, 'quarters', self._quarter_name(date), 'quarter'
+            col_selector = lambda day: years_cols.get_group(
+                day.year, 'quarters', self._quarter_name(day), 'quarter'
             )
             # chop quarterly
             self._annual_summary_detail(
@@ -184,12 +186,12 @@ class SummaryChef:
                 col_selector=col_selector
             )
 
-        # Fill output: annual summary timeline
-        key = model.time_line.summary_builder.ANNUAL_KEY
-        sum_timeline = model.time_line.summary_builder.summaries[key]
+        # Fill output: annual summary timeline, always included
+        key = time_line.summary_builder.ANNUAL_KEY
+        sum_timeline = model.get_timeline(key)
         # column selector: date -> years_cols.2017.year
-        col_selector = lambda date: years_cols.get_group(
-            date.year, 'year'
+        col_selector = lambda day: years_cols.get_group(
+            day.year, 'year'
         )
         self._annual_summary_detail(
             sheet,
