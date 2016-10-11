@@ -289,7 +289,7 @@ class SummaryMaker:
                 target_fins.starting = bal_enter
 
             # add to timeline
-            # summary_period.set_content(summary_unit)
+            target.set_content(summary_unit)
             timeline_summary.add_period(target)
             timeline_summary.summary_period = target
 
@@ -460,22 +460,19 @@ class SummaryMaker:
         Create a BU to use as the summary holder.
         """
         template_bu = self.time_line.current_period.bu_directory[self.buid]
-        # summary_unit = BusinessUnitBase(template_bu.tags.title)
-        #
-        # # intentionally keeping source BU's bbid so we can find it later
-        # summary_unit.id = copy.deepcopy(template_bu.id)
-        # summary_unit.period = period
-        # summary_unit.periods_used = 0
-        # summary_unit.summary_level = self.onkey
-        # summary_unit.set_financials(
-        #     Financials(parent=summary_unit, period=period)
-        # )
+        summary_unit = BusinessUnitBase(template_bu.tags.title)
 
-        period.financials[self.buid] = Financials(
-            parent=template_bu, period=period
-        )
+        # intentionally keeping source BU's bbid so we can find it later
+        summary_unit.id = copy.deepcopy(template_bu.id)
+        summary_unit.period = period
+        summary_unit.periods_used = 0
+        summary_unit.summary_level = self.onkey
+        fins = Financials(parent=summary_unit, period=period)
+        summary_unit.set_financials(fins)
 
-        # return summary_unit
+        period.financials[self.buid] = fins
+
+        return summary_unit
 
     def summarize(self):
         """
@@ -532,10 +529,10 @@ class SummaryMaker:
         summary.
         """
         timeline_summary = self.summaries[self.onkey]
-        summary_period = timeline_summary.summary_period
         source = timeline_summary.source
+        target = timeline_summary.summary_period
         source_bu = source.bu_directory[self.buid]
-        target_bu = summary_period.bu_directory[self.buid]
+        target_bu = target.bu_directory[self.buid]
 
         # loop through drivers in real_bu.drivers and copy all
         # "summary_type" == derive drivers to unit_summary.
@@ -544,8 +541,8 @@ class SummaryMaker:
                 target_bu.drivers.add_item(dr.copy())
 
         # apply derivations to target financials
-        summary_fins = target_bu.financials
-        for statement in summary_fins.ordered:
+        target_fins = self.model.get_financials(self.buid, target)
+        for statement in target_fins.ordered:
             if statement:
                 for line in statement.get_full_ordered():
                     if line.summary_type == 'derive':
