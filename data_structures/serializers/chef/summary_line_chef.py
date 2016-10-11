@@ -7,8 +7,8 @@
 # Module: data_structures.serializers.chef.summary_line_chef
 """
 
-Module defines LineChef class which converts Statement and LineItem objects
-into dynamic Excel format.
+Module defines SummaryLineChef class which converts Statement and LineItem
+objects into dynamic Excel format.
 ====================  =========================================================
 Attribute             Description
 ====================  =========================================================
@@ -20,7 +20,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-LineChef              class with methods to chop BB statements into dynamic
+SummaryLineChef       class with methods to chop BB statements into dynamic
                       Excel structures
 ====================  =========================================================
 """
@@ -30,10 +30,8 @@ LineChef              class with methods to chop BB statements into dynamic
 
 # Imports
 from data_structures.modelling.line_item import LineItem
+
 from .cell_styles import CellStyles
-from .data_types import TypeCodes
-from .field_names import FieldNames
-from .formulas import FormulaTemplates
 from .delayed_cell import DelayedCell
 
 
@@ -43,11 +41,6 @@ from .delayed_cell import DelayedCell
 # n/a
 
 # Module Globals
-cell_styles = CellStyles()
-field_names = FieldNames()
-formula_templates = FormulaTemplates()
-type_codes = TypeCodes()
-
 
 # Classes
 class SummaryLineChef:
@@ -77,6 +70,9 @@ class SummaryLineChef:
 
         --``sheet`` must be an instance of openpyxl Worksheet
         --``statement`` must be an instance of Statement
+        --``row_container`` is an instance of AxisGroup
+        --``col_container`` is an instance of AxisGroup
+        --``title`` str; optional string title to use
 
         Method walks through summary Statement lines and delegates to
         SummaryLineChef.chop_summary_line() to add them as dynamic links
@@ -118,7 +114,9 @@ class SummaryLineChef:
 
         --``sheet`` must be an instance of openpyxl Worksheet
         --``line`` must be an instance of LineItem
+        --``row_container`` is an instance of AxisGroup
         --``indent`` is amount of indent
+        --``show_empty`` bool; whether to show empty lines
 
         Method walks through LineItems and their details and converts them to
         dynamic links in Excel cells.  Method adds consolidation and derivation
@@ -358,7 +356,7 @@ class SummaryLineChef:
                 value=line.value,
                 row_container=matter,
                 col_container=col_container,
-                formatter=cell_styles.format_hardcoded,
+                formatter=CellStyles.format_hardcoded,
             )
 
         return sheet

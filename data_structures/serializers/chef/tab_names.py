@@ -48,8 +48,10 @@ class TabNames:
     ====================  ======================================================
 
     DATA:
+    COVER                 "Cover"
     SCENARIOS             "Scenarios"
     TIME_LINE             "Timeline"
+    TRANSCRIPT            "Transcript"
 
     FUNCTIONS:
     n/a
@@ -60,3 +62,4 @@ class TabNames:
     TIME_LINE = "Timeline"
     TRANSCRIPT = "Transcript"
     STRUCTURE = "Details >>"
+    SUMMARIES = "Summary Financials"

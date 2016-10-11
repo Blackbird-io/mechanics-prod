@@ -30,13 +30,11 @@ AxisGroup             abstract anchors for an axis
 from collections import OrderedDict
 from openpyxl.utils import get_column_letter
 
-from .field_names import FieldNames
-
 
 
 
 # Module Globals
-field_names = FieldNames()
+# n/a
 
 # Classes
 class AxisGroup:
@@ -49,26 +47,26 @@ class AxisGroup:
     ====================  =====================================================
 
     DATA:
-    name                  our tag, unique within parent
-    path                  shows path to ourselves from the very top
-    offset                our offset from the predecessor, or from the tip of
-                          container if we are at the top of container
-    tip                   0-base starting position of this group in container
-                          after offset is applied, may be None if unknown
-    size                  total span from tip to end, fixed or calculated,
-                          does not include own offset
-    outline               Excel outline level for group
-    groups                ordered container for groups
     by_name               unique names of groups -> index in groups
     extra                 anything else we need to remember
+    groups                ordered container for groups
+    name                  our tag, unique within parent
+    offset                our offset from the predecessor, or from the tip of
+                          container if we are at the top of container
+    outline               Excel outline level for group
+    path                  shows path to ourselves from the very top
+    size                  total span from tip to end, fixed or calculated,
+                          does not include own offset
+    tip                   0-base starting position of this group in container
+                          after offset is applied, may be None if unknown
 
     FUNCTIONS:
     add_group()           recursively adds nested groups or returns existing
-    get_group()           same as add_group, but will not add
     calc_size()           calculates the span of this group and children
+    get_corner_address()  converts row and col coordinates into 'A1' for Excel
+    get_group()           same as add_group, but will not add
     get_subgroups()       convenience iterator over subgroups
     number()              converts 0 -> 1 for Excel coordinate system
-    get_corner_address()  converts row and col coordinates into 'A1' for Excel
     resolve_cells()       converts DelayedCell to regular cells
     ====================  =====================================================
     """
@@ -126,24 +124,6 @@ class AxisGroup:
                 group = new_group
         return group
 
-    def get_group(self, *path):
-        """
-
-        AxisGroup.add_group() -> None
-
-        Walks the ``path`` to match an existing group, returns None if not
-        found (instead of creating one as add_group would do).
-        """
-        group = self
-        for name in path:
-            name = format(name)
-            if name in group.by_name:
-                group_idx = group.by_name[name]
-                group = group.groups[group_idx]
-            else:
-                return None
-        return group
-
     def calc_size(self, render=None):
         """
 
@@ -177,18 +157,6 @@ class AxisGroup:
         self.size = mysize
         return mysize
 
-    def get_subgroups(self, name):
-        """
-
-        AxisGroup.get_subgroups() -> iter -> AxisGroup
-
-        Convenience iterator over the subgroups of a group given by ``name``.
-        """
-        if name in self.by_name:
-            group_idx = self.by_name[name]
-            for group in self.groups[group_idx].groups:
-                yield group
-
     def find_all(self, *path):
         """
 
@@ -209,16 +177,6 @@ class AxisGroup:
                 else:
                     yield group
 
-    def number(self):
-        """
-
-        AxisGroup.number() -> int
-
-        Excel convenience: converts own 0-base location into 1-base.
-        """
-        if self.tip is not None:
-            return self.tip + 1
-
     def get_corner_address(self, col_group, row_path=[], col_path=[]):
         """
 
@@ -238,6 +196,24 @@ class AxisGroup:
             colnum = col.number()
             letter = get_column_letter(colnum)
             return '{}{}'.format(letter, rownum)
+
+    def get_group(self, *path):
+        """
+
+        AxisGroup.add_group() -> None
+
+        Walks the ``path`` to match an existing group, returns None if not
+        found (instead of creating one as add_group would do).
+        """
+        group = self
+        for name in path:
+            name = format(name)
+            if name in group.by_name:
+                group_idx = group.by_name[name]
+                group = group.groups[group_idx]
+            else:
+                return None
+        return group
 
     def get_range_address(self, col_group, row_path=[], col_path=[]):
         """
@@ -280,6 +256,28 @@ class AxisGroup:
             tip = get_column_letter(tip)
             end = get_column_letter(end)
         return tip, end
+
+    def get_subgroups(self, name):
+        """
+
+        AxisGroup.get_subgroups() -> iter -> AxisGroup
+
+        Convenience iterator over the subgroups of a group given by ``name``.
+        """
+        if name in self.by_name:
+            group_idx = self.by_name[name]
+            for group in self.groups[group_idx].groups:
+                yield group
+
+    def number(self):
+        """
+
+        AxisGroup.number() -> int
+
+        Excel convenience: converts own 0-base location into 1-base.
+        """
+        if self.tip is not None:
+            return self.tip + 1
 
     def resolve_cells(self):
         """

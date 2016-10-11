@@ -48,18 +48,40 @@ class FieldNames:
     ====================  =====================================================
 
     DATA:
-    BASE_CASE             "base_case"
-    CUSTOM_CASE           "custom_case"
 
-    LABELS                "labels"
-    MASTER                "master"
-    VALUES                "values"
+    GENERAL:
+    LABELS                 "labels"
+    MASTER                 "master"
+    TITLE                  "title"
+    VALUES                 "values"
 
-    REF_DATE              "ref_date"
-    AGE                   "age"
-    ALIVE                 "alive"
-    SPAN                  "span"
-    PERCENT               "percent"
+    SCENARIOS:
+    SELECTOR               "selector"
+
+    ACTIVE_SCENARIO        "active_scenario"
+    BASE_CASE              "base_case"
+    CUSTOM_CASE            "custom_case"
+
+    BASE                   "Base"
+    CUSTOM                 "Custom"
+    IN_EFFECT              "Active"
+
+    LIFE:
+    AGE                    "age"
+    ALIVE                  "alive"
+    PERCENT                "percent"
+    REF_DATE               "ref_date"
+    SPAN                   "span"
+    START_DATE             "period_start"
+
+    STANDARD AREAS:
+    GENERAL                "general"
+    PARAMETERS             "drivers"
+    SIZE                   "size"
+    TIMELINE               "time_line"
+
+    OTHER:
+    SIZE_LABEL             "store count"
 
     FUNCTIONS:
     n/a

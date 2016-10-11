@@ -49,8 +49,6 @@ SUBHEADER_COLOR = '808080'
 LOWHEADER_COLOR = 'CCCCCC'
 
 # Module Globals
-number_formats = NumberFormats()
-type_codes = TypeCodes()
 get_column_letter = xlio.utils.get_column_letter
 
 # Classes
@@ -67,16 +65,19 @@ class CellStyles:
 
     FUNCTIONS:
     format_area_label()   format label cell and row for sheet Areas
+    format_border_group()  add thin border around group of cells
     format_calculation()  format text in cells containing calculations
+    format_consolidated_label() consolidated rows in italic
     format_date()         format number in cells containing dates
     format_hardcoded()    format font in hardcoded cells
+    format_header_label() white on black
+    format_integer()      format number as integer
     format_line()         format text in line item cells
+    format_line_borders() adds borders to rows where lineitems request them
     format_parameter()    format number in parameter cells
     format_scenario_label()  format scenario label cells (black with white text)
-    format_header_label() white on black
-    format_consolidated_label() consolidated rows in italic
     format_scenario_selector_cell() format scenario selector cells
-    format_border_group()  add thin border around group of cells
+    format_sub_header_label() formats sub-header cells
     ====================  =====================================================
     """
 
@@ -90,6 +91,7 @@ class CellStyles:
         --``sheet`` is an instance of openpyxl.worksheet
         --``label`` is a the string name of the area to label
         --``row_num`` is the row number where the label should be inserted
+        --``col_num`` is the column number where the labels should be
 
         Format area/statement label and dividing border
         """
@@ -104,7 +106,7 @@ class CellStyles:
         cell = sheet[cell_cos]
         cell.font = Font(bold=True)
         cell.set_explicit_value(label.title(),
-                                data_type=type_codes.FORMULA_CACHE_STRING)
+                                data_type=TypeCodes.FORMULA_CACHE_STRING)
 
         if AREA_BORDER:
             rows = sheet.iter_rows(row_offset=row_num-1)
@@ -128,7 +130,7 @@ class CellStyles:
         # font = Font(italic=True, color=CALCULATION_COLOR)
         # cell.font = font
 
-        cell.number_format = number_formats.DEFAULT_PARAMETER_FORMAT
+        cell.number_format = NumberFormats.DEFAULT_PARAMETER_FORMAT
 
     @staticmethod
     def format_date(cell):
@@ -142,7 +144,7 @@ class CellStyles:
         Format cells containing dates to conform with Chef standard.
         """
 
-        cell.number_format = number_formats.DEFAULT_DATE_FORMAT
+        cell.number_format = NumberFormats.DEFAULT_DATE_FORMAT
 
     @staticmethod
     def format_hardcoded(cell):
@@ -169,7 +171,7 @@ class CellStyles:
 
         Format cells containing integers to conform with Chef standard.
         """
-        cell.number_format = number_formats.INTEGER_FORMAT
+        cell.number_format = NumberFormats.INTEGER_FORMAT
 
     @staticmethod
     def format_line(line):
@@ -184,7 +186,7 @@ class CellStyles:
         standard.
         """
 
-        use_format = line.xl.number_format or number_formats.DEFAULT_LINE_FORMAT
+        use_format = line.xl.number_format or NumberFormats.DEFAULT_LINE_FORMAT
 
         if line.xl.derived.cell:
             line.xl.derived.cell.number_format = use_format
@@ -215,10 +217,11 @@ class CellStyles:
 
         Format cells containing parameters to conform with Chef standard.
         """
-        cell.number_format = number_formats.DEFAULT_PARAMETER_FORMAT
+        cell.number_format = NumberFormats.DEFAULT_PARAMETER_FORMAT
         cell.alignment = Alignment(horizontal='right')
 
-    def format_scenario_label(self, cell):
+    @staticmethod
+    def format_scenario_label(cell):
         """
 
 
@@ -228,7 +231,7 @@ class CellStyles:
 
         Format cells containing scenario column labels on Scenario tab.
         """
-        self.format_header_label(cell, alignment='center')
+        CellStyles.format_header_label(cell, alignment='center')
 
     @staticmethod
     def format_header_label(cell, alignment=None, color=BLACK,
@@ -239,6 +242,10 @@ class CellStyles:
         CellStyles.format_header_label -> None
 
         --``cell`` is an instance of openpyxl cell class
+        --``alignment`` is the text alignment within the cell
+        --``color`` is the cell color, default is black (hex definition)
+        --``font_color`` is the font color, default is white (hex definition)
+        --``bold`` is a bool, whether or not to bold the font
 
         Headers at the top, white on black.
         """
@@ -258,6 +265,8 @@ class CellStyles:
         CellStyles.format_subheader_label -> None
 
         --``cell`` is an instance of openpyxl cell class
+        --``alignment`` is the text alignment within the cell
+        --``color`` is the cell color, default defined by SUBHEADER_COLOR
 
         Looks like Header, but on a different background color.
         """
@@ -290,6 +299,7 @@ class CellStyles:
         --``selector_col`` is the column number where the scenario selector
             cell lives
         --``row`` is the row where the scenario selector cells live
+        --``active`` is a bool, indicates whether scenario selector is live
 
         Format cells containing scenario selection label and selector.
         """
@@ -465,6 +475,7 @@ class CellStyles:
             border.right = side
             cell.border = border
 
+    @staticmethod
     def format_line_borders(book):
         """
 
@@ -502,5 +513,5 @@ class CellStyles:
                     continue
 
                 CellStyles.format_border_group(sheet, st_col=st_col,
-                                                ed_col=ed_col, st_row=row,
-                                                ed_row=row, border_style=border)
+                                               ed_col=ed_col, st_row=row,
+                                               ed_row=row, border_style=border)

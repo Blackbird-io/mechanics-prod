@@ -29,9 +29,10 @@ TranscriptChef         add transcript tab to Blackbird model Excel workbook
 # Imports
 import chef_settings
 import datetime
+import string
+
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.styles.colors import WHITE, BLACK
-import string
 
 from .bb_workbook import BB_Workbook as Workbook
 from .cell_styles import CellStyles
@@ -42,15 +43,12 @@ from .tab_names import TabNames
 
 
 # Module Globals
-cell_styles = CellStyles()
-sheet_style = SheetStyle()
-tab_names = TabNames()
+# n/a
 
 # Constants
 ADDABLE_CAPTION = ' (addable input)'
 NOTE_CAP = 'Note'
 TABLE_CAPTION = 'table entry'
-
 USAGE_NOTE = 'To ensure compatibility with website script functionality, ' \
              'adjust only values in "Response" column. Within "Response" ' \
              'column, maintain given formatting for ranges, dates, etc.'
@@ -65,8 +63,6 @@ PROM = 'prompt'
 RA = 'response_array'
 RS = 'response'
 TARG = 'target'
-
-
 
 # Classes
 class TranscriptChef:
@@ -122,7 +118,7 @@ class TranscriptChef:
 
             sheet.title = title
         else:
-            sheet = book.create_sheet(name=tab_names.TRANSCRIPT, index=idx)
+            sheet = book.create_sheet(name=TabNames.TRANSCRIPT, index=idx)
 
         # get length of interview
         transcript = list()
@@ -141,7 +137,7 @@ class TranscriptChef:
 
         for col in self.COLUMN_DICT.values():
             num_col = string.ascii_uppercase.find(col.upper()) + 1
-            cell_styles.format_border_group(sheet=sheet,
+            CellStyles.format_border_group(sheet=sheet,
                                             st_col=num_col,
                                             ed_col=num_col,
                                             st_row=8,
@@ -150,7 +146,7 @@ class TranscriptChef:
 
         self._add_note_to_excel(sheet, current_row + 1)
 
-        sheet_style.style_sheet(sheet, label_areas=False)
+        SheetStyle.style_sheet(sheet, label_areas=False)
         sheet.sheet_properties.tabColor = chef_settings.TRANSCRIPT_TAB_COLOR
 
         return book

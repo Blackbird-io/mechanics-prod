@@ -16,15 +16,13 @@ Attribute             Description
 ====================  =========================================================
 
 DATA:
-field_names           commonly used field names
-formula_templates     string templates for commonly used formulas
-tab_names             standard tab names
+n/a
 
 FUNCTIONS:
 n/a
 
 CLASSES:
-ModelChef             chop Blackbird Engine model into a dynamic Excel workbook
+SummaryChef           chop Blackbird Engine model into a dynamic Excel workbook
 ====================  =========================================================
 """
 
@@ -41,11 +39,9 @@ import bb_settings
 import chef_settings
 
 from .cell_styles import CellStyles, LOWHEADER_COLOR
-from .data_types import TypeCodes
 from .field_names import FieldNames
-from .formulas import FormulaTemplates
-from .summary_line_chef import SummaryLineChef
 from .sheet_style import SheetStyle
+from .summary_line_chef import SummaryLineChef
 from .tab_names import TabNames
 from .transcript_chef import TranscriptChef
 from .unit_chef import UnitChef
@@ -57,20 +53,14 @@ from .unit_chef import UnitChef
 # n/a
 
 # Module Globals
-cell_styles = CellStyles()
-field_names = FieldNames()
-formula_templates = FormulaTemplates()
 line_chef = SummaryLineChef()
-sheet_style = SheetStyle()
-tab_names = TabNames()
 transcript_chef = TranscriptChef()
-type_codes = TypeCodes()
 unit_chef = UnitChef()
 
 get_column_letter = xlio.utils.get_column_letter
 bounding_box = xlio.drawing.image.bounding_box
-
 logger = logging.getLogger(bb_settings.LOGNAME_MAIN)
+
 
 # Classes
 class SummaryChef:
@@ -95,13 +85,14 @@ class SummaryChef:
 
         ModelChef._add_annual_summary -> None
 
+        --``book`` is an instance ob BB_Workbook
         --``model`` is an instance of Blackbird Engine model
 
         Adds an annual summary tab.
         """
         # Create summary tab
         tab_idx = 1
-        sheet = book.create_sheet(chef_settings.SUMMARY_TITLE, tab_idx)
+        sheet = book.create_sheet(TabNames.SUMMARIES, tab_idx)
 
         # 2x1 top left corner for company name
         header_rows = sheet.bb.row_axis.add_group('tab_header', size=2)
@@ -134,9 +125,9 @@ class SummaryChef:
         )
 
         # Add parameters area to set up label and value columns
-        area = sheet.bb.add_area(field_names.PARAMETERS)
-        area.columns.by_name[field_names.LABELS] = label_cols.number()
-        area.columns.by_name[field_names.VALUES] = years_cols.number()
+        area = sheet.bb.add_area(FieldNames.PARAMETERS)
+        area.columns.by_name[FieldNames.LABELS] = label_cols.number()
+        area.columns.by_name[FieldNames.VALUES] = years_cols.number()
 
         # Add row and label for Complete T/F
         complete_label_rows = output_rows.add_group(
@@ -216,10 +207,10 @@ class SummaryChef:
         output_rows.resolve_cells()
 
         # Styling and formatting that's left
-        sheet_style.style_sheet(sheet, label_areas=False)
+        SheetStyle.style_sheet(sheet, label_areas=False)
 
         # Make pretty border
-        cell_styles.format_border_group(
+        CellStyles.format_border_group(
             sheet=sheet,
             st_col=output_cols.number(),
             ed_col=output_cols.number() + output_cols.size - 1,
@@ -243,7 +234,7 @@ class SummaryChef:
 
         sheet.sheet_properties.tabColor = chef_settings.SUMMARY_TAB_COLOR
 
-        corner_col = area.columns.by_name[field_names.VALUES] - 1
+        corner_col = area.columns.by_name[FieldNames.VALUES] - 1
         corner_row = complete_label_rows.number() - 1
         corner_cell = sheet.cell(column=corner_col, row=corner_row)
         sheet.freeze_panes = corner_cell
@@ -275,7 +266,7 @@ class SummaryChef:
                     row = group.number()
                     col = label_cols.number()
                     if group.name == 'title' and level == 0:
-                        formatter = cell_styles.format_area_label
+                        formatter = CellStyles.format_area_label
                         formatter(sheet, label, row, col_num=col)
                     else:
                         label_cell = sheet.cell(row=row, column=col)
@@ -315,7 +306,7 @@ class SummaryChef:
             address = year_headrow.get_corner_address(year_colgroup)
             cell = sheet.cell(address)
             cell.value = year_colgroup.name
-            cell_styles.format_header_label(cell, alignment='right')
+            CellStyles.format_header_label(cell, alignment='right')
 
             # merge header cells
             if year_colgroup.size > 1:
@@ -350,7 +341,7 @@ class SummaryChef:
             address = qtr_headrow.get_corner_address(qtr_colgroup)
             cell = sheet.cell(address)
             cell.value = qtr_colgroup.name
-            cell_styles.format_subheader_label(cell, alignment='right')
+            CellStyles.format_subheader_label(cell, alignment='right')
             column = sheet.column_dimensions[cell.column]
             column.width = chef_settings.COLUMN_WIDTH
 
@@ -379,7 +370,7 @@ class SummaryChef:
             address = mon_headrow.get_corner_address(mon_col)
             cell = sheet.cell(address)
             cell.value = mon_col.name
-            cell_styles.format_subheader_label(
+            CellStyles.format_subheader_label(
                 cell,
                 alignment='right',
                 color=LOWHEADER_COLOR
