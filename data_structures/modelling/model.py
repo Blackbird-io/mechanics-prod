@@ -98,6 +98,10 @@ class Model(TagsMixIn):
     change_ref_date()     updates timeline to use new reference date
     copy()                returns a copy of Model instance
     from_portal()         class method, extracts model out of API-format
+    get_company()         method to get top-level company unit
+    get_financials()      method to get financials for a given unit and time
+    get_life()            method to get unit life at a given time
+    get_timeline()        method to get timeline at specific resolution (m,q,a)
     start()               sets _started and started to True
     transcribe()          append message and timestamp to transcript
     ====================  ======================================================
@@ -285,6 +289,65 @@ class Model(TagsMixIn):
         result.target = self.target
 
         return result
+
+    def get_company(self):
+        """
+
+        Model.get_company() -> BusinessUnit
+
+        Method returns top-level business unit from current period.
+        """
+        co = self.time_line.current_period.content
+        return co
+
+    def get_financials(self, bbid, period):
+        """
+
+        Model.get_financials() -> Financials
+
+        --``bbid`` is the ID.bbid for the BusinessUnit whose financials you are
+         seeking
+        --``period`` is an instance of TimePeriod or TimePeriodBase
+
+        Method returns the specified version of financials.
+        """
+        unit = period.bu_directory[bbid]
+        fins = unit.financials
+
+        return fins
+
+    def get_life(self, bbid, period):
+        """
+
+        Model.get_life() -> Life
+
+        --``bbid`` is the ID.bbid for the BusinessUnit whose financials you are
+         seeking
+        --``period`` is an instance of TimePeriod or TimePeriodBase
+
+        Method returns the specified version of Life.
+        """
+        unit = period.bu_directory[bbid]
+        life = unit.life
+
+        return life
+
+    def get_timeline(self, resolution='monthly'):
+        """
+
+        Model.get_timeline() -> TimeLine
+
+        --``resolution`` is 'monthly', 'quarterly', 'annually' or any available
+          summary resolution'
+
+        Method returns the timeline for specified resolution (if any).
+        """
+        if resolution == 'monthly':
+            tl = self.time_line
+        else:
+            tl = self.time_line.summary_builder.summaries[resolution]
+
+        return tl
 
     def start(self):
         """
