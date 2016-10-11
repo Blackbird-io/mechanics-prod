@@ -165,8 +165,6 @@ class UnitFinsChef:
             dr_data, materials = sheet.bb.problem_lines.pop()
             line_chef.attempt_reference_resolution(sheet, dr_data, materials)
 
-        return self.fins_dict
-
     @staticmethod
     def add_valuation_tab(model, book, unit, index=None):
         """
