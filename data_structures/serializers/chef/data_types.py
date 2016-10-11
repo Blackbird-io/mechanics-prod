@@ -47,7 +47,7 @@ from chef_settings import PARAM_DECIMAL_POINTS
 class TypeCodes:
     """
 
-    Class stores type strings known to the excel interface. 
+    Class stores type strings known to the excel interface.
     ====================  =====================================================
     Attribute             Description
     ====================  =====================================================
@@ -92,6 +92,6 @@ class NumberFormats:
     DEFAULT_PARAMETER_FORMAT = "#,##0"
     if PARAM_DECIMAL_POINTS > 0:
         DEFAULT_PARAMETER_FORMAT += "."
-        DEFAULT_PARAMETER_FORMAT += "0"*PARAM_DECIMAL_POINTS
+        DEFAULT_PARAMETER_FORMAT += "0" * PARAM_DECIMAL_POINTS
 
     INTEGER_FORMAT = numbers.FORMAT_NUMBER

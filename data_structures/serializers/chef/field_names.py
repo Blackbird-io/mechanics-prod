@@ -42,7 +42,7 @@ FieldNames            standard keys for column and row lookups
 class FieldNames:
     """
 
-    Class stores standard keys for row and column lookups within SheetData. 
+    Class stores standard keys for row and column lookups within SheetData.
     ====================  =====================================================
     Attribute             Description
     ====================  =====================================================
@@ -88,7 +88,7 @@ class FieldNames:
     ====================  =====================================================
     """
     # GENERAL
-    
+
     LABELS = "labels"
     MASTER = "master"
     VALUES = "values"
