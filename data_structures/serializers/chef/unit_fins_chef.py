@@ -84,12 +84,46 @@ class UnitFinsChef:
     add_valuation_tab()   creates and fills in valuation tab
     ====================  =====================================================
     """
-    def add_financials(self, *pargs, sheet, unit, column, set_labels=True):
+    def __init__(self, model):
+        self.model = model
+        self.fins_dict = dict()
+
+    def chop_financials(self, sheet, unit):
         """
 
         UnitChef.add_financials() -> dict
 
-         --``sheet`` must be an instance of openpyxl Worksheet
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``unit`` must be an instance of BusinessUnit
+
+        Method adds financials to worksheet and returns a dictionary of the
+        statements added to the worksheet and their starting rows
+        """
+        body_rows = sheet.bb.row_axis.get_group('body')
+        body_rows.add_group(
+            'statements',
+            offset=sheet.bb.current_row - body_rows.tip + 1
+        )
+
+        time_line = self.model.get_timeline()
+        now = time_line.current_period
+        for period in time_line.iter_ordered(open=now.end):
+            sheet.bb.current_row = sheet.bb.size.rows.ending
+            column = sheet.bb.time_line.columns.get_position(period.end)
+            self.add_financials(
+                sheet, unit, period, column,
+                set_labels=(period.end == now.end)
+            )
+
+        return self.fins_dict
+
+
+    def add_financials(self, sheet, unit, period, column, set_labels=True):
+        """
+
+        UnitChef.add_financials() -> None
+
+        --``sheet`` must be an instance of openpyxl Worksheet
         --``unit`` must be an instance of BusinessUnit
         --``column`` must be a column number reference
         --``set_labels`` must be a boolean; True will set labels for line
@@ -97,15 +131,8 @@ class UnitFinsChef:
         Method adds financials to worksheet and returns a dictionary of the
         statements added to the worksheet and their starting rows
         """
-        fins_dict = dict()
-
-        body_rows = sheet.bb.row_axis.get_group('body')
-        body_rows.add_group(
-            'statements',
-            offset=sheet.bb.current_row - body_rows.tip + 1
-        )
-
-        for name, statement in unit.financials.chef_ordered():
+        financials = self.model.get_financials(unit.id.bbid, period)
+        for name, statement in financials.chef_ordered():
             if statement is not None:
                 sheet.bb.current_row += 1
                 sheet.bb.outline_level = 0
@@ -119,7 +146,7 @@ class UnitFinsChef:
                     title = statement.title
                     start_bal = False
 
-                fins_dict[title] = statement_row
+                self.fins_dict[title] = statement_row
                 statement_rows = self._add_statement_rows(sheet, statement,
                                                           title=title)
                 line_chef.chop_statement(
@@ -138,10 +165,10 @@ class UnitFinsChef:
             dr_data, materials = sheet.bb.problem_lines.pop()
             line_chef.attempt_reference_resolution(sheet, dr_data, materials)
 
-        return fins_dict
+        return self.fins_dict
 
     @staticmethod
-    def add_valuation_tab(book, unit, index=None):
+    def add_valuation_tab(model, book, unit, index=None):
         """
 
 
@@ -182,7 +209,10 @@ class UnitFinsChef:
         SheetStyle.set_column_width(sheet, current, width=22)
 
         statement_row = sheet.bb.current_row + 1
-        statement = unit.financials.valuation
+        time_line = model.get_timeline()
+        now = time_line.current_period
+        financials = model.get_financials(unit.id.bbid, now)
+        statement = financials.valuation
         line_chef.chop_statement(
             sheet=sheet,
             statement=statement,

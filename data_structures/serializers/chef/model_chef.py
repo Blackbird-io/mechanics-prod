@@ -90,20 +90,18 @@ class ModelChef:
         """
 
         book = GarnishChef.add_garnishes(model)
-        company = model.get_company()
 
         # add a tab with unit structure map
-        structure_chef = StructureChef()
-        structure_chef.chop(book, company)
+        structure_chef = StructureChef(model)
+        structure_chef.chop(book)
 
-        unit_chef.chop_multi(book, company)
+        unit_chef.chop_multi(model, book)
 
         if bb_settings.MAKE_ANNUAL_SUMMARIES:
-            summary_chef = SummaryChef()
-            summary_chef.add_annual_summary(model, book)
+            summary_chef = SummaryChef(model)
+            summary_chef.add_annual_summary(book)
 
-        unit_chef.chop_multi_valuation(book=book, unit=company, index=2,
-                                       recur=False)
+        unit_chef.chop_multi_valuation(model, book, index=2, recur=False)
 
         transcript_chef.make_transcript_excel(model, book, idx=3)
 
