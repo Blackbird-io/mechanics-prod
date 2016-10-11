@@ -70,17 +70,19 @@ class StructureChef:
     BOX_ACROSS = 2
     SEP_ACROSS = 4
 
-    def chop(self, book, unit, level=0):
+    def __init__(self, model):
+        self.model = model
+
+    def chop(self, book):
         """
 
 
         StructureChef.chop() -> None
 
         --``book`` must be a Workbook
-        --``unit`` must be an instance of BusinessUnit
 
-        Method recursively walks through ``unit`` and components and displays
-        a diagram of BU structure on an Excel sheet.
+        Method recursively walks through top-level unit and components
+        and displays a diagram of BU structure on an Excel sheet.
         """
         # sheet location
         ahead = book.get_sheet_by_name(TabNames.SCENARIOS)
@@ -96,6 +98,7 @@ class StructureChef:
         body_rows = sheet.bb.row_axis.add_group('body')
         body_cols = sheet.bb.col_axis.add_group('body')
 
+        unit = self.model.get_company()
         # start with top box
         self.unit_box(sheet, unit, body_rows, body_cols, level=0)
         body_rows.calc_size()

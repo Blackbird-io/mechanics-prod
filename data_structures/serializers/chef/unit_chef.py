@@ -56,7 +56,6 @@ REPLACEMENT_CHAR = None
 bad_char_table = {ord(c): REPLACEMENT_CHAR for c in _INVALID_CHARS}
 get_column_letter = xlio.utils.get_column_letter
 line_chef = LineChef()
-fins_chef = UnitFinsChef()
 info_chef = UnitInfoChef()
 
 # Classes
@@ -84,13 +83,14 @@ class UnitChef:
     n/a
 
     FUNCTIONS:
-    chop_multi()          returns sheet with a SheetData instance at sheet.bb,
+    chop_company()        returns sheet with a SheetData instance at sheet.bb,
                           also spreads financials, life, parameters of units
+    chop_multi()          recursor for chop_company to chop child units
     chop_multi_valuation() returns sheet with a SheetData instance at sheet.bb,
                           makes and fills Valuation tab
     ====================  =====================================================
     """
-    def chop_multi(self, book, unit):
+    def chop_multi(self, model, book, unit=None):
         """
 
 
@@ -103,13 +103,16 @@ class UnitChef:
         into Excel format.  Method also spreads financials, parameters, and
         life of the unit.
         """
+        # top level entry: get the company
+        if not unit:
+            unit = model.get_company()
 
         # 1.   Chop the children
         before_kids = len(book.worksheets)
         children = unit.components.get_ordered()
 
         for child in children:
-            self.chop_multi(book, child)
+            self.chop_multi(model, book, child)
 
         # 2.   Chop the parent
         #
@@ -138,21 +141,8 @@ class UnitChef:
         sheet.bb.outline_level -= 1
 
         # 2.4.  spread fins
-        current = sheet.bb.time_line.columns.get_position(unit.period.end)
-        fins_dict = fins_chef.add_financials(sheet=sheet, unit=unit,
-                                             column=current)
-
-        for snapshot in unit:
-            sheet.bb.current_row = sheet.bb.size.rows.ending
-            column = sheet.bb.time_line.columns.get_position(
-                snapshot.period.end)
-            # Load balance from prior column!!!
-
-            fins_chef.add_financials(sheet=sheet, unit=snapshot, column=column,
-                                     set_labels=False)
-
-            # Should make sure rows align here from one period to the next.
-            # Main problem lies in consolidation logic.
+        fins_chef = UnitFinsChef(model)
+        fins_dict = fins_chef.chop_financials(sheet, unit)
 
         # 2.5 add area and statement labels and sheet formatting
         SheetStyle.style_sheet(sheet)
@@ -176,7 +166,9 @@ class UnitChef:
 
         return sheet
 
-    def chop_multi_valuation(self, *pargs, book, unit, index, recur=False):
+    def chop_multi_valuation(
+        self, model, book, unit=None, index=2, recur=False
+    ):
         """
 
 
@@ -190,6 +182,9 @@ class UnitChef:
         Method recursively walks through ``unit`` and components and will chop
         their valuation if any exists.
         """
+        # top level entry: get unit from model
+        if not unit:
+            unit = model.get_company()
 
         # 1.   Chop the children
         if recur:
@@ -197,9 +192,14 @@ class UnitChef:
 
             for child in children:
                 index = book.get_index(child.xl.sheet) - 1
-                self.chop_multi_valuation(book=book, unit=child,
-                                          index=index, recur=recur)
+                self.chop_multi_valuation(
+                    model, book, unit=child, index=index, recur=recur
+                )
 
         # 2.6 add valuation tab, if any exists for unit
-        if unit.financials.has_valuation:
-            fins_chef.add_valuation_tab(book, unit, index=index)
+        time_line = model.get_timeline()
+        now = time_line.current_period
+        financials = model.get_financials(unit.id.bbid, now)
+        if financials.has_valuation:
+            fins_chef = UnitFinsChef(model)
+            fins_chef.add_valuation_tab(model, book, unit, index=index)

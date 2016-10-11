@@ -78,15 +78,16 @@ class SummaryChef:
     add_annual_summary()  adds a summary to book
     ====================  =====================================================
     """
+    def __init__(self, model):
+        self.model = model
 
-    def add_annual_summary(self, model, book):
+    def add_annual_summary(self, book):
         """
 
 
         ModelChef._add_annual_summary -> None
 
         --``book`` is an instance ob BB_Workbook
-        --``model`` is an instance of Blackbird Engine model
 
         Adds an annual summary tab.
         """
@@ -99,6 +100,7 @@ class SummaryChef:
         header_cols = sheet.bb.col_axis.add_group('tab_header', size=1)
 
         # Add company name, top left of header section
+        model = self.model
         company = model.get_company()
         address = header_rows.get_corner_address(header_cols)
         cell = sheet.cell(address)
@@ -485,7 +487,8 @@ class SummaryChef:
 
             # Statements
             statement_rowgroup = output_rows.add_group('statements', offset=1)
-            for name, statement in unit.financials.chef_ordered():
+            financials = self.model.get_financials(unit.id.bbid, period)
+            for name, statement in financials.chef_ordered():
                 if statement is not None:
                     # to handle the hard link from starting to ending financials
                     if name == 'starting':
