@@ -53,7 +53,7 @@ from .axis_group import AxisGroup
 
 
 # Module Globals
-field_names = FieldNames()
+
 
 # Classes
 class Area:
@@ -457,11 +457,11 @@ class RowData(dict):
     ====================  =====================================================
     """
 
-    field_names = FieldNames()
+    field_names = FieldNames
 
     def __init__(self):
-        self[self.field_names.VALUES] = None
-        self[self.field_names.LABELS] = None
+        self[FieldNames.VALUES] = None
+        self[FieldNames.LABELS] = None
 
 
 class SheetData:
@@ -497,7 +497,7 @@ class SheetData:
         self.consolidation_size = None
         self.outline_level = 0
         self.sheet = None
-        self.area_names = [field_names.GENERAL]
+        self.area_names = [FieldNames.GENERAL]
         self.scenario_selector = None
         self.line_directory = dict()
         self.problem_lines = []

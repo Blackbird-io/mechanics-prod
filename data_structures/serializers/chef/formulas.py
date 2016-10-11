@@ -48,6 +48,7 @@ class FormulaTemplates:
     ====================  =====================================================
 
     DATA:
+    SUM_ANYRANGE          "+SUM({top_cell}:{end_cell})"
     SUM_RANGE             "=SUM({alpha_column}{starting_row}:{alpha_column}
                            {ending_row})"
     SUM_RANGE_ON_SHEET    "+SUM({sheet}!{alpha_column}{starting_row}:{sheet}!

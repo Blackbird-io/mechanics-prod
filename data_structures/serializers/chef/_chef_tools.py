@@ -25,8 +25,9 @@ close_excel_by_force  function closes Excel application by force
 collapse_groups       function opens an Excel file and collapses all groups
 group_lines           function adds row to outline group for pretty collapsing
 is_close              function for fuzzy equals between numeric values
-test_book             function tests values calculated in Excel against those
-                      calculated within the Blackbird Engine
+rows_to_coordinates   creates directory of row name:row coordinate in a column
+set_label             function sets the label for a given row
+set_param_rows        function sets the SSOT parameter rows for a line item
 
 CLASSES:
 n/a
@@ -39,9 +40,11 @@ n/a
 # Imports
 import os
 import openpyxl as xlio
+import re
 import xlrd
 
-from chef_settings import SCENARIO_SELECTORS
+from bb_exceptions import ExcelPrepError
+from chef_settings import SCENARIO_SELECTORS, FILTER_PARAMETERS
 
 if SCENARIO_SELECTORS:
     import win32api
@@ -49,7 +52,6 @@ if SCENARIO_SELECTORS:
     import win32con
     import win32gui
     import win32process
-
 
 from openpyxl.worksheet.datavalidation import DataValidation
 
@@ -66,13 +68,12 @@ _VBS_FILENAME_BOOKMARK = "FILENAME_PLACEHOLDER"
 _VBS_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # Module Globals
-cell_styles = CellStyles()
-field_names = FieldNames()
+get_column_letter = xlio.utils.get_column_letter
 
 # Classes
 # n/a
 
-
+# Functions
 def add_links_to_selectors(filename, sources_dict):
     """
 
@@ -181,7 +182,7 @@ def add_scenario_selector(sheet, column, row, selections):
     sheet.bb.scenario_selector = selector_cell.coordinate
 
     # Make label cells and drop-down selector
-    cell_styles.format_scenario_selector_cells(sheet,
+    CellStyles.format_scenario_selector_cells(sheet,
                                                column,
                                                select_column,
                                                row)
@@ -343,200 +344,142 @@ def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 
-def test_book(model, filename, log_filename=None):
+def rows_to_coordinates(*pargs, lookup, column):
     """
 
 
-    test_book -> bool & writes a log file
+    LineChef._rows_to_coordinates -> dict
 
-    --``model`` must be a Chef-chopped Blackbird engine model
-    --``filename`` must be string path at which the workbook for the
-        chopped model has been saved.
-    --``log_filename`` is the optional path at which to write the test's log
+    --``lookup`` is a lookup table
+    --``column`` must be a column number reference
 
-    Function relies on the user having open-saved-closed the Excel spreadsheet,
-    manually or programmatically, to make the formulas calculate.
-
-    This is the driver function for checking Excel output.  Function delegates
-    to _check_bu to do most of the work.
-
-    Function checks formulas and values written to Excel against values
-    calculated and stored in the Blackbird Engine. Function uses fuzzy equals
-    (to the 0.001) to compare numeric values.
-
-    Function returns "True" if the test passes (there are no discrepancies
-    between the model and excel workbook), "False" otherwise.
-
-    Note:
-    A None in the Engine is declared equivalent to an Excel Zero for the
-    purpose of this test.
     """
 
-    # start with passed = True, will set False if any inconsistencies are found
-    passed = True
+    result = dict()
+    alpha_column = get_column_letter(column)
 
-    # now open workbook and retrieve relevant cells to compare to dict
-    wb = xlrd.open_workbook(filename=filename)
+    for k in lookup.by_name:
+        row = lookup.get_position(k)
+        result[k] = alpha_column + str(row)
 
-    # open log file
-    if not log_filename:
-        loc_dot = filename.rfind(".")
-        log_fnam = filename[0:loc_dot] + "_log.xlsx"
-    else:
-        log_fnam = log_filename
+    return result
 
-    log_wb = xlio.Workbook()
-    log_ws = log_wb.active
 
-    # # Lists to hold log values
-    qa_list = ["Sheet", "Cell", "BB_Value", "Excel_Value", "Formula_Name"]
-    log_ws.append(qa_list)
+def set_label(*pargs, label, sheet, row, column=None,
+              overwrite=False,
+              formatter=None):
+    """
 
-    # get model and walk through time periods, bu's, statements, lines
-    for t in model.time_line.values():
-        if t.end < model.time_line.current_period.end:
-            continue
 
-        if t is model.time_line.current_period:
-            # only check valuation for the company-level unit in the current
-            # period
-            check_val = True
+    LineChef._set_label() -> Worksheet
+
+    --``label`` must be value to set as a cell label
+    --``sheet`` must be an instance of openpyxl Worksheet
+    --``row`` must be a row index where ``label`` should be written
+    --``column`` column index or None where ``label`` should be written
+    --``overwrite`` must be a boolean; True overwrites existing value,
+       if any; default is False
+    --``formatter`` method in cell_styles to be called on the label cell
+
+    Set (column, row) cell value to label. Throw exception if cell already
+    has a different label, unless ``overwrite`` is True.
+
+    If ``column`` is None, method attempts to locate the labels column in
+    the sheet.bb.parameters area.
+    """
+    if column is None:
+        if getattr(sheet.bb, FieldNames.PARAMETERS, None):
+            param_area = getattr(sheet.bb, FieldNames.PARAMETERS)
+            cols = param_area.columns
+            column = cols.get_position(FieldNames.LABELS)
         else:
-            check_val = False
+            column = 2
 
-        if t.content:
-            passed = _check_bu(t.content, wb, log_ws, passed,
-                               check_val=check_val)
+    label_cell = sheet.cell(column=column, row=row)
+    existing_label = label_cell.value
 
-    # now check annual summaries
-    annual_summaries = model.time_line.summary_builder.summaries['annual']
-    for t in annual_summaries.values():
-        if t.content:
-            passed = _check_bu(t.content, wb, log_ws, passed, check_val=False)
+    if overwrite or not existing_label:
+        label_cell.value = label
+    else:
+        if existing_label != label:
+            c = """
+                Something is wrong with our alignment. We are trying to
+                write a parameter to an existing row with a different label.
+                """
+            print(c)
+            print("Old Label:", existing_label)
+            print("New Label:", label)
+            print("Sheet:", sheet.title)
+            print("Row:", row)
+            print("Col:", column)
 
-    log_wb.save(log_fnam)
+            # raise ExcelPrepError(c)
+            # Check to make sure we are writing to the right row; if the
+            # label doesn't match, we are in trouble.
 
-    return passed
+    if formatter:
+        formatter(label_cell)
+
+    return sheet
+
+
+def set_param_rows(line, sheet):
+    """
+
+    set_param_rows() -> None
+
+    --``line`` is an instance of LineItem
+    --``sheet`` is an instance of Openpyxl worksheet
+
+    Function determines the SSOT parameters that the line's drivers will need
+    in perpetuity.  Template parameters are saved to the sheet's line directory
+    """
+
+    try:
+        template_xl = sheet.bb.line_directory[line.id.bbid]
+    except KeyError:
+        template_xl = None
+
+    if template_xl:
+        for check_data, driver_data in zip(template_xl.derived.calculations,
+                                           line.xl.derived.calculations):
+            if check_data.name != driver_data.name:
+                c = "Formulas are not consistent for line over time!"
+                raise ExcelPrepError(c)
+
+            driver_data.rows = check_data.rows
+    elif FILTER_PARAMETERS:
+        # get params to keep
+        for driver_data in line.xl.derived.calculations:
+            params_keep = []
+            for step in driver_data.formula.values():
+                temp_step = [m.start() for m in re.finditer('parameters\[*',
+                                                            step)]
+
+                for idx in temp_step:
+                    jnk = step[idx:]
+                    idx_end = jnk.find(']') + idx
+                    params_keep.append(step[idx + 11:idx_end])
+
+        # clean driver_data
+        new_rows = []
+        for item in driver_data.rows:
+            if item[FieldNames.LABELS] in params_keep:
+                new_rows.append(item)
+
+            try:
+                temp = driver_data.conversion_map[item[FieldNames.LABELS]]
+            except KeyError:
+                pass
+            else:
+                if temp in params_keep:
+                    new_rows.append(item)
+
+        driver_data.rows = new_rows
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
-
-
-def _check_bu(business_unit, workbook_in, log_ws, passed, check_val=False):
-    """
-
-    _check_bu -> bool & writes to log file
-
-    --``business_unit`` must be an instance of BusinessUnit
-    --``workbook_in`` must be the Excel workbook (xlrd.Workbook type) to check
-    --``log_ws`` must be the Excel sheet for test log entries (openpyxl.Sheet
-        type)
-    --``passed`` must ba a bool, whether or not the test has passed thus far
-    --``check_val`` whether or not to check Valuation for the business unit
-
-    Function walks through BusinessUnits and Statements and delegates to _check
-    _statement to do the bulk of the work.  Function returns "True" if the
-    test has passed thus far, "False" otherwise.
-    """
-
-    # recursively walk through all business units
-    comps = business_unit.components.get_ordered()
-    for c in comps:
-        # do not check valuation, only check for company-level unit in current
-        # period
-        passed = _check_bu(c, workbook_in, log_ws, passed, check_val=False)
-
-    # walk through statements
-    for statement in business_unit.financials.full_ordered:
-        if statement:
-            is_val = statement is business_unit.financials.valuation
-            if is_val and not check_val:
-                continue
-            passed = _check_statement(statement, workbook_in, log_ws, passed)
-
-    return passed
-
-
-def _check_statement(statement, workbook_in, log_ws, passed):
-    """
-
-    _check_statement -> bool & writes to log file
-
-    --``business_unit`` must be an instance of BusinessUnit
-    --``workbook_in`` must be the Excel workbook (xlrd.Workbook type) to check
-    --``log_ws`` must be the Excel sheet for test log entries (openpyxl.Sheet
-        type)
-    --``passed`` must ba a bool, whether or not the test has passed thus far
-
-    Function recursively checks Excel output for all business units and writes
-    inconsistencies to log_ws.  Function uses fuzzy equals (to the 0.001) to
-    compare numeric values.
-
-    Function returns "True" if the test has passed thus far, "False" otherwise.
-
-    Note:
-    A None in the Engine is declared equivalent to an Excel Zero and Excel
-    empty string for the purpose of this test.
-    """
-
-    lines = statement.get_full_ordered()
-
-    # walk through lineitems
-    for line in lines:
-        # get cell value
-        sheet = workbook_in.sheet_by_name(line.xl.cell.parent.title)
-
-        try:
-            col = line.xl.cell.col_idx - 1
-            row = line.xl.cell.row - 1
-            cell = sheet.cell(row, col)
-        except IndexError:
-            m1 = "Row %s, Col %s" % (row, col)
-            m2 = "NROWS %s, NCOLS %s" % (sheet.nrows, sheet.ncols)
-            m = m1 + "\n" + m2
-            passed = False
-            raise IndexError(m)
-
-        same = False
-        if line.value is None or cell.value is None:
-            if line.value is None and cell.value is "":
-                same = True
-            elif line.value is None and cell.value == 0:
-                # None LineItems are written as zeros
-                same = True
-            else:
-                same = False
-        elif isinstance(cell.value, float) or isinstance(cell.value, int):
-            if is_close(cell.value, line.value, abs_tol=0.001):
-                same = True
-            else:
-                same = False
-        elif isinstance(cell.value, str):
-            if cell.value is line.value:
-                same = True
-            else:
-                same = False
-        else:
-            print("ERROR: unrecognized type")
-
-        if same is True:
-            pass
-        else:
-            if line.xl.derived.calculations:
-                calcs = line.xl.derived.calculations
-                formula_names = [c.name for c in calcs]
-                formula = ','.join(formula_names)
-            else:
-                formula = line.tags.name
-
-            qa_list = [line.xl.cell.parent.title, line.xl.cell.coordinate,
-                       line.value, cell.value, formula]
-            log_ws.append(qa_list)
-            passed = False
-
-    return passed
-
 
 def _write_run_temp_vbs_file(filename, vbs_file):
     """
