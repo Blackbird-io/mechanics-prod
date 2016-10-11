@@ -41,7 +41,6 @@ n/a
 import os
 import openpyxl as xlio
 import re
-import xlrd
 
 from bb_exceptions import ExcelPrepError
 from chef_settings import SCENARIO_SELECTORS, FILTER_PARAMETERS
@@ -341,7 +340,7 @@ def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
     math.isclose() method in Python 3.5.
 
     """
-    return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+    return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 
 def rows_to_coordinates(*pargs, lookup, column):
@@ -502,7 +501,7 @@ def _write_run_temp_vbs_file(filename, vbs_file):
     # write temporary VBS file with correct filepath
     i = 0
     while True:
-        temp_fnam = vbs_file[:-4]+"_temp_%s.vbs" % i
+        temp_fnam = vbs_file[:-4] + "_temp_%s.vbs" % i
         temp_path = os.path.join(_VBS_PATH, temp_fnam)
         if os.path.isfile(temp_path):
             i += 1
@@ -520,7 +519,7 @@ def _write_run_temp_vbs_file(filename, vbs_file):
     temp_file.close()
 
     # run the VBS file
-    run_path = '"'+temp_path+'"'
+    run_path = '"' + temp_path + '"'
     os.system(run_path)
 
     # delete the temporary VBS file

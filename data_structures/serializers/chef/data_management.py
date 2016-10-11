@@ -41,8 +41,6 @@ UnitData              holds the Worksheet for a particular BusinessUnit
 import copy
 
 from openpyxl.styles import Side
-from openpyxl.utils import get_column_letter
-from collections import OrderedDict
 
 from bb_exceptions import ExcelPrepError
 

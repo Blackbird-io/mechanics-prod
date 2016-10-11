@@ -242,7 +242,7 @@ class SummaryLineChef:
         Returns Worksheet with consolidation logic added.
         """
         if line.xl.consolidated.sources:
-            label = indent * " " + line.title #+ ': consolidation'
+            label = indent * " " + line.title  # + ': consolidation'
             matter = row_container.add_group(label, size=1, label=label)
 
             sources = line.xl.consolidated.sources
@@ -314,7 +314,7 @@ class SummaryLineChef:
                     formula_layout.append('{{_{}}}'.format(i))
 
             # aggregate line for the details
-            label = indent * " " + line.title #+ ': details'
+            label = indent * " " + line.title  # + ': details'
             detail_endrow = row_container.add_group(
                 label, size=1, label=label
             )

@@ -38,10 +38,7 @@ from .sheet_style import SheetStyle
 from .unit_fins_chef import UnitFinsChef
 from .unit_info_chef import UnitInfoChef
 
-from chef_settings import (
-    SCENARIO_SELECTORS, VALUATION_TAB_COLOR, HIDE_LIFE_EVENTS,
-    APPLY_COLOR_TO_DECEMBER, DECEMBER_COLOR,
-)
+from chef_settings import APPLY_COLOR_TO_DECEMBER, DECEMBER_COLOR
 from openpyxl.styles import PatternFill
 
 
