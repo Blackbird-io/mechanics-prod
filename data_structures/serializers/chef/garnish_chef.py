@@ -119,7 +119,7 @@ class GarnishChef:
 
         Method adds a cover tab to the workbook
         """
-        company = model.time_line.current_period.content
+        company = model.get_company()
 
         sheet = book.active
         sheet.title = TabNames.COVER
@@ -290,12 +290,13 @@ class GarnishChef:
 
         # storing scenario values in model.time_line is obsolete now, transfer
         # existing values to model.scenarios
-        base = model.time_line.parameters
-        base.update(model.time_line.current_period.parameters)
+        time_line = model.get_timeline()
+        base = time_line.parameters
+        base.update(time_line.current_period.parameters)
 
         # now loop through the rest of the time periods and grab parameters
-        for per in model.time_line.values():
-            if per.end < model.time_line.current_period.end:
+        for per in time_line.iter_ordered():
+            if per.end < time_line.current_period.end:
                 continue
 
             existing_parms = set(base.keys())
@@ -382,11 +383,7 @@ class GarnishChef:
         tl_start = active_column
         alpha_master_column = get_column_letter(in_effect_column)
 
-        past, present, future = model.time_line.get_segments()
-        covered_dates = present + future
-        for end_date in covered_dates:
-            period = model.time_line[end_date]
-
+        for period in time_line.iter_ordered(open=time_line.current_period.end):
             timeline.columns.by_name[period.end] = active_column
 
             SheetStyle.set_column_width(my_tab, active_column)
