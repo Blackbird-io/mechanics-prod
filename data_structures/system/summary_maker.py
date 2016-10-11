@@ -82,10 +82,11 @@ class SummaryMaker:
     ANNUAL_KEY = "annual"
     QUARTERLY_KEY = "quarterly"
 
-    def __init__(self, timeline):
+    def __init__(self, model):
         self._fiscal_year_end = None
-        self.time_line = timeline
-        self.bu_bbid = None
+        self.model = model
+        self.time_line = model.get_timeline()
+        self.buid = model.get_company().id.bbid
         self.init_summaries()
 
     @property
@@ -181,8 +182,6 @@ class SummaryMaker:
         Main responder. Passes ``period`` to quarterly and annual summaries.
         """
         period.summary = None
-        if not self.bu_bbid:
-            self.bu_bbid = self.time_line.current_period.content.id.bbid
         self.period = period
         self.onkey = self.QUARTERLY_KEY
         # determine the quarter and the year of the period pushed to us
@@ -278,14 +277,14 @@ class SummaryMaker:
             summary_period.summary = self.onkey
 
             # copy BU structure from time_line.current_period
-            summary_unit = self.add_content(self.bu_bbid, summary_period)
+            summary_unit = self.add_content(summary_period)
 
             # special handling of the first time period starting balance:
             # link to the starting balance of the first source period
             if len(timeline_summary) == 0:
-                source_bu = source.bu_directory[self.bu_bbid]
-                bal_enter = source_bu.financials.starting.copy()
-                bal_enter.link_to(source_bu.financials.starting)
+                source_fins = self.model.get_financials(self.buid, source)
+                bal_enter = source_fins.starting.copy()
+                bal_enter.link_to(source_fins.starting)
                 summary_unit.financials.starting = bal_enter
 
             # add to timeline
@@ -321,10 +320,10 @@ class SummaryMaker:
             # when flush() is called, source is the last processed sub-period
             source = timeline_summary.source
             # add link to ending financials of last processed source
-            source_bu = source.bu_directory[self.bu_bbid]
-            bal_close = source_bu.financials.ending.copy()
-            bal_close.link_to(source_bu.financials.ending)
-            target_bu = summary_period.bu_directory[self.bu_bbid]
+            source_fins = self.model.get_financials(self.buid, source)
+            bal_close = source_fins.ending.copy()
+            bal_close.link_to(source_fins.ending)
+            target_bu = summary_period.bu_directory[self.buid]
             target_bu.financials.ending = bal_close
 
             logger.debug('{}:{} -> {}:{} flush {}'.format(
@@ -335,7 +334,7 @@ class SummaryMaker:
             # link starting financials to previous summary
             summary_before = summary_period.past
             if summary_before:
-                before_bu = summary_before.bu_directory[self.bu_bbid]
+                before_bu = summary_before.bu_directory[self.buid]
                 # bal_enter = before_bu.financials.ending.copy()
                 # bal_enter.reset()
                 # bal_enter.link_to(before_bu.financials.ending)
@@ -424,16 +423,12 @@ class SummaryMaker:
         Method adds items from ``statement_name`` in source financials to
         target summary financials.
         """
-        # get BUs from time periods
-        bu_bbid = self.bu_bbid
-        # source BU whose financials will be aggregated
-        source_bu = source.bu_directory[bu_bbid]
-        source_fins = source_bu.get_financials(source)
+        source_fins = self.model.get_financials(self.buid, source)
 
         # summary BU
         timeline_summary = self.summaries[self.onkey]
         summary_period = timeline_summary.summary_period
-        target_bu = summary_period.bu_directory[bu_bbid]
+        target_bu = summary_period.bu_directory[self.buid]
         target_fins = target_bu.get_financials(summary_period)
 
         source_statement = getattr(source_fins, statement_name, None)
@@ -457,7 +452,7 @@ class SummaryMaker:
                 target_statement.add_line(target_line)
             self.add_line_summary(source_line, target_line, label=label)
 
-    def add_content(self, bu_bbid, period, recur=False):
+    def add_content(self, period, recur=False):
         """
 
 
@@ -465,7 +460,7 @@ class SummaryMaker:
 
         Create a BU to use as the summary holder.
         """
-        template_bu = self.time_line.current_period.bu_directory[bu_bbid]
+        template_bu = self.time_line.current_period.bu_directory[self.buid]
         summary_unit = BusinessUnitBase(template_bu.tags.title)
 
         # intentionally keeping source BU's bbid so we can find it later
@@ -541,8 +536,8 @@ class SummaryMaker:
         timeline_summary = self.summaries[self.onkey]
         summary_period = timeline_summary.summary_period
         source = timeline_summary.source
-        source_bu = source.bu_directory[self.bu_bbid]
-        target_bu = summary_period.bu_directory[self.bu_bbid]
+        source_bu = source.bu_directory[self.buid]
+        target_bu = summary_period.bu_directory[self.buid]
 
         # loop through drivers in real_bu.drivers and copy all
         # "summary_type" == derive drivers to unit_summary.
