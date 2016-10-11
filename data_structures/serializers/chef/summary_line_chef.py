@@ -29,7 +29,6 @@ LineChef              class with methods to chop BB statements into dynamic
 
 
 # Imports
-import openpyxl as xlio
 from data_structures.modelling.line_item import LineItem
 from .cell_styles import CellStyles
 from .data_types import TypeCodes
@@ -48,8 +47,6 @@ cell_styles = CellStyles()
 field_names = FieldNames()
 formula_templates = FormulaTemplates()
 type_codes = TypeCodes()
-
-get_column_letter = xlio.utils.get_column_letter
 
 
 # Classes
@@ -247,7 +244,7 @@ class SummaryLineChef:
         Returns Worksheet with consolidation logic added.
         """
         if line.xl.consolidated.sources:
-            label = indent * " " + line.title
+            label = indent * " " + line.title #+ ': consolidation'
             matter = row_container.add_group(label, size=1, label=label)
 
             sources = line.xl.consolidated.sources
@@ -319,7 +316,7 @@ class SummaryLineChef:
                     formula_layout.append('{{_{}}}'.format(i))
 
             # aggregate line for the details
-            label = indent * " " + line.title
+            label = indent * " " + line.title #+ ': details'
             detail_endrow = row_container.add_group(
                 label, size=1, label=label
             )
