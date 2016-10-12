@@ -477,7 +477,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         if adjust_future and self.future:
             self.future.recalculate(adjust_future=True)
 
-    def reset_financials(self, recur=True):
+    def reset_financials(self, period=None, recur=True):
         """
 
 
@@ -488,12 +488,13 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         each of the components. Method sets instance.filled to False.
         """
         self.filled = False
-        self.financials.reset()
+        financials = self.get_financials(period)
+        financials.reset()
         if recur:
             pool = self.components.get_all()
 
             for bu in pool:
-                bu.reset_financials(recur)
+                bu.reset_financials(period=period, recur=recur)
 
     def set_analytics(self, atx):
         """
