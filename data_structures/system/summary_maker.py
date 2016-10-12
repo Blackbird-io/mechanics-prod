@@ -183,7 +183,6 @@ class SummaryMaker:
 
         Main responder. Passes ``period`` to quarterly and annual summaries.
         """
-        period.summary = None
         self.period = period
         self.onkey = self.QUARTERLY_KEY
         # determine the quarter and the year of the period pushed to us
@@ -240,10 +239,10 @@ class SummaryMaker:
         }
         # quarter end -> annual info
         self.period_sources[self.ANNUAL_KEY][qt_close] = {
-             'period': yr_close.year,
-             'enter': yr_start,
-             'close': yr_close,
-             'into': yr_into,
+            'period': yr_close.year,
+            'enter': yr_start,
+            'close': yr_close,
+            'into': yr_into,
         }
 
     def add(self, source):
@@ -261,10 +260,10 @@ class SummaryMaker:
         """
         # this is what we last worked on, if anything
         timeline_summary = self.summaries[self.onkey]
-        summary_period = timeline_summary.summary_period
+        target = timeline_summary.summary_period
 
         # check if we stepped out of the target period, roll over
-        if not summary_period or summary_period.end < source.end:
+        if not target or target.end < source.end:
             # close out the summary we have been working on
             self.flush()
 
@@ -272,31 +271,31 @@ class SummaryMaker:
             new_info = self.period_sources[self.onkey][source.end]
             enter = new_info['enter']
             close = new_info['close']
-            summary_period = TimePeriodBase(enter, close)
+            period = TimePeriodBase(enter, close)
             # counter of months used in the summary
-            summary_period.periods_used = 0
+            period.periods_used = 0
             # what sort of timeline does the period belong to
-            summary_period.summary = self.onkey
+            period.summary = self.onkey
 
             # copy BU structure from time_line.current_period
-            summary_unit = self.add_content(summary_period)
+            summary_unit = self.add_content(period)
+
+            # add to timeline
+            period.set_content(summary_unit)
+            timeline_summary.add_period(period)
+            timeline_summary.summary_period = period
 
             # special handling of the first time period starting balance:
             # link to the starting balance of the first source period
-            if len(timeline_summary) == 0:
+            if len(timeline_summary) == 1:
                 source_fins = self.model.get_financials(self.buid, source)
+                period_fins = self.model.get_financials(self.buid, period)
                 bal_enter = source_fins.starting.copy()
                 bal_enter.link_to(source_fins.starting)
-                summary_unit.financials.starting = bal_enter
-
-            # add to timeline
-            summary_period.set_content(summary_unit)
-            timeline_summary.add_period(summary_period)
-            timeline_summary.summary_period = summary_period
+                period_fins.starting = bal_enter
 
             logger.debug('{}:{} -> {}:{} new {}'.format(
-                source.start, source.end,
-                summary_period.start, summary_period.end, self.onkey
+                source.start, source.end, period.start, period.end, self.onkey
             ))
 
         # all aggregation happens here
