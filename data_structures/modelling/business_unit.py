@@ -679,12 +679,12 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         # the values. We will fill in the values later through
         # consolidate(), update_balance(), and derive().
 
-        self._consolidate("ending")
+        self._consolidate("ending", period)
 
-        self._update_balance()
+        self._update_balance(period)
         # Sets ending balance lines to starting values by default
 
-        self._derive("ending")
+        self._derive("ending", period)
         # Derive() will overwrite ending balance sheet where appropriate
 
     def _consolidate(self, statement_name, period=None):
@@ -874,7 +874,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         comps.relationships.set_parent(self)
         self.components = comps
 
-    def _update_balance(self):
+    def _update_balance(self, period):
         """
 
 
@@ -884,8 +884,9 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         Connect starting balance sheet to past if available, copy shape to
         ending balance sheet.
         """
-        starting_balance = self.financials.starting
-        ending_balance = self.financials.ending
+        financials = self.get_financials(period)
+        starting_balance = financials.starting
+        ending_balance = financials.ending
 
         # Method expects balance sheet to come with accurate tables. We first
         # build the table in load_balance(). We then run consolidate(), which
