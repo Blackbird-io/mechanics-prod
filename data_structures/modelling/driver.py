@@ -505,8 +505,7 @@ class Driver(TagsMixIn):
         # "base annual expense".
 
         # extra info needed by formulas
-        if period:
-            params['period'] = period
+        params['period'] = period
 
         return params
 
