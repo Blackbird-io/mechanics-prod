@@ -220,9 +220,14 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
 
         Returns this BUs financials in a given period.
         """
-
-        summary = getattr(period, 'summary', None)
-        financials = self.financials
+        financials = None
+        summary = period.summary
+        if not summary and period in (None, self.period):
+            financials = self.financials
+        elif self.period:
+            time_line = self.period.relationships.parent
+            model = time_line.model
+            financials = model.get_financials(self.id.bbid, period)
 
         return financials
 
