@@ -751,7 +751,8 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         Method walks through lines in statement and delegates to
         BusinessUnit._derive_line() for all substantive derivation work.
         """
-        this_statement = getattr(self.financials, statement_name, None)
+        financials = self.get_financials(period)
+        this_statement = getattr(financials, statement_name, None)
 
         if this_statement:
             for line in this_statement.get_ordered():
