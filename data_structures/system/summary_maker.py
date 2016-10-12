@@ -165,6 +165,8 @@ class SummaryMaker:
         ):
             timeline_summary = TimelineBase(periods)
             timeline_summary.id.set_namespace(self.time_line.id.namespace)
+            # TODO: remove when there is a singular bu
+            timeline_summary.model = self.model
             # output quarter or year being currently processed
             timeline_summary.summary_period = None
             self.summaries[key] = timeline_summary
@@ -534,15 +536,7 @@ class SummaryMaker:
         """
         timeline_summary = self.summaries[self.onkey]
         target = timeline_summary.summary_period
-        source = timeline_summary.source
-        source_bu = self.model.get_company()
-        target_bu = target.bu_directory[self.buid]
-
-        # loop through drivers in real_bu.drivers and copy all
-        # "summary_type" == derive drivers to unit_summary.
-        for bbid, dr in source_bu.drivers.dr_directory.items():
-            if dr.summary_type == 'derive':
-                target_bu.drivers.add_item(dr.copy())
+        bu = self.model.get_company()
 
         # apply derivations to target financials
         target_fins = self.model.get_financials(self.buid, target)
@@ -551,4 +545,4 @@ class SummaryMaker:
                 for line in statement.get_full_ordered():
                     if line.summary_type == 'derive':
                         line.clear()
-                        target_bu._derive_line(line, period=target)
+                        bu._derive_line(line, period=target)

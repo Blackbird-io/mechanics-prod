@@ -225,7 +225,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         if not summary and period in (None, self.period):
             financials = self.financials
         elif self.period:
-            time_line = self.period.relationships.parent
+            time_line = period.relationships.parent
             model = time_line.model
             financials = model.get_financials(self.id.bbid, period)
 

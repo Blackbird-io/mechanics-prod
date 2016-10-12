@@ -91,6 +91,7 @@ class TimePeriodBase(History):
 
         self.bu_directory = dict()
 
+        self.summary = None
         self.content = content
         self.id = ID()
         self.relationships = Relationships(self)
