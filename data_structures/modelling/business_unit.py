@@ -392,13 +392,9 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         that component or any parent or ancestor of that component.
         """
         financials = self.get_financials(period)
-        if self.filled:
-            return
-        else:
+        if not financials.filled:
             if not period:
                 period = self.period
-            self.financials.relationships.set_parent(self)
-
             self._load_starting_balance(period)
 
             for statement in self.financials.compute_order:
@@ -409,6 +405,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
             self._check_start_balance(period)
 
             self.filled = True
+            financials.filled = True
 
     def kill(self, date=None, recur=True):
         """
