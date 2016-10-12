@@ -277,11 +277,12 @@ class SummaryMaker:
             # what sort of timeline does the period belong to
             period.summary = self.onkey
 
-            # copy BU structure from time_line.current_period
-            summary_unit = self.add_content(period)
+            # create target financials
+            bu = self.model.get_company()
+            period_fins = Financials(parent=bu, period=target)
+            period.financials[self.buid] = period_fins
 
             # add to timeline
-            period.set_content(summary_unit)
             timeline_summary.add_period(period)
             timeline_summary.summary_period = period
 
@@ -289,7 +290,6 @@ class SummaryMaker:
             # link to the starting balance of the first source period
             if len(timeline_summary) == 1:
                 source_fins = self.model.get_financials(self.buid, source)
-                period_fins = self.model.get_financials(self.buid, period)
                 bal_enter = source_fins.starting.copy()
                 bal_enter.link_to(source_fins.starting)
                 period_fins.starting = bal_enter
@@ -335,11 +335,11 @@ class SummaryMaker:
             before = target.past
             if before:
                 before_fins = self.model.get_financials(self.buid, before)
-                # bal_enter = before_bu.financials.ending.copy()
+                # bal_enter = before_fins.ending.copy()
                 # bal_enter.reset()
-                # bal_enter.link_to(before_bu.financials.ending)
+                # bal_enter.link_to(before_finls.ending)
                 # bal_enter.set_name('starting balance sheet')
-                # target_bu.financials.starting = bal_enter
+                # target_fins.starting = bal_enter
                 target_fins.starting = before_fins.ending
 
             # add formula calculations
@@ -424,7 +424,7 @@ class SummaryMaker:
         """
         source_fins = self.model.get_financials(self.buid, source)
 
-        # summary BU
+        # summary fins
         timeline_summary = self.summaries[self.onkey]
         target = timeline_summary.summary_period
         target_fins = self.model.get_financials(self.buid, target)
@@ -450,33 +450,6 @@ class SummaryMaker:
                 target_statement.add_line(target_line)
             self.add_line_summary(source_line, target_line, label=label)
 
-    def add_content(self, period, recur=False):
-        """
-
-
-        SummaryMaker.add_content() -> None
-
-        Create a BU to use as the summary holder.
-        """
-        template_bu = self.time_line.current_period.bu_directory[self.buid]
-        summary_unit = BusinessUnitBase(template_bu.tags.title)
-
-        # intentionally keeping source BU's bbid so we can find it later
-        summary_unit.id = copy.deepcopy(template_bu.id)
-        summary_unit.period = period
-        summary_unit.periods_used = 0
-        summary_unit.summary_level = self.onkey
-        summary_unit.set_financials(
-            Financials(parent=summary_unit, period=period)
-        )
-
-        if recur:
-            for comp in template_bu.components.get_all():
-                unit = self.add_content(comp.id.bbid, period)
-                summary_unit.add_component(unit, overwrite=True)
-
-        return summary_unit
-
     def summarize(self):
         """
 
@@ -487,13 +460,13 @@ class SummaryMaker:
         """
         timeline_summary = self.summaries[self.onkey]
         source = timeline_summary.source
-        summary_period = timeline_summary.summary_period
-        summary_period.periods_used += getattr(source, 'periods_used', 1)
+        target = timeline_summary.summary_period
+        target.periods_used += getattr(source, 'periods_used', 1)
 
         logger.debug('{}:{} -> {}:{} add to {} summary {}'.format(
             source.start, source.end,
-            summary_period.start, summary_period.end,
-            self.onkey, summary_period.periods_used
+            target.start, target.end,
+            self.onkey, target.periods_used
         ))
 
         for name in ["overview", "income", "cash", "ownership"]:

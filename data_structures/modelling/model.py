@@ -314,8 +314,11 @@ class Model(TagsMixIn):
 
         Method returns the specified version of financials.
         """
-        unit = period.bu_directory[bbid]
-        fins = unit.financials
+        if bbid in period.financials:
+            fins = period.financials[bbid]
+        else:
+            unit = period.bu_directory[bbid]
+            fins = unit.financials
 
         return fins
 

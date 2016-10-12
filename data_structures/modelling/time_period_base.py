@@ -90,6 +90,7 @@ class TimePeriodBase(History):
         self.end = end_date
 
         self.bu_directory = dict()
+        self.financials = dict()
 
         self.summary = None
         self.content = content
