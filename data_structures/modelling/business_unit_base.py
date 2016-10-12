@@ -220,16 +220,18 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
 
         Returns this BUs financials in a given period.
         """
-        financials = None
-        summary = period.summary
-        if not summary and period in (None, self.period):
-            financials = self.financials
-        elif self.period:
-            time_line = period.relationships.parent
-            model = time_line.model
-            financials = model.get_financials(self.id.bbid, period)
+        if not period:
+            fins = self.financials
+        else:
+            summary = period.summary
+            if not summary and period is self.period:
+                fins = self.financials
+            else:
+                time_line = period.relationships.parent
+                model = time_line.model
+                fins = model.get_financials(self.id.bbid, period)
 
-        return financials
+        return fins
 
     # *************************************************************************#
     #                          NON-PUBLIC METHODS                              #
