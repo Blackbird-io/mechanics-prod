@@ -773,7 +773,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
             for unit in self.components.values():
                 unit._fit_to_period(time_period, recur)
 
-    def _load_starting_balance(self, period=None):
+    def _load_starting_balance(self, period):
         """
 
 
@@ -792,15 +792,16 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         for unit in pool:
             unit._load_starting_balance(period)
 
-        if self.past:
+        if period.past:
             period_fins = self.get_financials(period)
-            # before_fins = self.get_financials(period.past)
-            self.financials.starting = self.past.financials.ending
-            # bal_start = self.past.financials.ending.copy()
-            # bal_start.link_to(self.past.financials.ending)
-            # bal_start.set_name('starting balance sheet')
-            # self.financials.starting = bal_start
-            # Connect to the past
+            before_fins = self.get_financials(period.past)
+            if before_fins:
+                period_fins.starting = before_fins.ending
+                # bal_start = before_fins.ending.copy()
+                # bal_start.link_to(before_fins.ending)
+                # bal_start.set_name('starting balance sheet')
+                # period_fins.starting = bal_start
+                # Connect to the past
 
     def _register_in_period(self, recur=True, overwrite=True):
         """
