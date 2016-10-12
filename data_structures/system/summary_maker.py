@@ -427,9 +427,8 @@ class SummaryMaker:
 
         # summary BU
         timeline_summary = self.summaries[self.onkey]
-        summary_period = timeline_summary.summary_period
-        target_bu = summary_period.bu_directory[self.buid]
-        target_fins = target_bu.get_financials(summary_period)
+        target = timeline_summary.summary_period
+        target_fins = self.model.get_financials(self.buid, target)
 
         source_statement = getattr(source_fins, statement_name, None)
         target_statement = getattr(target_fins, statement_name, None)
@@ -534,10 +533,10 @@ class SummaryMaker:
         summary.
         """
         timeline_summary = self.summaries[self.onkey]
-        summary_period = timeline_summary.summary_period
+        target = timeline_summary.summary_period
         source = timeline_summary.source
-        source_bu = source.bu_directory[self.buid]
-        target_bu = summary_period.bu_directory[self.buid]
+        source_bu = self.model.get_company()
+        target_bu = target.bu_directory[self.buid]
 
         # loop through drivers in real_bu.drivers and copy all
         # "summary_type" == derive drivers to unit_summary.
@@ -546,10 +545,10 @@ class SummaryMaker:
                 target_bu.drivers.add_item(dr.copy())
 
         # apply derivations to target financials
-        summary_fins = target_bu.financials
-        for statement in summary_fins.ordered:
+        target_fins = self.model.get_financials(self.buid, target)
+        for statement in target_fins.ordered:
             if statement:
                 for line in statement.get_full_ordered():
                     if line.summary_type == 'derive':
                         line.clear()
-                        target_bu._derive_line(line)
+                        target_bu._derive_line(line, period=target)
