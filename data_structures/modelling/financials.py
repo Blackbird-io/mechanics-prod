@@ -314,6 +314,7 @@ class Financials:
         Reset each defined statement.
         """
         self.run_on_all("reset")
+        self.filled = False
 
     def run_on_all(self, action, *kargs, **pargs):
         """
