@@ -224,9 +224,14 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
             fins = self.financials
         elif self.id.bbid in period.financials:
             fins = period.financials[self.id.bbid]
+        elif self.id.bbid in period.bu_directory:
+            bu = period.bu_directory[self.id.bbid]
+            fins = bu.get_financials(period)
         else:
-            fins = Financials(parent=self, period=period)
-            period.financials[self.id.bbid] = fins
+            fins = None
+            # fins = Financials(parent=self, period=period)
+            # period.financials[self.id.bbid] = fins
+            # raise ValueError()
             # time_line = period.relationships.parent
             # model = time_line.model
             # fins = model.get_financials(self.id.bbid, period)
