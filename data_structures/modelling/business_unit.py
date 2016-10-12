@@ -370,7 +370,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         return result
 
-    def fill_out(self):
+    def fill_out(self, period=None):
         """
 
 
@@ -391,20 +391,20 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         BusinessUnit.derive() will never run again for that LineItem, either at
         that component or any parent or ancestor of that component.
         """
-
+        financials = self.get_financials(period)
         if self.filled:
             return
         else:
             self.financials.relationships.set_parent(self)
 
-            self._load_starting_balance()
+            self._load_starting_balance(period)
 
             for statement in self.financials.compute_order:
-                self.compute(statement)
+                self.compute(statement, period)
 
-            self._compute_ending_balance()
+            self._compute_ending_balance(period)
 
-            self._check_start_balance()
+            self._check_start_balance(period)
 
             self.filled = True
 
@@ -603,7 +603,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         return id_directory, ty_directory
 
-    def _check_start_balance(self):
+    def _check_start_balance(self, period):
         """
 
 
@@ -615,17 +615,19 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         pool = self.components.get_all()
         for unit in pool:
-            unit._check_start_balance()
+            unit._check_start_balance(period)
 
-        for end_line in self.financials.ending.get_ordered():
-            start_line = self.financials.starting.find_first(end_line.name)
+        financials = self.get_financials(period)
+        for end_line in financials.ending.get_ordered():
+            start_line = financials.starting.find_first(end_line.name)
             if start_line:
                 self._check_line(start_line, end_line)
             else:
                 new_line = end_line.copy()
                 new_line.clear(force=True)
-                self.financials.starting.add_line(new_line,
-                                                  position=end_line.position)
+                financials.starting.add_line(
+                    new_line, position=end_line.position
+                )
 
     def _check_line(self, start_line, end_line):
         """
