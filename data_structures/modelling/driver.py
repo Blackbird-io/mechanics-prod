@@ -504,6 +504,10 @@ class Driver(TagsMixIn):
         # understand. So a key like "lowest maintenance bid" becomes
         # "base annual expense".
 
+        # extra info needed by formulas
+        if period:
+            params['period'] = period
+
         return params
 
     def _can_work_on_this(self, line):
