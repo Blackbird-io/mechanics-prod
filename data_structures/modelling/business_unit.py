@@ -395,6 +395,8 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         if self.filled:
             return
         else:
+            if not period:
+                period = self.period
             self.financials.relationships.set_parent(self)
 
             self._load_starting_balance(period)
@@ -752,7 +754,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         if this_statement:
             for line in this_statement.get_ordered():
-                self._derive_line(line)
+                self._derive_line(line, period)
 
     def _fit_to_period(self, time_period, recur=True):
         """
@@ -788,9 +790,11 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         # would look different (even though the bottom line would be the same).
 
         for unit in pool:
-            unit._load_starting_balance()
+            unit._load_starting_balance(period)
 
         if self.past:
+            period_fins = self.get_financials(period)
+            # before_fins = self.get_financials(period.past)
             self.financials.starting = self.past.financials.ending
             # bal_start = self.past.financials.ending.copy()
             # bal_start.link_to(self.past.financials.ending)
