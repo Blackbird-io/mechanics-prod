@@ -397,7 +397,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
                 period = self.period
             self._load_starting_balance(period)
 
-            for statement in self.financials.compute_order:
+            for statement in financials.compute_order:
                 self.compute(statement, period)
 
             self._compute_ending_balance(period)
@@ -649,7 +649,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
                     new_line.clear(force=True)
                     start_line.add_line(new_line, position=end.position)
 
-    def _compute_ending_balance(self, period=None):
+    def _compute_ending_balance(self, period):
         """
 
 
@@ -662,13 +662,15 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         """
 
         for unit in self.components.get_all():
-            unit._compute_ending_balance()
+            unit._compute_ending_balance(period)
 
-        ending_balance = self.financials.ending
-        starting_balance = self.financials.starting
+        financials = self.get_financials(period)
+        ending_balance = financials.ending
+        starting_balance = financials.starting
 
-        ending_balance.increment(starting_balance, consolidating=False,
-                                 over_time=True)
+        ending_balance.increment(
+            starting_balance, consolidating=False, over_time=True
+        )
         ending_balance.reset()
         # Our goal is to pick up shape, so clear values.
 
@@ -701,7 +703,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         # would look different (even though the bottom line would be the same).
 
         for unit in pool:
-            self._consolidate_unit(unit, statement_name)
+            self._consolidate_unit(unit, statement_name, period)
 
     def _consolidate_unit(self, sub, statement_name, period=None):
         """
@@ -720,17 +722,19 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         Method delegates to Statement.increment() for actual consolidation work.
         """
         # Step Only: Actual consolidation
-        child_statement = getattr(sub.financials, statement_name, None)
-        parent_statement = getattr(self.financials, statement_name, None)
+        sub_fins = sub.get_financials(period)
+        top_fins = self.get_financials(period)
+        sub_statement = getattr(sub_fins, statement_name, None)
+        top_statement = getattr(top_fins, statement_name, None)
 
         if sub.life.conceived:
             xl_only = False
         else:
             xl_only = True
 
-        if child_statement and parent_statement:
-            parent_statement.increment(
-                child_statement,
+        if sub_statement and top_statement:
+            top_statement.increment(
+                sub_statement,
                 consolidating=True,
                 xl_only=xl_only,
                 xl_label=sub.title,
