@@ -220,10 +220,12 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
 
         Returns this BUs financials in a given period.
         """
-        if not period or period is self.period:
+        if not period:
             fins = self.financials
         elif self.id.bbid in period.financials:
             fins = period.financials[self.id.bbid]
+        elif period.end == self.period.end and not period.summary:
+            fins = self.financials
         elif self.id.bbid in period.bu_directory:
             bu = period.bu_directory[self.id.bbid]
             fins = bu.get_financials(period)
