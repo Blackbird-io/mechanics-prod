@@ -492,13 +492,13 @@ class Driver(TagsMixIn):
         # update for period (more specific) and driver (even more specific).
 
         params = dict()
-        if time_line:
+        if time_line and hasattr(time_line, 'parameters'):
             params.update(time_line.parameters)
-        if period:
+        if period and hasattr(period, 'parameters'):
             params.update(period.parameters)
         if parent:
             params.update(parent.parameters)
-        if period:
+        if period and hasattr(period, 'unit_parameters'):
             params.update(period.unit_parameters.get(parent.id.bbid, {}))
         params.update(self.parameters)
 
