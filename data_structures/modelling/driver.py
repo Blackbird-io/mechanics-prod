@@ -399,6 +399,8 @@ class Driver(TagsMixIn):
                 # formula_catalog.issue() only performs dict retrieval and
                 # return for key.
 
+                # import devhooks
+                # devhooks.lineval(line, period, formula)
                 params = self._build_params(parent=bu, period=period)
 
                 if not bb_settings.PREP_FOR_EXCEL:
@@ -490,12 +492,14 @@ class Driver(TagsMixIn):
         # update for period (more specific) and driver (even more specific).
 
         params = dict()
-        if time_line and hasattr(time_line, 'parameters'):
+        if time_line:
             params.update(time_line.parameters)
-        if period and hasattr(period, 'parameters'):
+        if period:
             params.update(period.parameters)
-        if parent and hasattr(parent, 'parameters'):
+        if parent:
             params.update(parent.parameters)
+        if period:
+            params.update(period.unit_parameters.get(parent.id.bbid, {}))
         params.update(self.parameters)
 
         converted = self._map_params_to_formula(params)
