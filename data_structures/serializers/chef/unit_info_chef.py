@@ -336,8 +336,9 @@ class UnitInfoChef:
 
         return sheet
 
-    def create_unit_sheet(self, *pargs, book, unit, index, name=None,
-                           current_only=False):
+    def create_unit_sheet(
+        self, book, unit, index, name=None, current_only=False
+    ):
 
         """
 
@@ -352,6 +353,7 @@ class UnitInfoChef:
 
         Returns sheet with current row pointing to last parameter row
         """
+        self.book = book
 
         if not name:
             name = unit.tags.title
@@ -432,6 +434,15 @@ class UnitInfoChef:
         Method adds Life and Events sections to unit sheet and delegates to
         _add_unit_life to write each time period.
         """
+        body_rows = sheet.bb.row_axis.get_group('body')
+        body_rows.calc_size()
+        life_group = body_rows.add_group(
+            'life', offset=1 if body_rows.groups else 0
+        )
+        life_title = life_group.add_group(
+            'title', size=1, label='Life', rank=1
+        )
+        life_lines = life_group.add_group('lines')
 
         param_area = getattr(sheet.bb, FieldNames.PARAMETERS)
         if param_area.rows.ending:
