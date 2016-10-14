@@ -53,7 +53,6 @@ IMAGE_PATH = os.path.join(
 # Module Globals
 line_chef = LineChef()
 transcript_chef = TranscriptChef()
-unit_chef = UnitChef()
 
 get_column_letter = xlio.utils.get_column_letter
 bounding_box = xlio.drawing.image.bounding_box
@@ -95,7 +94,8 @@ class ModelChef:
         structure_chef = StructureChef(model)
         structure_chef.chop(book)
 
-        unit_chef.chop_multi(model, book)
+        unit_chef = UnitChef(model)
+        unit_chef.chop_multi(book)
 
         if bb_settings.MAKE_ANNUAL_SUMMARIES:
             summary_chef = SummaryChef(model)
