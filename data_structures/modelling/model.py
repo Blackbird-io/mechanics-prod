@@ -316,9 +316,12 @@ class Model(TagsMixIn):
         """
         if bbid in period.financials:
             fins = period.financials[bbid]
-        else:
+        elif bbid in period.bu_directory:
             unit = period.bu_directory[bbid]
-            fins = unit.financials
+            fins = unit.get_financials(period)
+        else:
+            unit = self.time_line.current_period.content
+            fins = unit.get_financials(period)
 
         return fins
 
