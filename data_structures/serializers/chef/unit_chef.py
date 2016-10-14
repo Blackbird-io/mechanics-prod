@@ -56,6 +56,7 @@ REPLACEMENT_CHAR = None
 bad_char_table = {ord(c): REPLACEMENT_CHAR for c in _INVALID_CHARS}
 get_column_letter = xlio.utils.get_column_letter
 line_chef = LineChef()
+info_chef = UnitInfoChef()
 
 # Classes
 class UnitChef:
@@ -89,10 +90,7 @@ class UnitChef:
                           makes and fills Valuation tab
     ====================  =====================================================
     """
-    def __init__(self, model):
-        self.model = model
-
-    def chop_multi(self, book, unit=None):
+    def chop_multi(self, model, book, unit=None):
         """
 
 
@@ -105,7 +103,6 @@ class UnitChef:
         into Excel format.  Method also spreads financials, parameters, and
         life of the unit.
         """
-        model = self.model
         # top level entry: get the company
         if not unit:
             unit = model.get_company()
@@ -115,7 +112,7 @@ class UnitChef:
         children = unit.components.get_ordered()
 
         for child in children:
-            self.chop_multi(book, child)
+            self.chop_multi(model, book, child)
 
         # 2.   Chop the parent
         #
@@ -125,10 +122,8 @@ class UnitChef:
         # starting row, and the spreadsheet would look like a staircase.
 
         # 2.1.   set up the unit sheet and spread params
-        info_chef = UnitInfoChef(model)
-        sheet = info_chef.create_unit_sheet(
-            book=book, unit=unit, index=before_kids
-        )
+        sheet = info_chef.create_unit_sheet(book=book, unit=unit,
+                                        index=before_kids)
         sheet.bb.outline_level += 1
 
         # 2.2.   spread life

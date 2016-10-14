@@ -97,7 +97,7 @@ class AxisGroup:
                 self.extra[k] = v
 
     def add_group(
-        self, *path, size=None, offset=None, **kargs
+        self, *path, size=None, offset=None, add_outline=False, **kargs
     ):
         """
 
@@ -117,7 +117,7 @@ class AxisGroup:
                 group = group.groups[group_idx]
             else:
                 new_group = self._make_group(
-                    name, size, offset, **kargs
+                    name, size, offset, add_outline, **kargs
                 )
                 group.by_name[name] = len(group.groups)
                 group.groups.append(new_group)
@@ -301,7 +301,7 @@ class AxisGroup:
     # *************************************************************************#
 
     def _make_group(
-        self, name, size=None, offset=None, **kargs
+        self, name, size=None, offset=None, add_outline=False, **kargs
     ):
         """
 
@@ -333,12 +333,18 @@ class AxisGroup:
         if tip is not None and offset:
             tip += offset
 
+        # bump up outline level by one, if set
+        outline_level = (self.outline or 0)
+        if add_outline:
+            outline_level += 1
+
         new_group = AxisGroup(
             name=name,
             path=path,
             tip=tip,
             size=size,
             offset=offset,
+            outline=outline_level,
             **kargs
         )
         return new_group
