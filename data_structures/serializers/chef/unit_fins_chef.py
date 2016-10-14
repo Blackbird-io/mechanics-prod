@@ -53,7 +53,6 @@ REPLACEMENT_CHAR = None
 bad_char_table = {ord(c): REPLACEMENT_CHAR for c in _INVALID_CHARS}
 get_column_letter = xlio.utils.get_column_letter
 line_chef = LineChef()
-info_chef = UnitInfoChef()
 
 # Classes
 class UnitFinsChef:
@@ -187,10 +186,10 @@ class UnitFinsChef:
         else:
             name = unit.name + ' val'
 
-        sheet = info_chef.create_unit_sheet(book=book, unit=unit,
-                                        index=index, name=name,
-                                        current_only=True)
-
+        info_chef = UnitInfoChef(self.model)
+        sheet = info_chef.create_unit_sheet(
+            book=book, unit=unit, index=index, name=name, current_only=True
+        )
         sheet.bb.outline_level += 1
 
         # 1.1   set-up life
@@ -222,6 +221,7 @@ class UnitFinsChef:
 
         # # 1.6 add selector cell
         #   Make scenario label cells
+        info_chef = UnitInfoChef(self.model)
         info_chef.add_scenario_selector_logic(book, sheet)
 
         sheet.sheet_properties.tabColor = VALUATION_TAB_COLOR
