@@ -100,21 +100,35 @@ class UnitFinsChef:
         """
         body_rows = sheet.bb.row_axis.get_group('body')
         body_rows.calc_size()
-        param_group = body_rows.get_group('drivers')
-        body_rows.add_group(
+        statement_group = body_rows.add_group(
             'statements',
-            offset=sheet.bb.current_row - body_rows.tip - 1 - param_group.size
+            offset=1,
+            # offset=sheet.bb.current_row - body_rows.tip - 1 - param_group.size
         )
 
         time_line = self.model.get_timeline()
         now = time_line.current_period
         for period in time_line.iter_ordered(open=now.end):
-            sheet.bb.current_row = sheet.bb.size.rows.ending
             column = sheet.bb.time_line.columns.get_position(period.end)
-            self.add_financials(
-                sheet, unit, period, column,
-                set_labels=(period.end == now.end)
-            )
+            financials = unit.get_financials(period)
+            for name, statement in financials.chef_ordered():
+                if statement is not None:
+                    if name == 'starting':
+                        title = 'Starting Balance Sheet'
+                        start_bal = True
+                    else:
+                        title = statement.title
+                        start_bal = False
+
+                    line_chef.chop_statement(
+                        sheet=sheet,
+                        statement=statement,
+                        row_container=statement_group,
+                        column=column,
+                        title=title,
+                        start_bal=start_bal,
+                    )
+                    body_rows.calc_size()
 
         return self.fins_dict
 
@@ -165,71 +179,6 @@ class UnitFinsChef:
         while sheet.bb.problem_lines:
             dr_data, materials = sheet.bb.problem_lines.pop()
             line_chef.attempt_reference_resolution(sheet, dr_data, materials)
-
-    def add_valuation_tab(self, book, unit, index=None):
-        """
-
-
-        UnitChef._add_valuation_tab() -> Worksheet
-
-        --``book`` must be a Workbook
-        --``unit`` must be an instance of BusinessUnit
-        --``index`` is optionally the index at which to insert the tab
-
-        Method creates a valuation tab and chops unit valuation statement.
-        """
-
-        # 1.0   set up the unit sheet and spread params
-        if not index:
-            index = len(book.worksheets)
-
-        if index == 2:
-            name = "Valuation"
-        else:
-            name = unit.name + ' val'
-
-        info_chef = UnitInfoChef(self.model)
-        sheet = info_chef.create_unit_sheet(
-            book=book, unit=unit, index=index, name=name, current_only=True
-        )
-        sheet.bb.outline_level += 1
-
-        # 1.1   set-up life
-        info_chef.unit_life(sheet, unit, current_only=True)
-        sheet.bb.current_row += 1
-        # sheet = info_chef.add_unit_life(sheet=sheet, unit=unit)
-        sheet.bb.outline_level -= 1
-
-        # 1.2  Add Valuation statement
-        sheet.bb.current_row = sheet.bb.events.rows.ending
-        sheet.bb.current_row += 1
-
-        current = sheet.bb.time_line.columns.get_position(unit.period.end)
-        SheetStyle.set_column_width(sheet, current, width=22)
-
-        statement_row = sheet.bb.current_row + 1
-        time_line = self.model.get_timeline()
-        now = time_line.current_period
-        financials = self.model.get_financials(unit.id.bbid, now)
-        statement = financials.valuation
-        line_chef.chop_statement(
-            sheet=sheet,
-            statement=statement,
-            column=current,
-            set_labels=True)
-
-        # 1.5 add area and statement labels and sheet formatting
-        SheetStyle.style_sheet(sheet)
-        CellStyles.format_area_label(sheet, statement.name, statement_row)
-
-        # # 1.6 add selector cell
-        #   Make scenario label cells
-        info_chef = UnitInfoChef(self.model)
-        info_chef.add_scenario_selector_logic(book, sheet)
-
-        sheet.sheet_properties.tabColor = VALUATION_TAB_COLOR
-
-        return sheet
 
     # *************************************************************************#
     #                          NON-PUBLIC METHODS                              #

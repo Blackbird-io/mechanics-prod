@@ -319,7 +319,7 @@ class LineChef:
         return sheet
 
     def chop_statement(
-        self, sheet, column, statement, row_container=None, set_labels=True,
+        self, sheet, column, statement, row_container=None,
         start_bal=False, title=None
     ):
         """
@@ -330,7 +330,6 @@ class LineChef:
         --``sheet`` must be an instance of openpyxl Worksheet
         --``column`` must be a column number reference
         --``statement`` must be an instance of Statement
-        --``set_labels`` must be a boolean; True will set labels for line
 
         Method walks through Statement lines and delegates LineChef.chop_line()
         to add them as dynamic links in Excel.
@@ -340,23 +339,20 @@ class LineChef:
         if title is None:
             title = statement.title
 
-        if not row_container:
-            row_container = sheet.bb.row_axis.add_group(
-                'body', 'statements', title,
-            )
-            row_container.tip = sheet.bb.current_row + 1
-            row_container.add_group('matter')
+        statement_rows = row_container.add_group(
+            title,
+            # add a spacer between self and previous statement, if not first
+            offset=1 if row_container.groups else 0,
+        )
 
-        matter = row_container.get_group('matter')
+        # Add title row and statement body
+        header = statement_rows.add_group('title', size=1, label=title, rank=1)
+        matter = statement_rows.add_group('lines')
 
-        if not BLANK_BETWEEN_TOP_LINES:
-            sheet.bb.current_row += 1
+        sheet.bb.need_spacer = False
 
         check = statement.name != 'ending balance sheet'
         for line in statement.get_ordered():
-            if BLANK_BETWEEN_TOP_LINES:
-                sheet.bb.current_row += 1
-
             offset = 1 if BLANK_BETWEEN_TOP_LINES else 0
             line_rows = matter.add_group(line.title, offset=offset)
 
@@ -365,7 +361,6 @@ class LineChef:
                 column=column,
                 line=line,
                 row_container=line_rows,
-                set_labels=set_labels,
                 check=check,
                 start_bal=start_bal
             )
@@ -375,6 +370,9 @@ class LineChef:
             sheet.bb.current_row += 1
         else:
             sheet.bb.need_spacer = False
+
+        if not matter.groups:
+            matter.size = 1
 
         return sheet
 
@@ -707,7 +705,7 @@ class LineChef:
             try:
                 formula = template.format(**materials)
             except Exception as X:
-                print("Name:     ", driver_data.title)
+                print("Name:     ", driver_data.name)
                 print("Template: ", driver_data.formula)
 
                 raise ExcelPrepError
