@@ -96,6 +96,7 @@ class ModelChef:
 
         unit_chef = UnitChef(model)
         unit_chef.chop_multi(book)
+        return book
 
         if bb_settings.MAKE_ANNUAL_SUMMARIES:
             summary_chef = SummaryChef(model)
