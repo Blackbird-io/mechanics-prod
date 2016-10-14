@@ -202,4 +202,4 @@ class UnitChef:
         financials = model.get_financials(unit.id.bbid, now)
         if financials.has_valuation:
             fins_chef = UnitFinsChef(model)
-            fins_chef.add_valuation_tab(model, book, unit, index=index)
+            fins_chef.add_valuation_tab(book, unit, index=index)

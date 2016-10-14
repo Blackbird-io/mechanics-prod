@@ -165,6 +165,8 @@ class SummaryMaker:
         ):
             timeline_summary = TimelineBase(periods)
             timeline_summary.id.set_namespace(self.time_line.id.namespace)
+            # TODO: remove when there is a singular bu
+            timeline_summary.model = self.model
             # output quarter or year being currently processed
             timeline_summary.summary_period = None
             self.summaries[key] = timeline_summary
@@ -181,7 +183,6 @@ class SummaryMaker:
 
         Main responder. Passes ``period`` to quarterly and annual summaries.
         """
-        period.summary = None
         self.period = period
         self.onkey = self.QUARTERLY_KEY
         # determine the quarter and the year of the period pushed to us
@@ -238,10 +239,10 @@ class SummaryMaker:
         }
         # quarter end -> annual info
         self.period_sources[self.ANNUAL_KEY][qt_close] = {
-             'period': yr_close.year,
-             'enter': yr_start,
-             'close': yr_close,
-             'into': yr_into,
+            'period': yr_close.year,
+            'enter': yr_start,
+            'close': yr_close,
+            'into': yr_into,
         }
 
     def add(self, source):
@@ -259,10 +260,10 @@ class SummaryMaker:
         """
         # this is what we last worked on, if anything
         timeline_summary = self.summaries[self.onkey]
-        summary_period = timeline_summary.summary_period
+        target = timeline_summary.summary_period
 
         # check if we stepped out of the target period, roll over
-        if not summary_period or summary_period.end < source.end:
+        if not target or target.end < source.end:
             # close out the summary we have been working on
             self.flush()
 
@@ -270,31 +271,31 @@ class SummaryMaker:
             new_info = self.period_sources[self.onkey][source.end]
             enter = new_info['enter']
             close = new_info['close']
-            summary_period = TimePeriodBase(enter, close)
+            period = TimePeriodBase(enter, close)
             # counter of months used in the summary
-            summary_period.periods_used = 0
+            period.periods_used = 0
             # what sort of timeline does the period belong to
-            summary_period.summary = self.onkey
+            period.summary = self.onkey
 
-            # copy BU structure from time_line.current_period
-            summary_unit = self.add_content(summary_period)
+            # create target financials
+            bu = self.model.get_company()
+            period_fins = Financials(parent=bu, period=period)
+            period.financials[self.buid] = period_fins
+
+            # add to timeline
+            timeline_summary.add_period(period)
+            timeline_summary.summary_period = period
 
             # special handling of the first time period starting balance:
             # link to the starting balance of the first source period
-            if len(timeline_summary) == 0:
+            if len(timeline_summary) == 1:
                 source_fins = self.model.get_financials(self.buid, source)
                 bal_enter = source_fins.starting.copy()
                 bal_enter.link_to(source_fins.starting)
-                summary_unit.financials.starting = bal_enter
-
-            # add to timeline
-            summary_period.set_content(summary_unit)
-            timeline_summary.add_period(summary_period)
-            timeline_summary.summary_period = summary_period
+                period_fins.starting = bal_enter
 
             logger.debug('{}:{} -> {}:{} new {}'.format(
-                source.start, source.end,
-                summary_period.start, summary_period.end, self.onkey
+                source.start, source.end, period.start, period.end, self.onkey
             ))
 
         # all aggregation happens here
@@ -316,45 +317,44 @@ class SummaryMaker:
         timeline_summary = self.summaries[self.onkey]
 
         if len(timeline_summary):
-            summary_period = timeline_summary.summary_period
             # when flush() is called, source is the last processed sub-period
             source = timeline_summary.source
+            target = timeline_summary.summary_period
             # add link to ending financials of last processed source
             source_fins = self.model.get_financials(self.buid, source)
+            target_fins = self.model.get_financials(self.buid, target)
             bal_close = source_fins.ending.copy()
             bal_close.link_to(source_fins.ending)
-            target_bu = summary_period.bu_directory[self.buid]
-            target_bu.financials.ending = bal_close
+            target_fins.ending = bal_close
 
             logger.debug('{}:{} -> {}:{} flush {}'.format(
-                source.start, source.end,
-                summary_period.start, summary_period.end, self.onkey
+                source.start, source.end, target.start, target.end, self.onkey
             ))
 
             # link starting financials to previous summary
-            summary_before = summary_period.past
-            if summary_before:
-                before_bu = summary_before.bu_directory[self.buid]
-                # bal_enter = before_bu.financials.ending.copy()
+            before = target.past
+            if before:
+                before_fins = self.model.get_financials(self.buid, before)
+                # bal_enter = before_fins.ending.copy()
                 # bal_enter.reset()
-                # bal_enter.link_to(before_bu.financials.ending)
+                # bal_enter.link_to(before_finls.ending)
                 # bal_enter.set_name('starting balance sheet')
-                # target_bu.financials.starting = bal_enter
-                target_bu.financials.starting = before_bu.financials.ending
+                # target_fins.starting = bal_enter
+                target_fins.starting = before_fins.ending
 
             # add formula calculations
             self.derived_calculations()
 
             # add period count
-            fins = target_bu.financials
-            fins.periods_used = summary_period.periods_used
-            full = (fins.periods_used == self.complete_periods[self.onkey])
-            fins.complete = full
+            target_fins.periods_used = target.periods_used
+            full = (target.periods_used == self.complete_periods[self.onkey])
+            target_fins.complete = full
+            target_fins.filled = True
 
             # cascade from quarterly to annual
             if self.onkey == self.QUARTERLY_KEY:
                 self.onkey = self.ANNUAL_KEY
-                self.add(summary_period)
+                self.add(target)
                 self.onkey = self.QUARTERLY_KEY
 
     def add_line_summary(self, source_line, target_line, label=None):
@@ -425,11 +425,10 @@ class SummaryMaker:
         """
         source_fins = self.model.get_financials(self.buid, source)
 
-        # summary BU
+        # summary fins
         timeline_summary = self.summaries[self.onkey]
-        summary_period = timeline_summary.summary_period
-        target_bu = summary_period.bu_directory[self.buid]
-        target_fins = target_bu.get_financials(summary_period)
+        target = timeline_summary.summary_period
+        target_fins = self.model.get_financials(self.buid, target)
 
         source_statement = getattr(source_fins, statement_name, None)
         target_statement = getattr(target_fins, statement_name, None)
@@ -452,33 +451,6 @@ class SummaryMaker:
                 target_statement.add_line(target_line)
             self.add_line_summary(source_line, target_line, label=label)
 
-    def add_content(self, period, recur=False):
-        """
-
-
-        SummaryMaker.add_content() -> None
-
-        Create a BU to use as the summary holder.
-        """
-        template_bu = self.time_line.current_period.bu_directory[self.buid]
-        summary_unit = BusinessUnitBase(template_bu.tags.title)
-
-        # intentionally keeping source BU's bbid so we can find it later
-        summary_unit.id = copy.deepcopy(template_bu.id)
-        summary_unit.period = period
-        summary_unit.periods_used = 0
-        summary_unit.summary_level = self.onkey
-        summary_unit.set_financials(
-            Financials(parent=summary_unit, period=period)
-        )
-
-        if recur:
-            for comp in template_bu.components.get_all():
-                unit = self.add_content(comp.id.bbid, period)
-                summary_unit.add_component(unit, overwrite=True)
-
-        return summary_unit
-
     def summarize(self):
         """
 
@@ -489,13 +461,13 @@ class SummaryMaker:
         """
         timeline_summary = self.summaries[self.onkey]
         source = timeline_summary.source
-        summary_period = timeline_summary.summary_period
-        summary_period.periods_used += getattr(source, 'periods_used', 1)
+        target = timeline_summary.summary_period
+        target.periods_used += getattr(source, 'periods_used', 1)
 
         logger.debug('{}:{} -> {}:{} add to {} summary {}'.format(
             source.start, source.end,
-            summary_period.start, summary_period.end,
-            self.onkey, summary_period.periods_used
+            target.start, target.end,
+            self.onkey, target.periods_used
         ))
 
         for name in ["overview", "income", "cash", "ownership"]:
@@ -534,22 +506,14 @@ class SummaryMaker:
         summary.
         """
         timeline_summary = self.summaries[self.onkey]
-        summary_period = timeline_summary.summary_period
-        source = timeline_summary.source
-        source_bu = source.bu_directory[self.buid]
-        target_bu = summary_period.bu_directory[self.buid]
-
-        # loop through drivers in real_bu.drivers and copy all
-        # "summary_type" == derive drivers to unit_summary.
-        for bbid, dr in source_bu.drivers.dr_directory.items():
-            if dr.summary_type == 'derive':
-                target_bu.drivers.add_item(dr.copy())
+        target = timeline_summary.summary_period
+        bu = self.model.get_company()
 
         # apply derivations to target financials
-        summary_fins = target_bu.financials
-        for statement in summary_fins.ordered:
+        target_fins = self.model.get_financials(self.buid, target)
+        for statement in target_fins.ordered:
             if statement:
                 for line in statement.get_full_ordered():
                     if line.summary_type == 'derive':
                         line.clear()
-                        target_bu._derive_line(line)
+                        bu._derive_line(line, period=target)
