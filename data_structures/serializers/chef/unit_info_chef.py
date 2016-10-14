@@ -392,8 +392,13 @@ class UnitInfoChef:
         body_rows = sheet.bb.row_axis.add_group('body')
         body_cols = sheet.bb.col_axis.add_group('body')
 
+        # link to TimeLine parameters
         self._link_to_time_line(book=book, sheet=sheet, unit=unit,
                                 current_only=current_only)
+
+        # unit-specific parameters
+        # Add unit parameters and update TimeLine/Period params as necessary
+        self._add_unit_params(sheet, unit, current_only=current_only)
 
         val_col = sheet.bb.time_line.columns.get_position(unit.period.end)
         param_area = getattr(sheet.bb, FieldNames.PARAMETERS)
@@ -409,6 +414,11 @@ class UnitInfoChef:
 
         corner_cell = sheet.cell(column=corner_col, row=corner_row)
         sheet.freeze_panes = corner_cell
+
+        for group in body_rows.groups:
+            self._add_labels(
+                sheet, group.groups, head_cols
+            )
 
         # Return sheet
         return sheet
@@ -446,6 +456,42 @@ class UnitInfoChef:
     # *************************************************************************#
     #                          NON-PUBLIC METHODS                              #
     # *************************************************************************#
+    def _add_labels(self, sheet, groups, label_col, level=0):
+        """
+
+
+        UnitChef._add_labels() -> None
+
+        Writes row labels on sheet. To show up on the axis, a group
+        1. should have no subgroups
+        2. should have a label
+        To add a title row for a group with subgroups, create a one-row
+        'title' subgroup.
+        """
+        for group in groups:
+            if group.groups:
+                self._add_labels(
+                    sheet, group.groups, label_col, level=level + 1
+                )
+            elif group.size:
+                label = group.extra.get('label')
+                if label:
+                    row = group.number()
+                    col = label_col.number()
+                    rank = group.extra.get('rank')
+                    if group.name == 'title' and rank == 1:
+                        formatter = CellStyles.format_area_label
+                        formatter(sheet, label, row, col_num=col)
+                    else:
+                        label_cell = sheet.cell(row=row, column=col + 1)
+                        label_cell.value = label
+                        formatter = group.extra.get('formatter')
+                        if formatter:
+                            formatter(label_cell)
+                        if group.outline:
+                            r = sheet.row_dimensions[row]
+                            r.outline_level = group.outline
+
     def _add_life_analysis(self, sheet, unit, active_column, set_labels=True):
         """
 
@@ -717,8 +763,9 @@ class UnitInfoChef:
 
         return sheet
 
-    def _add_unit_params(self, *pargs, sheet, unit, timeline_params,
-                         set_labels=True):
+    def _add_unit_params(
+        self, sheet, unit, current_only=False, set_labels=True
+    ):
         """
 
 
@@ -728,74 +775,58 @@ class UnitInfoChef:
         - Check on timeline_params and update with hardcoded value as applicable
         """
         parameters = getattr(sheet.bb, FieldNames.PARAMETERS)
-        time_line = getattr(sheet.bb, FieldNames.TIMELINE)
+        timeline_range = getattr(sheet.bb, FieldNames.TIMELINE)
+        timeline_params = timeline_range.rows.by_name.keys()
 
-        period_column = time_line.columns.get_position(unit.period.end)
-
-        ex_params = unit.parameters.keys() & parameters.rows.by_name.keys()
-        new_params = unit.parameters.keys() - ex_params
-
-        for param in timeline_params:
-            # check for updates
-            if param in unit.parameters:
-                this_row = parameters.rows.by_name[param]
-                this_col = period_column
-                cell = sheet.cell(column=this_col, row=this_row)
-
-                cell.value = unit.parameters[param]
-                CellStyles.format_hardcoded(cell)
-
-        unit_params = ex_params - timeline_params
-
+        param_lines = sheet.bb.row_axis.get_group('body', 'drivers', 'lines')
+        time_line = self.model.get_timeline()
+        now = time_line.current_period
         template = FormulaTemplates.LINK_TO_COORDINATES
-        for param in unit_params:
-            this_row = parameters.rows.by_name[param]
-            this_col = period_column
 
-            master_cell = sheet.cell(row=this_row, column=self.MASTER_COLUMN)
+        for period in time_line.iter_ordered(open=now.end):
+            period_column = timeline_range.columns.get_position(period.end)
 
-            cell = sheet.cell(column=this_col, row=this_row)
-            cell.value = unit.parameters[param]
-            CellStyles.format_parameter(cell)
+            # period, unit, and period-unit parameters
+            # combined in order of precedence
+            period_unitpar = getattr(period, 'unit_parameters', {})
+            allpar = {}
+            allpar.update(getattr(period, 'parameters', {}))
+            allpar.update(unit.parameters)
+            allpar.update(period_unitpar.get(unit.id.bbid, {}))
 
-            # check if exists and matches MASTER, if so, link to MASTER,
-            # otherwise overwrite with hardcoded value
-            if cell.value == master_cell.value:
-                info = dict(coordinates=master_cell.coordinate)
-                link = template.format(**info)
-                cell.set_explicit_value(link, data_type=TypeCodes.FORMULA)
-            else:
-                CellStyles.format_hardcoded(cell)
+            for param, value in sorted(allpar.items()):
+                rowbox = param_lines.add_group(
+                    param, size=1, label=param, outline=1
+                )
+                this_row = rowbox.number()
+                parameters.rows.by_name[param] = this_row
+                cell = sheet.cell(
+                    row=this_row, column=period_column
+                )
+                if param in timeline_params:
+                    if value != cell.value:
+                        cell.value = value
+                        CellStyles.format_hardcoded(cell)
+                else:
+                    master_cell = sheet.cell(
+                        row=this_row, column=self.MASTER_COLUMN
+                    )
+                    if value and not master_cell.value:
+                        master_cell.value = value
+                        CellStyles.format_parameter(master_cell)
+                        CellStyles.format_hardcoded(master_cell)
+                    if value == master_cell.value:
+                        info = dict(coordinates=master_cell.coordinate)
+                        link = template.format(**info)
+                        cell.set_explicit_value(
+                            link, data_type=TypeCodes.FORMULA
+                        )
+                    else:
+                        cell.value = value
+                        CellStyles.format_hardcoded(cell)
+                    CellStyles.format_parameter(cell)
 
-        template = FormulaTemplates.LINK_TO_COORDINATES
-        for param in sorted(new_params):
-            if parameters.rows.ending:
-                # there are existing parameters
-                this_row = parameters.rows.ending + 1
-            else:
-                # there are NO existing parameters
-                this_row = self.VALUES_START_ROW
-
-            this_col = period_column
-
-            parameters.rows.by_name[param] = this_row
-
-            master_cell = sheet.cell(row=this_row, column=self.MASTER_COLUMN)
-            master_cell.value = unit.parameters[param]
-            CellStyles.format_parameter(master_cell)
-            CellStyles.format_hardcoded(master_cell)
-
-            label_cell = sheet.cell(row=this_row, column=self.LABEL_COLUMN)
-            label_cell.value = param
-
-            cell = sheet.cell(column=this_col, row=this_row)
-            info = dict(coordinates=master_cell.coordinate)
-            link = template.format(**info)
-            cell.set_explicit_value(link, data_type=TypeCodes.FORMULA)
-            CellStyles.format_parameter(cell)
-
-        for row in parameters.rows.by_name.values():
-            group_lines(sheet, row=row)
+            if current_only: break
 
         sheet.bb.current_row = parameters.rows.ending or self.VALUES_START_ROW
 
@@ -829,26 +860,29 @@ class UnitInfoChef:
         source_label_column = source_area.columns.by_name[FieldNames.LABELS]
         src_col = get_column_letter(source_label_column)
 
-        src_params = set(source_area.rows.by_name.keys()) - {FieldNames.TITLE}
+        # link to parameters from Drivers tab
+        body_rows = sheet.bb.row_axis.get_group('body')
+        param_group = body_rows.add_group('drivers')
+        param_title = param_group.add_group(
+            'title', size=1, label='Drivers', rank=1
+        )
+        param_lines = param_group.add_group('lines', outline=1)
 
+        src_params = set(source_area.rows.by_name.keys()) - {FieldNames.TITLE}
         for param in sorted(src_params):
+            rowbox = param_lines.add_group(
+                param, size=1, label=param, outline=1
+            )
+            param_area.rows.by_name[param] = rowbox.number()
             src_row = source_area.rows.by_name[param]
-            param_area.rows.by_name[param] = active_row
-            cell = sheet.cell(column=active_column, row=active_row)
+            cell = sheet.cell(column=active_column, row=rowbox.number())
 
             info = dict(sheet=source.title, alpha_column=src_col, row=src_row)
             link = template.format(**info)
             cell.set_explicit_value(link, data_type=TypeCodes.FORMULA)
 
-            active_row += 1
-
         # Next add timeline header row and parameters from Scenarios tab
-
-        # save for later
-        time_params = param_area.rows.by_name.copy()
-        time_params = time_params.keys()
         timeline_area.rows.by_name[FieldNames.TITLE] = self.TITLE_ROW
-
         template = FormulaTemplates.ADD_CELL_FROM_SHEET
         src_vals = \
             set(source_area.columns.by_name.keys()) - {FieldNames.LABELS}
@@ -890,22 +924,7 @@ class UnitInfoChef:
 
             active_column += 1
 
-        sheet.bb.outline_level += 1
-
-        # Add unit parameters and update TimeLine/Period params as necessary
-        self._add_unit_params(sheet=sheet, unit=unit,
-                              timeline_params=time_params)
-
-        if not current_only:
-            time_line = self.model.get_timeline()
-            for period in time_line.iter_ordered():
-                if period.end > unit.period.end:
-                    self._add_unit_params(
-                        sheet=sheet, unit=period.content,
-                        timeline_params=time_params
-                    )
-
-        sheet.bb.outline_level -= 1
+        body_rows.calc_size()
 
         return sheet
 
