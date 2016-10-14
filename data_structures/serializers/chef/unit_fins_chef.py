@@ -99,9 +99,10 @@ class UnitFinsChef:
         statements added to the worksheet and their starting rows
         """
         body_rows = sheet.bb.row_axis.get_group('body')
+        param_group = body_rows.get_group('drivers')
         body_rows.add_group(
             'statements',
-            offset=sheet.bb.current_row - body_rows.tip + 1
+            offset=sheet.bb.current_row - body_rows.tip + 1 - param_group.size
         )
 
         time_line = self.model.get_timeline()
