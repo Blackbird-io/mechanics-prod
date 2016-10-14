@@ -53,7 +53,6 @@ REPLACEMENT_CHAR = None
 bad_char_table = {ord(c): REPLACEMENT_CHAR for c in _INVALID_CHARS}
 get_column_letter = xlio.utils.get_column_letter
 line_chef = LineChef()
-info_chef = UnitInfoChef()
 
 # Classes
 class UnitFinsChef:
@@ -100,9 +99,11 @@ class UnitFinsChef:
         statements added to the worksheet and their starting rows
         """
         body_rows = sheet.bb.row_axis.get_group('body')
+        body_rows.calc_size()
+        param_group = body_rows.get_group('drivers')
         body_rows.add_group(
             'statements',
-            offset=sheet.bb.current_row - body_rows.tip + 1
+            offset=sheet.bb.current_row - body_rows.tip - 1 - param_group.size
         )
 
         time_line = self.model.get_timeline()
@@ -187,15 +188,16 @@ class UnitFinsChef:
         else:
             name = unit.name + ' val'
 
-        sheet = info_chef.create_unit_sheet(book=book, unit=unit,
-                                        index=index, name=name,
-                                        current_only=True)
-
+        info_chef = UnitInfoChef(self.model)
+        sheet = info_chef.create_unit_sheet(
+            book=book, unit=unit, index=index, name=name, current_only=True
+        )
         sheet.bb.outline_level += 1
 
         # 1.1   set-up life
+        info_chef.unit_life(sheet, unit, current_only=True)
         sheet.bb.current_row += 1
-        sheet = info_chef.add_unit_life(sheet=sheet, unit=unit)
+        # sheet = info_chef.add_unit_life(sheet=sheet, unit=unit)
         sheet.bb.outline_level -= 1
 
         # 1.2  Add Valuation statement
@@ -222,6 +224,7 @@ class UnitFinsChef:
 
         # # 1.6 add selector cell
         #   Make scenario label cells
+        info_chef = UnitInfoChef(self.model)
         info_chef.add_scenario_selector_logic(book, sheet)
 
         sheet.sheet_properties.tabColor = VALUATION_TAB_COLOR

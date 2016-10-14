@@ -56,7 +56,6 @@ REPLACEMENT_CHAR = None
 bad_char_table = {ord(c): REPLACEMENT_CHAR for c in _INVALID_CHARS}
 get_column_letter = xlio.utils.get_column_letter
 line_chef = LineChef()
-info_chef = UnitInfoChef()
 
 # Classes
 class UnitChef:
@@ -90,7 +89,10 @@ class UnitChef:
                           makes and fills Valuation tab
     ====================  =====================================================
     """
-    def chop_multi(self, model, book, unit=None):
+    def __init__(self, model):
+        self.model = model
+
+    def chop_multi(self, book, unit=None):
         """
 
 
@@ -103,6 +105,7 @@ class UnitChef:
         into Excel format.  Method also spreads financials, parameters, and
         life of the unit.
         """
+        model = self.model
         # top level entry: get the company
         if not unit:
             unit = model.get_company()
@@ -112,7 +115,7 @@ class UnitChef:
         children = unit.components.get_ordered()
 
         for child in children:
-            self.chop_multi(model, book, child)
+            self.chop_multi(book, child)
 
         # 2.   Chop the parent
         #
@@ -122,8 +125,10 @@ class UnitChef:
         # starting row, and the spreadsheet would look like a staircase.
 
         # 2.1.   set up the unit sheet and spread params
-        sheet = info_chef.create_unit_sheet(book=book, unit=unit,
-                                        index=before_kids)
+        info_chef = UnitInfoChef(model)
+        sheet = info_chef.create_unit_sheet(
+            book=book, unit=unit, index=before_kids
+        )
         sheet.bb.outline_level += 1
 
         # 2.2.   spread life
@@ -140,19 +145,19 @@ class UnitChef:
         group_lines(sheet, sheet.bb.size.rows.ending)
         sheet.bb.outline_level -= 1
 
-        # 2.4.  spread fins
-        fins_chef = UnitFinsChef(model)
-        fins_dict = fins_chef.chop_financials(sheet, unit)
+        # # 2.4.  spread fins
+        # fins_chef = UnitFinsChef(model)
+        # fins_dict = fins_chef.chop_financials(sheet, unit)
 
-        # 2.5 add area and statement labels and sheet formatting
-        SheetStyle.style_sheet(sheet)
-
-        for statement, row in fins_dict.items():
-            CellStyles.format_area_label(sheet, statement, row)
-
-        # # 2.6 add selector cell
-        #   Make scenario label cells
-        info_chef.add_scenario_selector_logic(book, sheet)
+        # # 2.5 add area and statement labels and sheet formatting
+        # SheetStyle.style_sheet(sheet)
+        #
+        # for statement, row in fins_dict.items():
+        #     CellStyles.format_area_label(sheet, statement, row)
+        #
+        # # # 2.6 add selector cell
+        # #   Make scenario label cells
+        # info_chef.add_scenario_selector_logic(book, sheet)
 
         # Color the December columns
         if APPLY_COLOR_TO_DECEMBER:
@@ -163,6 +168,13 @@ class UnitChef:
                         cell.fill = PatternFill(start_color=DECEMBER_COLOR,
                                                 end_color=DECEMBER_COLOR,
                                                 fill_type='solid')
+
+        body_rows = sheet.bb.row_axis.get_group('body')
+        label_col = sheet.bb.col_axis.get_group('head')
+        for group in body_rows.groups:
+            self.add_labels(
+                sheet, group.groups, label_col
+            )
 
         return sheet
 
@@ -203,3 +215,40 @@ class UnitChef:
         if financials.has_valuation:
             fins_chef = UnitFinsChef(model)
             fins_chef.add_valuation_tab(book, unit, index=index)
+
+
+    def add_labels(self, sheet, groups, label_col, level=0):
+        """
+
+
+        UnitChef.add_labels() -> None
+
+        Writes row labels on sheet. To show up on the axis, a group
+        1. should have no subgroups
+        2. should have a label
+        To add a title row for a group with subgroups, create a one-row
+        'title' subgroup.
+        """
+        for group in groups:
+            if group.groups:
+                self.add_labels(
+                    sheet, group.groups, label_col, level=level + 1
+                )
+            elif group.size:
+                label = group.extra.get('label')
+                if label:
+                    row = group.number()
+                    col = label_col.number()
+                    rank = group.extra.get('rank')
+                    if group.name == 'title' and rank == 1:
+                        formatter = CellStyles.format_area_label
+                        formatter(sheet, label, row, col_num=col)
+                    else:
+                        label_cell = sheet.cell(row=row, column=col + 1)
+                        label_cell.value = label
+                        formatter = group.extra.get('formatter')
+                        if formatter:
+                            formatter(label_cell)
+                        if group.outline:
+                            r = sheet.row_dimensions[row]
+                            r.outline_level = group.outline

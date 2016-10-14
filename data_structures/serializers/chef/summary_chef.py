@@ -43,8 +43,6 @@ from .field_names import FieldNames
 from .sheet_style import SheetStyle
 from .summary_line_chef import SummaryLineChef
 from .tab_names import TabNames
-from .transcript_chef import TranscriptChef
-from .unit_chef import UnitChef
 
 
 
@@ -54,8 +52,6 @@ from .unit_chef import UnitChef
 
 # Module Globals
 line_chef = SummaryLineChef()
-transcript_chef = TranscriptChef()
-unit_chef = UnitChef()
 
 get_column_letter = xlio.utils.get_column_letter
 bounding_box = xlio.drawing.image.bounding_box
