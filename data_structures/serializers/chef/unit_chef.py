@@ -38,7 +38,9 @@ from .sheet_style import SheetStyle
 from .unit_fins_chef import UnitFinsChef
 from .unit_info_chef import UnitInfoChef
 
-from chef_settings import APPLY_COLOR_TO_DECEMBER, DECEMBER_COLOR
+from chef_settings import (
+    APPLY_COLOR_TO_DECEMBER, DECEMBER_COLOR, VALUATION_TAB_COLOR
+)
 from openpyxl.styles import PatternFill
 
 
@@ -129,35 +131,26 @@ class UnitChef:
         sheet = info_chef.create_unit_sheet(
             book=book, unit=unit, index=before_kids
         )
-        sheet.bb.outline_level += 1
 
         # 2.2.   spread life
         info_chef.unit_life(sheet, unit)
 
         # 2.3. add unit size
-        sheet.bb.current_row += 2
-        info_chef.add_unit_size(sheet=sheet, unit=unit, set_labels=True)
-        for snapshot in unit:
-            sheet.bb.current_row = sheet.bb.size.rows.ending
-            info_chef.add_unit_size(sheet=sheet, unit=snapshot, set_labels=False)
+        info_chef.add_unit_size(sheet, unit)
 
-        sheet.bb.outline_level += 1
-        group_lines(sheet, sheet.bb.size.rows.ending)
-        sheet.bb.outline_level -= 1
+        # 2.4.  spread fins
+        fins_chef = UnitFinsChef(model)
+        fins_dict = fins_chef.chop_financials(sheet, unit)
 
-        # # 2.4.  spread fins
-        # fins_chef = UnitFinsChef(model)
-        # fins_dict = fins_chef.chop_financials(sheet, unit)
+        # 2.5 add area and statement labels and sheet formatting
+        SheetStyle.style_sheet(sheet)
 
-        # # 2.5 add area and statement labels and sheet formatting
-        # SheetStyle.style_sheet(sheet)
-        #
         # for statement, row in fins_dict.items():
         #     CellStyles.format_area_label(sheet, statement, row)
-        #
-        # # # 2.6 add selector cell
-        # #   Make scenario label cells
-        # info_chef.add_scenario_selector_logic(book, sheet)
+
+        # 2.6 add selector cell
+        #   Make scenario label cells
+        info_chef.add_scenario_selector_logic(book, sheet)
 
         # Color the December columns
         if APPLY_COLOR_TO_DECEMBER:
@@ -213,11 +206,87 @@ class UnitChef:
         now = time_line.current_period
         financials = model.get_financials(unit.id.bbid, now)
         if financials.has_valuation:
-            fins_chef = UnitFinsChef(model)
-            fins_chef.add_valuation_tab(book, unit, index=index)
+            # fins_chef = UnitFinsChef(model)
+            self.add_valuation_tab(book, unit, index=index)
+
+    def add_valuation_tab(self, book, unit, index=None):
+        """
 
 
-    def add_labels(self, sheet, groups, label_col, level=0):
+        UnitChef._add_valuation_tab() -> Worksheet
+
+        --``book`` must be a Workbook
+        --``unit`` must be an instance of BusinessUnit
+        --``index`` is optionally the index at which to insert the tab
+
+        Method creates a valuation tab and chops unit valuation statement.
+        """
+
+        # 1.0   set up the unit sheet and spread params
+        if not index:
+            index = len(book.worksheets)
+
+        if index == 2:
+            name = "Valuation"
+        else:
+            name = unit.name + ' val'
+
+        info_chef = UnitInfoChef(self.model)
+        sheet = info_chef.create_unit_sheet(
+            book=book, unit=unit, index=index, name=name, current_only=True
+        )
+        sheet.bb.outline_level += 1
+
+        # 1.1   set-up life
+        info_chef.unit_life(sheet, unit, current_only=True)
+        sheet.bb.current_row += 1
+        # sheet = info_chef.add_unit_life(sheet=sheet, unit=unit)
+        sheet.bb.outline_level -= 1
+
+        # 1.2  Add Valuation statement
+        # sheet.bb.current_row = sheet.bb.events.rows.ending
+        # sheet.bb.current_row += 1
+
+
+        # statement_row = sheet.bb.current_row + 1
+        time_line = self.model.get_timeline()
+        now = time_line.current_period
+        current = sheet.bb.time_line.columns.get_position(now.end)
+        SheetStyle.set_column_width(sheet, current, width=22)
+
+        financials = self.model.get_financials(unit.id.bbid, now)
+        statement = financials.valuation
+        body_rows = sheet.bb.row_axis.get_group('body')
+        body_rows.calc_size()
+        statement_group = body_rows.add_group('statements', offset=1)
+        line_chef.chop_statement(
+            sheet=sheet,
+            column=current,
+            statement=statement,
+            row_container=statement_group
+        )
+
+        # 1.5 add area and statement labels and sheet formatting
+        SheetStyle.style_sheet(sheet)
+        # CellStyles.format_area_label(sheet, statement.name, statement_row)
+
+        # # 1.6 add selector cell
+        #   Make scenario label cells
+        info_chef = UnitInfoChef(self.model)
+        info_chef.add_scenario_selector_logic(book, sheet)
+
+        sheet.sheet_properties.tabColor = VALUATION_TAB_COLOR
+
+        body_rows = sheet.bb.row_axis.get_group('body')
+        label_col = sheet.bb.col_axis.get_group('head')
+        for group in body_rows.groups:
+            self.add_labels(
+                sheet, group.groups, label_col
+            )
+
+        return sheet
+
+    def add_labels(self, sheet, groups, label_col):
         """
 
 
@@ -231,9 +300,7 @@ class UnitChef:
         """
         for group in groups:
             if group.groups:
-                self.add_labels(
-                    sheet, group.groups, label_col, level=level + 1
-                )
+                self.add_labels(sheet, group.groups, label_col)
             elif group.size:
                 label = group.extra.get('label')
                 if label:

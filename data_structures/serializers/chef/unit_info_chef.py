@@ -177,60 +177,6 @@ class UnitInfoChef:
 
         return sheet
 
-    def add_unit_life(self, *pargs, sheet, unit, column=None,
-                       set_labels=True):
-        """
-
-
-        UnitChef._add_unit_life() -> Worksheet
-
-         --``sheet`` must be an instance of openpyxl Worksheet
-        --``unit`` must be an instance of BusinessUnit
-        --``column`` must be a column number reference
-        --``set_labels`` must be a boolean; True will set labels for line
-
-        Method adds life Area to unit sheet and delegates to
-        UnitChef._add_life_events() and UnitChef._add_life_analysis()
-        Expects to get sheet with current row pointing to a blank
-        Will start writing on current row
-        """
-        sheet_data = sheet.bb
-        active_column = column
-
-        if not active_column:
-            end = unit.period.end
-            active_column = sheet_data.time_line.columns.get_position(end)
-
-        # if not getattr(sheet.bb, "life", None):
-        #     sheet.bb.add_area("life")
-
-        if not getattr(sheet_data, "events", None):
-            sheet.bb.add_area("events")
-
-        first_life_row = sheet.bb.current_row + 1
-        first_event_row = first_life_row + 9
-        # Leave nine rows for basic life layout
-
-        sheet.bb.current_row = first_event_row
-        sheet = self._add_life_events(
-            sheet=sheet,
-            unit=unit,
-            active_column=active_column
-        )
-
-        sheet.bb.current_row = first_life_row
-        sheet = self._add_life_analysis(
-            sheet=sheet,
-            unit=unit,
-            active_column=active_column,
-            set_labels=set_labels
-        )
-
-        sheet.bb.current_row = sheet.bb.events.rows.ending
-        sheet.bb.first_life_row = first_life_row
-
-        return sheet
-
     def add_scenario_selector_logic(self, book, sheet):
         """
 
@@ -273,8 +219,7 @@ class UnitInfoChef:
                                                       self.SCENARIO_ROW,
                                                       active=False)
 
-    def add_unit_size(self, *pargs, sheet, unit, column=None,
-                       set_labels=True):
+    def add_unit_size(self, sheet, unit):
         """
 
 
@@ -288,17 +233,59 @@ class UnitInfoChef:
         Method adds "size" Area to unit sheet and populates it with values.
         Will start writing on current row.
         """
-        active_column = column
+        body_rows = sheet.bb.row_axis.get_group('body')
+        size_group = body_rows.add_group(
+            'size', offset=1
+        )
+        size_title = size_group.add_group(
+            'title', size=1, label='Size', rank=1
+        )
+        size_lines = size_group.add_group('lines')
+        body_rows.calc_size()
 
-        if not active_column:
-            end = unit.period.end
-            active_column = sheet.bb.time_line.columns.get_position(end)
+        timeline_range = getattr(sheet.bb, FieldNames.TIMELINE)
+        time_line = self.model.get_timeline()
+        now = time_line.current_period
+        template = FormulaTemplates.ADD_COORDINATES
+        master_column = self.MASTER_COLUMN
+
+        size = sheet.bb.add_area(FieldNames.SIZE)
+        size.rows.by_name[FieldNames.SIZE_LABEL] = size_lines.number()
+
+        for period in time_line.iter_ordered(open=now.end):
+            period_column = timeline_range.columns.get_position(period.end)
+            rowbox = size_lines.add_group(
+                FieldNames.SIZE_LABEL,
+                size=1,
+                label=FieldNames.SIZE_LABEL,
+                outline=1
+            )
+            master_cell = sheet.cell(
+                column=master_column, row=rowbox.number()
+            )
+            active_cell = sheet.cell(
+                column=period_column, row=rowbox.number()
+            )
+            # TODO: unit.get_size(period)
+            value = unit.size
+            if value and not master_cell.value:
+                master_cell.value = value
+                CellStyles.format_parameter(master_cell)
+                CellStyles.format_hardcoded(master_cell)
+            if value == master_cell.value:
+                link = template.format(coordinates=master_cell.coordinate)
+                active_cell.set_explicit_value(
+                    link, data_type=TypeCodes.FORMULA
+                )
+            else:
+                active_cell.value = value
+                CellStyles.format_hardcoded(master_cell)
+            CellStyles.format_integer(active_cell)
+        return
 
         parameters = getattr(sheet.bb, FieldNames.PARAMETERS)
-        master_column = parameters.columns.get_position(FieldNames.MASTER)
 
         if not getattr(sheet.bb, FieldNames.SIZE, None):
-            size = sheet.bb.add_area(FieldNames.SIZE)
 
             item_dict = dict()
             item_dict[FieldNames.SIZE_LABEL] = unit.size
@@ -311,28 +298,8 @@ class UnitInfoChef:
                 set_labels=set_labels,
                 format_func=CellStyles.format_integer)
 
-            size.rows.by_name[FieldNames.SIZE_LABEL] = sheet.bb.current_row
         else:
             size = getattr(sheet.bb, FieldNames.SIZE)
-
-        # Write values for existing events
-        existing_row = size.rows.get_position(FieldNames.SIZE_LABEL)
-
-        master_cell = sheet.cell(column=master_column,
-                                 row=existing_row)
-        active_cell = sheet.cell(column=active_column,
-                                 row=existing_row)
-
-        active_cell.value = unit.size
-
-        if master_cell.value == active_cell.value:
-            link_template = FormulaTemplates.ADD_COORDINATES
-            link = link_template.format(coordinates=master_cell.coordinate)
-
-            active_cell.set_explicit_value(link,
-                                           data_type=TypeCodes.FORMULA)
-
-        CellStyles.format_integer(active_cell)
 
         return sheet
 
@@ -441,7 +408,7 @@ class UnitInfoChef:
             'life', offset=1 if body_rows.groups else 0
         )
         life_title = life_group.add_group(
-            'title', size=1, label='Life', rank=1
+            'title', size=1, label='Life', rank=1, hidden=HIDE_LIFE_EVENTS,
         )
         life_lines = life_group.add_group('lines')
         for label in (
@@ -457,6 +424,7 @@ class UnitInfoChef:
             life_lines.add_group(
                 label or '_spacer', size=1, label=label,
                 outline=int(not HIDE_LIFE_EVENTS),
+                hidden=HIDE_LIFE_EVENTS,
             )
 
         # layout for Events
@@ -464,30 +432,30 @@ class UnitInfoChef:
             'events', offset=1
         )
         event_title = event_group.add_group(
-            'title', size=1, label='Events', rank=1
+            'title', size=1, label='Events', rank=1, hidden=HIDE_LIFE_EVENTS,
         )
         event_lines = event_group.add_group('lines')
         for label in unit.life.ORDER:
             box = event_lines.add_group(
                 label, size=1, label=label,
                 outline=int(not HIDE_LIFE_EVENTS),
+                hidden=HIDE_LIFE_EVENTS,
             )
-
-        size_group = body_rows.add_group(
-            'size', offset=1
-        )
-        size_title = size_group.add_group(
-            'title', size=1, label='Size', rank=1
-        )
-        size_lines = size_group.add_group('lines', size=1)
         body_rows.calc_size()
 
         if not getattr(sheet.bb, "life", None):
             sheet.bb.add_area("life")
+            for box in life_lines.groups:
+                if box.extra.get('label'):
+                    sheet.bb.life.rows.by_name[box.name] = box.number()
 
         if not getattr(sheet.bb, "events", None):
             sheet.bb.add_area("events")
+            for box in event_lines.groups:
+                if box.extra.get('label'):
+                    sheet.bb.events.rows.by_name[box.name] = box.number()
 
+        # fill in cell by period
         timeline_range = getattr(sheet.bb, FieldNames.TIMELINE)
         time_line = self.model.get_timeline()
         now = time_line.current_period
@@ -676,48 +644,46 @@ class UnitInfoChef:
                 active_cell.value = event_date
                 CellStyles.format_date(active_cell)
                 CellStyles.format_hardcoded(active_cell)
-        return
 
-        events = sheet.bb.events
-        parameters = getattr(sheet.bb, FieldNames.PARAMETERS)
-
-        active_row = sheet.bb.current_row
-
-        existing_names = unit.life.events.keys() & events.rows.by_name.keys()
-        new_names = unit.life.events.keys() - existing_names
-
-        # Write values for existing events
-        for name in existing_names:
-
-            existing_row = events.rows.get_position(name)
-
-            master_cell = sheet.cell(column=master_column, row=existing_row)
-            active_cell = sheet.cell(column=active_column, row=existing_row)
-
-            event_date = unit.life.events[name]
-
-            active_cell.value = event_date
-
-            if not HIDE_LIFE_EVENTS:
-                group_lines(sheet, existing_row)
-
-
-        # Now add
-        new_events = dict()
-        for name in new_names:
-            new_events[name] = unit.life.events[name]
-
-        group = not HIDE_LIFE_EVENTS
-        self.add_items_to_area(
-            sheet=sheet,
-            area=events,
-            items=new_events,
-            active_column=active_column,
-            format_func=CellStyles.format_date,
-            preference_order=unit.life.ORDER,
-            group=group
-        )
-        # Method will update current row to the last filled position.
+        # events = sheet.bb.events
+        # parameters = getattr(sheet.bb, FieldNames.PARAMETERS)
+        #
+        # active_row = sheet.bb.current_row
+        #
+        # existing_names = unit.life.events.keys() & events.rows.by_name.keys()
+        # new_names = unit.life.events.keys() - existing_names
+        #
+        # # Write values for existing events
+        # for name in existing_names:
+        #
+        #     existing_row = events.rows.get_position(name)
+        #
+        #     master_cell = sheet.cell(column=master_column, row=existing_row)
+        #     active_cell = sheet.cell(column=active_column, row=existing_row)
+        #
+        #     event_date = unit.life.events[name]
+        #
+        #     active_cell.value = event_date
+        #
+        #     if not HIDE_LIFE_EVENTS:
+        #         group_lines(sheet, existing_row)
+        #
+        #
+        # # Now add
+        # new_events = dict()
+        # for name in new_names:
+        #     new_events[name] = unit.life.events[name]
+        #
+        # group = not HIDE_LIFE_EVENTS
+        # self.add_items_to_area(
+        #     sheet=sheet,
+        #     area=events,
+        #     items=new_events,
+        #     active_column=active_column,
+        #     format_func=CellStyles.format_date,
+        #     preference_order=unit.life.ORDER,
+        #     group=group
+        # )
 
         return sheet
 
