@@ -201,8 +201,8 @@ class UnitInfoChef:
             end = unit.period.end
             active_column = sheet_data.time_line.columns.get_position(end)
 
-        if not getattr(sheet_data, "life", None):
-            sheet.bb.add_area("life")
+        # if not getattr(sheet.bb, "life", None):
+        #     sheet.bb.add_area("life")
 
         if not getattr(sheet_data, "events", None):
             sheet.bb.add_area("events")
@@ -417,15 +417,15 @@ class UnitInfoChef:
         corner_cell = sheet.cell(column=corner_col, row=corner_row)
         sheet.freeze_panes = corner_cell
 
-        for group in body_rows.groups:
-            self._add_labels(
-                sheet, group.groups, head_cols
-            )
+        # for group in body_rows.groups:
+        #     self._add_labels(
+        #         sheet, group.groups, head_cols
+        #     )
 
         # Return sheet
         return sheet
 
-    def unit_life(self, sheet, unit):
+    def unit_life(self, sheet, unit, current_only=False):
         """
 
 
@@ -435,7 +435,8 @@ class UnitInfoChef:
         _add_unit_life to write each time period.
         """
         body_rows = sheet.bb.row_axis.get_group('body')
-        body_rows.calc_size()
+
+        # layout for Life
         life_group = body_rows.add_group(
             'life', offset=1 if body_rows.groups else 0
         )
@@ -443,18 +444,59 @@ class UnitInfoChef:
             'title', size=1, label='Life', rank=1
         )
         life_lines = life_group.add_group('lines')
+        for label in (
+            FieldNames.REF_DATE,
+            FieldNames.START_DATE,
+            # blank line before age
+            None,
+            FieldNames.AGE,
+            FieldNames.ALIVE,
+            FieldNames.SPAN,
+            FieldNames.PERCENT,
+        ):
+            life_lines.add_group(
+                label or '_spacer', size=1, label=label,
+                outline=int(not HIDE_LIFE_EVENTS),
+            )
 
-        param_area = getattr(sheet.bb, FieldNames.PARAMETERS)
-        if param_area.rows.ending:
-            start_row = param_area.rows.ending + 1
-        else:
-            start_row = self.VALUES_START_ROW - 2
-        sheet.bb.current_row = start_row
-        sheet = self.add_unit_life(sheet=sheet, unit=unit)
-        for snapshot in unit:
-            sheet.bb.current_row = start_row
-            self.add_unit_life(sheet=sheet, unit=snapshot, set_labels=False)
-        sheet.bb.outline_level -= 1
+        # layout for Events
+        event_group = body_rows.add_group(
+            'events', offset=1
+        )
+        event_title = event_group.add_group(
+            'title', size=1, label='Events', rank=1
+        )
+        event_lines = event_group.add_group('lines')
+        for label in unit.life.ORDER:
+            box = event_lines.add_group(
+                label, size=1, label=label,
+                outline=int(not HIDE_LIFE_EVENTS),
+            )
+
+        size_group = body_rows.add_group(
+            'size', offset=1
+        )
+        size_title = size_group.add_group(
+            'title', size=1, label='Size', rank=1
+        )
+        size_lines = size_group.add_group('lines', size=1)
+        body_rows.calc_size()
+
+        if not getattr(sheet.bb, "life", None):
+            sheet.bb.add_area("life")
+
+        if not getattr(sheet.bb, "events", None):
+            sheet.bb.add_area("events")
+
+        timeline_range = getattr(sheet.bb, FieldNames.TIMELINE)
+        time_line = self.model.get_timeline()
+        now = time_line.current_period
+        for period in time_line.iter_ordered(open=now.end):
+            period_column = timeline_range.columns.get_position(period.end)
+            self._add_events(sheet, unit, period, period_column)
+            self._add_life(sheet, unit, period, period_column)
+            if current_only:
+                break
 
         if HIDE_LIFE_EVENTS:
             top_row = getattr(sheet.bb, 'first_life_row', None)
@@ -503,7 +545,7 @@ class UnitInfoChef:
                             r = sheet.row_dimensions[row]
                             r.outline_level = group.outline
 
-    def _add_life_analysis(self, sheet, unit, active_column, set_labels=True):
+    def _add_life(self, sheet, unit, period, active_column):
         """
 
 
@@ -512,35 +554,27 @@ class UnitInfoChef:
         Method adds unit life for a single period to show unit state
         (alive/dead/etc.), age, etc.  Method assumes events are filled out.
         """
-        parameters = getattr(sheet.bb, FieldNames.PARAMETERS)
-        timeline = getattr(sheet.bb, FieldNames.TIMELINE)
+        event_lines = sheet.bb.row_axis.get_group('body', 'events', 'lines')
+        life_lines = sheet.bb.row_axis.get_group('body', 'life', 'lines')
 
-        active_row = sheet.bb.current_row + 1
-
-        label_column = parameters.columns.get_position(FieldNames.LABELS)
-        time_line_row = timeline.rows.get_position(FieldNames.TITLE)
-
-        fs = FormulaTemplates
+        timeline_range = getattr(sheet.bb, FieldNames.TIMELINE)
+        timeline_row = timeline_range.rows.get_position(FieldNames.TITLE)
 
         events = sheet.bb.events
         life = sheet.bb.life
 
         birth = sheet.cell(
             column=active_column,
-            row=events.rows.get_position(common_events.KEY_BIRTH)
+            row=event_lines.get_group(common_events.KEY_BIRTH).number()
         )
         death = sheet.cell(
             column=active_column,
-            row=events.rows.get_position(common_events.KEY_DEATH)
+            row=event_lines.get_group(common_events.KEY_DEATH).number()
         )
         conception = sheet.cell(
             column=active_column,
-            row=events.rows.get_position(common_events.KEY_CONCEPTION)
+            row=event_lines.get_group(common_events.KEY_CONCEPTION).number()
         )
-
-        CellStyles.format_date(birth)
-        CellStyles.format_date(death)
-        CellStyles.format_date(conception)
 
         cells = dict()
         cells["birth"] = birth
@@ -548,169 +582,67 @@ class UnitInfoChef:
         cells["conception"] = conception
 
         # 1. Add ref_date
-        sheet.bb.life.rows.by_name[FieldNames.REF_DATE] = active_row
-        if set_labels:
-            set_label(
-                label=FieldNames.REF_DATE,
-                sheet=sheet,
-                row=active_row,
-                column=label_column
-            )
-
-        ref_date = sheet.cell(column=active_column, row=active_row)
-        CellStyles.format_date(ref_date)
-
-        if not HIDE_LIFE_EVENTS:
-            group_lines(sheet, row=active_row)
-
-        time_line = sheet.cell(column=active_column, row=time_line_row)
-
-        cells["ref_date"] = ref_date
-        formula = fs.LINK_TO_COORDINATES.format(
+        box = life_lines.get_group(FieldNames.REF_DATE)
+        # sheet.bb.life.rows.by_name[FieldNames.REF_DATE] = box.number()
+        ref_date = sheet.cell(column=active_column, row=box.number())
+        time_line = sheet.cell(column=active_column, row=timeline_row)
+        formula = FormulaTemplates.LINK_TO_COORDINATES.format(
             coordinates=time_line.coordinate
         )
         ref_date.value = formula
+        CellStyles.format_date(ref_date)
+        cells["ref_date"] = ref_date
 
-        del formula
-        # Make sure each cell gets its own formula by deleting F after use.
-
-        # Move down one row
-        if not HIDE_LIFE_EVENTS:
-            group_lines(sheet, row=active_row + 1)
-
-        active_row += 1
-
-        # 1. Add period start date
-        sheet.bb.life.rows.by_name[FieldNames.START_DATE] = active_row
-        if set_labels:
-            set_label(
-                label=FieldNames.START_DATE,
-                sheet=sheet,
-                row=active_row,
-                column=label_column
-            )
-
-        start_date = sheet.cell(column=active_column, row=active_row)
-
+        # 2. Add period start date
+        box = life_lines.get_group(FieldNames.START_DATE)
+        # sheet.bb.life.rows.by_name[FieldNames.START_DATE] = active_row
+        start_date = sheet.cell(column=active_column, row=box.number())
+        start_date.value = period.start
         CellStyles.format_date(start_date)
 
-        if not HIDE_LIFE_EVENTS:
-            group_lines(sheet, row=active_row)
-
-        CellStyles.format_date(start_date)
-        start_date.value = unit.period.start
-
-        # Move down two rows (to leave one blank)
-
-        if not HIDE_LIFE_EVENTS:
-            group_lines(sheet, row=active_row + 1)
-
-        active_row += 2
-
-        # 2. Add age
-        sheet.bb.life.rows.by_name[FieldNames.AGE] = active_row
-        if set_labels:
-            set_label(
-                label=FieldNames.AGE,
-                sheet=sheet,
-                row=active_row,
-                column=label_column
-            )
-
-        age = sheet.cell(column=active_column, row=active_row)
-        CellStyles.format_parameter(age)
-
-        if not HIDE_LIFE_EVENTS:
-            group_lines(sheet, row=active_row)
-
-        cells["age"] = age
+        # 3. Add age
+        box = life_lines.get_group(FieldNames.AGE)
+        # sheet.bb.life.rows.by_name[FieldNames.AGE] = box.number()
+        age = sheet.cell(column=active_column, row=box.number())
         cos = {k: v.coordinate for k, v in cells.items()}
-        formula = fs.COMPUTE_AGE_IN_DAYS.format(**cos)
-
+        formula = FormulaTemplates.COMPUTE_AGE_IN_DAYS.format(**cos)
         age.set_explicit_value(formula, data_type=TypeCodes.FORMULA)
-        del formula
+        CellStyles.format_parameter(age)
+        cells["age"] = age
+        cos[FieldNames.AGE] = age.coordinate
 
-        # Move row down
-        active_row += 1
-
-        # 3. Add alive
-        life.rows.by_name[FieldNames.ALIVE] = active_row
-        if set_labels:
-            set_label(
-                label=FieldNames.ALIVE,
-                sheet=sheet,
-                row=active_row,
-                column=label_column
-            )
-
-        alive = sheet.cell(column=active_column, row=active_row)
+        # 4. Add alive
+        box = life_lines.get_group(FieldNames.ALIVE)
+        # life.rows.by_name[FieldNames.ALIVE] = active_row
+        alive = sheet.cell(column=active_column, row=box.number())
+        formula = FormulaTemplates.IS_ALIVE.format(**cos)
+        alive.set_explicit_value(formula, data_type=TypeCodes.FORMULA)
         CellStyles.format_parameter(alive)
-
-        if not HIDE_LIFE_EVENTS:
-            group_lines(sheet, row=active_row)
-
         cells["alive"] = alive
         cos["alive"] = alive.coordinate
-        formula = fs.IS_ALIVE.format(**cos)
 
-        alive.set_explicit_value(formula, data_type=TypeCodes.FORMULA)
-        del formula
-
-        # Move row down
-        active_row += 1
-
-        # 4. Add span (so we can use it as the denominator in our percent
-        #    computation below).
-        life.rows.by_name[FieldNames.SPAN] = active_row
-        if set_labels:
-            set_label(
-                label=FieldNames.SPAN,
-                sheet=sheet,
-                row=active_row,
-                column=label_column
-            )
-
-        span = sheet.cell(column=active_column, row=active_row)
+        # 5. Add span (so we can use it as the denominator in our percent
+        # computation below).
+        box = life_lines.get_group(FieldNames.SPAN)
+        # life.rows.by_name[FieldNames.SPAN] = active_row
+        span = sheet.cell(column=active_column, row=box.number())
+        formula = FormulaTemplates.COMPUTE_SPAN_IN_DAYS.format(**cos)
+        span.set_explicit_value(formula, data_type=TypeCodes.FORMULA)
         CellStyles.format_parameter(span)
-
-        if not HIDE_LIFE_EVENTS:
-            group_lines(sheet, row=active_row)
-
         cells[FieldNames.SPAN] = span
         cos[FieldNames.SPAN] = span.coordinate
-        formula = fs.COMPUTE_SPAN_IN_DAYS.format(**cos)
 
-        span.set_explicit_value(formula, data_type=TypeCodes.FORMULA)
-        del formula
-
-        # Move row down
-        active_row += 1
-
-        # 5. Add percent
-        life.rows.by_name[FieldNames.PERCENT] = active_row
-        if set_labels:
-            set_label(
-                label=FieldNames.PERCENT,
-                sheet=sheet,
-                row=active_row,
-                column=label_column
-            )
-
-        percent = sheet.cell(column=active_column, row=active_row)
-
-        formula = fs.COMPUTE_AGE_IN_PERCENT.format(**cos)
-
+        # 6. Add percent
+        box = life_lines.get_group(FieldNames.PERCENT)
+        # life.rows.by_name[FieldNames.PERCENT] = active_row
+        percent = sheet.cell(column=active_column, row=box.number())
+        formula = FormulaTemplates.COMPUTE_AGE_IN_PERCENT.format(**cos)
         percent.set_explicit_value(formula, data_type=TypeCodes.FORMULA)
-
-        if not HIDE_LIFE_EVENTS:
-            group_lines(sheet, row=active_row)
-
-        sheet.bb.current_row = active_row + 1
 
         # Return sheet
         return sheet
 
-    def _add_life_events(self, *pargs, sheet, unit, active_column):
+    def _add_events(self, sheet, unit, period, active_column):
         """
 
 
@@ -721,11 +653,35 @@ class UnitInfoChef:
         Expects sheet to include areas for events and parameters.
         Runs through add_items() [which is why we get name-based sorting]
         """
+        event_lines = sheet.bb.row_axis.get_group('body', 'events', 'lines')
+        master_column = self.MASTER_COLUMN
+        template = FormulaTemplates.ADD_COORDINATES
+
+        for name, event_date in unit.life.events.items():
+            row = event_lines.get_group(name).number()
+            master_cell = sheet.cell(column=master_column, row=row)
+            active_cell = sheet.cell(column=active_column, row=row)
+            if not master_cell.value:
+                master_cell.value = event_date
+                CellStyles.format_date(master_cell)
+                CellStyles.format_hardcoded(master_cell)
+            if event_date == master_cell.value.date():
+                link = template.format(coordinates=master_cell.coordinate)
+                active_cell.set_explicit_value(
+                    link, data_type=TypeCodes.FORMULA
+                )
+                CellStyles.format_date(active_cell)
+            else:
+                print(master_cell.value, event_date)
+                active_cell.value = event_date
+                CellStyles.format_date(active_cell)
+                CellStyles.format_hardcoded(active_cell)
+        return
+
         events = sheet.bb.events
         parameters = getattr(sheet.bb, FieldNames.PARAMETERS)
 
         active_row = sheet.bb.current_row
-        master_column = parameters.columns.get_position(FieldNames.MASTER)
 
         existing_names = unit.life.events.keys() & events.rows.by_name.keys()
         new_names = unit.life.events.keys() - existing_names
@@ -737,7 +693,6 @@ class UnitInfoChef:
 
             master_cell = sheet.cell(column=master_column, row=existing_row)
             active_cell = sheet.cell(column=active_column, row=existing_row)
-            CellStyles.format_date(master_cell)
 
             event_date = unit.life.events[name]
 
@@ -746,14 +701,6 @@ class UnitInfoChef:
             if not HIDE_LIFE_EVENTS:
                 group_lines(sheet, existing_row)
 
-            if master_cell.value == active_cell.value:
-                link_template = FormulaTemplates.ADD_COORDINATES
-                link = link_template.format(coordinates=master_cell.coordinate)
-
-                active_cell.set_explicit_value(link,
-                                               data_type=TypeCodes.FORMULA)
-
-                CellStyles.format_date(active_cell)
 
         # Now add
         new_events = dict()
@@ -837,7 +784,8 @@ class UnitInfoChef:
                         CellStyles.format_hardcoded(cell)
                     CellStyles.format_parameter(cell)
 
-            if current_only: break
+            if current_only:
+                break
 
         sheet.bb.current_row = parameters.rows.ending or self.VALUES_START_ROW
 

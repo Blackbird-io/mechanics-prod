@@ -103,7 +103,7 @@ class UnitFinsChef:
         param_group = body_rows.get_group('drivers')
         body_rows.add_group(
             'statements',
-            offset=sheet.bb.current_row - body_rows.tip + 1 - param_group.size
+            offset=sheet.bb.current_row - body_rows.tip - 1 - param_group.size
         )
 
         time_line = self.model.get_timeline()
@@ -195,8 +195,9 @@ class UnitFinsChef:
         sheet.bb.outline_level += 1
 
         # 1.1   set-up life
+        info_chef.unit_life(sheet, unit, current_only=True)
         sheet.bb.current_row += 1
-        sheet = info_chef.add_unit_life(sheet=sheet, unit=unit)
+        # sheet = info_chef.add_unit_life(sheet=sheet, unit=unit)
         sheet.bb.outline_level -= 1
 
         # 1.2  Add Valuation statement

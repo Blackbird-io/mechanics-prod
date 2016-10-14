@@ -145,19 +145,19 @@ class UnitChef:
         group_lines(sheet, sheet.bb.size.rows.ending)
         sheet.bb.outline_level -= 1
 
-        # 2.4.  spread fins
-        fins_chef = UnitFinsChef(model)
-        fins_dict = fins_chef.chop_financials(sheet, unit)
+        # # 2.4.  spread fins
+        # fins_chef = UnitFinsChef(model)
+        # fins_dict = fins_chef.chop_financials(sheet, unit)
 
-        # 2.5 add area and statement labels and sheet formatting
-        SheetStyle.style_sheet(sheet)
-
-        for statement, row in fins_dict.items():
-            CellStyles.format_area_label(sheet, statement, row)
-
-        # # 2.6 add selector cell
-        #   Make scenario label cells
-        info_chef.add_scenario_selector_logic(book, sheet)
+        # # 2.5 add area and statement labels and sheet formatting
+        # SheetStyle.style_sheet(sheet)
+        #
+        # for statement, row in fins_dict.items():
+        #     CellStyles.format_area_label(sheet, statement, row)
+        #
+        # # # 2.6 add selector cell
+        # #   Make scenario label cells
+        # info_chef.add_scenario_selector_logic(book, sheet)
 
         # Color the December columns
         if APPLY_COLOR_TO_DECEMBER:
@@ -168,6 +168,13 @@ class UnitChef:
                         cell.fill = PatternFill(start_color=DECEMBER_COLOR,
                                                 end_color=DECEMBER_COLOR,
                                                 fill_type='solid')
+
+        body_rows = sheet.bb.row_axis.get_group('body')
+        label_col = sheet.bb.col_axis.get_group('head')
+        for group in body_rows.groups:
+            self.add_labels(
+                sheet, group.groups, label_col
+            )
 
         return sheet
 
@@ -208,3 +215,40 @@ class UnitChef:
         if financials.has_valuation:
             fins_chef = UnitFinsChef(model)
             fins_chef.add_valuation_tab(book, unit, index=index)
+
+
+    def add_labels(self, sheet, groups, label_col, level=0):
+        """
+
+
+        UnitChef.add_labels() -> None
+
+        Writes row labels on sheet. To show up on the axis, a group
+        1. should have no subgroups
+        2. should have a label
+        To add a title row for a group with subgroups, create a one-row
+        'title' subgroup.
+        """
+        for group in groups:
+            if group.groups:
+                self.add_labels(
+                    sheet, group.groups, label_col, level=level + 1
+                )
+            elif group.size:
+                label = group.extra.get('label')
+                if label:
+                    row = group.number()
+                    col = label_col.number()
+                    rank = group.extra.get('rank')
+                    if group.name == 'title' and rank == 1:
+                        formatter = CellStyles.format_area_label
+                        formatter(sheet, label, row, col_num=col)
+                    else:
+                        label_cell = sheet.cell(row=row, column=col + 1)
+                        label_cell.value = label
+                        formatter = group.extra.get('formatter')
+                        if formatter:
+                            formatter(label_cell)
+                        if group.outline:
+                            r = sheet.row_dimensions[row]
+                            r.outline_level = group.outline
