@@ -304,8 +304,8 @@ class TimeLine(TimelineBase):
                 if seed.content:
                     new_content = seed.content.copy()
                     period.set_content(new_content, updateID=False)
-                    period.content.reset_financials()
-                    period.content.fill_out()
+                    period.content.reset_financials(period=period)
+                    period.content.fill_out(period=period)
                 seed = period
 
             if bb_settings.MAKE_ANNUAL_SUMMARIES:
