@@ -165,8 +165,7 @@ class UnitFinsChef:
             dr_data, materials = sheet.bb.problem_lines.pop()
             line_chef.attempt_reference_resolution(sheet, dr_data, materials)
 
-    @staticmethod
-    def add_valuation_tab(model, book, unit, index=None):
+    def add_valuation_tab(self, book, unit, index=None):
         """
 
 
@@ -207,9 +206,9 @@ class UnitFinsChef:
         SheetStyle.set_column_width(sheet, current, width=22)
 
         statement_row = sheet.bb.current_row + 1
-        time_line = model.get_timeline()
+        time_line = self.model.get_timeline()
         now = time_line.current_period
-        financials = model.get_financials(unit.id.bbid, now)
+        financials = self.model.get_financials(unit.id.bbid, now)
         statement = financials.valuation
         line_chef.chop_statement(
             sheet=sheet,

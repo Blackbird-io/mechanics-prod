@@ -370,7 +370,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         return result
 
-    def fill_out(self):
+    def fill_out(self, period=None):
         """
 
 
@@ -391,22 +391,21 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         BusinessUnit.derive() will never run again for that LineItem, either at
         that component or any parent or ancestor of that component.
         """
+        financials = self.get_financials(period)
+        if not financials.filled:
+            if not period:
+                period = self.period
+            self._load_starting_balance(period)
 
-        if self.filled:
-            return
-        else:
-            self.financials.relationships.set_parent(self)
+            for statement in financials.compute_order:
+                self.compute(statement, period)
 
-            self._load_starting_balance()
+            self._compute_ending_balance(period)
 
-            for statement in self.financials.compute_order:
-                self.compute(statement)
-
-            self._compute_ending_balance()
-
-            self._check_start_balance()
+            self._check_start_balance(period)
 
             self.filled = True
+            financials.filled = True
 
     def kill(self, date=None, recur=True):
         """
@@ -477,7 +476,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         if adjust_future and self.future:
             self.future.recalculate(adjust_future=True)
 
-    def reset_financials(self, recur=True):
+    def reset_financials(self, period=None, recur=True):
         """
 
 
@@ -488,12 +487,13 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         each of the components. Method sets instance.filled to False.
         """
         self.filled = False
-        self.financials.reset()
+        financials = self.get_financials(period)
+        financials.reset()
         if recur:
             pool = self.components.get_all()
 
             for bu in pool:
-                bu.reset_financials(recur)
+                bu.reset_financials(period=period, recur=recur)
 
     def set_analytics(self, atx):
         """
@@ -603,7 +603,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         return id_directory, ty_directory
 
-    def _check_start_balance(self):
+    def _check_start_balance(self, period):
         """
 
 
@@ -615,17 +615,19 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         pool = self.components.get_all()
         for unit in pool:
-            unit._check_start_balance()
+            unit._check_start_balance(period)
 
-        for end_line in self.financials.ending.get_ordered():
-            start_line = self.financials.starting.find_first(end_line.name)
+        financials = self.get_financials(period)
+        for end_line in financials.ending.get_ordered():
+            start_line = financials.starting.find_first(end_line.name)
             if start_line:
                 self._check_line(start_line, end_line)
             else:
                 new_line = end_line.copy()
                 new_line.clear(force=True)
-                self.financials.starting.add_line(new_line,
-                                                  position=end_line.position)
+                financials.starting.add_line(
+                    new_line, position=end_line.position
+                )
 
     def _check_line(self, start_line, end_line):
         """
@@ -647,7 +649,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
                     new_line.clear(force=True)
                     start_line.add_line(new_line, position=end.position)
 
-    def _compute_ending_balance(self, period=None):
+    def _compute_ending_balance(self, period):
         """
 
 
@@ -660,13 +662,15 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         """
 
         for unit in self.components.get_all():
-            unit._compute_ending_balance()
+            unit._compute_ending_balance(period)
 
-        ending_balance = self.financials.ending
-        starting_balance = self.financials.starting
+        financials = self.get_financials(period)
+        ending_balance = financials.ending
+        starting_balance = financials.starting
 
-        ending_balance.increment(starting_balance, consolidating=False,
-                                 over_time=True)
+        ending_balance.increment(
+            starting_balance, consolidating=False, over_time=True
+        )
         ending_balance.reset()
         # Our goal is to pick up shape, so clear values.
 
@@ -675,12 +679,12 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         # the values. We will fill in the values later through
         # consolidate(), update_balance(), and derive().
 
-        self._consolidate("ending")
+        self._consolidate("ending", period)
 
-        self._update_balance()
+        self._update_balance(period)
         # Sets ending balance lines to starting values by default
 
-        self._derive("ending")
+        self._derive("ending", period)
         # Derive() will overwrite ending balance sheet where appropriate
 
     def _consolidate(self, statement_name, period=None):
@@ -699,7 +703,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         # would look different (even though the bottom line would be the same).
 
         for unit in pool:
-            self._consolidate_unit(unit, statement_name)
+            self._consolidate_unit(unit, statement_name, period)
 
     def _consolidate_unit(self, sub, statement_name, period=None):
         """
@@ -718,17 +722,19 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         Method delegates to Statement.increment() for actual consolidation work.
         """
         # Step Only: Actual consolidation
-        child_statement = getattr(sub.financials, statement_name, None)
-        parent_statement = getattr(self.financials, statement_name, None)
+        sub_fins = sub.get_financials(period)
+        top_fins = self.get_financials(period)
+        sub_statement = getattr(sub_fins, statement_name, None)
+        top_statement = getattr(top_fins, statement_name, None)
 
         if sub.life.conceived:
             xl_only = False
         else:
             xl_only = True
 
-        if child_statement and parent_statement:
-            parent_statement.increment(
-                child_statement,
+        if sub_statement and top_statement:
+            top_statement.increment(
+                sub_statement,
                 consolidating=True,
                 xl_only=xl_only,
                 xl_label=sub.title,
@@ -745,11 +751,12 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         Method walks through lines in statement and delegates to
         BusinessUnit._derive_line() for all substantive derivation work.
         """
-        this_statement = getattr(self.financials, statement_name, None)
+        financials = self.get_financials(period)
+        this_statement = getattr(financials, statement_name, None)
 
         if this_statement:
             for line in this_statement.get_ordered():
-                self._derive_line(line)
+                self._derive_line(line, period)
 
     def _fit_to_period(self, time_period, recur=True):
         """
@@ -768,7 +775,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
             for unit in self.components.values():
                 unit._fit_to_period(time_period, recur)
 
-    def _load_starting_balance(self, period=None):
+    def _load_starting_balance(self, period):
         """
 
 
@@ -785,15 +792,18 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         # would look different (even though the bottom line would be the same).
 
         for unit in pool:
-            unit._load_starting_balance()
+            unit._load_starting_balance(period)
 
-        if self.past:
-            self.financials.starting = self.past.financials.ending
-            # bal_start = self.past.financials.ending.copy()
-            # bal_start.link_to(self.past.financials.ending)
-            # bal_start.set_name('starting balance sheet')
-            # self.financials.starting = bal_start
-            # Connect to the past
+        if period.past:
+            period_fins = self.get_financials(period)
+            before_fins = self.get_financials(period.past)
+            if before_fins:
+                period_fins.starting = before_fins.ending
+                # bal_start = before_fins.ending.copy()
+                # bal_start.link_to(before_fins.ending)
+                # bal_start.set_name('starting balance sheet')
+                # period_fins.starting = bal_start
+                # Connect to the past
 
     def _register_in_period(self, recur=True, overwrite=True):
         """
@@ -865,7 +875,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         comps.relationships.set_parent(self)
         self.components = comps
 
-    def _update_balance(self):
+    def _update_balance(self, period):
         """
 
 
@@ -875,8 +885,9 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         Connect starting balance sheet to past if available, copy shape to
         ending balance sheet.
         """
-        starting_balance = self.financials.starting
-        ending_balance = self.financials.ending
+        financials = self.get_financials(period)
+        starting_balance = financials.starting
+        ending_balance = financials.ending
 
         # Method expects balance sheet to come with accurate tables. We first
         # build the table in load_balance(). We then run consolidate(), which
