@@ -399,6 +399,8 @@ class Driver(TagsMixIn):
                 # formula_catalog.issue() only performs dict retrieval and
                 # return for key.
 
+                # import devhooks
+                # devhooks.lineval(line, period, formula)
                 params = self._build_params(parent=bu, period=period)
 
                 if not bb_settings.PREP_FOR_EXCEL:
@@ -494,8 +496,10 @@ class Driver(TagsMixIn):
             params.update(time_line.parameters)
         if period and hasattr(period, 'parameters'):
             params.update(period.parameters)
-        if parent and hasattr(parent, 'parameters'):
+        if parent:
             params.update(parent.parameters)
+        if period and hasattr(period, 'unit_parameters'):
+            params.update(period.unit_parameters.get(parent.id.bbid, {}))
         params.update(self.parameters)
 
         converted = self._map_params_to_formula(params)
@@ -503,6 +507,9 @@ class Driver(TagsMixIn):
         # Turn unique shared data into common variables that the formula can
         # understand. So a key like "lowest maintenance bid" becomes
         # "base annual expense".
+
+        # extra info needed by formulas
+        params['period'] = period
 
         return params
 

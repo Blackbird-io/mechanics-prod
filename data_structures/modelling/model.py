@@ -120,7 +120,7 @@ class Model(TagsMixIn):
         self.portal_data = dict()
         self.taxonomy = dict()
         self.transcript = []
-        self.time_line = TimeLine()
+        self.time_line = TimeLine(self)
         self.time_line.id.set_namespace(self.id.bbid)
 
         self.scenarios = dict()
@@ -256,7 +256,7 @@ class Model(TagsMixIn):
         if self.time_line.has_been_extrapolated:
             return
 
-        new_tl = TimeLine()
+        new_tl = TimeLine(self)
         new_tl.parameters = self.time_line.parameters.copy()
         new_tl.master = self.time_line.master.copy()
         new_tl.build(ref_date=ref_date)
@@ -314,8 +314,11 @@ class Model(TagsMixIn):
 
         Method returns the specified version of financials.
         """
-        unit = period.bu_directory[bbid]
-        fins = unit.financials
+        if bbid in period.financials:
+            fins = period.financials[bbid]
+        else:
+            unit = period.bu_directory[bbid]
+            fins = unit.financials
 
         return fins
 
