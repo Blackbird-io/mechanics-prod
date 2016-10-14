@@ -106,6 +106,9 @@ class UnitInfoChef:
 
     SCENARIO_ROW = 2
 
+    def __init__(self, model):
+        self.model = model
+
     def add_items_to_area(self, *pargs, sheet, area, items, active_column,
                           set_labels=True, format_func=None,
                           preference_order=[], group=True):
@@ -894,9 +897,13 @@ class UnitInfoChef:
                               timeline_params=time_params)
 
         if not current_only:
-            for snapshot in unit:
-                self._add_unit_params(sheet=sheet, unit=snapshot,
-                                      timeline_params=time_params)
+            time_line = self.model.get_timeline()
+            for period in time_line.iter_ordered():
+                if period.end > unit.period.end:
+                    self._add_unit_params(
+                        sheet=sheet, unit=period.content,
+                        timeline_params=time_params
+                    )
 
         sheet.bb.outline_level -= 1
 
