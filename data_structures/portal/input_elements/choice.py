@@ -82,7 +82,7 @@ class ChoiceInput(GenericInput):
         GenericInput.__init__(self,var_attrs)
         self.__dict__["input_type"] = "choice"
         self.entries = ["None","None"]
-        self.multi = ["False"]
+        self.multi = False
 
     def check_response(self, proposed_response):
         """
