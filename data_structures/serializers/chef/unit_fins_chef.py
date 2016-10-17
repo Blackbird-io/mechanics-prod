@@ -81,6 +81,7 @@ class UnitFinsChef:
     FUNCTIONS:
     add_financials()      adds dynamic Excel for given financials
     add_valuation_tab()   creates and fills in valuation tab
+    add_statement_container() adds a row group to hold a statement
     ====================  =====================================================
     """
     def __init__(self, model):

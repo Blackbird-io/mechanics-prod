@@ -251,23 +251,21 @@ class UnitChef:
         current = sheet.bb.time_line.columns.get_position(now.end)
         SheetStyle.set_column_width(sheet, current, width=22)
 
+        fins_chef = UnitFinsChef(self.model)
         financials = self.model.get_financials(unit.id.bbid, now)
         statement = financials.valuation
-        body_rows = sheet.bb.row_axis.get_group('body')
-        body_rows.calc_size()
-        statement_group = body_rows.add_group('statements', offset=1)
+        statement_rows = fins_chef.add_statement_container(sheet, statement)
         line_chef.chop_statement(
             sheet=sheet,
             column=current,
             statement=statement,
-            row_container=statement_group
+            row_container=statement_rows
         )
 
         # 1.5 add area and statement labels and sheet formatting
         SheetStyle.style_sheet(sheet)
-        # CellStyles.format_area_label(sheet, statement.name, statement_row)
 
-        # # 1.6 add selector cell
+        # 1.6 add selector cell
         #   Make scenario label cells
         info_chef = UnitInfoChef(self.model)
         info_chef.add_scenario_selector_logic(book, sheet)
