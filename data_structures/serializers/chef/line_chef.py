@@ -355,7 +355,6 @@ class LineChef:
         for line in statement.get_ordered():
             offset = 1 if BLANK_BETWEEN_TOP_LINES else 0
             line_rows = matter.add_group(line.title, offset=offset)
-
             self.chop_line(
                 sheet=sheet,
                 column=column,
@@ -654,7 +653,7 @@ class LineChef:
 
                 # as a temporary measure, introduce a placeholder for line
                 # coordinates
-                line_coordinates[k] = '###'  # placeholder
+                line_coordinates[k] = '#N/A'  # placeholder
 
         materials = dict()
         materials["lines"] = line_coordinates
