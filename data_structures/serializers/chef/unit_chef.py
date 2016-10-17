@@ -145,9 +145,6 @@ class UnitChef:
         # 2.5 add area and statement labels and sheet formatting
         SheetStyle.style_sheet(sheet)
 
-        # for statement, row in fins_dict.items():
-        #     CellStyles.format_area_label(sheet, statement, row)
-
         # 2.6 add selector cell
         #   Make scenario label cells
         info_chef.add_scenario_selector_logic(book, sheet)
