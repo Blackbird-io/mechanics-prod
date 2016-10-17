@@ -272,6 +272,7 @@ class UnitInfoChef:
                 master_cell.value = value
                 CellStyles.format_parameter(master_cell)
                 CellStyles.format_hardcoded(master_cell)
+                CellStyles.format_integer(master_cell)
             if value == master_cell.value:
                 link = template.format(coordinates=master_cell.coordinate)
                 active_cell.set_explicit_value(
