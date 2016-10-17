@@ -336,19 +336,7 @@ class LineChef:
 
         Method relies on sheet.bb.current_row being up-to-date.
         """
-        if title is None:
-            title = statement.title
-
-        statement_rows = row_container.add_group(
-            title,
-            # add a spacer between self and previous statement, if not first
-            offset=1 if row_container.groups else 0,
-        )
-
-        # Add title row and statement body
-        header = statement_rows.add_group('title', size=1, label=title, rank=1)
-        matter = statement_rows.add_group('lines')
-
+        matter = row_container.get_group('lines')
         sheet.bb.need_spacer = False
 
         check = statement.name != 'ending balance sheet'

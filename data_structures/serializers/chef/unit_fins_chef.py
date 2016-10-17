@@ -98,13 +98,6 @@ class UnitFinsChef:
         Method adds financials to worksheet and returns a dictionary of the
         statements added to the worksheet and their starting rows
         """
-        body_rows = sheet.bb.row_axis.get_group('body')
-        body_rows.calc_size()
-        statement_group = body_rows.add_group(
-            'statements',
-            offset=1,
-        )
-
         time_line = self.model.get_timeline()
         now = time_line.current_period
         for period in time_line.iter_ordered(open=now.end):
@@ -118,16 +111,17 @@ class UnitFinsChef:
                     else:
                         title = statement.title
                         start_bal = False
-
+                    statement_rows = self.add_statement_container(
+                        sheet, statement, title=title
+                    )
                     line_chef.chop_statement(
                         sheet=sheet,
                         statement=statement,
-                        row_container=statement_group,
+                        row_container=statement_rows,
                         column=column,
                         title=title,
                         start_bal=start_bal,
                     )
-                    body_rows.calc_size()
 
         # We're done with the first pass of chopping financials, now go back
         # and try to resolve problem_line issues.
@@ -137,70 +131,21 @@ class UnitFinsChef:
 
         return self.fins_dict
 
-
-    def add_financials(self, sheet, unit, period, column, set_labels=True):
-        """
-
-        UnitChef.add_financials() -> None
-
-        --``sheet`` must be an instance of openpyxl Worksheet
-        --``unit`` must be an instance of BusinessUnit
-        --``column`` must be a column number reference
-        --``set_labels`` must be a boolean; True will set labels for line
-
-        Method adds financials to worksheet and returns a dictionary of the
-        statements added to the worksheet and their starting rows
-        """
-        financials = self.model.get_financials(unit.id.bbid, period)
-        for name, statement in financials.chef_ordered():
-            if statement is not None:
-                sheet.bb.current_row += 1
-                sheet.bb.outline_level = 0
-
-                statement_row = sheet.bb.current_row + 1
-
-                if name == 'starting':
-                    title = 'Starting Balance Sheet'
-                    start_bal = True
-                else:
-                    title = statement.title
-                    start_bal = False
-
-                self.fins_dict[title] = statement_row
-                statement_rows = self._add_statement_rows(sheet, statement,
-                                                          title=title)
-                line_chef.chop_statement(
-                    sheet=sheet,
-                    statement=statement,
-                    column=column,
-                    row_container=statement_rows,
-                    set_labels=set_labels,
-                    start_bal=start_bal,
-                    title=title,
-                )
-
-        # We're done with the first pass of chopping financials, now go back
-        # and try to resolve problem_line issues.
-        while sheet.bb.problem_lines:
-            dr_data, materials = sheet.bb.problem_lines.pop()
-            line_chef.attempt_reference_resolution(sheet, dr_data, materials)
-
-    # *************************************************************************#
-    #                          NON-PUBLIC METHODS                              #
-    # *************************************************************************#
-    def _add_statement_rows(self, sheet, statement, title=None):
+    def add_statement_container(self, sheet, statement, title=None):
         """
 
         UnitChef._add_statement() -> AxisGroup
 
+        Adds row container for a statement, with a title and lines placeholder.
         """
-        statement_group = sheet.bb.row_axis.get_group('body', 'statements')
-        statement_group.calc_size()
+        body_rows = sheet.bb.row_axis.get_group('body')
+        body_rows.calc_size()
+        statement_group = body_rows.add_group('statements', offset=1)
 
         offset = 1 if statement_group.size else 0
-        name = title or statement.name
-        statement_rows = statement_group.add_group(name, offset=offset)
-        statement_rows.add_group('title', title=name, size=1)
-        statement_rows.add_group('matter', size=0)
+        label = title or statement.title
+        statement_rows = statement_group.add_group(label, offset=offset)
+        statement_rows.add_group('title', size=1, rank=1, label=label)
+        statement_rows.add_group('lines')
 
         return statement_rows
