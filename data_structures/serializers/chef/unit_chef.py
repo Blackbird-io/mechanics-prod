@@ -140,7 +140,7 @@ class UnitChef:
 
         # 2.4.  spread fins
         fins_chef = UnitFinsChef(model)
-        fins_dict = fins_chef.chop_financials(sheet, unit)
+        fins_chef.chop_financials(sheet, unit)
 
         # 2.5 add area and statement labels and sheet formatting
         SheetStyle.style_sheet(sheet)

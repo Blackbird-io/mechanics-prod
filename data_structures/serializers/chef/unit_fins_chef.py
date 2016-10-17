@@ -103,7 +103,6 @@ class UnitFinsChef:
         statement_group = body_rows.add_group(
             'statements',
             offset=1,
-            # offset=sheet.bb.current_row - body_rows.tip - 1 - param_group.size
         )
 
         time_line = self.model.get_timeline()
@@ -129,6 +128,12 @@ class UnitFinsChef:
                         start_bal=start_bal,
                     )
                     body_rows.calc_size()
+
+        # We're done with the first pass of chopping financials, now go back
+        # and try to resolve problem_line issues.
+        while sheet.bb.problem_lines:
+            dr_data, materials = sheet.bb.problem_lines.pop()
+            line_chef.attempt_reference_resolution(sheet, dr_data, materials)
 
         return self.fins_dict
 
