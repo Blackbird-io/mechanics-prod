@@ -121,7 +121,7 @@ class FullQuestion:
     _klasses["number"] = NumberInput
     _klasses["number-range"] = NumberRangeInput
     _klasses["time"] = TimeInput
-    _klasses["time-range"]= TimeRangeInput
+    _klasses["time-range"] = TimeRangeInput
     _klasses["text"] = TextInput
 
     def __init__(self):
@@ -199,7 +199,7 @@ class FullQuestion:
         Return True if the instance type and sub_type matches the profile of
         each of the elements in instance's input_array, False otherwise.
 
-        NOTE: Method will return False if elements are homogenous but instance
+        NOTE: Method will return False if elements are homogeneous but instance
         type is set to ``mixed``. We do this to encourage disciplined question
         crafting. Otherwise, we may start to always label questions ``mixed``.
         """
@@ -209,16 +209,17 @@ class FullQuestion:
         sub_types_in_array = set()
         for element in self.input_array:
             types_in_array.add(element.input_type)
-            sub_types_in_array.add(element.input_sub_type)
-##        #
-##        if self.conditional:
-##            if self.input_type != "binary":
-##                types_in_array.remove("binary")
-##        # Skip this step now that we store gating specs at instance.show_if
-        #
+
+            if element.input_sub_type is not None:
+                sub_types_in_array.add(element.input_sub_type)
+
         types_in_array = sorted(types_in_array)
-        sub_types_in_array = sorted(sub_types_in_array)
-        #
+
+        if sub_types_in_array:
+            sub_types_in_array = sorted(sub_types_in_array)
+        else:
+            sub_types_in_array = [None]
+
         if len(types_in_array) > 1:
             if self.input_type == "mixed":
                 result = True
@@ -451,4 +452,3 @@ class FullQuestion:
             else:
                 if attr_val:
                     setattr(self, attr_name, attr_val)
-

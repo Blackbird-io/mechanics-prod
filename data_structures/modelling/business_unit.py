@@ -727,7 +727,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         sub_statement = getattr(sub_fins, statement_name, None)
         top_statement = getattr(top_fins, statement_name, None)
 
-        if sub.life.conceived:
+        if sub.life.conceived(period):
             xl_only = False
         else:
             xl_only = True
