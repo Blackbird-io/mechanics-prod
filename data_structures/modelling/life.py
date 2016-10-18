@@ -202,8 +202,7 @@ class Life(Equalities):
 
         return stop_date
 
-    @property
-    def age(self):
+    def age(self, period=None):
         """
 
 
@@ -213,10 +212,14 @@ class Life(Equalities):
         Instance ref_date minus date of birth (or latest clock start event).
         """
         result = None
+        if period:
+            ref_date = period.end
+        else:
+            ref_date = self.ref_date
 
         date_of_birth = self._clock_starts
         if date_of_birth is not None:
-            result = self.ref_date - date_of_birth
+            result = ref_date - date_of_birth
 
         return result
 
