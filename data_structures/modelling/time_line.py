@@ -302,8 +302,6 @@ class TimeLine(TimelineBase):
                 period.combine_parameters()
                 # copy and fill out content
                 if seed.content:
-                    # new_content = seed.content.copy()
-                    # period.set_content(new_content, updateID=False)
                     seed.content.reset_financials(period=period)
                     seed.content.fill_out(period=period)
 
@@ -315,8 +313,7 @@ class TimeLine(TimelineBase):
             if bb_settings.DYNAMIC_EXTRAPOLATION:
                 if period.past and period.past.past:
                     if period.past.past.end > self.current_period.end:
-                        period.past.content.reset_financials()
-                        period.past.past.clear()
+                        period.past.past.financials.clear()
 
         if bb_settings.MAKE_ANNUAL_SUMMARIES:
             self.summary_builder.wrap()
