@@ -206,10 +206,11 @@ class Life(Equalities):
         """
 
 
-        **read-only property**
+        Life.age() --> timedelta
 
+        --``period`` is an instance of TimePeriod
 
-        Instance ref_date minus date of birth (or latest clock start event).
+        Method calculates age from period end date and birth date.
         """
         result = None
         if period:
