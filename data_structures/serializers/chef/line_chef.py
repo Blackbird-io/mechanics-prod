@@ -205,7 +205,8 @@ class LineChef:
                     column=column,
                     line=line,
                     set_labels=set_labels,
-                    indent=indent + LineItem.TAB_WIDTH
+                    indent=indent + LineItem.TAB_WIDTH,
+                    row_container = matter
                 )
 
         if details:
@@ -382,7 +383,7 @@ class LineChef:
                     raise BBAnalyticalError(c)
 
     def _add_consolidation_logic(self, *pargs, sheet, column, line,
-                                 set_labels=True, indent=0):
+                                 set_labels=True, indent=0, row_container=None):
         """
 
 
@@ -429,6 +430,7 @@ class LineChef:
             # chunker gives (label, source) pairs in chunks of "links_per_cell".
             # Each hit returns a links_per_cell-sized tuple of tuples.
             chunker = itertools.repeat(paired, links_per_cell)
+            cons_rows = row_container.add_group('cons')
             for source_list in itertools.zip_longest(*chunker):
                 batch_summation = ""
 
@@ -444,8 +446,11 @@ class LineChef:
                     batch_summation += link
 
                 if batch_summation:
-                    batch_cell = sheet.cell(column=column,
-                                            row=sheet.bb.current_row)
+                    finish = cons_rows.add_group(
+                        label_line, size=1, label=label_line,
+                        formatter=CellStyles.format_consolidated_label
+                    )
+                    batch_cell = sheet.cell(column=column, row=finish.number())
                     batch_cell.set_explicit_value(
                         batch_summation,
                         data_type=TypeCodes.FORMULA
@@ -467,6 +472,8 @@ class LineChef:
                 line.xl.consolidated.ending = sheet.bb.current_row
                 sheet.bb.current_row += 1
 
+            row_container.calc_size()
+
             # Group the cells
             alpha_column = get_column_letter(column)
             summation_params = {
@@ -476,8 +483,11 @@ class LineChef:
             }
 
             summation = FormulaTemplates.SUM_RANGE.format(**summation_params)
-            summation_cell = sheet.cell(column=column,
-                                        row=sheet.bb.current_row)
+            line_label = ((indent - LineItem.TAB_WIDTH) * " ") + line.title
+            finish = row_container.add_group(
+                line.title, size=1, label=line_label
+            )
+            summation_cell = sheet.cell(column=column, row=finish.number())
             summation_cell.set_explicit_value(summation,
                                               data_type=TypeCodes.FORMULA)
 
