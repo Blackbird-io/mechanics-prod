@@ -160,15 +160,12 @@ class LineChef:
 
         if line.xl.format.blank_row_before and not details:
             sheet.bb.need_spacer = True
-
-        # add an axis placeholder for this line
-        group_label = indent * " " + line.title
-        matter = row_container.add_group(
-            group_label,
-            size=0,
-            offset=1 if sheet.bb.need_spacer else 0,
-            label=group_label
-        )
+        if sheet.bb.need_spacer:
+            if not row_container.offset:
+                row_container.tip += 1
+                row_container.offset = 1
+            sheet.bb.current_row += 1
+            sheet.bb.need_spacer = False
 
         # a line with own content should have no children with own content,
         # and should not consolidate
@@ -178,11 +175,11 @@ class LineChef:
             line.hardcoded,
         ))
 
-        sheet.bb.current_row = matter.tip
+        sheet.bb.current_row = row_container.tip
         run_segments = True
 
         if not start_bal:
-            # row_group = matter.add_group('reference')
+            row_group = row_container.add_group('reference')
             self._add_reference(
                 sheet=sheet,
                 column=column,
@@ -190,38 +187,36 @@ class LineChef:
                 set_labels=set_labels,
                 indent=indent
             )
-            # row_group.size = sheet.bb.current_row - row_group.tip
+            row_group.size = sheet.bb.current_row - row_group.tip
 
-            # row_group = matter.add_group('derivation')
+            row_group = row_container.add_group('derivation')
             self._add_derivation_logic(
                 sheet=sheet,
                 column=column,
                 line=line,
                 set_labels=set_labels,
-                indent=indent + LineItem.TAB_WIDTH,
-                row_container=matter,
+                indent=indent + LineItem.TAB_WIDTH
             )
-            # row_group.size = sheet.bb.current_row - row_group.tip
+            row_group.size = sheet.bb.current_row - row_group.tip
 
             if line.has_own_content:
                 # throw an error if any of consolidation sources have content
                 self._validate_consolidation(sheet, line)
             else:
-                # row_group = row_container.add_group('consolidation')
+                row_group = row_container.add_group('consolidation')
                 self._add_consolidation_logic(
                     sheet=sheet,
                     column=column,
                     line=line,
                     set_labels=set_labels,
-                    indent=indent + LineItem.TAB_WIDTH,
-                    row_container=matter,
+                    indent=indent + LineItem.TAB_WIDTH
                 )
-                # row_group.size = sheet.bb.current_row - row_group.tip
+                row_group.size = sheet.bb.current_row - row_group.tip
 
         if details:
             sub_indent = indent + LineItem.TAB_WIDTH
             detail_summation = ""
-            detail_group = matter.add_group('details')
+            detail_group = row_container.add_group('details')
 
             for detail in details:
                 detail_rows = detail_group.add_group(detail.name)
@@ -248,17 +243,16 @@ class LineChef:
 
                 if line.xl.format.blank_row_before:
                     sheet.bb.current_row += 1
-                    matter.add_group('spacer_details', size=1)
+                    row_container.add_group('spacer_details', size=1)
 
-                label = indent * " " + line.title  # + ': details'
-                finish = matter.add_group(label, size=1, label=label)
+                row_container.add_group('details_summary', size=1)
 
                 # Should group all the details here
-                sheet.bb.current_row = finish.number()
+                sheet.bb.current_row += 1
                 sheet.bb.outline_level = 0
 
                 subtotal_cell = sheet.cell(column=column,
-                                           row=finish.number())
+                                           row=sheet.bb.current_row)
                 subtotal_cell.set_explicit_value(detail_summation,
                                                  data_type=TypeCodes.FORMULA)
 
@@ -298,14 +292,14 @@ class LineChef:
                 run_segments = False
 
         if not line.xl.reference.source and run_segments:
+            segment_group = row_container.add_group('segments')
             self._combine_segments(
                 sheet=sheet,
                 column=column,
                 line=line,
                 set_labels=set_labels,
-                indent=indent,
-                row_container=matter,
-            )
+                indent=indent)
+            segment_group.size = sheet.bb.current_row - segment_group.tip
 
         CellStyles.format_line(line)
 
@@ -319,12 +313,8 @@ class LineChef:
 
         if line.xl.format.blank_row_after:
             sheet.bb.need_spacer = True
-            print('sss a', line.title)
-        else:
-            sheet.bb.need_spacer = False
 
         row_container.calc_size()
-        # print('::', matter.name, matter.number(), matter.size, len(line.xl.derived.calculations), '>>', column)
 
         return sheet
 
@@ -348,22 +338,19 @@ class LineChef:
         """
         matter = row_container.get_group('lines')
         sheet.bb.need_spacer = False
-        sheet.bb.current_row = matter.number()
 
         check = statement.name != 'ending balance sheet'
         for line in statement.get_ordered():
-            # offset = 1 if BLANK_BETWEEN_TOP_LINES else 0
-            # line_rows = matter.add_group(line.title, offset=offset)
+            offset = 1 if BLANK_BETWEEN_TOP_LINES else 0
+            line_rows = matter.add_group(line.title, offset=offset)
             self.chop_line(
                 sheet=sheet,
                 column=column,
                 line=line,
-                row_container=matter,
+                row_container=line_rows,
                 check=check,
                 start_bal=start_bal
             )
-
-            # break
 
         if len(statement.get_ordered()) == 0:
             sheet.bb.need_spacer = True
@@ -371,7 +358,6 @@ class LineChef:
         else:
             sheet.bb.need_spacer = False
 
-        # if statement has no lines, add an extra blank row
         if not matter.groups:
             matter.size = 1
 
@@ -407,7 +393,7 @@ class LineChef:
                     raise BBAnalyticalError(c)
 
     def _add_consolidation_logic(self, *pargs, sheet, column, line,
-                                 set_labels=True, indent=0, row_container=None):
+                                 set_labels=True, indent=0):
         """
 
 
@@ -469,7 +455,6 @@ class LineChef:
                     batch_summation += link
 
                 if batch_summation:
-                    summer = row_container.add_group(label_line, size=1, label=label_line)
                     batch_cell = sheet.cell(column=column,
                                             row=sheet.bb.current_row)
                     batch_cell.set_explicit_value(
@@ -501,10 +486,9 @@ class LineChef:
                 "alpha_column": alpha_column
             }
 
-            label = ((indent - LineItem.TAB_WIDTH) * " ") + line.title
-            finish = row_container.add_group(label, size=1, label=label)
             summation = FormulaTemplates.SUM_RANGE.format(**summation_params)
-            summation_cell = sheet.cell(column=column, row=finish.number())
+            summation_cell = sheet.cell(column=column,
+                                        row=sheet.bb.current_row)
             summation_cell.set_explicit_value(summation,
                                               data_type=TypeCodes.FORMULA)
 
@@ -524,7 +508,7 @@ class LineChef:
         return sheet
 
     def _add_derivation_logic(self, *pargs, sheet, column, line,
-                              set_labels=True, indent=0, row_container=None):
+                              set_labels=True, indent=0):
         """
 
         LineChef._add_derivation_logic() -> Worksheet
@@ -542,11 +526,9 @@ class LineChef:
         if not line.xl.derived.calculations:
             pass
         else:
-            sheet.bb.current_row = row_container.tip
             set_param_rows(line, sheet)
             sheet.bb.outline_level += 1
             for data_cluster in line.xl.derived.calculations:
-                print(data_cluster, sheet.bb.current_row, row_container.number(), column)
 
                 sheet.bb.current_row += 1
                 group_lines(sheet)
@@ -557,9 +539,7 @@ class LineChef:
                     line=line,
                     driver_data=data_cluster,
                     set_labels=set_labels,
-                    indent=indent,
-                    row_container=row_container,
-                )
+                    indent=indent)
 
             # NOTE: No summation at the end of the derive process. Final
             # derived value may OR MAY NOT be the sum of priors. Up to
@@ -568,7 +548,7 @@ class LineChef:
         return sheet
 
     def _add_driver_calculation(self, *pargs, sheet, column, line, driver_data,
-                                set_labels=True, indent=0, row_container=None):
+                                set_labels=True, indent=0):
         """
 
 
@@ -592,15 +572,16 @@ class LineChef:
         label_column = cols.get_position(FieldNames.LABELS)
         period_column = column
 
-        param_rows = row_container.add_group('params', size=0)
         for row_data in sorted(driver_data.rows,
                                key=lambda x: x[FieldNames.LABELS]):
 
             private_label = row_data[FieldNames.LABELS]
             private_value = row_data[FieldNames.VALUES]
-            indented_label = (indent * " ") + private_label
 
             if private_label and set_labels:
+
+                indented_label = (indent * " ") + private_label
+
                 set_label(
                     sheet=sheet,
                     label=indented_label,
@@ -610,7 +591,6 @@ class LineChef:
 
             group_lines(sheet)
 
-            source = param_rows.add_group(indented_label, size=1, label=indented_label)
             param_cell = sheet.cell(column=period_column,
                                     row=sheet.bb.current_row)
 
@@ -699,8 +679,6 @@ class LineChef:
         n_items = len(driver_data.formula.items())
         count = 0
 
-        row_container.calc_size()
-        print(param_rows.size)
         formula_steps = self._get_formula_steps(sheet, line, driver_data)
         for key in formula_steps:
             count += 1
@@ -719,9 +697,8 @@ class LineChef:
 
                 raise ExcelPrepError
 
-            label = ((indent - LineItem.TAB_WIDTH) * " ") + line.title
-            finish = row_container.add_group(label, size=1, label=label)
-            calc_cell = sheet.cell(column=period_column, row=finish.number())
+            calc_cell = sheet.cell(column=period_column,
+                                   row=sheet.bb.current_row)
             calc_cell.set_explicit_value(formula, data_type=TypeCodes.FORMULA)
 
             # add current step to materials dictionary
@@ -773,7 +750,8 @@ class LineChef:
                 group_lines(sheet)
 
                 if set_labels:
-                    label = ((indent - LineItem.TAB_WIDTH) * " ") + line.title
+                    label = ((indent - LineItem.TAB_WIDTH) * " ") \
+                        + line.tags.title
                     set_label(sheet=sheet, label=label,
                                     row=sheet.bb.current_row)
 
@@ -848,8 +826,8 @@ class LineChef:
         if not processed:
             label = indent * " " + line.title
             if row_container:
-                finish = row_container.add_group(label, size=1, label=label)
-                sheet.bb.current_row = finish.number()
+                row_container.add_group(label, size=1, label=label)
+                sheet.bb.current_row = row_container.number()
             else:
                 sheet.bb.current_row += 1
             cell = sheet.cell(column=column, row=sheet.bb.current_row)

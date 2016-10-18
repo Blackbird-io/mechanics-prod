@@ -406,12 +406,9 @@ class SummaryChef:
 
         # actual header labels, years and (possibly) quarters and months
         # nested in the form: years.2017.quarters.1Q17.months.2017-01-01
-        company = timeline.current_period.content
-        for date, period in sorted(timeline.items()):
-            if date < company.period.end:
-                continue
-            if not period.content:
-                continue
+        now = timeline.current_period
+        for period in timeline.iter_ordered(open=now.end):
+            date = period.end
             # container for quarters (if requested) and year
             year_colgroup = years_cols.add_group(date.year)
             # label for quarter column
@@ -456,14 +453,13 @@ class SummaryChef:
         """
         complete_label_rows = output_rows.get_group('complete_label')
         available_months_rows = output_rows.get_group('available_months')
+        # top-level unit is shown on the summary page
+        unit = self.model.get_company()
 
         for period in timeline.iter_ordered():
             column = col_selector(period.end)
             if not column:
                 continue
-
-            # top-level unit is shown on the summary page
-            unit = self.model.get_company()
             financials = self.model.get_financials(unit.id.bbid, period)
 
             # Complete T/F
