@@ -202,84 +202,6 @@ class Life(Equalities):
 
         return stop_date
 
-    def age(self, period=None):
-        """
-
-
-        Life.age() --> timedelta
-
-        --``period`` is an instance of TimePeriod
-
-        Method calculates age from period end date and birth date.
-        """
-        result = None
-        if period:
-            ref_date = period.end
-        else:
-            ref_date = self.ref_date
-
-        date_of_birth = self._clock_starts
-        if date_of_birth is not None:
-            result = ref_date - date_of_birth
-
-        return result
-
-    @property
-    def alive(self):
-        """
-
-
-        **read-only property**
-
-
-        True if instance ref date is in [birth, death), False otherwise.
-        """
-        result = False
-        birth = self._clock_starts
-        death = self._clock_stops
-        if death is None:
-            if birth <= self.ref_date:
-                result = True
-        else:
-            if birth <= self.ref_date < death:
-                result = True
-        #
-        return result
-
-    @property
-    def conceived(self):
-        """
-
-
-        **read-only property**
-
-
-        True if conception < ref_date, False otherwise. Generally represents
-        point when an object can start affecting its environment.
-        """
-        result = False
-        conception = self.events.get(self.KEY_CONCEPTION)
-        if conception:
-            if conception < self.ref_date:
-                result = True
-        return result
-
-    @property
-    def percent(self):
-        """
-
-
-        **read-only property**
-
-
-        Quotient of age over span, multiplied by 100 and rounded to integer.
-        """
-        result = None
-        if self.span is not None:
-            result = (self.age/self.span) * 100
-            result = round(result)
-        return result
-
     @property
     def ref_date(self):
         """
@@ -326,6 +248,90 @@ class Life(Equalities):
         self.events[self.KEY_OLD_AGE] = (
             birth + (value * self.PERCENT_OLD_AGE / 100)
             )
+
+    def age(self, period=None):
+        """
+
+
+        Life.age() --> timedelta
+
+        --``period`` is an instance of TimePeriod
+
+        Method calculates age from period end date and birth date.
+        """
+        result = None
+        if period:
+            ref_date = period.end
+        else:
+            ref_date = self.ref_date
+
+        date_of_birth = self._clock_starts
+        if date_of_birth is not None:
+            result = ref_date - date_of_birth
+
+        return result
+
+    def alive(self, period=None):
+        """
+
+
+        Life.alive() --> bool
+
+        --``period`` is an instance of TimePeriod
+
+        True if period end date is in [birth, death), False otherwise.
+        """
+        result = False
+        birth = self._clock_starts
+        death = self._clock_stops
+        if death is None:
+            if birth <= self.ref_date:
+                result = True
+        else:
+            if birth <= self.ref_date < death:
+                result = True
+        #
+        return result
+
+    def conceived(self, period=None):
+        """
+
+
+        Life.conceived() --> bool
+
+        --``period`` is an instance of TimePeriod
+
+        True if conception < period end date, False otherwise. Generally
+        represents point when an object can start affecting its environment.
+        """
+        result = False
+        if period:
+            ref_date = period.end
+        else:
+            ref_date = self.ref_date
+
+        conception = self.events.get(self.KEY_CONCEPTION)
+        if conception:
+            if conception < ref_date:
+                result = True
+
+        return result
+
+    def percent(self, period=None):
+        """
+
+
+        Life.percent() --> int
+
+        --``period`` is an instance of TimePeriod
+
+        Quotient of age over span, multiplied by 100 and rounded to integer.
+        """
+        result = None
+        if self.span is not None:
+            result = (self.age(period) / self.span) * 100
+            result = round(result)
+        return result
 
     def set_ref_date(self, value):
         """
