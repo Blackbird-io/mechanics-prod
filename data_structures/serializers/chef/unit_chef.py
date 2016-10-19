@@ -233,16 +233,8 @@ class UnitChef:
 
         # 1.1   set-up life
         info_chef.unit_life(sheet, unit, current_only=True)
-        sheet.bb.current_row += 1
-        # sheet = info_chef.add_unit_life(sheet=sheet, unit=unit)
-        sheet.bb.outline_level -= 1
 
         # 1.2  Add Valuation statement
-        # sheet.bb.current_row = sheet.bb.events.rows.ending
-        # sheet.bb.current_row += 1
-
-
-        # statement_row = sheet.bb.current_row + 1
         time_line = self.model.get_timeline()
         now = time_line.current_period
         current = sheet.bb.time_line.columns.get_position(now.end)
