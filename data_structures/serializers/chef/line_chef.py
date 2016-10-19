@@ -191,9 +191,9 @@ class LineChef:
                 sheet=sheet,
                 column=column,
                 line=line,
-                set_labels=set_labels,
-                indent=indent + LineItem.TAB_WIDTH,
-                row_container=matter
+                indent=indent,
+                row_container=matter,
+                set_labels = set_labels,
             )
 
             if line.has_own_content:
@@ -205,7 +205,7 @@ class LineChef:
                     column=column,
                     line=line,
                     set_labels=set_labels,
-                    indent=indent + LineItem.TAB_WIDTH,
+                    indent=indent,
                     row_container = matter
                 )
 
@@ -423,7 +423,7 @@ class LineChef:
 
                 for label, source_line in source_list:
                     if label:
-                        sub_indent = indent + LineItem.TAB_WIDTH
+                        sub_indent = indent + LineItem.TAB_WIDTH * 2
                         label_line = (sub_indent * " ") + label
                     include = source_line.xl.cell.parent is not sheet
                     source_cos = source_line.xl.get_coordinates(
@@ -457,7 +457,7 @@ class LineChef:
             }
 
             summation = FormulaTemplates.SUM_RANGE.format(**summation_params)
-            line_label = ((indent - LineItem.TAB_WIDTH) * " ") + line.title
+            line_label = indent * " " + line.title
             finish = row_container.add_group(
                 line.title, size=1, label=line_label
             )
@@ -539,7 +539,7 @@ class LineChef:
 
             private_label = row_data[FieldNames.LABELS]
             private_value = row_data[FieldNames.VALUES]
-            line_label = (indent * " ") + private_label
+            line_label = (indent + LineItem.TAB_WIDTH) * " " + private_label
 
             group_lines(sheet)
             finish = param_rows.add_group(
@@ -654,10 +654,10 @@ class LineChef:
 
             # all but the last step are indented an extra level
             if count < n_items:
-                line_label = indent * " " + key
+                line_label = (indent + LineItem.TAB_WIDTH) * " " + key
                 outline = 1
             else:
-                line_label = (indent - LineItem.TAB_WIDTH) * " " + line.title
+                line_label = indent * " " + line.title
                 outline = 0
             finish = row_container.add_group(
                 key, size=1, label=line_label, outline=outline
