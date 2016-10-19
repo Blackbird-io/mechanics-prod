@@ -216,14 +216,12 @@ class TimeLine(TimelineBase):
 
         Clear content from past and future, preserve current_period.
         """
-        past, present, future = self.get_segments()
-        to_delete = past + future
-        for date in to_delete:
-            period = self[date]
-            period.clear()
-        #<-----------------------------------------------------------------have to dereference history
-            # have to do so recursively, to make sure that none of the objects retain their external
-            # pointers.
+        for period in self.iter_ordered():
+            if period.end != self.current_period.end:
+                period.clear()
+        # have to dereference history
+        # have to do so recursively, to make sure that none of the objects
+        # retain their external pointers.
 
     def clear_future(self, seed=None):
         """
@@ -401,7 +399,7 @@ class TimeLine(TimelineBase):
                 q_date = date.fromtimestamp(query)
             except TypeError:
                 num_query = [int(x) for x in query.split("-")]
-                #query is a string, split it
+                # query is a string, split it
                 q_date = date(*num_query)
         end_date = self._get_ref_end_date(q_date)
         result = self[end_date]
@@ -428,7 +426,7 @@ class TimeLine(TimelineBase):
         #
         dates = sorted(self.keys())
         ref_spot = dates.index(ref_end)
-        future_dates = dates[(ref_spot + 1 ): ]
+        future_dates = dates[(ref_spot + 1):]
         past_dates = dates[:ref_spot]
         result = [past_dates, [ref_end], future_dates]
         return result
@@ -472,14 +470,12 @@ class TimeLine(TimelineBase):
 
         Method returns the starting date of the next month.
         """
-        result = None
-        ref_day = ref_date.day
         ref_month = ref_date.month
         ref_year = ref_date.year
         if ref_month == 12:
-            result = date(ref_year+1,1,1)
+            result = date(ref_year + 1, 1, 1)
         else:
-            result = date(ref_year,ref_month+1,1)
+            result = date(ref_year, ref_month + 1, 1)
         return result
 
     def _get_ref_end_date(self, ref_date):
