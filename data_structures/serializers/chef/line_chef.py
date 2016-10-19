@@ -160,12 +160,11 @@ class LineChef:
 
         if line.xl.format.blank_row_before and not details:
             sheet.bb.need_spacer = True
-        offset = 0
-        if sheet.bb.need_spacer:
-            if row_container.groups or not row_container.offset:
-                offset = 1
         line_label = indent * " " + line.title
-        matter = row_container.add_group(line.title, offset=offset)
+        matter = row_container.add_group(
+            line.title, offset=int(sheet.bb.need_spacer)
+        )
+        sheet.bb.need_spacer = False
         row_container.calc_size()
 
         # a line with own content should have no children with own content,
@@ -423,7 +422,6 @@ class LineChef:
             sheet.bb.current_row += 1
             sheet.bb.outline_level += 1
 
-            line.xl.consolidated.starting = sheet.bb.current_row
             line.xl.consolidated.array.clear()
 
             # the outer iter converts the sorted list into an iterator
@@ -471,12 +469,13 @@ class LineChef:
                 group_lines(sheet)
 
                 # Move on to next row
-                line.xl.consolidated.ending = sheet.bb.current_row
                 sheet.bb.current_row += 1
 
             row_container.calc_size()
 
             # Group the cells
+            line.xl.consolidated.starting = line.xl.consolidated.array[0].row
+            line.xl.consolidated.ending = line.xl.consolidated.array[-1].row
             alpha_column = get_column_letter(column)
             summation_params = {
                 "starting_row": line.xl.consolidated.starting,
@@ -604,7 +603,7 @@ class LineChef:
 
             param_cell.value = private_value
 
-            relative_position = sheet.bb.current_row \
+            relative_position = finish.number() \
                 - (private_data.rows.starting or 0)
             private_data.rows.by_name[private_label] = relative_position
             # ... In this particular case, we could map a specific cell
@@ -784,7 +783,7 @@ class LineChef:
         (e.g. new_cell.value = '=C18')
         """
         if line.xl.reference.source:
-            line_label = indent * " " + line.title
+            line_label = indent * " " + line.title  # + ': ref'
             finish = row_container.add_group(
                 line.title, size=1, label=line_label
             )
@@ -830,9 +829,9 @@ class LineChef:
             line.xl.detailed.cell or line.xl.reference.cell
 
         if not processed:
-            line_label = indent * " " + line.title
+            line_label = indent * " " + line.title  # + ': segment'
             finish = row_container.add_group(
-                line_label, size=1, label=line_label
+                line.title, size=1, label=line_label
             )
             cell = sheet.cell(column=column, row=finish.number())
 
