@@ -159,13 +159,13 @@ class LineChef:
         details = line.get_ordered()
 
         if line.xl.format.blank_row_before and not details:
-            sheet.bb.need_spacer = True
+            # if row_container.groups or not row_container.offset:
+                sheet.bb.need_spacer = True
         line_label = indent * " " + line.title
         matter = row_container.add_group(
             line.title, offset=int(sheet.bb.need_spacer)
         )
         sheet.bb.need_spacer = False
-        row_container.calc_size()
 
         # a line with own content should have no children with own content,
         # and should not consolidate
@@ -255,11 +255,6 @@ class LineChef:
                 line.xl.detailed.cell = subtotal_cell
                 line.xl.cell = subtotal_cell
 
-                # if set_labels:
-                #     set_label(sheet=sheet,
-                #               label=line_label,
-                #               row=sheet.bb.current_row)
-
             if start_bal:
                 run_segments = False
         elif start_bal:
@@ -294,9 +289,9 @@ class LineChef:
 
         CellStyles.format_line(line)
 
-        # # for row alignment
-        # if check:
-        #     check_alignment(line)
+        # for row alignment
+        if check:
+            check_alignment(line)
 
         if check and not start_bal:
             if line.id.bbid not in sheet.bb.line_directory.keys():
@@ -344,7 +339,6 @@ class LineChef:
                 set_labels=set_labels
             )
             row_container.calc_size()
-            # break
 
         if not matter.groups:
             matter.size = 1
@@ -454,14 +448,6 @@ class LineChef:
                     )
 
                     line.xl.consolidated.array.append(batch_cell)
-
-                    # if label:
-                    #     set_label(
-                    #         sheet=sheet,
-                    #         label=label_line,
-                    #         row=sheet.bb.current_row,
-                    #         formatter=CellStyles.format_consolidated_label
-                    #     )
 
                 group_lines(sheet)
 

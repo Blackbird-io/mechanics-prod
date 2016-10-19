@@ -43,6 +43,7 @@ class CashFlowStatement(Statement):
         Statement.__init__(self, name="cash flow statement", parent=parent)
 
         net_cash_line = LineItem('Total net cash flow')
+        net_cash_line.xl.format.blank_row_after = True
         self.add_top_line(net_cash_line)
 
         operating = LineItem(name="Cash from operations")
