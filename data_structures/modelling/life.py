@@ -282,15 +282,20 @@ class Life(Equalities):
         True if period end date is in [birth, death), False otherwise.
         """
         result = False
+        if period:
+            ref_date = period.end
+        else:
+            ref_date = self.ref_date
         birth = self._clock_starts
         death = self._clock_stops
+
         if death is None:
-            if birth <= self.ref_date:
+            if birth <= ref_date:
                 result = True
         else:
-            if birth <= self.ref_date < death:
+            if birth <= ref_date < death:
                 result = True
-        #
+
         return result
 
     def conceived(self, period=None):
