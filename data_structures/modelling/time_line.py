@@ -317,8 +317,8 @@ class TimeLine(TimelineBase):
         if bb_settings.MAKE_ANNUAL_SUMMARIES:
             self.summary_builder.wrap()
 
-        # import devhooks
-        # devhooks.picksize(self)
+        import devhooks
+        devhooks.picksize(self)
         self.has_been_extrapolated = True
 
     def extrapolate_dates(self, seed, dates, backward=False):
