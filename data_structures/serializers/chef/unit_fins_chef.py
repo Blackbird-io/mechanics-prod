@@ -31,12 +31,7 @@ UnitFinsChef          class containing methods for chopping unit financials
 # Imports
 import openpyxl as xlio
 
-from .cell_styles import CellStyles
 from .line_chef import LineChef
-from .sheet_style import SheetStyle
-from .unit_info_chef import UnitInfoChef
-
-from chef_settings import VALUATION_TAB_COLOR
 
 
 
