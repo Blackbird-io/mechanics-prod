@@ -160,11 +160,12 @@ class LineChef:
 
         if line.xl.format.blank_row_before and not details:
             sheet.bb.need_spacer = True
-
+        offset = 0
+        if sheet.bb.need_spacer:
+            if row_container.groups or not row_container.offset:
+                offset = 1
         line_label = indent * " " + line.title
-        matter = row_container.add_group(
-            line.title, offset=int(sheet.bb.need_spacer)
-        )
+        matter = row_container.add_group(line.title, offset=offset)
         row_container.calc_size()
 
         # a line with own content should have no children with own content,
@@ -184,7 +185,8 @@ class LineChef:
                 column=column,
                 line=line,
                 set_labels=set_labels,
-                indent=indent
+                indent=indent,
+                row_container=matter
             )
 
             self._add_derivation_logic(
@@ -237,9 +239,9 @@ class LineChef:
 
                 if line.xl.format.blank_row_before:
                     sheet.bb.current_row += 1
-                    row_container.add_group('spacer_details', size=1)
+                    matter.add_group('spacer_details', size=1)
 
-                finish = row_container.add_group(
+                finish = matter.add_group(
                     line_label, size=1, label=line_label
                 )
 
@@ -255,17 +257,15 @@ class LineChef:
                 line.xl.detailed.cell = subtotal_cell
                 line.xl.cell = subtotal_cell
 
-                if set_labels:
-                    set_label(sheet=sheet,
-                              label=line_label,
-                              row=sheet.bb.current_row)
+                # if set_labels:
+                #     set_label(sheet=sheet,
+                #               label=line_label,
+                #               row=sheet.bb.current_row)
 
             if start_bal:
                 run_segments = False
         elif start_bal:
             if line.xl.cell:
-                row_group = row_container.add_group('reference')
-
                 # here just link the current cell to the cell in line.xl.cell
                 old_cell = line.xl.cell
                 line.xl.reference.source = line
@@ -274,7 +274,9 @@ class LineChef:
                     column=column,
                     line=line,
                     set_labels=set_labels,
-                    indent=indent)
+                    indent=indent,
+                    row_container=matter
+                )
 
                 CellStyles.format_line(line)
 
@@ -282,7 +284,6 @@ class LineChef:
                 line.xl.reference.cell = None
                 line.xl.cell = old_cell
 
-                row_group.size = sheet.bb.current_row - row_group.tip
                 run_segments = False
 
         if not line.xl.reference.source and run_segments:
@@ -297,9 +298,9 @@ class LineChef:
 
         CellStyles.format_line(line)
 
-        # for row alignment
-        if check:
-            check_alignment(line)
+        # # for row alignment
+        # if check:
+        #     check_alignment(line)
 
         if check and not start_bal:
             if line.id.bbid not in sheet.bb.line_directory.keys():
@@ -316,7 +317,7 @@ class LineChef:
 
     def chop_statement(
         self, sheet, column, statement, row_container=None,
-        start_bal=False, title=None
+        start_bal=False, title=None, set_labels=False
     ):
         """
 
@@ -343,7 +344,8 @@ class LineChef:
                 line=line,
                 row_container=matter,
                 check=check,
-                start_bal=start_bal
+                start_bal=start_bal,
+                set_labels=set_labels
             )
             row_container.calc_size()
             # break
@@ -458,13 +460,13 @@ class LineChef:
 
                     line.xl.consolidated.array.append(batch_cell)
 
-                    if label:
-                        set_label(
-                            sheet=sheet,
-                            label=label_line,
-                            row=sheet.bb.current_row,
-                            formatter=CellStyles.format_consolidated_label
-                        )
+                    # if label:
+                    #     set_label(
+                    #         sheet=sheet,
+                    #         label=label_line,
+                    #         row=sheet.bb.current_row,
+                    #         formatter=CellStyles.format_consolidated_label
+                    #     )
 
                 group_lines(sheet)
 
@@ -494,11 +496,11 @@ class LineChef:
             line.xl.consolidated.cell = summation_cell
             line.xl.cell = summation_cell
 
-            if set_labels:
-                label = line.tags.title
-                label = ((indent - LineItem.TAB_WIDTH) * " ") + label
-                set_label(sheet=sheet, label=label,
-                          row=sheet.bb.current_row)
+            # if set_labels:
+            #     label = line.tags.title
+            #     label = ((indent - LineItem.TAB_WIDTH) * " ") + label
+            #     set_label(sheet=sheet, label=label,
+            #               row=sheet.bb.current_row)
 
             line.xl.consolidated.ending = sheet.bb.current_row
 
@@ -528,7 +530,6 @@ class LineChef:
             set_param_rows(line, sheet)
             sheet.bb.outline_level += 1
             for data_cluster in line.xl.derived.calculations:
-
                 sheet.bb.current_row += 1
                 group_lines(sheet)
 
@@ -581,13 +582,13 @@ class LineChef:
             private_value = row_data[FieldNames.VALUES]
             line_label = (indent * " ") + private_label
 
-            if private_label and set_labels:
-                set_label(
-                    sheet=sheet,
-                    label=line_label,
-                    row=sheet.bb.current_row,
-                    column=label_column
-                )
+            # if private_label and set_labels:
+            #     set_label(
+            #         sheet=sheet,
+            #         label=line_label,
+            #         row=sheet.bb.current_row,
+            #         column=label_column
+            #     )
 
             group_lines(sheet)
             finish = param_rows.add_group(line_label, size=1, label=line_label)
@@ -697,9 +698,13 @@ class LineChef:
 
                 raise ExcelPrepError
 
-            line_label = ((indent - LineItem.TAB_WIDTH) * " ") + line.title
+            # all but the last step are indented an extra level
+            if count < n_items:
+                line_label = indent * " " + key
+            else:
+                line_label = (indent - LineItem.TAB_WIDTH) * " " + line.title
             finish = row_container.add_group(
-                line_label, size=1, label=line_label
+                key, size=1, label=line_label
             )
             calc_cell = sheet.cell(column=period_column, row=finish.number())
             calc_cell.set_explicit_value(formula, data_type=TypeCodes.FORMULA)
@@ -742,21 +747,21 @@ class LineChef:
             if count < n_items:
                 group_lines(sheet)
 
-                if set_labels:
-                    label = (indent * " ") + key
-                    set_label(sheet=sheet, label=label,
-                                    row=sheet.bb.current_row)
+                # if set_labels:
+                #     label = (indent * " ") + key
+                #     set_label(sheet=sheet, label=label,
+                #                     row=sheet.bb.current_row)
 
                 sheet.bb.current_row += 1
             else:
                 sheet.bb.outline_level = 0
                 group_lines(sheet)
 
-                if set_labels:
-                    label = ((indent - LineItem.TAB_WIDTH) * " ") \
-                        + line.tags.title
-                    set_label(sheet=sheet, label=label,
-                                    row=sheet.bb.current_row)
+                # if set_labels:
+                #     label = ((indent - LineItem.TAB_WIDTH) * " ") \
+                #         + line.tags.title
+                #     set_label(sheet=sheet, label=label,
+                #                     row=sheet.bb.current_row)
 
         return sheet
 
@@ -779,13 +784,11 @@ class LineChef:
         (e.g. new_cell.value = '=C18')
         """
         if line.xl.reference.source:
-            line_label = indent * " " + line.tags.title
-            if row_container:
-                row_container.add_group(line.title, size=1, label=label)
-                sheet.bb.current_row = row_container.number()
-            else:
-                sheet.bb.current_row += 1
-            cell = sheet.cell(column=column, row=sheet.bb.current_row)
+            line_label = indent * " " + line.title
+            finish = row_container.add_group(
+                line.title, size=1, label=line_label
+            )
+            cell = sheet.cell(column=column, row=finish.number())
 
             ref_cell = line.xl.reference.source.xl.cell
             include = ref_cell.parent is not sheet
@@ -794,15 +797,15 @@ class LineChef:
 
             cell.set_explicit_value(excel_str, data_type=TypeCodes.FORMULA)
 
-            line.xl.ending = sheet.bb.current_row
+            line.xl.ending = finish.number()
             line.xl.reference.cell = ref_cell
 
             if update_cell:
                 line.xl.cell = cell
 
-            if set_labels:
-                set_label(label=label, sheet=sheet,
-                                row=sheet.bb.current_row)
+            # if set_labels:
+            #     set_label(label=label, sheet=sheet,
+            #                     row=sheet.bb.current_row)
 
         return sheet
 
