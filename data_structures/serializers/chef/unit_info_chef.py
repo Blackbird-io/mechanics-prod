@@ -31,7 +31,7 @@ UnitInfoChef          class containing methods to ad BusinessUnit attributes
 # Imports
 import openpyxl as xlio
 
-from ._chef_tools import add_scenario_selector, group_lines, set_label
+from ._chef_tools import add_scenario_selector, group_lines
 from .cell_styles import CellStyles
 from .data_types import TypeCodes
 from .field_names import FieldNames
@@ -228,7 +228,6 @@ class UnitInfoChef:
         --``sheet`` must be an instance of openpyxl Worksheet
         --``unit`` must be an instance of BusinessUnit
         --``column`` must be a column number reference
-        --``set_labels`` must be a boolean; True will set labels for line
 
         Method adds "size" Area to unit sheet and populates it with values.
         Will start writing on current row.
@@ -282,25 +281,6 @@ class UnitInfoChef:
                 active_cell.value = value
                 CellStyles.format_hardcoded(master_cell)
             CellStyles.format_integer(active_cell)
-        return
-
-        parameters = getattr(sheet.bb, FieldNames.PARAMETERS)
-
-        if not getattr(sheet.bb, FieldNames.SIZE, None):
-
-            item_dict = dict()
-            item_dict[FieldNames.SIZE_LABEL] = unit.size
-
-            self.add_items_to_area(
-                sheet=sheet,
-                area=size,
-                items=item_dict,
-                active_column=active_column,
-                set_labels=set_labels,
-                format_func=CellStyles.format_integer)
-
-        else:
-            size = getattr(sheet.bb, FieldNames.SIZE)
 
         return sheet
 
@@ -529,9 +509,6 @@ class UnitInfoChef:
         timeline_range = getattr(sheet.bb, FieldNames.TIMELINE)
         timeline_row = timeline_range.rows.get_position(FieldNames.TITLE)
 
-        events = sheet.bb.events
-        life = sheet.bb.life
-
         birth = sheet.cell(
             column=active_column,
             row=event_lines.get_group(common_events.KEY_BIRTH).number()
@@ -552,7 +529,6 @@ class UnitInfoChef:
 
         # 1. Add ref_date
         box = life_lines.get_group(FieldNames.REF_DATE)
-        # sheet.bb.life.rows.by_name[FieldNames.REF_DATE] = box.number()
         ref_date = sheet.cell(column=active_column, row=box.number())
         time_line = sheet.cell(column=active_column, row=timeline_row)
         formula = FormulaTemplates.LINK_TO_COORDINATES.format(
@@ -564,14 +540,12 @@ class UnitInfoChef:
 
         # 2. Add period start date
         box = life_lines.get_group(FieldNames.START_DATE)
-        # sheet.bb.life.rows.by_name[FieldNames.START_DATE] = active_row
         start_date = sheet.cell(column=active_column, row=box.number())
         start_date.value = period.start
         CellStyles.format_date(start_date)
 
         # 3. Add age
         box = life_lines.get_group(FieldNames.AGE)
-        # sheet.bb.life.rows.by_name[FieldNames.AGE] = box.number()
         age = sheet.cell(column=active_column, row=box.number())
         cos = {k: v.coordinate for k, v in cells.items()}
         formula = FormulaTemplates.COMPUTE_AGE_IN_DAYS.format(**cos)
@@ -582,7 +556,6 @@ class UnitInfoChef:
 
         # 4. Add alive
         box = life_lines.get_group(FieldNames.ALIVE)
-        # life.rows.by_name[FieldNames.ALIVE] = active_row
         alive = sheet.cell(column=active_column, row=box.number())
         formula = FormulaTemplates.IS_ALIVE.format(**cos)
         alive.set_explicit_value(formula, data_type=TypeCodes.FORMULA)
@@ -593,7 +566,6 @@ class UnitInfoChef:
         # 5. Add span (so we can use it as the denominator in our percent
         # computation below).
         box = life_lines.get_group(FieldNames.SPAN)
-        # life.rows.by_name[FieldNames.SPAN] = active_row
         span = sheet.cell(column=active_column, row=box.number())
         formula = FormulaTemplates.COMPUTE_SPAN_IN_DAYS.format(**cos)
         span.set_explicit_value(formula, data_type=TypeCodes.FORMULA)
@@ -603,7 +575,6 @@ class UnitInfoChef:
 
         # 6. Add percent
         box = life_lines.get_group(FieldNames.PERCENT)
-        # life.rows.by_name[FieldNames.PERCENT] = active_row
         percent = sheet.cell(column=active_column, row=box.number())
         formula = FormulaTemplates.COMPUTE_AGE_IN_PERCENT.format(**cos)
         percent.set_explicit_value(formula, data_type=TypeCodes.FORMULA)
