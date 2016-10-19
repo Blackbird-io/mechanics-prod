@@ -35,12 +35,12 @@ import itertools
 from openpyxl.comments import Comment
 from bb_exceptions import ExcelPrepError, BBAnalyticalError
 from chef_settings import (
-    COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING,
-    COMMENT_CUSTOM, BLANK_BETWEEN_TOP_LINES, FILTER_PARAMETERS,
+    COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING, COMMENT_CUSTOM,
 )
 from data_structures.modelling.line_item import LineItem
-from ._chef_tools import group_lines, check_alignment, set_label, \
-    set_param_rows, rows_to_coordinates
+from ._chef_tools import (
+    group_lines, check_alignment, set_param_rows, rows_to_coordinates
+)
 from .cell_styles import CellStyles
 from .data_types import TypeCodes
 from .field_names import FieldNames
@@ -409,10 +409,6 @@ class LineChef:
             # Make sure we include at least 1 link per cell.
 
             link_template = FormulaTemplates.ADD_COORDINATES
-
-            sheet.bb.current_row += 1
-            sheet.bb.outline_level += 1
-
             line.xl.consolidated.array.clear()
 
             # the outer iter converts the sorted list into an iterator
@@ -446,7 +442,6 @@ class LineChef:
                         batch_summation,
                         data_type=TypeCodes.FORMULA
                     )
-
                     line.xl.consolidated.array.append(batch_cell)
 
             row_container.calc_size()
@@ -467,21 +462,11 @@ class LineChef:
                 line.title, size=1, label=line_label
             )
             summation_cell = sheet.cell(column=column, row=finish.number())
-            summation_cell.set_explicit_value(summation,
-                                              data_type=TypeCodes.FORMULA)
-
+            summation_cell.set_explicit_value(
+                summation, data_type=TypeCodes.FORMULA
+            )
             line.xl.consolidated.cell = summation_cell
             line.xl.cell = summation_cell
-
-            # if set_labels:
-            #     label = line.tags.title
-            #     label = ((indent - LineItem.TAB_WIDTH) * " ") + label
-            #     set_label(sheet=sheet, label=label,
-            #               row=sheet.bb.current_row)
-
-            line.xl.consolidated.ending = sheet.bb.current_row
-
-            sheet.bb.outline_level -= 1
 
         return sheet
 
@@ -635,8 +620,9 @@ class LineChef:
 
         try:
             size = getattr(sheet.bb, FieldNames.SIZE)
-            size_coordinates = rows_to_coordinates(lookup=size.rows,
-                                                         column=period_column)
+            size_coordinates = rows_to_coordinates(
+                lookup=size.rows, column=period_column
+            )
         except AttributeError:
             pass
         else:
