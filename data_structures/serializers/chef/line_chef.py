@@ -438,7 +438,7 @@ class LineChef:
 
                 if batch_summation:
                     finish = cons_rows.add_group(
-                        label_line, size=1, label=label_line,
+                        label_line, size=1, label=label_line, outline=1,
                         formatter=CellStyles.format_consolidated_label
                     )
                     batch_cell = sheet.cell(column=column, row=finish.number())
@@ -448,11 +448,6 @@ class LineChef:
                     )
 
                     line.xl.consolidated.array.append(batch_cell)
-
-                group_lines(sheet)
-
-                # Move on to next row
-                sheet.bb.current_row += 1
 
             row_container.calc_size()
 
@@ -551,9 +546,6 @@ class LineChef:
         # Set up a private range that's going to include both "shared" period &
         # unit parameters from the column and "private" driver parameters.
 
-        param_area = getattr(sheet.bb, FieldNames.PARAMETERS)
-        cols = param_area.columns
-        label_column = cols.get_position(FieldNames.LABELS)
         period_column = column
         param_rows = row_container.add_group('params', size=0)
 
@@ -564,16 +556,10 @@ class LineChef:
             private_value = row_data[FieldNames.VALUES]
             line_label = (indent * " ") + private_label
 
-            # if private_label and set_labels:
-            #     set_label(
-            #         sheet=sheet,
-            #         label=line_label,
-            #         row=sheet.bb.current_row,
-            #         column=label_column
-            #     )
-
             group_lines(sheet)
-            finish = param_rows.add_group(line_label, size=1, label=line_label)
+            finish = param_rows.add_group(
+                line_label, size=1, label=line_label, outline=0
+            )
             param_cell = sheet.cell(column=period_column, row=finish.number())
 
             CellStyles.format_parameter(param_cell)
@@ -683,10 +669,12 @@ class LineChef:
             # all but the last step are indented an extra level
             if count < n_items:
                 line_label = indent * " " + key
+                outline = 1
             else:
                 line_label = (indent - LineItem.TAB_WIDTH) * " " + line.title
+                outline = 0
             finish = row_container.add_group(
-                key, size=1, label=line_label
+                key, size=1, label=line_label, outline=outline
             )
             calc_cell = sheet.cell(column=period_column, row=finish.number())
             calc_cell.set_explicit_value(formula, data_type=TypeCodes.FORMULA)
@@ -717,7 +705,7 @@ class LineChef:
 
             # we don't want a blank row between the calc cell and the summary
             # cell
-            line.xl.derived.ending = sheet.bb.current_row
+            line.xl.derived.ending = finish.number()
             line.xl.derived.cell = calc_cell
             line.xl.cell = calc_cell
 
@@ -725,25 +713,6 @@ class LineChef:
                 # save tuple of line and derivation materials
                 info = (driver_data, materials)
                 sheet.bb.problem_lines.append(info)
-
-            if count < n_items:
-                group_lines(sheet)
-
-                # if set_labels:
-                #     label = (indent * " ") + key
-                #     set_label(sheet=sheet, label=label,
-                #                     row=sheet.bb.current_row)
-
-                sheet.bb.current_row += 1
-            else:
-                sheet.bb.outline_level = 0
-                group_lines(sheet)
-
-                # if set_labels:
-                #     label = ((indent - LineItem.TAB_WIDTH) * " ") \
-                #         + line.tags.title
-                #     set_label(sheet=sheet, label=label,
-                #                     row=sheet.bb.current_row)
 
         return sheet
 
