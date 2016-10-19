@@ -193,7 +193,7 @@ class LineChef:
                 line=line,
                 indent=indent,
                 row_container=matter,
-                set_labels = set_labels,
+                set_labels=set_labels,
             )
 
             self._add_consolidation_logic(
@@ -201,8 +201,8 @@ class LineChef:
                 column=column,
                 line=line,
                 indent=indent,
-                row_container = matter,
-                set_labels = set_labels,
+                row_container=matter,
+                set_labels=set_labels,
             )
 
         if details:
@@ -396,7 +396,7 @@ class LineChef:
         if line.has_own_content:
             # throw an error if any of consolidation sources have content
             self._validate_consolidation(sheet, line)
-        if line.xl.consolidated.sources:
+        elif line.xl.consolidated.sources:
             sources = line.xl.consolidated.sources
             labels = line.xl.consolidated.labels
             required_rows = sheet.bb.consolidation_size
