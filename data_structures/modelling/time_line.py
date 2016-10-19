@@ -287,8 +287,6 @@ class TimeLine(TimelineBase):
         # init SummaryMaker now that TimeLine has been built
         self.summary_builder = SummaryMaker(self.model)
 
-        import devhooks
-        devhooks.set_time()
         for period in self.iter_ordered(open=seed.end):
             if period.end > seed.end:
                 logger.info(period.end)
@@ -300,6 +298,9 @@ class TimeLine(TimelineBase):
                 period.combine_parameters()
                 # copy and fill out content
                 if seed.content:
+                    if bb_settings.STATEFUL_EXTRAPOLATION:
+                        new_content = seed.content.copy()
+                        period.set_content(new_content, updateID=False)
                     seed.content.reset_financials(period=period)
                     seed.content.fill_out(period=period)
 
@@ -316,8 +317,8 @@ class TimeLine(TimelineBase):
         if bb_settings.MAKE_ANNUAL_SUMMARIES:
             self.summary_builder.wrap()
 
-        devhooks.log_time('in extrapolation')
-        devhooks.picksize(self)
+        # import devhooks
+        # devhooks.picksize(self)
         self.has_been_extrapolated = True
 
     def extrapolate_dates(self, seed, dates, backward=False):
