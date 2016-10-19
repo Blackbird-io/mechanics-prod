@@ -31,7 +31,6 @@ UnitChef              class containing methods to chop BusinessUnits into
 # Imports
 import openpyxl as xlio
 
-from ._chef_tools import group_lines
 from .cell_styles import CellStyles
 from .line_chef import LineChef
 from .sheet_style import SheetStyle

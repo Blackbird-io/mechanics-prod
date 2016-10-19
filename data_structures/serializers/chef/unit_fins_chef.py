@@ -119,8 +119,6 @@ class UnitFinsChef:
                         start_bal=start_bal,
                         set_labels = (period.end == now.end)
                     )
-                    # break
-            # if format(period.end) >= '2015-12': break
 
         # We're done with the first pass of chopping financials, now go back
         # and try to resolve problem_line issues.
