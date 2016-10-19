@@ -448,14 +448,6 @@ class UnitInfoChef:
             if current_only:
                 break
 
-        if HIDE_LIFE_EVENTS:
-            top_row = getattr(sheet.bb, 'first_life_row', None)
-            end_row = sheet.bb.current_row
-            if top_row and end_row:
-                for rownum in range(top_row, end_row + 2):
-                    row = sheet.row_dimensions[rownum]
-                    row.hidden = True
-
     # *************************************************************************#
     #                          NON-PUBLIC METHODS                              #
     # *************************************************************************#
