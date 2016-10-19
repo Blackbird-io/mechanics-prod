@@ -399,8 +399,6 @@ class Driver(TagsMixIn):
                 # formula_catalog.issue() only performs dict retrieval and
                 # return for key.
 
-                # import devhooks
-                # devhooks.lineval(line, period, formula)
                 params = self._build_params(parent=bu, period=period)
 
                 if not bb_settings.PREP_FOR_EXCEL:
