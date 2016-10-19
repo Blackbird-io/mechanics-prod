@@ -386,10 +386,12 @@ class UnitInfoChef:
 
         # layout for Life
         life_group = body_rows.add_group(
-            'life', offset=1 if body_rows.groups else 0
+            'life',
+            offset=1 if body_rows.groups else 0,
+            hidden=HIDE_LIFE_EVENTS,
         )
         life_title = life_group.add_group(
-            'title', size=1, label='Life', rank=1, hidden=HIDE_LIFE_EVENTS,
+            'title', size=1, label='Life', rank=1,
         )
         life_lines = life_group.add_group('lines')
         for label in (
@@ -405,22 +407,21 @@ class UnitInfoChef:
             life_lines.add_group(
                 label or '_spacer', size=1, label=label,
                 outline=int(not HIDE_LIFE_EVENTS),
-                hidden=HIDE_LIFE_EVENTS,
             )
 
         # layout for Events
         event_group = body_rows.add_group(
-            'events', offset=1
+            'events', offset=1,
+            hidden=HIDE_LIFE_EVENTS,
         )
         event_title = event_group.add_group(
-            'title', size=1, label='Events', rank=1, hidden=HIDE_LIFE_EVENTS,
+            'title', size=1, label='Events', rank=1,
         )
         event_lines = event_group.add_group('lines')
         for label in unit.life.ORDER:
             box = event_lines.add_group(
                 label, size=1, label=label,
                 outline=int(not HIDE_LIFE_EVENTS),
-                hidden=HIDE_LIFE_EVENTS,
             )
         body_rows.calc_size()
 

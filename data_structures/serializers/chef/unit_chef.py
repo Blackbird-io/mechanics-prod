@@ -161,10 +161,7 @@ class UnitChef:
 
         body_rows = sheet.bb.row_axis.get_group('body')
         label_col = sheet.bb.col_axis.get_group('head')
-        for group in body_rows.groups:
-            self.add_labels(
-                sheet, group.groups, label_col
-            )
+        self.add_labels(sheet, body_rows.groups, label_col)
 
         return sheet
 
@@ -274,10 +271,7 @@ class UnitChef:
 
         body_rows = sheet.bb.row_axis.get_group('body')
         label_col = sheet.bb.col_axis.get_group('head')
-        for group in body_rows.groups:
-            self.add_labels(
-                sheet, group.groups, label_col
-            )
+        self.add_labels(sheet, body_rows.groups, label_col)
 
         return sheet
 
@@ -314,3 +308,10 @@ class UnitChef:
                         if group.outline:
                             r = sheet.row_dimensions[row]
                             r.outline_level = group.outline
+            if group.extra.get('hidden'):
+                for rownum in range(
+                    group.number(),
+                    group.number() + group.size + 1
+                ):
+                    row = sheet.row_dimensions[rownum]
+                    row.hidden = True

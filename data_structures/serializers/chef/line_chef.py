@@ -183,7 +183,6 @@ class LineChef:
                 sheet=sheet,
                 column=column,
                 line=line,
-                set_labels=set_labels,
                 indent=indent,
                 row_container=matter
             )
@@ -272,7 +271,6 @@ class LineChef:
                     sheet=sheet,
                     column=column,
                     line=line,
-                    set_labels=set_labels,
                     indent=indent,
                     row_container=matter
                 )
@@ -290,7 +288,6 @@ class LineChef:
                 sheet=sheet,
                 column=column,
                 line=line,
-                set_labels=set_labels,
                 indent=indent,
                 row_container=matter,
             )
@@ -766,7 +763,7 @@ class LineChef:
 
     def _add_reference(
         self, sheet, column, line, row_container=None,
-        set_labels=True, indent=0, update_cell=True
+        indent=0, update_cell=True
     ):
         """
 
@@ -802,15 +799,10 @@ class LineChef:
             if update_cell:
                 line.xl.cell = cell
 
-            # if set_labels:
-            #     set_label(label=label, sheet=sheet,
-            #                     row=sheet.bb.current_row)
-
         return sheet
 
     def _combine_segments(
-        self, sheet, column, line, row_container=None,
-        set_labels=True, indent=0
+        self, sheet, column, line, row_container=None, indent=0
     ):
         """
 
@@ -841,10 +833,6 @@ class LineChef:
 
             line.xl.ending = sheet.bb.current_row
             line.xl.cell = cell
-
-            # if set_labels:
-            #     set_label(label=label, sheet=sheet,
-            #               row=sheet.bb.current_row)
 
         return sheet
 
