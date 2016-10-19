@@ -196,18 +196,14 @@ class LineChef:
                 set_labels = set_labels,
             )
 
-            if line.has_own_content:
-                # throw an error if any of consolidation sources have content
-                self._validate_consolidation(sheet, line)
-            else:
-                self._add_consolidation_logic(
-                    sheet=sheet,
-                    column=column,
-                    line=line,
-                    set_labels=set_labels,
-                    indent=indent,
-                    row_container = matter
-                )
+            self._add_consolidation_logic(
+                sheet=sheet,
+                column=column,
+                line=line,
+                indent=indent,
+                row_container = matter,
+                set_labels = set_labels,
+            )
 
         if details:
             sub_indent = indent + LineItem.TAB_WIDTH
@@ -374,8 +370,9 @@ class LineChef:
 
                     raise BBAnalyticalError(c)
 
-    def _add_consolidation_logic(self, *pargs, sheet, column, line,
-                                 set_labels=True, indent=0, row_container=None):
+    def _add_consolidation_logic(
+        self, sheet, column, line, set_labels=True, indent=0, row_container=None
+    ):
         """
 
 
@@ -396,10 +393,10 @@ class LineChef:
 
         Returns Worksheet with consolidation logic added as Excel dynamic links
         """
-
-        if not line.xl.consolidated.sources:
-            pass
-        else:
+        if line.has_own_content:
+            # throw an error if any of consolidation sources have content
+            self._validate_consolidation(sheet, line)
+        if line.xl.consolidated.sources:
             sources = line.xl.consolidated.sources
             labels = line.xl.consolidated.labels
             required_rows = sheet.bb.consolidation_size
