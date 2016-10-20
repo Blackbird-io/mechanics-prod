@@ -563,6 +563,34 @@ class BusinessUnit(BusinessUnitBase, Equalities):
             return peer
         return locator
 
+    def get_parameters(self, period=None):
+        """
+
+
+        BusinessUnitBase.get_financials() -> Financials()
+
+        --``period`` TimePeriod
+
+        Method combines all parameters from reachable sources in order
+        of precedence. Driver updates the results with own parameters.
+        """
+        if not period:
+            period = self.period
+        time_line = period.relationships.parent
+
+        # Specific parameters trump general ones. Start with time_line, then
+        # update for period (more specific). Driver trumps with own parameters.
+        params = dict()
+        if hasattr(time_line, 'parameters'):
+            params.update(time_line.parameters)
+        if hasattr(period, 'parameters'):
+            params.update(period.parameters)
+        params.update(self._parameters)
+        if hasattr(period, 'unit_parameters'):
+            params.update(period.unit_parameters.get(self.id.bbid, {}))
+
+        return params
+
     # *************************************************************************#
     #                           NON-PUBLIC METHODS                             #
     # *************************************************************************#

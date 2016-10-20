@@ -478,26 +478,9 @@ class Driver(TagsMixIn):
         formula arguments using instance.conversion_table. Result includes both
         the original and converted keys.
         """
-        time_line = None
-
-        if parent and not period:
+        if not period:
             period = parent.period
-
-        if period:
-            time_line = period.relationships.parent
-
-        # Specific parameters trump general ones. Start with time_line, then
-        # update for period (more specific) and driver (even more specific).
-
-        params = dict()
-        if time_line and hasattr(time_line, 'parameters'):
-            params.update(time_line.parameters)
-        if period and hasattr(period, 'parameters'):
-            params.update(period.parameters)
-        if parent:
-            params.update(parent.parameters)
-        if period and hasattr(period, 'unit_parameters'):
-            params.update(period.unit_parameters.get(parent.id.bbid, {}))
+        params = parent.get_parameters(period)
         params.update(self.parameters)
 
         converted = self._map_params_to_formula(params)

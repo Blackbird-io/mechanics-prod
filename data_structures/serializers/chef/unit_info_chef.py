@@ -677,11 +677,7 @@ class UnitInfoChef:
 
             # period, unit, and period-unit parameters
             # combined in order of precedence
-            period_unitpar = getattr(period, 'unit_parameters', {})
-            allpar = {}
-            allpar.update(getattr(period, 'parameters', {}))
-            allpar.update(unit.parameters)
-            allpar.update(period_unitpar.get(unit.id.bbid, {}))
+            allpar = unit.get_parameters(period)
 
             for param, value in sorted(allpar.items()):
                 rowbox = param_lines.add_group(
