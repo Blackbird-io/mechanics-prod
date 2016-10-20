@@ -216,7 +216,6 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         BusinessUnitBase.get_financials() -> Financials()
 
         --``period`` TimePeriod
-        --``summary`` str, one of the keys of SummaryMaker
 
         Returns this BUs financials in a given period.
         """
