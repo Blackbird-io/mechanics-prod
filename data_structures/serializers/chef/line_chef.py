@@ -151,8 +151,6 @@ class LineChef:
         dynamic links in Excel cells.  Method adds consolidation and derivation
         logic to cells.
 
-        Method relies on sheet.bb.current_row being up-to-date.
-
         Routines deliver sheet with the current_row pointing to the last filled
         in cell.
         """
@@ -203,44 +201,16 @@ class LineChef:
             )
 
         if details:
-            sub_indent = indent + LineItem.TAB_WIDTH
-            detail_summation = ""
-
-            for detail in details:
-                self.chop_line(
-                    sheet=sheet,
-                    column=column,
-                    line=detail,
-                    row_container=matter,
-                    set_labels=set_labels,
-                    indent=sub_indent,
-                    check=check,
-                    start_bal=start_bal,
-                )
-
-                link_template = FormulaTemplates.ADD_COORDINATES
-
-                include = detail.xl.cell.parent is not sheet
-                cos = detail.xl.get_coordinates(include_sheet=include)
-                link = link_template.format(coordinates=cos)
-                detail_summation += link
-            else:
-                matter.calc_size()
-
-                if line.xl.format.blank_row_before:
-                    matter.add_group('spacer_details', size=1)
-
-                finish = matter.add_group(
-                    line_label, size=1, label=line_label
-                )
-                subtotal_cell = sheet.cell(column=column, row=finish.number())
-                subtotal_cell.set_explicit_value(
-                    detail_summation, data_type=TypeCodes.FORMULA
-                )
-                line.xl.detailed.ending = sheet.bb.current_row
-                line.xl.detailed.cell = subtotal_cell
-                line.xl.cell = subtotal_cell
-
+            self._add_details(
+                sheet=sheet,
+                column=column,
+                line=line,
+                row_container=matter,
+                set_labels=set_labels,
+                indent=indent,
+                check=check,
+                start_bal=start_bal,
+            )
         elif start_bal:
             if line.xl.cell:
                 # here just link the current cell to the cell in line.xl.cell
@@ -308,8 +278,6 @@ class LineChef:
 
         Method walks through Statement lines and delegates LineChef.chop_line()
         to add them as dynamic links in Excel.
-
-        Method relies on sheet.bb.current_row being up-to-date.
         """
         matter = row_container.get_group('lines')
         sheet.bb.need_spacer = False
@@ -457,8 +425,9 @@ class LineChef:
 
         return sheet
 
-    def _add_derivation_logic(self, *pargs, sheet, column, line,
-                              set_labels=True, indent=0, row_container=None):
+    def _add_derivation_logic(
+        self, sheet, column, line, set_labels=True, indent=0, row_container=None
+    ):
         """
 
         LineChef._add_derivation_logic() -> Worksheet
@@ -477,11 +446,7 @@ class LineChef:
             pass
         else:
             set_param_rows(line, sheet)
-            sheet.bb.outline_level += 1
             for data_cluster in line.xl.derived.calculations:
-                sheet.bb.current_row += 1
-                group_lines(sheet)
-
                 self._add_driver_calculation(
                     sheet=sheet,
                     column=column,
@@ -512,7 +477,7 @@ class LineChef:
         --``set_labels`` must be a boolean; True will set labels for line
         --``indent`` is amount of indent
 
-        Writes driver logic to Excel sheet. Will write to sheet.bb.current_row.
+        Writes driver logic to Excel sheet.
         """
         private_data = getattr(sheet.bb, FieldNames.PARAMETERS).copy()
         # Set up a private range that's going to include both "shared" period &
@@ -551,9 +516,6 @@ class LineChef:
             # (in memory) to the parameter. Unclear whether that's useful
             # though, because we generally look up locations for lines, not
             # parameters. And lines continue to span several rows.
-
-            sheet.bb.current_row += 1
-            # Will add a blank row after all the columns
 
         # Transform the range values from rows to coordinates
         param_coordinates = rows_to_coordinates(
@@ -624,21 +586,6 @@ class LineChef:
         formula_steps = self._get_formula_steps(sheet, line, driver_data)
         for key in formula_steps:
             count += 1
-
-            try:
-                template = driver_data.formula[key]
-            except KeyError:
-                sheet.bb.current_row += 1
-                continue
-
-            try:
-                formula = template.format(**materials)
-            except Exception as X:
-                print("Name:     ", driver_data.name)
-                print("Template: ", driver_data.formula)
-
-                raise ExcelPrepError
-
             # all but the last step are indented an extra level
             if count < n_items:
                 line_label = (indent + LineItem.TAB_WIDTH) * " " + key
@@ -649,6 +596,20 @@ class LineChef:
             finish = row_container.add_group(
                 key, size=1, label=line_label, outline=outline
             )
+
+            try:
+                template = driver_data.formula[key]
+            except KeyError:
+                continue
+
+            try:
+                formula = template.format(**materials)
+            except Exception as X:
+                print("Name:     ", driver_data.name)
+                print("Template: ", driver_data.formula)
+
+                raise ExcelPrepError
+
             calc_cell = sheet.cell(column=period_column, row=finish.number())
             calc_cell.set_explicit_value(formula, data_type=TypeCodes.FORMULA)
 
@@ -745,9 +706,12 @@ class LineChef:
 
         Adds the combination to the current row.
         """
-        processed = line.xl.consolidated.cell or line.xl.derived.cell or \
-            line.xl.detailed.cell or line.xl.reference.cell
-
+        processed = any((
+            line.xl.consolidated.cell,
+            line.xl.derived.cell,
+            line.xl.detailed.cell,
+            line.xl.reference.cell
+        ))
         if not processed:
             line_label = indent * " " + line.title  # + ': segment'
             finish = row_container.add_group(
@@ -759,8 +723,68 @@ class LineChef:
             cell.value = line.value
             CellStyles.format_hardcoded(cell)
 
-            line.xl.ending = sheet.bb.current_row
+            line.xl.ending = finish.number()
             line.xl.cell = cell
+
+        return sheet
+
+    def _add_details(
+        self, sheet, column, line, row_container=None, indent=0,
+        set_labels=False, start_bal=False, check=False
+    ):
+        """
+
+
+        LineChef._add_detail() -> Worksheet
+
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``line`` must be an instance of LineItem
+        --``row_container`` coordinate anchor on the row axis
+        --``column`` must be a column number reference
+        --``indent`` is amount of indent
+
+        Displays detail sources.
+        """
+        details = line.get_ordered()
+        if details:
+            sub_indent = indent + LineItem.TAB_WIDTH
+            detail_summation = ""
+
+            for detail in details:
+                self.chop_line(
+                    sheet=sheet,
+                    column=column,
+                    line=detail,
+                    row_container=row_container,
+                    set_labels=set_labels,
+                    indent=sub_indent,
+                    check=check,
+                    start_bal=start_bal
+                )
+
+                link_template = FormulaTemplates.ADD_COORDINATES
+                include = detail.xl.cell.parent is not sheet
+                cos = detail.xl.get_coordinates(include_sheet=include)
+                link = link_template.format(coordinates=cos)
+                detail_summation += link
+
+            row_container.calc_size()
+
+            if line.xl.format.blank_row_before:
+                row_container.add_group('spacer_details', size=1)
+
+            # subtotal row for details
+            line_label = indent * " " + line.title
+            finish = row_container.add_group(
+                line_label, size=1, label=line_label
+            )
+            subtotal_cell = sheet.cell(column=column, row=finish.number())
+            subtotal_cell.set_explicit_value(
+                detail_summation, data_type=TypeCodes.FORMULA
+            )
+            line.xl.detailed.ending = finish.number()
+            line.xl.detailed.cell = subtotal_cell
+            line.xl.cell = subtotal_cell
 
         return sheet
 
