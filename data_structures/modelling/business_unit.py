@@ -589,8 +589,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         if hasattr(period, 'unit_parameters'):
             params.update(period.unit_parameters.get(self.id.bbid, {}))
 
-        # extra info needed by formulas
-        params['period'] = period
+        return params
 
     # *************************************************************************#
     #                           NON-PUBLIC METHODS                             #

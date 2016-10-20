@@ -175,9 +175,6 @@ class LineChef:
             line.hardcoded,
         ))
 
-        sheet.bb.current_row = row_container.tip
-        run_segments = True
-
         if not start_bal:
             self._add_reference(
                 sheet=sheet,
@@ -210,7 +207,6 @@ class LineChef:
             detail_summation = ""
 
             for detail in details:
-                sheet.bb.outline_level = 0
                 self.chop_line(
                     sheet=sheet,
                     column=column,
@@ -232,27 +228,19 @@ class LineChef:
                 matter.calc_size()
 
                 if line.xl.format.blank_row_before:
-                    sheet.bb.current_row += 1
                     matter.add_group('spacer_details', size=1)
 
                 finish = matter.add_group(
                     line_label, size=1, label=line_label
                 )
-
-                # Should group all the details here
-                sheet.bb.current_row += 1
-                sheet.bb.outline_level = 0
-
                 subtotal_cell = sheet.cell(column=column, row=finish.number())
-                subtotal_cell.set_explicit_value(detail_summation,
-                                                 data_type=TypeCodes.FORMULA)
-
+                subtotal_cell.set_explicit_value(
+                    detail_summation, data_type=TypeCodes.FORMULA
+                )
                 line.xl.detailed.ending = sheet.bb.current_row
                 line.xl.detailed.cell = subtotal_cell
                 line.xl.cell = subtotal_cell
 
-            if start_bal:
-                run_segments = False
         elif start_bal:
             if line.xl.cell:
                 # here just link the current cell to the cell in line.xl.cell
@@ -272,7 +260,10 @@ class LineChef:
                 line.xl.reference.cell = None
                 line.xl.cell = old_cell
 
-                run_segments = False
+        if start_bal and (details or line.xl.cell):
+            run_segments = False
+        else:
+            run_segments = True
 
         if not line.xl.reference.source and run_segments:
             self._combine_segments(
