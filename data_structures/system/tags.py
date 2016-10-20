@@ -36,6 +36,7 @@ from tools.parsing import deCase
 # globals
 # n/a
 
+
 # classes
 class Tags:
     """
@@ -72,6 +73,13 @@ class Tags:
     remove()               removes all instances of tag from object
     ====================  ======================================================
     """
+    attrmap = {}
+    attrmap["r"] = attrmap["req"] = attrmap["required"] = "_required"
+    attrmap["o"] = attrmap["opt"] = attrmap["optional"] = "_optional"
+    attrmap["p"] = attrmap["prohibited"] = "_prohibited"
+    attrmap[0] = attrmap["_required"] = attrmap["r"]
+    attrmap[1] = attrmap["_optional"] = attrmap["o"]
+
     def __init__(self, name=None):
         self._optional = set()
         self._required = set()
@@ -197,17 +205,7 @@ class Tags:
 
         Tags should generally be optional. When in doubt, add more tags.
         """
-        attrs = {}
-        attrs["r"] = attrs["req"] = attrs["required"] = "_required"
-        attrs["o"] = attrs["opt"] = attrs["optional"] = "_optional"
-        attrs[0] = attrs["_required"] = attrs["r"]
-        attrs[1] = attrs["_optional"] = attrs["o"]
-        attrs.update(
-            prohibited = '_prohibited',
-            p = '_prohibited',
-        )
-
-        real_thing = getattr(self, attrs[field])
+        real_thing = getattr(self, self.attrmap[field])
 
         for tag in newTags:
             # NOTE: automatically decase tags!
