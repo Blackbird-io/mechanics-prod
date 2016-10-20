@@ -358,7 +358,6 @@ class LineChef:
         2. ``line`` has consolidation sources.
         3. sources have own content.
         """
-
         if line.has_own_content:
             for sub in line.xl.consolidated.sources:
                 if sub.has_own_content:
