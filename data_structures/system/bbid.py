@@ -23,14 +23,14 @@ the built-in Python uuid module. All Blackbird uuids descend from a single
 stable environment UUID.
 
 To generate the seed UUID from scratch, run uuid.uuid1 on the original Blackbird
-computer for the original go-live date. 
+computer for the original go-live date.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
 
 DATA:
 BB_UUID_NAMESPACE     seed UUID for the Blackbird environment
-origin_s              string form of seed UUID 
+origin_s              string form of seed UUID
 
 FUNCTIONS:
 n/a
@@ -65,19 +65,19 @@ class ID:
 
     DATA:
     bbid                  uuid; instance-specific uuid
-    namespace             uuid; returns either instance-specific or origin 
+    namespace             uuid; returns either instance-specific or origin
     origin_id             uuid; BB_UUID_NAMESPACE
     short                 string w prefix and last 4 symbols of bbid, or None
-    
+
     FUNCTIONS:
-    assign()              assigns the object a new uuid of instance.id_type       
+    assign()              assigns the object a new uuid of instance.id_type
     revert_namespace()    undoes last change to instance.namespace_id
     set_namespace()       sets an external uuid as the instance's namespace
     verify()              see if bbid matches seed encoded in current namespace
     ====================  ======================================================
     """
     origin_id = BB_UUID_NAMESPACE
-    
+
     def __init__(self, id_type=3):
         self.bbid = None
         #
@@ -102,7 +102,7 @@ class ID:
         def __init__(self):
             self.chars = 4
             self.prefix = "xx"
-            
+
         def __get__(self,instance,owner):
             result = None
             full = None
@@ -110,7 +110,7 @@ class ID:
                 full = str(instance.bbid)
                 result = "xx" + full[-self.chars]
             return result
-            
+
         def __set__(self,instance,value):
             pass
 
@@ -132,10 +132,10 @@ class ID:
         a constant fixed outside the method call.
 
         NOTE: users should **NOT** choose seeds that are ip/memory addresses,
-        time, random numbers or hardware identifiers, among others. 
+        time, random numbers or hardware identifiers, among others.
         """
         encoder_name = "uuid" + str(self._id_type)
-        # Pick up either uuid.uuid3, uuid.uuid4, or uuid.uuid5. 
+        # Pick up either uuid.uuid3, uuid.uuid4, or uuid.uuid5.
         encoder = getattr(uuid, encoder_name)
         self.bbid = encoder(self.namespace, seed)
 
@@ -150,7 +150,7 @@ class ID:
         last_namespace_id. After reverting, method clears last_namespace_id
         (sets the attribute to None).
 
-        No-op if last_namespace_id is empty. 
+        No-op if last_namespace_id is empty.
         """
         if self._prior_namespace:
             self._namespace = self._prior_namespace
@@ -169,7 +169,7 @@ class ID:
         if self.namespace:
             self._prior_namespace = self.namespace
         self._namespace = new_namespace
-        
+
     def verify(self, seed):
         """
 
@@ -178,19 +178,19 @@ class ID:
 
 
         False if instance.bbid not what you get from uuid of the current type.
-        True if it is. 
+        True if it is.
         """
         result = False
-        
+
         encoder_name = "uuid" + str(self._id_type)
-        # Pick up either uuid.uuid3, uuid.uuid4, or uuid.uuid5. 
+        # Pick up either uuid.uuid3, uuid.uuid4, or uuid.uuid5.
         encoder = getattr(uuid, encoder_name)
-        
+
         correct_id = encoder(self.namespace, seed)
         if self.bbid == correct_id:
             result = True
 
         return result
-    
-    
-    
+
+
+
