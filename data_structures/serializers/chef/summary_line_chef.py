@@ -66,7 +66,7 @@ class SummaryLineChef:
         """
 
 
-        LineChef.chop_summary_statement() -> Worksheet
+        SummaryLineChef.chop_summary_statement() -> Worksheet
 
         --``sheet`` must be an instance of openpyxl Worksheet
         --``statement`` must be an instance of Statement
@@ -110,7 +110,7 @@ class SummaryLineChef:
         """
 
 
-        LineChef.chop_summary_line() -> Worksheet
+        SummaryLineChef.chop_summary_line() -> Worksheet
 
         --``sheet`` must be an instance of openpyxl Worksheet
         --``line`` must be an instance of LineItem
@@ -148,6 +148,8 @@ class SummaryLineChef:
             self._add_consolidation,
             # details lines
             self._add_detail,
+            # derived lines
+            self._add_derivation,
             # catch-all if no content has been added so far
             self._add_value,
         )):
@@ -183,7 +185,7 @@ class SummaryLineChef:
         """
 
 
-        LineChef._add_summary_reference() -> Worksheet
+        SummaryLineChef._add_reference() -> Worksheet
 
         --``sheet`` must be an instance of openpyxl Worksheet
         --``line`` must be an instance of LineItem
@@ -226,7 +228,7 @@ class SummaryLineChef:
         """
 
 
-        LineChef._add_consolidation_reference_summary() -> Worksheet
+        SummaryLineChef._add_consolidation() -> Worksheet
 
         --``sheet`` must be an instance of openpyxl Worksheet
         --``line`` must be an instance of LineItem
@@ -338,7 +340,7 @@ class SummaryLineChef:
         """
 
 
-        SummaryLineChef._combine_segments() -> Worksheet
+        SummaryLineChef._add_value() -> Worksheet
 
         --``sheet`` must be an instance of openpyxl Worksheet
         --``line`` must be an instance of LineItem
@@ -359,4 +361,69 @@ class SummaryLineChef:
                 formatter=CellStyles.format_hardcoded,
             )
 
+        return sheet
+
+    def _add_derivation(
+        self, sheet, line, row_container, col_container, indent=0
+    ):
+        """
+
+
+        SummaryLineChef._add_derivation() -> Worksheet
+
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``line`` must be an instance of LineItem
+        --``row_container`` coordinate anchor on the row axis
+        --``col_container`` coordinate anchor on the col axis
+        --``indent`` is amount of indent
+
+        Creates a formula with driver logic. Only touches the lines where
+            * there is a single calculation
+            * there is a single formula line
+            * all sources are lines
+        """
+        if not line.summary_type == 'derive':
+            return
+        if not line.xl.derived.calculations:
+            return
+        if len(line.xl.derived.calculations) != 1:
+            return
+        data_cluster = line.xl.derived.calculations[0]
+        if len(data_cluster.formula) != 1:
+            return
+        # render first (and only) formula
+        for key, formula in data_cluster.formula.items():
+            # remap the DelayedCell input dict into '{lines[...]}' setup
+            inputs_mold = lambda x: dict(lines=x)
+            # input cells
+            formula_source = {}
+            # link to formula inputs
+            for name, source_line in data_cluster.references.items():
+                cell = DelayedCell.from_cell(source_line)
+                if cell:
+                    formula_source[name] = cell
+            try:
+                # check that we have enough inputs to render formula
+                formula.format(**inputs_mold(formula_source))
+            except KeyError:
+                # not enough sources to render formula, defer to hardcoded
+                return
+            # create formula line
+            line_label = indent * " " + line.title  # + ': derivation'
+            finish = row_container.add_group(
+                line_label, size=1, label=line_label
+            )
+            # create cell
+            DelayedCell(
+                line,
+                sheet=sheet,
+                template=formula,
+                inputs=formula_source,
+                inputs_mold=inputs_mold,
+                row_container=finish,
+                col_container=col_container,
+                cell_type='derived',
+            )
+            # first only
+            break
         return sheet
