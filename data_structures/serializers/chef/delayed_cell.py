@@ -75,6 +75,8 @@ class DelayedCell:
         # cell content
         self.template = kargs.get('template')
         self.inputs = kargs.get('inputs', {})
+        # a callable to do postprocessing on inputs dict after filling it
+        self.inputs_mold = kargs.get('inputs_mold')
         self.value = kargs.get('value')
         self.cell_type = kargs.get('cell_type')
         self.update_cell = kargs.get('update_cell', True)
@@ -160,6 +162,9 @@ class DelayedCell:
                 else:
                     sname = ''
                 parsed[name] = '{}{}{}'.format(sname, col, row)
+            # postprocessing of inputs, e.g. to nest within another dict
+            if self.inputs_mold:
+                parsed = self.inputs_mold(parsed)
             formula = self.template.format(**parsed)
             target_cell.set_explicit_value(
                 formula, data_type=TypeCodes.FORMULA
