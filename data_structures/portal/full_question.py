@@ -146,6 +146,7 @@ class FullQuestion:
         self.custom_prompt = None
 
         self.extra_rows = True
+        self.delayed = False
 
     class _ProgressDescriptor:
         """
