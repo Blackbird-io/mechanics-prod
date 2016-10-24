@@ -83,7 +83,9 @@ class PortalQuestion(ReadyForPortal):
                     "transcribe",
                     "name",
                     "target",
-                    "extra_rows"]
+                    "extra_rows",
+                    "delayed",
+                    ]
         #
         ReadyForPortal.__init__(self, pq_attrs)
         #
@@ -101,6 +103,7 @@ class PortalQuestion(ReadyForPortal):
         self.transcribe = False
         self.target = None
         self.extra_rows = True
+        self.delayed = False
 
     def to_portal(self, seed, web=False):
         """
@@ -162,6 +165,7 @@ class PortalQuestion(ReadyForPortal):
         result["question_id"] = str(seed.id.bbid)
         result["target"] = seed.context.get("target", None)
         result["extra_rows"] = seed.extra_rows
+        result["delayed"] = seed.delayed
 
         del result["_var_attrs"]
         
