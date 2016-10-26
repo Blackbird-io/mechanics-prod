@@ -137,7 +137,10 @@ class PortalModel(ReadyForPortal):
             periods = []
             for period in model.time_line.iter_ordered():
                 periods.append({
-                    'period_end': format(period.end),
+                    'period_end': period.end,
+                    'period_start': period.start,
+                    'parameters': period.parameters,
+                    'unit_parameters': period.unit_parameters,
                     'financials_set': self.serialize_financials(model, period),
                 })
             result.append({
@@ -151,7 +154,6 @@ class PortalModel(ReadyForPortal):
 
 
         PortalModel.serialize_financials() -> []
-
 
         Method returns a list of serialized Financials for a period.
         """
@@ -178,7 +180,6 @@ class PortalModel(ReadyForPortal):
 
 
         PortalModel.serialize_financials() -> []
-
 
         Method returns a list of serialized Financials for a period.
         """
