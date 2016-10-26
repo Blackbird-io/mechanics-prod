@@ -144,7 +144,8 @@ class PortalModel(ReadyForPortal):
                     'financials_set': self.serialize_financials(model, period),
                 })
             result.append({
-                'data_type': 'monthly',
+                'resolution': 'monthly',
+                'actual': False,
                 'periods': periods,
             })
         return result
