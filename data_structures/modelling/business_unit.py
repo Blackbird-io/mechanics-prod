@@ -798,6 +798,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         """
         self.period = time_period
         self.life.set_ref_date(time_period.end)
+        self.period.financials[self.id.bbid] = self.financials
 
         if recur:
             for unit in self.components.values():

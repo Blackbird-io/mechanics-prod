@@ -102,7 +102,7 @@ class PortalModel(ReadyForPortal):
         output by manually extracting the industry.
         """
         prelim = ReadyForPortal.to_portal(self)
-        #prelim is a dictionary;
+        # prelim is a dictionary;
         result = prelim.copy()
         if seed:
             if seed.portal_data:
@@ -113,14 +113,86 @@ class PortalModel(ReadyForPortal):
             result["e_model"] = flattened
             #
             result["industry"] = seed.interview.work_space.get("industry")
+            result["timeline_set"] = self.serialize_timeline(seed)
             if seed.summary:
                 summary = seed.summary.to_portal()
             else:
-                summary = {"credit capacity" : "dummy placeholder"}
+                summary = {"credit capacity": "dummy placeholder"}
             result["summary"] = summary
         #
         del result["_var_attrs"]
         #
         return result
 
+    def serialize_timeline(self, model=None):
+        """
 
+
+        PortalModel.serialize_timeline() -> []
+
+        Method returns a list representing TimeLines.
+        """
+        result = []
+        if model:
+            periods = []
+            for period in model.time_line.iter_ordered():
+                periods.append({
+                    'period_end': format(period.end),
+                    'financials_set': self.serialize_financials(model, period),
+                })
+            result.append({
+                'data_type': 'monthly',
+                'periods': periods,
+            })
+        return result
+
+    def serialize_financials(self, model, period):
+        """
+
+
+        PortalModel.serialize_financials() -> []
+
+
+        Method returns a list of serialized Financials for a period.
+        """
+        result = []
+        if not period.financials:
+            unit = model.get_company()
+            if hasattr(unit, 'period'):
+                if unit.period is period:
+                    unit._fit_to_period(period)
+        for buid, fins in period.financials.items():
+            for statement in fins.full_ordered:
+                if statement:
+                    for line in statement._details.values():
+                        self.serialize_line(
+                            result, period, buid, statement, line
+                        )
+        return result
+
+
+    def serialize_line(
+        self, result, period, buid, statement, line, line_parent=None
+    ):
+        """
+
+
+        PortalModel.serialize_financials() -> []
+
+
+        Method returns a list of serialized Financials for a period.
+        """
+        row = {
+            'buid': buid,
+            'line_id': line.id.bbid.hex,
+            'line_parent_id': line_parent.id.bbid.hex if line_parent else None,
+            'statement_name': statement.name,
+            'line_name': line.name,
+            'line_title': line.title,
+            'value': line.value,
+        }
+        result.append(row)
+        for stub in line._details.values():
+            self.serialize_line(
+                result, period, buid, statement, stub, line_parent=line,
+            )

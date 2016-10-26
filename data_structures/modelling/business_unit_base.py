@@ -225,6 +225,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
             fins = period.financials[self.id.bbid]
         elif period.end == self.period.end and not period.summary:
             fins = self.financials
+            period.financials[self.id.bbid] = fins
         elif self.id.bbid in period.bu_directory:
             bu = period.bu_directory[self.id.bbid]
             fins = bu.get_financials(period)
