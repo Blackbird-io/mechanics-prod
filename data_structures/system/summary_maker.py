@@ -29,7 +29,6 @@ SummaryMaker        worker class for building financial summaries
 # imports
 import logging
 import calendar
-import copy
 import datetime as DT
 
 from dateutil.relativedelta import relativedelta
@@ -37,7 +36,6 @@ from dateutil.relativedelta import relativedelta
 import bb_settings
 import bb_exceptions
 
-from data_structures.modelling.business_unit_base import BusinessUnitBase
 from data_structures.modelling.financials import Financials
 from data_structures.modelling.time_period_base import TimePeriodBase
 from data_structures.modelling.time_line_base import TimelineBase
@@ -85,7 +83,6 @@ class SummaryMaker:
     def __init__(self, model):
         self._fiscal_year_end = None
         self.model = model
-        self.time_line = model.get_timeline()
         self.buid = model.get_company().id.bbid
         self.init_summaries()
 
@@ -99,7 +96,8 @@ class SummaryMaker:
         Return self._fiscal_year_end or calendar year end.
         """
         if not self._fiscal_year_end:
-            year = self.time_line.current_period.end.year
+            time_line = self.model.get_timeline()
+            year = time_line.current_period.end.year
             fye = DT.date(year, 12, 31)
         else:
             fye = self._fiscal_year_end
@@ -141,7 +139,7 @@ class SummaryMaker:
         Method makes a copy of the instance, maintaining original link to
         time_line, and returns it.
         """
-        result = SummaryMaker(self.time_line)
+        result = SummaryMaker(self.model)
         result._fiscal_year_end = self._fiscal_year_end
         for key, value in self.summaries.items():
             result.summaries[key] = value.copy()
@@ -159,19 +157,21 @@ class SummaryMaker:
         self.summaries = dict()
         self.complete_periods = dict()
         self.period_sources = dict()
+        time_line = self.model.get_timeline()
         for key, periods in (
             (self.QUARTERLY_KEY, 3),
             (self.ANNUAL_KEY, 12),
         ):
             timeline_summary = TimelineBase(periods)
-            timeline_summary.id.set_namespace(self.time_line.id.namespace)
-            # TODO: remove when there is a singular bu
-            timeline_summary.model = self.model
+            timeline_summary.id.set_namespace(time_line.id.namespace)
             # output quarter or year being currently processed
             timeline_summary.summary_period = None
             self.summaries[key] = timeline_summary
             self.complete_periods[key] = periods
             self.period_sources[key] = dict()
+            self.model.set_timeline(
+                timeline_summary, resolution=key, actual=False
+            )
 
     def parse_period(self, period):
         """

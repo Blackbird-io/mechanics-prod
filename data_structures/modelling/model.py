@@ -365,14 +365,6 @@ class Model(TagsMixIn):
         key = (resolution, actual)
         if key in self.timelines:
             return self.timelines[key]
-        time_line = self.timelines[('monthly', False)]
-        if resolution in time_line.summary_builder.summaries:
-            return time_line.summary_builder.summaries[resolution]
-
-        # if resolution == 'monthly':
-        #     tl = self.time_line
-        # else:
-        #     tl = self.time_line.summary_builder.summaries[resolution]
 
     def set_timeline(self, time_line, resolution='monthly', actual=False):
         """
