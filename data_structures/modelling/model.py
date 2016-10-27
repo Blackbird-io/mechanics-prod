@@ -122,6 +122,10 @@ class Model(TagsMixIn):
         self.transcript = []
         self.time_line = TimeLine(self)
         self.time_line.id.set_namespace(self.id.bbid)
+        # dict holding various timelines
+        self.timelines = dict()
+        # main TimeLine is (monthly, actual=False)
+        self.timelines[('monthly', False)] = self.time_line
 
         self.scenarios = dict()
         for s in DEFAULT_SCENARIOS:
@@ -229,6 +233,8 @@ class Model(TagsMixIn):
         output's .portal_data dictionary.
         """
         flat_model = portal_model["e_model"]
+        print(sorted(portal_model.keys()))
+        print(portal_model.get('timeline_set'))
 
         if flat_model:
             M = pickle.loads(flat_model)
@@ -238,6 +244,7 @@ class Model(TagsMixIn):
                 business_name = bb_settings.DEFAULT_MODEL_NAME
             M = cls(business_name)
         M.portal_data.update(portal_model)
+        cls.restore_timelines(M, portal_model)
         del M.portal_data["e_model"]
         return M
 
@@ -341,7 +348,7 @@ class Model(TagsMixIn):
 
         return life
 
-    def get_timeline(self, resolution='monthly'):
+    def get_timeline(self, resolution='monthly', actual=False):
         """
 
         Model.get_timeline() -> TimeLine
@@ -351,12 +358,11 @@ class Model(TagsMixIn):
 
         Method returns the timeline for specified resolution (if any).
         """
-        if resolution == 'monthly':
-            tl = self.time_line
-        else:
-            tl = self.time_line.summary_builder.summaries[resolution]
-
-        return tl
+        key = (resolution, actual)
+        if key in self.timelines:
+            return self.timelines[key]
+        if resolution in self.time_line.summary_builder.summaries:
+            return self.time_line.summary_builder.summaries[resolution]
 
     def start(self):
         """
@@ -381,3 +387,16 @@ class Model(TagsMixIn):
         time_stamp = time.time()
         record = (message, time_stamp)
         self.transcript.append(record)
+
+    @classmethod
+    def restore_timelines(cls, model, portal_model):
+        """
+
+        Model.restore_timeline() -> TimeLine
+
+        --``resolution`` is 'monthly', 'quarterly', 'annually' or any available
+          summary resolution'
+
+        Method returns the timeline for specified resolution (if any).
+        """
+        return
