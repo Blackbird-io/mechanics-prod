@@ -220,16 +220,27 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         Returns this BUs financials in a given period.
         """
         if not period:
+            # method allows a call with a blank period, on a bu without a period
+            # master bu and past bu will do this
+            # in which case bu must have financials attached
             fins = self.financials
         elif self.id.bbid in period.financials:
+            # the best case we expect: financials have been assigned to a period
             fins = period.financials[self.id.bbid]
         elif period.end == self.period.end and not period.summary:
+            # fallback if financials are not on period
+            # financials are assigned to bu before period is
             fins = self.financials
             period.financials[self.id.bbid] = fins
         elif self.id.bbid in period.bu_directory:
+            # case when a bu has been copied to the period, e.g. past
+            # we want to get the copied financials
             bu = period.bu_directory[self.id.bbid]
             fins = bu.get_financials(period)
+            period.financials[self.id.bbid] = fins
         elif period.end > self.period.end and not period.summary:
+            # flow of TimeLine.extrapolate() and bu.fill_out() gets us here
+            # copy the structure of master financials
             fins = self.financials.copy()
             fins.relationships.set_parent(self)
             fins.period = period
