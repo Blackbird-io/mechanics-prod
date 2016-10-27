@@ -165,14 +165,6 @@ class LineChef:
         )
         sheet.bb.need_spacer = False
 
-        # a line with own content should have no children with own content,
-        # and should not consolidate
-        line.has_own_content = any((
-            len(details) > 0,
-            line.xl.derived.calculations,
-            line.hardcoded,
-        ))
-
         if not start_bal:
             self._add_reference(
                 sheet=sheet,
@@ -317,9 +309,9 @@ class LineChef:
         2. ``line`` has consolidation sources.
         3. sources have own content.
         """
-        if line.has_own_content:
+        if line.has_own_content():
             for sub in line.xl.consolidated.sources:
-                if sub.has_own_content:
+                if sub.has_own_content():
                     c = (
                         'line "{}" on sheet "{}" has content '
                         'but also tries to consolidate line "{} '
@@ -351,7 +343,8 @@ class LineChef:
 
         Returns Worksheet with consolidation logic added as Excel dynamic links
         """
-        if line.has_own_content:
+        if line.has_own_content():
+            # a line with own content should have no children with own content
             # throw an error if any of consolidation sources have content
             self._validate_consolidation(sheet, line)
         elif line.xl.consolidated.sources:

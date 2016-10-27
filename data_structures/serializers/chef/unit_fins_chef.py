@@ -99,6 +99,7 @@ class UnitFinsChef:
         for period in time_line.iter_ordered(open=now.end):
             column = sheet.bb.time_line.columns.get_position(period.end)
             financials = unit.get_financials(period)
+            print(period.end, hex(id(financials)), column)
             for name, statement in financials.chef_ordered():
                 if statement is not None:
                     if name == 'starting':

@@ -509,6 +509,21 @@ class LineItem(Statement, HistoryLine):
             return peer
         return locator
 
+    def has_own_content(self):
+        """
+
+
+        LineItem.has_own_content() -> Bool
+
+        Checks if line has content. A line with own content should have no
+        children with own content, and should not consolidate
+        """
+        return any((
+            len(self._details) > 0,
+            self.xl.derived.calculations,
+            self.hardcoded,
+        ))
+
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
