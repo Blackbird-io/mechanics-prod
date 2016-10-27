@@ -124,7 +124,7 @@ class Model(TagsMixIn):
         time_line.id.set_namespace(self.id.bbid)
         # dict holding various timelines
         self.timelines = dict()
-        # main TimeLine is (monthly, actual=False)
+        # main TimeLine is (resolution='monthly', actual=False)
         self.set_timeline(time_line)
 
         self.scenarios = dict()
@@ -218,7 +218,6 @@ class Model(TagsMixIn):
 
     @time_line.setter
     def time_line(self, time_line):
-        raise ValueError()
         return self.set_timeline(time_line)
 
     # METHODS
@@ -364,11 +363,7 @@ class Model(TagsMixIn):
         Method returns the timeline for specified resolution (if any).
         """
         key = (resolution, actual)
-        # print('>>', key, self.timelines.keys())
         if key in self.timelines:
-            # print('..', self.timelines[key] is self.time_line, hex(id(self.timelines[key])), hex(id(self.time_line)))
-            # if self.timelines[key] is not self.time_line: raise ValueError()
-            # return self.time_line
             return self.timelines[key]
         time_line = self.timelines[('monthly', False)]
         if resolution in time_line.summary_builder.summaries:

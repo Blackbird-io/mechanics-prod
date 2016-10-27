@@ -100,14 +100,13 @@ class Starter:
 
         # officially ``start`` the model so that it never comes back here;
         # otherwise, starter.process() will destroy all existing model data.
-        time_line = model.get_timeline()
-        if not time_line.current_period:
-            time_line.build(ref_date)
+        if not model.time_line.current_period:
+            model.time_line.build(ref_date)
 
-        if not time_line.current_period.content:
+        if not model.time_line.current_period.content:
             company = BusinessUnit(model.tags.name)
-            time_line.current_period.set_content(company)
-            model.target = time_line.current_period.content
+            model.time_line.current_period.set_content(company)
+            model.target = model.time_line.current_period.content
 
         if not model.target.stage.path:
             model.target.stage.set_path()
