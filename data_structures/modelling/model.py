@@ -120,8 +120,12 @@ class Model(TagsMixIn):
         self.portal_data = dict()
         self.taxonomy = dict()
         self.transcript = []
-        self.time_line = TimeLine(self)
-        self.time_line.id.set_namespace(self.id.bbid)
+        time_line = TimeLine(self)
+        time_line.id.set_namespace(self.id.bbid)
+        # dict holding various timelines
+        self.timelines = dict()
+        # main TimeLine is (monthly, actual=False)
+        self.set_timeline(time_line)
 
         self.scenarios = dict()
         for s in DEFAULT_SCENARIOS:
@@ -208,6 +212,15 @@ class Model(TagsMixIn):
         )
         raise bb_exceptions.ManagedAttributeError(c)
 
+    @property
+    def time_line(self):
+        return self.get_timeline()
+
+    @time_line.setter
+    def time_line(self, time_line):
+        raise ValueError()
+        return self.set_timeline(time_line)
+
     # METHODS
     @classmethod
     def from_portal(cls, portal_model):
@@ -238,6 +251,7 @@ class Model(TagsMixIn):
                 business_name = bb_settings.DEFAULT_MODEL_NAME
             M = cls(business_name)
         M.portal_data.update(portal_model)
+        # cls.restore_timelines(M, portal_model)
         del M.portal_data["e_model"]
         return M
 
@@ -256,18 +270,16 @@ class Model(TagsMixIn):
         if self.time_line.has_been_extrapolated:
             return
 
+        old_tl = self.get_timeline()
+
         new_tl = TimeLine(self)
         new_tl.parameters = self.time_line.parameters.copy()
         new_tl.master = self.time_line.master.copy()
         new_tl.build(ref_date=ref_date)
+        new_tl.id.set_namespace(self.id.bbid)
+        new_tl.current_period.set_content(old_tl.current_period.content)
 
-        old_tl = self.time_line
-
-        self.time_line = new_tl
-        self.time_line.id.set_namespace(self.id.bbid)
-        self.time_line.current_period.set_content(old_tl.current_period.content)
-
-        del old_tl
+        self.set_timeline(new_tl)
 
     def clear_excel(self):
         self.time_line.clear_excel()
@@ -287,7 +299,7 @@ class Model(TagsMixIn):
         result.portal_data = self.portal_data.copy()
         result.taxonomy = self.taxonomy.copy()
         result.transcript = self.transcript.copy()
-        result.time_line = self.time_line.copy()
+        result.set_timeline(self.time_line.copy())
         result.scenarios = self.scenarios.copy()
         result.target = self.target
 
@@ -341,7 +353,7 @@ class Model(TagsMixIn):
 
         return life
 
-    def get_timeline(self, resolution='monthly'):
+    def get_timeline(self, resolution='monthly', actual=False):
         """
 
         Model.get_timeline() -> TimeLine
@@ -351,12 +363,34 @@ class Model(TagsMixIn):
 
         Method returns the timeline for specified resolution (if any).
         """
-        if resolution == 'monthly':
-            tl = self.time_line
-        else:
-            tl = self.time_line.summary_builder.summaries[resolution]
+        key = (resolution, actual)
+        # print('>>', key, self.timelines.keys())
+        if key in self.timelines:
+            # print('..', self.timelines[key] is self.time_line, hex(id(self.timelines[key])), hex(id(self.time_line)))
+            # if self.timelines[key] is not self.time_line: raise ValueError()
+            # return self.time_line
+            return self.timelines[key]
+        time_line = self.timelines[('monthly', False)]
+        if resolution in time_line.summary_builder.summaries:
+            return time_line.summary_builder.summaries[resolution]
 
-        return tl
+        # if resolution == 'monthly':
+        #     tl = self.time_line
+        # else:
+        #     tl = self.time_line.summary_builder.summaries[resolution]
+
+    def set_timeline(self, time_line, resolution='monthly', actual=False):
+        """
+
+        Model.set_timeline() -> None
+
+        --``resolution`` is 'monthly', 'quarterly', 'annually' or any available
+          summary resolution'
+
+        Method adds the timeline for specified resolution (if any).
+        """
+        key = (resolution, actual)
+        self.timelines[key] = time_line
 
     def start(self):
         """
@@ -381,3 +415,16 @@ class Model(TagsMixIn):
         time_stamp = time.time()
         record = (message, time_stamp)
         self.transcript.append(record)
+
+    @classmethod
+    def restore_timelines(cls, model, portal_model):
+        """
+
+        Model.restore_timeline() -> TimeLine
+
+        --``resolution`` is 'monthly', 'quarterly', 'annually' or any available
+          summary resolution'
+
+        Method returns the timeline for specified resolution (if any).
+        """
+        return
