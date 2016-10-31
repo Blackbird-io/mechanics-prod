@@ -93,13 +93,14 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
     set_content()         attach company to period
     ====================  ======================================================
     """
-    def __init__(self, start_date, end_date, content=None):
-        TimePeriodBase.__init__(self, start_date, end_date)
+    def __init__(self, start_date, end_date, content=None, model=None):
+        # content is handled differently, is not passed on to base init
+        TimePeriodBase.__init__(self, start_date, end_date, model=model)
         TagsMixIn.__init__(self)
 
         self.parameters = Parameters()
         self.unit_parameters = Parameters()
-        self.ty_directory = dict()
+        self.ty_directory = model.ty_directory
 
         if content:
             self.set_content(content)
