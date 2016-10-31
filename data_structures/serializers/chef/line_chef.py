@@ -271,7 +271,7 @@ class LineChef:
 
     def chop_statement(
         self, sheet, column, statement, row_container=None,
-        start_bal=False, title=None, set_labels=False, values_only=False
+        start_bal=False, title=None, set_labels=False
     ):
         """
 
@@ -298,7 +298,6 @@ class LineChef:
                 check=check,
                 start_bal=start_bal,
                 set_labels=set_labels,
-                values_only=values_only,
             )
             row_container.calc_size()
 

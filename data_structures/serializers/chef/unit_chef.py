@@ -98,7 +98,8 @@ class UnitChef:
         else:
             self.timeline = model.get_timeline(resolution='monthly') #, actual=False)
 
-    def chop_multi(self, book, unit=None, values_only=False):
+    def chop_multi(self, book, unit=None, values_only=False, tab_name='',
+                   tab_color=''):
         """
 
 
@@ -139,7 +140,8 @@ class UnitChef:
         # 2.1.   set up the unit sheet and spread params
         info_chef = UnitInfoChef(model, timeline)
         sheet = info_chef.create_unit_sheet(
-            book=book, unit=unit, index=before_kids, values_only=values_only
+            book=book, unit=unit, index=before_kids, values_only=values_only,
+            name=tab_name, tab_color=tab_color,
         )
 
         if not values_only:
