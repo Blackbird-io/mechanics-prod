@@ -283,56 +283,43 @@ class ReportChef:
         # a line with own content should have no children with own content,
         # and should not consolidate
         if details:
-            # self._add_details(
-            #     sheet=sheet,
-            #     act_line=act_line,
-            #     for_line=for_line,
-            #     row_container=row_container,
-            #     indent=indent,
-            # )
-            pass
+            self._add_details(
+                sheet=sheet,
+                act_line=act_line,
+                for_line=for_line,
+                row_container=line_rows,
+                indent=indent,
+            )
         else:
-            pass
-            # line_row = line_rows.add_group(act_line.title, size=1)
-            # sheet.bb.calc_sizes()
-            #
-            # # need to write actual and forecast values here (link to source)
-            # formula_string = '=%s' % act_line.xl.get_coordinates(include_sheet=True)
-            # act_cell = sheet.cell(row=line_row.number(), column=actual_col.number())
-            # act_cell.set_explicit_value(formula_string, data_type=TypeCodes.FORMULA)
-            # act_line.xl.cell = act_cell
-            #
-            # formula_string = '=%s' % for_line.xl.get_coordinates(include_sheet=True)
-            # for_cell = sheet.cell(row=line_row.number(), column=forecast_col.number())
-            # for_cell.set_explicit_value(formula_string, data_type=TypeCodes.FORMULA)
-            # for_line.xl.cell = for_cell
+            # this is the logic for lines without details
+            line_row = line_rows.add_group(act_line.title, size=1)
+            sheet.bb.calc_sizes()
 
-        # this is the logic for lines without details
-        line_row = line_rows.add_group(act_line.title, size=1)
+            # need to write actual and forecast values here (link to source)
+            formula_string = '=%s' % act_line.xl.get_coordinates(
+                include_sheet=True)
+            act_cell = sheet.cell(row=line_row.number(),
+                                  column=actual_col.number())
+            act_cell.set_explicit_value(formula_string,
+                                        data_type=TypeCodes.FORMULA)
+            act_line.xl.cell = act_cell
+            CellStyles.format_line(act_line)
+
+            formula_string = '=%s' % for_line.xl.get_coordinates(
+                include_sheet=True)
+            for_cell = sheet.cell(row=line_row.number(),
+                                  column=forecast_col.number())
+            for_cell.set_explicit_value(formula_string,
+                                        data_type=TypeCodes.FORMULA)
+            for_line.xl.cell = for_cell
+            CellStyles.format_line(for_line)
+
         sheet.bb.calc_sizes()
-
-        # need to write actual and forecast values here (link to source)
-        formula_string = '=%s' % act_line.xl.get_coordinates(
-            include_sheet=True)
-        act_cell = sheet.cell(row=line_row.number(),
-                              column=actual_col.number())
-        act_cell.set_explicit_value(formula_string,
-                                    data_type=TypeCodes.FORMULA)
-        act_line.xl.cell = act_cell
-        CellStyles.format_line(act_line)
-
-        formula_string = '=%s' % for_line.xl.get_coordinates(
-            include_sheet=True)
-        for_cell = sheet.cell(row=line_row.number(),
-                              column=forecast_col.number())
-        for_cell.set_explicit_value(formula_string,
-                                    data_type=TypeCodes.FORMULA)
-        for_line.xl.cell = for_cell
-        CellStyles.format_line(for_line)
-
         # *************************************************************
+        line_row = line_rows.get_group(act_line.title)
         # write line label
         label_cell = sheet.cell(row=line_row.number(), column=line_col.number())
+
         label_cell.value = line_label
         # *************************************************************
 
@@ -384,15 +371,18 @@ class ReportChef:
 
         Displays detail sources.
         """
-        details = act_line.get_ordered()
+        all_cols = sheet.bb.col_axis.get_group('all')
+        forecast_col = all_cols.get_group('Forecast')
+        actual_col = all_cols.get_group('Actual')
 
-        if details:
+        actual_details = act_line.get_ordered()
+
+        if actual_details:
             sub_indent = indent + LineItem.TAB_WIDTH
             act_detail_summation = ""
             for_detail_summation = ""
 
-            for detail in details:
-                act_det = detail
+            for act_det in actual_details:
                 for_det = for_line.find_first(act_det.name)
 
                 self._report_line(
@@ -419,20 +409,19 @@ class ReportChef:
                 row_container.add_group('spacer_details', size=1)
 
             # subtotal row for details
-            # line_label = indent * " " + line.title
-            # finish = row_container.add_group(
-            #     line_label, size=1, label=line_label
-            # )
-            # subtotal_cell = sheet.cell(column=column, row=finish.number())
-            # subtotal_cell.set_explicit_value(
-            #     detail_summation, data_type=TypeCodes.FORMULA
-            # )
-            # line.xl.detailed.ending = finish.number()
-            # line.xl.detailed.cell = subtotal_cell
-            # line.xl.cell = subtotal_cell
-            #
+            line_label = indent * " " + act_line.title
+            finish = row_container.add_group(act_line.title, size=1) # , label=line_label
 
-            # NEED TO DO FOR BOTH ACTUAL AND FORECAST, NEED TO MAKE SURE
-            # THESE CELLS ARE JUST REFERENCING PARENT SHEETS TO GET VALUE
+            sheet.bb.calc_sizes()
 
-        return sheet
+            # ACTUAL
+            act_cell = sheet.cell(column=actual_col.number(), row=finish.number())
+            act_cell.set_explicit_value(act_detail_summation, data_type=TypeCodes.FORMULA)
+            act_line.xl.cell = act_cell
+            CellStyles.format_line(act_line)
+
+            # FORECAST
+            for_cell = sheet.cell(column=forecast_col.number(), row=finish.number())
+            for_cell.set_explicit_value(for_detail_summation, data_type=TypeCodes.FORMULA)
+            for_line.xl.cell = for_cell
+            CellStyles.format_line(for_line)
