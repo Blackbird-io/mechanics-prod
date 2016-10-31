@@ -112,25 +112,28 @@ class ModelChef:
         return book
 
     def build_report(self, model, dates=None):
-        # gGet timelines to report from
-        proj = model.get_timeline()
-        actl = model.get_timeline(resolution='monthly', type='actual')
+        # Get timelines to report from
+        proj = model.get_timeline(resolution='monthly') #, actual=False)
+        actl = model.get_timeline(resolution='monthly') #, actual=True)
 
         # Make workbook and add Cover tab
-        book = GarnishChef.add_garnishes(model, report=True)
+        book = GarnishChef.add_garnishes(model, report=True)  # X
 
         # Add "Forecast" tab filled with projections and "Actual" tab filled
         # with reported values.
-        unit_chef = UnitChef(model)
-        unit_chef.chop_multi(timeline=proj)
-        unit_chef.chop_multi(timeline=actl, actuals=True)
+        unit_chef = UnitChef(model, timeline=proj)
+        unit_chef.chop_multi(book, values_only=True)
+
+        import pdb
+        pdb.set_trace()
+
+        unit_chef = UnitChef(model, timeline=actl)
+        unit_chef.chop_multi(book, values_only=True)
         """
         UnitChef notes:
-         - Using chop_multi() to start with. -> need to add timeline and actuals keywords
-         - Later, if we want to only chop the company, can add a chop_single()
-           routine (or just hide the extra tabs, if any)
-         - chop_multi(actuals=True) means no drivers, life, etc at the top of
-         the sheet since all values are hardcoded
+         - For reports, just add values from Company (other than Details,
+         no special linking, drivers, etc., just show the values) for actual and
+         forecast.
         """
 
         # Build reports

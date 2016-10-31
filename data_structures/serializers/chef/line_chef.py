@@ -73,6 +73,8 @@ class LineChef:
     chop_statement()      writes Statements to Excel (except Starting Balance)
     ====================  =====================================================
     """
+    def __init__(self, values_only=False):
+        self.values_only = values_only
 
     @staticmethod
     def attempt_reference_resolution(sheet, calc, materials):
@@ -134,7 +136,7 @@ class LineChef:
 
     def chop_line(
         self, sheet, column, line, row_container,
-        set_labels=True, indent=0, check=True, start_bal=False
+        set_labels=True, indent=0, check=True, start_bal=False,
     ):
         """
 
@@ -167,38 +169,42 @@ class LineChef:
 
         # a line with own content should have no children with own content,
         # and should not consolidate
-        line.has_own_content = any((
-            len(details) > 0,
-            line.xl.derived.calculations,
-            line.hardcoded,
-        ))
+        if not self.values_only:
+            line.has_own_content = any((
+                len(details) > 0,
+                line.xl.derived.calculations,
+                line.hardcoded,
+            ))
+        else:
+            line.has_own_content = True
 
         if not start_bal:
-            self._add_reference(
-                sheet=sheet,
-                column=column,
-                line=line,
-                indent=indent,
-                row_container=matter
-            )
+            if not self.values_only:
+                self._add_reference(
+                    sheet=sheet,
+                    column=column,
+                    line=line,
+                    indent=indent,
+                    row_container=matter
+                )
 
-            self._add_derivation_logic(
-                sheet=sheet,
-                column=column,
-                line=line,
-                indent=indent,
-                row_container=matter,
-                set_labels=set_labels,
-            )
+                self._add_derivation_logic(
+                    sheet=sheet,
+                    column=column,
+                    line=line,
+                    indent=indent,
+                    row_container=matter,
+                    set_labels=set_labels,
+                )
 
-            self._add_consolidation_logic(
-                sheet=sheet,
-                column=column,
-                line=line,
-                indent=indent,
-                row_container=matter,
-                set_labels=set_labels,
-            )
+                self._add_consolidation_logic(
+                    sheet=sheet,
+                    column=column,
+                    line=line,
+                    indent=indent,
+                    row_container=matter,
+                    set_labels=set_labels,
+                )
 
         if details:
             self._add_details(
@@ -265,7 +271,7 @@ class LineChef:
 
     def chop_statement(
         self, sheet, column, statement, row_container=None,
-        start_bal=False, title=None, set_labels=False
+        start_bal=False, title=None, set_labels=False, values_only=False
     ):
         """
 
@@ -291,7 +297,8 @@ class LineChef:
                 row_container=matter,
                 check=check,
                 start_bal=start_bal,
-                set_labels=set_labels
+                set_labels=set_labels,
+                values_only=values_only,
             )
             row_container.calc_size()
 
@@ -730,7 +737,7 @@ class LineChef:
 
     def _add_details(
         self, sheet, column, line, row_container=None, indent=0,
-        set_labels=False, start_bal=False, check=False
+        set_labels=False, start_bal=False, check=False,
     ):
         """
 
@@ -759,7 +766,7 @@ class LineChef:
                     set_labels=set_labels,
                     indent=sub_indent,
                     check=check,
-                    start_bal=start_bal
+                    start_bal=start_bal,
                 )
 
                 link_template = FormulaTemplates.ADD_COORDINATES

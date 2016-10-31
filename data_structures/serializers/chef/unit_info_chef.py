@@ -106,8 +106,9 @@ class UnitInfoChef:
 
     SCENARIO_ROW = 2
 
-    def __init__(self, model):
+    def __init__(self, model, timeline):
         self.model = model
+        self.timeline = timeline
 
     def add_items_to_area(self, *pargs, sheet, area, items, active_column,
                           set_labels=True, format_func=None,
@@ -285,7 +286,7 @@ class UnitInfoChef:
         return sheet
 
     def create_unit_sheet(
-        self, book, unit, index, name=None, current_only=False
+        self, book, unit, index, name=None, current_only=False, values_only=False
     ):
 
         """
@@ -342,33 +343,33 @@ class UnitInfoChef:
         body_rows = sheet.bb.row_axis.add_group('body')
         body_cols = sheet.bb.col_axis.add_group('body')
 
-        # link to TimeLine parameters
-        self._link_to_time_line(book=book, sheet=sheet, unit=unit,
-                                current_only=current_only)
+        if not values_only:
+            # link to TimeLine parameters
+            self._link_to_time_line(book=book, sheet=sheet, unit=unit,
+                                    current_only=current_only)
 
-        # unit-specific parameters
-        # Add unit parameters and update TimeLine/Period params as necessary
-        self._add_unit_params(sheet, unit, current_only=current_only)
+            # unit-specific parameters
+            # Add unit parameters and update TimeLine/Period params as necessary
+            self._add_unit_params(sheet, unit, current_only=current_only)
 
-        val_col = sheet.bb.time_line.columns.get_position(unit.period.end)
-        param_area = getattr(sheet.bb, FieldNames.PARAMETERS)
-        param_area.columns.by_name[FieldNames.VALUES] = val_col
-        # At this point, sheet.bb.current_row will point to the last parameter.
+            val_col = sheet.bb.time_line.columns.get_position(unit.period.end)
+            param_area = getattr(sheet.bb, FieldNames.PARAMETERS)
+            param_area.columns.by_name[FieldNames.VALUES] = val_col
+            # At this point, sheet.bb.current_row will point to the last parameter.
+
+            corner_col = param_area.columns.get_position(FieldNames.MASTER) + 1
+        else:
+            #  Will need to add timeline headers manually
+            self._add_independent_timeline(sheet=sheet)
+
+            corner_col = self.VALUE_COLUMN - 1
 
         # Freeze panes:
         corner_row = sheet.bb.time_line.rows.ending
         corner_row += 1
 
-        corner_col = param_area.columns.get_position(FieldNames.MASTER)
-        corner_col += 1
-
         corner_cell = sheet.cell(column=corner_col, row=corner_row)
         sheet.freeze_panes = corner_cell
-
-        # for group in body_rows.groups:
-        #     self._add_labels(
-        #         sheet, group.groups, head_cols
-        #     )
 
         # Return sheet
         return sheet
@@ -451,6 +452,18 @@ class UnitInfoChef:
     # *************************************************************************#
     #                          NON-PUBLIC METHODS                              #
     # *************************************************************************#
+    def _add_independent_timeline(self, sheet):
+        timeline_area = sheet.bb.add_area(FieldNames.TIMELINE)
+        timeline_area.rows.by_name[FieldNames.TITLE] = self.TITLE_ROW
+        active_column = self.VALUE_COLUMN
+        active_row = self.TITLE_ROW
+        for date in sorted(self.timeline.keys()):
+            timeline_area.columns.by_name[date] = active_column
+            cell = sheet.cell(column=active_column, row=active_row)
+            cell.value = date
+            CellStyles.format_date(cell)
+            active_column += 1
+
     def _add_labels(self, sheet, groups, label_col, level=0):
         """
 
@@ -609,46 +622,6 @@ class UnitInfoChef:
                 active_cell.value = event_date
                 CellStyles.format_date(active_cell)
                 CellStyles.format_hardcoded(active_cell)
-
-        # events = sheet.bb.events
-        # parameters = getattr(sheet.bb, FieldNames.PARAMETERS)
-        #
-        # active_row = sheet.bb.current_row
-        #
-        # existing_names = unit.life.events.keys() & events.rows.by_name.keys()
-        # new_names = unit.life.events.keys() - existing_names
-        #
-        # # Write values for existing events
-        # for name in existing_names:
-        #
-        #     existing_row = events.rows.get_position(name)
-        #
-        #     master_cell = sheet.cell(column=master_column, row=existing_row)
-        #     active_cell = sheet.cell(column=active_column, row=existing_row)
-        #
-        #     event_date = unit.life.events[name]
-        #
-        #     active_cell.value = event_date
-        #
-        #     if not HIDE_LIFE_EVENTS:
-        #         group_lines(sheet, existing_row)
-        #
-        #
-        # # Now add
-        # new_events = dict()
-        # for name in new_names:
-        #     new_events[name] = unit.life.events[name]
-        #
-        # group = not HIDE_LIFE_EVENTS
-        # self.add_items_to_area(
-        #     sheet=sheet,
-        #     area=events,
-        #     items=new_events,
-        #     active_column=active_column,
-        #     format_func=CellStyles.format_date,
-        #     preference_order=unit.life.ORDER,
-        #     group=group
-        # )
 
         return sheet
 
