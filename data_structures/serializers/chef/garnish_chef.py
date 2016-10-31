@@ -82,23 +82,26 @@ class GarnishChef:
     """
 
     @staticmethod
-    def add_garnishes(model):
+    def add_garnishes(model, report=False):
         """
 
 
         GarnishChef.add_garnishes() -> BB_Workbook
 
+        --``model`` is a Blackbird model instance
+        --``report`` is a bool, whether working on a report
 
         Return a workbook with:
-           cover [not implemented yet]
-           scenarios
-           timeline
+           cover
+           scenarios (only if report is False)
         """
         book = Workbook()
         book.properties.creator = chef_settings.WORKBOOK_AUTHOR
 
         GarnishChef._create_cover_tab(book, model)
-        GarnishChef._create_scenarios_tab(book, model)
+
+        if not report:
+            GarnishChef._create_scenarios_tab(book, model)
 
         return book
 

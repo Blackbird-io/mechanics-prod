@@ -79,11 +79,12 @@ class UnitFinsChef:
     add_statement_container() adds a row group to hold a statement
     ====================  =====================================================
     """
-    def __init__(self, model):
+    def __init__(self, model, timeline):
         self.model = model
         self.fins_dict = dict()
+        self.timeline = timeline
 
-    def chop_financials(self, sheet, unit):
+    def chop_financials(self, sheet, unit, values_only=False):
         """
 
         UnitChef.add_financials() -> dict
@@ -94,9 +95,10 @@ class UnitFinsChef:
         Method adds financials to worksheet and returns a dictionary of the
         statements added to the worksheet and their starting rows
         """
-        time_line = self.model.get_timeline()
-        now = time_line.current_period
-        for period in time_line.iter_ordered(open=now.end):
+        line_chef = LineChef(values_only)
+
+        now = self.timeline.current_period
+        for period in self.timeline.iter_ordered(open=now.end):
             column = sheet.bb.time_line.columns.get_position(period.end)
             financials = unit.get_financials(period)
             for name, statement in financials.chef_ordered():
@@ -117,7 +119,7 @@ class UnitFinsChef:
                         column=column,
                         title=title,
                         start_bal=start_bal,
-                        set_labels = (period.end == now.end)
+                        set_labels=(period.end == now.end),
                     )
 
         # We're done with the first pass of chopping financials, now go back
