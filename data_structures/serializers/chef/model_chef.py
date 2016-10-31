@@ -37,9 +37,11 @@ import bb_settings
 from .cell_styles import CellStyles
 from .garnish_chef import GarnishChef
 from .line_chef import LineChef
+from .report_chef import ReportChef
+from .sheet_style import SheetStyle
+from .summary_chef import SummaryChef
 from .transcript_chef import TranscriptChef
 from .unit_chef import UnitChef
-from .summary_chef import SummaryChef
 from .unit_structure import StructureChef
 
 
@@ -108,3 +110,38 @@ class ModelChef:
         CellStyles.format_line_borders(book)
 
         return book
+
+    def build_report(self, model, dates=None):
+        # gGet timelines to report from
+        proj = model.get_timeline()
+        actl = model.get_timeline(resolution='monthly', type='actual')
+
+        # Make workbook and add Cover tab
+        book = GarnishChef.add_garnishes(model, report=True)
+
+        # Add "Forecast" tab filled with projections and "Actual" tab filled
+        # with reported values.
+        unit_chef = UnitChef(model)
+        unit_chef.chop_multi(timeline=proj)
+        unit_chef.chop_multi(timeline=actl, actuals=True)
+        """
+        UnitChef notes:
+         - Using chop_multi() to start with. -> need to add timeline and actuals keywords
+         - Later, if we want to only chop the company, can add a chop_single()
+           routine (or just hide the extra tabs, if any)
+         - chop_multi(actuals=True) means no drivers, life, etc at the top of
+         the sheet since all values are hardcoded
+        """
+
+        # Build reports
+        report_chef = ReportChef(model, dates)
+        report_chef.build_reports(book, proj, actl)
+
+        # Add "Reports >>" tab with table of contents.  Need to do this last
+        # since we can't count on dates corresponding exactly with period start
+        # and end dates.
+        structure_chef = StructureChef(model)
+        structure_chef.chop_report(book, dates)
+
+        for sheet in book.worksheets:
+            SheetStyle.style_sheet(sheet)
