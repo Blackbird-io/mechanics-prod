@@ -134,8 +134,13 @@ class ReportChef:
 
         for name, act_statement in act_fins.chef_ordered():
             if act_statement is not None:
+                if name == 'starting':
+                    label = 'Starting Balance Sheet'
+                else:
+                    label = None
+
                 for_statement = getattr(for_fins, name)
-                self._report_statement(sheet, act_statement, for_statement)
+                self._report_statement(sheet, act_statement, for_statement, name=label)
 
         # Add Finishing Touches
         sheet.bb.calc_sizes()
@@ -219,7 +224,7 @@ class ReportChef:
         for c in range(label_col.number(), perc_diff.number()+1):
             SheetStyle.set_column_width(sheet, c, 16.63)
 
-    def _report_statement(self, sheet, act_statement, for_statement):
+    def _report_statement(self, sheet, act_statement, for_statement, name=None):
         """
         Add report statements
         """
@@ -227,12 +232,17 @@ class ReportChef:
         lab_col = all_cols.get_group('labels')
 
         all_rows = sheet.bb.row_axis.get_group('all')
-        stat_rows = all_rows.add_group(act_statement.name, offset=1)
+
+        if name is None:
+            name = act_statement.name
+
+        stat_rows = all_rows.add_group(name, offset=1)
+
         lab_row = stat_rows.add_group('label', size=1)
         sheet.bb.calc_sizes()
 
         cell = sheet.cell(row=lab_row.number(), column=lab_col.number())
-        cell.value = act_statement.title.title()
+        cell.value = name.title()
         CellStyles.format_bold(cell)
 
         for act_line in act_statement.get_ordered():
@@ -245,24 +255,15 @@ class ReportChef:
     def _report_line(self, sheet, act_line, for_line, row_container, indent=0):
         """
 
-
-        if act_line._details:
-            for det_act_line in act_line._details:
-                det_for_line = for_line.find_first(det_act_line.name)
-                self._report_line(sheet, det_act_line, det_for_line, indent=bigger indent)
-
-            # Copy soem logic from line chef
-
-        else:
-            # Don't need to worry about calcs, etc. here, we're just
-            referencing the cell where it was written
-
             - print line name
             - set reference to Forecast cell
             - set reference to Actual cell
             - set formula for Delta cell (Actual cell - Forecast cell)
             - set formula for Percent Difference cell (=IFERROR((Actual Cell - Forecast Cell )/ Forecast Cell, self.placeholder)
         """
+        act_save_cell = act_line.xl.cell
+        for_save_cell = for_line.xl.cell
+
         all_cols = sheet.bb.col_axis.get_group('all')
         line_col = all_cols.get_group('lines')
         forecast_col = all_cols.get_group('Forecast')
@@ -356,6 +357,9 @@ class ReportChef:
             sheet.bb.need_spacer = False
 
         row_container.calc_size()
+
+        act_line.xl.cell = act_save_cell
+        for_line.xl.cell = for_save_cell
 
     def _add_details(self, sheet, act_line, for_line, row_container, indent=0):
         """
