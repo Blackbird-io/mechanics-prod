@@ -232,12 +232,6 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
             # financials are assigned to bu before period is
             fins = self.financials
             period.financials[self.id.bbid] = fins
-        elif self.id.bbid in period.bu_directory:
-            # case when a bu has been copied to the period, e.g. past
-            # we want to get the copied financials
-            bu = period.bu_directory[self.id.bbid]
-            fins = bu.get_financials(period)
-            period.financials[self.id.bbid] = fins
         elif period.end > self.period.end and not period.summary:
             # flow of TimeLine.extrapolate() and bu.fill_out() gets us here
             # copy the structure of master financials
