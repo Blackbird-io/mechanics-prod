@@ -286,9 +286,9 @@ class UnitInfoChef:
         return sheet
 
     def create_unit_sheet(
-        self, book, unit, index, name=None, current_only=False, values_only=False
+        self, book, unit, index, name=None, current_only=False,
+        values_only=False, tab_color='',
     ):
-
         """
 
 
@@ -370,6 +370,9 @@ class UnitInfoChef:
 
         corner_cell = sheet.cell(column=corner_col, row=corner_row)
         sheet.freeze_panes = corner_cell
+
+        if tab_color:
+            sheet.sheet_properties.tabColor = tab_color
 
         # Return sheet
         return sheet

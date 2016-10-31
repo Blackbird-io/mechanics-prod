@@ -47,7 +47,6 @@ REPLACEMENT_CHAR = None
 # from sheet titles.
 bad_char_table = {ord(c): REPLACEMENT_CHAR for c in _INVALID_CHARS}
 get_column_letter = xlio.utils.get_column_letter
-line_chef = LineChef()
 
 # Classes
 class UnitFinsChef:

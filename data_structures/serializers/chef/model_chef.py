@@ -112,6 +112,9 @@ class ModelChef:
         return book
 
     def build_report(self, model, dates=None):
+        forecast_color = '4f6228'
+        actual_color = '000000'
+
         # Get timelines to report from
         proj = model.get_timeline(resolution='monthly') #, actual=False)
         actl = model.get_timeline(resolution='monthly') #, actual=True)
@@ -122,19 +125,21 @@ class ModelChef:
         # Add "Forecast" tab filled with projections and "Actual" tab filled
         # with reported values.
         unit_chef = UnitChef(model, timeline=proj)
-        unit_chef.chop_multi(book, values_only=True)
-
-        import pdb
-        pdb.set_trace()
+        unit_chef.chop_multi(book, values_only=True, tab_name='Forecast',
+                             tab_color=forecast_color)
 
         unit_chef = UnitChef(model, timeline=actl)
-        unit_chef.chop_multi(book, values_only=True)
+        unit_chef.chop_multi(book, values_only=True, tab_name='Actual',
+                             tab_color=actual_color)
         """
         UnitChef notes:
          - For reports, just add values from Company (other than Details,
          no special linking, drivers, etc., just show the values) for actual and
          forecast.
         """
+
+        import pdb
+        pdb.set_trace()
 
         # Build reports
         report_chef = ReportChef(model, dates)
