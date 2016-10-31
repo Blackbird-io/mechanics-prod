@@ -536,6 +536,10 @@ class SheetData:
 
         return result
 
+    def calc_sizes(self):
+        self.row_axis.calc_size()
+        self.col_axis.calc_size()
+
     def set_sheet(self, sheet):
         """
 

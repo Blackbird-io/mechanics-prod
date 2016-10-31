@@ -80,7 +80,6 @@ class CellStyles:
     format_sub_header_label() formats sub-header cells
     ====================  =====================================================
     """
-
     @staticmethod
     def format_area_label(sheet, label, row_num, col_num=None):
         """
@@ -235,7 +234,8 @@ class CellStyles:
 
     @staticmethod
     def format_header_label(cell, alignment=None, color=BLACK,
-                            font_color=WHITE, bold=True):
+                            font_color=WHITE, bold=True, font_size=11,
+                            name='Calibri'):
         """
 
 
@@ -252,7 +252,7 @@ class CellStyles:
         if alignment:
             cell.alignment = Alignment(horizontal=alignment)
 
-        cell.font = Font(color=font_color, bold=bold)
+        cell.font = Font(color=font_color, bold=bold, size=font_size, name=name)
         cell.fill = PatternFill(start_color=color,
                                 end_color=color,
                                 fill_type='solid')
@@ -515,3 +515,33 @@ class CellStyles:
                 CellStyles.format_border_group(sheet, st_col=st_col,
                                                ed_col=ed_col, st_row=row,
                                                ed_row=row, border_style=border)
+
+    @staticmethod
+    def format_bold(cell):
+        cell.font = Font(bold=True)
+
+    @staticmethod
+    def format_border(cell, top=False, bottom=False, left=False, right=False,
+                      border_style='thin'):
+
+        side = Side(border_style=border_style)
+        # no_side = Side(border_style=None)
+
+        border = Border(top=cell.border.top,
+                        bottom=cell.border.bottom,
+                        left=cell.border.left,
+                        right=cell.border.right)
+
+        if top:
+            border.top = side
+
+        if bottom:
+            border.bottom = side
+
+        if left:
+            border.left = side
+
+        if right:
+            border.right = side
+
+        cell.border = border
