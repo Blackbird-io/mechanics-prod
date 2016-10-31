@@ -127,6 +127,9 @@ class Model(TagsMixIn):
         # main TimeLine is (resolution='monthly', actual=False)
         self.set_timeline(time_line)
 
+        self.bu_directory = {}
+        self.ty_directory = {}
+
         self.scenarios = dict()
         for s in DEFAULT_SCENARIOS:
             self.scenarios[s] = dict()
@@ -298,7 +301,10 @@ class Model(TagsMixIn):
         result.portal_data = self.portal_data.copy()
         result.taxonomy = self.taxonomy.copy()
         result.transcript = self.transcript.copy()
-        result.set_timeline(self.time_line.copy())
+        for key, time_line in self.timelines.items():
+            new_tl = time_line.copy()
+            new_tl.model = result
+            result.set_timeline(new_tl, *key)
         result.scenarios = self.scenarios.copy()
         result.target = self.target
 
