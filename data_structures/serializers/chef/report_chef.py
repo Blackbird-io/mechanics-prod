@@ -27,10 +27,13 @@ ReportChef            class to generate reports from forecast and actual values
 
 
 # Imports
+from data_structures.modelling.line_item import LineItem
 from openpyxl.utils import get_column_letter
 
 from .cell_styles import CellStyles
+from .formulas import FormulaTemplates
 from .sheet_style import SheetStyle
+from .data_types import TypeCodes
 
 
 
@@ -147,10 +150,6 @@ class ReportChef:
 
         CellStyles.format_border_group(sheet, st_col, ed_col, st_row, ed_row)
 
-        sheet.parent.save(r'C:\Blackbird\test_reporting.xlsx')
-        import pdb
-        pdb.set_trace()
-
     def _make_report_header(self, sheet, title, date):
         """
         Add header
@@ -240,16 +239,11 @@ class ReportChef:
 
             self._report_line(sheet, act_line, for_line, stat_rows)
 
-        sheet.bb.calc_sizes()
+            sheet.bb.calc_sizes()
 
-    def _report_line(self, sheet, act_line, for_line, row_container):
+    def _report_line(self, sheet, act_line, for_line, row_container, indent=0):
         """
-        all_cols = sheet.bb.col_axis.get_group('all')
-        line_col = all_cols.get_group('line_col')
-        forecast_col = all_cols.get_group('Forecast')
-        actual_col = all_cols.get_group('Actual')
-        delta_col = all_cols.get_group('Delta')
-        diff_col = all_cols.get_group('Percent Difference')
+
 
         if act_line._details:
             for det_act_line in act_line._details:
@@ -268,7 +262,169 @@ class ReportChef:
             - set formula for Delta cell (Actual cell - Forecast cell)
             - set formula for Percent Difference cell (=IFERROR((Actual Cell - Forecast Cell )/ Forecast Cell, self.placeholder)
         """
-        import pdb
-        pdb.set_trace()
+        all_cols = sheet.bb.col_axis.get_group('all')
+        line_col = all_cols.get_group('lines')
+        forecast_col = all_cols.get_group('Forecast')
+        actual_col = all_cols.get_group('Actual')
+        delta_col = all_cols.get_group('Delta')
+        diff_col = all_cols.get_group('Percent Difference')
 
-        pass
+        details = act_line.get_ordered()
+
+        if act_line.xl.format.blank_row_before and not details:
+            # if row_container.groups or not row_container.offset:
+            sheet.bb.need_spacer = True
+
+        line_label = indent * " " + act_line.title
+        line_rows = row_container.add_group(act_line.title, offset=int(sheet.bb.need_spacer))
+        sheet.bb.need_spacer = False
+
+        # a line with own content should have no children with own content,
+        # and should not consolidate
+        if details:
+            # self._add_details(
+            #     sheet=sheet,
+            #     act_line=act_line,
+            #     for_line=for_line,
+            #     row_container=row_container,
+            #     indent=indent,
+            # )
+            pass
+        else:
+            pass
+            # line_row = line_rows.add_group(act_line.title, size=1)
+            # sheet.bb.calc_sizes()
+            #
+            # # need to write actual and forecast values here (link to source)
+            # formula_string = '=%s' % act_line.xl.get_coordinates(include_sheet=True)
+            # act_cell = sheet.cell(row=line_row.number(), column=actual_col.number())
+            # act_cell.set_explicit_value(formula_string, data_type=TypeCodes.FORMULA)
+            # act_line.xl.cell = act_cell
+            #
+            # formula_string = '=%s' % for_line.xl.get_coordinates(include_sheet=True)
+            # for_cell = sheet.cell(row=line_row.number(), column=forecast_col.number())
+            # for_cell.set_explicit_value(formula_string, data_type=TypeCodes.FORMULA)
+            # for_line.xl.cell = for_cell
+
+        # this is the logic for lines without details
+        line_row = line_rows.add_group(act_line.title, size=1)
+        sheet.bb.calc_sizes()
+
+        # need to write actual and forecast values here (link to source)
+        formula_string = '=%s' % act_line.xl.get_coordinates(
+            include_sheet=True)
+        act_cell = sheet.cell(row=line_row.number(),
+                              column=actual_col.number())
+        act_cell.set_explicit_value(formula_string,
+                                    data_type=TypeCodes.FORMULA)
+        act_line.xl.cell = act_cell
+        CellStyles.format_line(act_line)
+
+        formula_string = '=%s' % for_line.xl.get_coordinates(
+            include_sheet=True)
+        for_cell = sheet.cell(row=line_row.number(),
+                              column=forecast_col.number())
+        for_cell.set_explicit_value(formula_string,
+                                    data_type=TypeCodes.FORMULA)
+        for_line.xl.cell = for_cell
+        CellStyles.format_line(for_line)
+
+        # *************************************************************
+        # write line label
+        label_cell = sheet.cell(row=line_row.number(), column=line_col.number())
+        label_cell.value = line_label
+        # *************************************************************
+
+        # *************************************************************
+        # Do the actual work here
+        materials = dict()
+        materials['actual'] = act_line.xl.get_coordinates(include_sheet=False)
+        materials['forecast'] = for_line.xl.get_coordinates(include_sheet=False)
+        materials['placeholder'] = self._placeholder
+
+        delta_cell = sheet.cell(row=line_row.number(), column=delta_col.number())
+        temp = FormulaTemplates.REPORT_DELTA
+        formula_string = temp.format(**materials)
+        delta_cell.set_explicit_value(formula_string,
+                                      data_type=TypeCodes.FORMULA)
+
+        diff_cell = sheet.cell(row=line_row.number(), column=diff_col.number())
+        temp = FormulaTemplates.REPORT_DIFF
+        formula_string = temp.format(**materials)
+        diff_cell.set_explicit_value(formula_string,
+                                     data_type=TypeCodes.FORMULA)
+        # *************************************************************
+
+        if act_line.xl.format.blank_row_after:
+            sheet.bb.need_spacer = True
+        else:
+            sheet.bb.need_spacer = False
+
+        row_container.calc_size()
+
+    def _add_details(self, sheet, act_line, for_line, row_container, indent=0):
+        """
+
+
+        LineChef._add_detail() -> Worksheet
+
+        --``sheet`` must be an instance of openpyxl Worksheet
+        --``line`` must be an instance of LineItem
+        --``row_container`` coordinate anchor on the row axis
+        --``column`` must be a column number reference
+        --``indent`` is amount of indent
+
+        Displays detail sources.
+        """
+        details = act_line.get_ordered()
+
+        if details:
+            sub_indent = indent + LineItem.TAB_WIDTH
+            act_detail_summation = ""
+            for_detail_summation = ""
+
+            for detail in details:
+                act_det = detail
+                for_det = for_line.find_first(act_det.name)
+
+                self._report_line(
+                    sheet=sheet,
+                    act_line=act_det,
+                    for_line=for_det,
+                    row_container=row_container,
+                    indent=sub_indent,
+                )
+
+                link_template = FormulaTemplates.ADD_COORDINATES
+
+                cos = act_det.xl.get_coordinates(include_sheet=False)
+                link = link_template.format(coordinates=cos)
+                act_detail_summation += link
+
+                cos = for_det.xl.get_coordinates(include_sheet=False)
+                link = link_template.format(coordinates=cos)
+                for_detail_summation += link
+
+            row_container.calc_size()
+
+            if act_line.xl.format.blank_row_before:
+                row_container.add_group('spacer_details', size=1)
+
+            # subtotal row for details
+            # line_label = indent * " " + line.title
+            # finish = row_container.add_group(
+            #     line_label, size=1, label=line_label
+            # )
+            # subtotal_cell = sheet.cell(column=column, row=finish.number())
+            # subtotal_cell.set_explicit_value(
+            #     detail_summation, data_type=TypeCodes.FORMULA
+            # )
+            # line.xl.detailed.ending = finish.number()
+            # line.xl.detailed.cell = subtotal_cell
+            # line.xl.cell = subtotal_cell
+            #
+
+            # NEED TO DO FOR BOTH ACTUAL AND FORECAST, NEED TO MAKE SURE
+            # THESE CELLS ARE JUST REFERENCING PARENT SHEETS TO GET VALUE
+
+        return sheet
