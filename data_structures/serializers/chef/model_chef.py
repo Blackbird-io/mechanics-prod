@@ -139,12 +139,13 @@ class ModelChef:
          forecast.
         """
 
-        import pdb
-        pdb.set_trace()
-
         # Build reports
         report_chef = ReportChef(model, proj, actl, dates)
         report_chef.build_reports(book)
+
+        import pdb
+        pdb.set_trace()
+
 
         # Add "Reports >>" tab with table of contents.  Need to do this last
         # since we can't count on dates corresponding exactly with period start
