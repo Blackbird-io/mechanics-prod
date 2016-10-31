@@ -101,6 +101,9 @@ class UnitFinsChef:
             now = self.timeline[min(self.timeline.keys())]
 
         for period in self.timeline.iter_ordered(open=now.end):
+            if period.start < now.start:
+                continue
+
             column = sheet.bb.time_line.columns.get_position(period.end)
             financials = unit.get_financials(period)
             for name, statement in financials.chef_ordered():

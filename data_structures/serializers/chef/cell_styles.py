@@ -521,6 +521,10 @@ class CellStyles:
         cell.font = Font(bold=True)
 
     @staticmethod
+    def format_alignment(cell, alignment):
+        cell.alignment = Alignment(horizontal=alignment)
+
+    @staticmethod
     def format_border(cell, top=False, bottom=False, left=False, right=False,
                       border_style='thin'):
 
