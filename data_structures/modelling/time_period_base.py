@@ -83,13 +83,13 @@ class TimePeriodBase(History):
     ====================  ======================================================
     """
 
-    def __init__(self, start_date, end_date, content=None):
+    def __init__(self, start_date, end_date, content=None, model=None):
         History.__init__(self, recursive_attribute="content")
 
         self.start = start_date
         self.end = end_date
 
-        self.bu_directory = dict()
+        self.bu_directory = model.bu_directory
         self.financials = dict()
 
         self.summary = None
@@ -101,7 +101,7 @@ class TimePeriodBase(History):
         self.next_end = None
 
         # The current approach to indexing units within a period assumes that
-        # Blackbird will rarely remove existing units from a model. both
+        # Blackbird will rarely remove existing units from a model.
         # The ``bu`` directory is static: it does not know if
         # the unit whose bbid it references is no longer in its domain.
 

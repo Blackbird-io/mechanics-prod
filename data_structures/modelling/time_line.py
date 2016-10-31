@@ -170,7 +170,9 @@ class TimeLine(TimelineBase):
         # Make reference period
         fwd_start_date = self._get_fwd_start_date(ref_date)
         current_end_date = fwd_start_date - timedelta(1)
-        current_period = TimePeriod(current_start_date, current_end_date)
+        current_period = TimePeriod(
+            current_start_date, current_end_date, model=self.model
+        )
         self.add_period(current_period)
         self.current_period = current_period
 
@@ -188,7 +190,9 @@ class TimeLine(TimelineBase):
             curr_start_date = fwd_start_date
             fwd_start_date = self._get_fwd_start_date(curr_start_date)
             curr_end_date = fwd_start_date - timedelta(1)
-            fwd_period = TimePeriod(curr_start_date, curr_end_date)
+            fwd_period = TimePeriod(
+                curr_start_date, curr_end_date, model=self.model
+            )
             self.add_period(fwd_period)
             i += 1
             if i >= fwd and fwd_period.end.month == 12:
@@ -202,7 +206,9 @@ class TimeLine(TimelineBase):
             curr_start_date = date(
                 curr_end_date.year, curr_end_date.month, 1
             )
-            back_period = TimePeriod(curr_start_date, curr_end_date)
+            back_period = TimePeriod(
+                curr_start_date, curr_end_date, model=self.model
+            )
             self.add_period(back_period)
             # close loop:
             back_end_date = curr_start_date - timedelta(1)
