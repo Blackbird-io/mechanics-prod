@@ -82,7 +82,7 @@ class GarnishChef:
     """
 
     @staticmethod
-    def add_garnishes(model, report=False):
+    def add_garnishes(model, report=False, last_date=None):
         """
 
 
@@ -98,7 +98,7 @@ class GarnishChef:
         book = Workbook()
         book.properties.creator = chef_settings.WORKBOOK_AUTHOR
 
-        GarnishChef._create_cover_tab(book, model)
+        GarnishChef._create_cover_tab(book, model, report=report, last_report=last_date)
 
         if not report:
             GarnishChef._create_scenarios_tab(book, model)
@@ -109,7 +109,7 @@ class GarnishChef:
     #                           NON-PUBLIC METHODS                             #
     # *************************************************************************#
     @staticmethod
-    def _create_cover_tab(book, model):
+    def _create_cover_tab(book, model, report=False, last_report=None):
         """
 
 
@@ -159,7 +159,13 @@ class GarnishChef:
                                         border_style='double')
 
         cell = sheet.cell('E11')
-        cell.value = company.name.title()
+
+        if report:
+            title = 'Reporting: ' + company.name.title()
+        else:
+            title = company.name.title()
+
+        cell.value = title
         cell.alignment = Alignment(horizontal='center', vertical='center')
         cell.font = Font(size=18, bold=True, underline='single')
 
@@ -168,37 +174,49 @@ class GarnishChef:
         cell.alignment = Alignment(horizontal='left')
         cell.font = Font(size=12, bold=True)
 
+        if not report:
+            date_label = chef_settings.REF_DATE_LABEL
+        else:
+            date_label = 'Latest Report Date:'
+
         cell = sheet.cell('D15')
-        cell.value = chef_settings.REF_DATE_LABEL
+        cell.value = date_label
         cell.alignment = Alignment(horizontal='left')
         cell.font = Font(size=12, bold=True)
 
-        cell = sheet.cell('D16')
-        cell.value = chef_settings.QCOUNT_LABEL
-        cell.alignment = Alignment(horizontal='left')
-        cell.font = Font(size=12, bold=True)
+        if not report:
+            cell = sheet.cell('D16')
+            cell.value = chef_settings.QCOUNT_LABEL
+            cell.alignment = Alignment(horizontal='left')
+            cell.font = Font(size=12, bold=True)
 
         cell = sheet.cell(chef_settings.COVER_DATE_CELL)
         cell.value = datetime.date.today()
         cell.alignment = Alignment(horizontal='right')
         cell.font = Font(size=12)
 
+        if not report:
+            use_date = model.time_line.ref_date
+        else:
+            use_date = last_report
+
         cell = sheet.cell('F15')
-        cell.value = model.time_line.ref_date
+        cell.value = use_date
         cell.alignment = Alignment(horizontal='right')
         cell.font = Font(size=12)
 
-        # get length of interview
-        questions = []
-        for i in model.transcript:
-            q = i[0]['q_in']
-            if q:
-                questions.append(q['prompt'])
+        if not report:
+            # get length of interview
+            questions = []
+            for i in model.transcript:
+                q = i[0]['q_in']
+                if q:
+                    questions.append(q['prompt'])
 
-        cell = sheet.cell('F16')
-        cell.value = len(questions)
-        cell.alignment = Alignment(horizontal='right')
-        cell.font = Font(size=12)
+            cell = sheet.cell('F16')
+            cell.value = len(questions)
+            cell.alignment = Alignment(horizontal='right')
+            cell.font = Font(size=12)
 
         cell = sheet.cell('C18')
         cell.value = chef_settings.ESTIMATED_LABEL

@@ -120,8 +120,10 @@ class ModelChef:
         proj = model.get_timeline(resolution='monthly') #, actual=False)
         actl = model.get_timeline(resolution='quarterly') #, actual=True)
 
+        last_date = max(actl.keys())
+
         # Make workbook and add Cover tab
-        book = GarnishChef.add_garnishes(model, report=True)  # X
+        book = GarnishChef.add_garnishes(model, report=True, last_date=last_date)
 
         # Add "Forecast" tab filled with projections and "Actual" tab filled
         # with reported values.
@@ -144,15 +146,15 @@ class ModelChef:
         report_chef = ReportChef(model, proj, actl, dates)
         report_chef.build_reports(book)
 
-        book.save(r'C:\Blackbird\test_reporting.xlsx')
-        import pdb
-        pdb.set_trace()
-
         # Add "Reports >>" tab with table of contents.  Need to do this last
         # since we can't count on dates corresponding exactly with period start
         # and end dates.
         structure_chef = StructureChef(model)
-        structure_chef.chop_report(book, dates)
+        structure_chef.chop_report(book)
 
-        for sheet in book.worksheets:
-            SheetStyle.style_sheet(sheet)
+        # for sheet in book.worksheets:
+        #     SheetStyle.style_sheet(sheet)
+
+        book.save(r'C:\Blackbird\test_reporting.xlsx')
+        import pdb
+        pdb.set_trace()

@@ -105,6 +105,11 @@ class StructureChef:
         body_cols.calc_size()
         self.layout(sheet, body_rows.groups)
 
+    def chop_report(self, book):
+        sheet = book.create_sheet('Reports >>', 1)
+        sheet.sheet_properties.tabColor = '4f81bd'
+        SheetStyle.style_sheet(sheet, label_areas=False)
+
     def unit_box(self, sheet, unit, row_container, col_container, level=0):
         """
 
