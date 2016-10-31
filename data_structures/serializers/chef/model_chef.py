@@ -112,12 +112,13 @@ class ModelChef:
         return book
 
     def build_report(self, model, dates=None):
+
         forecast_color = '4f6228'
         actual_color = '000000'
 
         # Get timelines to report from
         proj = model.get_timeline(resolution='monthly') #, actual=False)
-        actl = model.get_timeline(resolution='monthly') #, actual=True)
+        actl = model.get_timeline(resolution='quarterly') #, actual=True)
 
         # Make workbook and add Cover tab
         book = GarnishChef.add_garnishes(model, report=True)  # X
@@ -128,7 +129,7 @@ class ModelChef:
         unit_chef.chop_multi(book, values_only=True, tab_name='Forecast',
                              tab_color=forecast_color)
 
-        unit_chef = UnitChef(model, timeline=actl)
+        unit_chef = UnitChef(model, timeline=actl)  # faked with quarterly summaries for now
         unit_chef.chop_multi(book, values_only=True, tab_name='Actual',
                              tab_color=actual_color)
         """
@@ -142,8 +143,8 @@ class ModelChef:
         pdb.set_trace()
 
         # Build reports
-        report_chef = ReportChef(model, dates)
-        report_chef.build_reports(book, proj, actl)
+        report_chef = ReportChef(model, proj, actl, dates)
+        report_chef.build_reports(book)
 
         # Add "Reports >>" tab with table of contents.  Need to do this last
         # since we can't count on dates corresponding exactly with period start

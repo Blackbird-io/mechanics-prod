@@ -241,7 +241,14 @@ class LineChef:
         else:
             run_segments = True
 
-        if not line.xl.reference.source and run_segments:
+        if (not line.xl.reference.source and run_segments) or self.values_only:
+            if self.values_only:
+                if line.xl.reference.source:
+                    save_source = line.xl.reference.source
+                    line.xl.reference.source = None
+                else:
+                    save_source = None
+
             self._combine_segments(
                 sheet=sheet,
                 column=column,
@@ -249,6 +256,11 @@ class LineChef:
                 indent=indent,
                 row_container=matter,
             )
+
+            if self.values_only and save_source is not None:
+                line.xl.reference.source = save_source
+                # this is only temporary, we might just want to pull off the
+                # line.xl attr altogether and replace at end or something
 
         CellStyles.format_line(line)
 
@@ -770,6 +782,7 @@ class LineChef:
 
                 link_template = FormulaTemplates.ADD_COORDINATES
                 include = detail.xl.cell.parent is not sheet
+
                 cos = detail.xl.get_coordinates(include_sheet=include)
                 link = link_template.format(coordinates=cos)
                 detail_summation += link

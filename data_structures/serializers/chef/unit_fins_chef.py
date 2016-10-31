@@ -96,7 +96,10 @@ class UnitFinsChef:
         """
         line_chef = LineChef(values_only)
 
-        now = self.timeline.current_period
+        now = getattr(self.timeline, 'current_period', None)
+        if now is None:
+            now = self.timeline[min(self.timeline.keys())]
+
         for period in self.timeline.iter_ordered(open=now.end):
             column = sheet.bb.time_line.columns.get_position(period.end)
             financials = unit.get_financials(period)
