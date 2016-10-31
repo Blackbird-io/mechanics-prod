@@ -132,20 +132,21 @@ class ModelChef:
         unit_chef = UnitChef(model, timeline=actl)  # faked with quarterly summaries for now
         unit_chef.chop_multi(book, values_only=True, tab_name='Actual',
                              tab_color=actual_color)
-        """
-        UnitChef notes:
-         - For reports, just add values from Company (other than Details,
-         no special linking, drivers, etc., just show the values) for actual and
-         forecast.
-        """
+
+        # """
+        # UnitChef notes:
+        #  - For reports, just add values from Company (other than Details,
+        #  no special linking, drivers, etc., just show the values) for actual and
+        #  forecast.
+        # """
 
         # Build reports
         report_chef = ReportChef(model, proj, actl, dates)
         report_chef.build_reports(book)
 
+        book.save(r'C:\Blackbird\test_reporting.xlsx')
         import pdb
         pdb.set_trace()
-
 
         # Add "Reports >>" tab with table of contents.  Need to do this last
         # since we can't count on dates corresponding exactly with period start
