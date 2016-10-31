@@ -460,7 +460,15 @@ class UnitInfoChef:
         timeline_area.rows.by_name[FieldNames.TITLE] = self.TITLE_ROW
         active_column = self.VALUE_COLUMN
         active_row = self.TITLE_ROW
+
+        now = getattr(self.timeline, 'current_period', None)
+        if now is None:
+            now = self.timeline[min(self.timeline.keys())]
+
         for date in sorted(self.timeline.keys()):
+            if date < now.end:
+                continue
+
             timeline_area.columns.by_name[date] = active_column
             cell = sheet.cell(column=active_column, row=active_row)
             cell.value = date

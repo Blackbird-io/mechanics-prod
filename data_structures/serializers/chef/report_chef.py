@@ -33,7 +33,7 @@ from openpyxl.utils import get_column_letter
 from .cell_styles import CellStyles
 from .formulas import FormulaTemplates
 from .sheet_style import SheetStyle
-from .data_types import TypeCodes
+from .data_types import TypeCodes, NumberFormats
 
 
 
@@ -201,6 +201,7 @@ class ReportChef:
         value_cell.value = date
         CellStyles.format_date(value_cell)
         CellStyles.format_bold(value_cell)
+        CellStyles.format_alignment(value_cell, 'left')
 
         # Set header columns (should be own row group w/offset=1, col group with offset=3)
         groups = [fore_col, actl_col, delta_col, perc_diff]
@@ -348,11 +349,18 @@ class ReportChef:
         delta_cell.set_explicit_value(formula_string,
                                       data_type=TypeCodes.FORMULA)
 
+        save_cell = act_line.xl.cell
+        act_line.xl.cell = delta_cell
+        CellStyles.format_line(act_line)
+        act_line.xl.cell = save_cell
+
         diff_cell = sheet.cell(row=line_row.number(), column=diff_col.number())
         temp = FormulaTemplates.REPORT_DIFF
         formula_string = temp.format(**materials)
         diff_cell.set_explicit_value(formula_string,
                                      data_type=TypeCodes.FORMULA)
+        CellStyles.format_parameter(diff_cell)
+        diff_cell.number_format = NumberFormats.PERCENT_FORMAT
         # *************************************************************
 
         if act_line.xl.format.blank_row_after:
