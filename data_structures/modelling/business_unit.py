@@ -443,25 +443,17 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         n-1 period (located at instance.period.past), and then recursively
         linking all of the instance components to their younger selves.
         """
-        if self.past:
-            if overwrite:
-                pass
-            else:
-                c = "Instance already defines past. "
-                c += "Implicit overwrites prohibited."
-                raise bb_exceptions.BBPermissionError(c)
+        if self.id.bbid not in self.period.past.financials:
+            fins = self.financials.copy()
+            fins.reset()
+            fins.relationships.set_parent(self)
+            fins.period = self.period.past
+            self.period.past.financials[self.id.bbid] = fins
 
-        younger = self.copy()
-        younger.reset_financials()
+        for bu in self.components.get_all():
+            bu.make_past()
 
-        younger._fit_to_period(self.period.past)
-        younger._register_in_period()
-        # younger includes all components
-
-        self.set_history(younger, clear_future=False)
-        # connect all components to their younger selves
-
-    def recalculate(self, adjust_future=True):
+    def recalculate(self, adjust_future=True, period=None):
         """
 
 
@@ -471,10 +463,10 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         Recalculate instance finanicals. If ``adjust_future`` is True, will
         repeat for all future snapshots.
         """
-        self.reset_financials()
-        self.fill_out()
-        if adjust_future and self.future:
-            self.future.recalculate(adjust_future=True)
+        self.reset_financials(period=period)
+        self.fill_out(period=period)
+        if adjust_future and period and period.future:
+            self.recalculate(adjust_future=True, period=period.future)
 
     def reset_financials(self, period=None, recur=True):
         """
