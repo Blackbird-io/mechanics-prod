@@ -259,7 +259,7 @@ class UnitChef:
         current = sheet.bb.time_line.columns.get_position(now.end)
         SheetStyle.set_column_width(sheet, current, width=22)
 
-        fins_chef = UnitFinsChef(self.model)
+        fins_chef = UnitFinsChef(self.model, self.timeline)
         financials = self.model.get_financials(unit.id.bbid, now)
         statement = financials.valuation
         statement_rows = fins_chef.add_statement_container(sheet, statement)
