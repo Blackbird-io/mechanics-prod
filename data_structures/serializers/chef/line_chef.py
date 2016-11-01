@@ -29,15 +29,16 @@ LineChef              class with methods to chop BB statements into dynamic
 
 
 # Imports
-import openpyxl as xlio
 import itertools
+import openpyxl as xlio
 
-from openpyxl.comments import Comment
 from bb_exceptions import ExcelPrepError, BBAnalyticalError
 from chef_settings import (
     COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING, COMMENT_CUSTOM,
 )
 from data_structures.modelling.line_item import LineItem
+from openpyxl.comments import Comment
+
 from ._chef_tools import (
     group_lines, check_alignment, set_param_rows, rows_to_coordinates
 )
@@ -65,7 +66,7 @@ class LineChef:
     ====================  =====================================================
 
     DATA:
-    n/a
+    values_only           whether to write full logic to Excel or only values
 
     FUNCTIONS:
     attempt_reference_resolution() tries to resolve missing line refs in formulas
@@ -73,6 +74,8 @@ class LineChef:
     chop_statement()      writes Statements to Excel (except Starting Balance)
     ====================  =====================================================
     """
+    def __init__(self, values_only=False):
+        self.values_only = values_only
 
     @staticmethod
     def attempt_reference_resolution(sheet, calc, materials):
@@ -134,7 +137,7 @@ class LineChef:
 
     def chop_line(
         self, sheet, column, line, row_container,
-        set_labels=True, indent=0, check=True, start_bal=False
+        set_labels=True, indent=0, check=True, start_bal=False,
     ):
         """
 
@@ -165,32 +168,41 @@ class LineChef:
         )
         sheet.bb.need_spacer = False
 
+        if self.values_only:
+            line.has_own_content = True
+        else:
+            line.has_own_content = any((
+                len(details) > 0,
+                line.xl.derived.calculations,
+                line.hardcoded,
+            ))
         if not start_bal:
-            self._add_reference(
-                sheet=sheet,
-                column=column,
-                line=line,
-                indent=indent,
-                row_container=matter
-            )
+            if not self.values_only:
+                self._add_reference(
+                    sheet=sheet,
+                    column=column,
+                    line=line,
+                    indent=indent,
+                    row_container=matter
+                )
 
-            self._add_derivation_logic(
-                sheet=sheet,
-                column=column,
-                line=line,
-                indent=indent,
-                row_container=matter,
-                set_labels=set_labels,
-            )
+                self._add_derivation_logic(
+                    sheet=sheet,
+                    column=column,
+                    line=line,
+                    indent=indent,
+                    row_container=matter,
+                    set_labels=set_labels,
+                )
 
-            self._add_consolidation_logic(
-                sheet=sheet,
-                column=column,
-                line=line,
-                indent=indent,
-                row_container=matter,
-                set_labels=set_labels,
-            )
+                self._add_consolidation_logic(
+                    sheet=sheet,
+                    column=column,
+                    line=line,
+                    indent=indent,
+                    row_container=matter,
+                    set_labels=set_labels,
+                )
 
         if details:
             self._add_details(
@@ -227,7 +239,7 @@ class LineChef:
         else:
             run_segments = True
 
-        if not line.xl.reference.source and run_segments:
+        if (not line.xl.reference.source and run_segments) or self.values_only:
             self._combine_segments(
                 sheet=sheet,
                 column=column,
@@ -283,7 +295,7 @@ class LineChef:
                 row_container=matter,
                 check=check,
                 start_bal=start_bal,
-                set_labels=set_labels
+                set_labels=set_labels,
             )
             row_container.calc_size()
 
@@ -705,7 +717,10 @@ class LineChef:
             line.xl.detailed.cell,
             line.xl.reference.cell
         ))
-        if not processed:
+
+        write_value = not processed or (self.values_only and not line.xl.detailed.cell)
+
+        if write_value:
             line_label = indent * " " + line.title  # + ': segment'
             finish = row_container.add_group(
                 line.title, size=1, label=line_label
@@ -723,7 +738,7 @@ class LineChef:
 
     def _add_details(
         self, sheet, column, line, row_container=None, indent=0,
-        set_labels=False, start_bal=False, check=False
+        set_labels=False, start_bal=False, check=False,
     ):
         """
 
@@ -752,11 +767,12 @@ class LineChef:
                     set_labels=set_labels,
                     indent=sub_indent,
                     check=check,
-                    start_bal=start_bal
+                    start_bal=start_bal,
                 )
 
                 link_template = FormulaTemplates.ADD_COORDINATES
                 include = detail.xl.cell.parent is not sheet
+
                 cos = detail.xl.get_coordinates(include_sheet=include)
                 link = link_template.format(coordinates=cos)
                 detail_summation += link
