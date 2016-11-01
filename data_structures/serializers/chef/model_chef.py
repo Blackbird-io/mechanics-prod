@@ -38,7 +38,6 @@ from .cell_styles import CellStyles
 from .garnish_chef import GarnishChef
 from .line_chef import LineChef
 from .report_chef import ReportChef
-from .sheet_style import SheetStyle
 from .summary_chef import SummaryChef
 from .transcript_chef import TranscriptChef
 from .unit_chef import UnitChef
@@ -74,6 +73,7 @@ class ModelChef:
     FUNCTIONS:
     chop_model()          returns BB_Workbook containing an Excel workbook with
                           dynamic links
+    build_report()        returns BB_Workbook containing formatted report(s)
     ====================  =====================================================
     """
 
@@ -112,13 +112,24 @@ class ModelChef:
         return book
 
     def build_report(self, model, dates=None):
+        """
+
+
+        ModelChef.build_report() -> BB_Workbook
+
+        --``model`` is an instance of Blackbird Engine model
+        --``dates`` is a tuple of the date range for which to produce reports
+
+        Method prepares and formats reports for the specified date range, or
+        all available if no date range is provided.
+        """
 
         forecast_color = '4f6228'
         actual_color = '000000'
 
         # Get timelines to report from
         proj = model.get_timeline(resolution='monthly') #, actual=False)
-        actl = model.get_timeline(resolution='quarterly') #, actual=True)
+        actl = model.get_timeline(resolution='quarterly') #, actual=True)      # faked with quarterly summaries for now
 
         last_date = max(actl.keys())
 
@@ -131,16 +142,9 @@ class ModelChef:
         unit_chef.chop_multi(book, values_only=True, tab_name='Forecast',
                              tab_color=forecast_color)
 
-        unit_chef = UnitChef(model, timeline=actl)  # faked with quarterly summaries for now
+        unit_chef = UnitChef(model, timeline=actl)
         unit_chef.chop_multi(book, values_only=True, tab_name='Actual',
                              tab_color=actual_color)
-
-        # """
-        # UnitChef notes:
-        #  - For reports, just add values from Company (other than Details,
-        #  no special linking, drivers, etc., just show the values) for actual and
-        #  forecast.
-        # """
 
         # Build reports
         report_chef = ReportChef(model, proj, actl, dates)
@@ -152,9 +156,4 @@ class ModelChef:
         structure_chef = StructureChef(model)
         structure_chef.chop_report(book)
 
-        # for sheet in book.worksheets:
-        #     SheetStyle.style_sheet(sheet)
-
-        book.save(r'C:\Blackbird\test_reporting.xlsx')
-        import pdb
-        pdb.set_trace()
+        return book

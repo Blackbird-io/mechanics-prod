@@ -108,12 +108,16 @@ class UnitChef:
         --``book`` must be a Workbook
         --``unit`` is optionally an instance of BusinessUnit
         --``timeline`` is optionally the timeline from which to pull financials
-        --``actuals`` must be a bool, whether all values are hardcoded values
-                      (don't print drivers and life)
+        --``values_only`` must be a bool, whether all values should be written
+                          as hardcoded values (don't print drivers and life)
 
         Method recursively walks through ``unit`` and components and chops them
         into Excel format.  Method also spreads financials, parameters, and
         life of the unit.
+
+        If `values_only` = True, only chop company unit (no recursion) and
+        write all financial values as hardcoded.  This option is used for
+        reports.
         """
         model = self.model
         timeline = self.timeline
