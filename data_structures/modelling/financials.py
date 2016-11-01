@@ -260,7 +260,7 @@ class Financials:
         """
         self.run_on_all("build_tables")
 
-    def copy(self):
+    def copy(self, clean=False):
         """
 
 
@@ -279,7 +279,7 @@ class Financials:
         for name in self.full_order:
             own_statement = getattr(self, name)
             if own_statement is not None:
-                new_statement = own_statement.copy()
+                new_statement = own_statement.copy(clean=clean)
                 new_statement.relationships.set_parent(new_instance)
                 setattr(new_instance, name, new_statement)
 
