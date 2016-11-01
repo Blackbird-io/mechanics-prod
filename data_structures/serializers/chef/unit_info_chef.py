@@ -126,6 +126,7 @@ class UnitInfoChef:
         --``format_func`` is a function to use on cells for formatting
         --``preference_order`` is optionally a specific ordering
         --``group`` bool; whether to group the rows these items are added to
+
         Method adds names to Area in sorted order.  Method starts work after
         the current row and expects sheet to come with parameters unless you
         specify the label and master column.
@@ -299,11 +300,16 @@ class UnitInfoChef:
         --``index`` is optionally the index at which to insert the tab
         --``name`` is the name to give the tab
         --``current_only`` bool; whether to add all periods or only current
+        --``values_only`` bool; whether to write flowing Excel formulas and
+                          include background info, like life and parameters, on
+                          the unit sheet
+        --``tab_color`` str; Hex color definition for tab color
 
-        Returns sheet with current row pointing to last parameter row
+        Returns sheet with current row pointing to last parameter row.
+        ``values_only`` = True will print only values to Excel, no driver
+        calculations, no consolidation, so Life, Events, and Drivers sections
+        will not be written to the sheet.
         """
-        self.book = book
-
         if not name:
             name = unit.tags.title
 
@@ -456,6 +462,11 @@ class UnitInfoChef:
     #                          NON-PUBLIC METHODS                              #
     # *************************************************************************#
     def _add_independent_timeline(self, sheet):
+        """
+        Method adds stand-alone timeline to unit sheet.  Method writes values
+        to header row (does not link to another tab).  Method will not write
+        periods preceding the current_period, if defined.
+        """
         timeline_area = sheet.bb.add_area(FieldNames.TIMELINE)
         timeline_area.rows.by_name[FieldNames.TITLE] = self.TITLE_ROW
         active_column = self.VALUE_COLUMN
