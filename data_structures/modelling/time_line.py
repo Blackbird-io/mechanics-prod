@@ -287,7 +287,7 @@ class TimeLine(TimelineBase):
         company.reset_financials(period=seed)
         company.fill_out(period=seed)
 
-        if seed.past.content:
+        if seed.past and company.id.bbid in seed.past.financials:
             company.reset_financials(period=seed.past)
             company.fill_out(period=seed.past)
 
