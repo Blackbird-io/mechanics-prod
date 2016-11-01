@@ -79,6 +79,8 @@ class UnitInfoChef:
     ====================  =====================================================
 
     DATA:
+    model                 obj; instance of Blackbird model
+    timeline              obj; instance of Timeline from which to pull financials
     MAX_CONSOLIDATION_ROWS = 15
     MAX_LINKS_PER_CELL = 1
     MAX_TITLE_CHARACTERS = 30
