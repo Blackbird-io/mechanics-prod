@@ -253,7 +253,6 @@ class Model(TagsMixIn):
                 business_name = bb_settings.DEFAULT_MODEL_NAME
             M = cls(business_name)
         M.portal_data.update(portal_model)
-        # cls.restore_timelines(M, portal_model)
         del M.portal_data["e_model"]
         return M
 
@@ -408,16 +407,3 @@ class Model(TagsMixIn):
         time_stamp = time.time()
         record = (message, time_stamp)
         self.transcript.append(record)
-
-    @classmethod
-    def restore_timelines(cls, model, portal_model):
-        """
-
-        Model.restore_timeline() -> TimeLine
-
-        --``resolution`` is 'monthly', 'quarterly', 'annually' or any available
-          summary resolution'
-
-        Method returns the timeline for specified resolution (if any).
-        """
-        return
