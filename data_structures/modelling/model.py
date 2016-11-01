@@ -34,6 +34,8 @@ import bb_exceptions
 import bb_settings
 from chef_settings import DEFAULT_SCENARIOS
 from data_structures.system.bbid import ID
+from data_structures.modelling.line_item import LineItem
+from data_structures.modelling.statement import Statement
 from data_structures.system.tags_mixin import TagsMixIn
 from .time_line import TimeLine
 
@@ -135,6 +137,7 @@ class Model(TagsMixIn):
         # target is BU from which to get path and interview info, default
         # points to top-level business unit/company
 
+        self.monitoring = False
 
     # DYNAMIC ATTRIBUTES
     @property
@@ -365,6 +368,29 @@ class Model(TagsMixIn):
         key = (resolution, actual)
         if key in self.timelines:
             return self.timelines[key]
+
+    def prep_for_monitoring_interview(self):
+        """
+
+
+        prep_monitoring_interview(portal_model) -> PortalModel
+
+        --``portal_model`` is an instance of PortalModel
+
+        Function sets path for monitoring interview after projections are set.
+        Function runs after pressing the "update" button on the model card.
+        """
+        if not self.started:
+            self.start()
+
+        new_path = Statement()
+        self.target.stage.set_path(new_path)
+
+        new_line = LineItem("monitoring path")
+        self.target.stage.path.append(new_line)
+
+        if not self.target.stage.focal_point:
+            self.target.stage.set_focal_point(new_line)
 
     def set_timeline(self, time_line, resolution='monthly', actual=False):
         """
