@@ -169,13 +169,10 @@ class LineChef:
         sheet.bb.need_spacer = False
 
         if self.values_only:
-            line.has_own_content = True
+            has_own_content = True
         else:
-            line.has_own_content = any((
-                len(details) > 0,
-                line.xl.derived.calculations,
-                line.hardcoded,
-            ))
+            has_own_content = line.has_own_content()
+
         if not start_bal:
             if not self.values_only:
                 self._add_reference(
