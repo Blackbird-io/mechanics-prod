@@ -30,13 +30,14 @@ GarnishChef           adds garnishes and builds foundation for model Excel book
 
 
 # Imports
+import chef_settings
 import datetime
-import os
 import openpyxl as xlio
+import os
+
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.styles.colors import WHITE, BLACK
 
-import chef_settings
 from ._chef_tools import add_scenario_selector
 from .bb_workbook import BB_Workbook as Workbook
 from .cell_styles import CellStyles
@@ -62,6 +63,7 @@ transcript_chef = TranscriptChef()
 
 get_column_letter = xlio.utils.get_column_letter
 bounding_box = xlio.drawing.image.bounding_box
+
 
 # Classes
 class GarnishChef:
@@ -90,6 +92,8 @@ class GarnishChef:
 
         --``model`` is a Blackbird model instance
         --``report`` is a bool, whether working on a report
+        --``last_date`` datetime.date; last available report date or last report
+                        date in requested time period
 
         Return a workbook with:
            cover
@@ -117,6 +121,9 @@ class GarnishChef:
 
         --``book`` is an instance of B_Workbook
         --``model`` is a Blackbird Engine model
+        --``report`` is a bool, whether working on a report
+        --``last_report`` datetime.date; last available report date or last report
+                        date in requested time period
 
         Method adds a cover tab to the workbook
         """
