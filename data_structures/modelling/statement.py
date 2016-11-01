@@ -328,7 +328,7 @@ class Statement(Equalities, TagsMixIn):
 
         self._bind_and_record(line)
 
-    def copy(self, check_include_details=False):
+    def copy(self, check_include_details=False, clean=False):
         """
 
 
@@ -364,7 +364,8 @@ class Statement(Equalities, TagsMixIn):
                 if check_include_details and not own_line.consolidate:
                     continue
 
-                new_line = own_line.copy(check_include_details=check_include_details)
+                cid = check_include_details
+                new_line = own_line.copy(check_include_details=cid, clean=clean)
                 result.add_line(new_line, position=own_line.position)
             # Preserve relative order
 

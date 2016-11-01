@@ -241,7 +241,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         elif period.end > self.period.end and not period.summary:
             # flow of TimeLine.extrapolate() and bu.fill_out() gets us here
             # copy the structure of master financials
-            fins = self.financials.copy()
+            fins = self.financials.copy(clean=True)
             fins.relationships.set_parent(self)
             fins.period = period
             period.financials[self.id.bbid] = fins
