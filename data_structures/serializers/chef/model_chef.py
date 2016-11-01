@@ -124,13 +124,16 @@ class ModelChef:
         all available if no date range is provided.
         """
 
+        if not model.time_line.has_been_extrapolated:
+            model.time_line.extrapolate()
+
         forecast_color = '4f6228'
         actual_color = '000000'
         spacer_color = '4f81bd'
 
         # Get timelines to report from
-        proj = model.get_timeline(resolution='monthly') #, actual=False)
-        actl = model.get_timeline(resolution='quarterly') #, actual=True)      # faked with quarterly summaries for now
+        proj = model.get_timeline(resolution='monthly', actual=False)
+        actl = model.get_timeline(resolution='quarterly', actual=False) #, actual=True)      # faked with quarterly summaries for now
 
         last_date = max(actl.keys())
 
