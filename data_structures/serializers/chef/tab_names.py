@@ -52,6 +52,9 @@ class TabNames:
     SCENARIOS             "Scenarios"
     TIME_LINE             "Timeline"
     TRANSCRIPT            "Transcript"
+    STRUCTURE             "Details >>"
+    SUMMARIES             "Summary Financials"
+    REPORT_SPACER         "Reports >>"
 
     FUNCTIONS:
     n/a
@@ -63,3 +66,4 @@ class TabNames:
     TRANSCRIPT = "Transcript"
     STRUCTURE = "Details >>"
     SUMMARIES = "Summary Financials"
+    REPORT_SPACER = 'Reports >>'

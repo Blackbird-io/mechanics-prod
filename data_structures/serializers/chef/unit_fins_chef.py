@@ -70,29 +70,29 @@ class UnitFinsChef:
     ====================  =====================================================
 
     DATA:
-    # n/a
+    model                 obj; instance of Blackbird model
+    timeline              obj; instance of Timeline from which to pull financials
 
     FUNCTIONS:
-    add_financials()      adds dynamic Excel for given financials
-    add_valuation_tab()   creates and fills in valuation tab
+    chop_financials()      adds dynamic Excel for given financials
     add_statement_container() adds a row group to hold a statement
     ====================  =====================================================
     """
     def __init__(self, model, timeline):
         self.model = model
-        self.fins_dict = dict()
         self.timeline = timeline
 
     def chop_financials(self, sheet, unit, values_only=False):
         """
 
-        UnitChef.add_financials() -> dict
+        UnitChef.add_financials() -> None
 
         --``sheet`` must be an instance of openpyxl Worksheet
         --``unit`` must be an instance of BusinessUnit
+        --``values_only`` must be a bool, whether all values should be written
+                          as hardcoded values (don't print drivers and life)
 
-        Method adds financials to worksheet and returns a dictionary of the
-        statements added to the worksheet and their starting rows
+        Method adds financials to Unit worksheet.
         """
         line_chef = LineChef(values_only)
 
@@ -132,8 +132,6 @@ class UnitFinsChef:
         while sheet.bb.problem_lines:
             dr_data, materials = sheet.bb.problem_lines.pop()
             line_chef.attempt_reference_resolution(sheet, dr_data, materials)
-
-        return self.fins_dict
 
     def add_statement_container(self, sheet, statement, title=None):
         """

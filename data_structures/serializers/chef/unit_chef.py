@@ -80,7 +80,8 @@ class UnitChef:
     ====================  =====================================================
 
     DATA:
-    n/a
+    model                 obj; instance of Blackbird model
+    timeline              obj; instance of Timeline from which to pull financials
 
     FUNCTIONS:
     chop_company()        returns sheet with a SheetData instance at sheet.bb,

@@ -126,6 +126,7 @@ class ModelChef:
 
         forecast_color = '4f6228'
         actual_color = '000000'
+        spacer_color = '4f81bd'
 
         # Get timelines to report from
         proj = model.get_timeline(resolution='monthly') #, actual=False)
@@ -154,6 +155,6 @@ class ModelChef:
         # since we can't count on dates corresponding exactly with period start
         # and end dates.
         structure_chef = StructureChef(model)
-        structure_chef.chop_report(book)
+        structure_chef.chop_report(book, spacer_color)
 
         return book

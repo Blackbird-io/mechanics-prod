@@ -28,8 +28,8 @@ StructureChef         class containing methods to display BusinessUnits
 
 
 # Imports
-from openpyxl.utils import get_column_interval
 from openpyxl.styles import Border, Side, Alignment
+from openpyxl.utils import get_column_interval
 
 import chef_settings
 
@@ -62,6 +62,7 @@ class StructureChef:
 
     FUNCTIONS:
     chop()                creates a tab for unit structure
+    chop_report()         creates spacer tab for reports including TOC
     unit_box()            creates a top-level box and recurs to components
     layout()              once all boxes are set, computes the layout
     ====================  =====================================================
@@ -105,9 +106,20 @@ class StructureChef:
         body_cols.calc_size()
         self.layout(sheet, body_rows.groups)
 
-    def chop_report(self, book):
-        sheet = book.create_sheet('Reports >>', 1)
-        sheet.sheet_properties.tabColor = '4f81bd'
+    def chop_report(self, book, tab_color):
+        """
+
+
+        StructureChef.chop() -> None
+
+        --``book`` must be a Workbook
+        --``tab_color`` must be a Hex color
+
+        Method adds a spacer tab before reports.  Method will eventually
+        add a table of contents.
+        """
+        sheet = book.create_sheet(TabNames.REPORT_SPACER, 1)
+        sheet.sheet_properties.tabColor = tab_color
         SheetStyle.style_sheet(sheet, label_areas=False)
 
     def unit_box(self, sheet, unit, row_container, col_container, level=0):
