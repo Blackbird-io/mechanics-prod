@@ -29,15 +29,16 @@ LineChef              class with methods to chop BB statements into dynamic
 
 
 # Imports
-import openpyxl as xlio
 import itertools
+import openpyxl as xlio
 
-from openpyxl.comments import Comment
 from bb_exceptions import ExcelPrepError, BBAnalyticalError
 from chef_settings import (
     COMMENT_FORMULA_NAME, COMMENT_FORMULA_STRING, COMMENT_CUSTOM,
 )
 from data_structures.modelling.line_item import LineItem
+from openpyxl.comments import Comment
+
 from ._chef_tools import (
     group_lines, check_alignment, set_param_rows, rows_to_coordinates
 )
@@ -65,7 +66,7 @@ class LineChef:
     ====================  =====================================================
 
     DATA:
-    n/a
+    values_only           whether to write full logic to Excel or only values
 
     FUNCTIONS:
     attempt_reference_resolution() tries to resolve missing line refs in formulas
@@ -169,14 +170,14 @@ class LineChef:
 
         # a line with own content should have no children with own content,
         # and should not consolidate
-        if not self.values_only:
+        if self.values_only:
+            line.has_own_content = True
+        else:
             line.has_own_content = any((
                 len(details) > 0,
                 line.xl.derived.calculations,
                 line.hardcoded,
             ))
-        else:
-            line.has_own_content = True
 
         if not start_bal:
             if not self.values_only:
@@ -242,13 +243,6 @@ class LineChef:
             run_segments = True
 
         if (not line.xl.reference.source and run_segments) or self.values_only:
-            if self.values_only:
-                if line.xl.reference.source:
-                    save_source = line.xl.reference.source
-                    line.xl.reference.source = None
-                else:
-                    save_source = None
-
             self._combine_segments(
                 sheet=sheet,
                 column=column,
@@ -256,11 +250,6 @@ class LineChef:
                 indent=indent,
                 row_container=matter,
             )
-
-            if self.values_only and save_source is not None:
-                line.xl.reference.source = save_source
-                # this is only temporary, we might just want to pull off the
-                # line.xl attr altogether and replace at end or something
 
         CellStyles.format_line(line)
 
@@ -730,7 +719,10 @@ class LineChef:
             line.xl.detailed.cell,
             line.xl.reference.cell
         ))
-        if not processed:
+
+        write_value = not processed or (self.values_only and not line.xl.detailed.cell)
+
+        if write_value:
             line_label = indent * " " + line.title  # + ': segment'
             finish = row_container.add_group(
                 line.title, size=1, label=line_label
