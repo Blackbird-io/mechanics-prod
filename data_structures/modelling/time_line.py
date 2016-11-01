@@ -283,12 +283,13 @@ class TimeLine(TimelineBase):
         if seed is None:
             seed = self.current_period
 
-        seed.content.reset_financials()
-        seed.content.fill_out()
+        company = seed.content
+        company.reset_financials(period=seed)
+        company.fill_out(period=seed)
 
         if seed.past.content:
-            seed.past.content.reset_financials()
-            seed.past.content.fill_out()
+            company.reset_financials(period=seed.past)
+            company.fill_out(period=seed.past)
 
         # init SummaryMaker now that TimeLine has been built
         self.summary_builder = SummaryMaker(self.model)
@@ -307,8 +308,8 @@ class TimeLine(TimelineBase):
                     if bb_settings.STATEFUL_EXTRAPOLATION:
                         new_content = seed.content.copy()
                         period.set_content(new_content, updateID=False)
-                    seed.content.reset_financials(period=period)
-                    seed.content.fill_out(period=period)
+                company.reset_financials(period=period)
+                company.fill_out(period=period)
 
             if bb_settings.MAKE_ANNUAL_SUMMARIES:
                 if period.end >= self.current_period.end:
