@@ -119,8 +119,22 @@ class AxisGroup:
                 new_group = self._make_group(
                     name, size, offset, **kargs
                 )
-                group.by_name[name] = len(group.groups)
-                group.groups.append(new_group)
+                atindex = kargs.pop('index', None)
+                if atindex is None:
+                    group.by_name[name] = len(group.groups)
+                    group.groups.append(new_group)
+                else:
+                    # main use case: -1, to preserve the position of last item
+                    # shift by_name to accommodate the insertion point
+                    if atindex < 0:
+                        target_index = min(0, len(group.groups) + atindex)
+                    else:
+                        target_index = min(atindex, len(group.groups))
+                    group.by_name[name] = target_index
+                    group.groups.insert(target_index, new_group)
+                    for n, i in group.by_name.items():
+                        if i >= target_index:
+                            group.by_name[n] = i + 1
                 group = new_group
         return group
 

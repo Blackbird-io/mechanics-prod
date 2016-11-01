@@ -99,6 +99,7 @@ class SummaryLineChef:
                 line=line,
                 row_container=matter,
                 col_container=col_container,
+                show_empty=True,
             )
 
         return sheet
@@ -129,6 +130,16 @@ class SummaryLineChef:
         matter = row_container.add_group(
             indent * " " + line.title,
             label=indent * " " + line.title,
+        )
+        # pre-determine the layout, to make sure details appear above the total
+        # this is where details and consolidation go
+        matter.add_group('work')
+        # this is where the line itself goes
+        matter.add_group(
+            indent * " " + line.title,
+            label=indent * " " + line.title,
+            # setting size=1 will display the line even if no work gets done
+            size=1 if show_empty else 0
         )
 
         # previous line may have requested a spacer after itself
@@ -167,12 +178,6 @@ class SummaryLineChef:
         if line.xl.format.blank_row_after:
             sheet.bb.need_spacer = True
 
-        # if by tragic happenstance nothing has been added, setting
-        # matter.size = 0 will drop the row
-        # matter.size = 1 will add an empty row with a label
-        if not matter.groups:
-            matter.size = 1 if show_empty else 0
-
         return sheet
 
     # *************************************************************************#
@@ -206,8 +211,8 @@ class SummaryLineChef:
         if source:
             cell = DelayedCell.from_cell(source)
             if cell:
-                label = indent * " " + line.title
-                matter = row_container.add_group(label, size=1, label=label)
+                matter = row_container.groups[1]
+                matter.size = 1
                 formula = '={ref}'
                 sources = {'ref': cell}
                 DelayedCell(
@@ -244,8 +249,8 @@ class SummaryLineChef:
         Returns Worksheet with consolidation logic added.
         """
         if line.xl.consolidated.sources:
-            label = indent * " " + line.title  # + ': consolidation'
-            matter = row_container.add_group(label, size=1, label=label)
+            matter = row_container.groups[1]
+            matter.size = 1
 
             sources = line.xl.consolidated.sources
             labels = line.xl.consolidated.labels
@@ -298,7 +303,7 @@ class SummaryLineChef:
         details = line.get_ordered()
         if details:
             sub_indent = indent + LineItem.TAB_WIDTH
-            detail_rows = row_container.add_group('details')
+            detail_rows = row_container.get_group('work')
 
             formula_source = {}
             formula_layout = []
@@ -316,10 +321,8 @@ class SummaryLineChef:
                     formula_layout.append('{{_{}}}'.format(i))
 
             # aggregate line for the details
-            label = indent * " " + line.title  # + ': details'
-            detail_endrow = row_container.add_group(
-                label, size=1, label=label
-            )
+            matter = row_container.groups[1]
+            matter.size = 1
             if formula_layout:
                 formula = '=' + '+'.join(formula_layout)
                 DelayedCell(
@@ -327,7 +330,7 @@ class SummaryLineChef:
                     sheet=sheet,
                     template=formula,
                     inputs=formula_source,
-                    row_container=detail_endrow,
+                    row_container=matter,
                     col_container=col_container,
                     cell_type='detailed',
                 )
@@ -350,8 +353,8 @@ class SummaryLineChef:
         """
         cell = DelayedCell.from_cell(line)
         if not cell:
-            label = indent * " " + line.title
-            matter = row_container.add_group(label, size=1, label=label)
+            matter = row_container.groups[1]
+            matter.size = 1
             DelayedCell(
                 line,
                 sheet=sheet,
@@ -408,11 +411,10 @@ class SummaryLineChef:
             except KeyError:
                 # not enough sources to render formula, defer to hardcoded
                 return
-            # create formula line
-            line_label = indent * " " + line.title  # + ': derivation'
-            finish = row_container.add_group(
-                line_label, size=1, label=line_label
-            )
+            # get formula line
+            # we do not create additional lines here, only expect one
+            matter = row_container.groups[1]
+            matter.size = 1
             # create cell
             DelayedCell(
                 line,
@@ -420,10 +422,10 @@ class SummaryLineChef:
                 template=formula,
                 inputs=formula_source,
                 inputs_mold=inputs_mold,
-                row_container=finish,
+                row_container=matter,
                 col_container=col_container,
                 cell_type='derived',
             )
-            # first only
+            # take first only
             break
         return sheet
