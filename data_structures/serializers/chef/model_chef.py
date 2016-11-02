@@ -133,7 +133,7 @@ class ModelChef:
 
         # Get timelines to report from
         proj = model.get_timeline(resolution='monthly', actual=False)
-        actl = model.get_timeline(resolution='quarterly', actual=False) #, actual=True)      # faked with quarterly summaries for now
+        actl = model.get_timeline(resolution='monthly', actual=True)
 
         last_date = max(actl.keys())
 
