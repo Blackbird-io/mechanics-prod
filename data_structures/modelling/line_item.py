@@ -256,7 +256,9 @@ class LineItem(Statement, HistoryLine):
         Return a deep copy of the instance and its details. If  is
         True, copy conforms to ``out`` rules.
         """
-        new_line = Statement.copy(self, check_include_details=check_include_details)
+        new_line = Statement.copy(self,
+                                  check_include_details=check_include_details,
+                                  clean=clean)
         # Shallow copy, should pick up _local_value as is, and then create
         # independent containers for tags.
 
