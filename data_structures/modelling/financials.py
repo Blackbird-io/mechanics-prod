@@ -93,7 +93,7 @@ class Financials:
             "ledger", "valuation"
         ]
         self._chef_order = [
-            "overview", "income", "cash", "starting", "ending", "ownership"
+            "overview", "income", "cash", "starting", "ending"
         ]
         self._compute_order = ['overview', 'income', 'cash']
         self._exclude_statements = ['valuation', 'starting']
