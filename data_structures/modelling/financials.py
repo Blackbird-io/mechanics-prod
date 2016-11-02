@@ -243,6 +243,7 @@ class Financials:
                 new_compute.remove(term)
 
             self._compute_order = new_compute
+            self._chef_order.append(name)
         else:
             self._exclude_statements.append(name)
 
