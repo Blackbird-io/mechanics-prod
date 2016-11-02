@@ -35,7 +35,6 @@ import bb_settings
 from chef_settings import DEFAULT_SCENARIOS
 from data_structures.system.bbid import ID
 from data_structures.modelling.line_item import LineItem
-from data_structures.modelling.statement import Statement
 from data_structures.system.tags_mixin import TagsMixIn
 from .time_line import TimeLine
 
@@ -381,15 +380,16 @@ class Model(TagsMixIn):
         if not self.started:
             self.start()
 
+        # set company as target
         co = self.get_company()
         co._stage = None
         self.target = co
 
-        # if not self.target.stage.path:
-        co.used = set()
-        new_path = Statement()
-        self.target.stage.set_path(new_path)
+        # preserve existing path and set fresh BU.used and BU.stage.path
+        co.archive_path()
+        co.archive_used()
 
+        # set monitoring path:
         new_line = LineItem("monitoring path")
         self.target.stage.path.append(new_line)
 
