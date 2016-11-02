@@ -137,8 +137,6 @@ class Model(TagsMixIn):
         # target is BU from which to get path and interview info, default
         # points to top-level business unit/company
 
-        self.monitoring = False
-
     # DYNAMIC ATTRIBUTES
     @property
     def interview(self):
@@ -383,6 +381,12 @@ class Model(TagsMixIn):
         if not self.started:
             self.start()
 
+        co = self.get_company()
+        co._stage = None
+        self.target = co
+
+        # if not self.target.stage.path:
+        co.used = set()
         new_path = Statement()
         self.target.stage.set_path(new_path)
 
