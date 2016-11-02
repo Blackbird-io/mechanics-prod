@@ -483,6 +483,7 @@ class SheetData:
 
     FUNCTIONS:
     add_area()            method adds a new area to the worksheet
+    calc_sizes()          method calculates sizes of row and column axis groups
     set_sheet()           method sets ``sheet`` attribute
     ====================  =====================================================
     """
@@ -535,6 +536,17 @@ class SheetData:
             self.area_names.append(area_name)
 
         return result
+
+    def calc_sizes(self):
+        """
+
+
+        SheetData.calc_sizes() ->
+
+        Method calculates sizes for row and column axis groups.
+        """
+        self.row_axis.calc_size()
+        self.col_axis.calc_size()
 
     def set_sheet(self, sheet):
         """

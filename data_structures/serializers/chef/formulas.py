@@ -68,7 +68,9 @@ class FormulaTemplates:
     COMPUTE_SPAN_IN_DAYS   "=IF({death}, {death}-{birth})"
     IS_ALIVE               "=IF(AND({birth}<={ref_date},{ref_date}<{death}),
                             TRUE,FALSE)"
-
+    REPORT_DELTA           "={actual}-{forecast}"
+    REPORT_DIFF            '=IFERROR(({actual}-{forecast})/{forecast},
+                                                              "{placeholder}")'
     FUNCTIONS:
     n/a
     ====================  =====================================================
@@ -97,3 +99,6 @@ class FormulaTemplates:
     COMPUTE_SPAN_IN_DAYS = "=IF({death}, {death}-{birth})"
 
     IS_ALIVE = "=IF(AND({birth}<={ref_date},{ref_date}<{death}),TRUE,FALSE)"
+
+    REPORT_DELTA = "={actual}-{forecast}"
+    REPORT_DIFF = '=IFERROR(({actual}-{forecast})/{forecast}, "{placeholder}")'

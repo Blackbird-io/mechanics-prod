@@ -234,11 +234,11 @@ class LineItem(Statement, HistoryLine):
             sig = self.SIGNATURE_FOR_VALUE_RESET
             self.set_value(None, sig, override=True)
 
-            keep_format = self.xl.format.copy()
+            format2keep = self.xl.format.copy()
             self.xl = xl_mgmt.LineData()
 
             if keep_format:
-                self.xl.format = keep_format
+                self.xl.format = format2keep
 
             self.set_consolidate(consolidate)
             # Start with a clean slate for Excel tracking, except for
@@ -256,8 +256,9 @@ class LineItem(Statement, HistoryLine):
         Return a deep copy of the instance and its details. If  is
         True, copy conforms to ``out`` rules.
         """
-        cid = check_include_details
-        new_line = Statement.copy(self, check_include_details=cid, clean=clean)
+        new_line = Statement.copy(self,
+                                  check_include_details=check_include_details,
+                                  clean=clean)
         # Shallow copy, should pick up _local_value as is, and then create
         # independent containers for tags.
 
@@ -272,7 +273,7 @@ class LineItem(Statement, HistoryLine):
 
         if not clean:
             new_line.set_hardcoded(self._hardcoded)
-            if cid and not new_line._details and self._details:
+            if check_include_details and not new_line._details and self._details:
                 new_line.set_value(self.value, self.SIGNATURE_FOR_COPY,
                                    override=True)
         else:
