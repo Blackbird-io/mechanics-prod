@@ -277,13 +277,14 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
 
         return id_directory
 
-    def _derive_line(self, line, period=None):
+    def _derive_line(self, line, period):
         """
 
 
         BusinessUnitBase.derive_line() -> None
 
         --``line`` is the LineItem to work on
+        --``period`` is the TimePeriod to work on
 
         Method computes the value of a line using drivers stored on the
         instance.  Method builds a queue of applicable drivers for the provided
@@ -304,7 +305,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
             if key in self.drivers:
                 matching_drivers = self.drivers.get_drivers(key)
                 for driver in matching_drivers:
-                    driver.workOnThis(line, bu=self, period=period)
+                    driver.workOnThis(line, self, period)
 
         # Repeat for any details
         if line._details:
