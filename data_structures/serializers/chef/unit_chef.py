@@ -80,7 +80,8 @@ class UnitChef:
     ====================  =====================================================
 
     DATA:
-    n/a
+    model                 obj; instance of Blackbird model
+    timeline              obj; instance of Timeline from which to pull financials
 
     FUNCTIONS:
     chop_company()        returns sheet with a SheetData instance at sheet.bb,
@@ -90,23 +91,38 @@ class UnitChef:
                           makes and fills Valuation tab
     ====================  =====================================================
     """
-    def __init__(self, model):
+    def __init__(self, model, timeline=None):
         self.model = model
 
-    def chop_multi(self, book, unit=None):
+        if timeline is not None:
+            self.timeline = timeline
+        else:
+            self.timeline = model.get_timeline(resolution='monthly') #, actual=False)
+
+    def chop_multi(self, book, unit=None, values_only=False, tab_name='',
+                   tab_color=''):
         """
 
 
         UnitChef.chop_multi() -> Worksheet
 
         --``book`` must be a Workbook
-        --``unit`` must be an instance of BusinessUnit
+        --``unit`` is optionally an instance of BusinessUnit
+        --``timeline`` is optionally the timeline from which to pull financials
+        --``values_only`` must be a bool, whether all values should be written
+                          as hardcoded values (don't print drivers and life)
 
         Method recursively walks through ``unit`` and components and chops them
         into Excel format.  Method also spreads financials, parameters, and
         life of the unit.
+
+        If `values_only` = True, only chop company unit (no recursion) and
+        write all financial values as hardcoded.  This option is used for
+        reports.
         """
         model = self.model
+        timeline = self.timeline
+
         # top level entry: get the company
         if not unit:
             unit = model.get_company()
@@ -115,8 +131,9 @@ class UnitChef:
         before_kids = len(book.worksheets)
         children = unit.components.get_ordered()
 
-        for child in children:
-            self.chop_multi(book, child)
+        if not values_only:
+            for child in children:
+                self.chop_multi(book, child)
 
         # 2.   Chop the parent
         #
@@ -126,30 +143,33 @@ class UnitChef:
         # starting row, and the spreadsheet would look like a staircase.
 
         # 2.1.   set up the unit sheet and spread params
-        info_chef = UnitInfoChef(model)
+        info_chef = UnitInfoChef(model, timeline)
         sheet = info_chef.create_unit_sheet(
-            book=book, unit=unit, index=before_kids
+            book=book, unit=unit, index=before_kids, values_only=values_only,
+            name=tab_name, tab_color=tab_color,
         )
 
-        # 2.2.   spread life
-        info_chef.unit_life(sheet, unit)
+        if not values_only:
+            # 2.2.   spread life
+            info_chef.unit_life(sheet, unit)
 
-        # 2.3. add unit size
-        info_chef.add_unit_size(sheet, unit)
+            # 2.3. add unit size
+            info_chef.add_unit_size(sheet, unit)
 
         # 2.4.  spread fins
-        fins_chef = UnitFinsChef(model)
-        fins_chef.chop_financials(sheet, unit)
+        fins_chef = UnitFinsChef(model, timeline)
+        fins_chef.chop_financials(sheet, unit, values_only=values_only)
 
         # 2.5 add area and statement labels and sheet formatting
         SheetStyle.style_sheet(sheet)
 
-        # 2.6 add selector cell
-        #   Make scenario label cells
-        info_chef.add_scenario_selector_logic(book, sheet)
+        if not values_only:
+            # 2.6 add selector cell
+            #   Make scenario label cells
+            info_chef.add_scenario_selector_logic(book, sheet)
 
         # Color the December columns
-        if APPLY_COLOR_TO_DECEMBER:
+        if APPLY_COLOR_TO_DECEMBER and not values_only:
             for date, column in sheet.bb.time_line.columns.by_name.items():
                 if date.month == 12:
                     for row in range(1, sheet.max_row + 1):
@@ -224,7 +244,7 @@ class UnitChef:
         else:
             name = unit.name + ' val'
 
-        info_chef = UnitInfoChef(self.model)
+        info_chef = UnitInfoChef(self.model, self.timeline)
         sheet = info_chef.create_unit_sheet(
             book=book, unit=unit, index=index, name=name, current_only=True
         )
@@ -239,7 +259,7 @@ class UnitChef:
         current = sheet.bb.time_line.columns.get_position(now.end)
         SheetStyle.set_column_width(sheet, current, width=22)
 
-        fins_chef = UnitFinsChef(self.model)
+        fins_chef = UnitFinsChef(self.model, self.timeline)
         financials = self.model.get_financials(unit.id.bbid, now)
         statement = financials.valuation
         statement_rows = fins_chef.add_statement_container(sheet, statement)
@@ -255,7 +275,7 @@ class UnitChef:
 
         # 1.6 add selector cell
         #   Make scenario label cells
-        info_chef = UnitInfoChef(self.model)
+        info_chef = UnitInfoChef(self.model, self.timeline)
         info_chef.add_scenario_selector_logic(book, sheet)
 
         sheet.sheet_properties.tabColor = VALUATION_TAB_COLOR
