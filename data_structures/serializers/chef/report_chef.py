@@ -69,20 +69,37 @@ class ReportChef:
     ===============  ==========================================================
     """
 
-    def __init__(self, model, proj, actl, dates=None):
+    def __init__(self, model, proj, actl, report_type, dates=None):
         self.model = model
         self.forecast = proj
         self.actual = actl
 
-        if dates is not None:
+        # Validate arguments
+        options = ['all', 'latest', 'specific_dates']
+
+        if report_type not in options:
+            report_type = 'latest'
+
+        if report_type == 'specific_dates' and dates is None:
+            report_type = 'latest'
+
+        if report_type == 'all':
+            self.start_date = min(self.actual.keys())
+            self.end_date = max(self.actual.keys())
+        elif report_type == 'latest':
+            last_period = self.actual[max(self.actual.keys())]
+            self.start_date = last_period.start
+            self.end_date = last_period.end
+        elif report_type == 'specific_dates':
             self.start_date = min(dates)
             self.end_date = max(dates)
         else:
-            self.start_date = min(self.actual.keys())
-            self.end_date = max(self.actual.keys())
+            c = 'Report type %s is unknown, select from {all, latest,' \
+                ' specific_dates}' % report_type
+            raise KeyError(c)
 
-        self._placeholder = '--'  # value to use in reports for Divide by Zero 
-                                 # error or unavailable data
+        self._placeholder = '--'  # value to use in reports for Divide by Zero
+                                  # error or unavailable data
 
         # FORMATTING
         self._report_tab_color = WHITE
