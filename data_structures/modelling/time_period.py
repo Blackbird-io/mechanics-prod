@@ -80,8 +80,6 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
     combine_parameters()  propagate past parameters to current period
     extrapolate_to()      updates inheritance then delegates to Tags
     ex_to_default()       creates result from seed, sets to target start/end
-    get_units()           return list of units from bbid pool
-    get_lowest_units()    return list of units w/o components from bbid pool
     ====================  ======================================================
     """
     def __init__(self, start_date, end_date, model=None):
