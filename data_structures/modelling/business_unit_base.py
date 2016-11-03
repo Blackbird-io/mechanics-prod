@@ -41,7 +41,6 @@ from data_structures.system.tags_mixin import TagsMixIn
 
 from .dr_container import DrContainer
 from .financials import Financials
-from .history_line import HistoryLine
 from .components_base import ComponentsBase
 
 
@@ -55,7 +54,7 @@ logger = logging.getLogger(bb_settings.LOGNAME_MAIN)
 
 
 # Classes
-class BusinessUnitBase(HistoryLine, TagsMixIn):
+class BusinessUnitBase(TagsMixIn):
     """
 
     Object is primarily a storage container for financial summary and business
@@ -80,9 +79,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
     ====================  ======================================================
     """
 
-    def __init__(self, name, fins=None):
-
-        HistoryLine.__init__(self)
+    def __init__(self, name, fins=None, model=None):
         TagsMixIn.__init__(self, name)
 
         self.components = None
@@ -98,7 +95,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         self.id = ID()
         # Get the id functionality but do NOT assign a bbid yet
 
-        self.relationships = Relationships(self)
+        self.relationships = Relationships(self, model=model)
         self.periods_used = 0
         self.xl = xl_mgmt.UnitData()
 
@@ -183,7 +180,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         If all id verification steps go smoothly, method delegates insertion
         down to SummaryComponents.add_item().
         """
-        bu.update_id(self.id.bbid, recur=True)
+        bu.update_id(namespace=self.id.bbid, recur=True)
         model = self.relationships.model
         # bu's id was already updated to ours above
         model.register(bu, update_id=False, overwrite=overwrite, recur=True)
@@ -295,7 +292,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
             if key in self.drivers:
                 matching_drivers = self.drivers.get_drivers(key)
                 for driver in matching_drivers:
-                    driver.workOnThis(line, self, period)
+                    driver.workOnThis(line, bu=self, period=period)
 
         # Repeat for any details
         if line._details:

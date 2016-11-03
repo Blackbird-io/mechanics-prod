@@ -92,12 +92,11 @@ class BusinessUnit(BusinessUnitBase, Equalities):
     compute()             consolidates and derives a statement for all units
     fill_out()            runs calculations to fill out financial statements
     kill()                make dead, optionally recursive
-    make_past()           put a younger version of unit in prior period
+    make_past()           create a set of financials for a prior period
     recalculate()         reset financials, compute again, repeat for future
     reset_financials()    resets instance and (optionally) component financials
     set_analytics()       attaches an object to instance.analytics
     set_financials()      attaches a Financials object from the right template
-    set_history()         connect instance to older snapshot, optionally recur
     synchronize()         set components to same life, optionally recursive
     ====================  ======================================================
     """
@@ -111,8 +110,8 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
     _UPDATE_BALANCE_SIGNATURE = "Update balance"
 
-    def __init__(self, name, fins=None):
-        BusinessUnitBase.__init__(self, name, fins)
+    def __init__(self, name, fins=None, model=None):
+        BusinessUnitBase.__init__(self, name, fins=fins, model=model)
 
         self._type = None
 
@@ -441,11 +440,8 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         --``overwrite``: if True, will replace existing instance.past
 
-        Create a past for instance.
-
-        Routine operates by making an instance copy, fitting the copy to the
-        n-1 period (located at instance.period.past), and then recursively
-        linking all of the instance components to their younger selves.
+        Create a past for instance by making a copy of financials and
+        putting them into current_period.past.
         """
         model = self.relationships.model
         past_period = model.get_timeline().current_period.past
@@ -513,28 +509,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         """
         atx.relationships.set_parent(self)
         self.valuation = atx
-
-    def set_history(self, history, clear_future=True, recur=True):
-        """
-
-
-        BusinessUnit.set_history() -> None
-
-
-        Set history for instance; repeat for components (by bbid) if recur is
-        True.
-        """
-        HistoryLine.set_history(self, history, clear_future=clear_future)
-
-        # Use dedicated logic to handle recursion.
-        if recur:
-            for bbid, unit in self.components.items():
-                mini_history = history.components[bbid]
-                unit.set_history(mini_history)
-
-        self.reset_financials(recur=False)
-        # Reset financials here because we just connected a new starting
-        # balance sheet.
 
     def synchronize(self, recur=True):
         """
@@ -736,23 +710,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
             for line in this_statement.get_ordered():
                 self._derive_line(line, period)
 
-    def _fit_to_period(self, time_period, recur=True):
-        """
-
-
-        BusinessUnit._fit_to_period() -> None
-
-
-        Set pointer to timeperiod and synchronize ref date to period end date.
-        If ``recur`` == True, repeat for all components.
-        """
-        self.period = time_period
-        self.life.set_ref_date(time_period.end)
-
-        if recur:
-            for unit in self.components.values():
-                unit._fit_to_period(time_period, recur)
-
     def _load_starting_balance(self, period):
         """
 
@@ -782,60 +739,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
                 # bal_start.set_name('starting balance sheet')
                 # period_fins.starting = bal_start
                 # Connect to the past
-
-    def _register_in_period(self, recur=True, overwrite=True):
-        """
-
-
-        BusinessUnit._register_in_period() -> None
-
-
-        Method updates the bu_directory on the instance period with the contents
-        of instance.components (bbid:bu). If ``recur`` == True, repeats for
-        every component in instance.
-
-        If ``overwrite`` == False, method will raise an error if any of its
-        component bbids is already in the period's bu_directory at the time of
-        call.
-
-        NOTE: Method will raise an error only if the calling instance's own
-        components have ids that overlap with the bu_directory. To the extent
-        any of the caller's children have an overlap, the error will appear only
-        when the recursion gets to them. As a result, by the time the error
-        occurs, some higher-level or sibling components may have already updated
-        the period's directory.
-        """
-        # UPGRADE-S: Can fix the partial-overwrite problem by refactoring this
-        # routine into 2 pieces. build_dir(recur=True) would walk the tree and
-        # return a clean dict. update_dir(overwrite=bool) would compare that
-        # dict with the existing directory and raise an error if there is
-        # an overlap. Also carries a speed benefit, cause only compare once.
-
-        if not overwrite:
-            if self.id.bbid in self.period.bu_directory:
-                c = (
-                    "TimePeriod.bu_directory already contains an object with "
-                    "the same bbid as this unit. \n"
-                    "unit id:         {bbid}\n"
-                    "known unit name: {name}\n"
-                    "new unit name:   {mine}\n\n"
-                ).format(
-                    bbid=self.id.bbid,
-                    name=self.period.bu_directory[self.id.bbid].tags.name,
-                    mine=self.tags.name,
-                )
-                print(self.period.bu_directory)
-                raise bb_exceptions.IDCollisionError(c)
-
-        # Check for collisions first, then register if none arise.
-        self.period.bu_directory[self.id.bbid] = self
-
-        brethren = self.period.ty_directory.setdefault(self.type, set())
-        brethren.add(self.id.bbid)
-
-        if recur:
-            for unit in self.components.values():
-                unit._register_in_period(recur, overwrite)
 
     def _set_components(self, comps=None):
         """

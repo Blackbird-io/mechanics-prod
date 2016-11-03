@@ -75,7 +75,6 @@ class TimePeriodBase(History):
 
     FUNCTIONS:
     copy()                return a copy of the caller instance
-    get_units()           return list of units from bbid pool
     ====================  ======================================================
     """
 
