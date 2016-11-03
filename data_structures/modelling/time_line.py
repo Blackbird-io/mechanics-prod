@@ -93,7 +93,6 @@ class TimeLine(TimelineBase):
         self._current_period = None
         self._old_current_period = None
 
-        self.master = None
         self.parameters = Parameters()
         self.summary_builder = None
         self.has_been_extrapolated = False
@@ -175,9 +174,6 @@ class TimeLine(TimelineBase):
         )
         self.add_period(current_period)
         self.current_period = current_period
-
-        # Add master period
-        self.master = current_period.copy()
 
         # Now make the chain
         back_end_date = current_start_date - timedelta(1)
