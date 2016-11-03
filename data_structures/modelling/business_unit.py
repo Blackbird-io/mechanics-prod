@@ -296,9 +296,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         Method registers a driver to names and tags of lines it supports.
         Method delegates all work to DrContainer.addItem().
         """
-        model = self.relationships.model
-        period = model.get_timeline().current_period
-        newDriver.validate(self, period)
+        newDriver.validate(parent=self)
         # Validation call will throw DefinitionError if driver does not have
         # sufficient data to run in this instance at the time of insertion.
 
@@ -311,21 +309,20 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         self.drivers.add_item(newDriver, *otherKeys)
 
-    def compute(self, statement_name, period):
+    def compute(self, statement_name, period=None):
         """
 
 
         BusinessUnit.compute() -> None
 
         --``statement`` name of statement to operate on
-        --``period`` TimePeriod to operate on
 
         Method recursively runs consolidation and derivation logic on
         statements for instance and components.
         """
 
         for unit in self.components.get_all():
-            unit.compute(statement_name, period)
+            unit.compute(statement_name, period=period)
 
         self._consolidate(statement_name, period)
         self._derive(statement_name, period)
@@ -397,9 +394,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         financials = self.get_financials(period)
         if not financials.filled:
             if not period:
-                model = self.relationships.model
-                period = model.get_timeline().current_period
-
+                period = self.period
             self._load_starting_balance(period)
 
             for statement in financials.compute_order:
@@ -409,6 +404,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
             self._check_start_balance(period)
 
+            self.filled = True
             financials.filled = True
 
     def kill(self, date=None, recur=True):
@@ -447,20 +443,17 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         n-1 period (located at instance.period.past), and then recursively
         linking all of the instance components to their younger selves.
         """
-        model = self.relationships.model
-        past_period = model.get_timeline().current_period.past
-
-        if past_period and self.id.bbid not in past_period.financials:
+        if self.id.bbid not in self.period.past.financials:
             fins = self.financials.copy()
             fins.reset()
             fins.relationships.set_parent(self)
-            fins.period = past_period
-            past_period.financials[self.id.bbid] = fins
+            fins.period = self.period.past
+            self.period.past.financials[self.id.bbid] = fins
 
         for bu in self.components.get_all():
             bu.make_past()
 
-    def recalculate(self, period=None, adjust_future=True):
+    def recalculate(self, adjust_future=True, period=None):
         """
 
 
@@ -470,14 +463,10 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         Recalculate instance finanicals. If ``adjust_future`` is True, will
         repeat for all future snapshots.
         """
-        if not period:
-            model = self.relationships.model
-            period = model.get_timeline().current_period
-
-        self.reset_financials(period)
-        self.fill_out(period)
-        if adjust_future and period.future:
-            self.recalculate(period=period.future, adjust_future=True)
+        self.reset_financials(period=period)
+        self.fill_out(period=period)
+        if adjust_future and period and period.future:
+            self.recalculate(adjust_future=True, period=period.future)
 
     def reset_financials(self, period=None, recur=True):
         """
@@ -489,10 +478,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         Method resets financials for instance and, if ``recur`` is True, for
         each of the components. Method sets instance.filled to False.
         """
-        if not period:
-            model = self.relationships.model
-            period = model.get_timeline().current_period
-
+        self.filled = False
         financials = self.get_financials(period)
         financials.reset()
         if recur:
@@ -551,7 +537,25 @@ class BusinessUnit(BusinessUnitBase, Equalities):
             if recur:
                 unit.synchronize()
 
-    def get_parameters(self, period):
+    def peer_locator(self):
+        """
+
+
+        BusinessUnit.peer_locator() -> BusinessUnit
+
+        Given a parent container from another time period, return a function
+        locating a copy of ourselves within that container.
+        """
+
+        def locator(time_period, create=True, **kargs):
+            if self.id.bbid not in time_period.bu_directory:
+                if create and time_period.end == self.period.past_end:
+                    self.make_past()
+            peer = time_period.bu_directory.get(self.id.bbid)
+            return peer
+        return locator
+
+    def get_parameters(self, period=None):
         """
 
 
@@ -562,6 +566,8 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         Method combines all parameters from reachable sources in order
         of precedence. Driver updates the results with own parameters.
         """
+        if not period:
+            period = self.period
         time_line = period.relationships.parent
 
         # Specific parameters trump general ones. Start with time_line, then
@@ -580,6 +586,42 @@ class BusinessUnit(BusinessUnitBase, Equalities):
     # *************************************************************************#
     #                           NON-PUBLIC METHODS                             #
     # *************************************************************************#
+
+    def _build_directory(self, recur=True, overwrite=True):
+        """
+
+
+        BusinessUnit._build_directory() -> (id_directory, ty_directory)
+
+
+        Register yourself and optionally your components, by type and by id
+        return id_directory, ty_directory
+        """
+
+        # return a dict of bbid:unit
+        id_directory = dict()
+        ty_directory = dict()
+        if recur:
+            for unit in self.components.values():
+                lower_level = unit._build_directory(
+                    recur=True, overwrite=overwrite
+                )
+                lower_ids = lower_level[0]
+                lower_ty = lower_level[1]
+                id_directory.update(lower_ids)
+                ty_directory.update(lower_ty)
+
+            # update the directory for each unit in self
+        if self.id.bbid in id_directory:
+            if not overwrite:
+                c = "Can not overwrite existing bbid"
+                raise bb_exceptions.BBAnalyticalError(c)
+
+        id_directory[self.id.bbid] = self
+        this_type = ty_directory.setdefault(self.type, set())
+        this_type.add(self.id.bbid)
+
+        return id_directory, ty_directory
 
     def _check_start_balance(self, period):
         """
@@ -665,7 +707,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         self._derive("ending", period)
         # Derive() will overwrite ending balance sheet where appropriate
 
-    def _consolidate(self, statement_name, period):
+    def _consolidate(self, statement_name, period=None):
         """
 
 
@@ -683,7 +725,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         for unit in pool:
             self._consolidate_unit(unit, statement_name, period)
 
-    def _consolidate_unit(self, sub, statement_name, period):
+    def _consolidate_unit(self, sub, statement_name, period=None):
         """
 
 
@@ -718,7 +760,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
                 xl_label=sub.title,
             )
 
-    def _derive(self, statement_name, period):
+    def _derive(self, statement_name, period=None):
         """
 
 
