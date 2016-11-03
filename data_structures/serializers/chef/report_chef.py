@@ -207,23 +207,24 @@ class ReportChef:
             for act_det in actual_details:
                 for_det = for_line.find_first(act_det.name)
 
-                self._report_line(
-                    sheet=sheet,
-                    act_line=act_det,
-                    for_line=for_det,
-                    row_container=row_container,
-                    indent=sub_indent,
-                )
+                if for_det is not None:
+                    self._report_line(
+                        sheet=sheet,
+                        act_line=act_det,
+                        for_line=for_det,
+                        row_container=row_container,
+                        indent=sub_indent,
+                    )
 
-                link_template = FormulaTemplates.ADD_COORDINATES
+                    link_template = FormulaTemplates.ADD_COORDINATES
 
-                cos = act_det.xl.get_coordinates(include_sheet=False)
-                link = link_template.format(coordinates=cos)
-                act_detail_summation += link
+                    cos = act_det.xl.get_coordinates(include_sheet=False)
+                    link = link_template.format(coordinates=cos)
+                    act_detail_summation += link
 
-                cos = for_det.xl.get_coordinates(include_sheet=False)
-                link = link_template.format(coordinates=cos)
-                for_detail_summation += link
+                    cos = for_det.xl.get_coordinates(include_sheet=False)
+                    link = link_template.format(coordinates=cos)
+                    for_detail_summation += link
 
             row_container.calc_size()
 
@@ -370,6 +371,7 @@ class ReportChef:
 
             formula_string = '=%s' % for_line.xl.get_coordinates(
                 include_sheet=True)
+
             for_cell = sheet.cell(row=line_row.number(),
                                   column=forecast_col.number())
             for_cell.set_explicit_value(formula_string,
@@ -444,7 +446,7 @@ class ReportChef:
 
         for act_line in act_statement.get_ordered():
             for_line = for_statement.find_first(act_line.name)
+            if for_line is not None:
+                self._report_line(sheet, act_line, for_line, stat_rows)
 
-            self._report_line(sheet, act_line, for_line, stat_rows)
-
-            sheet.bb.calc_sizes()
+                sheet.bb.calc_sizes()
