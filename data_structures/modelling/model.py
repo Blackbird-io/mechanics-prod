@@ -407,3 +407,60 @@ class Model(TagsMixIn):
         time_stamp = time.time()
         record = (message, time_stamp)
         self.transcript.append(record)
+
+    def get_units(self, pool):
+        """
+
+
+        Model.get_units() -> list
+
+
+        Method returns a list of objects from instance.bu_directory that
+        correspond to each bbid in ``pool``. Method sorts pool prior to
+        processing.
+
+        Method expects ``pool`` to be an iterable of bbids.
+        """
+        pool = sorted(pool)
+        # make sure to sort pool for stable output order
+        units = []
+        for bbid in pool:
+            u = self.bu_directory[bbid]
+            units.append(u)
+        return units
+
+    def get_lowest_units(self, pool=None, run_on_empty=False):
+        """
+
+
+        Model.get_lowest_units() -> list
+
+
+        Method returns a list of units in pool that have no components.
+
+        Method expects ``pool`` to be an iterable of bbids.
+
+        If ``pool`` is None, method will build its own pool from all keys in
+        the instance's bu_directory. Method will raise error if asked to run
+        on an empty pool unless ``run_on_empty`` == True.
+        """
+        if pool is None:
+            pool = sorted(self.bu_directory.keys())
+        else:
+            pool = sorted(pool)
+        # make sure to sort pool for stable output order
+        #
+        if any([pool, run_on_empty]):
+            foundation = []
+            for bbid in pool:
+                bu = self.bu_directory[bbid]
+                if bu.components:
+                    continue
+                else:
+                    foundation.append(bu)
+            #
+            return foundation
+            #
+        else:
+            c = "``pool`` is empty, method requires explicit permission to run."
+            raise bb_exceptions.ProcessError(c)

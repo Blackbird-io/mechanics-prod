@@ -189,24 +189,3 @@ class TimePeriodBase(History):
 
         return result
 
-    def get_units(self, pool):
-        """
-
-
-        TimePeriodBase.get_units() -> list
-
-
-        Method returns a list of objects from instance.bu_directory that
-        correspond to each bbid in ``pool``. Method sorts pool prior to
-        processing.
-
-        Method expects ``pool`` to be an iterable of bbids.
-        """
-        pool = sorted(pool)
-        # make sure to sort pool for stable output order
-        units = []
-        model = self.relationships.parent.model
-        for bbid in pool:
-            u = model.bu_directory[bbid]
-            units.append(u)
-        return units
