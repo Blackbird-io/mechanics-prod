@@ -389,6 +389,38 @@ class TimeLine(TimelineBase):
             self[date] = updated_period
             seed = updated_period
 
+    def extrapolate_statement(self, statement_name, seed=None):
+        """
+
+
+        TimeLine.extrapolate_statement() -> None
+
+
+        Extrapolates a single statement forward in time. DOES NOT MAKE
+        SUMMARIES.
+        """
+        if seed is None:
+            seed = self.current_period
+
+        company = self.model.get_company()
+        orig_fins = company.get_financials(period=seed)
+        orig_statement = getattr(orig_fins, statement_name)
+        orig_statement.reset()
+        company.compute(statement_name, period=seed)
+
+        for period in self.iter_ordered(open=seed.end):
+            if period.end > seed.end:
+                new_fins = company.get_financials(period=period)
+                new_stat = getattr(new_fins, statement_name, None)
+                if new_stat is None:
+                    # need to add statement
+                    new_stat = orig_statement.copy(clean=True)
+                    new_fins.add_statement(statement_name, statement=new_stat)
+                    company.compute(statement_name, period=period)
+                else:
+                    # compute what is already there
+                    company.compute(statement_name, period=period)
+
     def find_period(self, query):
         """
 
