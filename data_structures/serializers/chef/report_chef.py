@@ -308,8 +308,6 @@ class ReportChef:
         Method adds links to source data for Forecast and Actual columns and
         inserts formulas to calculate Delta and Percent Difference.
         """
-        act_save_cell = act_line.xl.cell
-        for_save_cell = for_line.xl.cell
 
         all_cols = sheet.bb.col_axis.get_group('all')
         line_col = all_cols.get_group('lines')
@@ -404,9 +402,6 @@ class ReportChef:
             sheet.bb.need_spacer = False
 
         row_container.calc_size()
-
-        act_line.xl.cell = act_save_cell
-        for_line.xl.cell = for_save_cell
 
     def _report_statement(self, sheet, act_statement, for_statement, name=None):
         """
