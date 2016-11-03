@@ -81,6 +81,7 @@ class NumberFormats:
     DEFAULT_LINE_FORMAT   $#,###.##
     DEFAULT_PARAMETER_FORMAT  "#,##0"
     INTEGER_FORMAT         Excel number format
+    PERCENT_FORMAT         numbers.FORMAT_PERCENTAGE
 
     FUNCTIONS:
     n/a
@@ -95,3 +96,4 @@ class NumberFormats:
         DEFAULT_PARAMETER_FORMAT += "0" * PARAM_DECIMAL_POINTS
 
     INTEGER_FORMAT = numbers.FORMAT_NUMBER
+    PERCENT_FORMAT = numbers.FORMAT_PERCENTAGE

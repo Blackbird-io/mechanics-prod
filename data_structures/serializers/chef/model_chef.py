@@ -37,9 +37,10 @@ import bb_settings
 from .cell_styles import CellStyles
 from .garnish_chef import GarnishChef
 from .line_chef import LineChef
+from .report_chef import ReportChef
+from .summary_chef import SummaryChef
 from .transcript_chef import TranscriptChef
 from .unit_chef import UnitChef
-from .summary_chef import SummaryChef
 from .unit_structure import StructureChef
 
 
@@ -72,6 +73,7 @@ class ModelChef:
     FUNCTIONS:
     chop_model()          returns BB_Workbook containing an Excel workbook with
                           dynamic links
+    build_report()        returns BB_Workbook containing formatted report(s)
     ====================  =====================================================
     """
 
@@ -106,5 +108,56 @@ class ModelChef:
         transcript_chef.make_transcript_excel(model, book, idx=3)
 
         CellStyles.format_line_borders(book)
+
+        return book
+
+    def build_report(self, model, dates=None):
+        """
+
+
+        ModelChef.build_report() -> BB_Workbook
+
+        --``model`` is an instance of Blackbird Engine model
+        --``dates`` is a tuple of the date range for which to produce reports
+
+        Method prepares and formats reports for the specified date range, or
+        all available if no date range is provided.
+        """
+
+        if not model.time_line.has_been_extrapolated:
+            model.time_line.extrapolate()
+
+        forecast_color = '4f6228'
+        actual_color = '000000'
+        spacer_color = '4f81bd'
+
+        # Get timelines to report from
+        proj = model.get_timeline(resolution='monthly', actual=False)
+        actl = model.get_timeline(resolution='monthly', actual=True)
+
+        last_date = max(actl.keys())
+
+        # Make workbook and add Cover tab
+        book = GarnishChef.add_garnishes(model, report=True, last_date=last_date)
+
+        # Add "Forecast" tab filled with projections and "Actual" tab filled
+        # with reported values.
+        unit_chef = UnitChef(model, timeline=proj)
+        unit_chef.chop_multi(book, values_only=True, tab_name='Forecast',
+                             tab_color=forecast_color)
+
+        unit_chef = UnitChef(model, timeline=actl)
+        unit_chef.chop_multi(book, values_only=True, tab_name='Actual',
+                             tab_color=actual_color)
+
+        # Build reports
+        report_chef = ReportChef(model, proj, actl, dates)
+        report_chef.build_reports(book)
+
+        # Add "Reports >>" tab with table of contents.  Need to do this last
+        # since we can't count on dates corresponding exactly with period start
+        # and end dates.
+        structure_chef = StructureChef(model)
+        structure_chef.chop_report(book, spacer_color)
 
         return book
