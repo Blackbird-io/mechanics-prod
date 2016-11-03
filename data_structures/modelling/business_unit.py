@@ -581,42 +581,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
     #                           NON-PUBLIC METHODS                             #
     # *************************************************************************#
 
-    def _build_directory(self, recur=True, overwrite=True):
-        """
-
-
-        BusinessUnit._build_directory() -> (id_directory, ty_directory)
-
-
-        Register yourself and optionally your components, by type and by id
-        return id_directory, ty_directory
-        """
-
-        # return a dict of bbid:unit
-        id_directory = dict()
-        ty_directory = dict()
-        if recur:
-            for unit in self.components.values():
-                lower_level = unit._build_directory(
-                    recur=True, overwrite=overwrite
-                )
-                lower_ids = lower_level[0]
-                lower_ty = lower_level[1]
-                id_directory.update(lower_ids)
-                ty_directory.update(lower_ty)
-
-            # update the directory for each unit in self
-        if self.id.bbid in id_directory:
-            if not overwrite:
-                c = "Can not overwrite existing bbid"
-                raise bb_exceptions.BBAnalyticalError(c)
-
-        id_directory[self.id.bbid] = self
-        this_type = ty_directory.setdefault(self.type, set())
-        this_type.add(self.id.bbid)
-
-        return id_directory, ty_directory
-
     def _check_start_balance(self, period):
         """
 

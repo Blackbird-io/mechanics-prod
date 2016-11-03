@@ -463,3 +463,59 @@ class Model(TagsMixIn):
         else:
             c = "``pool`` is empty, method requires explicit permission to run."
             raise bb_exceptions.ProcessError(c)
+
+    def register(
+            self, bu, update_id=True, overwrite=True, recur=True
+    ):
+        """
+
+
+        Model.register() -> None
+
+
+        Manually add unit to period. Unit will conform to period and appear
+        in directories. Use sparingly: designed for master (taxonomy) period.
+
+        NOTE: content should generally have a tree structure, with a
+        single bu node on top. That node will manage all child relationships.
+        Accordingly, the best way to add units to a model is to run
+        bu.add_component(new_unit).
+
+        If ``update_id`` is True, method will assign unit a new id in the
+        model's namespace. Parameter should be True when adding a top-level
+        unit, False when adding child units.
+        """
+        # Make sure unit has an id in the right namespace.
+        if update_id:
+            bu.update_id(self.id.namespace, recur=True)
+        if not bu.id.bbid:
+            c = "Cannot add content without a valid bbid."
+            raise bb_exceptions.IDError(c)
+
+        # Check for collisions first, then register if none arise.
+        if not overwrite:
+            if bu.id.bbid in self.bu_directory:
+                c = (
+                    "TimePeriod.bu_directory already contains an object with "
+                    "the same bbid as this unit. \n"
+                    "unit id:         {bbid}\n"
+                    "known unit name: {name}\n"
+                    "new unit name:   {mine}\n\n"
+                ).format(
+                    bbid=bu.id.bbid,
+                    name=self.bu_directory[bu.id.bbid].tags.name,
+                    mine=bu.tags.name,
+                )
+                print(self.bu_directory)
+                raise bb_exceptions.IDCollisionError(c)
+        self.bu_directory[bu.id.bbid] = bu
+
+        brethren = self.ty_directory.setdefault(bu.type, set())
+        brethren.add(bu.id.bbid)
+
+        if recur:
+            for unit in bu.components.values():
+                self.register(
+                    unit, update_id=update_id, overwrite=overwrite, recur=recur
+                )
+
