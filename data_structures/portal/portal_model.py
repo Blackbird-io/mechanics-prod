@@ -75,7 +75,10 @@ class PortalModel(ReadyForPortal):
                     "business_name",
                     "business_id",
                     "user_context",
-                    "tags"]
+                    "tags",
+                    "update_count",
+                    "monitoring",
+                    ]
         #
         ReadyForPortal.__init__(self, pm_attrs)
         #
@@ -86,8 +89,10 @@ class PortalModel(ReadyForPortal):
         self.business_id = 99999999
         self.user_context = None
         self.tags = None
+        self.update_count = 0
+        self.monitoring = False
 
-    def to_portal(self, seed = None):
+    def to_portal(self, seed=None):
         """
 
 

@@ -175,7 +175,7 @@ class BusinessUnitBase(TagsMixIn):
         Method prepares a bu and adds it to instance components.
 
         If register_in_period is true, method raises IDCollisionError if the
-        model's directory already contains the new business unit's bbid.
+        period's directory already contains the new business unit's bbid.
 
         If all id verification steps go smoothly, method delegates insertion
         down to SummaryComponents.add_item().
@@ -252,7 +252,7 @@ class BusinessUnitBase(TagsMixIn):
         elif period.end > self.period.end and not period.summary:
             # flow of TimeLine.extrapolate() and bu.fill_out() gets us here
             # copy the structure of master financials
-            fins = self.financials.copy()
+            fins = self.financials.copy(clean=True)
             fins.relationships.set_parent(self)
             fins.period = period
             period.financials[self.id.bbid] = fins
