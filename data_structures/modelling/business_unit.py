@@ -34,6 +34,7 @@ import bb_exceptions
 
 from data_structures.guidance.guide import Guide
 from data_structures.guidance.interview_tracker import InterviewTracker
+from data_structures.modelling.statement import Statement
 from data_structures.valuation.business_summary import BusinessSummary
 from data_structures.valuation.company_value import CompanyValue
 
@@ -88,7 +89,8 @@ class BusinessUnit(BusinessUnitBase, Equalities):
     FUNCTIONS:
     add_component()       adds unit to instance components
     add_driver()          registers a driver
-    clear()               restore default attribute values
+    archive_path()        archives existing path then sets to blank Statement
+    archive_used()        archives existing used topics and sets to blank set
     compute()             consolidates and derives a statement for all units
     fill_out()            runs calculations to fill out financial statements
     kill()                make dead, optionally recursive
@@ -138,6 +140,10 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         self.periods_used = 1
 
         self._parameters = Parameters()
+
+        # for monitoring, temporary storage for existing path and used sets
+        self._path_archive = list()
+        self._used_archive = list()
 
     @property
     def parameters(self):
@@ -308,6 +314,37 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         # of the required formula parameters at the time the Topic runs.
 
         self.drivers.add_item(newDriver, *otherKeys)
+
+    def archive_path(self):
+        """
+
+
+        BusinessUnit.archive_path() -> None
+
+
+        Method archives existing path to BusinessUnit._path_archive and sets
+         the path to a clean Statement().  Method is used by monitoring to
+         pre-process before setting the monitoring path.
+        """
+        if self.stage.path is not None:
+            self._path_archive.append(self.stage.path)
+
+        new_path = Statement()
+        self.stage.set_path(new_path)
+
+    def archive_used(self):
+        """
+
+
+        BusinessUnit.archive_used() -> None
+
+
+        Method archives existing set of used topics to
+        BusinessUnit._used_archive and sets used to a new empty set. Method is
+        used by monitoring to pre-process before setting the monitoring path.
+        """
+        self._used_archive.append(self.used)
+        self.used = set()
 
     def compute(self, statement_name, period=None):
         """

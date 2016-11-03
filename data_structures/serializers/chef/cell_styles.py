@@ -64,7 +64,10 @@ class CellStyles:
     n/a
 
     FUNCTIONS:
+    format_alignment()    format horizontal alignment of text
     format_area_label()   format label cell and row for sheet Areas
+    format_bold()         makes font bold
+    format_border()       sets format for single cell border
     format_border_group()  add thin border around group of cells
     format_calculation()  format text in cells containing calculations
     format_consolidated_label() consolidated rows in italic
@@ -80,6 +83,20 @@ class CellStyles:
     format_sub_header_label() formats sub-header cells
     ====================  =====================================================
     """
+
+    @staticmethod
+    def format_alignment(cell, alignment):
+        """
+
+
+        CellStyles.format_alignment() -> None
+
+        --``cell`` is an instance of openpyxl cell class
+        --``alignment`` is the text alignment within the cell
+
+        Sets horizontal text alignment in cell.
+        """
+        cell.alignment = Alignment(horizontal=alignment)
 
     @staticmethod
     def format_area_label(sheet, label, row_num, col_num=None):
@@ -117,232 +134,57 @@ class CellStyles:
                 cell.border = border
 
     @staticmethod
-    def format_calculation(cell):
+    def format_bold(cell):
         """
 
 
-        CellStyles.format_calculation -> None
+        CellStyles.format_bold() -> None
 
         --``cell`` is an instance of openpyxl cell class
 
-        Format cells containing calculations to conform with Chef standard.
+        Sets font to bold within cell.
         """
-        # font = Font(italic=True, color=CALCULATION_COLOR)
-        # cell.font = font
-
-        cell.number_format = NumberFormats.DEFAULT_PARAMETER_FORMAT
+        cell.font = Font(bold=True)
 
     @staticmethod
-    def format_date(cell):
+    def format_border(cell, top=False, bottom=False, left=False, right=False,
+                      border_style='thin'):
         """
 
 
-        CellStyles.format_date -> None
+        CellStyles.format_bold() -> None
 
         --``cell`` is an instance of openpyxl cell class
+        --``top`` whether to draw the top border, default is False
+        --``bottom`` whether to draw the bottom border, default is False
+        --``left`` whether to draw the left border, default is False
+        --``right`` whether to draw the right border, default is False
+        --``border_style`` is any openpyxl border style, default is `thin`
 
-        Format cells containing dates to conform with Chef standard.
+        Sets horizontal text alignment in cell.
         """
 
-        cell.number_format = NumberFormats.DEFAULT_DATE_FORMAT
+        side = Side(border_style=border_style)
+        # no_side = Side(border_style=None)
 
-    @staticmethod
-    def format_hardcoded(cell):
-        """
+        border = Border(top=cell.border.top,
+                        bottom=cell.border.bottom,
+                        left=cell.border.left,
+                        right=cell.border.right)
 
+        if top:
+            border.top = side
 
-        CellStyles.format_hardcoded -> None
+        if bottom:
+            border.bottom = side
 
-        --``cell`` is an instance of openpyxl cell class
+        if left:
+            border.left = side
 
-        Format cells containing hardcoded values to conform with Chef standard.
-        """
-        font = Font(color=HARDCODED_COLOR, bold=True)
-        cell.font = font
+        if right:
+            border.right = side
 
-    @staticmethod
-    def format_integer(cell):
-        """
-
-
-        CellStyles.format_integer -> None
-
-        --``cell`` is an instance of openpyxl cell class
-
-        Format cells containing integers to conform with Chef standard.
-        """
-        cell.number_format = NumberFormats.INTEGER_FORMAT
-
-    @staticmethod
-    def format_line(line):
-        """
-
-
-        CellStyles.format_line -> None
-
-        --``line`` is an instance of LineItem
-
-        Format cells written to for the provided line to conform with Chef
-        standard.
-        """
-
-        use_format = line.xl.number_format or NumberFormats.DEFAULT_LINE_FORMAT
-
-        if line.xl.derived.cell:
-            line.xl.derived.cell.number_format = use_format
-
-        if line.xl.consolidated.cell:
-            line.xl.consolidated.cell.number_format = use_format
-
-        for cell in line.xl.consolidated.array:
-            cell.number_format = use_format
-
-        if line.xl.detailed.cell:
-            line.xl.detailed.cell.number_format = use_format
-
-        if line.xl.cell:
-            line.xl.cell.number_format = use_format
-
-        if line.xl.format.font_format:
-            line.xl.cell.font = Font(**line.xl.format.font_format)
-
-    @staticmethod
-    def format_parameter(cell):
-        """
-
-
-        CellStyles.format_parameter -> None
-
-        --``cell`` is an instance of openpyxl cell class
-
-        Format cells containing parameters to conform with Chef standard.
-        """
-        cell.number_format = NumberFormats.DEFAULT_PARAMETER_FORMAT
-        cell.alignment = Alignment(horizontal='right')
-
-    @staticmethod
-    def format_scenario_label(cell):
-        """
-
-
-        CellStyles.format_scenario_label -> None
-
-        --``cell`` is an instance of openpyxl cell class
-
-        Format cells containing scenario column labels on Scenario tab.
-        """
-        CellStyles.format_header_label(cell, alignment='center')
-
-    @staticmethod
-    def format_header_label(cell, alignment=None, color=BLACK,
-                            font_color=WHITE, bold=True):
-        """
-
-
-        CellStyles.format_header_label -> None
-
-        --``cell`` is an instance of openpyxl cell class
-        --``alignment`` is the text alignment within the cell
-        --``color`` is the cell color, default is black (hex definition)
-        --``font_color`` is the font color, default is white (hex definition)
-        --``bold`` is a bool, whether or not to bold the font
-
-        Headers at the top, white on black.
-        """
-        if alignment:
-            cell.alignment = Alignment(horizontal=alignment)
-
-        cell.font = Font(color=font_color, bold=bold)
-        cell.fill = PatternFill(start_color=color,
-                                end_color=color,
-                                fill_type='solid')
-
-    @staticmethod
-    def format_subheader_label(cell, alignment=None, color=SUBHEADER_COLOR):
-        """
-
-
-        CellStyles.format_subheader_label -> None
-
-        --``cell`` is an instance of openpyxl cell class
-        --``alignment`` is the text alignment within the cell
-        --``color`` is the cell color, default defined by SUBHEADER_COLOR
-
-        Looks like Header, but on a different background color.
-        """
-        CellStyles.format_header_label(cell, alignment, color)
-
-    @staticmethod
-    def format_consolidated_label(cell):
-        """
-
-
-        CellStyles.format_consolidated_labelr -> None
-
-        --``cell`` is an instance of openpyxl cell class
-
-        Format cells which are labels for consolidating logic.
-        """
-        cell.font = Font(italic=True)
-
-    @staticmethod
-    def format_scenario_selector_cells(sheet, label_col, selector_col, row,
-                                       active=True):
-        """
-
-
-        CellStyles.format_scenario_selector_cells -> None
-
-        --``sheet`` is an instance of openpyxl worksheet class
-        --``label_col`` is the column number where the scenario selector label
-            lives
-        --``selector_col`` is the column number where the scenario selector
-            cell lives
-        --``row`` is the row where the scenario selector cells live
-        --``active`` is a bool, indicates whether scenario selector is live
-
-        Format cells containing scenario selection label and selector.
-        """
-        side = Side(border_style='thick')
-
-        # Left label cell
-        left_cell = sheet.cell(column=label_col, row=row)
-        border = Border(left=left_cell.border.left,
-                        top=left_cell.border.top,
-                        bottom=left_cell.border.bottom)
-        border.left = side
-        border.top = side
-        border.bottom = side
-        left_cell.border = border
-        left_cell.font = Font(bold=True, size=14)
-        left_cell.value = "Active Scenario:"
-
-        # Blank middle cell
-        blank_cell = sheet.cell(column=label_col + 1, row=row)
-        border = Border(top=blank_cell.border.top,
-                        bottom=blank_cell.border.bottom)
-        border.top = side
-        border.bottom = side
-        blank_cell.border = border
-
-        # Rightmost cell where selector lives
-        right_cell = sheet.cell(column=selector_col, row=row)
-        border = Border(right=right_cell.border.right,
-                        top=right_cell.border.top,
-                        bottom=right_cell.border.bottom)
-        border.right = side
-        border.top = side
-        border.bottom = side
-        right_cell.border = border
-        right_cell.alignment = Alignment(horizontal='center')
-
-        if active:
-            color = HARDCODED_COLOR
-        else:
-            color = BLACK
-
-        font = Font(color=color, bold=True, size=14)
-        right_cell.font = font
+        cell.border = border
 
     @staticmethod
     def format_border_group(sheet, st_col, ed_col, st_row, ed_row,
@@ -476,6 +318,136 @@ class CellStyles:
             cell.border = border
 
     @staticmethod
+    def format_calculation(cell):
+        """
+
+
+        CellStyles.format_calculation -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Format cells containing calculations to conform with Chef standard.
+        """
+        # font = Font(italic=True, color=CALCULATION_COLOR)
+        # cell.font = font
+
+        cell.number_format = NumberFormats.DEFAULT_PARAMETER_FORMAT
+
+    @staticmethod
+    def format_consolidated_label(cell):
+        """
+
+
+        CellStyles.format_consolidated_labelr -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Format cells which are labels for consolidating logic.
+        """
+        cell.font = Font(italic=True)
+
+    @staticmethod
+    def format_date(cell):
+        """
+
+
+        CellStyles.format_date -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Format cells containing dates to conform with Chef standard.
+        """
+
+        cell.number_format = NumberFormats.DEFAULT_DATE_FORMAT
+
+    @staticmethod
+    def format_hardcoded(cell):
+        """
+
+
+        CellStyles.format_hardcoded -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Format cells containing hardcoded values to conform with Chef standard.
+        """
+        font = Font(color=HARDCODED_COLOR, bold=True)
+        cell.font = font
+
+    @staticmethod
+    def format_header_label(cell, alignment=None, color=BLACK,
+                            font_color=WHITE, bold=True, font_size=11,
+                            name='Calibri'):
+        """
+
+
+        CellStyles.format_header_label -> None
+
+        --``cell`` is an instance of openpyxl cell class
+        --``alignment`` is the text alignment within the cell
+        --``color`` is the cell color, default is black (hex definition)
+        --``font_color`` is the font color, default is white (hex definition)
+        --``bold`` is a bool, whether or not to bold the font
+        --``font_size`` is an integer, size for font
+        --``name`` is the string name of a font
+
+        Headers at the top, white on black.
+        """
+        if alignment:
+            cell.alignment = Alignment(horizontal=alignment)
+
+        cell.font = Font(color=font_color, bold=bold, size=font_size, name=name)
+        cell.fill = PatternFill(start_color=color,
+                                end_color=color,
+                                fill_type='solid')
+
+    @staticmethod
+    def format_integer(cell):
+        """
+
+
+        CellStyles.format_integer -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Format cells containing integers to conform with Chef standard.
+        """
+        cell.number_format = NumberFormats.INTEGER_FORMAT
+
+    @staticmethod
+    def format_line(line):
+        """
+
+
+        CellStyles.format_line -> None
+
+        --``line`` is an instance of LineItem
+
+        Format cells written to for the provided line to conform with Chef
+        standard.
+        """
+
+        use_format = line.xl.number_format or NumberFormats.DEFAULT_LINE_FORMAT
+
+        if line.xl.derived.cell:
+            line.xl.derived.cell.number_format = use_format
+
+        if line.xl.consolidated.cell:
+            line.xl.consolidated.cell.number_format = use_format
+
+        for cell in line.xl.consolidated.array:
+            cell.number_format = use_format
+
+        if line.xl.detailed.cell:
+            line.xl.detailed.cell.number_format = use_format
+
+        if line.xl.cell:
+            line.xl.cell.number_format = use_format
+
+        if line.xl.format.font_format:
+            line.xl.cell.font = Font(**line.xl.format.font_format)
+
+    @staticmethod
     def format_line_borders(book):
         """
 
@@ -515,3 +487,104 @@ class CellStyles:
                 CellStyles.format_border_group(sheet, st_col=st_col,
                                                ed_col=ed_col, st_row=row,
                                                ed_row=row, border_style=border)
+
+    @staticmethod
+    def format_parameter(cell):
+        """
+
+
+        CellStyles.format_parameter -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Format cells containing parameters to conform with Chef standard.
+        """
+        cell.number_format = NumberFormats.DEFAULT_PARAMETER_FORMAT
+        cell.alignment = Alignment(horizontal='right')
+
+    @staticmethod
+    def format_scenario_label(cell):
+        """
+
+
+        CellStyles.format_scenario_label -> None
+
+        --``cell`` is an instance of openpyxl cell class
+
+        Format cells containing scenario column labels on Scenario tab.
+        """
+        CellStyles.format_header_label(cell, alignment='center')
+
+    @staticmethod
+    def format_subheader_label(cell, alignment=None, color=SUBHEADER_COLOR):
+        """
+
+
+        CellStyles.format_subheader_label -> None
+
+        --``cell`` is an instance of openpyxl cell class
+        --``alignment`` is the text alignment within the cell
+        --``color`` is the cell color, default defined by SUBHEADER_COLOR
+
+        Looks like Header, but on a different background color.
+        """
+        CellStyles.format_header_label(cell, alignment, color)
+
+    @staticmethod
+    def format_scenario_selector_cells(sheet, label_col, selector_col, row,
+                                       active=True):
+        """
+
+
+        CellStyles.format_scenario_selector_cells -> None
+
+        --``sheet`` is an instance of openpyxl worksheet class
+        --``label_col`` is the column number where the scenario selector label
+            lives
+        --``selector_col`` is the column number where the scenario selector
+            cell lives
+        --``row`` is the row where the scenario selector cells live
+        --``active`` is a bool, indicates whether scenario selector is live
+
+        Format cells containing scenario selection label and selector.
+        """
+        side = Side(border_style='thick')
+
+        # Left label cell
+        left_cell = sheet.cell(column=label_col, row=row)
+        border = Border(left=left_cell.border.left,
+                        top=left_cell.border.top,
+                        bottom=left_cell.border.bottom)
+        border.left = side
+        border.top = side
+        border.bottom = side
+        left_cell.border = border
+        left_cell.font = Font(bold=True, size=14)
+        left_cell.value = "Active Scenario:"
+
+        # Blank middle cell
+        blank_cell = sheet.cell(column=label_col + 1, row=row)
+        border = Border(top=blank_cell.border.top,
+                        bottom=blank_cell.border.bottom)
+        border.top = side
+        border.bottom = side
+        blank_cell.border = border
+
+        # Rightmost cell where selector lives
+        right_cell = sheet.cell(column=selector_col, row=row)
+        border = Border(right=right_cell.border.right,
+                        top=right_cell.border.top,
+                        bottom=right_cell.border.bottom)
+        border.right = side
+        border.top = side
+        border.bottom = side
+        right_cell.border = border
+        right_cell.alignment = Alignment(horizontal='center')
+
+        if active:
+            color = HARDCODED_COLOR
+        else:
+            color = BLACK
+
+        font = Font(color=color, bold=True, size=14)
+        right_cell.font = font

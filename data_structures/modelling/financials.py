@@ -93,7 +93,7 @@ class Financials:
             "ledger", "valuation"
         ]
         self._chef_order = [
-            "overview", "income", "cash", "starting", "ending", "ownership"
+            "overview", "income", "cash", "starting", "ending"
         ]
         self._compute_order = ['overview', 'income', 'cash']
         self._exclude_statements = ['valuation', 'starting']
@@ -243,6 +243,7 @@ class Financials:
                 new_compute.remove(term)
 
             self._compute_order = new_compute
+            self._chef_order.append(name)
         else:
             self._exclude_statements.append(name)
 
@@ -260,7 +261,7 @@ class Financials:
         """
         self.run_on_all("build_tables")
 
-    def copy(self):
+    def copy(self, clean=False):
         """
 
 
@@ -276,10 +277,11 @@ class Financials:
         new_instance._full_order = self._full_order.copy()
         new_instance._compute_order = self._compute_order.copy()
         new_instance._exclude_statements = self._exclude_statements.copy()
+        new_instance._chef_order = self._chef_order.copy()
         for name in self.full_order:
             own_statement = getattr(self, name)
             if own_statement is not None:
-                new_statement = own_statement.copy()
+                new_statement = own_statement.copy(clean=clean)
                 new_statement.relationships.set_parent(new_instance)
                 setattr(new_instance, name, new_statement)
 
