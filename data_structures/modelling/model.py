@@ -275,7 +275,6 @@ class Model(TagsMixIn):
 
         new_tl = TimeLine(self)
         new_tl.parameters = self.time_line.parameters.copy()
-        new_tl.master = self.time_line.master.copy()
         new_tl.build(ref_date=ref_date)
         new_tl.id.set_namespace(self.id.bbid)
         new_tl.current_period.set_content(old_tl.current_period.content)
