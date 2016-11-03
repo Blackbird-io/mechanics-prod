@@ -370,7 +370,9 @@ class Model(TagsMixIn):
         if key in self.timelines:
             return self.timelines[key]
 
-    def set_timeline(self, time_line, resolution='monthly', actual=False):
+    def set_timeline(
+        self, time_line, resolution='monthly', actual=False, overwrite=False
+    ):
         """
 
         Model.set_timeline() -> None
@@ -381,6 +383,12 @@ class Model(TagsMixIn):
         Method adds the timeline for specified resolution (if any).
         """
         key = (resolution, actual)
+        if key in self.timelines and not overwrite:
+            c = (
+                "TimeLine (resolution='{}', actual='{}') "
+                "already exists".format(*key)
+            )
+            raise KeyError(c)
         self.timelines[key] = time_line
 
     def start(self):
