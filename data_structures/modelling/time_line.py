@@ -442,7 +442,7 @@ class TimeLine(TimelineBase):
                 # query is a string, split it
                 q_date = date(*num_query)
         end_date = self._get_ref_end_date(q_date)
-        result = self[end_date]
+        result = self.get(end_date)
         return result
 
     def get_segments(self, ref_date=None):
