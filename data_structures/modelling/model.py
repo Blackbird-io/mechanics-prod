@@ -134,6 +134,7 @@ class Model(TagsMixIn):
         for s in DEFAULT_SCENARIOS:
             self.scenarios[s] = dict()
 
+        self.company = None
         self.target = None
         # target is BU from which to get path and interview info, default
         # points to top-level business unit/company
@@ -308,15 +309,28 @@ class Model(TagsMixIn):
 
         return result
 
-    def get_company(self):
+    def get_company(self, buid=None):
         """
 
         Model.get_company() -> BusinessUnit
 
         Method returns top-level business unit from current period.
         """
-        co = self.time_line.current_period.content
-        return co
+        if buid:
+            return self.bu_directory[buid]
+        return self.company
+
+    def set_company(self, company):
+        """
+
+        Model.set_company() -> None
+
+        Method sets the company as the top-level unit.
+        """
+        self.bu_directory.clear()
+        self.ty_directory.clear()
+        self.register(company, update_id=True, overwrite=False, recur=True)
+        self.company = company
 
     def get_financials(self, bbid, period):
         """
