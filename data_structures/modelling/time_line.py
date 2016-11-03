@@ -93,6 +93,7 @@ class TimeLine(TimelineBase):
         self._current_period = None
         self._old_current_period = None
 
+        self.master = None
         self.parameters = Parameters()
         self.summary_builder = None
         self.has_been_extrapolated = False
@@ -174,6 +175,9 @@ class TimeLine(TimelineBase):
         )
         self.add_period(current_period)
         self.current_period = current_period
+
+        # Add master period
+        self.master = current_period.copy()
 
         # Now make the chain
         back_end_date = current_start_date - timedelta(1)
@@ -385,6 +389,38 @@ class TimeLine(TimelineBase):
             self[date] = updated_period
             seed = updated_period
 
+    def extrapolate_statement(self, statement_name, seed=None):
+        """
+
+
+        TimeLine.extrapolate_statement() -> None
+
+
+        Extrapolates a single statement forward in time. DOES NOT MAKE
+        SUMMARIES.
+        """
+        if seed is None:
+            seed = self.current_period
+
+        company = self.model.get_company()
+        orig_fins = company.get_financials(period=seed)
+        orig_statement = getattr(orig_fins, statement_name)
+        orig_statement.reset()
+        company.compute(statement_name, period=seed)
+
+        for period in self.iter_ordered(open=seed.end):
+            if period.end > seed.end:
+                new_fins = company.get_financials(period=period)
+                new_stat = getattr(new_fins, statement_name, None)
+                if new_stat is None:
+                    # need to add statement
+                    new_stat = orig_statement.copy(clean=True)
+                    new_fins.add_statement(statement_name, statement=new_stat)
+                    company.compute(statement_name, period=period)
+                else:
+                    # compute what is already there
+                    company.compute(statement_name, period=period)
+
     def find_period(self, query):
         """
 
@@ -406,7 +442,7 @@ class TimeLine(TimelineBase):
                 # query is a string, split it
                 q_date = date(*num_query)
         end_date = self._get_ref_end_date(q_date)
-        result = self[end_date]
+        result = self.get(end_date)
         return result
 
     def get_segments(self, ref_date=None):

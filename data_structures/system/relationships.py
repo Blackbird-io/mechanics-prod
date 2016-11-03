@@ -60,16 +60,13 @@ class Relationships:
     set_parent()          sets non-public parent attribute _parent
     """
 
-    def __init__(self, owner, parent=None, model=None):
+    def __init__(self, owner, parent=None):
         self._owner = owner
         self._parent = None
         self._level = None
-        self._model = None
 
         if parent:
             self.set_parent(parent)
-        if model:
-            self.set_model(model)
 
     @property
     def level(self):
@@ -92,10 +89,6 @@ class Relationships:
     def parent(self):
         return self._parent
 
-    @property
-    def model(self):
-        return self._model
-
     def set_parent(self, parent):
         """
 
@@ -107,18 +100,6 @@ class Relationships:
         Sets _parent non-public attribute to parent object
         """
         self._parent = parent
-
-    def set_model(self, model):
-        """
-
-
-        Relationship.set_model -> None
-
-        --``model`` instance of Model
-
-        Sets _model non-public attribute to an instance of Model
-        """
-        self._model = model
 
     def copy(self):
         """

@@ -234,11 +234,11 @@ class LineItem(Statement, HistoryLine):
             sig = self.SIGNATURE_FOR_VALUE_RESET
             self.set_value(None, sig, override=True)
 
-            keep_format = self.xl.format.copy()
+            format2keep = self.xl.format.copy()
             self.xl = xl_mgmt.LineData()
 
             if keep_format:
-                self.xl.format = keep_format
+                self.xl.format = format2keep
 
             self.set_consolidate(consolidate)
             # Start with a clean slate for Excel tracking, except for
@@ -246,7 +246,7 @@ class LineItem(Statement, HistoryLine):
 
             self.summary_count = 0
 
-    def copy(self, check_include_details=False):
+    def copy(self, check_include_details=False, clean=False):
         """
 
 
@@ -256,7 +256,9 @@ class LineItem(Statement, HistoryLine):
         Return a deep copy of the instance and its details. If  is
         True, copy conforms to ``out`` rules.
         """
-        new_line = Statement.copy(self, check_include_details=check_include_details)
+        new_line = Statement.copy(self,
+                                  check_include_details=check_include_details,
+                                  clean=clean)
         # Shallow copy, should pick up _local_value as is, and then create
         # independent containers for tags.
 
@@ -265,14 +267,19 @@ class LineItem(Statement, HistoryLine):
         new_line._sum_over_time = self.sum_over_time
         new_line._include_details = self.include_details
         new_line.set_consolidate(self._consolidate)
-        new_line.set_hardcoded(self._hardcoded)
         new_line.id = copy.copy(self.id)
         new_line.xl = xl_mgmt.LineData()
         new_line.xl.format = self.xl.format.copy()
 
-        if check_include_details and not new_line._details and self._details:
-            new_line.set_value(self.value, self.SIGNATURE_FOR_COPY,
-                               override=True)
+        if not clean:
+            new_line.set_hardcoded(self._hardcoded)
+            if check_include_details and not new_line._details and self._details:
+                new_line.set_value(self.value, self.SIGNATURE_FOR_COPY,
+                                   override=True)
+        else:
+            new_line.set_hardcoded(False)
+            new_line._local_value = None
+            new_line.log = []
 
         return new_line
 
