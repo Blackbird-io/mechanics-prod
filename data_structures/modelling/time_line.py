@@ -91,9 +91,6 @@ class TimeLine(TimelineBase):
         TimelineBase.__init__(self, interval=1)
 
         self.model = model
-        self._current_period = None
-        self._old_current_period = None
-
         self.master = None
         self.parameters = Parameters()
         self.summary_builder = None
@@ -111,16 +108,9 @@ class TimeLine(TimelineBase):
         Getter returns instance._current_period. Setter stores old value for
         reversion, then sets new value. Deleter sets value to None.
         """
-        return self._current_period
-
-    @current_period.setter
-    def current_period(self, value):
-        self._old_current_period = self._current_period
-        self._current_period = value
-
-    @current_period.deleter
-    def current_period(self):
-        self.current_period = None
+        if len(self):
+            cp = self.find_period(self.model.ref_date)
+            return cp
 
     def __str__(self, lines=None):
         """
@@ -182,8 +172,7 @@ class TimeLine(TimelineBase):
         date. Method also sets master to a copy of the current period.
         """
         if not ref_date:
-            ref_date = date.today()
-
+            ref_date = self.model.ref_date
         self.ref_date = ref_date
 
         ref_month = ref_date.month
@@ -198,7 +187,6 @@ class TimeLine(TimelineBase):
             current_start_date, current_end_date, model=self.model
         )
         self.add_period(current_period)
-        self.current_period = current_period
 
         # Add master period
         self.master = current_period.copy()

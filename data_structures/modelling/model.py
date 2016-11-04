@@ -114,7 +114,7 @@ class Model(TagsMixIn):
         TagsMixIn.__init__(self, name)
 
         self._started = False
-        #
+        self.ref_date = None
         self.id = ID()
         self.id.assign(name)
         # Models carry uuids in the origin namespace.
@@ -272,13 +272,16 @@ class Model(TagsMixIn):
             return
 
         old_tl = self.get_timeline()
-
         new_tl = TimeLine(self)
         new_tl.parameters = self.time_line.parameters.copy()
         new_tl.master = self.time_line.master.copy()
         new_tl.build(ref_date=ref_date)
         new_tl.id.set_namespace(self.id.bbid)
-        new_tl.current_period.set_content(old_tl.current_period.content)
+
+        # switch ref_date on the model and content on timeline
+        company = old_tl.current_period.content
+        self.ref_date = ref_date
+        new_tl.current_period.set_content(company)
 
         self.set_timeline(new_tl, overwrite=True)
 
