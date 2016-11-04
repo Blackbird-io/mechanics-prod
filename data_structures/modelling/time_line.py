@@ -28,6 +28,7 @@ TimeLine              collection of TimePeriod objects indexed by end date
 
 # imports
 import logging
+import copy
 
 from datetime import date, datetime, timedelta
 
@@ -147,15 +148,24 @@ class TimeLine(TimelineBase):
         Method returns a copy of self linked to parent model and with the same
         layout.
         """
-        result = self.__class__(self.model)
-        result.build(self.ref_date)
+        result = type(self)(self.model)
+        result.ref_date = copy.copy(self.ref_date)
         result.parameters = self.parameters.copy()
+        for old_period in self.iter_ordered():
+            new_period = old_period.copy(clean=True)
+            result.add_period(new_period)
+
+        if self._current_period:
+            result._current_period = result[self._current_period.end]
+        if self.master:
+            result.master = result[self.master.end]
+
         return result
 
-    def build(self,
-              ref_date,
-              fwd=DEFAULT_PERIODS_FORWARD,
-              back=DEFAULT_PERIODS_BACK):
+    def build(
+        self, ref_date,
+        fwd=DEFAULT_PERIODS_FORWARD, back=DEFAULT_PERIODS_BACK, year_end=True,
+    ):
         """
 
 
@@ -209,7 +219,7 @@ class TimeLine(TimelineBase):
             )
             self.add_period(fwd_period)
             i += 1
-            if i >= fwd and fwd_period.end.month == 12:
+            if i >= fwd and (not year_end or fwd_period.end.month == 12):
                 break
             # first line picks up last value in function scope, so loop
             # should be closed.

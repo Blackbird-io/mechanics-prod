@@ -122,7 +122,7 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         self.content = None
         self._reset_directories()
 
-    def copy(self):
+    def copy(self, clean=False):
         """
 
 
@@ -150,6 +150,9 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         result.unit_parameters = Parameters()
         for bbid, unit_dict in self.unit_parameters.items():
             result.unit_parameters[bbid] = unit_dict.copy()
+
+        for bbid, fins in self.financials.items():
+            result.financials[bbid] = fins.copy(clean=clean)
 
         return result
 
