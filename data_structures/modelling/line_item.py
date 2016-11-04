@@ -207,90 +207,6 @@ class LineItem(Statement, HistoryLine):
 
         return result
 
-    @classmethod
-    def from_portal(cls, parent, portal_data):
-        """
-
-
-        LineItem.from_portal(portal_model) -> Model
-
-        **CLASS METHOD**
-
-        Method deserializes a LineItem.
-        """
-        line_data = portal_data['myself']
-        line = parent.find_first(line_data['line_name'])
-        if not line:
-            line = cls(
-                line_data['line_title'], line_data['_local_value'], parent
-            )
-            parent.add_line(line, position=line_data['position'])
-        for attr in (
-            'position',
-            'summary_type',
-            'summary_count',
-            '_local_value',
-            '_hardcoded',
-            '_consolidate',
-            '_replica',
-            '_hardcoded',
-            '_include_details',
-        ):
-            setattr(line, attr, line_data[attr])
-
-        for attr, value in line_data['xl'].items():
-            setattr(line.xl.format, attr, value)
-
-        for line_id, sub_data in portal_data['subset'].items():
-            cls.from_portal(line, sub_data)
-
-        return line
-
-    def to_portal(
-        self, period, buid, statement, statement_attr, line_index,
-        line_parent=None
-    ):
-        """
-
-
-        LineItem.to_portal(portal_model) -> iter(dict)
-
-        Method yields a serialized representation of a LineItem.
-        """
-        row = {
-            'buid': buid,
-            'line_id': self.id.bbid.hex,
-            # 'line_index': line_index,
-            'line_name': self.name,
-            'line_title': self.title,
-            'line_parent_id': line_parent.id.bbid.hex if line_parent else None,
-            'statement_name': statement.name,
-            'statement_attr': statement_attr,
-            'position': self.position,
-            'summary_type': self.summary_type,
-            'summary_count': self.summary_count,
-            '_local_value': self._local_value,
-            '_hardcoded': self._hardcoded,
-            '_consolidate': self._consolidate,
-            '_replica': self._replica,
-            '_hardcoded': self._hardcoded,
-            '_include_details': self._include_details,
-            'xl': {
-                'blank_row_before': self.xl.format.blank_row_before,
-                'blank_row_after': self.xl.format.blank_row_after,
-                'number_format': self.xl.format.number_format,
-            }
-        }
-
-        # return this line
-        yield row
-        # return child lines
-        for stub_index, stub in enumerate(self.get_ordered()):
-            yield from stub.to_portal(
-                period, buid, statement, statement_attr, stub_index,
-                line_parent=self,
-            )
-
     def __str__(self):
         result = "\n".join(self._get_line_strings())
         result += "\n"
@@ -318,11 +234,11 @@ class LineItem(Statement, HistoryLine):
             sig = self.SIGNATURE_FOR_VALUE_RESET
             self.set_value(None, sig, override=True)
 
-            keep_format = self.xl.format.copy()
+            format2keep = self.xl.format.copy()
             self.xl = xl_mgmt.LineData()
 
             if keep_format:
-                self.xl.format = keep_format
+                self.xl.format = format2keep
 
             self.set_consolidate(consolidate)
             # Start with a clean slate for Excel tracking, except for
@@ -330,7 +246,7 @@ class LineItem(Statement, HistoryLine):
 
             self.summary_count = 0
 
-    def copy(self, check_include_details=False):
+    def copy(self, check_include_details=False, clean=False):
         """
 
 
@@ -340,7 +256,9 @@ class LineItem(Statement, HistoryLine):
         Return a deep copy of the instance and its details. If  is
         True, copy conforms to ``out`` rules.
         """
-        new_line = Statement.copy(self, check_include_details=check_include_details)
+        new_line = Statement.copy(self,
+                                  check_include_details=check_include_details,
+                                  clean=clean)
         # Shallow copy, should pick up _local_value as is, and then create
         # independent containers for tags.
 
@@ -349,14 +267,19 @@ class LineItem(Statement, HistoryLine):
         new_line._sum_over_time = self.sum_over_time
         new_line._include_details = self.include_details
         new_line.set_consolidate(self._consolidate)
-        new_line.set_hardcoded(self._hardcoded)
         new_line.id = copy.copy(self.id)
         new_line.xl = xl_mgmt.LineData()
         new_line.xl.format = self.xl.format.copy()
 
-        if check_include_details and not new_line._details and self._details:
-            new_line.set_value(self.value, self.SIGNATURE_FOR_COPY,
-                               override=True)
+        if not clean:
+            new_line.set_hardcoded(self._hardcoded)
+            if check_include_details and not new_line._details and self._details:
+                new_line.set_value(self.value, self.SIGNATURE_FOR_COPY,
+                                   override=True)
+        else:
+            new_line.set_hardcoded(False)
+            new_line._local_value = None
+            new_line.log = []
 
         return new_line
 

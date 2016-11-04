@@ -29,14 +29,11 @@ Financials            a dynamic class that holds standard and custom statements
 # Imports
 import logging
 
-from collections import OrderedDict
-
 import bb_settings
 
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
 from .statement import Statement
-from .line_item import LineItem
 from .statements import BalanceSheet
 from .statements import CashFlow
 from .equalities import Equalities
@@ -96,7 +93,7 @@ class Financials:
             "ledger", "valuation"
         ]
         self._chef_order = [
-            "overview", "income", "cash", "starting", "ending", "ownership"
+            "overview", "income", "cash", "starting", "ending"
         ]
         self._compute_order = ['overview', 'income', 'cash']
         self._exclude_statements = ['valuation', 'starting']
@@ -151,79 +148,6 @@ class Financials:
             result.append(statement)
 
         return result
-
-    @classmethod
-    def from_portal(cls, period, portal_data):
-        """
-
-
-        Financials.from_portal(portal_model) -> Model
-
-        **CLASS METHOD**
-
-        Method extracts a Financials from serialized representation.
-        """
-        # a data structure to convert flat list to a nested dict
-        tree_nodes = OrderedDict()
-        # Pass one: create data structures for tree representation
-        # every parent-child relationship is at the top level but also hold
-        # all the nested relationships
-        # buid -> statement attribute name -> line id
-        for line in portal_data:
-            buid_node = tree_nodes.setdefault(line['buid'], {})
-            attr_node = buid_node.setdefault(line['statement_attr'], {})
-            line_node = attr_node.setdefault(line['line_id'], dict(
-                myself = line,
-                parent = line['line_parent_id'],
-                subset = OrderedDict(),
-            ))
-        # Pass two: nest child lines within parents. Top-level nodes that don't
-        # have a parent are the root nodes of the tree.
-        for buid, buid_node in tree_nodes.items():
-            for attr, attr_node in buid_node.items():
-                for id, node in attr_node.items():
-                    if node['parent']:
-                        attr_node[node['parent']]['subset'][id] = node
-        financials_set = {}
-        for buid, buid_node in tree_nodes.items():
-            for attr, attr_node in buid_node.items():
-                for id, node in attr_node.items():
-                    # restrict operation to root nodes
-                    if not node['parent']:
-                        line = node['myself']
-                        if buid not in financials_set:
-                            fins = cls(period=period)
-                            financials_set[buid] = fins
-                        fins = financials_set[buid]
-                        if not hasattr(fins, attr):
-                            statement = Statement(
-                                line['statement_name'], parent=fins
-                            )
-                            setattr(fins, attr, statement)
-                        statement = getattr(fins, attr)
-                        LineItem.from_portal(statement, node)
-
-        return financials_set
-
-    def to_portal(self, period, buid):
-        """
-
-
-        Model.to_portal(portal_model) -> Model
-
-
-        Method extracts a TimeLine from ``portal_data``.
-
-        Method expects ``portal_data`` to be a dict.
-        """
-        for statement_attr in self._full_order:
-            statement = getattr(self, statement_attr, None)
-            if statement:
-                for line_index, line in enumerate(statement.get_ordered()):
-                    # line is yielded first, followed by _details
-                    yield from line.to_portal(
-                        period, buid, statement, statement_attr, line_index
-                    )
 
     def __str__(self):
         period =  self.period or self.relationships.parent.period
@@ -319,6 +243,7 @@ class Financials:
                 new_compute.remove(term)
 
             self._compute_order = new_compute
+            self._chef_order.append(name)
         else:
             self._exclude_statements.append(name)
 
@@ -336,7 +261,7 @@ class Financials:
         """
         self.run_on_all("build_tables")
 
-    def copy(self):
+    def copy(self, clean=False):
         """
 
 
@@ -352,10 +277,11 @@ class Financials:
         new_instance._full_order = self._full_order.copy()
         new_instance._compute_order = self._compute_order.copy()
         new_instance._exclude_statements = self._exclude_statements.copy()
+        new_instance._chef_order = self._chef_order.copy()
         for name in self.full_order:
             own_statement = getattr(self, name)
             if own_statement is not None:
-                new_statement = own_statement.copy()
+                new_statement = own_statement.copy(clean=clean)
                 new_statement.relationships.set_parent(new_instance)
                 setattr(new_instance, name, new_statement)
 
