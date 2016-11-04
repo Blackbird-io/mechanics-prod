@@ -303,7 +303,7 @@ class Model(TagsMixIn):
         for key, time_line in self.timelines.items():
             new_tl = time_line.copy()
             new_tl.model = result
-            result.set_timeline(new_tl, *key)
+            result.set_timeline(new_tl, *key, overwrite=True)
         result.scenarios = self.scenarios.copy()
         result.target = self.target
 
