@@ -138,6 +138,19 @@ class TimeLine(TimelineBase):
         result = line_end.join(lines)
         return result
 
+    def copy_structure(self):
+        """
+
+
+        TimeLine.copy_structure() -> TimeLine
+
+        Method returns a copy of self linked to parent model and with the same
+        layout.
+        """
+        result = self.__class__(self.model)
+        result.build(self.ref_date)
+        return result
+
     def build(self,
               ref_date,
               fwd=DEFAULT_PERIODS_FORWARD,
