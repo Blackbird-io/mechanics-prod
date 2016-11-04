@@ -34,6 +34,7 @@ import bb_settings
 import bb_exceptions
 
 from data_structures.system.tags_mixin import TagsMixIn
+from tools.parsing import date_from_iso
 
 from .parameters import Parameters
 from .time_period_base import TimePeriodBase
@@ -89,6 +90,44 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
 
         self.parameters = Parameters()
         self.unit_parameters = Parameters()
+
+    @classmethod
+    def from_portal(cls, model, portal_data):
+        """
+
+
+        TimePeriod.from_portal() -> TimePeriod
+
+        **CLASS METHOD**
+
+        Method deserializes a TimePeriod from portal representation.
+        """
+        period = TimePeriodBase.from_portal(model, portal_data)
+        period.summary = portal_data['summary']
+        period.parameters.update(portal_data['parameters'])
+        period.unit_parameters.update(portal_data['unit_parameters'])
+
+        return period
+
+    def to_portal(self):
+        """
+
+
+        TimePeriod.to_portal() -> dict
+
+        Method serializes a TimePeriod to portal representation.
+        """
+        result = TimePeriodBase.to_portal(self)
+        result.update(
+            summary=self.summary,
+            parameters=self.parameters,
+            unit_parameters={
+                k if isinstance(k, str) else k.hex: v
+                for k, v in self.unit_parameters.items()
+            },
+        )
+
+        return result
 
     def copy(self):
         """
