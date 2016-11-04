@@ -32,7 +32,6 @@ import copy
 from datetime import date
 
 from data_structures.system.bbid import ID
-from data_structures.modelling.time_period_base import TimePeriodBase
 
 
 
@@ -71,40 +70,6 @@ class TimelineBase(dict):
         # down to time periods. The TimelineBase instance itself does not get
         # its own bbid.
         self.interval = interval
-
-    @classmethod
-    def from_portal(cls, model, portal_data):
-        """
-
-        TimelineBase.from_portal() -> TimelineBase
-
-        **CLASS METHOD**
-
-        Method deserializes a TimelineBase from portal representation.
-        """
-        time_line = cls(portal_data.get('interval', 1))
-        for period_data in portal_data.get('periods', []):
-            period = TimePeriodBase.from_portal(model, period_data)
-            time_line.add_period(period)
-
-        return time_line
-
-    def to_portal(self):
-        """
-
-
-        TimelineBase.to_portal(portal_model) -> dict
-
-        Method serializes a TimelineBase to portal representation.
-        """
-        result = {
-            'interval': self.interval,
-        }
-        result['periods'] = [
-            period.to_portal() for period in self.iter_ordered()
-        ]
-
-        return result
 
     def add_period(self, period):
         """

@@ -34,6 +34,7 @@ import bb_exceptions
 import bb_settings
 from chef_settings import DEFAULT_SCENARIOS
 from data_structures.system.bbid import ID
+from data_structures.modelling.line_item import LineItem
 from data_structures.system.tags_mixin import TagsMixIn
 from .time_line import TimeLine
 
@@ -134,11 +135,9 @@ class Model(TagsMixIn):
         for s in DEFAULT_SCENARIOS:
             self.scenarios[s] = dict()
 
-        self.company = None
         self.target = None
         # target is BU from which to get path and interview info, default
         # points to top-level business unit/company
-
 
     # DYNAMIC ATTRIBUTES
     @property
@@ -276,11 +275,12 @@ class Model(TagsMixIn):
 
         new_tl = TimeLine(self)
         new_tl.parameters = self.time_line.parameters.copy()
+        new_tl.master = self.time_line.master.copy()
         new_tl.build(ref_date=ref_date)
         new_tl.id.set_namespace(self.id.bbid)
         new_tl.current_period.set_content(old_tl.current_period.content)
 
-        self.set_timeline(new_tl)
+        self.set_timeline(new_tl, overwrite=True)
 
     def clear_excel(self):
         self.time_line.clear_excel()
@@ -309,28 +309,15 @@ class Model(TagsMixIn):
 
         return result
 
-    def get_company(self, buid=None):
+    def get_company(self):
         """
 
         Model.get_company() -> BusinessUnit
 
         Method returns top-level business unit from current period.
         """
-        if buid:
-            return self.bu_directory[buid]
-        return self.company
-
-    def set_company(self, company):
-        """
-
-        Model.set_company() -> None
-
-        Method sets the company as the top-level unit.
-        """
-        self.bu_directory.clear()
-        self.ty_directory.clear()
-        self.register(company, update_id=True, overwrite=False, recur=True)
-        self.company = company
+        co = self.time_line.current_period.content
+        return co
 
     def get_financials(self, bbid, period):
         """
@@ -384,6 +371,36 @@ class Model(TagsMixIn):
         if key in self.timelines:
             return self.timelines[key]
 
+    def prep_for_monitoring_interview(self):
+        """
+
+
+        prep_monitoring_interview(portal_model) -> PortalModel
+
+        --``portal_model`` is an instance of PortalModel
+
+        Function sets path for monitoring interview after projections are set.
+        Function runs after pressing the "update" button on the model card.
+        """
+        if not self.started:
+            self.start()
+
+        # set company as target
+        co = self.get_company()
+        co._stage = None
+        self.target = co
+
+        # preserve existing path and set fresh BU.used and BU.stage.path
+        co.archive_path()
+        co.archive_used()
+
+        # set monitoring path:
+        new_line = LineItem("monitoring path")
+        self.target.stage.path.append(new_line)
+
+        if not self.target.stage.focal_point:
+            self.target.stage.set_focal_point(new_line)
+
     def set_timeline(
         self, time_line, resolution='monthly', actual=False, overwrite=False
     ):
@@ -428,116 +445,3 @@ class Model(TagsMixIn):
         time_stamp = time.time()
         record = (message, time_stamp)
         self.transcript.append(record)
-
-    def get_units(self, pool):
-        """
-
-
-        Model.get_units() -> list
-
-
-        Method returns a list of objects from instance.bu_directory that
-        correspond to each bbid in ``pool``. Method sorts pool prior to
-        processing.
-
-        Method expects ``pool`` to be an iterable of bbids.
-        """
-        pool = sorted(pool)
-        # make sure to sort pool for stable output order
-        units = []
-        for bbid in pool:
-            u = self.bu_directory[bbid]
-            units.append(u)
-        return units
-
-    def get_lowest_units(self, pool=None, run_on_empty=False):
-        """
-
-
-        Model.get_lowest_units() -> list
-
-
-        Method returns a list of units in pool that have no components.
-
-        Method expects ``pool`` to be an iterable of bbids.
-
-        If ``pool`` is None, method will build its own pool from all keys in
-        the instance's bu_directory. Method will raise error if asked to run
-        on an empty pool unless ``run_on_empty`` == True.
-        """
-        if pool is None:
-            pool = sorted(self.bu_directory.keys())
-        else:
-            pool = sorted(pool)
-        # make sure to sort pool for stable output order
-        #
-        if any([pool, run_on_empty]):
-            foundation = []
-            for bbid in pool:
-                bu = self.bu_directory[bbid]
-                if bu.components:
-                    continue
-                else:
-                    foundation.append(bu)
-            #
-            return foundation
-            #
-        else:
-            c = "``pool`` is empty, method requires explicit permission to run."
-            raise bb_exceptions.ProcessError(c)
-
-    def register(
-            self, bu, update_id=True, overwrite=True, recur=True
-    ):
-        """
-
-
-        Model.register() -> None
-
-
-        Manually add unit to period. Unit will conform to period and appear
-        in directories. Use sparingly: designed for master (taxonomy) period.
-
-        NOTE: content should generally have a tree structure, with a
-        single bu node on top. That node will manage all child relationships.
-        Accordingly, the best way to add units to a model is to run
-        bu.add_component(new_unit).
-
-        If ``update_id`` is True, method will assign unit a new id in the
-        model's namespace. Parameter should be True when adding a top-level
-        unit, False when adding child units.
-        """
-        # Make sure unit has an id in the right namespace.
-        if update_id:
-            bu.update_id(namespace=self.id.namespace, recur=True)
-        if not bu.id.bbid:
-            c = "Cannot add content without a valid bbid."
-            raise bb_exceptions.IDError(c)
-
-        # Check for collisions first, then register if none arise.
-        if not overwrite:
-            if bu.id.bbid in self.bu_directory:
-                c = (
-                    "TimePeriod.bu_directory already contains an object with "
-                    "the same bbid as this unit. \n"
-                    "unit id:         {bbid}\n"
-                    "known unit name: {name}\n"
-                    "new unit name:   {mine}\n\n"
-                ).format(
-                    bbid=bu.id.bbid,
-                    name=self.bu_directory[bu.id.bbid].tags.name,
-                    mine=bu.tags.name,
-                )
-                print(self.bu_directory)
-                raise bb_exceptions.IDCollisionError(c)
-        self.bu_directory[bu.id.bbid] = bu
-
-        brethren = self.ty_directory.setdefault(bu.type, set())
-        brethren.add(bu.id.bbid)
-
-        if recur:
-            for unit in bu.components.values():
-                self.register(
-                    unit, update_id=update_id, overwrite=overwrite, recur=recur
-                )
-

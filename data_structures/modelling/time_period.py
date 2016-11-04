@@ -34,7 +34,6 @@ import bb_settings
 import bb_exceptions
 
 from data_structures.system.tags_mixin import TagsMixIn
-from tools.parsing import date_from_iso
 
 from .parameters import Parameters
 from .time_period_base import TimePeriodBase
@@ -72,62 +71,56 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
     ====================  ======================================================
 
     DATA:
+    bu_directory          dict; all business units in this period, keyed by bbid
+    content               pointer to content, usually a business unit
+    end                   datetime.date; last date in period
+    id                    instance of ID class
+    length                float; seconds between start and end
     parameters            Parameters object, specifies shared parameters
-    unit_parameters       Parameters object, unit-specific parameters
+    relationships         instance of Relationships class
+    start                 datetime.date; first date in period.
+    ty_directory          dict; keys are strings, values are sets of bbids
 
     FUNCTIONS:
     __str__               basic print, shows starts, ends, and content
+    clear()               clears content, resets bu_directory
     copy()                returns new TimePeriod with a copy of content
-    combine_parameters()  propagate past parameters to current period
     extrapolate_to()      updates inheritance then delegates to Tags
     ex_to_default()       creates result from seed, sets to target start/end
+    get_units()           return list of units from bbid pool
+    get_lowest_units()    return list of units w/o components from bbid pool
+    register()            conform and register unit
+    set_content()         attach company to period
     ====================  ======================================================
     """
-    def __init__(self, start_date, end_date, model=None):
+    def __init__(self, start_date, end_date, content=None, model=None):
         # content is handled differently, is not passed on to base init
         TimePeriodBase.__init__(self, start_date, end_date, model=model)
         TagsMixIn.__init__(self)
 
         self.parameters = Parameters()
         self.unit_parameters = Parameters()
+        self.ty_directory = model.ty_directory
 
-    @classmethod
-    def from_portal(cls, model, portal_data):
+        if content:
+            self.set_content(content)
+
+        # The current approach to indexing units within a period assumes that
+        # Blackbird will rarely remove existing units from a model. both
+        # The ``bu`` and ``ty`` directories are static: they do not know if
+        # the unit whose bbid they reference is no longer in their domain.
+
+    def clear(self):
         """
 
 
-        TimePeriod.from_portal() -> TimePeriod
+        TimePeriod.clear() -> None
 
-        **CLASS METHOD**
 
-        Method deserializes a TimePeriod from portal representation.
+        Method sets content to None and resets instance directories.
         """
-        period = TimePeriodBase.from_portal(model, portal_data)
-        period.summary = portal_data['summary']
-        period.parameters.update(portal_data['parameters'])
-        period.unit_parameters.update(portal_data['unit_parameters'])
-
-        return period
-
-    def to_portal(self):
-        """
-
-
-        TimePeriod.to_portal() -> dict
-
-        Method serializes a TimePeriod to portal representation.
-        """
-        result = TimePeriodBase.to_portal(self)
-        result.update(
-            summary=self.summary,
-            parameters=self.parameters,
-            unit_parameters={
-                k if isinstance(k, str) else k.hex: v
-                for k, v in self.unit_parameters.items()
-            },
-        )
-
-        return result
+        self.content = None
+        self._reset_directories()
 
     def copy(self):
         """
@@ -284,3 +277,122 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
 
         # Step 3: return container
         return result
+
+    def get_lowest_units(self, pool=None, run_on_empty=False):
+        """
+
+
+        TimePeriod.get_lowest_units() -> list
+
+
+        Method returns a list of units in pool that have no components.
+
+        Method expects ``pool`` to be an iterable of bbids.
+
+        If ``pool`` is None, method will build its own pool from all keys in
+        the instance's bu_directory. Method will raise error if asked to run
+        on an empty pool unless ``run_on_empty`` == True.
+
+        NOTE: method performs identity check (``is``) for building own pool;
+        accordingly, running a.select_bottom_units(pool = set()) will raise
+        an exception.
+        """
+        if pool is None:
+            pool = sorted(self.bu_directory.keys())
+        else:
+            pool = sorted(pool)
+        #make sure to sort pool for stable output order
+        #
+        if any([pool, run_on_empty]):
+            foundation = []
+            for bbid in pool:
+                bu = self.bu_directory[bbid]
+                if bu.components:
+                    continue
+                else:
+                    foundation.append(bu)
+            #
+            return foundation
+            #
+        else:
+            c = "``pool`` is empty, method requires explicit permission to run."
+            raise bb_exceptions.ProcessError(c)
+
+    def register(self, bu, updateID=True, reset_directories=False):
+        """
+
+
+        TimePeriod.register() -> None
+
+
+        Manually add unit to period. Unit will conform to period and appear
+        in directories. Use sparingly: designed for master (taxonomy) period.
+
+        NOTE: Period content should generally have a tree structure, with a
+        single bu node on top. That node will manage all child relationships.
+        Accordingly, the best way to add units to a period is to run
+        bu.add_component(new_unit).
+
+        If ``updateID`` is True, method will assign unit a new id in the
+        period's namespace. Parameter should be False when moving units
+        between scenarios.
+
+        If ``reset_directories`` is True, method will clear existing type
+        and id directories. Parameter should be True when registering the
+        top (company) node of a structure.
+        """
+
+        bu._fit_to_period(self, recur=True)
+        # Update unit life.
+
+        if updateID:
+            bu._update_id(self.id.namespace, recur=True)
+        if not bu.id.bbid:
+            c = "Cannot add content without a valid bbid."
+            raise bb_exceptions.IDError(c)
+        # Make sure unit has an id in the right namespace.
+
+        if reset_directories:
+            self._reset_directories()
+
+        bu._register_in_period(recur=True, overwrite=False)
+        # Register the unit.
+
+    def set_content(self, bu, updateID=True):
+        """
+
+
+        TimePeriod.set_content() -> None
+
+
+        Register bu and set instance.content to point to it.
+
+        NOTE: ``updateID`` should only be True when adding external content to
+        a model for the first time (as opposed to moving content from period to
+        period or level to level within a model).
+
+        TimePeriods in a Model all share the model's namespace_id. Accordingly,
+        a BusinessUnit will have the same bbid in all time periods. The
+        BusinessUnit can elect to get a different bbid if it's name changes, but
+        in such an event, the Model will treat it as a new unit altogether.
+        """
+        self.register(bu, updateID=updateID, reset_directories=True)
+        # Reset directories when setting the top node in the period.
+        self.content = bu
+
+    #*************************************************************************#
+    #                          NON-PUBLIC METHODS                             #
+    #*************************************************************************#
+
+    def _reset_directories(self):
+        """
+
+
+        TimePeriod.reset_directories() -> None
+
+
+        Method sets instance.bu_directory and instance.ty_directory to blank
+        dictionaries.
+        """
+        self.bu_directory = {}
+        self.ty_directory = {}
