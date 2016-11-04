@@ -134,67 +134,16 @@ class PortalModel(ReadyForPortal):
         """
         result = []
         if model:
-            periods = []
-            for period in model.time_line.iter_ordered():
-                periods.append({
-                    'period_end': period.end,
-                    'period_start': period.start,
-                    'parameters': period.parameters,
-                    'unit_parameters': period.unit_parameters,
-                    'financials_set': self.serialize_financials(model, period),
-                })
-            result.append({
-                'resolution': 'monthly',
-                'actual': False,
-                'periods': periods,
-            })
+            for key, time_line in model.timelines.items():
+                tl_result = time_line.to_portal()
+                tl_result.update(
+                    resolution = key[0],
+                    actual = key[1],
+                )
+                result.append(tl_result)
+
+            # import json, gzip
+            # json.dump(result, open('c:/misc/json/{}_{}.time_line.json'.format(*key), 'w'), sort_keys=True, indent=2)
+            # json.dump(result, gzip.open('c:/misc/json/{}_{}.time_line.gz'.format(*key), 'wt'))
+
         return result
-
-    def serialize_financials(self, model, period):
-        """
-
-
-        PortalModel.serialize_financials() -> []
-
-        Method returns a list of serialized Financials for a period.
-        """
-        result = []
-        if not period.financials:
-            unit = model.get_company()
-            if hasattr(unit, 'period'):
-                if unit.period is period:
-                    unit._fit_to_period(period)
-        for buid, fins in period.financials.items():
-            for statement in fins.full_ordered:
-                if statement:
-                    for line in statement._details.values():
-                        self.serialize_line(
-                            result, period, buid, statement, line
-                        )
-        return result
-
-
-    def serialize_line(
-        self, result, period, buid, statement, line, line_parent=None
-    ):
-        """
-
-
-        PortalModel.serialize_financials() -> []
-
-        Method returns a list of serialized Financials for a period.
-        """
-        row = {
-            'buid': buid,
-            'line_id': line.id.bbid.hex,
-            'line_parent_id': line_parent.id.bbid.hex if line_parent else None,
-            'statement_name': statement.name,
-            'line_name': line.name,
-            'line_title': line.title,
-            'value': line.value,
-        }
-        result.append(row)
-        for stub in line._details.values():
-            self.serialize_line(
-                result, period, buid, statement, stub, line_parent=line,
-            )
