@@ -35,6 +35,7 @@ import bb_settings
 import tools.for_printing as views
 
 from data_structures.system.summary_maker import SummaryMaker
+from tools.parsing import date_from_iso
 
 from .parameters import Parameters
 from .time_line_base import TimelineBase
@@ -81,6 +82,8 @@ class TimeLine(TimelineBase):
     link()                connect adjacent periods
     revert_current()      go back to the prior current period
     update_current()      updates current_period for reference or actual date
+    from_portal()         deserializes from portal representation
+    to_portal()           serializes to portal representation
     ====================  ======================================================
     """
     DEFAULT_PERIODS_FORWARD = 60
@@ -119,6 +122,57 @@ class TimeLine(TimelineBase):
     @current_period.deleter
     def current_period(self):
         self.current_period = None
+
+    @classmethod
+    def from_portal(cls, model, portal_data):
+        """
+
+
+        TimeLine.from_portal(portal_model) -> TimeLine
+
+        **CLASS METHOD**
+
+        Method deserializes a TimeLine from portal representation.
+        """
+        time_line = cls(model)
+        time_line.ref_date = date_from_iso(portal_data['ref_date'])
+        time_line.has_been_extrapolated = portal_data['has_been_extrapolated']
+        time_line.parameters.update(portal_data['parameters'])
+        for period_data in portal_data.get('periods', []):
+            period = TimePeriod.from_portal(model, period_data)
+            time_line.add_period(period)
+        for key in ('_current_period',):
+            end = portal_data.get(key)
+            if end:
+                end = date_from_iso(end)
+                val = time_line.find_period(end)
+                setattr(time_line, key, val)
+
+        return time_line
+
+    def to_portal(self):
+        """
+
+        TimeLine.from_portal(portal_model) -> TimeLine
+
+        Method serializes a Timeline to portal representation.
+        """
+        result = {
+            'parameters': self.parameters,
+            'ref_date': format(self.ref_date),
+            'has_been_extrapolated': self.has_been_extrapolated,
+        }
+        for key in ('_current_period', ):
+            val = getattr(self, key, None)
+            if val:
+                result[key] = format(val.end)
+            else:
+                result[key] = None
+        result['periods'] = [
+            period.to_portal() for period in self.iter_ordered()
+        ]
+
+        return result
 
     def __str__(self, lines=None):
         """
