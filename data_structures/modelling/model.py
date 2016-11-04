@@ -113,7 +113,7 @@ class Model(TagsMixIn):
         TagsMixIn.__init__(self, name)
 
         self._started = False
-        #
+        self.ref_date = None
         self.id = ID()
         self.id.assign(name)
         # Models carry uuids in the origin namespace.
@@ -169,17 +169,12 @@ class Model(TagsMixIn):
         **read-only property**
 
 
-        Pointer to company summary on current period. If current period has no
-        content, returns None.
+        Pointer to company summary.
         """
-        result = None
-        #
-        company = self.time_line.current_period.content
+        company = self.get_company()
         if company:
-            # catch periods with empty content
             result = company.summary
-
-        return result
+            return result
 
     @summary.setter
     def summary(self, value):
@@ -278,9 +273,8 @@ class Model(TagsMixIn):
         new_tl.parameters = self.time_line.parameters.copy()
         new_tl.build(ref_date=ref_date)
         new_tl.id.set_namespace(self.id.bbid)
-        new_tl.current_period.set_content(old_tl.current_period.content)
-
-        self.set_timeline(new_tl)
+        self.ref_date = ref_date
+        self.set_timeline(new_tl, overwrite=True)
 
     def clear_excel(self):
         self.time_line.clear_excel()
@@ -303,7 +297,7 @@ class Model(TagsMixIn):
         for key, time_line in self.timelines.items():
             new_tl = time_line.copy()
             new_tl.model = result
-            result.set_timeline(new_tl, *key)
+            result.set_timeline(new_tl, *key, overwrite=True)
         result.scenarios = self.scenarios.copy()
         result.target = self.target
 
