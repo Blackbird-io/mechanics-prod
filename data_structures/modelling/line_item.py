@@ -212,14 +212,11 @@ class LineItem(Statement, HistoryLine):
         """
 
 
-        Model.from_portal(portal_model) -> Model
-
+        LineItem.from_portal(portal_model) -> Model
 
         **CLASS METHOD**
 
-        Method extracts a TimeLine from ``portal_data``.
-
-        Method expects ``portal_data`` to be a dict.
+        Method deserializes a LineItem.
         """
         line_data = portal_data['myself']
         line = parent.find_first(line_data['line_name'])
@@ -258,7 +255,7 @@ class LineItem(Statement, HistoryLine):
 
         LineItem.to_portal(portal_model) -> iter(dict)
 
-        Method yields.
+        Method yields a serialized representation of a LineItem.
         """
         row = {
             'buid': buid,
