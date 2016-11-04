@@ -33,8 +33,10 @@ import bb_settings
 
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
+from tools.parsing import date_from_iso
 
 from .history import History
+from .financials import Financials
 
 
 
@@ -170,6 +172,53 @@ class TimePeriodBase(History):
         Noop. TimePeriods look each other up through parent TimeLine.
         """
         pass
+
+    @classmethod
+    def from_portal(cls, model, portal_data):
+        """
+
+
+        TimePeriodBase.to_portal(portal_model) -> TimePeriodBase
+
+        **CLASS METHOD**
+
+        Method deserializes a TimePeriodBase from portal representation.
+        """
+        period = cls(
+            date_from_iso(portal_data['period_start']),
+            date_from_iso(portal_data['period_end']),
+            model=model,
+        )
+        period.summary = portal_data['summary']
+
+        financials_set = Financials.from_portal(
+            period, portal_data.get('financials_set', [])
+        )
+        for buid, fins in financials_set.items():
+            period.financials[buid] = fins
+
+        return period
+
+    def to_portal(self):
+        """
+
+
+        TimePeriodBase.to_portal(portal_model) -> dict
+
+        Method serializes a TimePeriodBase to portal representation.
+        """
+        financials_set = []
+        for buid, fins in self.financials.items():
+            if not isinstance(buid, str):
+                buid = buid.hex
+            financials_set.extend(fins.to_portal(self, buid))
+        result = {
+            'period_end': format(self.end),
+            'period_start': format(self.start),
+            'summary': self.summary,
+            'financials_set': financials_set,
+        }
+        return result
 
     def copy(self):
         """
