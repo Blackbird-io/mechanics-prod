@@ -149,6 +149,7 @@ class TimeLine(TimelineBase):
         """
         result = self.__class__(self.model)
         result.build(self.ref_date)
+        result.parameters = self.parameters.copy()
         return result
 
     def build(self,
