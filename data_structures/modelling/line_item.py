@@ -565,7 +565,7 @@ class LineItem(Statement, HistoryLine):
 
             if self.hardcoded:
                 c = "Line is hardcoded. Cannot write."
-                raise bb_exceptions.BBPermissionError(c, self)
+                # raise bb_exceptions.BBPermissionError(c, self)
 
         new_value = value
         if new_value is None:
