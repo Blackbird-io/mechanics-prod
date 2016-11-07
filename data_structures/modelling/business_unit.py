@@ -113,8 +113,8 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
     _UPDATE_BALANCE_SIGNATURE = "Update balance"
 
-    def __init__(self, name, fins=None):
-        BusinessUnitBase.__init__(self, name, fins)
+    def __init__(self, name, fins=None, model=None):
+        BusinessUnitBase.__init__(self, name, fins=fins, model=model)
 
         self._type = None
 

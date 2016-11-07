@@ -80,7 +80,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
     ====================  ======================================================
     """
 
-    def __init__(self, name, fins=None):
+    def __init__(self, name, fins=None, model=None):
 
         HistoryLine.__init__(self)
         TagsMixIn.__init__(self, name)
@@ -99,7 +99,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         # Get the id functionality but do NOT assign a bbid yet
 
         self.period = None
-        self.relationships = Relationships(self)
+        self.relationships = Relationships(self, model=model)
         self.periods_used = 0
         self.xl = xl_mgmt.UnitData()
 
