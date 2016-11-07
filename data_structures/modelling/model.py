@@ -34,6 +34,7 @@ import bb_exceptions
 import bb_settings
 from chef_settings import DEFAULT_SCENARIOS
 from data_structures.system.bbid import ID
+from data_structures.modelling.line_item import LineItem
 from data_structures.system.tags_mixin import TagsMixIn
 from .time_line import TimeLine
 
@@ -271,9 +272,15 @@ class Model(TagsMixIn):
 
         new_tl = TimeLine(self)
         new_tl.parameters = self.time_line.parameters.copy()
+        new_tl.master = self.time_line.master.copy()
         new_tl.build(ref_date=ref_date)
         new_tl.id.set_namespace(self.id.bbid)
+
+        # switch ref_date on the model and content on timeline
+        company = old_tl.current_period.content
         self.ref_date = ref_date
+        new_tl.current_period.set_content(company)
+
         self.set_timeline(new_tl, overwrite=True)
 
     def clear_excel(self):
@@ -290,6 +297,7 @@ class Model(TagsMixIn):
         relevant classes to copy attributes.
         """
         result = Model(self.tags.title)
+        result.ref_date = self.ref_date
         result._started = self._started
         result.portal_data = self.portal_data.copy()
         result.taxonomy = self.taxonomy.copy()
@@ -312,7 +320,9 @@ class Model(TagsMixIn):
         """
         if buid:
             return self.bu_directory[buid]
-        return self.company
+        if self.company:
+            return self.company
+        return self.get_timeline().current_period.content
 
     def set_company(self, company):
         """
@@ -377,6 +387,36 @@ class Model(TagsMixIn):
         key = (resolution, actual)
         if key in self.timelines:
             return self.timelines[key]
+
+    def prep_for_monitoring_interview(self):
+        """
+
+
+        prep_monitoring_interview(portal_model) -> PortalModel
+
+        --``portal_model`` is an instance of PortalModel
+
+        Function sets path for monitoring interview after projections are set.
+        Function runs after pressing the "update" button on the model card.
+        """
+        if not self.started:
+            self.start()
+
+        # set company as target
+        co = self.get_company()
+        co._stage = None
+        self.target = co
+
+        # preserve existing path and set fresh BU.used and BU.stage.path
+        co.archive_path()
+        co.archive_used()
+
+        # set monitoring path:
+        new_line = LineItem("monitoring path")
+        self.target.stage.path.append(new_line)
+
+        if not self.target.stage.focal_point:
+            self.target.stage.set_focal_point(new_line)
 
     def set_timeline(
         self, time_line, resolution='monthly', actual=False, overwrite=False
