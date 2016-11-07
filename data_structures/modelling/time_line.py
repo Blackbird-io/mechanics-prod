@@ -273,11 +273,11 @@ class TimeLine(TimelineBase):
             result.summary_builder = self.summary_builder.copy()
             result.summary_builder.time_line = result
 
-        if self.current_period:
-            result._current_period = result[self.current_period.end]
-
-        if self._old_current_period:
-            result._old_current_period = result[self._old_current_period.end]
+        # if self.current_period:
+        #     result._current_period = result[self.current_period.end]
+        #
+        # if self._old_current_period:
+        #     result._old_current_period = result[self._old_current_period.end]
 
         return result
 
@@ -482,32 +482,6 @@ class TimeLine(TimelineBase):
         past_dates = dates[:ref_spot]
         result = [past_dates, [ref_end], future_dates]
         return result
-
-    def revert_current(self):
-        """
-
-
-        TimeLine.revert_current() -> None
-
-
-        Method reverts instance.current_period to preceding value.
-        """
-        self.current_period = self._old_current_period
-
-    def update_current(self, ref_date=None):
-        """
-
-
-        TimeLine.update_current() -> None
-
-
-        Method sets instance.current_period to whichever period contains the
-        ref_date. If ``ref_date`` == None, method uses current system time.
-        """
-        if not ref_date:
-            ref_date = date.today()
-        ref_period = self.find_period(ref_date)
-        self.current_period = ref_period
 
     # *************************************************************************#
     #                           NON-PUBLIC METHODS                             #
