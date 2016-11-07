@@ -151,7 +151,7 @@ class TimeLine(TimelineBase):
         return result
 
     def build(
-        self, ref_date,
+        self, ref_date=None,
         fwd=DEFAULT_PERIODS_FORWARD, back=DEFAULT_PERIODS_BACK, year_end=True,
     ):
         """
