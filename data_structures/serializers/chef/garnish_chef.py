@@ -30,13 +30,14 @@ GarnishChef           adds garnishes and builds foundation for model Excel book
 
 
 # Imports
+import chef_settings
 import datetime
-import os
 import openpyxl as xlio
+import os
+
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.styles.colors import WHITE, BLACK
 
-import chef_settings
 from ._chef_tools import add_scenario_selector
 from .bb_workbook import BB_Workbook as Workbook
 from .cell_styles import CellStyles
@@ -63,6 +64,7 @@ transcript_chef = TranscriptChef()
 get_column_letter = xlio.utils.get_column_letter
 bounding_box = xlio.drawing.image.bounding_box
 
+
 # Classes
 class GarnishChef:
     """
@@ -82,23 +84,28 @@ class GarnishChef:
     """
 
     @staticmethod
-    def add_garnishes(model):
+    def add_garnishes(model, report=False, last_date=None):
         """
 
 
         GarnishChef.add_garnishes() -> BB_Workbook
 
+        --``model`` is a Blackbird model instance
+        --``report`` is a bool, whether working on a report
+        --``last_date`` datetime.date; last available report date or last report
+                        date in requested time period
 
         Return a workbook with:
-           cover [not implemented yet]
-           scenarios
-           timeline
+           cover
+           scenarios (only if report is False)
         """
         book = Workbook()
         book.properties.creator = chef_settings.WORKBOOK_AUTHOR
 
-        GarnishChef._create_cover_tab(book, model)
-        GarnishChef._create_scenarios_tab(book, model)
+        GarnishChef._create_cover_tab(book, model, report=report, last_report=last_date)
+
+        if not report:
+            GarnishChef._create_scenarios_tab(book, model)
 
         return book
 
@@ -106,7 +113,7 @@ class GarnishChef:
     #                           NON-PUBLIC METHODS                             #
     # *************************************************************************#
     @staticmethod
-    def _create_cover_tab(book, model):
+    def _create_cover_tab(book, model, report=False, last_report=None):
         """
 
 
@@ -114,6 +121,9 @@ class GarnishChef:
 
         --``book`` is an instance of B_Workbook
         --``model`` is a Blackbird Engine model
+        --``report`` is a bool, whether working on a report
+        --``last_report`` datetime.date; last available report date or last report
+                        date in requested time period
 
         Method adds a cover tab to the workbook
         """
@@ -156,7 +166,13 @@ class GarnishChef:
                                         border_style='double')
 
         cell = sheet.cell('E11')
-        cell.value = company.name.title()
+
+        if report:
+            title = 'Reporting: ' + company.name.title()
+        else:
+            title = company.name.title()
+
+        cell.value = title
         cell.alignment = Alignment(horizontal='center', vertical='center')
         cell.font = Font(size=18, bold=True, underline='single')
 
@@ -165,37 +181,49 @@ class GarnishChef:
         cell.alignment = Alignment(horizontal='left')
         cell.font = Font(size=12, bold=True)
 
+        if not report:
+            date_label = chef_settings.REF_DATE_LABEL
+        else:
+            date_label = 'Latest Report Date:'
+
         cell = sheet.cell('D15')
-        cell.value = chef_settings.REF_DATE_LABEL
+        cell.value = date_label
         cell.alignment = Alignment(horizontal='left')
         cell.font = Font(size=12, bold=True)
 
-        cell = sheet.cell('D16')
-        cell.value = chef_settings.QCOUNT_LABEL
-        cell.alignment = Alignment(horizontal='left')
-        cell.font = Font(size=12, bold=True)
+        if not report:
+            cell = sheet.cell('D16')
+            cell.value = chef_settings.QCOUNT_LABEL
+            cell.alignment = Alignment(horizontal='left')
+            cell.font = Font(size=12, bold=True)
 
         cell = sheet.cell(chef_settings.COVER_DATE_CELL)
         cell.value = datetime.date.today()
         cell.alignment = Alignment(horizontal='right')
         cell.font = Font(size=12)
 
+        if not report:
+            use_date = model.time_line.ref_date
+        else:
+            use_date = last_report
+
         cell = sheet.cell('F15')
-        cell.value = model.time_line.ref_date
+        cell.value = use_date
         cell.alignment = Alignment(horizontal='right')
         cell.font = Font(size=12)
 
-        # get length of interview
-        questions = []
-        for i in model.transcript:
-            q = i[0]['q_in']
-            if q:
-                questions.append(q['prompt'])
+        if not report:
+            # get length of interview
+            questions = []
+            for i in model.transcript:
+                q = i[0]['q_in']
+                if q:
+                    questions.append(q['prompt'])
 
-        cell = sheet.cell('F16')
-        cell.value = len(questions)
-        cell.alignment = Alignment(horizontal='right')
-        cell.font = Font(size=12)
+            cell = sheet.cell('F16')
+            cell.value = len(questions)
+            cell.alignment = Alignment(horizontal='right')
+            cell.font = Font(size=12)
 
         cell = sheet.cell('C18')
         cell.value = chef_settings.ESTIMATED_LABEL

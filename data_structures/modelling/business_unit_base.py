@@ -41,6 +41,7 @@ from data_structures.system.tags_mixin import TagsMixIn
 
 from .dr_container import DrContainer
 from .financials import Financials
+from .history_line import HistoryLine
 from .components_base import ComponentsBase
 
 
@@ -54,7 +55,7 @@ logger = logging.getLogger(bb_settings.LOGNAME_MAIN)
 
 
 # Classes
-class BusinessUnitBase(TagsMixIn):
+class BusinessUnitBase(HistoryLine, TagsMixIn):
     """
 
     Object is primarily a storage container for financial summary and business
@@ -79,7 +80,9 @@ class BusinessUnitBase(TagsMixIn):
     ====================  ======================================================
     """
 
-    def __init__(self, name, fins=None, model=None):
+    def __init__(self, name, fins=None):
+
+        HistoryLine.__init__(self)
         TagsMixIn.__init__(self, name)
 
         self.components = None
@@ -95,7 +98,8 @@ class BusinessUnitBase(TagsMixIn):
         self.id = ID()
         # Get the id functionality but do NOT assign a bbid yet
 
-        self.relationships = Relationships(self, model=model)
+        self.period = None
+        self.relationships = Relationships(self)
         self.periods_used = 0
         self.xl = xl_mgmt.UnitData()
 
@@ -175,36 +179,15 @@ class BusinessUnitBase(TagsMixIn):
         Method prepares a bu and adds it to instance components.
 
         If register_in_period is true, method raises IDCollisionError if the
-        model's directory already contains the new business unit's bbid.
+        period's directory already contains the new business unit's bbid.
 
         If all id verification steps go smoothly, method delegates insertion
         down to SummaryComponents.add_item().
         """
-        bu.update_id(namespace=self.id.bbid, recur=True)
-        model = self.relationships.model
-        # bu's id was already updated to ours above
-        model.register(bu, update_id=False, overwrite=overwrite, recur=True)
+        # register the unit, will raise errors on collisions
+        bu._register_in_period(self.period, recur=True, overwrite=overwrite)
+
         self.components.add_item(bu)
-
-    def update_id(self, namespace, recur=True):
-        """
-
-
-        BusinessUnitBase._update_id() -> None
-
-
-        Assigns instance a new id in the namespace, based on the instance name.
-        If ``recur`` == True, updates ids for all components in the parent
-        instance bbid namespace.
-        """
-        self.id.set_namespace(namespace)
-        self.id.assign(self.tags.name)
-        self.financials.register(namespace=namespace)
-        # This unit now has an id in the namespace. Now pass our bbid down as
-        # the namespace for all downstream components.
-        if recur:
-            for unit in self.components.values():
-                unit.update_id(namespace=self.id.bbid, recur=True)
 
     def set_financials(self, fins=None):
         """
@@ -252,7 +235,7 @@ class BusinessUnitBase(TagsMixIn):
         elif period.end > self.period.end and not period.summary:
             # flow of TimeLine.extrapolate() and bu.fill_out() gets us here
             # copy the structure of master financials
-            fins = self.financials.copy()
+            fins = self.financials.copy(clean=True)
             fins.relationships.set_parent(self)
             fins.period = period
             period.financials[self.id.bbid] = fins
@@ -263,15 +246,44 @@ class BusinessUnitBase(TagsMixIn):
     # *************************************************************************#
     #                          NON-PUBLIC METHODS                              #
     # *************************************************************************#
+    def _build_directory(self, recur=True, overwrite=True):
+        """
 
-    def _derive_line(self, line, period):
+
+        BusinessUnitBase._build_directory() -> (id_directory, ty_directory)
+
+
+        Register yourself and optionally your components, by type and by id
+        return id_directory, ty_directory
+        """
+
+        # return a dict of bbid:unit
+        id_directory = dict()
+        if recur:
+            for unit in self.components.values():
+                lower_level = unit._build_directory(recur=True,
+                                                    overwrite=overwrite)
+                lower_ids = lower_level[0]
+                id_directory.update(lower_ids)
+
+            # update the directory for each unit in self
+            pass
+        if self.id.bbid in id_directory:
+            if not overwrite:
+                c = "Can not overwrite existing bbid"
+                raise bb_exceptions.BBAnalyticalError(c)
+
+        id_directory[self.id.bbid] = self
+
+        return id_directory
+
+    def _derive_line(self, line, period=None):
         """
 
 
         BusinessUnitBase.derive_line() -> None
 
         --``line`` is the LineItem to work on
-        --``period`` is the TimePeriod to work on
 
         Method computes the value of a line using drivers stored on the
         instance.  Method builds a queue of applicable drivers for the provided
@@ -303,6 +315,49 @@ class BusinessUnitBase(TagsMixIn):
                     # A replica should never have any details
                 else:
                     self._derive_line(detail, period)
+
+    def _register_in_period(self, period, recur=True, overwrite=True):
+        """
+
+
+        BusinessUnitBase._register_in_period() -> None
+
+
+        Method updates the bu_directory on the instance period with the contents
+        of instance.components (bbid:bu). If ``recur`` == True, repeats for
+        every component in instance.
+
+        If ``overwrite`` == False, method will raise an error if any of its
+        component bbids is already in the period's bu_directory at the time of
+        call.
+
+        NOTE: Method will raise an error only if the calling instance's own
+        components have ids that overlap with the bu_directory. To the extent
+        any of the caller's children have an overlap, the error will appear only
+        when the recursion gets to them. As a result, by the time the error
+        occurs, some higher-level or sibling components may have already updated
+        the period's directory.
+        """
+        self.period = period
+
+        if not overwrite:
+            if self.id.bbid in self.period.bu_directory:
+                c1 = "TimePeriod.bu_directory already contains an object with "
+                c2 = "the same bbid as this unit. \n"
+                c3 = "unit id:         %s\n" % self.id.bbid
+                c4 = "known unit name: %s\n"
+                c4 = c4 % self.period.bu_directory[self.id.bbid].tags.name
+                c5 = "new unit name:   %s\n\n" % self.tags.name
+                print(self.period.bu_directory)
+                c = c1 + c2 + c3 + c4 + c5
+                raise bb_exceptions.IDCollisionError(c)
+
+        # Check for collisions first, then register if none arise.
+        self.period.bu_directory[self.id.bbid] = self
+
+        if recur:
+            for unit in self.components.values():
+                unit._register_in_period(period, recur, overwrite)
 
     def _set_components(self, comps=None):
         """
@@ -336,3 +391,22 @@ class BusinessUnitBase(TagsMixIn):
         dr_c.setPartOf(self, recur=True)
         self.drivers = dr_c
 
+    def _update_id(self, namespace, recur=True):
+        """
+
+
+        BusinessUnitBase._update_id() -> None
+
+
+        Assigns instance a new id in the namespace, based on the instance name.
+        If ``recur`` == True, updates ids for all components in the parent
+        instance bbid namespace.
+        """
+        self.id.set_namespace(namespace)
+        self.id.assign(self.tags.name)
+        self.financials.register(namespace=namespace)
+        # This unit now has an id in the namespace. Now pass our bbid down as
+        # the namespace for all downstream components.
+        if recur:
+            for unit in self.components.values():
+                unit._update_id(namespace=self.id.bbid, recur=True)
