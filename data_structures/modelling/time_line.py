@@ -145,8 +145,6 @@ class TimeLine(TimelineBase):
             new_period = old_period.copy(clean=True)
             result.add_period(new_period)
 
-        if self._current_period:
-            result._current_period = result[self._current_period.end]
         if self.master:
             result.master = result[self.master.end]
 
