@@ -28,6 +28,7 @@ TimeLine              collection of TimePeriod objects indexed by end date
 
 # imports
 import logging
+import copy
 
 from datetime import date, datetime, timedelta
 
@@ -35,7 +36,6 @@ import bb_settings
 import tools.for_printing as views
 
 from data_structures.system.summary_maker import SummaryMaker
-from tools.parsing import date_from_iso
 
 from .parameters import Parameters
 from .time_line_base import TimelineBase
@@ -82,8 +82,6 @@ class TimeLine(TimelineBase):
     link()                connect adjacent periods
     revert_current()      go back to the prior current period
     update_current()      updates current_period for reference or actual date
-    from_portal()         deserializes from portal representation
-    to_portal()           serializes to portal representation
     ====================  ======================================================
     """
     DEFAULT_PERIODS_FORWARD = 60
@@ -93,9 +91,7 @@ class TimeLine(TimelineBase):
         TimelineBase.__init__(self, interval=1)
 
         self.model = model
-        self._current_period = None
-        self._old_current_period = None
-
+        self.master = None
         self.parameters = Parameters()
         self.summary_builder = None
         self.has_been_extrapolated = False
@@ -112,67 +108,9 @@ class TimeLine(TimelineBase):
         Getter returns instance._current_period. Setter stores old value for
         reversion, then sets new value. Deleter sets value to None.
         """
-        return self._current_period
-
-    @current_period.setter
-    def current_period(self, value):
-        self._old_current_period = self._current_period
-        self._current_period = value
-
-    @current_period.deleter
-    def current_period(self):
-        self.current_period = None
-
-    @classmethod
-    def from_portal(cls, model, portal_data):
-        """
-
-
-        TimeLine.from_portal(portal_model) -> TimeLine
-
-        **CLASS METHOD**
-
-        Method deserializes a TimeLine from portal representation.
-        """
-        time_line = cls(model)
-        time_line.ref_date = date_from_iso(portal_data['ref_date'])
-        time_line.has_been_extrapolated = portal_data['has_been_extrapolated']
-        time_line.parameters.update(portal_data['parameters'])
-        for period_data in portal_data.get('periods', []):
-            period = TimePeriod.from_portal(model, period_data)
-            time_line.add_period(period)
-        for key in ('_current_period',):
-            end = portal_data.get(key)
-            if end:
-                end = date_from_iso(end)
-                val = time_line.find_period(end)
-                setattr(time_line, key, val)
-
-        return time_line
-
-    def to_portal(self):
-        """
-
-        TimeLine.from_portal(portal_model) -> TimeLine
-
-        Method serializes a Timeline to portal representation.
-        """
-        result = {
-            'parameters': self.parameters,
-            'ref_date': format(self.ref_date),
-            'has_been_extrapolated': self.has_been_extrapolated,
-        }
-        for key in ('_current_period', ):
-            val = getattr(self, key, None)
-            if val:
-                result[key] = format(val.end)
-            else:
-                result[key] = None
-        result['periods'] = [
-            period.to_portal() for period in self.iter_ordered()
-        ]
-
-        return result
+        if len(self):
+            cp = self.find_period(self.model.ref_date)
+            return cp
 
     def __str__(self, lines=None):
         """
@@ -191,10 +129,33 @@ class TimeLine(TimelineBase):
         result = line_end.join(lines)
         return result
 
-    def build(self,
-              ref_date,
-              fwd=DEFAULT_PERIODS_FORWARD,
-              back=DEFAULT_PERIODS_BACK):
+    def copy_structure(self):
+        """
+
+
+        TimeLine.copy_structure() -> TimeLine
+
+        Method returns a copy of self linked to parent model and with the same
+        layout.
+        """
+        result = type(self)(self.model)
+        result.ref_date = copy.copy(self.ref_date)
+        result.parameters = self.parameters.copy()
+        for old_period in self.iter_ordered():
+            new_period = old_period.copy(clean=True)
+            result.add_period(new_period)
+
+        if self._current_period:
+            result._current_period = result[self._current_period.end]
+        if self.master:
+            result.master = result[self.master.end]
+
+        return result
+
+    def build(
+        self, ref_date,
+        fwd=DEFAULT_PERIODS_FORWARD, back=DEFAULT_PERIODS_BACK, year_end=True,
+    ):
         """
 
 
@@ -211,8 +172,7 @@ class TimeLine(TimelineBase):
         date. Method also sets master to a copy of the current period.
         """
         if not ref_date:
-            ref_date = date.today()
-
+            ref_date = self.model.ref_date
         self.ref_date = ref_date
 
         ref_month = ref_date.month
@@ -227,7 +187,9 @@ class TimeLine(TimelineBase):
             current_start_date, current_end_date, model=self.model
         )
         self.add_period(current_period)
-        self.current_period = current_period
+
+        # Add master period
+        self.master = current_period.copy()
 
         # Now make the chain
         back_end_date = current_start_date - timedelta(1)
@@ -245,7 +207,7 @@ class TimeLine(TimelineBase):
             )
             self.add_period(fwd_period)
             i += 1
-            if i >= fwd and fwd_period.end.month == 12:
+            if i >= fwd and (not year_end or fwd_period.end.month == 12):
                 break
             # first line picks up last value in function scope, so loop
             # should be closed.
@@ -439,6 +401,38 @@ class TimeLine(TimelineBase):
             self[date] = updated_period
             seed = updated_period
 
+    def extrapolate_statement(self, statement_name, seed=None):
+        """
+
+
+        TimeLine.extrapolate_statement() -> None
+
+
+        Extrapolates a single statement forward in time. DOES NOT MAKE
+        SUMMARIES.
+        """
+        if seed is None:
+            seed = self.current_period
+
+        company = self.model.get_company()
+        orig_fins = company.get_financials(period=seed)
+        orig_statement = getattr(orig_fins, statement_name)
+        orig_statement.reset()
+        company.compute(statement_name, period=seed)
+
+        for period in self.iter_ordered(open=seed.end):
+            if period.end > seed.end:
+                new_fins = company.get_financials(period=period)
+                new_stat = getattr(new_fins, statement_name, None)
+                if new_stat is None:
+                    # need to add statement
+                    new_stat = orig_statement.copy(clean=True)
+                    new_fins.add_statement(statement_name, statement=new_stat)
+                    company.compute(statement_name, period=period)
+                else:
+                    # compute what is already there
+                    company.compute(statement_name, period=period)
+
     def find_period(self, query):
         """
 
@@ -460,7 +454,7 @@ class TimeLine(TimelineBase):
                 # query is a string, split it
                 q_date = date(*num_query)
         end_date = self._get_ref_end_date(q_date)
-        result = self[end_date]
+        result = self.get(end_date)
         return result
 
     def get_segments(self, ref_date=None):
