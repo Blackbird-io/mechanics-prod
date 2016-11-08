@@ -69,20 +69,37 @@ class ReportChef:
     ===============  ==========================================================
     """
 
-    def __init__(self, model, proj, actl, dates=None):
+    def __init__(self, model, proj, actl, report_type, dates=None):
         self.model = model
         self.forecast = proj
         self.actual = actl
 
-        if dates is not None:
+        # Validate arguments
+        options = ['all', 'latest', 'specific_dates']
+
+        if report_type not in options:
+            report_type = 'latest'
+
+        if report_type == 'specific_dates' and dates is None:
+            report_type = 'latest'
+
+        if report_type == 'all':
+            self.start_date = min(self.actual.keys())
+            self.end_date = max(self.actual.keys())
+        elif report_type == 'latest':
+            last_period = self.actual[max(self.actual.keys())]
+            self.start_date = last_period.start
+            self.end_date = last_period.end
+        elif report_type == 'specific_dates':
             self.start_date = min(dates)
             self.end_date = max(dates)
         else:
-            self.start_date = min(self.actual.keys())
-            self.end_date = max(self.actual.keys())
+            c = 'Report type %s is unknown, select from {all, latest,' \
+                ' specific_dates}' % report_type
+            raise KeyError(c)
 
-        self._placeholder = '--'  # value to use in reports for Divide by Zero 
-                                 # error or unavailable data
+        self._placeholder = '--'  # value to use in reports for Divide by Zero
+                                  # error or unavailable data
 
         # FORMATTING
         self._report_tab_color = WHITE
@@ -190,23 +207,24 @@ class ReportChef:
             for act_det in actual_details:
                 for_det = for_line.find_first(act_det.name)
 
-                self._report_line(
-                    sheet=sheet,
-                    act_line=act_det,
-                    for_line=for_det,
-                    row_container=row_container,
-                    indent=sub_indent,
-                )
+                if for_det is not None:
+                    self._report_line(
+                        sheet=sheet,
+                        act_line=act_det,
+                        for_line=for_det,
+                        row_container=row_container,
+                        indent=sub_indent,
+                    )
 
-                link_template = FormulaTemplates.ADD_COORDINATES
+                    link_template = FormulaTemplates.ADD_COORDINATES
 
-                cos = act_det.xl.get_coordinates(include_sheet=False)
-                link = link_template.format(coordinates=cos)
-                act_detail_summation += link
+                    cos = act_det.xl.get_coordinates(include_sheet=False)
+                    link = link_template.format(coordinates=cos)
+                    act_detail_summation += link
 
-                cos = for_det.xl.get_coordinates(include_sheet=False)
-                link = link_template.format(coordinates=cos)
-                for_detail_summation += link
+                    cos = for_det.xl.get_coordinates(include_sheet=False)
+                    link = link_template.format(coordinates=cos)
+                    for_detail_summation += link
 
             row_container.calc_size()
 
@@ -353,6 +371,7 @@ class ReportChef:
 
             formula_string = '=%s' % for_line.xl.get_coordinates(
                 include_sheet=True)
+
             for_cell = sheet.cell(row=line_row.number(),
                                   column=forecast_col.number())
             for_cell.set_explicit_value(formula_string,
@@ -427,7 +446,7 @@ class ReportChef:
 
         for act_line in act_statement.get_ordered():
             for_line = for_statement.find_first(act_line.name)
+            if for_line is not None:
+                self._report_line(sheet, act_line, for_line, stat_rows)
 
-            self._report_line(sheet, act_line, for_line, stat_rows)
-
-            sheet.bb.calc_sizes()
+                sheet.bb.calc_sizes()

@@ -111,17 +111,24 @@ class ModelChef:
 
         return book
 
-    def build_report(self, model, dates=None):
+    def build_report(self, model, report='latest', specific_dates=None):
         """
 
 
         ModelChef.build_report() -> BB_Workbook
 
         --``model`` is an instance of Blackbird Engine model
-        --``dates`` is a tuple of the date range for which to produce reports
+        --``report`` must be a string in {'all', 'latest', 'specific_dates'}
+        --``specific_dates`` is a tuple of the date range for which to produce
+                             reports if report == 'specific_dates'
 
         Method prepares and formats reports for the specified date range, or
         all available if no date range is provided.
+
+        ``report`` keyword specifies which reports to produce.  The default is
+        to produce only the latest report.  If report == ``specific_dates``,
+        specific_dates keyword must be set, otherwise will produce latest
+        report.
         """
 
         if not model.time_line.has_been_extrapolated:
@@ -151,7 +158,8 @@ class ModelChef:
                              tab_color=actual_color)
 
         # Build reports
-        report_chef = ReportChef(model, proj, actl, dates)
+        report_chef = ReportChef(model, proj, actl, report,
+                                 dates=specific_dates)
         report_chef.build_reports(book)
 
         # Add "Reports >>" tab with table of contents.  Need to do this last
