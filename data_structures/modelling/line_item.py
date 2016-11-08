@@ -564,7 +564,8 @@ class LineItem(Statement, HistoryLine):
             # Will throw exception if value doesn't support arithmetic
 
             if self.hardcoded:
-                c = "Line is hardcoded. Cannot write."
+                return  # Do Nothing if line is hardcoded
+                # c = "Line %s is hardcoded. Cannot write." % self.name
                 # raise bb_exceptions.BBPermissionError(c, self)
 
         new_value = value
