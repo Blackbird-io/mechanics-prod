@@ -32,6 +32,7 @@ UnitFinsChef          class containing methods for chopping unit financials
 import openpyxl as xlio
 
 from .line_chef import LineChef
+from .sheet_style import SheetStyle
 
 
 
@@ -105,6 +106,7 @@ class UnitFinsChef:
                 continue
 
             column = sheet.bb.time_line.columns.get_position(period.end)
+            SheetStyle.set_column_width(sheet, column)
             financials = unit.get_financials(period)
             for name, statement in financials.chef_ordered():
                 if statement is not None:
