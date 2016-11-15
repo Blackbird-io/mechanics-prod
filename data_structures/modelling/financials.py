@@ -150,22 +150,23 @@ class Financials:
         return result
 
     def __str__(self):
-        period =  self.period or self.relationships.parent.period
-        if Equalities.multi_getattr(self, "relationships.parent", None):
-            header = (
-                '{begin:^{width}}\n\n'
-                '{start:^{width}}\n'
-                '{close:^{width}}\n\n'
-            ).format(
-                width=bb_settings.SCREEN_WIDTH,
-                begin='Financial statements for {}'.format(
-                    self.relationships.parent.tags.name
-                ),
-                start='Period starting: {}'.format(period.start),
-                close='Period ending:   {}'.format(period.end),
-            )
-        else:
-            header = ''
+        header = ''
+
+        period = self.period #or self.relationships.parent.period
+        if period:
+            if Equalities.multi_getattr(self, "relationships.parent", None):
+                header = (
+                    '{begin:^{width}}\n\n'
+                    '{start:^{width}}\n'
+                    '{close:^{width}}\n\n'
+                ).format(
+                    width=bb_settings.SCREEN_WIDTH,
+                    begin='Financial statements for {}'.format(
+                        self.relationships.parent.tags.name
+                    ),
+                    start='Period starting: {}'.format(period.start),
+                    close='Period ending:   {}'.format(period.end),
+                )
 
         content = []
         for statement in self.full_ordered:
