@@ -104,8 +104,7 @@ class GarnishChef:
 
         GarnishChef._create_cover_tab(book, model, report=report, last_report=last_date)
 
-        if not report:
-            GarnishChef._create_scenarios_tab(book, model)
+        GarnishChef._create_scenarios_tab(book, model, report=report)
 
         return book
 
@@ -244,7 +243,7 @@ class GarnishChef:
         sheet.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
 
     @staticmethod
-    def _create_scenarios_tab(book, model):
+    def _create_scenarios_tab(book, model, report=False):
         """
 
 
@@ -267,47 +266,45 @@ class GarnishChef:
         custom_column = 4
         base_case_column = 6
 
-        area = my_tab.bb.add_area(FieldNames.PARAMETERS)
-        timeline = my_tab.bb.add_area(FieldNames.TIMELINE)
-
-        area.columns.by_name[FieldNames.LABELS] = label_column
-        area.columns.by_name[FieldNames.VALUES] = in_effect_column
-        area.columns.by_name[FieldNames.CUSTOM_CASE] = custom_column
-        area.columns.by_name[FieldNames.BASE_CASE] = base_case_column
-
-        timeline.columns.by_name[FieldNames.LABELS] = label_column
-
         current_row = starting_row
 
-        book.set_scenario_names(model)
-        scenario_columns = book.scenario_names[1:]
+        area = my_tab.bb.add_area(FieldNames.PARAMETERS)
+        area.columns.by_name[FieldNames.LABELS] = label_column
 
-        add_scenario_selector(my_tab, label_column, current_row,
-                              book.scenario_names)
-        selector_cell = my_tab.cell(row=current_row, column=custom_column)
-        selector_cell.value = FieldNames.CUSTOM
-        my_tab.bb.general.rows.by_name[FieldNames.SELECTOR] = current_row
+        if not report:
+            area.columns.by_name[FieldNames.VALUES] = in_effect_column
+            area.columns.by_name[FieldNames.CUSTOM_CASE] = custom_column
+            area.columns.by_name[FieldNames.BASE_CASE] = base_case_column
 
-        current_row += 3
-        # Make scenario label cells
-        custom_cell = my_tab.cell(column=custom_column, row=current_row)
-        custom_cell.value = FieldNames.CUSTOM
-        CellStyles.format_scenario_label(custom_cell)
+            book.set_scenario_names(model)
+            scenario_columns = book.scenario_names[1:]
 
-        for i, s in enumerate(scenario_columns):
-            scen_cell = my_tab.cell(
-                column=base_case_column + i, row=current_row
-            )
-            scen_cell.value = s.title()
-            CellStyles.format_scenario_label(scen_cell)
-            if i > 0:
-                # add columns for other cases to area
-                area.columns.by_name[s.lower() + "_case"] = base_case_column + i
+            add_scenario_selector(my_tab, label_column, current_row,
+                                  book.scenario_names)
+            selector_cell = my_tab.cell(row=current_row, column=custom_column)
+            selector_cell.value = FieldNames.CUSTOM
+            my_tab.bb.general.rows.by_name[FieldNames.SELECTOR] = current_row
 
-        active_label_cell = my_tab.cell(column=in_effect_column,
-                                        row=current_row)
-        active_label_cell.value = FieldNames.IN_EFFECT
-        CellStyles.format_scenario_label(active_label_cell)
+            current_row += 3
+            # Make scenario label cells
+            custom_cell = my_tab.cell(column=custom_column, row=current_row)
+            custom_cell.value = FieldNames.CUSTOM
+            CellStyles.format_scenario_label(custom_cell)
+
+            for i, s in enumerate(scenario_columns):
+                scen_cell = my_tab.cell(
+                    column=base_case_column + i, row=current_row
+                )
+                scen_cell.value = s.title()
+                CellStyles.format_scenario_label(scen_cell)
+                if i > 0:
+                    # add columns for other cases to area
+                    area.columns.by_name[s.lower() + "_case"] = base_case_column + i
+
+            active_label_cell = my_tab.cell(column=in_effect_column,
+                                            row=current_row)
+            active_label_cell.value = FieldNames.IN_EFFECT
+            CellStyles.format_scenario_label(active_label_cell)
 
         title_row = current_row
 
@@ -316,6 +313,9 @@ class GarnishChef:
 
         # storing scenario values in model.time_line is obsolete now, transfer
         # existing values to model.scenarios
+        timeline = my_tab.bb.add_area(FieldNames.TIMELINE)
+        timeline.columns.by_name[FieldNames.LABELS] = label_column
+
         time_line = model.get_timeline()
         base = time_line.parameters
         base.update(time_line.current_period.parameters)
@@ -347,67 +347,74 @@ class GarnishChef:
 
             area.rows.by_name[param_name] = current_row
 
-            case_cell = my_tab.cell(column=custom_column,
-                                    row=current_row)
-            case_cell.value = base[param_name]
-            CellStyles.format_hardcoded(case_cell)
-            CellStyles.format_parameter(case_cell)
-
-            # Loop through scenarios and add values
-            for i, s in enumerate(scenario_columns):
-                case_cell = my_tab.cell(column=base_case_column + i,
+            if not report:
+                case_cell = my_tab.cell(column=custom_column,
                                         row=current_row)
-                case_cell.value = all_scenarios[s].get(param_name, '')
+                case_cell.value = base[param_name]
+                CellStyles.format_hardcoded(case_cell)
                 CellStyles.format_parameter(case_cell)
 
-            start_cos = custom_cell.coordinate
-            end_cos = case_cell.coordinate
+                # Loop through scenarios and add values
+                for i, s in enumerate(scenario_columns):
+                    case_cell = my_tab.cell(column=base_case_column + i,
+                                            row=current_row)
+                    case_cell.value = all_scenarios[s].get(param_name, '')
+                    CellStyles.format_parameter(case_cell)
 
-            link_template = FormulaTemplates.HLOOKUP
-            link = link_template.format(ref_coords=selector_cell.coordinate,
-                                        start_coords=start_cos,
-                                        end_coords=end_cos,
-                                        ref_row=ref_row)
+                start_cos = custom_cell.coordinate
+                end_cos = case_cell.coordinate
 
-            in_effect_cell = my_tab.cell(column=in_effect_column,
-                                         row=current_row)
-            in_effect_cell.set_explicit_value(
-                link, data_type=TypeCodes.FORMULA
-            )
-            CellStyles.format_parameter(in_effect_cell)
+                link_template = FormulaTemplates.HLOOKUP
+                link = link_template.format(ref_coords=selector_cell.coordinate,
+                                            start_coords=start_cos,
+                                            end_coords=end_cos,
+                                            ref_row=ref_row)
+
+                in_effect_cell = my_tab.cell(column=in_effect_column,
+                                             row=current_row)
+                in_effect_cell.set_explicit_value(
+                    link, data_type=TypeCodes.FORMULA
+                )
+                CellStyles.format_parameter(in_effect_cell)
 
             current_row += 1
             ref_row += 1
 
-        # Add cell outline formatting for Scenarios cells here
-        CellStyles.format_border_group(
-            my_tab,
-            custom_column,
-            custom_column,
-            title_row,
-            current_row - 1
-        )
+        if not report:
+            # Add cell outline formatting for Scenarios cells here
+            CellStyles.format_border_group(
+                my_tab,
+                custom_column,
+                custom_column,
+                title_row,
+                current_row - 1
+            )
 
-        CellStyles.format_border_group(
-            my_tab,
-            base_case_column,
-            base_case_column + i,
-            title_row,
-            current_row - 1
-        )
+            CellStyles.format_border_group(
+                my_tab,
+                base_case_column,
+                base_case_column + i,
+                title_row,
+                current_row - 1
+            )
 
-        CellStyles.format_border_group(
-            my_tab,
-            in_effect_column,
-            in_effect_column,
-            title_row,
-            current_row - 1
-        )
+            CellStyles.format_border_group(
+                my_tab,
+                in_effect_column,
+                in_effect_column,
+                title_row,
+                current_row - 1
+            )
 
         # Now add the timeline area
-        active_column = in_effect_column + 2
-        tl_start = active_column
-        alpha_master_column = get_column_letter(in_effect_column)
+        if report:
+            active_column = custom_column + 1
+            tl_start = active_column
+            alpha_master_column = get_column_letter(active_column)
+        else:
+            active_column = in_effect_column + 2
+            tl_start = active_column
+            alpha_master_column = get_column_letter(in_effect_column)
 
         for period in time_line.iter_ordered(open=time_line.current_period.end):
             timeline.columns.by_name[period.end] = active_column
@@ -435,7 +442,11 @@ class GarnishChef:
                     column=in_effect_column, row=param_row
                 )
 
-                link2master = True
+                if get_column_letter(active_column) == alpha_master_column:
+                    link2master = False
+                else:
+                    link2master = True
+
                 if k in period.parameters:
                     param_cell.value = period.parameters[k]
 
@@ -443,14 +454,14 @@ class GarnishChef:
                         CellStyles.format_hardcoded(param_cell)
                         link2master = False
 
-                if link2master:
-                    link_template = FormulaTemplates.ADD_CELL
-                    cos = dict(alpha_column=alpha_master_column, row=param_row)
-                    link = link_template.format(**cos)
+                    if link2master:
+                        link_template = FormulaTemplates.ADD_CELL
+                        cos = dict(alpha_column=alpha_master_column, row=param_row)
+                        link = link_template.format(**cos)
 
-                    param_cell.set_explicit_value(
-                        link, data_type=TypeCodes.FORMULA
-                    )
+                        param_cell.set_explicit_value(
+                            link, data_type=TypeCodes.FORMULA
+                        )
 
                 CellStyles.format_parameter(param_cell)
 
@@ -459,27 +470,36 @@ class GarnishChef:
         tl_end = active_column - 1
         timeline.rows.by_name[FieldNames.TITLE] = title_row
 
-        for col in range(tl_start, tl_end + 1):
-            alpha = get_column_letter(col)
-            my_tab.column_dimensions[alpha].outline_level = 1
+        if not report:
+            for col in range(tl_start, tl_end + 1):
+                alpha = get_column_letter(col)
+                my_tab.column_dimensions[alpha].outline_level = 1
 
-        for col in range(base_case_column, in_effect_column + 1):
-            alpha = get_column_letter(col)
-            my_tab.column_dimensions[alpha].outline_level = 1
+            for col in range(base_case_column, in_effect_column + 1):
+                alpha = get_column_letter(col)
+                my_tab.column_dimensions[alpha].outline_level = 1
 
-        for c in range(1, area.columns.ending + 1):
-            SheetStyle.set_column_width(my_tab, c)
+            for c in range(1, area.columns.ending + 1):
+                SheetStyle.set_column_width(my_tab, c)
 
-        SheetStyle.set_column_width(my_tab, custom_column + 1, 12)
-        SheetStyle.set_column_width(my_tab, in_effect_column + 1, 12)
-        SheetStyle.set_column_width(my_tab, in_effect_column - 1, 12)
+            SheetStyle.set_column_width(my_tab, custom_column + 1, 12)
+            SheetStyle.set_column_width(my_tab, in_effect_column + 1, 12)
+            SheetStyle.set_column_width(my_tab, in_effect_column - 1, 12)
 
-        corner_col = area.columns.by_name[FieldNames.BASE_CASE]
+        if area.columns.by_name.get(FieldNames.BASE_CASE):
+            corner_col = area.columns.by_name[FieldNames.BASE_CASE]
+        else:
+            corner_col = tl_start
+
         corner_row = title_row + 1
         corner_cell = my_tab.cell(column=corner_col, row=corner_row)
         my_tab.freeze_panes = corner_cell
 
         SheetStyle.style_sheet(my_tab, label_areas=False)
-        my_tab.sheet_properties.tabColor = chef_settings.SCENARIO_TAB_COLOR
+
+        if report:
+            my_tab.sheet_properties.tabColor = '808080'
+        else:
+            my_tab.sheet_properties.tabColor = chef_settings.SCENARIO_TAB_COLOR
 
         return my_tab
