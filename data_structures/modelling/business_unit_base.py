@@ -227,20 +227,20 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         elif self.id.bbid in period.financials:
             # the best case we expect: financials have been assigned to a period
             fins = period.financials[self.id.bbid]
-        elif period.end == self.period.end and not period.summary:
-            # fallback if financials are not on period
-            # financials are assigned to bu before period is
-            fins = self.financials
-            period.financials[self.id.bbid] = fins
-        elif period.end > self.period.end and not period.summary:
+        # elif period.end == self.period.end and not period.summary:
+        #     # fallback if financials are not on period
+        #     # financials are assigned to bu before period is
+        #     fins = self.financials
+        #     period.financials[self.id.bbid] = fins
+        else: #period.end > self.period.end and not period.summary:
             # flow of TimeLine.extrapolate() and bu.fill_out() gets us here
             # copy the structure of master financials
             fins = self.financials.copy(clean=True)
             fins.relationships.set_parent(self)
             fins.period = period
             period.financials[self.id.bbid] = fins
-        else:
-            fins = None
+        # else:
+        #     fins = None
         return fins
 
     # *************************************************************************#
