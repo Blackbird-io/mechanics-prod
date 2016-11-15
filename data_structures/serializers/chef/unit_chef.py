@@ -128,12 +128,16 @@ class UnitChef:
             unit = model.get_company()
 
         # 1.   Chop the children
-        before_kids = len(book.worksheets)
+        if values_only:
+            before_kids = len(book.worksheets)-1
+        else:
+            before_kids = len(book.worksheets)
+
         children = unit.components.get_ordered()
 
-        if not values_only:
-            for child in children:
-                self.chop_multi(book, child)
+        for child in children:
+            self.chop_multi(book, child, values_only=values_only,
+                            tab_color=tab_color)
 
         # 2.   Chop the parent
         #
