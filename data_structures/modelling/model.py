@@ -569,7 +569,7 @@ class Model(TagsMixIn):
         brethren = self.ty_directory.setdefault(bu.type, set())
         brethren.add(bu.id.bbid)
 
-        bu.relationships.model = self
+        bu.relationships.set_model(self)
         now = self.get_timeline().current_period
         now.financials[bu.id.bbid] = bu.financials
 
