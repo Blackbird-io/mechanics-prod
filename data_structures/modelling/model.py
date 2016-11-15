@@ -569,6 +569,9 @@ class Model(TagsMixIn):
         brethren = self.ty_directory.setdefault(bu.type, set())
         brethren.add(bu.id.bbid)
 
+        now = self.get_timeline().current_period
+        now.financials[bu.id.bbid] = bu.financials
+
         if recur:
             for unit in bu.components.values():
                 self.register(
