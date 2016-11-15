@@ -479,7 +479,9 @@ class Driver(TagsMixIn):
         the original and converted keys.
         """
         if not period:
-            period = parent.period
+            if parent.relationships.model:
+                time_line = parent.relationships.model.get_timeline()
+                period = time_line.current_period
         params = parent.get_parameters(period)
         params.update(self.parameters)
 
