@@ -302,7 +302,7 @@ class TimeLine(TimelineBase):
             company.fill_out(period=seed.past)
 
         # init SummaryMaker now that TimeLine has been built
-        self.summary_builder = SummaryMaker(self.model)
+        self.summary_builder = SummaryMaker(self.model, actual=self.actual)
 
         for period in self.iter_ordered(open=seed.end):
             if period.end > seed.end:
