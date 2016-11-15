@@ -266,10 +266,12 @@ class GarnishChef:
         custom_column = 4
         base_case_column = 6
 
-        current_row = starting_row
-
         area = my_tab.bb.add_area(FieldNames.PARAMETERS)
+        timeline = my_tab.bb.add_area(FieldNames.TIMELINE)
+
         area.columns.by_name[FieldNames.LABELS] = label_column
+        timeline.columns.by_name[FieldNames.LABELS] = label_column
+        current_row = starting_row
 
         if not report:
             area.columns.by_name[FieldNames.VALUES] = in_effect_column
@@ -313,9 +315,6 @@ class GarnishChef:
 
         # storing scenario values in model.time_line is obsolete now, transfer
         # existing values to model.scenarios
-        timeline = my_tab.bb.add_area(FieldNames.TIMELINE)
-        timeline.columns.by_name[FieldNames.LABELS] = label_column
-
         time_line = model.get_timeline()
         base = time_line.parameters
         base.update(time_line.current_period.parameters)
@@ -407,14 +406,14 @@ class GarnishChef:
             )
 
         # Now add the timeline area
-        if report:
-            active_column = custom_column + 1
-            tl_start = active_column
-            alpha_master_column = get_column_letter(active_column)
-        else:
+        if not report:
             active_column = in_effect_column + 2
             tl_start = active_column
             alpha_master_column = get_column_letter(in_effect_column)
+        else:
+            active_column = custom_column + 2
+            tl_start = active_column
+            alpha_master_column = get_column_letter(active_column)
 
         for period in time_line.iter_ordered(open=time_line.current_period.end):
             timeline.columns.by_name[period.end] = active_column
@@ -442,11 +441,7 @@ class GarnishChef:
                     column=in_effect_column, row=param_row
                 )
 
-                if get_column_letter(active_column) == alpha_master_column:
-                    link2master = False
-                else:
-                    link2master = True
-
+                link2master = True
                 if k in period.parameters:
                     param_cell.value = period.parameters[k]
 
@@ -454,14 +449,21 @@ class GarnishChef:
                         CellStyles.format_hardcoded(param_cell)
                         link2master = False
 
-                    if link2master:
-                        link_template = FormulaTemplates.ADD_CELL
-                        cos = dict(alpha_column=alpha_master_column, row=param_row)
-                        link = link_template.format(**cos)
+                if report and alpha_master_column == get_column_letter(active_column):
+                    if k not in period.parameters and k in time_line.parameters:
+                        param_cell.value = time_line.parameters[k]
+                        CellStyles.format_hardcoded(param_cell)
 
-                        param_cell.set_explicit_value(
-                            link, data_type=TypeCodes.FORMULA
-                        )
+                    link2master = False
+
+                if link2master:
+                    link_template = FormulaTemplates.ADD_CELL
+                    cos = dict(alpha_column=alpha_master_column, row=param_row)
+                    link = link_template.format(**cos)
+
+                    param_cell.set_explicit_value(
+                        link, data_type=TypeCodes.FORMULA
+                    )
 
                 CellStyles.format_parameter(param_cell)
 
@@ -486,10 +488,9 @@ class GarnishChef:
             SheetStyle.set_column_width(my_tab, in_effect_column + 1, 12)
             SheetStyle.set_column_width(my_tab, in_effect_column - 1, 12)
 
-        if area.columns.by_name.get(FieldNames.BASE_CASE):
             corner_col = area.columns.by_name[FieldNames.BASE_CASE]
         else:
-            corner_col = tl_start
+            corner_col = custom_column + 1
 
         corner_row = title_row + 1
         corner_cell = my_tab.cell(column=corner_col, row=corner_row)
@@ -497,9 +498,9 @@ class GarnishChef:
 
         SheetStyle.style_sheet(my_tab, label_areas=False)
 
-        if report:
-            my_tab.sheet_properties.tabColor = '808080'
-        else:
+        if not report:
             my_tab.sheet_properties.tabColor = chef_settings.SCENARIO_TAB_COLOR
+        else:
+            my_tab.sheet_properties.tabColor = '808080'
 
         return my_tab
