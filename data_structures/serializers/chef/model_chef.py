@@ -77,7 +77,7 @@ class ModelChef:
     ====================  =====================================================
     """
 
-    def chop_model(self, model):
+    def chop_model(self, model, base_file=None):
         """
 
 
@@ -90,7 +90,12 @@ class ModelChef:
         dynamic links.
         """
 
-        book = GarnishChef.add_garnishes(model)
+        if base_file is not None:
+            book = xlio.load_workbook(base_file)
+        else:
+            book = None
+
+        book = GarnishChef.add_garnishes(model, book=book)
 
         # add a tab with unit structure map
         structure_chef = StructureChef(model)
