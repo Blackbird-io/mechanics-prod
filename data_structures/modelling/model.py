@@ -277,9 +277,9 @@ class Model(TagsMixIn):
         new_tl.id.set_namespace(self.id.bbid)
 
         # switch ref_date on the model and content on timeline
-        company = old_tl.current_period.content
+        # company = old_tl.current_period.content
         self.ref_date = ref_date
-        new_tl.current_period.set_content(company)
+        # new_tl.current_period.set_content(company)
 
         self.set_timeline(new_tl, overwrite=True)
 
