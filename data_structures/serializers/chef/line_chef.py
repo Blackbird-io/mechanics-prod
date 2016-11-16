@@ -665,7 +665,23 @@ class LineChef:
         Adds a single cell reference to a new cell.
         (e.g. new_cell.value = '=C18')
         """
-        if line.xl.reference.source:
+        if line.xl.reference.direct_source:
+            line_label = indent * " " + line.title  # + ': ref'
+            finish = row_container.add_group(
+                line.title, size=1, label=line_label
+            )
+            cell = sheet.cell(column=column, row=finish.number())
+
+            excel_str = "=" + line.xl.reference.direct_source
+
+            cell.set_explicit_value(excel_str, data_type=TypeCodes.FORMULA)
+
+            line.xl.ending = finish.number()
+            line.xl.reference.cell = cell
+
+            if update_cell:
+                line.xl.cell = cell
+        elif line.xl.reference.source:
             line_label = indent * " " + line.title  # + ': ref'
             finish = row_container.add_group(
                 line.title, size=1, label=line_label

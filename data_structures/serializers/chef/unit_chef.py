@@ -131,7 +131,7 @@ class UnitChef:
         if values_only:
             before_kids = len(book.worksheets)-1
         else:
-            before_kids = len(book.worksheets)
+            before_kids = len(book.worksheets) - book.original_tab_count
 
         children = unit.components.get_ordered()
 
