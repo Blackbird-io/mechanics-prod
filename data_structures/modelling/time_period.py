@@ -89,7 +89,6 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
     ex_to_default()       creates result from seed, sets to target start/end
     get_units()           return list of units from bbid pool
     get_lowest_units()    return list of units w/o components from bbid pool
-    register()            conform and register unit
     set_content()         attach company to period
     ====================  ======================================================
     """
@@ -320,46 +319,6 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         else:
             c = "``pool`` is empty, method requires explicit permission to run."
             raise bb_exceptions.ProcessError(c)
-
-    def register(self, bu, updateID=True, reset_directories=False):
-        """
-
-
-        TimePeriod.register() -> None
-
-
-        Manually add unit to period. Unit will conform to period and appear
-        in directories. Use sparingly: designed for master (taxonomy) period.
-
-        NOTE: Period content should generally have a tree structure, with a
-        single bu node on top. That node will manage all child relationships.
-        Accordingly, the best way to add units to a period is to run
-        bu.add_component(new_unit).
-
-        If ``updateID`` is True, method will assign unit a new id in the
-        period's namespace. Parameter should be False when moving units
-        between scenarios.
-
-        If ``reset_directories`` is True, method will clear existing type
-        and id directories. Parameter should be True when registering the
-        top (company) node of a structure.
-        """
-
-        bu._fit_to_period(self, recur=True)
-        # Update unit life.
-
-        if updateID:
-            bu._update_id(self.id.namespace, recur=True)
-        if not bu.id.bbid:
-            c = "Cannot add content without a valid bbid."
-            raise bb_exceptions.IDError(c)
-        # Make sure unit has an id in the right namespace.
-
-        if reset_directories:
-            self._reset_directories()
-
-        bu._register_in_period(recur=True, overwrite=False)
-        # Register the unit.
 
     def set_content(self, bu, updateID=True):
         """
