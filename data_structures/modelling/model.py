@@ -191,17 +191,12 @@ class Model(TagsMixIn):
         **read-only property**
 
 
-        Pointer to company valuation on current period. If current period has no
-        content, returns None.
+        Pointer to company valuation on current period.
         """
-        result = None
-        #
-        company = self.time_line.current_period.content
+        company = self.get_company()
         if company:
             # catch periods with empty content
-            result = company.valuation
-        #
-        return result
+            return company.valuation
 
     @valuation.setter
     def valuation(self, value):
