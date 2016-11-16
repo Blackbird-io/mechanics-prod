@@ -434,9 +434,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         financials = self.get_financials(period)
         if not financials.filled:
             if not period:
-                time_line = self.relationships.model.get_timeline()
-                period = time_line.current_period
-
+                period = self.relationships.model.get_timeline().current_period
             self._load_starting_balance(period)
 
             for statement in financials.compute_order:
