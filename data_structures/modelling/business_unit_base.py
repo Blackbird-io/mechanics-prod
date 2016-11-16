@@ -219,29 +219,41 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
 
         Returns this BUs financials in a given period.
         """
+        model = self.relationships.model
+        now = model.get_timeline().current_period if model else None
+
         if not period:
-            # method allows a call with a blank period, on a bu without a period
-            # master bu and past bu will do this
+            # method allows a call with a blank period
             # in which case bu must have financials attached
             fins = self.financials
         elif self.id.bbid in period.financials:
             # the best case we expect: financials have been assigned to a period
             fins = period.financials[self.id.bbid]
-        # elif period.end == self.period.end and not period.summary:
-        #     # fallback if financials are not on period
-        #     # financials are assigned to bu before period is
-        #     fins = self.financials
-        #     period.financials[self.id.bbid] = fins
-        else: #period.end > self.period.end and not period.summary:
+        elif period is now:
+            # fallback if financials are not on period
+            fins = self.financials
+            period.financials[self.id.bbid] = fins
+        else:
             # flow of TimeLine.extrapolate() and bu.fill_out() gets us here
             # copy the structure of master financials
             fins = self.financials.copy(clean=True)
             fins.relationships.set_parent(self)
             fins.period = period
             period.financials[self.id.bbid] = fins
-        # else:
-        #     fins = None
         return fins
+
+    def get_current_period(self):
+        """
+
+
+        BusinessUnitBase.get_current_period() -> TimePeriodBase
+
+        Convenience method to get current_period from parent model's
+        default timeline.
+        """
+        model = self.relationships.model
+        if model:
+            return model.get_timeline().current_period
 
     # *************************************************************************#
     #                          NON-PUBLIC METHODS                              #
