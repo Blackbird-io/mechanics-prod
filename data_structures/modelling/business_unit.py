@@ -355,6 +355,8 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         Method recursively runs consolidation and derivation logic on
         statements for instance and components.
         """
+        if not period:
+            period = self.relationships.model.get_timeline().current_period
 
         for unit in self.components.get_all():
             unit.compute(statement_name, period=period)
