@@ -34,6 +34,7 @@ from chef_settings import COLLAPSE_ROWS, DEFAULT_SCENARIOS, SCENARIO_SELECTORS
 from ._chef_tools import check_filename_ext
 from .data_management import SheetData
 from .field_names import FieldNames
+from .tab_names import TabNames
 
 if COLLAPSE_ROWS or SCENARIO_SELECTORS:
     import pythoncom
@@ -74,6 +75,38 @@ class BB_Workbook(xlio.Workbook):
         xlio.Workbook.__init__(self, *pargs, **kwargs)
         self.scenario_names = None
         self.original_tab_count = 0
+        self.drivers_tab_name = TabNames.SCENARIOS
+
+    @staticmethod
+    def convert(book):
+        """
+
+
+        BB_WorkBook.convert() -> BB_Workbook
+
+        --``book`` must be a normal OpenPyXl workbook
+
+        Return BB_Workbook version of book.
+        """
+        new_book = BB_Workbook()
+        new_book._alignments = book._alignments
+        new_book._borders = book._borders
+        new_book._cell_styles = book._cell_styles
+        new_book._colors = book._colors
+        new_book._charts = book._charts
+        new_book._differential_styles = book._differential_styles
+        new_book._drawings = book._drawings
+        new_book._fills = book._fills
+        new_book._fonts = book._fonts
+        new_book._named_ranges = book._named_ranges
+        new_book._images = book._images
+        new_book._named_styles = book._named_styles
+
+        for sheet in book.worksheets:
+            sheet._WorkbookChild__parent = new_book
+            new_book._sheets.append(sheet)
+
+        return new_book
 
     def create_sheet(self, name, index=None):
         """
@@ -88,6 +121,16 @@ class BB_Workbook(xlio.Workbook):
         Return worksheet with a SheetData record set at instance.bb.
 
         """
+
+        oname = name
+        idx = 1
+
+        lower_names = [n.lower().strip() for n in self.sheetnames]
+        while name.lower().strip() in lower_names:
+            name = oname + '_%s' % idx
+            idx += 1
+            print(name)
+
         sheet = xlio.Workbook.create_sheet(self, name, index=index)
         sheet.bb = SheetData()
 
