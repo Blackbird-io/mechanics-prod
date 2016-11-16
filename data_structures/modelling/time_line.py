@@ -297,9 +297,9 @@ class TimeLine(TimelineBase):
         company.reset_financials(period=seed)
         company.fill_out(period=seed)
 
-        if seed.past and company.id.bbid in seed.past.financials:
-            company.reset_financials(period=seed.past)
-            company.fill_out(period=seed.past)
+        # if seed.past and company.id.bbid in seed.past.financials:
+        #     company.reset_financials(period=seed.past)
+        #     company.fill_out(period=seed.past)
 
         # init SummaryMaker now that TimeLine has been built
         self.summary_builder = SummaryMaker(self.model, actual=self.actual)
