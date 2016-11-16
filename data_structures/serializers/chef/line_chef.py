@@ -599,12 +599,26 @@ class LineChef:
             except KeyError:
                 continue
 
+            if ':' in template:
+                new_materials = dict()
+                template = template.replace(':', '#')
+                for pk in materials:
+                    new_materials[pk] = dict()
+                    for k in materials[pk]:
+                        if ':' in k:
+                            new_k = k.replace(':', '#')
+                        else:
+                            new_k = k
+
+                        new_materials[pk][new_k] = materials[pk][k]
+
+                materials = new_materials
+
             try:
                 formula = template.format(**materials)
             except Exception as X:
                 print("Name:     ", driver_data.name)
                 print("Template: ", driver_data.formula)
-
                 raise ExcelPrepError
 
             calc_cell = sheet.cell(column=period_column, row=finish.number())
