@@ -478,12 +478,10 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         n-1 period (located at instance.period.past), and then recursively
         linking all of the instance components to their younger selves.
         """
-        if self.id.bbid not in self.period.past.financials:
-            fins = self.financials.copy()
-            fins.reset()
-            fins.relationships.set_parent(self)
-            fins.period = self.period.past
-            self.period.past.financials[self.id.bbid] = fins
+        model = self.relationships.model
+        period = model.get_timeline().current_period
+
+        self.get_financials(period.past)
 
         for bu in self.components.get_all():
             bu.make_past()
