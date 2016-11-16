@@ -192,7 +192,7 @@ class UnitInfoChef:
         Method adds logic to use scenario selector from unit tab.  Scenario
         selector changes parameter values.
         """
-        scen_tab = book.get_sheet_by_name(TabNames.SCENARIOS)
+        scen_tab = book.get_sheet_by_name(book.drivers_tab_name)
         src_sheet = scen_tab.title
         src_row = scen_tab.bb.general.rows.by_name[FieldNames.SELECTOR]
 
@@ -735,7 +735,7 @@ class UnitInfoChef:
         Force keyword-entry for book and sheet to make sure we feed in the
         right arguments.
         """
-        source = book.get_sheet_by_name(TabNames.SCENARIOS)
+        source = book.get_sheet_by_name(book.drivers_tab_name)
         source_area = getattr(source.bb, FieldNames.TIMELINE)
 
         param_area = sheet.bb.add_area(FieldNames.PARAMETERS)
