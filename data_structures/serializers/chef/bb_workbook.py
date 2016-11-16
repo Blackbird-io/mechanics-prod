@@ -73,6 +73,7 @@ class BB_Workbook(xlio.Workbook):
     def __init__(self, *pargs, **kwargs):
         xlio.Workbook.__init__(self, *pargs, **kwargs)
         self.scenario_names = None
+        self.original_tab_count = 0
 
     def create_sheet(self, name, index=None):
         """

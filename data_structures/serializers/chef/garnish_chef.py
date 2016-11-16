@@ -122,7 +122,10 @@ class GarnishChef:
                 new_book._setup_styles = book._setup_styles
 
             book = new_book
-            book.create_sheet("Original >>", index=1)
+            otab = book.create_sheet("Original >>", index=1)
+            otab.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
+            SheetStyle.style_sheet(otab)
+            book.original_tab_count = len(book.worksheets) - 1
 
         book.properties.creator = chef_settings.WORKBOOK_AUTHOR
 
@@ -277,7 +280,7 @@ class GarnishChef:
         Return a worksheet that lays out the assumptions used by the model in
         various scenarios.
         """
-        my_tab = book.create_sheet(TabNames.SCENARIOS)
+        my_tab = book.create_sheet(TabNames.SCENARIOS, index=1)
 
         # Sheet map:
         # A          |  B      | C             | D     | E
