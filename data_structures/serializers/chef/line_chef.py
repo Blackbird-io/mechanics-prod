@@ -679,7 +679,7 @@ class LineChef:
         Adds a single cell reference to a new cell.
         (e.g. new_cell.value = '=C18')
         """
-        if line.xl.reference.direct_source:
+        if line.xl.reference.direct_source and not self.values_only:
             line_label = indent * " " + line.title  # + ': ref'
             finish = row_container.add_group(
                 line.title, size=1, label=line_label
