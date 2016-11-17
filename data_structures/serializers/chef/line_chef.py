@@ -161,45 +161,40 @@ class LineChef:
 
         if line.xl.format.blank_row_before and not details:
             # if row_container.groups or not row_container.offset:
-                sheet.bb.need_spacer = True
+            sheet.bb.need_spacer = True
+
         line_label = indent * " " + line.title
         matter = row_container.add_group(
             line.title, offset=int(sheet.bb.need_spacer)
         )
         sheet.bb.need_spacer = False
 
-        if self.values_only:
-            has_own_content = True
-        else:
-            has_own_content = line.has_own_content()
-
         if not start_bal:
-            if not self.values_only:
-                self._add_reference(
-                    sheet=sheet,
-                    column=column,
-                    line=line,
-                    indent=indent,
-                    row_container=matter
-                )
+            self._add_reference(
+                sheet=sheet,
+                column=column,
+                line=line,
+                indent=indent,
+                row_container=matter
+            )
 
-                self._add_derivation_logic(
-                    sheet=sheet,
-                    column=column,
-                    line=line,
-                    indent=indent,
-                    row_container=matter,
-                    set_labels=set_labels,
-                )
+            self._add_derivation_logic(
+                sheet=sheet,
+                column=column,
+                line=line,
+                indent=indent,
+                row_container=matter,
+                set_labels=set_labels,
+            )
 
-                self._add_consolidation_logic(
-                    sheet=sheet,
-                    column=column,
-                    line=line,
-                    indent=indent,
-                    row_container=matter,
-                    set_labels=set_labels,
-                )
+            self._add_consolidation_logic(
+                sheet=sheet,
+                column=column,
+                line=line,
+                indent=indent,
+                row_container=matter,
+                set_labels=set_labels,
+            )
 
         if details:
             self._add_details(
@@ -236,7 +231,7 @@ class LineChef:
         else:
             run_segments = True
 
-        if (not line.xl.reference.source and run_segments) or self.values_only:
+        if run_segments and not line.xl.reference.source:
             self._combine_segments(
                 sheet=sheet,
                 column=column,
@@ -604,12 +599,26 @@ class LineChef:
             except KeyError:
                 continue
 
+            if ':' in template:
+                new_materials = dict()
+                template = template.replace(':', '#')
+                for pk in materials:
+                    new_materials[pk] = dict()
+                    for k in materials[pk]:
+                        if ':' in k:
+                            new_k = k.replace(':', '#')
+                        else:
+                            new_k = k
+
+                        new_materials[pk][new_k] = materials[pk][k]
+
+                materials = new_materials
+
             try:
                 formula = template.format(**materials)
             except Exception as X:
                 print("Name:     ", driver_data.name)
                 print("Template: ", driver_data.formula)
-
                 raise ExcelPrepError
 
             calc_cell = sheet.cell(column=period_column, row=finish.number())
@@ -670,7 +679,23 @@ class LineChef:
         Adds a single cell reference to a new cell.
         (e.g. new_cell.value = '=C18')
         """
-        if line.xl.reference.source:
+        if line.xl.reference.direct_source:
+            line_label = indent * " " + line.title  # + ': ref'
+            finish = row_container.add_group(
+                line.title, size=1, label=line_label
+            )
+            cell = sheet.cell(column=column, row=finish.number())
+
+            excel_str = "=" + line.xl.reference.direct_source
+
+            cell.set_explicit_value(excel_str, data_type=TypeCodes.FORMULA)
+
+            line.xl.ending = finish.number()
+            line.xl.reference.cell = cell
+
+            if update_cell:
+                line.xl.cell = cell
+        elif line.xl.reference.source:
             line_label = indent * " " + line.title  # + ': ref'
             finish = row_container.add_group(
                 line.title, size=1, label=line_label
@@ -715,7 +740,7 @@ class LineChef:
             line.xl.reference.cell
         ))
 
-        write_value = not processed or (self.values_only and not line.xl.detailed.cell)
+        write_value = not processed
 
         if write_value:
             line_label = indent * " " + line.title  # + ': segment'

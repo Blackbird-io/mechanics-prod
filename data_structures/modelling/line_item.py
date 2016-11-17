@@ -244,6 +244,8 @@ class LineItem(Statement, HistoryLine):
         for line_id, sub_data in portal_data['subset'].items():
             cls.from_portal(line, sub_data)
 
+        line.xl.reference.direct_source = line_data.get('xl_reference')
+
         return line
 
     def to_portal(
@@ -257,6 +259,11 @@ class LineItem(Statement, HistoryLine):
 
         Method yields a serialized representation of a LineItem.
         """
+        try:
+            direct_source = self.xl.reference.direct_source
+        except AttributeError:
+            direct_source = None
+
         row = {
             'buid': buid,
             'line_id': self.id.bbid.hex,
@@ -279,7 +286,8 @@ class LineItem(Statement, HistoryLine):
                 'blank_row_before': self.xl.format.blank_row_before,
                 'blank_row_after': self.xl.format.blank_row_after,
                 'number_format': self.xl.format.number_format,
-            }
+            },
+            'xl_reference': direct_source,
         }
 
         # return this line
