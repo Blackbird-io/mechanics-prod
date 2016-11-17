@@ -86,7 +86,7 @@ class StructureChef:
         and displays a diagram of BU structure on an Excel sheet.
         """
         # sheet location
-        ahead = book.get_sheet_by_name(TabNames.SCENARIOS)
+        ahead = book.get_sheet_by_name(book.drivers_tab_name)
         index = book.get_index(ahead) + 1
 
         # sheet layout

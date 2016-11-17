@@ -114,7 +114,13 @@ class TranscriptChef:
 
             date = datetime.date.today()
             date_str = '%s-%s-%s' % (date.month, date.day, date.year)
-            title = model.name + ' ' + date_str
+
+            if len(model.name) > 20:
+                model_name = model.name[0:20]
+            else:
+                model_name = model.name
+
+            title = model_name + ' ' + date_str
 
             sheet.title = title
         else:

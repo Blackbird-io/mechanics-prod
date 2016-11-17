@@ -188,6 +188,7 @@ class Reference:
     def __init__(self):
         self.source = None
         self.cell = None
+        self.direct_source = None
 
 
 class LineData(Range):

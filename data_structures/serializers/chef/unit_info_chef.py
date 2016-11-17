@@ -192,7 +192,7 @@ class UnitInfoChef:
         Method adds logic to use scenario selector from unit tab.  Scenario
         selector changes parameter values.
         """
-        scen_tab = book.get_sheet_by_name(TabNames.SCENARIOS)
+        scen_tab = book.get_sheet_by_name(book.drivers_tab_name)
         src_sheet = scen_tab.title
         src_row = scen_tab.bb.general.rows.by_name[FieldNames.SELECTOR]
 
@@ -351,26 +351,30 @@ class UnitInfoChef:
         body_rows = sheet.bb.row_axis.add_group('body')
         body_cols = sheet.bb.col_axis.add_group('body')
 
-        if not values_only:
-            # link to TimeLine parameters
-            self._link_to_time_line(book=book, sheet=sheet, unit=unit,
-                                    current_only=current_only)
+        # if not values_only:
+        # link to TimeLine parameters
+        self._link_to_time_line(book=book, sheet=sheet, unit=unit,
+                                current_only=current_only)
 
-            # unit-specific parameters
-            # Add unit parameters and update TimeLine/Period params as necessary
-            self._add_unit_params(sheet, unit, current_only=current_only)
+        # unit-specific parameters
+        # Add unit parameters and update TimeLine/Period params as necessary
+        self._add_unit_params(sheet, unit, current_only=current_only)
 
-            val_col = sheet.bb.time_line.columns.get_position(unit.period.end)
-            param_area = getattr(sheet.bb, FieldNames.PARAMETERS)
-            param_area.columns.by_name[FieldNames.VALUES] = val_col
-            # At this point, sheet.bb.current_row will point to the last parameter.
-
-            corner_col = param_area.columns.get_position(FieldNames.MASTER) + 1
+        if values_only:
+            val_col = min(sheet.bb.time_line.columns.by_name.keys())
         else:
-            #  Will need to add timeline headers manually
-            self._add_independent_timeline(sheet=sheet)
+            val_col = sheet.bb.time_line.columns.get_position(unit.period.end)
 
-            corner_col = self.VALUE_COLUMN - 1
+        param_area = getattr(sheet.bb, FieldNames.PARAMETERS)
+        param_area.columns.by_name[FieldNames.VALUES] = val_col
+        # At this point, sheet.bb.current_row will point to the last parameter.
+
+        corner_col = param_area.columns.get_position(FieldNames.MASTER) + 1
+        # else:
+        #     #  Will need to add timeline headers manually
+        #     self._add_independent_timeline(sheet=sheet)
+        #
+        #     corner_col = self.VALUE_COLUMN - 1
 
         # Freeze panes:
         corner_row = sheet.bb.time_line.rows.ending
@@ -670,7 +674,11 @@ class UnitInfoChef:
         template = FormulaTemplates.LINK_TO_COORDINATES
 
         for period in time_line.iter_ordered(open=now.end):
-            period_column = timeline_range.columns.get_position(period.end)
+
+            try:
+                period_column = timeline_range.columns.get_position(period.end)
+            except KeyError:
+                continue
 
             # period, unit, and period-unit parameters
             # combined in order of precedence
@@ -727,7 +735,7 @@ class UnitInfoChef:
         Force keyword-entry for book and sheet to make sure we feed in the
         right arguments.
         """
-        source = book.get_sheet_by_name(TabNames.SCENARIOS)
+        source = book.get_sheet_by_name(book.drivers_tab_name)
         source_area = getattr(source.bb, FieldNames.TIMELINE)
 
         param_area = sheet.bb.add_area(FieldNames.PARAMETERS)
@@ -775,6 +783,9 @@ class UnitInfoChef:
 
         active_column = self.VALUE_COLUMN
         for date in sorted(src_vals):
+            if date not in self.timeline.keys():
+                continue
+
             active_row = self.TITLE_ROW
             src_row = source_area.rows.by_name[FieldNames.TITLE]
 
