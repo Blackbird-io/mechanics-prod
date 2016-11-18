@@ -437,6 +437,10 @@ class Model(TagsMixIn):
                 "already exists".format(*key)
             )
             raise KeyError(c)
+
+        time_line.actual = actual
+        time_line.resolution = resolution
+
         self.timelines[key] = time_line
 
     def start(self):
