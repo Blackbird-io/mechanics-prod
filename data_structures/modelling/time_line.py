@@ -293,16 +293,16 @@ class TimeLine(TimelineBase):
         if seed is None:
             seed = self.current_period
 
-        company = seed.content
+        company = self.model.get_company()
         company.reset_financials(period=seed)
         company.fill_out(period=seed)
 
-        if seed.past and company.id.bbid in seed.past.financials:
-            company.reset_financials(period=seed.past)
-            company.fill_out(period=seed.past)
+        # if seed.past and company.id.bbid in seed.past.financials:
+        #     company.reset_financials(period=seed.past)
+        #     company.fill_out(period=seed.past)
 
         # init SummaryMaker now that TimeLine has been built
-        self.summary_builder = SummaryMaker(self.model)
+        self.summary_builder = SummaryMaker(self.model, actual=self.actual)
 
         for period in self.iter_ordered(open=seed.end):
             if period.end > seed.end:
