@@ -431,7 +431,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         financials = self.get_financials(period)
         if not financials.filled:
             if not period:
-                period = self.relationships.model.get_timeline().current_period
+                period = self.get_current_period()
             self._load_starting_balance(period)
 
             for statement in financials.compute_order:
@@ -602,7 +602,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         of precedence. Driver updates the results with own parameters.
         """
         if not period:
-            period = self.period
+            period = self.get_current_period()
         time_line = period.relationships.parent
 
         # Specific parameters trump general ones. Start with time_line, then
