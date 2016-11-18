@@ -191,17 +191,12 @@ class Model(TagsMixIn):
         **read-only property**
 
 
-        Pointer to company valuation on current period. If current period has no
-        content, returns None.
+        Pointer to company valuation on current period.
         """
-        result = None
-        #
-        company = self.time_line.current_period.content
+        company = self.get_company()
         if company:
             # catch periods with empty content
-            result = company.valuation
-        #
-        return result
+            return company.valuation
 
     @valuation.setter
     def valuation(self, value):
@@ -277,9 +272,9 @@ class Model(TagsMixIn):
         new_tl.id.set_namespace(self.id.bbid)
 
         # switch ref_date on the model and content on timeline
-        company = old_tl.current_period.content
+        # company = old_tl.current_period.content
         self.ref_date = ref_date
-        new_tl.current_period.set_content(company)
+        # new_tl.current_period.set_content(company)
 
         self.set_timeline(new_tl, overwrite=True)
 
@@ -437,6 +432,8 @@ class Model(TagsMixIn):
                 "already exists".format(*key)
             )
             raise KeyError(c)
+        time_line.resolution = resolution
+        time_line.actual = actual
         self.timelines[key] = time_line
 
     def start(self):
@@ -543,7 +540,7 @@ class Model(TagsMixIn):
         """
         # Make sure unit has an id in the right namespace.
         if update_id:
-            bu.update_id(namespace=self.id.namespace, recur=True)
+            bu._update_id(namespace=self.id.namespace, recur=True)
         if not bu.id.bbid:
             c = "Cannot add content without a valid bbid."
             raise bb_exceptions.IDError(c)
@@ -568,6 +565,10 @@ class Model(TagsMixIn):
 
         brethren = self.ty_directory.setdefault(bu.type, set())
         brethren.add(bu.id.bbid)
+
+        bu.relationships.set_model(self)
+        now = self.get_timeline().current_period
+        now.financials[bu.id.bbid] = bu.financials
 
         if recur:
             for unit in bu.components.values():

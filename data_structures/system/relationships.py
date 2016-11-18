@@ -128,6 +128,7 @@ class Relationships:
 
         Returns a new Relationship object with _parent attribute preserved
         """
-        result = Relationships(self._owner, parent=self._parent)
-
+        result = Relationships(
+            self._owner, parent=self._parent, model=self._model
+        )
         return result

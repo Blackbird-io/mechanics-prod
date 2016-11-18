@@ -479,7 +479,7 @@ class Driver(TagsMixIn):
         the original and converted keys.
         """
         if not period:
-            period = parent.period
+            period = parent.get_current_period()
         params = parent.get_parameters(period)
         params.update(self.parameters)
 
