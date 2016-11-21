@@ -94,7 +94,7 @@ class TranscriptChef:
     COLUMN_DICT[RESPONSE_HEADER] = 'F'
     COLUMN_DICT[QUESTION_NAME_HEADER] = 'G'
 
-    def make_transcript_excel(self, model, book=None, idx=1):
+    def make_transcript_excel(self, model, book=None, idx=1, transcript=None):
         """
 
 
@@ -127,18 +127,23 @@ class TranscriptChef:
             sheet = book.create_sheet(name=TabNames.TRANSCRIPT, index=idx)
 
         # get length of interview
-        transcript = list()
-        for i in model.transcript:
-            q = i[0]['q_in']
-            if q:
-                q['response_array'] = i[0]['r_in']
-                transcript.append(q)
+        if transcript is None:
+            transcript = model.transcript
+
+            transcript_out = list()
+            for i in transcript:
+                q = i[0]['q_in']
+                if q:
+                    q['response_array'] = i[0]['r_in']
+                    transcript_out.append(q)
+        else:
+            transcript_out = transcript
 
         analysis_name = model.name.title()
         sheet = self._prep_output_excel(sheet, analysis_name)
 
         current_row = 8
-        for q in transcript:
+        for q in transcript_out:
             current_row = self._prep_question_output(sheet, q, current_row)
 
         for col in self.COLUMN_DICT.values():
