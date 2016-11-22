@@ -826,6 +826,8 @@ class LineChef:
         Function gets and returns steps in formula calculation based on the
         template calculation for this line.
         """
+        keys = []  # Return a blank list if no formula steps.
+
         try:
             template_xl = sheet.bb.line_directory[line.id.bbid]
         except KeyError:
