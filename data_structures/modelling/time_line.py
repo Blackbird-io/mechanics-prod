@@ -63,11 +63,13 @@ class TimeLine(TimelineBase):
     ====================  ======================================================
 
     DATA:
+    actual                bool; True/False corresponds with Model.time_line key
     current_period        P; pointer to the period that represents the present
     id                    instance of PlatformComponents.ID class, for interface
     master                TimePeriod; unit templates that fall outside of time
     parameters            Parameters object, specifies shared parameters
     ref_date              datetime.date; reference date for the model
+    resolution            string; 'monthly', 'annual'..etc. Model.time_line key
     summary_builder       SummaryBuilder; makes financial summaries
 
     FUNCTIONS:
@@ -96,6 +98,8 @@ class TimeLine(TimelineBase):
         self.summary_builder = None
         self.has_been_extrapolated = False
         self.ref_date = None
+        self.actual = None
+        self.resolution = None
 
     @property
     def current_period(self):
