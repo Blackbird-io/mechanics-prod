@@ -134,93 +134,84 @@ class GarnishChef:
 
         Method adds a cover tab to the workbook
         """
-        company = model.get_company()
-
-        sheet = book.active
-        sheet.title = TabNames.COVER
-        SheetStyle.style_sheet(sheet, label_areas=False)
-
-        row = sheet.row_dimensions[1]
-        row.height = 9
-
-        for r in range(8, 24):
-            row = sheet.row_dimensions[r]
-            row.height = 21.75
-
-        row = sheet.row_dimensions[19]
-        row.height = 9
-
-        column = sheet.column_dimensions['A']
-        column.width = 10.71
-
-        column = sheet.column_dimensions['D']
-        column.width = 14
-
-        column = sheet.column_dimensions['E']
-        column.width = 31.71
-
-        column = sheet.column_dimensions['F']
-        column.width = 14
-
-        if chef_settings.INCLUDE_LOGO:
-            img = xlio.drawing.image.Image(IMAGE_PATH,
-                                           size=(250, None))
-            img.anchor(sheet.cell('B2'))
-
-            sheet.add_image(img)
-
-        CellStyles.format_border_group(sheet, 2, 8, 9, 23,
-                                        border_style='double')
-
-        cell = sheet.cell('E11')
-
         if report:
-            title = 'Reporting: ' + company.name.title()
+            book.remove_sheet(book.active)
         else:
+            company = model.get_company()
+
+            sheet = book.active
+            sheet.title = TabNames.COVER
+            SheetStyle.style_sheet(sheet, label_areas=False)
+
+            row = sheet.row_dimensions[1]
+            row.height = 9
+
+            for r in range(8, 24):
+                row = sheet.row_dimensions[r]
+                row.height = 21.75
+
+            row = sheet.row_dimensions[19]
+            row.height = 9
+
+            column = sheet.column_dimensions['A']
+            column.width = 10.71
+
+            column = sheet.column_dimensions['D']
+            column.width = 14
+
+            column = sheet.column_dimensions['E']
+            column.width = 31.71
+
+            column = sheet.column_dimensions['F']
+            column.width = 14
+
+            if chef_settings.INCLUDE_LOGO:
+                img = xlio.drawing.image.Image(IMAGE_PATH,
+                                               size=(250, None))
+                img.anchor(sheet.cell('B2'))
+
+                sheet.add_image(img)
+
+            CellStyles.format_border_group(sheet, 2, 8, 9, 23,
+                                            border_style='double')
+
+            cell = sheet.cell('E11')
+
             title = company.name.title()
 
-        cell.value = title
-        cell.alignment = Alignment(horizontal='center', vertical='center')
-        cell.font = Font(size=18, bold=True, underline='single')
+            cell.value = title
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+            cell.font = Font(size=18, bold=True, underline='single')
 
-        cell = sheet.cell('D14')
-        cell.value = chef_settings.DATE_LABEL
-        cell.alignment = Alignment(horizontal='left')
-        cell.font = Font(size=12, bold=True)
+            cell = sheet.cell('D14')
+            cell.value = chef_settings.DATE_LABEL
+            cell.alignment = Alignment(horizontal='left')
+            cell.font = Font(size=12, bold=True)
 
-        if not report:
             date_label = chef_settings.REF_DATE_LABEL
-        else:
-            date_label = 'Latest Report Date:'
 
-        cell = sheet.cell('D15')
-        cell.value = date_label
-        cell.alignment = Alignment(horizontal='left')
-        cell.font = Font(size=12, bold=True)
+            cell = sheet.cell('D15')
+            cell.value = date_label
+            cell.alignment = Alignment(horizontal='left')
+            cell.font = Font(size=12, bold=True)
 
-        if not report:
             cell = sheet.cell('D16')
             cell.value = chef_settings.QCOUNT_LABEL
             cell.alignment = Alignment(horizontal='left')
             cell.font = Font(size=12, bold=True)
 
-        cell = sheet.cell(chef_settings.COVER_DATE_CELL)
-        cell.value = datetime.date.today()
-        cell.alignment = Alignment(horizontal='right')
-        cell.font = Font(size=12)
+            cell = sheet.cell(chef_settings.COVER_DATE_CELL)
+            cell.value = datetime.date.today()
+            cell.alignment = Alignment(horizontal='right')
+            cell.font = Font(size=12)
 
-        if not report:
             use_date = model.time_line.ref_date
-        else:
-            use_date = last_report
 
-        cell = sheet.cell('F15')
-        cell.value = use_date
-        cell.alignment = Alignment(horizontal='right')
-        cell.font = Font(size=12)
+            cell = sheet.cell('F15')
+            cell.value = use_date
+            cell.alignment = Alignment(horizontal='right')
+            cell.font = Font(size=12)
 
-        if not report:
-            # get length of interview
             questions = []
             for i in model.transcript:
                 q = i[0]['q_in']
@@ -232,23 +223,23 @@ class GarnishChef:
             cell.alignment = Alignment(horizontal='right')
             cell.font = Font(size=12)
 
-        cell = sheet.cell('C18')
-        cell.value = chef_settings.ESTIMATED_LABEL
-        cell.font = Font(color=WHITE, size=11, bold=True)
-        cell.fill = PatternFill(start_color=BLACK,
-                                end_color=BLACK,
-                                fill_type='solid')
-        cell.alignment = Alignment(horizontal='center', vertical='center')
-        sheet.merge_cells('C18:G18')
+            cell = sheet.cell('C18')
+            cell.value = chef_settings.ESTIMATED_LABEL
+            cell.font = Font(color=WHITE, size=11, bold=True)
+            cell.fill = PatternFill(start_color=BLACK,
+                                    end_color=BLACK,
+                                    fill_type='solid')
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+            sheet.merge_cells('C18:G18')
 
-        cell = sheet.cell('C20')
-        cell.value = chef_settings.DISCLAIMER_TEXT
-        cell.font = Font(size=10)
-        cell.alignment = Alignment(horizontal='center', vertical='center',
-                                   wrap_text=True)
-        sheet.merge_cells('C20:G22')
+            cell = sheet.cell('C20')
+            cell.value = chef_settings.DISCLAIMER_TEXT
+            cell.font = Font(size=10)
+            cell.alignment = Alignment(horizontal='center', vertical='center',
+                                       wrap_text=True)
+            sheet.merge_cells('C20:G22')
 
-        sheet.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
+            sheet.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
 
     @staticmethod
     def _create_scenarios_tab(book, model, report=False):

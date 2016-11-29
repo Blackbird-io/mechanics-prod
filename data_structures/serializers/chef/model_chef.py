@@ -170,7 +170,8 @@ class ModelChef:
         # Add "Reports >>" tab with table of contents.  Need to do this last
         # since we can't count on dates corresponding exactly with period start
         # and end dates.
-        structure_chef = StructureChef(model)
-        structure_chef.chop_report(book, spacer_color)
+
+        # structure_chef = StructureChef(model)
+        # structure_chef.chop_report(book, spacer_color)
 
         return book
