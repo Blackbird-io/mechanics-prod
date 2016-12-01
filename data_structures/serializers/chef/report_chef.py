@@ -233,26 +233,27 @@ class ReportChef:
 
             row_container.calc_size()
 
-            if act_line.xl.format.blank_row_before:
-                row_container.add_group('spacer_details', size=1)
+            if act_line.sum_details:
+                if act_line.xl.format.blank_row_before:
+                    row_container.add_group('spacer_details', size=1)
 
-            # subtotal row for details
-            line_label = indent * " " + act_line.title
-            finish = row_container.add_group(act_line.title, size=1) # , label=line_label
+                # subtotal row for details
+                line_label = indent * " " + act_line.title
+                finish = row_container.add_group(act_line.title, size=1) # , label=line_label
 
-            sheet.bb.calc_sizes()
+                sheet.bb.calc_sizes()
 
-            # ACTUAL
-            act_cell = sheet.cell(column=actual_col.number(), row=finish.number())
-            act_cell.set_explicit_value(act_detail_summation, data_type=TypeCodes.FORMULA)
-            act_line.xl.cell = act_cell
-            CellStyles.format_line(act_line)
+                # ACTUAL
+                act_cell = sheet.cell(column=actual_col.number(), row=finish.number())
+                act_cell.set_explicit_value(act_detail_summation, data_type=TypeCodes.FORMULA)
+                act_line.xl.cell = act_cell
+                CellStyles.format_line(act_line)
 
-            # FORECAST
-            for_cell = sheet.cell(column=forecast_col.number(), row=finish.number())
-            for_cell.set_explicit_value(for_detail_summation, data_type=TypeCodes.FORMULA)
-            for_line.xl.cell = for_cell
-            CellStyles.format_line(for_line)
+                # FORECAST
+                for_cell = sheet.cell(column=forecast_col.number(), row=finish.number())
+                for_cell.set_explicit_value(for_detail_summation, data_type=TypeCodes.FORMULA)
+                for_line.xl.cell = for_cell
+                CellStyles.format_line(for_line)
 
     def _make_report_header(self, sheet, title, date):
         """
@@ -351,7 +352,7 @@ class ReportChef:
 
         # a line with own content should have no children with own content,
         # and should not consolidate
-        if details:
+        if details and act_line.sum_details:
             self._add_details(
                 sheet=sheet,
                 act_line=act_line,
@@ -360,6 +361,15 @@ class ReportChef:
                 indent=indent,
             )
         else:
+            if details:
+                self._add_details(
+                    sheet=sheet,
+                    act_line=act_line,
+                    for_line=for_line,
+                    row_container=line_rows,
+                    indent=indent,
+                )
+
             # this is the logic for lines without details
             line_row = line_rows.add_group(act_line.title, size=1)
             sheet.bb.calc_sizes()

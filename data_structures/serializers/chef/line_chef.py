@@ -167,6 +167,12 @@ class LineChef:
         matter = row_container.add_group(
             line.title, offset=int(sheet.bb.need_spacer)
         )
+
+        if sheet.bb.need_spacer:
+            row_size = row_container.calc_size()
+            r = sheet.row_dimensions[row_container.tip + row_size]
+            r.outline_level = sheet.bb.outline_level
+
         sheet.bb.need_spacer = False
 
         if details:
@@ -250,6 +256,9 @@ class LineChef:
         if check and not start_bal:
             if line.id.bbid not in sheet.bb.line_directory.keys():
                 sheet.bb.line_directory[line.id.bbid] = line.xl
+
+        r = sheet.row_dimensions[line.xl.cell.row]
+        r.outline_level = sheet.bb.outline_level
 
         if line.xl.format.blank_row_after:
             sheet.bb.need_spacer = True
@@ -587,10 +596,10 @@ class LineChef:
             # all but the last step are indented an extra level
             if count < n_items:
                 line_label = (indent + LineItem.TAB_WIDTH) * " " + key
-                outline = 1
+                outline = sheet.bb.outline_level + 1
             else:
                 line_label = indent * " " + line.title
-                outline = 0
+                outline = sheet.bb.outline_level
             finish = row_container.add_group(
                 key, size=1, label=line_label, outline=outline
             )
@@ -781,6 +790,7 @@ class LineChef:
             sub_indent = indent + LineItem.TAB_WIDTH
             detail_summation = ""
 
+            sheet.bb.outline_level += 1
             for detail in details:
                 self.chop_line(
                     sheet=sheet,
@@ -800,6 +810,7 @@ class LineChef:
                 link = link_template.format(coordinates=cos)
                 detail_summation += link
 
+            sheet.bb.outline_level -= 1
             row_container.calc_size()
 
             if line.sum_details:
