@@ -128,6 +128,7 @@ class LineItem(Statement, HistoryLine):
         self._replica = False
         self._hardcoded = False
         self._include_details = True
+        self._sum_details = True
         self.id = ID()
 
         if value is not None:
@@ -182,6 +183,18 @@ class LineItem(Statement, HistoryLine):
         return self._replica
 
     @property
+    def sum_details(self):
+        return self._sum_details
+
+    @sum_details.setter
+    def sum_details(self, val):
+        if isinstance(val, bool):
+            self._sum_details = val
+        else:
+            msg = "LineItem.sum_details can only be set to a boolean value"
+            raise(TypeError(msg))
+
+    @property
     def sum_over_time(self):
         """
         Default value of sum_over_time is True.  If False, line.value will not
@@ -202,8 +215,8 @@ class LineItem(Statement, HistoryLine):
         result = self._local_value
         # Could be None
 
-        if self._details:
-            result = self._sum_details()
+        if self._details and self.sum_details:
+            result = self._get_sum_of_details()
 
         return result
 
@@ -733,11 +746,11 @@ class LineItem(Statement, HistoryLine):
         self._details[replica.tags.name] = replica
         # Add replica in first position.
 
-    def _sum_details(self):
+    def _get_sum_of_details(self):
         """
 
 
-        Line._sum_details() -> None or number
+        Line._get_sum_of_details() -> None or number
 
 
         Return sum of all details or None if all of the details have a None
