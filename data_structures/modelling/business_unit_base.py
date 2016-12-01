@@ -295,11 +295,6 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         LineItem.has_been_consolidated == True).
         """
 
-        # look for drivers based on line name, line parent name, all line tags
-        keys = [line.tags.name]
-        keys.append(line.relationships.parent.name.casefold())
-        keys.extend(line.tags.all)
-
         # Repeat for any details
         if line._details:
             for detail in line.get_ordered():
@@ -310,11 +305,22 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
                 else:
                     self._derive_line(detail, period)
 
+        if line.name == 'leverage ratio status':
+            print(line)
+
+        # look for drivers based on line name, line parent name, all line tags
+        keys = [line.tags.name]
+        keys.append(line.relationships.parent.name.casefold())
+        keys.extend(line.tags.all)
+
         for key in keys:
             if key in self.drivers:
                 matching_drivers = self.drivers.get_drivers(key)
                 for driver in matching_drivers:
                     driver.workOnThis(line, bu=self, period=period)
+
+                    if line.name == 'leverage ratio status':
+                        print(line)
 
     def _register_in_period(self, period, recur=True, overwrite=True):
         """
