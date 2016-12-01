@@ -300,12 +300,6 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         keys.append(line.relationships.parent.name.casefold())
         keys.extend(line.tags.all)
 
-        for key in keys:
-            if key in self.drivers:
-                matching_drivers = self.drivers.get_drivers(key)
-                for driver in matching_drivers:
-                    driver.workOnThis(line, bu=self, period=period)
-
         # Repeat for any details
         if line._details:
             for detail in line.get_ordered():
@@ -315,6 +309,12 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
                     # A replica should never have any details
                 else:
                     self._derive_line(detail, period)
+
+        for key in keys:
+            if key in self.drivers:
+                matching_drivers = self.drivers.get_drivers(key)
+                for driver in matching_drivers:
+                    driver.workOnThis(line, bu=self, period=period)
 
     def _register_in_period(self, period, recur=True, overwrite=True):
         """
