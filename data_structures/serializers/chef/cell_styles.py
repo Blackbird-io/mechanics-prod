@@ -371,7 +371,7 @@ class CellStyles:
 
         Format cells containing hardcoded values to conform with Chef standard.
         """
-        font = Font(color=HARDCODED_COLOR, bold=True)
+        font = Font(color=HARDCODED_COLOR, bold=False)
         cell.font = font
 
     @staticmethod

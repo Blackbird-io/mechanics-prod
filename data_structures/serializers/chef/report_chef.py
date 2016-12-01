@@ -123,11 +123,12 @@ class ReportChef:
         Method creates a new report tab and fills in the forecast and actual
         data.  Method adds columns for delta and percent difference.
         """
+
         # Do preliminary formatting
         use_date = act_period.end
         tab_name = use_date.strftime('%Y-%m-%d')
         title = '%s: %s Performance' % (self.model.title, use_date.strftime('%m-%Y'))
-        sheet = wb.create_sheet(tab_name, index=1)
+        sheet = wb.create_sheet(tab_name, index=0)
         self._make_report_header(sheet, title, use_date)
 
         co = self.model.get_company()
@@ -155,6 +156,10 @@ class ReportChef:
         all_row = sheet.bb.row_axis.get_group('all')
         st_row = all_row.number()
         ed_row = st_row + all_row.size
+
+        freeze_cell = 'D7'
+        corner_cell = sheet[freeze_cell]
+        sheet.freeze_panes = corner_cell
 
         CellStyles.format_border_group(sheet, st_col, ed_col, st_row, ed_row)
 
