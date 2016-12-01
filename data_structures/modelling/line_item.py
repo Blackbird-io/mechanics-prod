@@ -248,6 +248,7 @@ class LineItem(Statement, HistoryLine):
             '_replica',
             '_hardcoded',
             '_include_details',
+            '_sum_details',
         ):
             setattr(line, attr, line_data[attr])
 
@@ -295,6 +296,7 @@ class LineItem(Statement, HistoryLine):
             '_replica': self._replica,
             '_hardcoded': self._hardcoded,
             '_include_details': self._include_details,
+            '_sum_details': self._sum_details,
             'xl': {
                 'blank_row_before': self.xl.format.blank_row_before,
                 'blank_row_after': self.xl.format.blank_row_after,
@@ -371,6 +373,7 @@ class LineItem(Statement, HistoryLine):
         new_line.log = self.log[:]
         new_line._sum_over_time = self.sum_over_time
         new_line._include_details = self.include_details
+        new_line._sum_details = self.sum_details
         new_line.set_consolidate(self._consolidate)
         new_line.id = copy.copy(self.id)
         new_line.xl = xl_mgmt.LineData()
@@ -654,7 +657,7 @@ class LineItem(Statement, HistoryLine):
         # value, but is now being assigned a detail line.  We will add the
         # existing value as an additional detail line with the currently
         # assigned value
-        if self._local_value and not self._details:
+        if self._local_value and not self._details and self.sum_details:
             self._bring_down_local_value()
 
         Statement._bind_and_record(self,line)
@@ -669,7 +672,7 @@ class LineItem(Statement, HistoryLine):
         Bring down instance's local value to replica. No-op if local value is
         None.
         """
-        if self._local_value is None:
+        if self._local_value is None or not self.sum_details:
             pass
         else:
             sig = self.SIGNATURE_FOR_REPLICA_MANAGEMENT
