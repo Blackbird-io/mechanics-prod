@@ -154,13 +154,13 @@ class ModelChef:
 
         # Add "Forecast" tab filled with projections and "Actual" tab filled
         # with reported values.
-        unit_chef = UnitChef(model, timeline=proj)
-        unit_chef.chop_multi(book, values_only=True, tab_name='Forecast',
-                             tab_color=forecast_color)
-
         unit_chef = UnitChef(model, timeline=actl)
         unit_chef.chop_multi(book, values_only=True, tab_name='Actual',
                              tab_color=actual_color)
+
+        unit_chef = UnitChef(model, timeline=proj)
+        unit_chef.chop_multi(book, values_only=True, tab_name='Forecast',
+                             tab_color=forecast_color)
 
         # Build reports
         report_chef = ReportChef(model, proj, actl, report,
@@ -170,7 +170,8 @@ class ModelChef:
         # Add "Reports >>" tab with table of contents.  Need to do this last
         # since we can't count on dates corresponding exactly with period start
         # and end dates.
-        structure_chef = StructureChef(model)
-        structure_chef.chop_report(book, spacer_color)
+
+        # structure_chef = StructureChef(model)
+        # structure_chef.chop_report(book, spacer_color)
 
         return book

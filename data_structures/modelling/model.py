@@ -239,13 +239,18 @@ class Model(TagsMixIn):
 
         if flat_model:
             M = pickle.loads(flat_model)
+            business_name = portal_model["business_name"]
+            if business_name:
+                M.set_name(business_name)
         else:
             business_name = portal_model["business_name"]
             if not business_name:
                 business_name = bb_settings.DEFAULT_MODEL_NAME
             M = cls(business_name)
+
         M.portal_data.update(portal_model)
         del M.portal_data["e_model"]
+
         return M
 
     def change_ref_date(self, ref_date):
@@ -432,8 +437,10 @@ class Model(TagsMixIn):
                 "already exists".format(*key)
             )
             raise KeyError(c)
-        time_line.resolution = resolution
+
         time_line.actual = actual
+        time_line.resolution = resolution
+
         self.timelines[key] = time_line
 
     def start(self):

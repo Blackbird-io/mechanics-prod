@@ -673,6 +673,9 @@ class UnitInfoChef:
         now = time_line.current_period
         template = FormulaTemplates.LINK_TO_COORDINATES
 
+        # previous parameter column
+        oldcol = None
+
         for period in time_line.iter_ordered(open=now.end):
 
             try:
@@ -690,31 +693,51 @@ class UnitInfoChef:
                 )
                 this_row = rowbox.number()
                 parameters.rows.by_name[param] = this_row
-                cell = sheet.cell(
-                    row=this_row, column=period_column
-                )
+                cell = sheet.cell(row=this_row, column=period_column)
+                CellStyles.format_parameter(cell)
+
+                # override timeline parameters, if need be
                 if param in timeline_params:
                     if value != cell.value:
                         cell.value = value
                         CellStyles.format_hardcoded(cell)
-                else:
-                    master_cell = sheet.cell(
-                        row=this_row, column=self.MASTER_COLUMN
-                    )
-                    if value and not master_cell.value:
-                        master_cell.value = value
-                        CellStyles.format_parameter(master_cell)
-                        CellStyles.format_hardcoded(master_cell)
-                    if value == master_cell.value:
-                        info = dict(coordinates=master_cell.coordinate)
+                        continue
+
+                # set master sell if not set yet
+                master_cell = sheet.cell(
+                    row=this_row, column=self.MASTER_COLUMN
+                )
+                if value and not master_cell.value:
+                    master_cell.value = value
+                    CellStyles.format_parameter(master_cell)
+                    CellStyles.format_hardcoded(master_cell)
+
+                # compare to parameter values from preceding iteration
+                if oldcol:
+                    oldval = oldpar.get(param)
+                    if value == oldval:
+                        oldcell = sheet.cell(row=this_row, column=oldcol)
+                        info = dict(coordinates=oldcell.coordinate)
                         link = template.format(**info)
                         cell.set_explicit_value(
                             link, data_type=TypeCodes.FORMULA
                         )
-                    else:
-                        cell.value = value
-                        CellStyles.format_hardcoded(cell)
-                    CellStyles.format_parameter(cell)
+                        continue
+
+                # compare to master cell
+                if value == master_cell.value:
+                    info = dict(coordinates=master_cell.coordinate)
+                    link = template.format(**info)
+                    cell.set_explicit_value(link, data_type=TypeCodes.FORMULA)
+                    continue
+
+                # default: set as hardcoded
+                cell.value = value
+                CellStyles.format_hardcoded(cell)
+
+            # save parameters for next iteration, to link to preceding cell
+            oldcol = period_column
+            oldpar = allpar
 
             if current_only:
                 break
