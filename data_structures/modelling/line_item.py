@@ -592,9 +592,8 @@ class LineItem(Statement, HistoryLine):
         new_value = value
         if new_value is None:
             self._local_value = new_value
-
         else:
-            if self._details:
+            if self._details and self.sum_details:
                 m = "Cannot assign new value to a line with existing details."
                 raise bb_exceptions.BBPermissionError(m)
             else:
