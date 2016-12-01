@@ -295,6 +295,16 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         LineItem.has_been_consolidated == True).
         """
 
+        # Repeat for any details
+        if line._details:
+            for detail in line.get_ordered():
+                if detail.replica:
+                    continue
+                    # Skip replicas to make sure we apply the driver only once
+                    # A replica should never have any details
+                else:
+                    self._derive_line(detail, period)
+
         # look for drivers based on line name, line parent name, all line tags
         keys = [line.tags.name]
         keys.append(line.relationships.parent.name.casefold())
@@ -305,16 +315,6 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
                 matching_drivers = self.drivers.get_drivers(key)
                 for driver in matching_drivers:
                     driver.workOnThis(line, bu=self, period=period)
-
-        # Repeat for any details
-        if line._details:
-            for detail in line.get_ordered():
-                if detail.replica:
-                    continue
-                    # Skip replicas to make sure we apply the driver only once
-                    # A replica should never have any details
-                else:
-                    self._derive_line(detail, period)
 
     def _register_in_period(self, period, recur=True, overwrite=True):
         """

@@ -393,7 +393,7 @@ class Driver(TagsMixIn):
             not line.has_been_consolidated,
         )):
             if self._can_work_on_this(line):
-                line.clear()
+                line.clear(recur=False)
 
                 formula = self._FM.local_catalog.issue(self.formula_bbid)
                 # formula_catalog.issue() only performs dict retrieval and

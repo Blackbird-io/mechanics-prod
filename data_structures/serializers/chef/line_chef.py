@@ -169,6 +169,37 @@ class LineChef:
         )
         sheet.bb.need_spacer = False
 
+        if details:
+            self._add_details(
+                sheet=sheet,
+                column=column,
+                line=line,
+                row_container=matter,
+                set_labels=set_labels,
+                indent=indent,
+                check=check,
+                start_bal=start_bal,
+            )
+
+        elif start_bal:
+            if line.xl.cell:
+                # here just link the current cell to the cell in line.xl.cell
+                old_cell = line.xl.cell
+                line.xl.reference.source = line
+                self._add_reference(
+                    sheet=sheet,
+                    column=column,
+                    line=line,
+                    indent=indent,
+                    row_container=matter
+                )
+
+                CellStyles.format_line(line)
+
+                line.xl.reference.source = None
+                line.xl.reference.cell = None
+                line.xl.cell = old_cell
+
         if not start_bal:
             self._add_reference(
                 sheet=sheet,
@@ -195,36 +226,6 @@ class LineChef:
                 row_container=matter,
                 set_labels=set_labels,
             )
-
-        if details:
-            self._add_details(
-                sheet=sheet,
-                column=column,
-                line=line,
-                row_container=matter,
-                set_labels=set_labels,
-                indent=indent,
-                check=check,
-                start_bal=start_bal,
-            )
-        elif start_bal:
-            if line.xl.cell:
-                # here just link the current cell to the cell in line.xl.cell
-                old_cell = line.xl.cell
-                line.xl.reference.source = line
-                self._add_reference(
-                    sheet=sheet,
-                    column=column,
-                    line=line,
-                    indent=indent,
-                    row_container=matter
-                )
-
-                CellStyles.format_line(line)
-
-                line.xl.reference.source = None
-                line.xl.reference.cell = None
-                line.xl.cell = old_cell
 
         if start_bal and (details or line.xl.cell):
             run_segments = False
@@ -801,21 +802,22 @@ class LineChef:
 
             row_container.calc_size()
 
-            if line.xl.format.blank_row_before:
-                row_container.add_group('spacer_details', size=1)
+            if line.sum_details:
+                if line.xl.format.blank_row_before:
+                    row_container.add_group('spacer_details', size=1)
 
-            # subtotal row for details
-            line_label = indent * " " + line.title
-            finish = row_container.add_group(
-                line_label, size=1, label=line_label
-            )
-            subtotal_cell = sheet.cell(column=column, row=finish.number())
-            subtotal_cell.set_explicit_value(
-                detail_summation, data_type=TypeCodes.FORMULA
-            )
-            line.xl.detailed.ending = finish.number()
-            line.xl.detailed.cell = subtotal_cell
-            line.xl.cell = subtotal_cell
+                # subtotal row for details
+                line_label = indent * " " + line.title
+                finish = row_container.add_group(
+                    line_label, size=1, label=line_label
+                )
+                subtotal_cell = sheet.cell(column=column, row=finish.number())
+                subtotal_cell.set_explicit_value(
+                    detail_summation, data_type=TypeCodes.FORMULA
+                )
+                line.xl.detailed.ending = finish.number()
+                line.xl.detailed.cell = subtotal_cell
+                line.xl.cell = subtotal_cell
 
         return sheet
 
