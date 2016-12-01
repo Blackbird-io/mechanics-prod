@@ -305,9 +305,6 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
                 else:
                     self._derive_line(detail, period)
 
-        if line.name == 'leverage ratio status':
-            print(line)
-
         # look for drivers based on line name, line parent name, all line tags
         keys = [line.tags.name]
         keys.append(line.relationships.parent.name.casefold())
@@ -318,9 +315,6 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
                 matching_drivers = self.drivers.get_drivers(key)
                 for driver in matching_drivers:
                     driver.workOnThis(line, bu=self, period=period)
-
-                    if line.name == 'leverage ratio status':
-                        print(line)
 
     def _register_in_period(self, period, recur=True, overwrite=True):
         """
