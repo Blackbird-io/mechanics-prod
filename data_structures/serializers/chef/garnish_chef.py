@@ -47,7 +47,6 @@ from .formulas import FormulaTemplates
 from .line_chef import LineChef
 from .sheet_style import SheetStyle
 from .tab_names import TabNames
-from .transcript_chef import TranscriptChef
 
 
 
@@ -59,7 +58,6 @@ IMAGE_PATH = os.path.join(
 
 # Module Globals
 line_chef = LineChef()
-transcript_chef = TranscriptChef()
 
 get_column_letter = xlio.utils.get_column_letter
 bounding_box = xlio.drawing.image.bounding_box
