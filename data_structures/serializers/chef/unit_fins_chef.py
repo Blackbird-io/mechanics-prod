@@ -109,6 +109,7 @@ class UnitFinsChef:
             SheetStyle.set_column_width(sheet, column)
             financials = unit.get_financials(period)
             for name, statement in financials.chef_ordered():
+                sheet.bb.outline_level = 1
                 if statement is not None:
                     if name == 'starting':
                         title = 'Starting Balance Sheet'

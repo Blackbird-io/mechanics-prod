@@ -209,6 +209,7 @@ class ReportChef:
             act_detail_summation = ""
             for_detail_summation = ""
 
+            sheet.bb.outline_level += 1
             for act_det in actual_details:
                 for_det = for_line.find_first(act_det.name)
 
@@ -231,28 +232,30 @@ class ReportChef:
                     link = link_template.format(coordinates=cos)
                     for_detail_summation += link
 
+            sheet.bb.outline_level -= 1
             row_container.calc_size()
 
-            if act_line.xl.format.blank_row_before:
-                row_container.add_group('spacer_details', size=1)
+            if act_line.sum_details:
+                if act_line.xl.format.blank_row_before:
+                    row_container.add_group('spacer_details', size=1)
 
-            # subtotal row for details
-            line_label = indent * " " + act_line.title
-            finish = row_container.add_group(act_line.title, size=1) # , label=line_label
+                # subtotal row for details
+                line_label = indent * " " + act_line.title
+                finish = row_container.add_group(act_line.title, size=1) # , label=line_label
 
-            sheet.bb.calc_sizes()
+                sheet.bb.calc_sizes()
 
-            # ACTUAL
-            act_cell = sheet.cell(column=actual_col.number(), row=finish.number())
-            act_cell.set_explicit_value(act_detail_summation, data_type=TypeCodes.FORMULA)
-            act_line.xl.cell = act_cell
-            CellStyles.format_line(act_line)
+                # ACTUAL
+                act_cell = sheet.cell(column=actual_col.number(), row=finish.number())
+                act_cell.set_explicit_value(act_detail_summation, data_type=TypeCodes.FORMULA)
+                act_line.xl.cell = act_cell
+                CellStyles.format_line(act_line)
 
-            # FORECAST
-            for_cell = sheet.cell(column=forecast_col.number(), row=finish.number())
-            for_cell.set_explicit_value(for_detail_summation, data_type=TypeCodes.FORMULA)
-            for_line.xl.cell = for_cell
-            CellStyles.format_line(for_line)
+                # FORECAST
+                for_cell = sheet.cell(column=forecast_col.number(), row=finish.number())
+                for_cell.set_explicit_value(for_detail_summation, data_type=TypeCodes.FORMULA)
+                for_line.xl.cell = for_cell
+                CellStyles.format_line(for_line)
 
     def _make_report_header(self, sheet, title, date):
         """
@@ -347,11 +350,17 @@ class ReportChef:
 
         line_label = indent * " " + act_line.title
         line_rows = row_container.add_group(act_line.title, offset=int(sheet.bb.need_spacer))
+
+        if sheet.bb.need_spacer:
+            row_size = row_container.calc_size()
+            r = sheet.row_dimensions[row_container.tip + row_size]
+            r.outline_level = sheet.bb.outline_level
+
         sheet.bb.need_spacer = False
 
         # a line with own content should have no children with own content,
         # and should not consolidate
-        if details:
+        if details and act_line.sum_details:
             self._add_details(
                 sheet=sheet,
                 act_line=act_line,
@@ -360,6 +369,15 @@ class ReportChef:
                 indent=indent,
             )
         else:
+            if details:
+                self._add_details(
+                    sheet=sheet,
+                    act_line=act_line,
+                    for_line=for_line,
+                    row_container=line_rows,
+                    indent=indent,
+                )
+
             # this is the logic for lines without details
             line_row = line_rows.add_group(act_line.title, size=1)
             sheet.bb.calc_sizes()
@@ -406,6 +424,8 @@ class ReportChef:
         delta_cell.set_explicit_value(formula_string,
                                       data_type=TypeCodes.FORMULA)
 
+        working_row = delta_cell.row
+
         save_cell = act_line.xl.cell
         act_line.xl.cell = delta_cell
         CellStyles.format_line(act_line)
@@ -419,6 +439,9 @@ class ReportChef:
         CellStyles.format_parameter(diff_cell)
         diff_cell.number_format = NumberFormats.PERCENT_FORMAT
         # *************************************************************
+
+        r = sheet.row_dimensions[working_row]
+        r.outline_level = sheet.bb.outline_level
 
         if act_line.xl.format.blank_row_after:
             sheet.bb.need_spacer = True
@@ -450,6 +473,7 @@ class ReportChef:
         CellStyles.format_bold(cell)
 
         for act_line in act_statement.get_ordered():
+            sheet.bb.outline_level = 1
             for_line = for_statement.find_first(act_line.name)
             if for_line is not None:
                 self._report_line(sheet, act_line, for_line, stat_rows)
