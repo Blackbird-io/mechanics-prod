@@ -39,7 +39,6 @@ from .garnish_chef import GarnishChef
 from .line_chef import LineChef
 from .report_chef import ReportChef
 from .summary_chef import SummaryChef
-from .transcript_chef import TranscriptChef
 from .unit_chef import UnitChef
 from .unit_structure import StructureChef
 
@@ -53,7 +52,6 @@ IMAGE_PATH = os.path.join(
 
 # Module Globals
 line_chef = LineChef()
-transcript_chef = TranscriptChef()
 
 get_column_letter = xlio.utils.get_column_letter
 bounding_box = xlio.drawing.image.bounding_box
@@ -110,7 +108,7 @@ class ModelChef:
 
         unit_chef.chop_multi_valuation(model, book, index=2, recur=False)
 
-        transcript_chef.make_transcript_excel(model, book, idx=3)
+        # transcript_chef.make_transcript_excel(model, book, idx=3)
 
         CellStyles.format_line_borders(book)
 
