@@ -34,10 +34,14 @@ import os
 import openpyxl as xlio
 
 import bb_settings
+import chef_settings
+
+from .bb_workbook import BB_Workbook as Workbook
 from .cell_styles import CellStyles
 from .garnish_chef import GarnishChef
 from .line_chef import LineChef
 from .report_chef import ReportChef
+from .sheet_style import SheetStyle
 from .summary_chef import SummaryChef
 from .unit_chef import UnitChef
 from .unit_structure import StructureChef
@@ -88,10 +92,17 @@ class ModelChef:
         dynamic links.
         """
 
+        # otab = book.create_sheet("Original >>", index=2)
+        # otab.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
+        # SheetStyle.style_sheet(otab)
+        # book = Workbook.convert(book)
+        # book.original_tab_count = len(book.worksheets) - 1
+
         if base_file is not None:
-            book = xlio.load_workbook(base_file)
+            obook = xlio.load_workbook(base_file)
+            book = Workbook.convert(obook)
         else:
-            book = None
+            book = Workbook()
 
         book = GarnishChef.add_garnishes(model, book=book)
 

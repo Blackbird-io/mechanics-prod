@@ -99,12 +99,6 @@ class GarnishChef:
         """
         if book is None:
             book = Workbook()
-        else:
-            book = Workbook.convert(book)
-            otab = book.create_sheet("Original >>", index=1)
-            otab.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
-            SheetStyle.style_sheet(otab)
-            book.original_tab_count = len(book.worksheets) - 1
 
         book.properties.creator = chef_settings.WORKBOOK_AUTHOR
 
