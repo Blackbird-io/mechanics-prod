@@ -92,12 +92,6 @@ class ModelChef:
         dynamic links.
         """
 
-        # otab = book.create_sheet("Original >>", index=2)
-        # otab.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
-        # SheetStyle.style_sheet(otab)
-        # book = Workbook.convert(book)
-        # book.original_tab_count = len(book.worksheets) - 1
-
         if base_file is not None:
             obook = xlio.load_workbook(base_file)
             book = Workbook.convert(obook)
@@ -118,8 +112,6 @@ class ModelChef:
             summary_chef.add_annual_summary(book)
 
         unit_chef.chop_multi_valuation(model, book, index=2, recur=False)
-
-        # transcript_chef.make_transcript_excel(model, book, idx=3)
 
         CellStyles.format_line_borders(book)
 
