@@ -146,6 +146,7 @@ class ModelChef:
         # Get timelines to report from
         proj = model.get_timeline(resolution='monthly', actual=False)
         actl = model.get_timeline(resolution='monthly', actual=True)
+        budg = model.get_timeline(resolution='monthly', actual='budget')
 
         last_date = max(actl.keys())
 
@@ -157,6 +158,12 @@ class ModelChef:
         unit_chef = UnitChef(model, timeline=actl)
         unit_chef.chop_multi(book, values_only=True, tab_name='Actual',
                              tab_color=actual_color)
+
+        if budg is not None:
+            unit_chef = UnitChef(model, timeline=budg)
+            unit_chef.chop_multi(book, values_only=True,
+                                 tab_name='Budget Projections',
+                                 tab_color=actual_color)
 
         unit_chef = UnitChef(model, timeline=proj)
         unit_chef.chop_multi(book, values_only=True, tab_name='Forecast',
