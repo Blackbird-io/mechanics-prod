@@ -578,6 +578,8 @@ class Model(TagsMixIn):
         brethren = self.ty_directory.setdefault(bu.type, set())
         brethren.add(bu.id.bbid)
 
+        bu.relationships.set_model(self)
+
         if recur:
             for unit in bu.components.values():
                 self.register(
