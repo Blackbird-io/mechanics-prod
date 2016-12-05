@@ -270,6 +270,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         """
         bu.summary = None
         bu.valuation = None
+        bu.relationships.set_model(self.relationships.model)
 
         # Step 1: update lifecycle with the right dates for unit and components
         bu._fit_to_period(self.period, recur=True)
