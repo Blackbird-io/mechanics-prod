@@ -211,15 +211,24 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
     @type.setter
     def type(self, value):
-        #
+        """
+
+
+        **property**
+
+
+        Sets ._type.
+        """
         old_type = self.type
         self._type = value
-        #
-        if self.period and old_type:
-            old_entry = self.period.ty_directory.get(old_type)
-            old_entry.remove(self.id.bbid)
 
-            new_entry = self.period.ty_directory.setdefault(value, set())
+        model = self.relationships.model
+        if model:
+            if old_type:
+                old_entry = model.ty_directory.get(old_type)
+                old_entry.remove(self.id.bbid)
+
+            new_entry = model.ty_directory.setdefault(value, set())
             new_entry.add(self.id.bbid)
             # Entries are sets of bbids for units that belong to that type
 
