@@ -282,7 +282,8 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         bu.relationships.set_model(self.relationships.model)
 
         # Step 1: update lifecycle with the right dates for unit and components
-        bu._fit_to_period(self.period, recur=True)
+        now = self.relationships.model.get_timeline().current_period
+        bu._fit_to_period(now, recur=True)
 
         # Step 2: optionally update ids.
         if update_id:
