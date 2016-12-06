@@ -156,9 +156,9 @@ class ModelChef:
 
         # Add "Forecast" tab filled with projections and "Actual" tab filled
         # with reported values.
-        unit_chef = UnitChef(model, timeline=actl)
-        unit_chef.chop_multi(book, values_only=True, tab_name='Actual',
-                             tab_color=actual_color)
+        unit_chef = UnitChef(model, timeline=proj)
+        unit_chef.chop_multi(book, values_only=True, tab_name='Forecast',
+                             tab_color=forecast_color)
 
         if budg is not None:
             unit_chef = UnitChef(model, timeline=budg)
@@ -166,9 +166,9 @@ class ModelChef:
                                  tab_name='Budget Projections',
                                  tab_color=actual_color)
 
-        unit_chef = UnitChef(model, timeline=proj)
-        unit_chef.chop_multi(book, values_only=True, tab_name='Forecast',
-                             tab_color=forecast_color)
+        unit_chef = UnitChef(model, timeline=actl)
+        unit_chef.chop_multi(book, values_only=True, tab_name='Actual',
+                             tab_color=actual_color)
 
         # Build reports
         report_chef = ReportChef(model, proj, actl, report,
