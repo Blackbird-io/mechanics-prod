@@ -552,7 +552,7 @@ class Model(TagsMixIn):
         """
         # Make sure unit has an id in the right namespace.
         if update_id:
-            bu.update_id(namespace=self.id.namespace, recur=True)
+            bu._update_id(namespace=self.id.namespace, recur=True)
         if not bu.id.bbid:
             c = "Cannot add content without a valid bbid."
             raise bb_exceptions.IDError(c)
