@@ -594,9 +594,10 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         Given a parent container from another time period, return a function
         locating a copy of ourselves within that container.
         """
+        model = self.relationships.model
 
         def locator(time_period, create=True, **kargs):
-            if self.id.bbid not in time_period.bu_directory:
+            if self.id.bbid not in model.bu_directory:
                 if create and time_period.end == self.period.past_end:
                     self.make_past()
             peer = time_period.bu_directory.get(self.id.bbid)
@@ -901,8 +902,10 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         # dict with the existing directory and raise an error if there is
         # an overlap. Also carries a speed benefit, cause only compare once.
 
+        model = self.relationships.model
+
         if not overwrite:
-            if self.id.bbid in self.period.bu_directory:
+            if self.id.bbid in model.bu_directory:
                 c = (
                     "TimePeriod.bu_directory already contains an object with "
                     "the same bbid as this unit. \n"
@@ -911,16 +914,17 @@ class BusinessUnit(BusinessUnitBase, Equalities):
                     "new unit name:   {mine}\n\n"
                 ).format(
                     bbid=self.id.bbid,
-                    name=self.period.bu_directory[self.id.bbid].tags.name,
+                    name=model.bu_directory[self.id.bbid].tags.name,
                     mine=self.tags.name,
                 )
-                print(self.period.bu_directory)
+                print(model.bu_directory)
                 raise bb_exceptions.IDCollisionError(c)
 
         # Check for collisions first, then register if none arise.
-        self.period.bu_directory[self.id.bbid] = self
 
-        brethren = self.period.ty_directory.setdefault(self.type, set())
+        model.bu_directory[self.id.bbid] = self
+
+        brethren = model.ty_directory.setdefault(self.type, set())
         brethren.add(self.id.bbid)
 
         if recur:
