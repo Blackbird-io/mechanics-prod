@@ -98,7 +98,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         self.id = ID()
         # Get the id functionality but do NOT assign a bbid yet
 
-        self.period = None
+        # self.period = None
         self.relationships = Relationships(self, model=model)
         self.periods_used = 0
         self.xl = xl_mgmt.UnitData()
@@ -185,7 +185,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         down to SummaryComponents.add_item().
         """
         # register the unit, will raise errors on collisions
-        bu._register_in_period(self.period, recur=True, overwrite=overwrite)
+        bu._register_in_dir(self.period, recur=True, overwrite=overwrite)
 
         self.components.add_item(bu)
 
@@ -229,10 +229,6 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         elif self.id.bbid in period.financials:
             # the best case we expect: financials have been assigned to a period
             fins = period.financials[self.id.bbid]
-        elif period is now:
-            # fallback if financials are not on period
-            fins = self.financials
-            period.financials[self.id.bbid] = fins
         else:
             # flow of TimeLine.extrapolate() and bu.fill_out() gets us here
             # copy the structure of master financials
@@ -328,11 +324,11 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
                 for driver in matching_drivers:
                     driver.workOnThis(line, bu=self, period=period)
 
-    def _register_in_period(self, period, recur=True, overwrite=True):
+    def _register_in_dir(self, period, recur=True, overwrite=True):
         """
 
 
-        BusinessUnitBase._register_in_period() -> None
+        BusinessUnitBase._register_in_dir() -> None
 
 
         Method updates the bu_directory on the instance period with the contents
@@ -350,26 +346,26 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         occurs, some higher-level or sibling components may have already updated
         the period's directory.
         """
-        self.period = period
+        model = self.relationships.model
 
         if not overwrite:
-            if self.id.bbid in self.period.bu_directory:
+            if self.id.bbid in model.bu_directory:
                 c1 = "TimePeriod.bu_directory already contains an object with "
                 c2 = "the same bbid as this unit. \n"
                 c3 = "unit id:         %s\n" % self.id.bbid
                 c4 = "known unit name: %s\n"
-                c4 = c4 % self.period.bu_directory[self.id.bbid].tags.name
+                c4 = c4 % model.bu_directory[self.id.bbid].tags.name
                 c5 = "new unit name:   %s\n\n" % self.tags.name
-                print(self.period.bu_directory)
+                print(model.bu_directory)
                 c = c1 + c2 + c3 + c4 + c5
                 raise bb_exceptions.IDCollisionError(c)
 
         # Check for collisions first, then register if none arise.
-        self.period.bu_directory[self.id.bbid] = self
+        model.bu_directory[self.id.bbid] = self
 
         if recur:
             for unit in self.components.values():
-                unit._register_in_period(period, recur, overwrite)
+                unit._register_in_dir(period, recur, overwrite)
 
     def _set_components(self, comps=None):
         """

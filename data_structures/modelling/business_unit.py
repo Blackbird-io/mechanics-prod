@@ -291,7 +291,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         # Step 3: Register the units. Will raise errors on collisions.
         if register_in_period:
-            bu._register_in_period(recur=True, overwrite=overwrite)
+            bu._register_in_dir(recur=True, overwrite=overwrite)
         self.components.add_item(bu)
 
     def addDriver(self, newDriver, *otherKeys):
@@ -873,11 +873,11 @@ class BusinessUnit(BusinessUnitBase, Equalities):
                 # period_fins.starting = bal_start
                 # Connect to the past
 
-    def _register_in_period(self, recur=True, overwrite=True):
+    def _register_in_dir(self, recur=True, overwrite=True):
         """
 
 
-        BusinessUnit._register_in_period() -> None
+        BusinessUnit._register_in_dir() -> None
 
 
         Method updates the bu_directory on the instance period with the contents
@@ -925,7 +925,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         if recur:
             for unit in self.components.values():
-                unit._register_in_period(recur, overwrite)
+                unit._register_in_dir(recur, overwrite)
 
     def _set_components(self, comps=None):
         """
