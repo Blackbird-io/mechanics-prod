@@ -281,14 +281,17 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         bu.valuation = None
         bu.relationships.set_model(self.relationships.model)
 
-        # optionally update ids.
+        # Step 1: update lifecycle with the right dates for unit and components
+        now = self.relationships.model.get_timeline().current_period
+        bu._fit_to_period(now, recur=True)
+
+        # Step 2: optionally update ids.
         if update_id:
             bu._update_id(namespace=self.id.bbid, recur=True)
 
-        # register to model
-        model = self.relationships.model
-        model.register(bu, update_id=False, overwrite=overwrite, recur=True)
-
+        # Step 3: Register the units. Will raise errors on collisions.
+        if register_in_period:
+            bu._register_in_period(recur=True, overwrite=overwrite)
         self.components.add_item(bu)
 
     def addDriver(self, newDriver, *otherKeys):
