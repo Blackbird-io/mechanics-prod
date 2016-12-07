@@ -108,6 +108,7 @@ class Starter:
             company = BusinessUnit(model.tags.name)
             model.set_company(company)
             model.target = company
+            # TODO: remove
             model.time_line.current_period.set_content(company)
 
         if not model.target.stage.path:
