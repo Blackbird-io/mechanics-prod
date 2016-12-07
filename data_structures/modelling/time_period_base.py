@@ -258,7 +258,7 @@ class TimePeriodBase(History):
         if reset_directories:
             self._reset_directories()
 
-        bu._register_in_period(self, recur=True, overwrite=False)
+        bu._register_in_dir(self, recur=True, overwrite=False)
         # Register the unit.
 
     def set_content(self, bu):

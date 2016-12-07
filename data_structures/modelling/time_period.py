@@ -208,6 +208,8 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
             self.set_history(result, clear_future=False, recur=True)
             # For backwards extrapolation; keep future as-is.
 
+        model = self.relationships.parent.model
+        company = model.get_company()
         if result.content:
             result.content.reset_financials()
             result.content.fill_out()
