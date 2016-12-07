@@ -158,17 +158,17 @@ class ModelChef:
         # with reported values.
         unit_chef = UnitChef(model, timeline=proj)
         unit_chef.chop_multi(book, values_only=True, tab_name='Forecast',
-                             tab_color=forecast_color)
+                             tab_color=forecast_color, index=0)
 
         if budg is not None:
             unit_chef = UnitChef(model, timeline=budg)
             unit_chef.chop_multi(book, values_only=True,
                                  tab_name='Budget Projections',
-                                 tab_color=actual_color)
+                                 tab_color=actual_color, index=0)
 
         unit_chef = UnitChef(model, timeline=actl)
         unit_chef.chop_multi(book, values_only=True, tab_name='Actual',
-                             tab_color=actual_color)
+                             tab_color=actual_color, index=0)
 
         # Build reports
         report_chef = ReportChef(model, proj, actl, report,

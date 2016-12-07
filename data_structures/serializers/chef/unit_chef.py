@@ -100,7 +100,7 @@ class UnitChef:
             self.timeline = model.get_timeline(resolution='monthly') #, actual=False)
 
     def chop_multi(self, book, unit=None, values_only=False, tab_name='',
-                   tab_color=''):
+                   tab_color='', index=None):
         """
 
 
@@ -128,10 +128,11 @@ class UnitChef:
             unit = model.get_company()
 
         # 1.   Chop the children
-        if values_only:
-            before_kids = len(book.worksheets)-1
-        else:
-            before_kids = len(book.worksheets) - book.original_tab_count
+        if index is None:
+            if values_only:
+                index = len(book.worksheets)-1
+            else:
+                index = len(book.worksheets) - book.original_tab_count
 
         children = unit.components.get_ordered()
 
@@ -149,7 +150,7 @@ class UnitChef:
         # 2.1.   set up the unit sheet and spread params
         info_chef = UnitInfoChef(model, timeline)
         sheet = info_chef.create_unit_sheet(
-            book=book, unit=unit, index=before_kids, values_only=values_only,
+            book=book, unit=unit, index=index, values_only=values_only,
             name=tab_name, tab_color=tab_color,
         )
 
