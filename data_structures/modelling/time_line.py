@@ -297,7 +297,7 @@ class TimeLine(TimelineBase):
         if seed is None:
             seed = self.current_period
 
-        company = seed.relationships.parent.model.get_company()
+        company = self.model.get_company()
         company.reset_financials(period=seed)
         company.fill_out(period=seed)
 

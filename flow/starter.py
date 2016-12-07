@@ -104,12 +104,11 @@ class Starter:
         if not model.time_line.current_period:
             model.time_line.build(ref_date)
 
-        if not model.time_line.current_period.content:
+        if not model.get_company():
             company = BusinessUnit(model.tags.name)
             model.set_company(company)
             model.target = company
             # TODO: remove
-            model.time_line.current_period.set_content(company)
 
         if not model.target.stage.path:
             model.target.stage.set_path()

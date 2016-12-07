@@ -281,16 +281,14 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         bu.valuation = None
         bu.relationships.set_model(self.relationships.model)
 
-        # Step 1: update lifecycle with the right dates for unit and components
-        bu._fit_to_period(self.period, recur=True)
-
-        # Step 2: optionally update ids.
+        # optionally update ids.
         if update_id:
             bu._update_id(namespace=self.id.bbid, recur=True)
 
-        # Step 3: Register the units. Will raise errors on collisions.
-        if register_in_period:
-            bu._register_in_period(recur=True, overwrite=overwrite)
+        # register to model
+        model = self.relationships.model
+        model.register(bu, update_id=False, overwrite=overwrite, recur=True)
+
         self.components.add_item(bu)
 
     def addDriver(self, newDriver, *otherKeys):
@@ -367,6 +365,8 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         Method recursively runs consolidation and derivation logic on
         statements for instance and components.
         """
+        if not period:
+            period = self.relationships.model.get_timeline().current_period
 
         for unit in self.components.get_all():
             unit.compute(statement_name, period=period)
@@ -441,7 +441,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         financials = self.get_financials(period)
         if not financials.filled:
             if not period:
-                period = self.period
+                period = self.get_current_period()
             self._load_starting_balance(period)
 
             for statement in financials.compute_order:
@@ -490,12 +490,10 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         n-1 period (located at instance.period.past), and then recursively
         linking all of the instance components to their younger selves.
         """
-        if self.id.bbid not in self.period.past.financials:
-            fins = self.financials.copy()
-            fins.reset()
-            fins.relationships.set_parent(self)
-            fins.period = self.period.past
-            self.period.past.financials[self.id.bbid] = fins
+        model = self.relationships.model
+        period = model.get_timeline().current_period
+
+        self.get_financials(period.past)
 
         for bu in self.components.get_all():
             bu.make_past()
@@ -614,7 +612,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         of precedence. Driver updates the results with own parameters.
         """
         if not period:
-            period = self.period
+            period = self.get_current_period()
         time_line = period.relationships.parent
 
         # Specific parameters trump general ones. Start with time_line, then
