@@ -178,7 +178,7 @@ class TaxoDir(TagsMixIn):
             c = "``pool`` is empty, method requires explicit permission to run."
             raise bb_exceptions.ProcessError(c)
 
-    def register(self, bu, reset_directories=False):
+    def register(self, bu, update_id=True, reset_directories=False):
         """
 
 
@@ -201,8 +201,11 @@ class TaxoDir(TagsMixIn):
             self._reset_directories()
 
         # bu._register_in_dir(self, recur=True, overwrite=False)
-        # Note that Period.register normal delagates to bu._register_in_dir
+        # Note that Period.register normal delegates to bu._register_in_dir
         # _register_in_dir looks for bu.period which
+
+        if update_id:
+            bu._update_id(namespace=bu.id.bbid, recur=True)
 
         # Check for collisions
         if bu.id.bbid in self.bu_directory:
@@ -214,7 +217,7 @@ class TaxoDir(TagsMixIn):
                 "new unit name:   {mine}\n\n"
             ).format(
                 bbid=self.id.bbid,
-                name=self.bu_directory[self.id.bbid].tags.name,
+                name=self.bu_directory[bu.id.bbid].tags.name,
                 mine=self.tags.name,
             )
             print(self.bu_directory)
