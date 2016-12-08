@@ -37,6 +37,7 @@ from data_structures.system.bbid import ID
 from data_structures.modelling.line_item import LineItem
 from data_structures.system.tags_mixin import TagsMixIn
 from .time_line import TimeLine
+from .taxo_dir import TaxoDir
 
 
 # constants
@@ -90,6 +91,7 @@ class Model(TagsMixIn):
     started               bool; property, tracks whether engine has begun work
     summary               P; pointer to current period summary
     target                P; pointer to target BusinessUnit
+    taxo_dir              instance of TaxoDir, directory of taxonomy templates
     taxonomy              dict with tree of unit templates
     time_line             list of TimePeriod objects
     transcript            list of entries that tracks Engine processing
@@ -120,6 +122,7 @@ class Model(TagsMixIn):
         # Models carry uuids in the origin namespace.
         self.portal_data = dict()
         self.taxonomy = dict()
+        self.taxo_dir = TaxoDir()
         self.transcript = []
         time_line = TimeLine(self)
         time_line.id.set_namespace(self.id.bbid)
@@ -272,7 +275,7 @@ class Model(TagsMixIn):
 
         new_tl = TimeLine(self)
         new_tl.parameters = self.time_line.parameters.copy()
-        new_tl.master = self.time_line.master.copy()
+        new_tl.master = self.time_line.master
         new_tl.build(ref_date=ref_date)
         new_tl.id.set_namespace(self.id.bbid)
 
@@ -358,21 +361,21 @@ class Model(TagsMixIn):
 
         return fins
 
-    def get_life(self, bbid, period):
-        """
-
-        Model.get_life() -> Life
-
-        --``bbid`` is the ID.bbid for the BusinessUnit whose financials you are
-         seeking
-        --``period`` is an instance of TimePeriod or TimePeriodBase
-
-        Method returns the specified version of Life.
-        """
-        unit = period.bu_directory[bbid]
-        life = unit.life
-
-        return life
+    # def get_life(self, bbid, period):
+    #     """
+    #
+    #     Model.get_life() -> Life
+    #
+    #     --``bbid`` is the ID.bbid for the BusinessUnit whose financials you are
+    #      seeking
+    #     --``period`` is an instance of TimePeriod or TimePeriodBase
+    #
+    #     Method returns the specified version of Life.
+    #     """
+    #     unit = period.bu_directory[bbid]
+    #     life = unit.life
+    #
+    #     return life
 
     def get_timeline(self, resolution='monthly', actual=False):
         """

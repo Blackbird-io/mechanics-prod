@@ -191,7 +191,7 @@ class TimeLine(TimelineBase):
         self.add_period(current_period)
 
         # Add master period
-        self.master = current_period.copy()
+        self.master = self.model.taxo_dir
 
         # Now make the chain
         back_end_date = current_start_date - timedelta(1)
