@@ -224,11 +224,16 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         model = self.relationships.model
         if model:
+            if self.id.bbid in model.bu_directory:
+                ty_directory = model.ty_directory
+            elif self.id.bbid in model.taxo_dir.bu_directory:
+                ty_directory = model.taxo_dir.ty_directory
+
             if old_type:
-                old_entry = model.ty_directory.get(old_type)
+                old_entry = ty_directory.get(old_type)
                 old_entry.remove(self.id.bbid)
 
-            new_entry = model.ty_directory.setdefault(value, set())
+            new_entry = ty_directory.setdefault(value, set())
             new_entry.add(self.id.bbid)
             # Entries are sets of bbids for units that belong to that type
 
