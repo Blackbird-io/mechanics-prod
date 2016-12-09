@@ -165,10 +165,11 @@ class PortalModel(ReadyForPortal):
         """
         result = []
         if not period.financials:
-            unit = model.get_company()
-            if hasattr(unit, 'period'):
-                if unit.period is period:
-                    unit._fit_to_period(period)
+            return result
+            # unit = model.get_company()
+            # if hasattr(unit, 'period'):
+            #     if unit.period is period:
+            #         unit._fit_to_period(period)
         for buid, fins in period.financials.items():
             for statement in fins.full_ordered:
                 if statement:
