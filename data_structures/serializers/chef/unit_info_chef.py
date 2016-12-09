@@ -804,7 +804,9 @@ class UnitInfoChef:
             set(source_area.columns.by_name.keys()) - {FieldNames.LABELS}
 
         if current_only:
-            src_vals = [unit.relationships.model.ref_date]
+            model = unit.relationships.model
+            now = model.time_line.current_period
+            src_vals = [now.end]
 
         active_column = self.VALUE_COLUMN
         for date in sorted(src_vals):
