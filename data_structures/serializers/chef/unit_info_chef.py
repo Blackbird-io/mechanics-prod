@@ -363,7 +363,9 @@ class UnitInfoChef:
         if values_only:
             val_col = min(sheet.bb.time_line.columns.by_name.keys())
         else:
-            val_col = sheet.bb.time_line.columns.get_position(unit.period.end)
+            model = unit.relationships.model
+            now = model.time_line.current_period
+            val_col = sheet.bb.time_line.columns.get_position(now.end)
 
         param_area = getattr(sheet.bb, FieldNames.PARAMETERS)
         param_area.columns.by_name[FieldNames.VALUES] = val_col
