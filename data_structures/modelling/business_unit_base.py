@@ -445,8 +445,6 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         self.financials.register(namespace=namespace)
         # This unit now has an id in the namespace. Now pass our bbid down as
         # the namespace for all downstream components.
-        print(self.name, self.id.bbid)
-        input()
 
         if recur:
             for unit in self.components.values():
