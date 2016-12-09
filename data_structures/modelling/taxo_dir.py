@@ -205,7 +205,7 @@ class TaxoDir(TagsMixIn):
         # _register_in_dir looks for bu.period which
 
         if update_id:
-            bu._update_id(namespace=bu.id.bbid, recur=True)
+            bu._update_id(namespace=self.id.bbid, recur=True)
 
         # Check for collisions
         if bu.id.bbid in self.bu_directory:
