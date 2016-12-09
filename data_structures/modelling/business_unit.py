@@ -224,18 +224,36 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         model = self.relationships.model
         if model:
+            in_model = False
+            in_taxonomy = False
+
             if self.id.bbid in model.bu_directory:
-                ty_directory = model.ty_directory
-            elif self.id.bbid in model.taxo_dir.bu_directory:
-                ty_directory = model.taxo_dir.ty_directory
+                if self is model.bu_directory[self.id.bbid]:
+                    ty_directory = model.ty_directory
+                    in_model = True
+                else:
+                    print("Warning, another BU has same ID in model")
 
-            if old_type:
-                old_entry = ty_directory.get(old_type)
-                old_entry.remove(self.id.bbid)
+            if self.id.bbid in model.taxo_dir.bu_directory:
+                if self is model.taxo_dir.bu_directory[self.id.bbid]:
+                    ty_directory = model.taxo_dir.ty_directory
+                    in_taxonomy = True
+                else:
+                    print("Warning, another BU has same ID in taxonomy")
 
-            new_entry = ty_directory.setdefault(value, set())
-            new_entry.add(self.id.bbid)
-            # Entries are sets of bbids for units that belong to that type
+            if in_model and in_taxonomy:
+                print(self.name + " is both model.bu_dir and taxo_dir!!")
+                import pdb
+                pdb.set_trace()
+
+            if in_model or in_taxonomy:
+                if old_type:
+                    old_entry = ty_directory.get(old_type)
+                    old_entry.remove(self.id.bbid)
+
+                new_entry = ty_directory.setdefault(value, set())
+                new_entry.add(self.id.bbid)
+                # Entries are sets of bbids for units that belong to that type
 
     @type.deleter
     def type(self):
@@ -287,8 +305,8 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         bu.relationships.set_model(self.relationships.model)
 
         # Step 1: update lifecycle with the right dates for unit and components
-        now = self.relationships.model.get_timeline().current_period
-        bu._fit_to_period(now, recur=True)
+        # now = self.relationships.model.get_timeline().current_period
+        # bu._fit_to_period(now, recur=True)
 
         # Step 2: optionally update ids.
         if update_id:
@@ -328,6 +346,8 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         # arbitrarily far away in the future. This method looks to avoid
         # confusing future errors by making sure that the Topic author is aware
         # of the required formula parameters at the time the Topic runs.
+        if newDriver.signature == 'cost driver':
+            print(self.name, self.id.bbid)
 
         self.drivers.add_item(newDriver, *otherKeys)
 
@@ -832,22 +852,22 @@ class BusinessUnit(BusinessUnitBase, Equalities):
             for line in this_statement.get_ordered():
                 self._derive_line(line, period)
 
-    def _fit_to_period(self, time_period, recur=True):
-        """
-
-
-        BusinessUnit._fit_to_period() -> None
-
-
-        Set pointer to timeperiod and synchronize ref date to period end date.
-        If ``recur`` == True, repeat for all components.
-        """
-        self.period = time_period
-        self.life.set_ref_date(time_period.end)
-
-        if recur:
-            for unit in self.components.values():
-                unit._fit_to_period(time_period, recur)
+    # def _fit_to_period(self, time_period, recur=True):
+    #     """
+    #
+    #
+    #     BusinessUnit._fit_to_period() -> None
+    #
+    #
+    #     Set pointer to timeperiod and synchronize ref date to period end date.
+    #     If ``recur`` == True, repeat for all components.
+    #     """
+    #     self.period = time_period
+    #     self.life.set_ref_date(time_period.end)
+    #
+    #     if recur:
+    #         for unit in self.components.values():
+    #             unit._fit_to_period(time_period, recur)
 
     def _load_starting_balance(self, period):
         """

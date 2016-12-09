@@ -229,13 +229,21 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         elif self.id.bbid in period.financials:
             # the best case we expect: financials have been assigned to a period
             fins = period.financials[self.id.bbid]
-        else:
+        elif period is now:
+            # fallback if financials are not on period
+            # financials are assigned to bu before period is
+            fins = self.financials
+            period.financials[self.id.bbid] = fins
+        elif not period.summary:
             # flow of TimeLine.extrapolate() and bu.fill_out() gets us here
             # copy the structure of master financials
             fins = self.financials.copy(clean=True)
             fins.relationships.set_parent(self)
             fins.period = period
             period.financials[self.id.bbid] = fins
+        else:
+            fins = None
+
         return fins
 
     def get_current_period(self):
@@ -324,7 +332,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
                 for driver in matching_drivers:
                     driver.workOnThis(line, bu=self, period=period)
 
-    def _register_in_dir(self, period, recur=True, overwrite=True):
+    def _register_in_dir(self, recur=True, overwrite=True):
         """
 
 
@@ -348,8 +356,27 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         """
         model = self.relationships.model
 
+        if self.id.bbid in model.bu_directory:
+            if self is model.bu_directory[self.id.bbid]:
+                bu_directory = model.bu_directory
+                in_model = True
+            else:
+                print("Warning, another BU has same ID in model")
+
+        if self.id.bbid in model.taxo_dir.bu_directory:
+            if self is model.taxo_dir.bu_directory[self.id.bbid]:
+                bu_directory = model.taxo_dir.bu_directory
+                in_taxonomy = True
+            else:
+                print("Warning, another BU has same ID in taxonomy")
+
+        if in_model and in_taxonomy:
+            print(self.name + " is both model.bu_dir and taxo_dir!!")
+            import pdb
+            pdb.set_trace()
+
         if not overwrite:
-            if self.id.bbid in model.bu_directory:
+            if self.id.bbid in bu_directory:
                 c1 = "TimePeriod.bu_directory already contains an object with "
                 c2 = "the same bbid as this unit. \n"
                 c3 = "unit id:         %s\n" % self.id.bbid
@@ -361,11 +388,14 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
                 raise bb_exceptions.IDCollisionError(c)
 
         # Check for collisions first, then register if none arise.
-        model.bu_directory[self.id.bbid] = self
+        if in_model:
+            model.bu_directory[self.id.bbid] = self
+        elif in_taxonomy:
+            model.taxo_dir.bu_directory[self.id.bbid] = self
 
         if recur:
             for unit in self.components.values():
-                unit._register_in_dir(period, recur, overwrite)
+                unit._register_in_dir(recur, overwrite)
 
     def _set_components(self, comps=None):
         """
@@ -415,6 +445,9 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
         self.financials.register(namespace=namespace)
         # This unit now has an id in the namespace. Now pass our bbid down as
         # the namespace for all downstream components.
+        print(self.name, self.id.bbid)
+        input()
+
         if recur:
             for unit in self.components.values():
                 unit._update_id(namespace=self.id.bbid, recur=True)
