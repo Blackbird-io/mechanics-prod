@@ -244,8 +244,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
             if in_model and in_taxonomy:
                 print(self.name + " is both model.bu_dir and taxo_dir!!")
-                import pdb
-                pdb.set_trace()
+                raise bb_exceptions.BBAnalyticalError
 
             if in_model or in_taxonomy:
                 if old_type in ty_directory:

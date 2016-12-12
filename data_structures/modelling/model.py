@@ -104,7 +104,6 @@ class Model(TagsMixIn):
     from_portal()         class method, extracts model out of API-format
     get_company()         method to get top-level company unit
     get_financials()      method to get financials for a given unit and time
-    get_life()            method to get unit life at a given time
     get_timeline()        method to get timeline at specific resolution (m,q,a)
     start()               sets _started and started to True
     transcribe()          append message and timestamp to transcript
@@ -359,22 +358,6 @@ class Model(TagsMixIn):
             fins = unit.get_financials(period)
 
         return fins
-
-    # def get_life(self, bbid, period):
-    #     """
-    #
-    #     Model.get_life() -> Life
-    #
-    #     --``bbid`` is the ID.bbid for the BusinessUnit whose financials you are
-    #      seeking
-    #     --``period`` is an instance of TimePeriod or TimePeriodBase
-    #
-    #     Method returns the specified version of Life.
-    #     """
-    #     unit = period.bu_directory[bbid]
-    #     life = unit.life
-    #
-    #     return life
 
     def get_timeline(self, resolution='monthly', actual=False):
         """
