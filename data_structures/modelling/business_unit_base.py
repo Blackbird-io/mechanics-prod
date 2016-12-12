@@ -258,36 +258,6 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
     # *************************************************************************#
     #                          NON-PUBLIC METHODS                              #
     # *************************************************************************#
-    def _build_directory(self, recur=True, overwrite=True):
-        """
-
-
-        BusinessUnitBase._build_directory() -> (id_directory, ty_directory)
-
-
-        Register yourself and optionally your components, by type and by id
-        return id_directory, ty_directory
-        """
-
-        # return a dict of bbid:unit
-        id_directory = dict()
-        if recur:
-            for unit in self.components.values():
-                lower_level = unit._build_directory(recur=True,
-                                                    overwrite=overwrite)
-                lower_ids = lower_level[0]
-                id_directory.update(lower_ids)
-
-            # update the directory for each unit in self
-            pass
-        if self.id.bbid in id_directory:
-            if not overwrite:
-                c = "Can not overwrite existing bbid"
-                raise bb_exceptions.BBAnalyticalError(c)
-
-        id_directory[self.id.bbid] = self
-
-        return id_directory
 
     def _derive_line(self, line, period=None):
         """
