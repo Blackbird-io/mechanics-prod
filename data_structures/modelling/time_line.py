@@ -318,10 +318,6 @@ class TimeLine(TimelineBase):
                 # propagate parameters from past to current
                 period.combine_parameters()
                 # copy and fill out content
-                if seed.content:
-                    if bb_settings.STATEFUL_EXTRAPOLATION:
-                        new_content = seed.content.copy()
-                        period.set_content(new_content, updateID=False)
                 company.reset_financials(period=period)
                 company.fill_out(period=period)
 

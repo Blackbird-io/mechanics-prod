@@ -64,14 +64,12 @@ class TaxoDir(TagsMixIn):
     bu_directory          dict; all business units in this period, keyed by bbid
     ty_directory          dict; keys are strings, values are sets of bbids
     id                    instance of ID class
-    parameters            Parameters object, specifies shared parameters
 
     FUNCTIONS:
     clear()               clears content, resets bu_directory
-    copy()                returns new TaxoDir with a copy of content
+    copy()                returns new TaxoDir with a copy of directories
     get_units()           return list of units from bbid pool
     get_lowest_units()    return list of units w/o components from bbid pool
-    set_content()         attach company to period
     ====================  ======================================================
     """
     def __init__(self, model=None):
