@@ -419,7 +419,7 @@ class SummaryBuilder:
                                                   recur)
 
             if unit_summary:
-                period_summary.set_content(unit_summary)
+                # period_summary.set_content(unit_summary)
                 timeline_summary.add_period(period_summary)
 
             start_pointer = end_pointer + relativedelta(months=1)

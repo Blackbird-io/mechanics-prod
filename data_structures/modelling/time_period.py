@@ -89,7 +89,6 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
     ex_to_default()       creates result from seed, sets to target start/end
     get_units()           return list of units from bbid pool
     get_lowest_units()    return list of units w/o components from bbid pool
-    set_content()         attach company to period
     ====================  ======================================================
     """
     def __init__(self, start_date, end_date, content=None, model=None):
@@ -100,9 +99,6 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         self.parameters = Parameters()
         self.unit_parameters = Parameters()
         self.ty_directory = model.ty_directory
-
-        if content:
-            self.set_content(content)
 
         # The current approach to indexing units within a period assumes that
         # Blackbird will rarely remove existing units from a model. both
@@ -138,12 +134,7 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         result.start = copy.copy(self.start)
         result.end = copy.copy(self.end)
 
-        if self.content:
-            new_content = self.content.copy()
-            result.set_content(new_content, updateID=False)
-
         result.tags = self.tags.copy()
-        result.ty_directory = copy.copy(self.ty_directory)
         result.parameters = self.parameters.copy()
 
         result.unit_parameters = Parameters()
@@ -275,10 +266,6 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
 
             result.unit_parameters.add({bbid: temp_parms}, overwrite=True)
 
-        if seed.content:
-            new_content = seed.content.copy()
-            result.set_content(new_content, updateID=False)
-
         # Step 3: return container
         return result
 
@@ -321,28 +308,6 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         else:
             c = "``pool`` is empty, method requires explicit permission to run."
             raise bb_exceptions.ProcessError(c)
-
-    def set_content(self, bu, updateID=True):
-        """
-
-
-        TimePeriod.set_content() -> None
-
-
-        Register bu and set instance.content to point to it.
-
-        NOTE: ``updateID`` should only be True when adding external content to
-        a model for the first time (as opposed to moving content from period to
-        period or level to level within a model).
-
-        TimePeriods in a Model all share the model's namespace_id. Accordingly,
-        a BusinessUnit will have the same bbid in all time periods. The
-        BusinessUnit can elect to get a different bbid if it's name changes, but
-        in such an event, the Model will treat it as a new unit altogether.
-        """
-        self.register(bu, updateID=updateID, reset_directories=True)
-        # Reset directories when setting the top node in the period.
-        self.content = bu
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
