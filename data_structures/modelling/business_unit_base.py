@@ -338,8 +338,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
 
         if in_model and in_taxonomy:
             print(self.name + " is both model.bu_dir and taxo_dir!!")
-            import pdb
-            pdb.set_trace()
+            raise bb_exceptions.BBAnalyticalError
 
         if not overwrite:
             if self.id.bbid in bu_directory:
