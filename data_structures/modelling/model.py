@@ -92,7 +92,7 @@ class Model(TagsMixIn):
     summary               P; pointer to current period summary
     target                P; pointer to target BusinessUnit
     taxo_dir              instance of TaxoDir, directory of taxonomy templates
-    taxonomy              dict with tree of unit templates
+    taxonomy              dict with tree of business unit templates
     time_line             list of TimePeriod objects
     transcript            list of entries that tracks Engine processing
     valuation             P; pointer to current period valuation
@@ -121,8 +121,12 @@ class Model(TagsMixIn):
         self.id.assign(name)
         # Models carry uuids in the origin namespace.
         self.portal_data = dict()
+
         self.taxonomy = dict()
-        self.taxo_dir = TaxoDir()
+        self.taxo_dir = TaxoDir(model=self)
+        self.taxo_dir.id.set_namespace(self.id.bbid)
+        self.taxo_dir.id.assign(seed='taxonomy directory')
+
         self.transcript = []
         time_line = TimeLine(self)
         time_line.id.set_namespace(self.id.bbid)
@@ -571,6 +575,7 @@ class Model(TagsMixIn):
                 )
                 print(self.bu_directory)
                 raise bb_exceptions.IDCollisionError(c)
+
         self.bu_directory[bu.id.bbid] = bu
 
         brethren = self.ty_directory.setdefault(bu.type, set())

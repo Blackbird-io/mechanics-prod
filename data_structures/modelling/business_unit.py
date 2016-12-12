@@ -227,6 +227,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
             in_model = False
             in_taxonomy = False
 
+            # Determine if bu is in model or taxo_dir
             if self.id.bbid in model.bu_directory:
                 if self is model.bu_directory[self.id.bbid]:
                     ty_directory = model.ty_directory
@@ -247,12 +248,15 @@ class BusinessUnit(BusinessUnitBase, Equalities):
                 pdb.set_trace()
 
             if in_model or in_taxonomy:
-                if old_type:
-                    old_entry = ty_directory.get(old_type)
-                    old_entry.remove(self.id.bbid)
+                if old_type in ty_directory:
+                    old_id_set = ty_directory.get(old_type)
+                    old_id_set.remove(self.id.bbid)
+                    # Remove sets if they are empty
+                    if len(old_id_set) == 0:
+                        ty_directory.pop(old_type)
 
-                new_entry = ty_directory.setdefault(value, set())
-                new_entry.add(self.id.bbid)
+                new_id_set = ty_directory.setdefault(value, set())
+                new_id_set.add(self.id.bbid)
                 # Entries are sets of bbids for units that belong to that type
 
     @type.deleter
@@ -347,8 +351,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         # arbitrarily far away in the future. This method looks to avoid
         # confusing future errors by making sure that the Topic author is aware
         # of the required formula parameters at the time the Topic runs.
-        if newDriver.signature == 'cost driver':
-            print(self.name, self.id.bbid)
 
         self.drivers.add_item(newDriver, *otherKeys)
 
