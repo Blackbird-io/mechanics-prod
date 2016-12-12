@@ -184,6 +184,7 @@ class TaxoDir(TagsMixIn):
         --``bu`` is an instance of BusinessUnit or BusinessUnitBase
 
         Manually add unit to TaxoDir. Unit will appear in directories.
+        If bu has child units, those units will NOT automatically register
 
         If ``reset_directories`` is True, method will clear existing type
         and id directories. Parameter should be True when registering the
@@ -226,10 +227,9 @@ class TaxoDir(TagsMixIn):
         brethren = self.ty_directory.setdefault(bu.type, set())
         brethren.add(bu.id.bbid)
 
-        # Recusion DOES NOT WORK unless bu._register_in_dir works for TaxoDir
-        # if recur:
-        #     for unit in self.components.values():
-        #         unit._register_in_dir(recur, overwrite)
+        # Do NOT automatically register child units. May cause conflicts
+        # for child_bu in bu.components.values():
+        #     self.register(child_bu, update_id=True, reset_directories=False)
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #

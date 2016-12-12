@@ -265,7 +265,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         return self.id.__hash__()
 
     def add_component(
-            self, bu, update_id=True, register_in_period=True, overwrite=False
+            self, bu, update_id=True, register_in_dir=True, overwrite=False
     ):
         """
 
@@ -313,8 +313,9 @@ class BusinessUnit(BusinessUnitBase, Equalities):
             bu._update_id(namespace=self.id.bbid, recur=True)
 
         # Step 3: Register the units. Will raise errors on collisions.
-        if register_in_period:
+        if register_in_dir:
             bu._register_in_dir(recur=True, overwrite=overwrite)
+
         self.components.add_item(bu)
 
     def addDriver(self, newDriver, *otherKeys):
@@ -851,23 +852,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         if this_statement:
             for line in this_statement.get_ordered():
                 self._derive_line(line, period)
-
-    # def _fit_to_period(self, time_period, recur=True):
-    #     """
-    #
-    #
-    #     BusinessUnit._fit_to_period() -> None
-    #
-    #
-    #     Set pointer to timeperiod and synchronize ref date to period end date.
-    #     If ``recur`` == True, repeat for all components.
-    #     """
-    #     self.period = time_period
-    #     self.life.set_ref_date(time_period.end)
-    #
-    #     if recur:
-    #         for unit in self.components.values():
-    #             unit._fit_to_period(time_period, recur)
 
     def _load_starting_balance(self, period):
         """
