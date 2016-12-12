@@ -32,6 +32,7 @@ import time
 
 import bb_exceptions
 import bb_settings
+import tools.for_tag_operations
 from chef_settings import DEFAULT_SCENARIOS
 from data_structures.system.bbid import ID
 from data_structures.modelling.line_item import LineItem
@@ -275,19 +276,13 @@ class Model(TagsMixIn):
         if self.time_line.has_been_extrapolated:
             return
 
-        old_tl = self.get_timeline()
-
         new_tl = TimeLine(self)
         new_tl.parameters = self.time_line.parameters.copy()
         new_tl.master = self.time_line.master
         new_tl.build(ref_date=ref_date)
         new_tl.id.set_namespace(self.id.bbid)
 
-        # switch ref_date on the model and content on timeline
-        # company = old_tl.current_period.content
         self.ref_date = ref_date
-        # new_tl.current_period.set_content(company)
-
         self.set_timeline(new_tl, overwrite=True)
 
     def clear_excel(self):
@@ -530,6 +525,28 @@ class Model(TagsMixIn):
         else:
             c = "``pool`` is empty, method requires explicit permission to run."
             raise bb_exceptions.ProcessError(c)
+
+    def get_tagged_units(self, *tags, pool=None):
+        """
+
+
+        TaxoDir.get_tagged_units() -> dict
+
+
+        Return a dictionary of units (by bbid) that carry the specified tags.
+
+        If ``pool`` is None, uses bu_directory.
+        Delegates all selection work to tools.for_tag_operations.get_tagged()
+        """
+        if not pool:
+            pool = self.bu_directory.values()
+            # We want a consistent order for the pool across run times
+            pool = list(pool)
+            pool.sort(key=lambda bu: bu.id.bbid)
+
+        tagged_dict = tools.for_tag_operations.get_tagged(pool, *tags)
+
+        return tagged_dict
 
     def register(
             self, bu, update_id=True, overwrite=True, recur=True
