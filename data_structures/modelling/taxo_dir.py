@@ -54,20 +54,19 @@ class TaxoDir(TagsMixIn):
 
     TaxoDir objects have a bu_directory and ty_directory designed for storing
     and searching for Taxonomy BusinessUnits. These directories will be separate
-    from the directories in Model.
+    from the directories in Model. Each Taxonomy BU will have its own financials
 
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
-    bu_directory          dict; all business units in this period, keyed by bbid
-    ty_directory          dict; keys are strings, values are sets of bbids
+    bu_directory          dict; key = bbid, val = business units
+    ty_directory          dict; key = strings, val = sets of bbids
     id                    instance of ID class
 
     FUNCTIONS:
-    clear()               clears content, resets bu_directory
-    copy()                returns new TaxoDir with a copy of directories
+    clear()               clears bu and ty directory
     get_units()           return list of units from bbid pool
     get_lowest_units()    return list of units w/o components from bbid pool
     ====================  ======================================================
@@ -76,6 +75,7 @@ class TaxoDir(TagsMixIn):
         # content is handled differently, is not passed on to base init
         TagsMixIn.__init__(self)
 
+        self.model = model
         self.ty_directory = dict()
         self.bu_directory = dict()
         self.financials = dict()
@@ -90,29 +90,8 @@ class TaxoDir(TagsMixIn):
 
         Method sets financials to empty dict and resets instance directories.
         """
-        self.financials = dict()
-        self._reset_directories()
-
-    def copy(self, clean=False):
-        """
-
-
-        TaxoDir.copy() -> TaxoDir
-
-
-        Method returns a new TaxoDir object whose content is a class-specific
-        copy of the caller content.
-        """
-        result = copy.copy(self)
-
-        result.tags = self.tags.copy()
-        result.ty_directory = copy.copy(self.ty_directory)
-        result.bu_directory = copy.copy(self.ty_directory)
-
-        for bbid, fins in self.financials.items():
-            result.financials[bbid] = fins.copy(clean=clean)
-
-        return result
+        self.bu_directory = {}
+        self.ty_directory = {}
 
     def get_units(self, pool):
         """
@@ -175,7 +154,7 @@ class TaxoDir(TagsMixIn):
             c = "``pool`` is empty, method requires explicit permission to run."
             raise bb_exceptions.ProcessError(c)
 
-    def register(self, bu, update_id=True, reset_directories=False):
+    def register(self, bu, update_id=True):
         """
 
 
@@ -185,25 +164,16 @@ class TaxoDir(TagsMixIn):
 
         Manually add unit to TaxoDir. Unit will appear in directories.
         If bu has child units, those units will NOT automatically register
-
-        If ``reset_directories`` is True, method will clear existing type
-        and id directories. Parameter should be True when registering the
-        top (company) node of a structure.
         """
+        if update_id:
+            bu._update_id(namespace=self.id.bbid, recur=True)
+
         if not bu.id.bbid:
             c = "Cannot add content without a valid bbid."
             raise bb_exceptions.IDError(c)
         # Make sure unit has an id in the right namespace.
 
-        if reset_directories:
-            self._reset_directories()
-
-        # bu._register_in_dir(self, recur=True, overwrite=False)
-        # Note that Period.register normal delegates to bu._register_in_dir
-        # _register_in_dir looks for bu.period which
-
-        if update_id:
-            bu._update_id(namespace=self.id.bbid, recur=True)
+        bu.relationships.set_model(self.model)
 
         # Check for collisions
         if bu.id.bbid in self.bu_directory:
@@ -225,25 +195,9 @@ class TaxoDir(TagsMixIn):
         self.bu_directory[bu.id.bbid] = bu
 
         brethren = self.ty_directory.setdefault(bu.type, set())
+        # Setdefault returns dict[key] if value exists, or sets dict[key]=set()
         brethren.add(bu.id.bbid)
 
         # Do NOT automatically register child units. May cause conflicts
         # for child_bu in bu.components.values():
         #     self.register(child_bu, update_id=True, reset_directories=False)
-
-    #*************************************************************************#
-    #                          NON-PUBLIC METHODS                             #
-    #*************************************************************************#
-
-    def _reset_directories(self):
-        """
-
-
-        TaxoDir.reset_directories() -> None
-
-
-        Method sets instance.bu_directory and instance.ty_directory to blank
-        dictionaries.
-        """
-        self.bu_directory = {}
-        self.ty_directory = {}
