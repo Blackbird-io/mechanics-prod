@@ -6,7 +6,7 @@
 # Module: data_structures.modelling.taxo_dir
 """
 
-Module defines TaxiDir class.
+Module defines TaxoDir class.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -18,7 +18,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-TaxiDir               Directory for Taxonomy units. Stored on Model.master
+TaxoDir               Directory for Taxonomy units. Stored on Model.master
 ====================  ==========================================================
 """
 
@@ -52,7 +52,7 @@ logger = logging.getLogger(bb_settings.LOGNAME_MAIN)
 class TaxoDir(TagsMixIn):
     """
 
-    TaxiDir objects have a bu_directory and ty_directory designed for storing
+    TaxoDir objects have a bu_directory and ty_directory designed for storing
     and searching for Taxonomy BusinessUnits. These directories will be separate
     from the directories in Model.
 
@@ -65,11 +65,10 @@ class TaxoDir(TagsMixIn):
     ty_directory          dict; keys are strings, values are sets of bbids
     id                    instance of ID class
     parameters            Parameters object, specifies shared parameters
-    relationships         instance of Relationships class
 
     FUNCTIONS:
     clear()               clears content, resets bu_directory
-    copy()                returns new TaxiDir with a copy of content
+    copy()                returns new TaxoDir with a copy of content
     get_units()           return list of units from bbid pool
     get_lowest_units()    return list of units w/o components from bbid pool
     set_content()         attach company to period
@@ -88,7 +87,7 @@ class TaxoDir(TagsMixIn):
         """
 
 
-        TaxiDir.clear() -> None
+        TaxoDir.clear() -> None
 
 
         Method sets financials to empty dict and resets instance directories.
@@ -100,10 +99,10 @@ class TaxoDir(TagsMixIn):
         """
 
 
-        TaxiDir.copy() -> TaxiDir
+        TaxoDir.copy() -> TaxoDir
 
 
-        Method returns a new TaxiDir object whose content is a class-specific
+        Method returns a new TaxoDir object whose content is a class-specific
         copy of the caller content.
         """
         result = copy.copy(self)
@@ -121,10 +120,10 @@ class TaxoDir(TagsMixIn):
         """
 
 
-        TaxiDir.get_units() -> list
+        TaxoDir.get_units() -> list
 
 
-        Method returns a list of objects from instance.bu_directory that
+        Method returns a list of objects from self.bu_directory that
         correspond to each bbid in ``pool``. Method sorts pool prior to
         processing.
 
@@ -142,7 +141,7 @@ class TaxoDir(TagsMixIn):
         """
 
 
-        TaxiDir.get_lowest_units() -> list
+        TaxoDir.get_lowest_units() -> list
 
 
         Method returns a list of units in pool that have no components.
@@ -182,7 +181,7 @@ class TaxoDir(TagsMixIn):
         """
 
 
-        TaxiDir.register() -> None
+        TaxoDir.register() -> None
 
         --``bu`` is an instance of BusinessUnit or BusinessUnitBase
 
@@ -242,7 +241,7 @@ class TaxoDir(TagsMixIn):
         """
 
 
-        TaxiDir.reset_directories() -> None
+        TaxoDir.reset_directories() -> None
 
 
         Method sets instance.bu_directory and instance.ty_directory to blank
