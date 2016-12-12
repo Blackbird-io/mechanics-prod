@@ -32,13 +32,10 @@ import logging
 
 import bb_settings
 import bb_exceptions
+import tools.for_tag_operations
 
 from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.system.bbid import ID
-from data_structures.system.relationships import Relationships
-
-from .parameters import Parameters
-
 
 
 
@@ -153,6 +150,28 @@ class TaxoDir(TagsMixIn):
         else:
             c = "``pool`` is empty, method requires explicit permission to run."
             raise bb_exceptions.ProcessError(c)
+
+    def get_tagged_units(self, *tags, pool=None):
+        """
+
+
+        TaxoDir.get_tagged_units() -> dict
+
+
+        Return a dictionary of units (by bbid) that carry the specified tags.
+
+        If ``pool`` is None, uses bu_directory.
+        Delegates all selection work to tools.for_tag_operations.get_tagged()
+        """
+        if not pool:
+            pool = self.bu_directory.values()
+            # We want a consistent order for the pool across run times
+            pool = list(pool)
+            pool.sort(key=lambda bu: bu.id.bbid)
+
+        tagged_dict = tools.for_tag_operations.get_tagged(pool, *tags)
+
+        return tagged_dict
 
     def register(self, bu, update_id=True):
         """
