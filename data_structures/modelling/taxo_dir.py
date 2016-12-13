@@ -166,8 +166,7 @@ class TaxoDir(TagsMixIn):
         if not pool:
             pool = self.bu_directory.values()
             # We want a consistent order for the pool across run times
-            pool = list(pool)
-            pool.sort(key=lambda bu: bu.id.bbid)
+            pool = sorted(pool, key=lambda bu: bu.id.bbid)
 
         tagged_dict = tools.for_tag_operations.get_tagged(pool, *tags)
 

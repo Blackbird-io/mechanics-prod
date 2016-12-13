@@ -57,29 +57,13 @@ class Model(TagsMixIn):
     Blackbird UUID. The Model's namespace_id is the source of truth for business
     units within that model. In other words, business units have ids that are
     unique within the Model. If a business unit has an id that's equal to that
-    of another business unit, they represent the same real life referent within
+    of another business unit, they represent the same real life reference within
     a given model.
 
-    A Model can and should contain multiple instances of the same business unit,
-    as determined by the business unit's bbid. Each TimePeriod in the TimeLine
-    should contain its instance for the BusinessUnit to show how it evolves over
-    time.
+    A Model should contain a single instance of the same business unit for each
+    unit's bbid. Each TimePeriod in the TimeLine should contain a instance of
+    Financials that are keyed by that business units bbid.
 
-    On the other hand, each BusinessUnit should only appear once per TimePeriod,
-    because within a given Model, the BusinessUnit can only have single state
-    at a given point in time.
-
-    To enforce the above requirement, each TimePeriod has a directory of all
-    business units that exist within it. The directory is a dictionary of
-    pointers to BUs, keyed by bbid, available at TimePeriod.bu_directory. The
-    directory cuts across all levels of the BusinessUnit hierarchy within the
-    TimePeriod: it includes keys for the top-level BU (TimePeriod.content) and
-    any children, grandchildren, etc that BU may have.
-
-    All BusinessUnits within a TimePeriod use the directory to check whether
-    they can add a new business unit as a component. If the business unit's bbid
-    is already in the directory, they cannot. If it is new to the TimePeriod,
-    they can.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -92,7 +76,7 @@ class Model(TagsMixIn):
     started               bool; property, tracks whether engine has begun work
     summary               P; pointer to current period summary
     target                P; pointer to target BusinessUnit
-    taxo_dir              instance of TaxoDir, directory of taxonomy templates
+    taxo_dir              instance of TaxoDir, has a dict {bbid: taxonomy units}
     taxonomy              dict with tree of business unit templates
     time_line             list of TimePeriod objects
     transcript            list of entries that tracks Engine processing
