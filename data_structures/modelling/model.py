@@ -89,6 +89,9 @@ class Model(TagsMixIn):
     get_company()         method to get top-level company unit
     get_financials()      method to get financials for a given unit and time
     get_timeline()        method to get timeline at specific resolution (m,q,a)
+    get_units()           return list of units from bbid pool
+    get_lowest_units()    return list of units w/o components from bbid pool
+    get_tagged_units()    return dict of units (by bbid) with specified tags
     start()               sets _started and started to True
     transcribe()          append message and timestamp to transcript
     ====================  ======================================================

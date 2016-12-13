@@ -66,6 +66,7 @@ class TaxoDir(TagsMixIn):
     clear()               clears bu and ty directory
     get_units()           return list of units from bbid pool
     get_lowest_units()    return list of units w/o components from bbid pool
+    get_tagged_units()    return dict of units (by bbid) with specified tags
     ====================  ======================================================
     """
     def __init__(self, model=None):
