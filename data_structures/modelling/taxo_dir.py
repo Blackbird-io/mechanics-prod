@@ -77,7 +77,9 @@ class TaxoDir(TagsMixIn):
         self.bu_directory = dict()
         self.financials = dict()
         self.id = ID()
-        
+        self.id.set_namespace(model.id.bbid)
+        self.id.assign(seed='taxonomy directory')
+
     def clear(self):
         """
 
