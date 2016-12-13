@@ -75,7 +75,6 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
     xl                    instance of UnitData class
 
     FUNCTIONS:
-    add_component()       adds UnitSummary to instance components
     set_financials()      sets instance financials attribute
     ====================  ======================================================
     """
@@ -166,28 +165,6 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
 
         box = "\n".join(lines)
         return box
-
-    def add_component(self, bu, overwrite=False):
-        """
-
-
-        BusinessUnitBase.add_component() -> None
-
-        --``bu``
-        --``overwrite``
-
-        Method prepares a bu and adds it to instance components.
-
-        If register_in_dir is true, method raises IDCollisionError if the
-        period's directory already contains the new business unit's bbid.
-
-        If all id verification steps go smoothly, method delegates insertion
-        down to SummaryComponents.add_item().
-        """
-        # register the unit, will raise errors on collisions
-        bu._register_in_dir(self.period, recur=True, overwrite=overwrite)
-
-        self.components.add_item(bu)
 
     def set_financials(self, fins=None):
         """
