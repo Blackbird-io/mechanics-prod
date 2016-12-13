@@ -101,6 +101,8 @@ class TimeLine(TimelineBase):
         self.actual = None
         self.resolution = None
 
+        self.id.set_namespace(model.id.bbid)
+
     @property
     def current_period(self):
         """

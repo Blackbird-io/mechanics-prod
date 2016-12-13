@@ -69,6 +69,7 @@ class Model(TagsMixIn):
     ====================  ======================================================
 
     DATA:
+    bu_directory          dict; key = bbid, val = business units
     id                    instance of ID object, carries bbid for model
     interview             property; points to target BusinessUnit.interview
     portal_data           dict; stores data from Portal related to the instance
@@ -80,6 +81,7 @@ class Model(TagsMixIn):
     taxonomy              dict with tree of business unit templates
     time_line             list of TimePeriod objects
     transcript            list of entries that tracks Engine processing
+    ty_directory          dict; key = strings, val = sets of bbids
     valuation             P; pointer to current period valuation
 
     FUNCTIONS:
@@ -113,7 +115,6 @@ class Model(TagsMixIn):
         self.taxo_dir = TaxoDir(model=self)
         self.transcript = []
         time_line = TimeLine(self)
-        time_line.id.set_namespace(self.id.bbid)
         # dict holding various timelines
         self.timelines = dict()
         # main TimeLine is (resolution='monthly', actual=False)
