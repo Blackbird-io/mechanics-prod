@@ -851,7 +851,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         BusinessUnit._register_in_dir() -> None
 
 
-        Method updates the model.bu_directory on with (bbid:bu).
+        Method updates the bu_directory on with (bbid:bu).
         If ``recur`` == True, repeats for every component in instance.
 
         If ``overwrite`` == False, method will raise an error if any of its
