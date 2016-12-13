@@ -108,9 +108,6 @@ class Model(TagsMixIn):
 
         self.taxonomy = dict()
         self.taxo_dir = TaxoDir(model=self)
-        self.taxo_dir.id.set_namespace(self.id.bbid)
-        self.taxo_dir.id.assign(seed='taxonomy directory')
-
         self.transcript = []
         time_line = TimeLine(self)
         time_line.id.set_namespace(self.id.bbid)
@@ -328,17 +325,14 @@ class Model(TagsMixIn):
 
         --``bbid`` is the ID.bbid for the BusinessUnit whose financials you are
          seeking
-        --``period`` is an instance of TimePeriod or TimePeriodBase
+        --``period`` is an instance of TimePeriod
 
         Method returns the specified version of financials.
         """
         if bbid in period.financials:
             fins = period.financials[bbid]
-        elif bbid in period.bu_directory:
-            unit = period.bu_directory[bbid]
-            fins = unit.get_financials(period)
         else:
-            unit = self.time_line.current_period.content
+            unit = self.bu_directory[bbid]
             fins = unit.get_financials(period)
 
         return fins
