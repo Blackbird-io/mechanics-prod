@@ -873,26 +873,37 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
         model = self.relationships.model
 
+        # Default case
+        bu_directory = model.bu_directory
+        ty_directory = model.ty_directory
+
+        # If _register_in_dir is called from taxonomy_template.add_component(bu)
+        parent = self.relationships.parent
+        if parent:
+            if parent.id.bbid in model.taxo_dir.bu_directory:
+                bu_directory = model.taxo_dir.bu_directory
+                ty_directory = model.taxo_dir.ty_directory
+
         if not overwrite:
             # Check for collisions first, then register if none arise.
-            if self.id.bbid in model.bu_directory:
+            if self.id.bbid in bu_directory:
                 c = (
-                    "TimePeriod.bu_directory already contains an object with "
+                    "bu_directory already contains an object with "
                     "the same bbid as this unit. \n"
                     "unit id:         {bbid}\n"
                     "known unit name: {name}\n"
                     "new unit name:   {mine}\n\n"
                 ).format(
                     bbid=self.id.bbid,
-                    name=model.bu_directory[self.id.bbid].tags.name,
+                    name=bu_directory[self.id.bbid].tags.name,
                     mine=self.tags.name,
                 )
-                print(model.bu_directory)
+                print(bu_directory)
                 raise bb_exceptions.IDCollisionError(c)
 
-        model.bu_directory[self.id.bbid] = self
+        bu_directory[self.id.bbid] = self
 
-        brethren = model.ty_directory.setdefault(self.type, set())
+        brethren = ty_directory.setdefault(self.type, set())
         brethren.add(self.id.bbid)
 
         if recur:
