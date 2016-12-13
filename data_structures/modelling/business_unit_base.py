@@ -178,7 +178,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
 
         Method prepares a bu and adds it to instance components.
 
-        If register_in_period is true, method raises IDCollisionError if the
+        If register_in_dir is true, method raises IDCollisionError if the
         period's directory already contains the new business unit's bbid.
 
         If all id verification steps go smoothly, method delegates insertion
@@ -341,6 +341,7 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
             raise bb_exceptions.BBAnalyticalError
 
         if not overwrite:
+            # Check for collisions first, then register if none arise.
             if self.id.bbid in bu_directory:
                 c1 = "TimePeriod.bu_directory already contains an object with "
                 c2 = "the same bbid as this unit. \n"
@@ -352,7 +353,6 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
                 c = c1 + c2 + c3 + c4 + c5
                 raise bb_exceptions.IDCollisionError(c)
 
-        # Check for collisions first, then register if none arise.
         if in_model:
             model.bu_directory[self.id.bbid] = self
         elif in_taxonomy:

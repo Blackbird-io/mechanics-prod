@@ -71,7 +71,6 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
     ====================  ======================================================
 
     DATA:
-    bu_directory          dict; all business units in this period, keyed by bbid
     content               pointer to content, usually a business unit
     end                   datetime.date; last date in period
     id                    instance of ID class
@@ -79,7 +78,6 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
     parameters            Parameters object, specifies shared parameters
     relationships         instance of Relationships class
     start                 datetime.date; first date in period.
-    ty_directory          dict; keys are strings, values are sets of bbids
 
     FUNCTIONS:
     __str__               basic print, shows starts, ends, and content

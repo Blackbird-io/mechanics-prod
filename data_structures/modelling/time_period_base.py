@@ -46,7 +46,7 @@ from .history import History
 class TimePeriodBase(History):
     """
 
-    PeriodSummary objects represent periods of time and store a snapshot of some
+    TimePeriodBase objects represent periods of time and store a snapshot of some
     data during that period in their ``content`` attribute.
 
     Class represents an interval that includes its endpoints: [start, end].
@@ -55,18 +55,11 @@ class TimePeriodBase(History):
     hangers. This structure enables Blackbird to track the evolution of the data
     over real-world wall/calendar) time.
 
-    The data in ``content`` is usually a top-level business unit. TimePeriod
-    provides a reference table ``bu_directory`` for objects that the data
-    contains. The bu_directory tracks objects by their bbid. Only one object
-    with a given bbid should exist within a PeriodSummary. bbid collisions within
-    a time period represent the time-traveller's paradox.
-
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
-    bu_directory          dict; all business units in this period, keyed by bbid
     content               pointer to content, usually a business unit
     end                   datetime.date; last date in period
     id                    instance of ID class

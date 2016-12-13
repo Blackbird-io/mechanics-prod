@@ -287,7 +287,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         someone inserts a business unit from one model into another without
         updating the business unit's bbid).
 
-        If register_in_period is true, method raises IDCollisionError if the
+        If register_in_dir is true, method raises IDCollisionError if the
         period's directory already contains the new business unit's bbid.
 
         If all id verification steps go smoothly, method delegates insertion
@@ -307,15 +307,11 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         bu.valuation = None
         bu.relationships.set_model(self.relationships.model)
 
-        # Step 1: update lifecycle with the right dates for unit and components
-        # now = self.relationships.model.get_timeline().current_period
-        # bu._fit_to_period(now, recur=True)
-
-        # Step 2: optionally update ids.
+        # Step 1: optionally update ids.
         if update_id:
             bu._update_id(namespace=self.id.bbid, recur=True)
 
-        # Step 3: Register the units. Will raise errors on collisions.
+        # Step 2: Register the units. Will raise errors on collisions.
         if register_in_dir:
             bu._register_in_dir(recur=True, overwrite=overwrite)
 
@@ -855,9 +851,8 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         BusinessUnit._register_in_dir() -> None
 
 
-        Method updates the bu_directory on the instance period with the contents
-        of instance.components (bbid:bu). If ``recur`` == True, repeats for
-        every component in instance.
+        Method updates the model.bu_directory on with (bbid:bu).
+        If ``recur`` == True, repeats for every component in instance.
 
         If ``overwrite`` == False, method will raise an error if any of its
         component bbids is already in the period's bu_directory at the time of
@@ -879,6 +874,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         model = self.relationships.model
 
         if not overwrite:
+            # Check for collisions first, then register if none arise.
             if self.id.bbid in model.bu_directory:
                 c = (
                     "TimePeriod.bu_directory already contains an object with "
@@ -893,8 +889,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
                 )
                 print(model.bu_directory)
                 raise bb_exceptions.IDCollisionError(c)
-
-        # Check for collisions first, then register if none arise.
 
         model.bu_directory[self.id.bbid] = self
 
