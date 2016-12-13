@@ -513,7 +513,7 @@ class Model(TagsMixIn):
         """
 
 
-        TaxoDir.get_tagged_units() -> dict
+        Model.get_tagged_units() -> dict
 
 
         Return a dictionary of units (by bbid) that carry the specified tags.
@@ -559,8 +559,8 @@ class Model(TagsMixIn):
             c = "Cannot add content without a valid bbid."
             raise bb_exceptions.IDError(c)
 
-        # Check for collisions first, then register if none arise.
         if not overwrite:
+            # Check for collisions first, then register if none arise.
             if bu.id.bbid in self.bu_directory:
                 c = (
                     "TimePeriod.bu_directory already contains an object with "
