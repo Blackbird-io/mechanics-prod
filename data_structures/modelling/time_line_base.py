@@ -63,13 +63,14 @@ class TimelineBase(dict):
     get_ordered()         returns list of periods ordered by end point
     ====================  ======================================================
     """
-    def __init__(self, interval):
+    def __init__(self, interval, model):
         dict.__init__(self)
         self.id = ID()
         # TimelineBase objects support the id interface and pass the model's id
         # down to time periods. The TimelineBase instance itself does not get
         # its own bbid.
         self.interval = interval
+        self.model = model
 
     def add_period(self, period):
         """

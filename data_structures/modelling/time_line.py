@@ -90,7 +90,7 @@ class TimeLine(TimelineBase):
     DEFAULT_PERIODS_BACK = 1
 
     def __init__(self, model):
-        TimelineBase.__init__(self, interval=1)
+        TimelineBase.__init__(self, interval=1, model=model)
 
         self.model = model
         self.master = None
