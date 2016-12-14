@@ -809,6 +809,8 @@ class BusinessUnit(BusinessUnitBase, Equalities):
 
 
         Method updates the bu_directory on with (bbid:bu).
+        Method does nothing if BU is not connected to the Model yet.
+
         If ``recur`` == True, repeats for every component in instance.
 
         If ``overwrite`` == False, method will raise an error if any of its
@@ -829,6 +831,9 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         # an overlap. Also carries a speed benefit, cause only compare once.
 
         model = self.relationships.model
+        if not model:
+            # Do nothing if Business Unit is not part of the model yet.
+            return
 
         # Default case
         bu_directory = model.bu_directory
