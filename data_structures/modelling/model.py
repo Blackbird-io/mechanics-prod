@@ -302,13 +302,14 @@ class Model(TagsMixIn):
 
         Model.get_company() -> BusinessUnit
 
-        Method returns top-level business unit from current period.
+        Method returns top-level business unit.
         """
         if buid:
             return self.bu_directory[buid]
-        if self.company:
+        elif self.company:
             return self.company
-        return self.get_timeline().current_period.content
+        else:
+            return None
 
     def set_company(self, company):
         """

@@ -163,7 +163,7 @@ class SummaryMaker:
             (self.QUARTERLY_KEY, 3),
             (self.ANNUAL_KEY, 12),
         ):
-            timeline_summary = TimelineBase(periods)
+            timeline_summary = TimelineBase(periods, model=self.model)
             timeline_summary.id.set_namespace(time_line.id.namespace)
             # output quarter or year being currently processed
             timeline_summary.summary_period = None

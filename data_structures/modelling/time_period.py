@@ -52,7 +52,7 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
     """
 
     TimePeriod objects represent periods of time and store a snapshot of some
-    data during that period in their ``content`` attribute.
+    data during that period in their ``financials`` attribute.
 
     Class represents an interval that includes its endpoints: [start, end].
 
@@ -60,18 +60,14 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
     hangers. This structure enables Blackbird to track the evolution of the data
     over real-world wall/calendar) time.
 
-    The data in ``content`` is usually a top-level business unit. TimePeriod
-    provides a reference table ``bu_directory`` for objects that the data
-    contains. The bu_directory tracks objects by their bbid. Only one object
-    with a given bbid should exist within a TimePeriod. bbid collisions within
-    a time period represent the time-traveller's paradox.
+    TimePeriod.financials is dict keyed by bbid, with values as the Business
+    Unit's Financials.
 
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
-    content               pointer to content, usually a business unit
     end                   datetime.date; last date in period
     id                    instance of ID class
     length                float; seconds between start and end
@@ -80,17 +76,15 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
     start                 datetime.date; first date in period.
 
     FUNCTIONS:
-    __str__               basic print, shows starts, ends, and content
-    clear()               clears content, resets bu_directory
-    copy()                returns new TimePeriod with a copy of content
+    __str__               basic print, shows starts, ends,
+    copy()                returns new TimePeriod with a copy of financials
     extrapolate_to()      updates inheritance then delegates to Tags
     ex_to_default()       creates result from seed, sets to target start/end
     get_units()           return list of units from bbid pool
     get_lowest_units()    return list of units w/o components from bbid pool
     ====================  ======================================================
     """
-    def __init__(self, start_date, end_date, content=None, model=None):
-        # content is handled differently, is not passed on to base init
+    def __init__(self, start_date, end_date, model=None):
         TimePeriodBase.__init__(self, start_date, end_date, model=model)
         TagsMixIn.__init__(self)
 
@@ -199,9 +193,9 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
 
         model = self.relationships.parent.model
         company = model.get_company()
-        if result.content:
-            result.content.reset_financials()
-            result.content.fill_out()
+        if company:
+            company.reset_financials(period=result)
+            company.fill_out(period=result)
             # This logic should really run on the business unit
 
         return result

@@ -878,11 +878,13 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         ty_directory = model.ty_directory
 
         # If _register_in_dir is called from taxonomy_template.add_component(bu)
-        parent = self.relationships.parent
-        if parent:
-            if parent.id.bbid in model.taxo_dir.bu_directory:
-                bu_directory = model.taxo_dir.bu_directory
-                ty_directory = model.taxo_dir.ty_directory
+        parent_bu_components = self.relationships.parent
+        if parent_bu_components:
+            parent_bu = parent_bu_components.relationships.parent
+            if parent_bu:
+                if parent_bu.id.bbid in model.taxo_dir.bu_directory:
+                    bu_directory = model.taxo_dir.bu_directory
+                    ty_directory = model.taxo_dir.ty_directory
 
         if not overwrite:
             # Check for collisions first, then register if none arise.

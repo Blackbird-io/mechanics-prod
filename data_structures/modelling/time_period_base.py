@@ -46,12 +46,12 @@ from .history import History
 class TimePeriodBase(History):
     """
 
-    TimePeriodBase objects represent periods of time and store a snapshot of some
-    data during that period in their ``content`` attribute.
+    TimePeriodBase objects represent periods of time and store a snapshot of
+    some data during that period in their ``financials`` attribute.
 
     Class represents an interval that includes its endpoints: [start, end].
 
-    If one thinks of a TimeLine as a clothesrack, TimePeriods are individual
+    If one thinks of a TimeLine as a clothes rack, TimePeriods are individual
     hangers. This structure enables Blackbird to track the evolution of the data
     over real-world wall/calendar) time.
 
@@ -60,7 +60,6 @@ class TimePeriodBase(History):
     ====================  ======================================================
 
     DATA:
-    content               pointer to content, usually a business unit
     end                   datetime.date; last date in period
     id                    instance of ID class
     next_end              datetime.date; end of following period
@@ -84,7 +83,6 @@ class TimePeriodBase(History):
         self.financials = dict()
 
         self.summary = None
-        self.content = content
         self.id = ID()
         self.relationships = Relationships(self)
 
