@@ -523,10 +523,9 @@ class Model(TagsMixIn):
         Model.register() -> None
 
 
-        Manually add unit to period. Unit will conform to period and appear
-        in directories. Use sparingly: designed for master (taxonomy) period.
+        Manually add unit to bu_directory and ty_directory.
 
-        NOTE: content should generally have a tree structure, with a
+        NOTE: BUs should generally have a tree structure, with a
         single bu node on top. That node will manage all child relationships.
         Accordingly, the best way to add units to a model is to run
         bu.add_component(new_unit).
@@ -546,7 +545,7 @@ class Model(TagsMixIn):
             # Check for collisions first, then register if none arise.
             if bu.id.bbid in self.bu_directory:
                 c = (
-                    "TimePeriod.bu_directory already contains an object with "
+                    "bu_directory already contains an object with "
                     "the same bbid as this unit. \n"
                     "unit id:         {bbid}\n"
                     "known unit name: {name}\n"

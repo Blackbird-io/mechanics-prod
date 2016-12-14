@@ -99,7 +99,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
     reset_financials()    resets instance and (optionally) component financials
     set_analytics()       attaches an object to instance.analytics
     set_financials()      attaches a Financials object from the right template
-    set_history()         connect instance to older snapshot, optionally recur
     synchronize()         set components to same life, optionally recursive
     ====================  ======================================================
     """
@@ -571,28 +570,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         atx.relationships.set_parent(self)
         self.valuation = atx
 
-    def set_history(self, history, clear_future=True, recur=True):
-        """
-
-
-        BusinessUnit.set_history() -> None
-
-
-        Set history for instance; repeat for components (by bbid) if recur is
-        True.
-        """
-        HistoryLine.set_history(self, history, clear_future=clear_future)
-
-        # Use dedicated logic to handle recursion.
-        if recur:
-            for bbid, unit in self.components.items():
-                mini_history = history.components[bbid]
-                unit.set_history(mini_history)
-
-        self.reset_financials(recur=False)
-        # Reset financials here because we just connected a new starting
-        # balance sheet.
-
     def synchronize(self, recur=True):
         """
 
@@ -607,25 +584,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
             unit.life = self.life.copy()
             if recur:
                 unit.synchronize()
-
-    def peer_locator(self):
-        """
-
-
-        BusinessUnit.peer_locator() -> BusinessUnit
-
-        Given a parent container from another time period, return a function
-        locating a copy of ourselves within that container.
-        """
-        model = self.relationships.model
-
-        def locator(time_period, create=True, **kargs):
-            if self.id.bbid not in model.bu_directory:
-                if create and time_period.end == self.period.past_end:
-                    self.make_past()
-            peer = time_period.bu_directory.get(self.id.bbid)
-            return peer
-        return locator
 
     def get_parameters(self, period=None):
         """
