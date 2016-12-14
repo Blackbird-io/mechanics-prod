@@ -62,7 +62,7 @@ class Model(TagsMixIn):
 
     A Model should contain a single instance of the same business unit for each
     unit's bbid. Each TimePeriod in the TimeLine should contain a instance of
-    Financials that are keyed by that business units bbid.
+    Financials that are keyed by that business unit's bbid.
 
     ====================  ======================================================
     Attribute             Description
@@ -127,7 +127,7 @@ class Model(TagsMixIn):
         for s in DEFAULT_SCENARIOS:
             self.scenarios[s] = dict()
 
-        self.company = None
+        self._company = None
         self.target = None
         # target is BU from which to get path and interview info, default
         # points to top-level business unit/company
@@ -302,14 +302,12 @@ class Model(TagsMixIn):
 
         Model.get_company() -> BusinessUnit
 
-        Method returns top-level business unit.
+        Method returns model.company or a business unit with a specific bbid.
         """
         if buid:
             return self.bu_directory[buid]
-        elif self.company:
-            return self.company
         else:
-            return None
+            return self._company
 
     def set_company(self, company):
         """
@@ -321,7 +319,7 @@ class Model(TagsMixIn):
         self.bu_directory.clear()
         self.ty_directory.clear()
         self.register(company, update_id=True, overwrite=False, recur=True)
-        self.company = company
+        self._company = company
 
     def get_financials(self, bbid, period):
         """
