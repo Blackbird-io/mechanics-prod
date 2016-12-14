@@ -41,7 +41,6 @@ from data_structures.system.tags_mixin import TagsMixIn
 
 from .dr_container import DrContainer
 from .financials import Financials
-from .history_line import HistoryLine
 from .components_base import ComponentsBase
 
 
@@ -55,7 +54,7 @@ logger = logging.getLogger(bb_settings.LOGNAME_MAIN)
 
 
 # Classes
-class BusinessUnitBase(HistoryLine, TagsMixIn):
+class BusinessUnitBase(TagsMixIn):
     """
 
     Object is primarily a storage container for financial summary and business
@@ -81,7 +80,6 @@ class BusinessUnitBase(HistoryLine, TagsMixIn):
 
     def __init__(self, name, fins=None, model=None):
 
-        HistoryLine.__init__(self)
         TagsMixIn.__init__(self, name)
 
         self.components = None
