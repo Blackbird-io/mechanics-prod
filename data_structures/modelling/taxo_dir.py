@@ -176,7 +176,7 @@ class TaxoDir(TagsMixIn):
 
         return tagged_dict
 
-    def register(self, bu, update_id=True):
+    def register(self, bu, update_id=True, overwrite=False, recur=True):
         """
 
 
@@ -185,41 +185,42 @@ class TaxoDir(TagsMixIn):
         --``bu`` is an instance of BusinessUnit or BusinessUnitBase
 
         Manually add unit to TaxoDir. Unit will appear in directories.
-        If bu has child units, those units will NOT automatically register
+        If bu has child units, those units will automatically register
+        Generally it is better to avoid having child units in taxonomy
         """
         if update_id:
             bu._update_id(namespace=self.id.bbid, recur=True)
-
         if not bu.id.bbid:
             c = "Cannot add content without a valid bbid."
             raise bb_exceptions.IDError(c)
-        # Make sure unit has an id in the right namespace.
 
-        bu.relationships.set_model(self.model)
-
-        # Check for collisions
-        if bu.id.bbid in self.bu_directory:
-            c = (
-                "TaxoDir.bu_directory already contains an object with "
-                "the same bbid as this unit. \n"
-                "unit id:         {bbid}\n"
-                "known unit name: {name}\n"
-                "new unit name:   {mine}\n\n"
-            ).format(
-                bbid=self.id.bbid,
-                name=self.bu_directory[bu.id.bbid].tags.name,
-                mine=self.tags.name,
-            )
-            print(self.bu_directory)
-            raise bb_exceptions.IDCollisionError(c)
+        if not overwrite:
+            # Check for collisions first, then register if none arise.
+            if bu.id.bbid in self.bu_directory:
+                c = (
+                    "TaxoDir.bu_directory already contains an object with "
+                    "the same bbid as this unit. \n"
+                    "unit id:         {bbid}\n"
+                    "known unit name: {name}\n"
+                    "new unit name:   {mine}\n\n"
+                ).format(
+                    bbid=self.id.bbid,
+                    name=self.bu_directory[bu.id.bbid].tags.name,
+                    mine=self.tags.name,
+                )
+                print(self.bu_directory)
+                raise bb_exceptions.IDCollisionError(c)
 
         # Register the unit.
         self.bu_directory[bu.id.bbid] = bu
 
-        brethren = self.ty_directory.setdefault(bu.type, set())
         # Setdefault returns dict[key] if value exists, or sets dict[key]=set()
+        brethren = self.ty_directory.setdefault(bu.type, set())
         brethren.add(bu.id.bbid)
 
-        # Do NOT automatically register child units. May cause conflicts
-        # for child_bu in bu.components.values():
-        #     self.register(child_bu, update_id=True, reset_directories=False)
+        bu.relationships.set_model(self.model)
+
+        if recur:
+            for child_bu in bu.components.values():
+                child_bu._register_in_period(recur=True, overwrite=False)
+

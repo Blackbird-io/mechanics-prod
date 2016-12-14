@@ -298,8 +298,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
             ParentBU.add_component(ChildBU, True, True)
         Transferring a ChildBU from one parent to another:
             ParentBU2.add_component(ChildBU, False, False)
-        Transferring a ChildBU to a ParentBU in a different period
-            ParentBU3.add_component(ChildBU, False, True)
 
         """
         bu.summary = None
@@ -839,6 +837,8 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         # If _register_in_dir is called from taxonomy_template.add_component(bu)
         parent_bu_components = self.relationships.parent
         if parent_bu_components:
+            # For every ChildBU, its parent is a Components object
+            # You must go 2 parent levels up to get to ParentBU
             parent_bu = parent_bu_components.relationships.parent
             if parent_bu:
                 if parent_bu.id.bbid in model.taxo_dir.bu_directory:
