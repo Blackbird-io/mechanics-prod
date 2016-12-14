@@ -512,9 +512,7 @@ class Model(TagsMixIn):
 
         return tagged_dict
 
-    def register(
-            self, bu, update_id=True, overwrite=True, recur=True
-    ):
+    def register(self, bu, update_id=True, overwrite=False, recur=True):
         """
 
 
@@ -522,10 +520,8 @@ class Model(TagsMixIn):
 
 
         Manually add unit to bu_directory and ty_directory.
-
-        NOTE: BUs should generally have a tree structure, with a
-        single bu node on top. That node will manage all child relationships.
-        Accordingly, the best way to add units to a model is to run
+        Typically will only be used by set_company()
+        After the company is set, the best way to add units to a model is to run
         bu.add_component(new_unit).
 
         If ``update_id`` is True, method will assign unit a new id in the
@@ -558,16 +554,14 @@ class Model(TagsMixIn):
 
         self.bu_directory[bu.id.bbid] = bu
 
+        # Setdefault returns dict[key] if value exists, or sets dict[key]=set()
         brethren = self.ty_directory.setdefault(bu.type, set())
         brethren.add(bu.id.bbid)
 
         bu.relationships.set_model(self)
-        now = self.get_timeline().current_period
-        now.financials[bu.id.bbid] = bu.financials
 
         if recur:
-            for unit in bu.components.values():
-                self.register(
-                    unit, update_id=update_id, overwrite=overwrite, recur=recur
-                )
+            for child_bu in bu.components.values():
+                child_bu._register_in_period(recur=True, overwrite=overwrite)
+
 
