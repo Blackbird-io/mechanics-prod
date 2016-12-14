@@ -310,11 +310,12 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         if update_id:
             bu._update_id(namespace=self.id.bbid, recur=True)
 
-        # Step 2: Register the units. Will raise errors on collisions.
+        # Step 2: Add component
+        self.components.add_item(bu)
+
+        # Step 3: Register the units. Will raise errors on collisions.
         if register_in_dir:
             bu._register_in_dir(recur=True, overwrite=overwrite)
-
-        self.components.add_item(bu)
 
     def addDriver(self, newDriver, *otherKeys):
         """
