@@ -37,7 +37,7 @@ import bb_settings
 import bb_exceptions
 
 from data_structures.modelling.financials import Financials
-from data_structures.modelling.time_period_base import TimePeriodBase
+from data_structures.modelling.time_period import TimePeriod
 from data_structures.modelling.time_line_base import TimelineBase
 
 
@@ -58,8 +58,7 @@ class SummaryMaker:
 
     DATA:
     fiscal_year_end       date; end of fiscal year default = 12/31/current year
-    summaries             dict; holds TimelineBase objects keyed by interval
-    time_line             pointer to TimeLine containing relevant financials
+    summaries             dict; holds Timeline objects keyed by interval
     bu_bbid               id of the unit being summarized
 
     FUNCTIONS:
@@ -272,7 +271,7 @@ class SummaryMaker:
             new_info = self.period_sources[self.onkey][source.end]
             enter = new_info['enter']
             close = new_info['close']
-            period = TimePeriodBase(enter, close, model=self.model)
+            period = TimePeriod(enter, close, model=self.model)
             # counter of months used in the summary
             period.periods_used = 0
             # what sort of timeline does the period belong to
@@ -418,7 +417,7 @@ class SummaryMaker:
 
         SummaryMaker.add_statement_summary() -> None
 
-        --``source`` TimePeriodBase summarized from, monthly or quarterly
+        --``source`` TimePeriod summarized from, monthly or quarterly
         --``statement_name`` is the name of the statement you wish to summarize
 
         Method adds items from ``statement_name`` in source financials to
