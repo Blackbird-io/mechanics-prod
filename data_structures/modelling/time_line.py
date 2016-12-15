@@ -35,8 +35,6 @@ from datetime import date, datetime, timedelta
 import bb_settings
 import tools.for_printing as views
 
-from data_structures.system.summary_maker import SummaryMaker
-
 from .parameters import Parameters
 from .time_line_base import TimelineBase
 from .time_period import TimePeriod
@@ -63,14 +61,13 @@ class TimeLine(TimelineBase):
     ====================  ======================================================
 
     DATA:
-    actual                bool; True/False corresponds with Model.time_line key
     current_period        P; pointer to the period that represents the present
     id                    instance of PlatformComponents.ID class, for interface
     master                TimePeriod; unit templates that fall outside of time
+    name                  str; corresponds with Model.time_line key
     parameters            Parameters object, specifies shared parameters
     ref_date              datetime.date; reference date for the model
     resolution            string; 'monthly', 'annual'..etc. Model.time_line key
-    summary_builder       SummaryBuilder; makes financial summaries
 
     FUNCTIONS:
     build()               populates instance with adjacent time periods
@@ -89,17 +86,16 @@ class TimeLine(TimelineBase):
     DEFAULT_PERIODS_FORWARD = 60
     DEFAULT_PERIODS_BACK = 1
 
-    def __init__(self, model):
+    def __init__(self, model, resolution='monthly', name='default'):
         TimelineBase.__init__(self, interval=1, model=model)
 
         self.model = model
+        self.resolution = resolution
+        self.name = name
         self.master = None
         self.parameters = Parameters()
-        self.summary_builder = None
         self.has_been_extrapolated = False
         self.ref_date = None
-        self.actual = None
-        self.resolution = None
 
         self.id.set_namespace(model.id.bbid)
 
@@ -272,17 +268,6 @@ class TimeLine(TimelineBase):
         """
         result = TimelineBase.copy(self)
         result.has_been_extrapolated = self.has_been_extrapolated
-
-        if self.summary_builder:
-            result.summary_builder = self.summary_builder.copy()
-            result.summary_builder.time_line = result
-
-        # if self.current_period:
-        #     result._current_period = result[self.current_period.end]
-        #
-        # if self._old_current_period:
-        #     result._old_current_period = result[self._old_current_period.end]
-
         return result
 
     def extrapolate(self, seed=None):
@@ -303,8 +288,7 @@ class TimeLine(TimelineBase):
         company.reset_financials(period=seed)
         company.fill_out(period=seed)
 
-        # init SummaryMaker now that TimeLine has been built
-        self.summary_builder = SummaryMaker(self.model)
+        summary_maker = self.model.prep_summaries()
 
         for period in self.iter_ordered(open=seed.end):
             if period.end > seed.end:
@@ -321,7 +305,7 @@ class TimeLine(TimelineBase):
 
             if bb_settings.MAKE_ANNUAL_SUMMARIES:
                 if period.end >= self.current_period.end:
-                    self.summary_builder.parse_period(period)
+                    summary_maker.parse_period(period)
 
             # drop future periods that have been used up to keep size low
             if bb_settings.DYNAMIC_EXTRAPOLATION:
@@ -330,7 +314,7 @@ class TimeLine(TimelineBase):
                         period.past.past.financials.clear()
 
         if bb_settings.MAKE_ANNUAL_SUMMARIES:
-            self.summary_builder.wrap()
+            summary_maker.wrap()
 
         # import devhooks
         # devhooks.picksize(self)
