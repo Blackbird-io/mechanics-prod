@@ -38,6 +38,7 @@ from openpyxl.styles import Font, Alignment
 import bb_settings
 import chef_settings
 
+from data_structures.system.summary_maker import SummaryMaker
 from .cell_styles import CellStyles, LOWHEADER_COLOR
 from .field_names import FieldNames
 from .sheet_style import SheetStyle
@@ -168,8 +169,9 @@ class SummaryChef:
 
         # Fill output: quarterly summary timeline, may be excluded
         if chef_settings.SUMMARY_INCLUDES_QUARTERS:
-            key = time_line.summary_builder.QUARTERLY_KEY
-            qtr_timeline = model.get_timeline(key)
+            qtr_timeline = model.get_timeline(
+                resolution=SummaryMaker.QUARTERLY_KEY
+            )
             # calculate the column layout for quarters and years
             # column selector: date -> years_cols.2017.quarters.1Q17
             col_selector = lambda day: years_cols.get_group(
@@ -185,8 +187,9 @@ class SummaryChef:
             )
 
         # Fill output: annual summary timeline, always included
-        key = time_line.summary_builder.ANNUAL_KEY
-        sum_timeline = model.get_timeline(key)
+        sum_timeline = model.get_timeline(
+            resolution=SummaryMaker.ANNUAL_KEY
+        )
         # column selector: date -> years_cols.2017.year
         col_selector = lambda day: years_cols.get_group(
             day.year, 'year'
