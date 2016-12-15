@@ -182,7 +182,7 @@ class TaxoDir(TagsMixIn):
 
         TaxoDir.register() -> None
 
-        --``bu`` is an instance of BusinessUnit or BusinessUnitBase
+        --``bu`` is an instance of BusinessUnit
 
         Manually add unit to TaxoDir. Unit will appear in directories.
         If bu has child units, those units will automatically register

@@ -29,9 +29,14 @@ ParameterManager      manager class for unit parameters over time
 
 # Imports
 import copy
-
+import logging
+import bb_settings
 import bb_exceptions
-
+import tools.for_printing as views
+from data_structures.serializers.chef import data_management as xl_mgmt
+from data_structures.system.bbid import ID
+from data_structures.system.relationships import Relationships
+from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.guidance.guide import Guide
 from data_structures.guidance.interview_tracker import InterviewTracker
 from data_structures.modelling.statement import Statement
@@ -40,10 +45,10 @@ from data_structures.valuation.company_value import CompanyValue
 
 from . import common_events
 
-from .business_unit_base import BusinessUnitBase
+from .dr_container import DrContainer
+from .financials import Financials
 from .components import Components
 from .equalities import Equalities
-from .history_line import HistoryLine
 from .life import Life as LifeCycle
 from .parameters import Parameters
 
@@ -54,10 +59,10 @@ from .parameters import Parameters
 # n/a
 
 # Globals
-# n/a
+logger = logging.getLogger(bb_settings.LOGNAME_MAIN)
 
 # Classes
-class BusinessUnit(BusinessUnitBase, Equalities):
+class BusinessUnit(TagsMixIn, Equalities):
     """
 
     Object describes a group of business activity. A business unit can be a
@@ -68,6 +73,7 @@ class BusinessUnit(BusinessUnitBase, Equalities):
     ====================  ======================================================
 
     DATA:
+    complete              bool; if financials are complete for unit in period
     components            instance of Components class, stores business units
     drivers               dict; tag/line name : set of driver bbids
     filled                bool; True if fill_out() has run to completion
@@ -113,14 +119,21 @@ class BusinessUnit(BusinessUnitBase, Equalities):
     _UPDATE_BALANCE_SIGNATURE = "Update balance"
 
     def __init__(self, name, fins=None, model=None):
-        BusinessUnitBase.__init__(self, name, fins=fins, model=model)
+
+        TagsMixIn.__init__(self, name)
 
         self._type = None
 
         self.components = None
         self._set_components()
 
+        self.drivers = None
+        self._set_drivers()
+
         self.filled = False
+
+        self.financials = None
+        self.set_financials(fins)
 
         self.guide = Guide()
         self.interview = InterviewTracker()
@@ -130,15 +143,21 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         self.life = LifeCycle()
         self.location = None
 
+        self.relationships = Relationships(self, model=model)
+        
         self.size = 1
         self.summary = BusinessSummary()
         self.valuation = CompanyValue()
 
-        # attrs from BusinessUnitBase
         self.complete = True
-        self.periods_used = 1
+        # self.periods_used = 1
+
+        self.id = ID()
+        # Get the id functionality but do NOT assign a bbid yet
 
         self._parameters = Parameters()
+
+        self.xl = xl_mgmt.UnitData()
 
         # for monitoring, temporary storage for existing path and used sets
         self._path_archive = list()
@@ -266,6 +285,29 @@ class BusinessUnit(BusinessUnitBase, Equalities):
     def __hash__(self):
         return self.id.__hash__()
 
+    def __str__(self, lines=None):
+        """
+
+
+        BusinessUnit.__str__() -> str
+
+
+        Method concatenates each line in ``lines``, adds a new-line character at
+        the end, and returns a string ready for printing. If ``lines`` is None,
+        method calls views.view_as_unit() on instance.
+        """
+        # Get string list, slap a new-line at the end of every line and return
+        # a string with all the lines joined together.
+        if not lines:
+            lines = views.view_as_base(self)
+
+        # Add empty strings for header and footer padding
+        lines.insert(0, "")
+        lines.append("")
+
+        box = "\n".join(lines)
+        return box
+
     def add_component(
             self, bu, update_id=True, register_in_dir=True, overwrite=False
     ):
@@ -314,15 +356,6 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         # Step 3: Register the units. Will raise errors on collisions.
         if register_in_dir:
             bu._register_in_dir(recur=True, overwrite=overwrite)
-
-    def addDriver(self, newDriver, *otherKeys):
-        """
-
-        **OBSOLETE**
-
-        Legacy interface for add_driver().
-        """
-        return self.add_driver(newDriver, *otherKeys)
 
     def add_driver(self, newDriver, *otherKeys):
         """
@@ -423,7 +456,21 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         all return deep copies of the object and its contents. See their
         respective class documentation for mode detail.
         """
-        result = BusinessUnitBase.copy(self)
+        result = copy.copy(self)
+        result.tags = self.tags.copy()
+        result.relationships = self.relationships.copy()
+        # Start with a basic shallow copy, then add tags
+        #
+        r_comps = self.components.copy()
+        result._set_components(r_comps)
+
+        r_drivers = self.drivers.copy()
+        result._set_drivers(r_drivers)
+
+        r_fins = self.financials.copy()
+        result.set_financials(r_fins)
+
+        result.id = copy.copy(self.id)
 
         result.guide = copy.deepcopy(self.guide)
         # Have to make a deep copy of guide because it is composed of Counter
@@ -569,6 +616,26 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         atx.relationships.set_parent(self)
         self.valuation = atx
 
+    def set_financials(self, fins=None):
+        """
+
+
+        BusinessUnit.set_financials() -> None
+
+
+        Method for initializing instance.financials with a properly configured
+        Financials object.
+
+        Method will set instance financials to ``fins``, if caller specifies
+        ``fins``. Otherwise, method will set financials to a new Financials
+        instance.
+        """
+        if fins is None:
+            fins = Financials(parent=self)
+
+        fins.relationships.set_parent(self)
+        self.financials = fins
+
     def synchronize(self, recur=True):
         """
 
@@ -584,11 +651,57 @@ class BusinessUnit(BusinessUnitBase, Equalities):
             if recur:
                 unit.synchronize()
 
+    def get_current_period(self):
+        """
+
+
+        BusinessUnit.get_current_period() -> TimePeriod
+
+        Convenience method to get current_period from parent model's
+        default timeline.
+        """
+        model = self.relationships.model
+        if model:
+            return model.get_timeline().current_period
+
+    def get_financials(self, period=None):
+        """
+
+
+        BusinessUnit.get_financials() -> Financials()
+
+        --``period`` TimePeriod
+
+        Returns this BUs financials in a given period.
+        """
+        model = self.relationships.model
+        now = model.get_timeline().current_period if model else None
+
+        if not period:
+            # method allows a call with a blank period
+            # in which case bu must have financials attached
+            fins = self.financials
+        elif self.id.bbid in period.financials:
+            # the best case we expect: financials have been assigned to a period
+            fins = period.financials[self.id.bbid]
+        elif period is now:
+            # fallback if financials are not on period
+            # financials are assigned to bu before period is
+            fins = self.financials
+            period.financials[self.id.bbid] = fins
+        else:
+            fins = self.financials.copy(clean=True)
+            fins.relationships.set_parent(self)
+            fins.period = period
+            period.financials[self.id.bbid] = fins
+
+        return fins
+    
     def get_parameters(self, period=None):
         """
 
 
-        BusinessUnitBase.get_financials() -> Financials()
+        BusinessUnit.get_financials() -> Financials()
 
         --``period`` TimePeriod
 
@@ -771,6 +884,45 @@ class BusinessUnit(BusinessUnitBase, Equalities):
             for line in this_statement.get_ordered():
                 self._derive_line(line, period)
 
+    def _derive_line(self, line, period=None):
+        """
+
+
+        BusinessUnit.derive_line() -> None
+
+        --``line`` is the LineItem to work on
+
+        Method computes the value of a line using drivers stored on the
+        instance.  Method builds a queue of applicable drivers for the provided
+        LineItem. Method then runs the drivers in the queue sequentially. Each
+        LineItem gets a unique queue.
+
+        Method will not derive any lines that are hardcoded or have already
+        been consolidated (LineItem.hardcoded == True or
+        LineItem.has_been_consolidated == True).
+        """
+
+        # Repeat for any details
+        if line._details:
+            for detail in line.get_ordered():
+                if detail.replica:
+                    continue
+                    # Skip replicas to make sure we apply the driver only once
+                    # A replica should never have any details
+                else:
+                    self._derive_line(detail, period)
+
+        # look for drivers based on line name, line parent name, all line tags
+        keys = [line.tags.name]
+        keys.append(line.relationships.parent.name.casefold())
+        keys.extend(line.tags.all)
+
+        for key in keys:
+            if key in self.drivers:
+                matching_drivers = self.drivers.get_drivers(key)
+                for driver in matching_drivers:
+                    driver.workOnThis(line, bu=self, period=period)
+
     def _load_starting_balance(self, period):
         """
 
@@ -892,6 +1044,22 @@ class BusinessUnit(BusinessUnitBase, Equalities):
         comps.relationships.set_parent(self)
         self.components = comps
 
+    def _set_drivers(self, dr_c=None):
+        """
+
+
+        BusinessUnit._set_drivers() -> None
+
+
+        Method for initializing instance.drivers with a properly configured
+        DrContainer object. Method sets instance as the parentObject for
+        DrContainer and any drivers in DrContainer.
+        """
+        if not dr_c:
+            dr_c = DrContainer()
+        dr_c.setPartOf(self, recur=True)
+        self.drivers = dr_c
+        
     def _update_balance(self, period):
         """
 
@@ -920,6 +1088,27 @@ class BusinessUnit(BusinessUnitBase, Equalities):
                     ending_line = ending_balance.find_first(starting_line.name)
                     self._update_lines(starting_line, ending_line)
 
+    def _update_id(self, namespace, recur=True):
+        """
+
+
+        BusinessUnit._update_id() -> None
+
+
+        Assigns instance a new id in the namespace, based on the instance name.
+        If ``recur`` == True, updates ids for all components in the parent
+        instance bbid namespace.
+        """
+        self.id.set_namespace(namespace)
+        self.id.assign(self.tags.name)
+        self.financials.register(namespace=namespace)
+        # This unit now has an id in the namespace. Now pass our bbid down as
+        # the namespace for all downstream components.
+
+        if recur:
+            for unit in self.components.values():
+                unit._update_id(namespace=self.id.bbid, recur=True)
+                
     def _update_lines(self, start_line, end_line):
         """
 
