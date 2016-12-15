@@ -91,7 +91,7 @@ class ComponentsBase(dict):
 
         ComponentsBase.add_item() -> None
 
-        --``bu`` is an instance of BusinessUnit or BusinessUnitBase object
+        --``bu`` is an instance of BusinessUnit
 
         Method adds bu to the instance, keyed as bu.id.bbid. If bu does not
         specify a bbid, method raises IDError.
