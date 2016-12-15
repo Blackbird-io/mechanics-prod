@@ -34,9 +34,10 @@ import bb_settings
 import bb_exceptions
 
 from data_structures.system.tags_mixin import TagsMixIn
-
+from data_structures.system.bbid import ID
+from data_structures.system.relationships import Relationships
 from .parameters import Parameters
-from .time_period_base import TimePeriodBase
+from .history import History
 
 
 
@@ -48,7 +49,7 @@ from .time_period_base import TimePeriodBase
 logger = logging.getLogger(bb_settings.LOGNAME_MAIN)
 
 # Classes
-class TimePeriod(TimePeriodBase, TagsMixIn):
+class TimePeriod(History, TagsMixIn):
     """
 
     TimePeriod objects represent periods of time and store a snapshot of some
@@ -68,34 +69,126 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
     ====================  ======================================================
 
     DATA:
+    start                 datetime.date; first date in period.
     end                   datetime.date; last date in period
+    next_end              datetime.date; end of following period
+    past_end              datetime.date; end of preceding period
+    financials            dict {bbid: Financials)
     id                    instance of ID class
     length                float; seconds between start and end
     parameters            Parameters object, specifies shared parameters
     relationships         instance of Relationships class
-    start                 datetime.date; first date in period.
+    summary               string, Summary Period = None, 'annual', 'quarterly'
 
     FUNCTIONS:
     __str__               basic print, shows starts, ends,
     copy()                returns new TimePeriod with a copy of financials
+    clear()               clears financials dictionary
     extrapolate_to()      updates inheritance then delegates to Tags
     ex_to_default()       creates result from seed, sets to target start/end
-    get_units()           return list of units from bbid pool
-    get_lowest_units()    return list of units w/o components from bbid pool
     ====================  ======================================================
     """
     def __init__(self, start_date, end_date, model=None):
-        TimePeriodBase.__init__(self, start_date, end_date, model=model)
+        History.__init__(self, recursive_attribute="financials")
         TagsMixIn.__init__(self)
+
+        self.start = start_date
+        self.end = end_date
+
+        self.financials = dict()
+
+        self.summary = None
+        self.id = ID()
+        self.relationships = Relationships(self)
+
+        self.past_end = None
+        self.next_end = None
 
         self.parameters = Parameters()
         self.unit_parameters = Parameters()
-        self.ty_directory = model.ty_directory
 
         # The current approach to indexing units within a period assumes that
         # Blackbird will rarely remove existing units from a model. both
         # The ``bu`` and ``ty`` directories are static: they do not know if
         # the unit whose bbid they reference is no longer in their domain.
+
+    def __str__(self):
+        dots = "*" * bb_settings.SCREEN_WIDTH
+        s = "\t starts:  \t%s\n" % self.start.isoformat()
+        e = "\t ends:    \t%s\n" % self.end.isoformat()
+        c = "\t content: \t%s\n" % self.content
+        result = dots + "\n" + s + e + c + dots + "\n"
+        return result
+
+    def __iter__(self):
+        """
+
+        __iter__() -> iterator of TimePeriod
+
+        Iteration starts with the period following this one and goes forward.
+        """
+        this = self
+        while this.next_end:
+            this = this.future
+            yield this
+
+    @property
+    def past(self):
+        """
+
+        ** property **
+
+        TimePeriod.past() -> TimePeriod
+
+        If parent Timeline.add_period() set a _past_day on us, use it
+        to locate the predecessor in parent's dictionary.
+        """
+        past_day = getattr(self, 'past_end', None)
+        if past_day:
+            return self.relationships.parent[past_day]
+        else:
+            return None
+
+    @past.setter
+    def past(self, value):
+        """
+
+        ** property setter **
+
+        TimePeriod.past() -> None
+
+        Noop. TimePeriods look each other up through parent TimeLine.
+        """
+        pass
+
+    @property
+    def future(self):
+        """
+
+        ** property **
+
+        TimePeriod.future() -> TimePeriod
+
+        If parent Timeline.add_period() set a _next_day on us, use it
+        to locate the successor in parent's dictionary.
+        """
+        next_day = getattr(self, 'next_end', None)
+        if next_day:
+            return self.relationships.parent[next_day]
+        else:
+            return None
+
+    @future.setter
+    def future(self, value):
+        """
+
+        ** property setter **
+
+        TimePeriod.future() -> None
+
+        Noop. TimePeriods look each other up through parent TimeLine.
+        """
+        pass
 
     def clear(self):
         """
@@ -104,10 +197,9 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         TimePeriod.clear() -> None
 
 
-        Method sets content to None and resets instance directories.
+        Method erases all Financials data.
         """
-        self.content = None
-        self._reset_directories()
+        self.financials = dict()
 
     def copy(self, clean=False):
         """
@@ -120,7 +212,6 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         copy of the caller content.
         """
 
-        # result = TimePeriodBase.copy(self)
         result = copy.copy(self)
         result.relationships = self.relationships.copy()
         result.start = copy.copy(self.start)
@@ -260,60 +351,3 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
 
         # Step 3: return container
         return result
-
-    def get_lowest_units(self, pool=None, run_on_empty=False):
-        """
-
-
-        TimePeriod.get_lowest_units() -> list
-
-
-        Method returns a list of units in pool that have no components.
-
-        Method expects ``pool`` to be an iterable of bbids.
-
-        If ``pool`` is None, method will build its own pool from all keys in
-        the instance's bu_directory. Method will raise error if asked to run
-        on an empty pool unless ``run_on_empty`` == True.
-
-        NOTE: method performs identity check (``is``) for building own pool;
-        accordingly, running a.select_bottom_units(pool = set()) will raise
-        an exception.
-        """
-        if pool is None:
-            pool = sorted(self.bu_directory.keys())
-        else:
-            pool = sorted(pool)
-        #make sure to sort pool for stable output order
-        #
-        if any([pool, run_on_empty]):
-            foundation = []
-            for bbid in pool:
-                bu = self.bu_directory[bbid]
-                if bu.components:
-                    continue
-                else:
-                    foundation.append(bu)
-            #
-            return foundation
-            #
-        else:
-            c = "``pool`` is empty, method requires explicit permission to run."
-            raise bb_exceptions.ProcessError(c)
-
-    #*************************************************************************#
-    #                          NON-PUBLIC METHODS                             #
-    #*************************************************************************#
-
-    def _reset_directories(self):
-        """
-
-
-        TimePeriod.reset_directories() -> None
-
-
-        Method sets instance.bu_directory and instance.ty_directory to blank
-        dictionaries.
-        """
-        self.bu_directory = {}
-        self.ty_directory = {}
