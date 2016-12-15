@@ -28,10 +28,12 @@ Components            Tags-type container that stores business units
 
 #imports
 import tools.for_tag_operations
-
+import copy
+import bb_exceptions
+import bb_settings
+import tools.for_printing as views
 from data_structures.system.tags_mixin import TagsMixIn
-
-from .components_base import ComponentsBase
+from data_structures.system.relationships import Relationships
 from .equalities import Equalities
 
 
@@ -41,7 +43,7 @@ from .equalities import Equalities
 #n/a
 
 #classes
-class Components(ComponentsBase, TagsMixIn, Equalities):
+class Components(dict, TagsMixIn, Equalities):
     """
 
     The Components class defines a container that stores BusinessUnit objects
@@ -65,7 +67,6 @@ class Components(ComponentsBase, TagsMixIn, Equalities):
     find_bbid()           return bbid that contains a known string
     get_all()             returns list of all units in instance
     get_living()          returns a bbid:bu dict of all bus that are alive
-    getOrdered()          legacy interface for get_ordered()
     get_ordered()         returns a list of values, ordered by key
     get_tagged()          return a dict of units with tags
     refresh_names()       clear and rebuild name-to-bbid dictionary
@@ -84,11 +85,31 @@ class Components(ComponentsBase, TagsMixIn, Equalities):
     #comparison logic
 
     def __init__(self, name="Components"):
-        ComponentsBase.__init__(self)
+        dict.__init__(self)
+        self.by_name = dict()
+        self.relationships = Relationships(self)
+
         TagsMixIn.__init__(self, name)
         Equalities.__init__(self)
 
-    def __eq__(self, comparator, trace = False, tab_width = 4):
+    def __str__(self, lines=None):
+        """
+
+
+        Components.__str__(lines = None) -> str
+
+
+        Method concatenates each line in ``lines``, adds a new-line character at
+        the end, and returns a string ready for printing. If ``lines`` is None,
+        method calls _get_pretty_lines() on instance.
+        """
+        if not lines:
+            lines = views.view_as_components(self)
+        line_end = "\n"
+        result = line_end.join(lines)
+        return result
+
+    def __eq__(self, comparator, trace=False, tab_width=4):
         """
 
 
@@ -100,7 +121,7 @@ class Components(ComponentsBase, TagsMixIn, Equalities):
         """
         return Equalities.__eq__(self, comparator, trace, tab_width)
 
-    def __ne__(self, comparator, trace = False, tab_width = 4):
+    def __ne__(self, comparator, trace=False, tab_width=4):
         """
 
 
@@ -122,7 +143,17 @@ class Components(ComponentsBase, TagsMixIn, Equalities):
         shell. Method then sets result.by_name to a blank dictionary and adds a
         copy of each unit in the instance to the result.
         """
-        result = ComponentsBase.copy(self)
+        result = copy.copy(self)
+        result.relationships = self.relationships.copy()
+
+        # customize container
+        result.clear()
+        result.by_name = dict()
+
+        # fill container (automatically add names)
+        for unit in self.get_ordered():
+            result.add_item(unit.copy())
+
         result.tags = self.tags.copy()
 
         return result
@@ -170,16 +201,39 @@ class Components(ComponentsBase, TagsMixIn, Equalities):
         #
         return result
 
-    def getOrdered(self):
+    def get_ordered(self, order_by=None):
         """
 
 
-        Components.getOrdered() -> list
+        Components.get_ordered() -> list
 
 
-        Legacy interface for components.get_ordered()
+        Method returns a list of every value in the instance, ordered by key.
         """
-        return self.get_ordered()
+        result = []
+        for k, bu in sorted(self.items(), key=order_by):
+            result.append(bu)
+        return result
+
+    def get_all(self):
+        """
+
+
+        Components.get_all() -> list
+
+
+        Method returns list of all units in instance; ordered if in DEBUG_MODE,
+        unordered otherwise.
+        """
+        if bb_settings.DEBUG_MODE:
+            # return ordered list
+            result = []
+            for k in sorted(self.keys()):
+                result.append(self[k])
+        else:
+            result = list(self.values())
+
+        return result
 
     def get_tagged(self, *tags, pool=None, recur=False):
         """
@@ -224,6 +278,28 @@ class Components(ComponentsBase, TagsMixIn, Equalities):
                 self.by_name[bu.tags.name] = bu.id.bbid
             else:
                 continue
+
+    def add_item(self, bu):
+        """
+
+
+        Components.add_item() -> None
+
+        --``bu`` is an instance of BusinessUnit or BusinessUnit object
+
+        Method adds bu to the instance, keyed as bu.id.bbid. If bu does not
+        specify a bbid, method raises IDError.
+
+        Method also registers each unit's id under the unit's name in
+        instance.by_name.
+        """
+        if not bu.id.bbid:
+            c = "Cannot add a component that does not have a valid bbid."
+            raise bb_exceptions.IDError(c)
+        bu.relationships.set_parent(self)
+        self[bu.id.bbid] = bu
+        if bu.tags.name:
+            self.by_name[bu.tags.name] = bu.id.bbid
 
     def remove_item(self, bbid):
         """
