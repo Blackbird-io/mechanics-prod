@@ -82,10 +82,11 @@ class TimePeriod(History, TagsMixIn):
 
     FUNCTIONS:
     __str__               basic print, shows starts, ends,
-    copy()                returns new TimePeriod with a copy of financials
     clear()               clears financials dictionary
-    extrapolate_to()      updates inheritance then delegates to Tags
+    combine_parameters()  propagate preceeding period's parameters to self.
+    copy()                returns new TimePeriod with a copy of financials
     ex_to_default()       creates result from seed, sets to target start/end
+    extrapolate_to()      updates inheritance then delegates to Tags
     ====================  ======================================================
     """
     def __init__(self, start_date, end_date, model=None):
@@ -116,8 +117,7 @@ class TimePeriod(History, TagsMixIn):
         dots = "*" * bb_settings.SCREEN_WIDTH
         s = "\t starts:  \t%s\n" % self.start.isoformat()
         e = "\t ends:    \t%s\n" % self.end.isoformat()
-        c = "\t content: \t%s\n" % self.content
-        result = dots + "\n" + s + e + c + dots + "\n"
+        result = dots + "\n" + s + e + dots + "\n"
         return result
 
     def __iter__(self):
@@ -309,10 +309,7 @@ class TimePeriod(History, TagsMixIn):
         Method first creates a vanilla shallow copy of the caller, then runs
         a class-specific .copy on the vanilla alt_seed to create the result
         shell. Method sets the time endpoints on the result to those specified
-        by target and creates a copy of seed content. Method concludes by
-        running setContent(new_content) on the result. The last step spread the
-        period and date information down the content structure and updates the
-        result's bu_directory with the bbid's of all BusinessUnits it contains.
+        by target.
 
         NOTE2: For best results, may want to clear and re-inherit tags on result
         after method returns it.
