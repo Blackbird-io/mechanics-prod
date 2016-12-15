@@ -444,8 +444,9 @@ def view_as_time_line(time_line, dates=None, sep="<<", border="-", hook=True):
     #
     underscore = "_"
     bu_lines = list()
-    if time_line.current_period.content:
-        bu_lines = view_as_unit(time_line.current_period.content)
+    bu = time_line.model.get_company()
+    if bu:
+        bu_lines = view_as_unit(bu)
     bu_width = 20
     # default width should be a setting (probably same as bu view)
     if bu_lines:
@@ -515,10 +516,10 @@ def view_as_time_line(time_line, dates=None, sep="<<", border="-", hook=True):
             bot_brdr = top_brdr[:]
             hanger = space * column_width
             col_bu_lines = []
-            if period.content:
+            if bu:
                 bot_brdr = hook_char.center(column_width, border)
                 hanger = "|".center(column_width)
-                for line in period.content._get_pretty_lines():
+                for line in bu._get_pretty_lines():
                     adj_line = line.center(column_width)
                     col_bu_lines.append(adj_line)
             else:
