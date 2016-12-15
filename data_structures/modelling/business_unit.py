@@ -66,8 +66,7 @@ class BusinessUnit(TagsMixIn, Equalities):
     """
 
     Object describes a group of business activity. A business unit can be a
-    store, a region, a product, a team, a relationship (or many relationships),
-    etcetera.
+    store, a region, a product, a team, a relationship (or many relationships).
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
@@ -98,9 +97,13 @@ class BusinessUnit(TagsMixIn, Equalities):
     archive_path()        archives existing path then sets to blank Statement
     archive_used()        archives existing used topics and sets to blank set
     compute()             consolidates and derives a statement for all units
+    copy()                create a copy of this BusinessUnit instance
     fill_out()            runs calculations to fill out financial statements
+    get_current_period()  returns current period on BU.model.time_line
+    get_financials()      returns Financials from a period or creates a new one
+    get_parameters()      returns Parameters from TimeLine, Period, self
     kill()                make dead, optionally recursive
-    make_past()           put a younger version of unit in prior period
+    make_past()           put a younger version of financials in prior period
     recalculate()         reset financials, compute again, repeat for future
     reset_financials()    resets instance and (optionally) component financials
     set_analytics()       attaches an object to instance.analytics
@@ -124,21 +127,18 @@ class BusinessUnit(TagsMixIn, Equalities):
 
         self._type = None
 
+        self.complete = True
+
         self.components = None
-        self._set_components()
+        self._set_components()  # Only used in copy()
 
         self.drivers = None
-        self._set_drivers()
+        self._set_drivers()  # Only used in copy()
 
         self.filled = False
 
         self.financials = None
         self.set_financials(fins)
-
-        self.guide = Guide()
-        self.interview = InterviewTracker()
-        self._stage = None
-        self.used = set()
 
         self.life = LifeCycle()
         self.location = None
@@ -149,15 +149,18 @@ class BusinessUnit(TagsMixIn, Equalities):
         self.summary = BusinessSummary()
         self.valuation = CompanyValue()
 
-        self.complete = True
-        # self.periods_used = 1
-
         self.id = ID()
         # Get the id functionality but do NOT assign a bbid yet
 
         self._parameters = Parameters()
 
         self.xl = xl_mgmt.UnitData()
+
+        # Attributes related to Path
+        self._stage = None
+        self.guide = Guide()
+        self.interview = InterviewTracker()
+        self.used = set()
 
         # for monitoring, temporary storage for existing path and used sets
         self._path_archive = list()
@@ -235,7 +238,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         **property**
 
 
-        Sets ._type.
+        Sets ._type. Updates ty_directory when type is changed.
         """
         old_type = self.type
         self._type = value
@@ -673,6 +676,8 @@ class BusinessUnit(TagsMixIn, Equalities):
         --``period`` TimePeriod
 
         Returns this BUs financials in a given period.
+        If no financials exist, creates a new financials with same structure
+        Stores financials in period.financials dict, keyed by BU.id.bbid
         """
         model = self.relationships.model
         now = model.get_timeline().current_period if model else None
