@@ -145,9 +145,9 @@ class ModelChef:
         spacer_color = '4f81bd'
 
         # Get timelines to report from
-        proj = model.get_timeline(resolution='monthly', actual=False)
-        actl = model.get_timeline(resolution='monthly', actual=True)
-        budg = model.get_timeline(resolution='monthly', actual='budget')
+        proj = model.get_timeline(resolution='monthly', name='forecast')
+        actl = model.get_timeline(resolution='monthly', name='actual')
+        budg = model.get_timeline(resolution='monthly', name='budget')
 
         last_date = max(actl.keys())
 
