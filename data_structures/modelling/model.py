@@ -37,9 +37,9 @@ from chef_settings import DEFAULT_SCENARIOS
 from data_structures.system.bbid import ID
 from data_structures.modelling.line_item import LineItem
 from data_structures.system.tags_mixin import TagsMixIn
+from data_structures.system.summary_maker import SummaryMaker
 from .time_line import TimeLine
 from .taxo_dir import TaxoDir
-
 
 # constants
 # n/a
@@ -117,7 +117,7 @@ class Model(TagsMixIn):
         time_line = TimeLine(self)
         # dict holding various timelines
         self.timelines = dict()
-        # main TimeLine is (resolution='monthly', actual=False)
+        # main TimeLine is (resolution='monthly', projection='forecast')
         self.set_timeline(time_line)
 
         self.bu_directory = {}
@@ -340,7 +340,7 @@ class Model(TagsMixIn):
 
         return fins
 
-    def get_timeline(self, resolution='monthly', actual=False):
+    def get_timeline(self, resolution='monthly', projection=False):
         """
 
         Model.get_timeline() -> TimeLine
@@ -350,7 +350,11 @@ class Model(TagsMixIn):
 
         Method returns the timeline for specified resolution (if any).
         """
-        key = (resolution, actual)
+        if projection is False:
+            projection = 'forecast'
+        if projection is True:
+            projection = 'actual'
+        key = (resolution, projection)
         if key in self.timelines:
             return self.timelines[key]
 
@@ -385,7 +389,7 @@ class Model(TagsMixIn):
             self.target.stage.set_focal_point(new_line)
 
     def set_timeline(
-        self, time_line, resolution='monthly', actual=False, overwrite=False
+        self, time_line, resolution='monthly', projection=False, overwrite=False
     ):
         """
 
@@ -396,16 +400,20 @@ class Model(TagsMixIn):
 
         Method adds the timeline for specified resolution (if any).
         """
-        key = (resolution, actual)
+        if projection is False:
+            projection = 'forecast'
+        if projection is True:
+            projection = 'actual'
+        key = (resolution, projection)
         if key in self.timelines and not overwrite:
             c = (
-                "TimeLine (resolution='{}', actual='{}') "
+                "TimeLine (resolution='{}', projection='{}') "
                 "already exists".format(*key)
             )
             raise KeyError(c)
 
-        time_line.actual = actual
         time_line.resolution = resolution
+        time_line.projection = projection
 
         self.timelines[key] = time_line
 
@@ -563,5 +571,3 @@ class Model(TagsMixIn):
         if recur:
             for child_bu in bu.components.values():
                 child_bu._register_in_period(recur=True, overwrite=overwrite)
-
-

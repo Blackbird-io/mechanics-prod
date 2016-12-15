@@ -80,10 +80,10 @@ class SummaryMaker:
     ANNUAL_KEY = "annual"
     QUARTERLY_KEY = "quarterly"
 
-    def __init__(self, model, actual=False):
+    def __init__(self, model, projection=False):
         self._fiscal_year_end = None
         self.model = model
-        self.actual = actual
+        self.projection = projection
         self.buid = model.get_company().id.bbid
         self.init_summaries()
 
@@ -171,7 +171,7 @@ class SummaryMaker:
             self.complete_periods[key] = periods
             self.period_sources[key] = dict()
             self.model.set_timeline(
-                timeline_summary, resolution=key, actual=self.actual
+                timeline_summary, resolution=key, projection=self.projection
             )
 
     def parse_period(self, period):
