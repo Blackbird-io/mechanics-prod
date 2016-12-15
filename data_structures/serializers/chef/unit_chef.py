@@ -97,7 +97,7 @@ class UnitChef:
         if timeline is not None:
             self.timeline = timeline
         else:
-            self.timeline = model.get_timeline(resolution='monthly') #, actual=False)
+            self.timeline = model.get_timeline(resolution='monthly')
 
     def chop_multi(self, book, unit=None, values_only=False, tab_name='',
                    tab_color='', index=None):
