@@ -37,9 +37,9 @@ from chef_settings import DEFAULT_SCENARIOS
 from data_structures.system.bbid import ID
 from data_structures.modelling.line_item import LineItem
 from data_structures.system.tags_mixin import TagsMixIn
+from data_structures.system.summary_maker import SummaryMaker
 from .time_line import TimeLine
 from .taxo_dir import TaxoDir
-
 
 # constants
 # n/a
@@ -117,7 +117,7 @@ class Model(TagsMixIn):
         time_line = TimeLine(self)
         # dict holding various timelines
         self.timelines = dict()
-        # main TimeLine is (resolution='monthly', actual=False)
+        # main TimeLine is (resolution='monthly', name='forecast')
         self.set_timeline(time_line)
 
         self.bu_directory = {}
@@ -340,17 +340,18 @@ class Model(TagsMixIn):
 
         return fins
 
-    def get_timeline(self, resolution='monthly', actual=False):
+    def get_timeline(self, resolution='monthly', name='default'):
         """
 
         Model.get_timeline() -> TimeLine
 
         --``resolution`` is 'monthly', 'quarterly', 'annually' or any available
           summary resolution'
+        --``name`` is 'default', 'actual', forecast', 'budget'
 
         Method returns the timeline for specified resolution (if any).
         """
-        key = (resolution, actual)
+        key = (resolution, name)
         if key in self.timelines:
             return self.timelines[key]
 
@@ -385,7 +386,7 @@ class Model(TagsMixIn):
             self.target.stage.set_focal_point(new_line)
 
     def set_timeline(
-        self, time_line, resolution='monthly', actual=False, overwrite=False
+        self, time_line, resolution='monthly', name='default', overwrite=False
     ):
         """
 
@@ -393,21 +394,42 @@ class Model(TagsMixIn):
 
         --``resolution`` is 'monthly', 'quarterly', 'annually' or any available
           summary resolution'
+        --``name`` is 'default', 'actual', forecast', 'budget'
 
         Method adds the timeline for specified resolution (if any).
         """
-        key = (resolution, actual)
+        key = (resolution, name)
         if key in self.timelines and not overwrite:
             c = (
-                "TimeLine (resolution='{}', actual='{}') "
+                "TimeLine (resolution='{}', name='{}') "
                 "already exists".format(*key)
             )
             raise KeyError(c)
 
-        time_line.actual = actual
         time_line.resolution = resolution
+        time_line.name = name
 
         self.timelines[key] = time_line
+
+    def create_timeline(
+        self, resolution='monthly', name='default', add=True, overwrite=False
+    ):
+        """
+
+        Model.create_timeline() -> TimeLine
+
+        --``resolution`` is 'monthly', 'quarterly', 'annually' or any available
+          summary resolution'
+
+        Method creates a timeline and adds it to the dictionary of own
+        timelines.
+        """
+        time_line = TimeLine(self, resolution=resolution, name=name)
+        if add:
+            self.set_timeline(
+                time_line, resolution=resolution, name=name, overwrite=overwrite
+            )
+        return time_line
 
     def start(self):
         """
@@ -564,4 +586,14 @@ class Model(TagsMixIn):
             for child_bu in bu.components.values():
                 child_bu._register_in_period(recur=True, overwrite=overwrite)
 
+    def prep_summaries(self):
+        """
 
+
+        Model.prep_summaries() -> SummaryMaker
+
+
+        Create a SummaryMaker instance with default timelines.
+        """
+        self.summary_maker = SummaryMaker(self)
+        return self.summary_maker
