@@ -118,7 +118,9 @@ class PortalModel(ReadyForPortal):
             result["e_model"] = flattened
             #
             result["industry"] = seed.interview.work_space.get("industry")
-            result["timeline_set"] = self.serialize_timeline(seed)
+            result.update(seed.to_portal())
+
+            # result["timeline_set"] = self.serialize_timeline(seed)
             if seed.summary:
                 summary = seed.summary.to_portal()
             else:
