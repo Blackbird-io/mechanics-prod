@@ -33,10 +33,11 @@ import logging
 import bb_settings
 import bb_exceptions
 
+from data_structures.system.bbid import ID
+from data_structures.system.relationships import Relationships
 from data_structures.system.tags_mixin import TagsMixIn
 
 from .parameters import Parameters
-from .time_period_base import TimePeriodBase
 
 
 
@@ -48,7 +49,7 @@ from .time_period_base import TimePeriodBase
 logger = logging.getLogger(bb_settings.LOGNAME_MAIN)
 
 # Classes
-class TimePeriod(TimePeriodBase, TagsMixIn):
+class TimePeriod(TagsMixIn):
     """
 
     TimePeriod objects represent periods of time and store a snapshot of some
@@ -85,8 +86,21 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
     ====================  ======================================================
     """
     def __init__(self, start_date, end_date, model=None):
-        TimePeriodBase.__init__(self, start_date, end_date, model=model)
+        # TimePeriodBase.__init__(self, start_date, end_date, model=model)
         TagsMixIn.__init__(self)
+
+        self.start = start_date
+        self.end = end_date
+
+        self.bu_directory = model.bu_directory
+        self.financials = dict()
+
+        self.summary = None
+        self.id = ID()
+        self.relationships = Relationships(self)
+
+        self.past_end = None
+        self.next_end = None
 
         self.parameters = Parameters()
         self.unit_parameters = Parameters()
@@ -96,6 +110,84 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         # Blackbird will rarely remove existing units from a model. both
         # The ``bu`` and ``ty`` directories are static: they do not know if
         # the unit whose bbid they reference is no longer in their domain.
+
+    def __str__(self):
+        dots = "*" * bb_settings.SCREEN_WIDTH
+        s = "\t starts:  \t%s\n" % self.start.isoformat()
+        e = "\t ends:    \t%s\n" % self.end.isoformat()
+        c = "\t content: \t%s\n" % self.content
+        result = dots + "\n" + s + e + c + dots + "\n"
+        return result
+
+    def __iter__(self):
+        """
+
+        __iter__() -> iterator of TimePeriodBase
+
+        Iteration starts with the period following this one and goes forward.
+        """
+        this = self
+        while this.next_end:
+            this = this.future
+            yield this
+
+    @property
+    def past(self):
+        """
+
+        ** property **
+
+        TimePeriod.past() -> TimePeriodBase
+
+        If parent TimelineBase.add_period() set a _past_day on us, use it
+        to locate the predecessor in parent's dictionary.
+        """
+        past_day = getattr(self, 'past_end', None)
+        if past_day:
+            return self.relationships.parent[past_day]
+        else:
+            return None
+
+    @past.setter
+    def past(self, value):
+        """
+
+        ** property setter **
+
+        TimePeriod.past() -> None
+
+        Noop. TimePeriods look each other up through parent TimeLine.
+        """
+        pass
+
+    @property
+    def future(self):
+        """
+
+        ** property **
+
+        TimePeriod.future() -> TimePeriodBase
+
+        If parent TimelineBase.add_period() set a _next_day on us, use it
+        to locate the successor in parent's dictionary.
+        """
+        next_day = getattr(self, 'next_end', None)
+        if next_day:
+            return self.relationships.parent[next_day]
+        else:
+            return None
+
+    @future.setter
+    def future(self, value):
+        """
+
+        ** property setter **
+
+        TimePeriod.future() -> None
+
+        Noop. TimePeriods look each other up through parent TimeLine.
+        """
+        pass
 
     def clear(self):
         """
@@ -119,8 +211,6 @@ class TimePeriod(TimePeriodBase, TagsMixIn):
         Method returns a new TimePeriod object whose content is a class-specific
         copy of the caller content.
         """
-
-        # result = TimePeriodBase.copy(self)
         result = copy.copy(self)
         result.relationships = self.relationships.copy()
         result.start = copy.copy(self.start)
