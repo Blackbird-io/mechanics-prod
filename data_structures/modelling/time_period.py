@@ -33,11 +33,11 @@ import logging
 import bb_settings
 import bb_exceptions
 
-from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
+from data_structures.system.tags_mixin import TagsMixIn
+
 from .parameters import Parameters
-from .history import History
 
 
 
@@ -49,7 +49,7 @@ from .history import History
 logger = logging.getLogger(bb_settings.LOGNAME_MAIN)
 
 # Classes
-class TimePeriod(History, TagsMixIn):
+class TimePeriod(TagsMixIn):
     """
 
     TimePeriod objects represent periods of time and store a snapshot of some
@@ -85,12 +85,14 @@ class TimePeriod(History, TagsMixIn):
     clear()               clears financials dictionary
     combine_parameters()  propagate preceeding period's parameters to self.
     copy()                returns new TimePeriod with a copy of financials
-    ex_to_default()       creates result from seed, sets to target start/end
     extrapolate_to()      updates inheritance then delegates to Tags
+    ex_to_default()       creates result from seed, sets to target start/end
+    get_units()           return list of units from bbid pool
+    get_lowest_units()    return list of units w/o components from bbid pool
     ====================  ======================================================
     """
     def __init__(self, start_date, end_date, model=None):
-        History.__init__(self, recursive_attribute="financials")
+        # TimePeriodBase.__init__(self, start_date, end_date, model=model)
         TagsMixIn.__init__(self)
 
         self.start = start_date
@@ -104,6 +106,7 @@ class TimePeriod(History, TagsMixIn):
 
         self.past_end = None
         self.next_end = None
+
 
         self.parameters = Parameters()
         self.unit_parameters = Parameters()
@@ -190,6 +193,7 @@ class TimePeriod(History, TagsMixIn):
         """
         pass
 
+
     def clear(self):
         """
 
@@ -211,7 +215,6 @@ class TimePeriod(History, TagsMixIn):
         Method returns a new TimePeriod object whose content is a class-specific
         copy of the caller content.
         """
-
         result = copy.copy(self)
         result.relationships = self.relationships.copy()
         result.start = copy.copy(self.start)
