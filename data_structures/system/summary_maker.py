@@ -57,7 +57,7 @@ class SummaryMaker:
 
     DATA:
     fiscal_year_end       date; end of fiscal year default = 12/31/current year
-    summaries             dict; holds TimelineBase objects keyed by interval
+    summaries             dict; holds Timeline objects keyed by interval
     time_line             pointer to TimeLine containing relevant financials
     bu_bbid               id of the unit being summarized
 
