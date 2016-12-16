@@ -38,7 +38,6 @@ import bb_exceptions
 
 from data_structures.modelling.financials import Financials
 from data_structures.modelling.time_period import TimePeriod
-from data_structures.modelling.time_line_base import TimelineBase
 
 
 
@@ -79,10 +78,10 @@ class SummaryMaker:
     ANNUAL_KEY = "annual"
     QUARTERLY_KEY = "quarterly"
 
-    def __init__(self, model, actual=False):
+    def __init__(self, model, timeline_name='default'):
         self._fiscal_year_end = None
         self.model = model
-        self.actual = actual
+        self.timeline_name = timeline_name
         self.buid = model.get_company().id.bbid
         self.init_summaries()
 
@@ -157,21 +156,18 @@ class SummaryMaker:
         self.summaries = dict()
         self.complete_periods = dict()
         self.period_sources = dict()
-        time_line = self.model.get_timeline()
         for key, periods in (
             (self.QUARTERLY_KEY, 3),
             (self.ANNUAL_KEY, 12),
         ):
-            timeline_summary = TimelineBase(periods, model=self.model)
-            timeline_summary.id.set_namespace(time_line.id.namespace)
+            timeline_summary = self.model.create_timeline(
+                resolution=key, name=self.timeline_name
+            )
             # output quarter or year being currently processed
             timeline_summary.summary_period = None
             self.summaries[key] = timeline_summary
             self.complete_periods[key] = periods
             self.period_sources[key] = dict()
-            self.model.set_timeline(
-                timeline_summary, resolution=key, actual=self.actual
-            )
 
     def parse_period(self, period):
         """
