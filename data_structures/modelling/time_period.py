@@ -139,7 +139,7 @@ class TimePeriod(TagsMixIn):
 
         TimePeriod.past() -> TimePeriodBase
 
-        If parent TimelineBase.add_period() set a _past_day on us, use it
+        If parent Timeline.add_period() set a _past_day on us, use it
         to locate the predecessor in parent's dictionary.
         """
         past_day = getattr(self, 'past_end', None)
@@ -168,7 +168,7 @@ class TimePeriod(TagsMixIn):
 
         TimePeriod.future() -> TimePeriodBase
 
-        If parent TimelineBase.add_period() set a _next_day on us, use it
+        If parent Timeline.add_period() set a _next_day on us, use it
         to locate the successor in parent's dictionary.
         """
         next_day = getattr(self, 'next_end', None)
