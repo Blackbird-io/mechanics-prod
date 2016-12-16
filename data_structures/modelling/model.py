@@ -212,9 +212,7 @@ class Model(TagsMixIn):
     def from_portal(cls, portal_model):
         """
 
-
         Model.from_portal(portal_model) -> Model
-
 
         **CLASS METHOD**
 
@@ -243,7 +241,41 @@ class Model(TagsMixIn):
         M.portal_data.update(portal_model)
         del M.portal_data["e_model"]
 
+        # M.timelines = {
+        #
+        # }
         return M
+
+    def to_portal(self):
+        """
+
+        Model.to_portal() -> dict
+
+        Method yields a serialized representation of self.
+        """
+        # serialized representation has a list of timelines attached
+        # with (resolution, name) as properties
+        timelines = []
+        for (resolution, name), time_line in self.timelines.items():
+            print('sss', resolution, name)
+            periods = []
+            for period in time_line.iter_ordered(): pass
+                # periods.append({
+                #     'period_end': period.end,
+                #     'period_start': period.start,
+                #     'parameters': period.parameters,
+                #     'unit_parameters': period.unit_parameters,
+                #     'financials_set': self.serialize_financials(model, period),
+                # })
+            timelines.append({
+                'resolution': resolution,
+                'name': name,
+            })
+        result = dict(
+            timelines=timelines,
+        )
+        return result
+
 
     def change_ref_date(self, ref_date):
         """
