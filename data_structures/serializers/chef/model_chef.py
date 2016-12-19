@@ -145,7 +145,7 @@ class ModelChef:
         spacer_color = '4f81bd'
 
         # Get timelines to report from
-        proj = model.get_timeline(resolution='monthly', name='forecast')
+        proj = model.get_timeline(resolution='monthly', name='default')
         actl = model.get_timeline(resolution='monthly', name='actual')
         budg = model.get_timeline(resolution='monthly', name='budget')
 
