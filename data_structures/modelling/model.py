@@ -242,7 +242,7 @@ class Model(TagsMixIn):
         del M.portal_data["e_model"]
 
         # TODO: remove when serialization is complete
-        if portal_model['timelines']:
+        if portal_model.get('timelines'):
             timelines = {}
             for time_line in portal_model['timelines']:
                 key = (time_line['resolution'], time_line['name'])
