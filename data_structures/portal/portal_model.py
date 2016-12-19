@@ -118,9 +118,9 @@ class PortalModel(ReadyForPortal):
             result["e_model"] = flattened
             #
             result["industry"] = seed.interview.work_space.get("industry")
+            # dict keys serialized by Model itself
             result.update(seed.to_portal())
 
-            # result["timeline_set"] = self.serialize_timeline(seed)
             if seed.summary:
                 summary = seed.summary.to_portal()
             else:
@@ -129,32 +129,6 @@ class PortalModel(ReadyForPortal):
         #
         del result["_var_attrs"]
         #
-        return result
-
-    def serialize_timeline(self, model=None):
-        """
-
-
-        PortalModel.serialize_timeline() -> []
-
-        Method returns a list representing TimeLines.
-        """
-        result = []
-        if model:
-            periods = []
-            for period in model.time_line.iter_ordered():
-                periods.append({
-                    'period_end': period.end,
-                    'period_start': period.start,
-                    'parameters': period.parameters,
-                    'unit_parameters': period.unit_parameters,
-                    'financials_set': self.serialize_financials(model, period),
-                })
-            result.append({
-                'resolution': 'monthly',
-                'actual': False,
-                'periods': periods,
-            })
         return result
 
     def serialize_financials(self, model, period):
