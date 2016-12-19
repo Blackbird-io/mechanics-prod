@@ -193,6 +193,31 @@ class TimePeriod(TagsMixIn):
         """
         pass
 
+    @classmethod
+    def from_portal(cls, portal_data):
+        """
+
+        TimeLine.from_portal(portal_data) -> TimeLine
+
+        **CLASS METHOD**
+
+        Method extracts a TimeLine from portal_data.
+        """
+
+    def to_portal(self):
+        """
+
+        TimeLine.to_portal() -> dict
+
+        Method yields a serialized representation of self.
+        """
+        result = {
+            'period_end': format(self.end),
+            'period_start': format(self.start),
+            'parameters': {},
+            'unit_parameters': {},
+        }
+        return result
 
     def clear(self):
         """
