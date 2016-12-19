@@ -44,6 +44,9 @@ intro_line = LineItem("introduction")
 intro_line.tags.add("start", "configuration")
 intro_line.guide.quality.set_standard(2)
 
+build_or_upload_line = LineItem("build or upload")
+intro_line.append(build_or_upload_line)
+
 #classes
 class Starter:
     """
@@ -58,7 +61,7 @@ class Starter:
     MR                    instance of Messenger
 
     FUNCTIONS:
-    process()             main interace, put togetherg (M, None, None) message
+    process()             main interface, put together (M, None, None) message
     ====================  ======================================================
     """
 
