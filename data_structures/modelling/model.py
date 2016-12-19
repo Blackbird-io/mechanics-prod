@@ -244,9 +244,9 @@ class Model(TagsMixIn):
         # TODO: remove when serialization is complete
         if portal_model.get('timelines'):
             timelines = {}
-            for time_line in portal_model['timelines']:
-                key = (time_line['resolution'], time_line['name'])
-                timelines[key] = M.timelines[key]
+            for data in portal_model['timelines']:
+                key = (data['resolution'], data['name'])
+                timelines[key] = TimeLine.from_portal(data, model=M)
             M.timelines = timelines
 
         return M
@@ -272,6 +272,7 @@ class Model(TagsMixIn):
         result = dict(
             timelines=timelines,
         )
+
         return result
 
 

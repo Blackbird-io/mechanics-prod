@@ -137,7 +137,7 @@ class TimeLine(dict):
         return result
 
     @classmethod
-    def from_portal(cls, portal_data):
+    def from_portal(cls, portal_data, model):
         """
 
         TimeLine.from_portal(portal_data) -> TimeLine
@@ -146,6 +146,9 @@ class TimeLine(dict):
 
         Method extracts a TimeLine from portal_data.
         """
+        key = tuple(portal_data[k] for k in ('resolution', 'name'))
+        obj = model.timelines[key]
+        return obj
 
     def to_portal(self):
         """
@@ -154,11 +157,9 @@ class TimeLine(dict):
 
         Method yields a serialized representation of self.
         """
-        periods = []
-        # for period in self.values():
-        #     periods.append(period.to_por
-        #         'period_end':
-        #     })
+        periods = [
+            period.to_portal() for period in self.values()
+        ]
         result = {
             'periods': periods,
         }
