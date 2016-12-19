@@ -286,7 +286,6 @@ class Model(TagsMixIn):
 
         for period in tl.iter_ordered(open=seed.end):
             if period.end >= seed.end:
-                print(period.end)
                 summary_builder.parse_period(period)
 
         summary_builder.wrap()
