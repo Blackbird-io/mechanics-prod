@@ -208,6 +208,10 @@ class SummaryLineChef:
             source = line
         if line.xl.reference.source:
             source = line.xl.reference.source
+
+        if line.xl.cell:  ##
+            source = line  ##
+
         if source:
             cell = DelayedCell.from_cell(source)
             if cell:
@@ -320,20 +324,21 @@ class SummaryLineChef:
                     formula_source['_{}'.format(i)] = cell
                     formula_layout.append('{{_{}}}'.format(i))
 
-            # aggregate line for the details
-            matter = row_container.groups[1]
-            matter.size = 1
-            if formula_layout:
-                formula = '=' + '+'.join(formula_layout)
-                DelayedCell(
-                    line,
-                    sheet=sheet,
-                    template=formula,
-                    inputs=formula_source,
-                    row_container=matter,
-                    col_container=col_container,
-                    cell_type='detailed',
-                )
+            if line.sum_details:
+                # aggregate line for the details
+                matter = row_container.groups[1]
+                matter.size = 1
+                if formula_layout:
+                    formula = '=' + '+'.join(formula_layout)
+                    DelayedCell(
+                        line,
+                        sheet=sheet,
+                        template=formula,
+                        inputs=formula_source,
+                        row_container=matter,
+                        col_container=col_container,
+                        cell_type='detailed',
+                    )
 
         return sheet
 
