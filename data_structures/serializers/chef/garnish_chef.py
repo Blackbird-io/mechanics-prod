@@ -100,12 +100,17 @@ class GarnishChef:
         if book is None:
             book = Workbook()
         else:
-            if len(book.worksheets) > 2:
+            if len(book.worksheets) > 1:
+                if 'Transcript' in book.sheetnames:
+                    idx = 2
+                else:
+                    idx = 1
+
                 # two worksheets means 1 transcript sheet and 1 spare tab
-                otab = book.create_sheet("Original >>", index=2)
+                otab = book.create_sheet("Original >>", index=idx)
                 otab.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
                 SheetStyle.style_sheet(otab)
-                book.original_tab_count = len(book.worksheets) - 2
+                book.original_tab_count = len(book.worksheets) - idx
 
         book.properties.creator = chef_settings.WORKBOOK_AUTHOR
 
