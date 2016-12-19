@@ -208,6 +208,10 @@ class SummaryLineChef:
             source = line
         if line.xl.reference.source:
             source = line.xl.reference.source
+
+        if line.xl.cell:  ##
+            source = line  ##
+
         if source:
             cell = DelayedCell.from_cell(source)
             if cell:

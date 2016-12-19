@@ -327,7 +327,7 @@ class TimeLine(dict):
         """
         return list(self.iter_ordered())
 
-    def extrapolate(self, seed=None):
+    def extrapolate(self, seed=None, calc_summaries=True):
         """
 
 
@@ -360,7 +360,7 @@ class TimeLine(dict):
                 company.reset_financials(period=period)
                 company.fill_out(period=period)
 
-            if bb_settings.MAKE_ANNUAL_SUMMARIES:
+            if bb_settings.MAKE_ANNUAL_SUMMARIES and calc_summaries:
                 if period.end >= self.current_period.end:
                     summary_maker.parse_period(period)
 
@@ -370,7 +370,7 @@ class TimeLine(dict):
                     if period.past.past.end > self.current_period.end:
                         period.past.past.financials.clear()
 
-        if bb_settings.MAKE_ANNUAL_SUMMARIES:
+        if bb_settings.MAKE_ANNUAL_SUMMARIES and calc_summaries:
             summary_maker.wrap()
 
         # import devhooks
