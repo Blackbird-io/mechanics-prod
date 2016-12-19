@@ -241,9 +241,13 @@ class Model(TagsMixIn):
         M.portal_data.update(portal_model)
         del M.portal_data["e_model"]
 
-        # M.timelines = {
-        #
-        # }
+        # TODO: remove when serialization is complete
+        timelines = {}
+        for time_line in portal_model['timelines']:
+            key = (time_line.resolution, time_line.name)
+            timelines[key] = M.get_timeline(key)
+        M.timelines = timelines
+
         return M
 
     def to_portal(self):
@@ -257,16 +261,6 @@ class Model(TagsMixIn):
         # with (resolution, name) as properties
         timelines = []
         for (resolution, name), time_line in self.timelines.items():
-            print('sss', resolution, name)
-            periods = []
-            for period in time_line.iter_ordered(): pass
-                # periods.append({
-                #     'period_end': period.end,
-                #     'period_start': period.start,
-                #     'parameters': period.parameters,
-                #     'unit_parameters': period.unit_parameters,
-                #     'financials_set': self.serialize_financials(model, period),
-                # })
             timelines.append({
                 'resolution': resolution,
                 'name': name,
