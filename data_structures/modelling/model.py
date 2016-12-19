@@ -262,10 +262,13 @@ class Model(TagsMixIn):
         # with (resolution, name) as properties
         timelines = []
         for (resolution, name), time_line in self.timelines.items():
-            timelines.append({
+            data = {
                 'resolution': resolution,
                 'name': name,
-            })
+            }
+            # add serialized periods
+            data.update(time_line.to_portal())
+            timelines.append(data)
         result = dict(
             timelines=timelines,
         )
