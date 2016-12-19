@@ -242,11 +242,12 @@ class Model(TagsMixIn):
         del M.portal_data["e_model"]
 
         # TODO: remove when serialization is complete
-        timelines = {}
-        for time_line in portal_model['timelines']:
-            key = (time_line.resolution, time_line.name)
-            timelines[key] = M.get_timeline(key)
-        M.timelines = timelines
+        if portal_model['timelines']:
+            timelines = {}
+            for time_line in portal_model['timelines']:
+                key = (time_line['resolution'], time_line['name'])
+                timelines[key] = M.timelines[key]
+            M.timelines = timelines
 
         return M
 

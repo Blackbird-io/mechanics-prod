@@ -78,6 +78,7 @@ class PortalModel(ReadyForPortal):
                     "tags",
                     "update_count",
                     "monitoring",
+                    "timelines",
                     ]
         #
         ReadyForPortal.__init__(self, pm_attrs)
