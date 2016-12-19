@@ -245,6 +245,26 @@ class Model(TagsMixIn):
 
         return M
 
+    def calc_summaries(self):
+        try:
+            self.timelines.pop(('quarterly', 'default'))
+            self.timelines.pop(('annual', 'default'))
+        except KeyError:
+            # explicitly silence
+            pass
+
+        summary_builder = SummaryMaker(self)
+
+        tl = self.get_timeline('monthly', 'default')
+        seed = tl.current_period
+
+        for period in tl.iter_ordered(open=seed.end):
+            if period.end >= seed.end:
+                print(period.end)
+                summary_builder.parse_period(period)
+
+        summary_builder.wrap()
+
     def change_ref_date(self, ref_date):
         """
 

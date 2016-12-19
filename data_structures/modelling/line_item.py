@@ -416,7 +416,7 @@ class LineItem(Statement, HistoryLine):
             # all of its value data. Statement.increment() will copy those
             # details to this instance.
         elif matching_line.value is None:
-            if self.consolidate:
+            if self.consolidate and consolidating:
                 self.xl.consolidated.sources.append(matching_line)
                 self.xl.consolidated.labels.append(xl_label)
         else:
@@ -534,7 +534,7 @@ class LineItem(Statement, HistoryLine):
             msg = "lineitem._consolidate can only be set to a boolean value"
             raise(TypeError(msg))
 
-    def set_hardcoded(self, val):
+    def set_hardcoded(self, val, recur=False):
         """
 
 
@@ -552,6 +552,10 @@ class LineItem(Statement, HistoryLine):
         else:
             msg = "lineitem._hardcoded can only be set to a boolean value"
             raise(TypeError(msg))
+
+        if recur:
+            for line in self._details.values():
+                line.set_hardcoded(val, recur=recur)
 
     def setValue(self, value, signature,
                  overrideValueManagement=False):
