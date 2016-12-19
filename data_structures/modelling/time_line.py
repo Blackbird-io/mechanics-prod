@@ -136,6 +136,34 @@ class TimeLine(dict):
         result = line_end.join(lines)
         return result
 
+    @classmethod
+    def from_portal(cls, portal_data):
+        """
+
+        TimeLine.from_portal(portal_data) -> TimeLine
+
+        **CLASS METHOD**
+
+        Method extracts a TimeLine from portal_data.
+        """
+
+    def to_portal(self):
+        """
+
+        TimeLine.to_portal() -> dict
+
+        Method yields a serialized representation of self.
+        """
+        periods = []
+        # for period in self.values():
+        #     periods.append(period.to_por
+        #         'period_end':
+        #     })
+        result = {
+            'periods': periods,
+        }
+        return result
+
     def copy_structure(self):
         """
 
