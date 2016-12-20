@@ -216,7 +216,14 @@ class TimePeriod(TagsMixIn):
             'period_start': format(self.start),
             'parameters': {},
             'unit_parameters': {},
+            'financials': [],
         }
+        for buid, fins in self.financials.items():
+            data = {
+                'buid': buid.hex,
+            }
+            data.update(fins.to_portal())
+            result['financials'].append(data)
         return result
 
     def clear(self):
