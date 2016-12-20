@@ -192,7 +192,6 @@ class Statement(Equalities, TagsMixIn):
         Method yields a serialized representation of self.
         """
         result = {
-            'name': self.name,
             'lines': [],
         }
         for line in self._details.values():
