@@ -186,6 +186,34 @@ class Financials:
 
         return result
 
+    @classmethod
+    def from_portal(cls, portal_data):
+        """
+
+        Financials.from_portal(portal_data) -> TimeLine
+
+        **CLASS METHOD**
+
+        Method extracts Financials from portal_data.
+        """
+
+    def to_portal(self):
+        """
+
+        Financials.to_portal() -> dict
+
+        Method yields a serialized representation of self.
+        """
+        statements = []
+        for name in self._full_order:
+            statement = getattr(self, name, None)
+            if statement:
+                statements.append(statement.to_portal())
+        result = {
+            'statements': statements,
+        }
+        return result
+
     def chef_ordered(self):
         """
 
