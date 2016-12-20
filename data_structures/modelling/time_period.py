@@ -28,6 +28,7 @@ TimePeriod            a snapshot of data over a period of time.
 
 # Imports
 import copy
+import json
 import logging
 
 import bb_settings
@@ -214,8 +215,8 @@ class TimePeriod(TagsMixIn):
         result = {
             'period_end': format(self.end),
             'period_start': format(self.start),
-            'parameters': {},
-            'unit_parameters': {},
+            'parameters': json.dumps(self.parameters),
+            'unit_parameters': json.dumps(self.unit_parameters),
             'financials': [],
         }
         for buid, fins in self.financials.items():
