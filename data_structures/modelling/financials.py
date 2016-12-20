@@ -208,7 +208,11 @@ class Financials:
         for name in self._full_order:
             statement = getattr(self, name, None)
             if statement:
-                statements.append(statement.to_portal())
+                data = {
+                    'name': name,
+                }
+                data.update(statement.to_portal())
+                statements.append(data)
         result = {
             'statements': statements,
         }
