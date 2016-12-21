@@ -216,7 +216,9 @@ class TimePeriod(TagsMixIn):
             'period_end': format(self.end),
             'period_start': format(self.start),
             'parameters': json.dumps(self.parameters),
-            'unit_parameters': json.dumps(self.unit_parameters),
+            'unit_parameters': json.dumps({
+                format(k): v for k, v in self.unit_parameters.items()
+            }),
             'financials': [],
         }
         for buid, fins in self.financials.items():
