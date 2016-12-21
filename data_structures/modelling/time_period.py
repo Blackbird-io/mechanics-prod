@@ -28,7 +28,6 @@ TimePeriod            a snapshot of data over a period of time.
 
 # Imports
 import copy
-import json
 import logging
 
 import bb_settings
@@ -208,15 +207,12 @@ class TimePeriod(TagsMixIn):
         period_start = date_from_iso(portal_data['period_start'])
         period_end = date_from_iso(portal_data['period_end'])
         new = cls(period_start, period_end)
-        for k, v in json.loads(
-            portal_data.get('parameters', '{}')
-        ).items():
-            new.parameters[k] = v
-        for k, v in json.loads(
-            portal_data.get('unit_parameters', '{}')
-        ).items():
+        new.parameters.update(portal_data.get('parameters', {}))
+
+        for k, v in portal_data.get('unit_parameters', {}).items():
             bbid = ID.from_portal(k)
             new.unit_parameters[bbid] = v
+
         return new
 
     def to_portal(self):
@@ -229,10 +225,10 @@ class TimePeriod(TagsMixIn):
         result = {
             'period_end': format(self.end),
             'period_start': format(self.start),
-            'parameters': json.dumps(self.parameters),
-            'unit_parameters': json.dumps({
+            'parameters': self.parameters,
+            'unit_parameters': {
                 format(k): v for k, v in self.unit_parameters.items()
-            }),
+            },
             'financials': [],
         }
         for buid, fins in self.financials.items():
