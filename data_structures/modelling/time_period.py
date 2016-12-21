@@ -37,6 +37,7 @@ import bb_exceptions
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
 from data_structures.system.tags_mixin import TagsMixIn
+from tools.parsing import date_from_iso
 
 from .parameters import Parameters
 
@@ -204,6 +205,19 @@ class TimePeriod(TagsMixIn):
 
         Method extracts a TimeLine from portal_data.
         """
+        period_start = date_from_iso(portal_data['period_start'])
+        period_end = date_from_iso(portal_data['period_end'])
+        new = cls(period_start, period_end)
+        for k, v in json.loads(
+            portal_data.get('parameters', '{}')
+        ).items():
+            new.parameters[k] = v
+        for k, v in json.loads(
+            portal_data.get('unit_parameters', '{}')
+        ).items():
+            bbid = ID.from_portal(k)
+            new.unit_parameters[bbid] = v
+        return new
 
     def to_portal(self):
         """
