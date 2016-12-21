@@ -28,6 +28,7 @@ LineItem              a Statement that has its own value
 # Imports
 import copy
 import time
+import json
 
 import bb_settings
 import bb_exceptions
@@ -278,20 +279,20 @@ class LineItem(Statement, HistoryLine):
             'position': self.position,
             'summary_type': self.summary_type,
             'summary_count': self.summary_count,
-            'local_value': self._local_value,
-            'hardcoded': self._hardcoded,
-            'consolidate': self._consolidate,
-            'replica': self._replica,
-            'include_details': self._include_details,
-            'sum_details': self._sum_details,
-            'xl': {
+            '_local_value': self._local_value,
+            '_hardcoded': self._hardcoded,
+            '_consolidate': self._consolidate,
+            '_replica': self._replica,
+            '_include_details': self._include_details,
+            '_sum_details': self._sum_details,
+            'xl': json.dumps({
                 'blank_row_before': self.xl.format.blank_row_before,
                 'blank_row_after': self.xl.format.blank_row_after,
                 'number_format': self.xl.format.number_format,
                 'direct_source': getattr(
                     self.xl.reference, 'direct_source', None
                 )
-            },
+            }),
         }
 
         # return this line
