@@ -29,7 +29,6 @@ TimeLine              collection of TimePeriod objects indexed by end date
 # imports
 import logging
 import copy
-import json
 
 from datetime import date, datetime, timedelta
 
@@ -161,11 +160,10 @@ class TimeLine(dict):
         if portal_data['has_been_extrapolated'] is not None:
             new.has_been_extrapolated = portal_data['has_been_extrapolated']
         if portal_data['parameters'] is not None:
-            new.parameters.update(json.loads(portal_data['parameters']))
+            new.parameters.update(portal_data['parameters'])
 
         obj = model.timelines[key]
         new.master = obj.master
-        # new.parameters = obj.parameters.copy()
 
         for data in portal_data['periods']:
             period = TimePeriod.from_portal(data)
@@ -188,7 +186,7 @@ class TimeLine(dict):
             'interval': self.interval,
             'ref_date': format(self.ref_date) if self.ref_date else '',
             'has_been_extrapolated': self.has_been_extrapolated,
-            'parameters': json.dumps(self.parameters),
+            'parameters': self.parameters,
         }
         return result
 
