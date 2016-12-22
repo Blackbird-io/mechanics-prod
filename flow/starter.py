@@ -40,12 +40,9 @@ from data_structures.system.messenger import Messenger
 
 
 #globals
-intro_line = LineItem("introduction")
-intro_line.tags.add("start", "configuration")
-intro_line.guide.quality.set_standard(2)
-
-build_or_upload_line = LineItem("build or upload")
-intro_line.append(build_or_upload_line)
+intro_line = LineItem("build or upload")
+# intro_line.tags.add("start", "configuration")
+# intro_line.guide.quality.set_standard(2)
 
 #classes
 class Starter:
