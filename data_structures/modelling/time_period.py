@@ -207,11 +207,14 @@ class TimePeriod(TagsMixIn):
         period_start = date_from_iso(portal_data['period_start'])
         period_end = date_from_iso(portal_data['period_end'])
         new = cls(period_start, period_end)
-        new.parameters.update(portal_data.get('parameters', {}))
 
-        for k, v in portal_data.get('unit_parameters', {}).items():
-            bbid = ID.from_portal(k)
-            new.unit_parameters[bbid] = v
+        new.parameters = Parameters.from_portal(portal_data['parameters'])
+        # convert unit_parameters keys to UUID
+        new.unit_parameters.add({
+            ID.from_portal(k): v
+            for k, v in
+            Parameters.from_portal(portal_data['unit_parameters']).items()
+        })
 
         return new
 
@@ -225,10 +228,8 @@ class TimePeriod(TagsMixIn):
         result = {
             'period_end': format(self.end),
             'period_start': format(self.start),
-            'parameters': self.parameters,
-            'unit_parameters': {
-                format(k): v for k, v in self.unit_parameters.items()
-            },
+            'parameters': list(self.parameters.to_portal()),
+            'unit_parameters': list(self.unit_parameters.to_portal()),
             'financials': [],
         }
         for buid, fins in self.financials.items():
