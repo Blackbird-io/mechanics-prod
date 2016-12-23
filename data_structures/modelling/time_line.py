@@ -160,7 +160,9 @@ class TimeLine(dict):
         if portal_data['has_been_extrapolated'] is not None:
             new.has_been_extrapolated = portal_data['has_been_extrapolated']
         if portal_data['parameters'] is not None:
-            new.parameters.update(portal_data['parameters'])
+            new.parameters = Parameters.from_portal(
+                portal_data['parameters'], model
+            )
 
         obj = model.timelines[key]
         new.master = obj.master
@@ -186,7 +188,7 @@ class TimeLine(dict):
             'interval': self.interval,
             'ref_date': format(self.ref_date) if self.ref_date else '',
             'has_been_extrapolated': self.has_been_extrapolated,
-            'parameters': self.parameters,
+            'parameters': list(self.parameters.to_portal()),
         }
         return result
 
