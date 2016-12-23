@@ -285,14 +285,14 @@ class LineItem(Statement, HistoryLine):
             '_replica': self._replica,
             '_include_details': self._include_details,
             '_sum_details': self._sum_details,
-            'xl': json.dumps({
+            'xl': {
                 'blank_row_before': self.xl.format.blank_row_before,
                 'blank_row_after': self.xl.format.blank_row_after,
                 'number_format': self.xl.format.number_format,
                 'direct_source': getattr(
                     self.xl.reference, 'direct_source', None
                 )
-            }),
+            },
         }
 
         # return this line
