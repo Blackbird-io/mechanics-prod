@@ -184,7 +184,7 @@ class TimeLine(dict):
         result = {
             'periods': periods,
             'interval': self.interval,
-            'ref_date': format(self.ref_date) if self.ref_date else '',
+            'ref_date': format(self.ref_date) if self.ref_date else None,
             'has_been_extrapolated': self.has_been_extrapolated,
             'parameters': list(self.parameters.to_portal()),
         }
