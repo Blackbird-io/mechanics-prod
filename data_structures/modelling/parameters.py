@@ -92,7 +92,7 @@ class Parameters(dict):
         return result
 
     @classmethod
-    def from_portal(cls, portal_data, model):
+    def from_portal(cls, portal_data):
         """
 
         Parameters.from_portal(portal_data) -> Parameters
@@ -124,9 +124,9 @@ class Parameters(dict):
         Method yields a serialized representation of self.
         """
         for k, v in self.items():
-            path = '{}\n{}'.format(key_path, k) if key_path else k
+            path = '{}\n{}'.format(key_path, k) if key_path else format(k)
             if isinstance(v, dict):
-                yield from v.to_portal(data, key_path=path)
+                yield from v.to_portal(key_path=path)
             else:
                 data = dict(
                     key_path=path,
