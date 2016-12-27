@@ -192,5 +192,25 @@ class ID:
 
         return result
 
+    @classmethod
+    def from_portal(cls, portal_data):
+        """
 
+        ID.from_portal(portal_data) -> ID
 
+        **CLASS METHOD**
+
+        Method extracts ID from portal_data.
+        """
+        new = cls()
+        new.bbid = uuid.UUID(portal_data)
+        return new
+
+    def to_portal(self):
+        """
+
+        TimeLine.to_portal() -> dict
+
+        Method yields a serialized representation of self.
+        """
+        return self.bbid.hex

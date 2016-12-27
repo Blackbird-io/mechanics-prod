@@ -28,6 +28,7 @@ LineItem              a Statement that has its own value
 # Imports
 import copy
 import time
+import json
 
 import bb_settings
 import bb_exceptions
@@ -262,10 +263,7 @@ class LineItem(Statement, HistoryLine):
 
         return line
 
-    def to_portal(
-        self, period, buid, statement, statement_attr, line_index,
-        line_parent=None
-    ):
+    def to_portal(self, parent_line=None):
         """
 
 
@@ -273,20 +271,11 @@ class LineItem(Statement, HistoryLine):
 
         Method yields a serialized representation of a LineItem.
         """
-        try:
-            direct_source = self.xl.reference.direct_source
-        except AttributeError:
-            direct_source = None
-
         row = {
-            'buid': buid,
-            'line_id': self.id.bbid.hex,
-            # 'line_index': line_index,
-            'line_name': self.name,
-            'line_title': self.title,
-            'line_parent_id': line_parent.id.bbid.hex if line_parent else None,
-            'statement_name': statement.name,
-            'statement_attr': statement_attr,
+            'bbid': self.id.bbid.hex,
+            'parent_bbid': parent_line.id.bbid.hex if parent_line else None,
+            'name': self.name,
+            'title': self.title,
             'position': self.position,
             'summary_type': self.summary_type,
             'summary_count': self.summary_count,
@@ -294,25 +283,23 @@ class LineItem(Statement, HistoryLine):
             '_hardcoded': self._hardcoded,
             '_consolidate': self._consolidate,
             '_replica': self._replica,
-            '_hardcoded': self._hardcoded,
             '_include_details': self._include_details,
             '_sum_details': self._sum_details,
             'xl': {
                 'blank_row_before': self.xl.format.blank_row_before,
                 'blank_row_after': self.xl.format.blank_row_after,
                 'number_format': self.xl.format.number_format,
+                'direct_source': getattr(
+                    self.xl.reference, 'direct_source', None
+                )
             },
-            'xl_reference': direct_source,
         }
 
         # return this line
         yield row
         # return child lines
         for stub_index, stub in enumerate(self.get_ordered()):
-            yield from stub.to_portal(
-                period, buid, statement, statement_attr, stub_index,
-                line_parent=self,
-            )
+            yield from stub.to_portal(parent_line=self)
 
     def __str__(self):
         result = "\n".join(self._get_line_strings())

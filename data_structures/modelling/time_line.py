@@ -36,6 +36,7 @@ import bb_settings
 import tools.for_printing as views
 
 from data_structures.system.bbid import ID
+from tools.parsing import date_from_iso
 from .parameters import Parameters
 from .time_period import TimePeriod
 
@@ -147,8 +148,28 @@ class TimeLine(dict):
         Method extracts a TimeLine from portal_data.
         """
         key = tuple(portal_data[k] for k in ('resolution', 'name'))
+        new = cls(
+            model,
+            resolution=portal_data['resolution'],
+            name=portal_data['name'],
+        )
+        if portal_data['interval'] is not None:
+            new.interval = portal_data['interval']
+        if portal_data['ref_date']:
+            new.ref_date = date_from_iso(portal_data['ref_date'])
+        if portal_data['has_been_extrapolated'] is not None:
+            new.has_been_extrapolated = portal_data['has_been_extrapolated']
+        if portal_data['parameters'] is not None:
+            new.parameters = Parameters.from_portal(portal_data['parameters'])
+
         obj = model.timelines[key]
-        return obj
+        new.master = obj.master
+
+        for data in portal_data['periods']:
+            period = TimePeriod.from_portal(data)
+            new.add_period(obj[period.end])
+
+        return new
 
     def to_portal(self):
         """
@@ -162,6 +183,10 @@ class TimeLine(dict):
         ]
         result = {
             'periods': periods,
+            'interval': self.interval,
+            'ref_date': format(self.ref_date) if self.ref_date else None,
+            'has_been_extrapolated': self.has_been_extrapolated,
+            'parameters': list(self.parameters.to_portal()),
         }
         return result
 
