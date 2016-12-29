@@ -109,11 +109,9 @@ class Parameters(dict):
                 k = keypath.pop(0)
                 if keypath:
                     keyhold = keyhold.setdefault(k, cls())
-                elif data['value']:
+                else:
                     # cast value to the stored type
                     keyhold[k] = locate(data['value_type'])(data['value'])
-                else:
-                    keyhold[k] = None
         return result
 
     def to_portal(self, key_path=None):
