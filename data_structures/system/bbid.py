@@ -85,6 +85,9 @@ class ID:
         self._prior_namespace = None
         self._namespace = None
 
+    def __str__(self):
+        return self.bbid.hex
+
     @property
     def namespace(self):
         """
