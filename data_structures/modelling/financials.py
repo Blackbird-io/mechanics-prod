@@ -191,7 +191,7 @@ class Financials:
     def from_portal(cls, portal_data, model, period):
         """
 
-        Financials.from_portal(portal_data) -> TimeLine
+        Financials.from_portal(portal_data) -> Financials
 
         **CLASS METHOD**
 
