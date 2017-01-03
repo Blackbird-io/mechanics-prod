@@ -200,7 +200,8 @@ class Financials:
         buid = ID.from_portal(portal_data['buid']).bbid
         company = model.get_company(buid)
         new = cls(parent=company, period=period)
-        period.financials[buid] = new
+        if period:
+            period.financials[buid] = new
 
         for data in portal_data['statements']:
             attr_name = data['name']
