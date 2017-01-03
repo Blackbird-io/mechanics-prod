@@ -36,6 +36,7 @@ import bb_exceptions
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
 from data_structures.system.tags_mixin import TagsMixIn
+from data_structures.modelling.financials import Financials
 from tools.parsing import date_from_iso
 
 from .parameters import Parameters
@@ -101,13 +102,11 @@ class TimePeriod(TagsMixIn):
 
         self.financials = dict()
 
-        self.summary = None
         self.id = ID()
         self.relationships = Relationships(self)
 
         self.past_end = None
         self.next_end = None
-
 
         self.parameters = Parameters()
         self.unit_parameters = Parameters()
@@ -195,7 +194,7 @@ class TimePeriod(TagsMixIn):
         pass
 
     @classmethod
-    def from_portal(cls, portal_data):
+    def from_portal(cls, portal_data, model, key):
         """
 
         TimeLine.from_portal(portal_data) -> TimeLine
@@ -211,10 +210,18 @@ class TimePeriod(TagsMixIn):
         new.parameters = Parameters.from_portal(portal_data['parameters'])
         # convert unit_parameters keys to UUID
         new.unit_parameters.add({
-            ID.from_portal(k): v
+            ID.from_portal(k).bbid: v
             for k, v in
             Parameters.from_portal(portal_data['unit_parameters']).items()
         })
+
+        time_line = model.timelines[key]
+        for data in portal_data['financials']:
+            Financials.from_portal(
+                data,
+                model=model,
+                period=None if new is time_line.current_period else new
+            )
 
         return new
 
