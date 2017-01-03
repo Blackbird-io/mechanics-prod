@@ -238,7 +238,7 @@ class LineChef:
         else:
             run_segments = True
 
-        if run_segments and not line.xl.reference.source and not line.xl.reference.direct_source:
+        if run_segments and not line.xl.reference.source:
             self._combine_segments(
                 sheet=sheet,
                 column=column,
