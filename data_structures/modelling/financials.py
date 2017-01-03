@@ -80,6 +80,7 @@ class Financials:
         self.ending = BalanceSheet("Ending Balance Sheet", parent=self)
         self.ledger = None
         self.id = ID()  # does not get its own bbid, just holds namespace
+        # parent for Financials is BusinessUnit
         self.relationships = Relationships(self, parent=parent)
         self.period = period
         self.filled = False
@@ -196,7 +197,11 @@ class Financials:
 
         Method extracts Financials from portal_data.
         """
-        new = cls(model, period)
+        buid = ID.from_portal(portal_data['buid']).bbid
+        company = model.get_company(buid)
+        new = cls(parent=company, period=period)
+        period.financials[buid] = new
+
         for data in portal_data['statements']:
             if data['name'] != 'starting':
                 statement = Statement.from_portal(
