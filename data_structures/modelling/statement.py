@@ -173,6 +173,34 @@ class Statement(Equalities, TagsMixIn):
         """
         return self._consolidated
 
+    @classmethod
+    def from_portal(cls, portal_data, model, financials):
+        """
+
+        Statement.from_portal(portal_data) -> Statement
+
+        **CLASS METHOD**
+
+        Method extracts a Statement from portal_data.
+        """
+        new = cls(name=portal_data['name'], parent=financials)
+
+        return new
+
+    def to_portal(self):
+        """
+
+        Statement.to_portal() -> dict
+
+        Method yields a serialized representation of self.
+        """
+        result = {
+            'lines': [],
+        }
+        for line in self._details.values():
+            result['lines'].extend(line.to_portal())
+        return result
+
     def add_line(self, new_line, position=None):
         """
 
