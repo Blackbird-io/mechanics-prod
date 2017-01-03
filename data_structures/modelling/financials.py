@@ -203,11 +203,18 @@ class Financials:
         period.financials[buid] = new
 
         for data in portal_data['statements']:
-            if data['name'] != 'starting':
-                statement = Statement.from_portal(
-                    data, model=model, financials=new
-                )
-                setattr(new, data['name'], statement)
+            attr_name = data['name']
+            if attr_name != 'starting':
+                # look for the auto-created statement first
+                statement = getattr(new, attr_name, None)
+                # if does not exist, create
+                if statement is None or True:
+                    statement = Statement.from_portal(
+                        data, model=model, financials=new
+                    )
+                    setattr(new, attr_name, statement)
+                if attr_name not in new._full_order:
+                    new._full_order.append(attr_name)
                 # deserialize all LineItems
                 LineItem.from_portal(
                     data['lines'], model=model, statement=statement

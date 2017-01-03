@@ -183,7 +183,7 @@ class Statement(Equalities, TagsMixIn):
 
         Method extracts a Statement from portal_data.
         """
-        new = cls(name=portal_data['name'], parent=financials)
+        new = cls(name=portal_data['title'], parent=financials)
 
         return new
 
@@ -195,6 +195,7 @@ class Statement(Equalities, TagsMixIn):
         Method yields a serialized representation of self.
         """
         result = {
+            'title': self.title,
             'lines': [],
         }
         for line in self._details.values():
