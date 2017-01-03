@@ -222,46 +222,55 @@ class LineItem(Statement, HistoryLine):
         return result
 
     @classmethod
-    def from_portal(cls, parent, portal_data):
+    def from_portal(cls, portal_data, model, statement):
         """
 
 
-        LineItem.from_portal(portal_model) -> Model
+        LineItem.from_portal() -> None
 
         **CLASS METHOD**
 
-        Method deserializes a LineItem.
+        Method deserializes all LineItems belonging to ``statement``.
         """
-        line_data = portal_data['myself']
-        line = parent.find_first(line_data['line_name'])
-        if not line:
-            line = cls(
-                line_data['line_title'], line_data['_local_value'], parent
+        # first pass: create a dict of lines
+        line_info = {}
+        for data in portal_data:
+            new = cls(
+                name=data['title'],
+                value=data['_local_value'],
+                parent=None,
             )
-            parent.add_line(line, position=line_data['position'])
-        for attr in (
-            'position',
-            'summary_type',
-            'summary_count',
-            '_local_value',
-            '_hardcoded',
-            '_consolidate',
-            '_replica',
-            '_hardcoded',
-            '_include_details',
-            '_sum_details',
-        ):
-            setattr(line, attr, line_data[attr])
+            for attr in (
+                'position',
+                'summary_type',
+                'summary_count',
+                '_local_value',
+                '_hardcoded',
+                '_consolidate',
+                '_replica',
+                '_hardcoded',
+                '_include_details',
+                '_sum_details',
+            ):
+                setattr(new, attr, data[attr])
+            for attr, value in data['xl'].items():
+                setattr(new.xl.format, attr, value)
+            new.xl.reference.direct_source = data['xl']['direct_source']
+            line_info[data['bbid']] = (new, data)
 
-        for attr, value in line_data['xl'].items():
-            setattr(line.xl.format, attr, value)
-
-        for line_id, sub_data in portal_data['subset'].items():
-            cls.from_portal(line, sub_data)
-
-        line.xl.reference.direct_source = line_data.get('xl_reference')
-
-        return line
+        # second pass: place lines
+        for bbid, (line, data) in line_info.items():
+            parent_bbid = data['parent_bbid']
+            if parent_bbid:
+                # another LineItem is the parent
+                parent = line_info.get(parent_bbid)[0]
+            else:
+                # Statement is the parent
+                parent = statement
+            position = data['position']
+            position = int(position) if position else None
+            line.relationships.set_parent(parent)
+            parent.add_line(line, position=position)
 
     def to_portal(self, parent_line=None):
         """
