@@ -187,7 +187,7 @@ class Financials:
         return result
 
     @classmethod
-    def from_portal(cls, portal_data):
+    def from_portal(cls, portal_data, model, period):
         """
 
         Financials.from_portal(portal_data) -> TimeLine
@@ -196,6 +196,15 @@ class Financials:
 
         Method extracts Financials from portal_data.
         """
+        new = cls(model, period)
+        for data in portal_data['statements']:
+            if data['name'] != 'starting':
+                statement = Statement.from_portal(
+                    data, model=model, financials=new
+                )
+                setattr(new, data['name'], statement)
+
+        return new
 
     def to_portal(self):
         """
