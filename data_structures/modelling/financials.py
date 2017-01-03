@@ -33,7 +33,7 @@ import bb_settings
 
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
-from .statement import Statement
+from .line_item import Statement, LineItem
 from .statements import BalanceSheet
 from .statements import CashFlow
 from .equalities import Equalities
@@ -203,6 +203,10 @@ class Financials:
                     data, model=model, financials=new
                 )
                 setattr(new, data['name'], statement)
+                # deserialize all LineItems
+                LineItem.from_portal(
+                    data['lines'], model=model, statement=statement
+                )
 
         return new
 
