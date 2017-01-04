@@ -188,7 +188,7 @@ class Financials:
         return result
 
     @classmethod
-    def from_portal(cls, portal_data, model, period):
+    def from_portal(cls, portal_data, model, period, time_line):
         """
 
         Financials.from_portal(portal_data) -> Financials
@@ -200,8 +200,13 @@ class Financials:
         buid = ID.from_portal(portal_data['buid']).bbid
         company = model.get_company(buid)
         new = cls(parent=company, period=period)
-        if period:
-            period.financials[buid] = new
+
+        if portal_data['complete'] is not None:
+            new.complete = portal_data['complete']
+        if portal_data['periods_used'] is not None:
+            new.periods_used = int(portal_data['periods_used'])
+
+        period.financials[buid] = new
 
         for data in portal_data['statements']:
             attr_name = data['name']
@@ -241,6 +246,8 @@ class Financials:
                 statements.append(data)
         result = {
             'statements': statements,
+            'complete': self.complete,
+            'periods_used': self.periods_used,
         }
         return result
 
