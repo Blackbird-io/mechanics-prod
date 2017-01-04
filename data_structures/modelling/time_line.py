@@ -166,8 +166,8 @@ class TimeLine(dict):
         new.master = obj.master
 
         for data in portal_data['periods']:
-            period = TimePeriod.from_portal(data, model=model, key=key)
-            new.add_period(period)
+            period = TimePeriod.from_portal(data, model=model, time_line=new)
+            # new.add_period(period)
 
         for period in new.iter_ordered():
             if period.past:
