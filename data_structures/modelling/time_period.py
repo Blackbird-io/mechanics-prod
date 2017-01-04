@@ -194,7 +194,7 @@ class TimePeriod(TagsMixIn):
         pass
 
     @classmethod
-    def from_portal(cls, portal_data, model, key):
+    def from_portal(cls, portal_data, model, **kargs):
         """
 
         TimeLine.from_portal(portal_data) -> TimeLine
@@ -215,13 +215,13 @@ class TimePeriod(TagsMixIn):
             Parameters.from_portal(portal_data['unit_parameters']).items()
         })
 
-        time_line = model.timelines[key]
+        # old = model.get_timeline(resolution=time_line.resolution, name=time_line.name)
+        # old = old[new.end]
+
+        time_line = kargs['time_line']
+        time_line.add_period(new)
         for data in portal_data['financials']:
-            Financials.from_portal(
-                data,
-                model=model,
-                period=None if new is time_line.current_period else new
-            )
+            Financials.from_portal(data, model=model, period=new, **kargs)
 
         return new
 

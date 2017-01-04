@@ -222,7 +222,7 @@ class LineItem(Statement, HistoryLine):
         return result
 
     @classmethod
-    def from_portal(cls, portal_data, model, statement):
+    def from_portal(cls, portal_data, model, **kargs):
         """
 
 
@@ -232,6 +232,7 @@ class LineItem(Statement, HistoryLine):
 
         Method deserializes all LineItems belonging to ``statement``.
         """
+        statement = kargs['statement']
         # first pass: create a dict of lines
         line_info = {}
         for data in portal_data:
@@ -240,6 +241,8 @@ class LineItem(Statement, HistoryLine):
                 value=data['_local_value'],
                 parent=None,
             )
+            new.id = ID.from_portal(data['bbid'])
+            new.xl = xl_mgmt.LineData.from_portal(data['xl'], model=model)
             for attr in (
                 'position',
                 'summary_type',
@@ -253,9 +256,6 @@ class LineItem(Statement, HistoryLine):
                 '_sum_details',
             ):
                 setattr(new, attr, data[attr])
-            for attr, value in data['xl'].items():
-                setattr(new.xl.format, attr, value)
-            new.xl.reference.direct_source = data['xl']['direct_source']
             line_info[data['bbid']] = (new, data)
 
         # second pass: place lines
@@ -276,7 +276,7 @@ class LineItem(Statement, HistoryLine):
         """
 
 
-        LineItem.to_portal(portal_model) -> iter(dict)
+        LineItem.to_portal() -> iter(dict)
 
         Method yields a serialized representation of a LineItem.
         """
@@ -294,14 +294,7 @@ class LineItem(Statement, HistoryLine):
             '_replica': self._replica,
             '_include_details': self._include_details,
             '_sum_details': self._sum_details,
-            'xl': {
-                'blank_row_before': self.xl.format.blank_row_before,
-                'blank_row_after': self.xl.format.blank_row_after,
-                'number_format': self.xl.format.number_format,
-                'direct_source': getattr(
-                    self.xl.reference, 'direct_source', None
-                )
-            },
+            'xl': self.xl.to_portal(),
         }
 
         # return this line
@@ -309,6 +302,36 @@ class LineItem(Statement, HistoryLine):
         # return child lines
         for stub_index, stub in enumerate(self.get_ordered()):
             yield from stub.to_portal(parent_line=self)
+
+    def portal_locator(self):
+        """
+
+
+        LineItem.portal_locator() -> dict
+
+        Method returns a dict with info needed to locate this line within
+        a model without object references.
+        """
+        parent = self.relationships.parent
+        while isinstance(parent, Statement):
+            parent = parent.relationships.parent
+        # parent is Financials at this point
+        bu = parent.relationships.parent
+        locator = dict(
+            buid=bu.id.bbid.hex,
+            bbid=self.id.bbid.hex,
+        )
+
+        period = parent.period
+        if period:
+            time_line = period.relationships.parent
+            locator.update(
+                period=format(period.end),
+                resolution=time_line.resolution,
+                name=time_line.name,
+            )
+
+        return locator
 
     def __str__(self):
         result = "\n".join(self._get_line_strings())
