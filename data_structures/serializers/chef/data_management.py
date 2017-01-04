@@ -254,6 +254,50 @@ class LineData(Range):
     def number_format(self, value):
         self.format.number_format = value
 
+    @classmethod
+    def from_portal(cls, portal_data, model):
+        """
+
+
+        LineData.from_portal() -> LineData
+
+        **CLASS METHOD**
+
+        Method deserializes a LineData.
+        """
+        new = cls()
+        if portal_data.get('format'):
+            new.format = LineFormat.from_portal(
+                portal_data['format'], model=model
+            )
+        return new
+
+    def to_portal(self):
+        """
+
+
+        LineData.to_portal() -> dict
+
+        Method yields a serialized representation of self.
+        """
+        row = {
+            'consolidated': {
+                'labels': self.consolidated.labels,
+                'sources': [
+                    line.portal_locator() for line in self.consolidated.sources
+                ],
+            },
+            'reference': {},
+        }
+
+        if self.reference.source:
+            row['reference']['source'] = self.reference.source.portal_locator()
+
+        if self.format:
+            row['format'] = self.format.to_portal()
+
+        return  row
+
     def get_coordinates(self, include_sheet=True):
         """
 
@@ -340,6 +384,31 @@ class LineFormat:
     @border.deleter
     def border(self):
         self._border = None
+
+    @classmethod
+    def from_portal(cls, portal_data, model):
+        """
+
+
+        LineFormat.from_portal() -> LineFormat
+
+        **CLASS METHOD**
+
+        Method deserializes a LineFormat object.
+        """
+        new = cls()
+        new.__dict__.update(portal_data)
+        return new
+
+    def to_portal(self):
+        """
+
+
+        LineFormat.to_portal() -> dict
+
+        Method yields a serialized representation of self.
+        """
+        return self.__dict__
 
     def copy(self):
         """
