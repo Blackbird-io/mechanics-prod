@@ -188,7 +188,7 @@ class Financials:
         return result
 
     @classmethod
-    def from_portal(cls, portal_data, model, period, time_line):
+    def from_portal(cls, portal_data, model, **kargs):
         """
 
         Financials.from_portal(portal_data) -> Financials
@@ -197,6 +197,8 @@ class Financials:
 
         Method extracts Financials from portal_data.
         """
+        period = kargs['period']
+
         buid = ID.from_portal(portal_data['buid']).bbid
         company = model.get_company(buid)
         new = cls(parent=company, period=period)
@@ -211,19 +213,15 @@ class Financials:
         for data in portal_data['statements']:
             attr_name = data['name']
             if attr_name != 'starting':
-                # look for the auto-created statement first
-                statement = getattr(new, attr_name, None)
-                # if does not exist, create
-                if statement is None or True:
-                    statement = Statement.from_portal(
-                        data, model=model, financials=new
-                    )
-                    setattr(new, attr_name, statement)
+                statement = Statement.from_portal(
+                    data, model=model, financials=new, **kargs
+                )
+                setattr(new, attr_name, statement)
                 if attr_name not in new._full_order:
                     new._full_order.append(attr_name)
                 # deserialize all LineItems
                 LineItem.from_portal(
-                    data['lines'], model=model, statement=statement
+                    data['lines'], model=model, statement=statement, **kargs
                 )
 
         return new
@@ -412,7 +410,6 @@ class Financials:
         """
         self.run_on_all("summarize")
 
-
     def peer_locator(self):
         """
 
@@ -427,3 +424,23 @@ class Financials:
             peer = bu.get_financials(kargs['period'])
             return peer
         return locator
+
+    def find_line(self, line_id):
+        """
+
+
+        Financials.find_line() -> LineItem
+
+        --``line_id`` bbid of line
+
+        Finds a LineItem across all statements by its bbid.
+        """
+        if isinstance(line_id, str):
+            line_id = ID.from_portal(line_id).bbid
+
+        for name in self._full_order:
+            statement = getattr(self, name, None)
+            if statement:
+                for line in statement.get_full_ordered():
+                    if line.id.bbid == line_id:
+                        return line
