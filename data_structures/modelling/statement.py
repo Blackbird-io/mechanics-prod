@@ -174,7 +174,7 @@ class Statement(Equalities, TagsMixIn):
         return self._consolidated
 
     @classmethod
-    def from_portal(cls, portal_data, model, financials):
+    def from_portal(cls, portal_data, model, **kargs):
         """
 
         Statement.from_portal(portal_data) -> Statement
@@ -183,6 +183,7 @@ class Statement(Equalities, TagsMixIn):
 
         Method extracts a Statement from portal_data.
         """
+        financials = kargs['financials']
         new = cls(name=portal_data['title'], parent=financials)
 
         return new
