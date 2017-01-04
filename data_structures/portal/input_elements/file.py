@@ -25,9 +25,11 @@ GenericInput          Describes on-screen field where user can input a response
 """
 
 # imports
-import copy
-
+import base64
 import bb_exceptions
+import copy
+import json
+import os
 
 from ..ready_for_portal import ReadyForPortal
 
@@ -108,9 +110,6 @@ class FileInput(ReadyForPortal):
                          "line_value",
                          "main_caption",
                          "multi",
-                         "r_max",
-                         "r_min",
-                         "r_step",
                          "response",
                          "shadow",
                          "shadow_2",
@@ -136,9 +135,6 @@ class FileInput(ReadyForPortal):
         self.__dict__["line_value"] = None
         self.__dict__["main_caption"] = None
         self.__dict__["multi"] = False
-        self.__dict__["r_max"] = None
-        self.__dict__["r_min"] = None
-        self.__dict__["r_steps"] = None
         self.__dict__["response"] = None
         self.__dict__["shadow"] = None
         self.__dict__["shadow_2"] = None
@@ -222,6 +218,19 @@ class FileInput(ReadyForPortal):
             adj_response = raw_response
         else:
             adj_response = [raw_response]
+
+        for i, r in enumerate(adj_response):
+            new_r = dict()
+
+            tempf = open(os.path.realpath(r), 'rb')
+            fc = tempf.read()
+            fc_b64 = base64.b64encode(fc)
+            fc_utf = fc_b64.decode("utf-8")
+            fc_json = json.dumps(fc_utf)
+
+            new_r['file_contents'] = fc_json
+            new_r['file_name'] = os.path.basename(r)
+            adj_response[i] = new_r
 
         return adj_response
 
