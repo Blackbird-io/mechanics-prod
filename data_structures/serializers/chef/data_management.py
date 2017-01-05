@@ -43,6 +43,8 @@ import copy
 from openpyxl.styles import Side
 
 from bb_exceptions import ExcelPrepError
+from data_structures.system.bbid import ID
+from tools.parsing import date_from_iso
 
 from .field_names import FieldNames
 from .axis_group import AxisGroup
@@ -255,7 +257,7 @@ class LineData(Range):
         self.format.number_format = value
 
     @classmethod
-    def from_portal(cls, portal_data, model):
+    def from_portal(cls, portal_data, model, **kargs):
         """
 
 
@@ -266,10 +268,32 @@ class LineData(Range):
         Method deserializes a LineData.
         """
         new = cls()
+
         if portal_data.get('format'):
             new.format = LineFormat.from_portal(
-                portal_data['format'], model=model
+                portal_data['format'], model=model, **kargs
             )
+
+        if portal_data['consolidated']['sources']:
+            new.consolidated.labels = portal_data['consolidated']['labels']
+            new.consolidated.sources.clear()
+            for locator in portal_data['consolidated']['sources']:
+                print(locator)
+                buid = ID.from_portal(locator['buid']).bbid
+                bbid = ID.from_portal(locator['bbid']).bbid
+                if locator.get('period'):
+                    end = date_from_iso(locator['period'])
+                    resolution = locator['resolution']
+                    name = locator['name']
+                    time_line = model.get_timeline(
+                        resolution=resolution, name=name
+                    )
+                    period = time_line[end]
+                else:
+                    period = None
+                financials = model.get_financials(buid, period)
+                financials.find_line(bbid)
+
         return new
 
     def to_portal(self):
@@ -386,7 +410,7 @@ class LineFormat:
         self._border = None
 
     @classmethod
-    def from_portal(cls, portal_data, model):
+    def from_portal(cls, portal_data, model, **kargs):
         """
 
 
