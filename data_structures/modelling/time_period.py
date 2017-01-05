@@ -36,6 +36,8 @@ import bb_exceptions
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
 from data_structures.system.tags_mixin import TagsMixIn
+from data_structures.modelling.financials import Financials
+from tools.parsing import date_from_iso
 
 from .parameters import Parameters
 
@@ -100,13 +102,11 @@ class TimePeriod(TagsMixIn):
 
         self.financials = dict()
 
-        self.summary = None
         self.id = ID()
         self.relationships = Relationships(self)
 
         self.past_end = None
         self.next_end = None
-
 
         self.parameters = Parameters()
         self.unit_parameters = Parameters()
@@ -194,7 +194,7 @@ class TimePeriod(TagsMixIn):
         pass
 
     @classmethod
-    def from_portal(cls, portal_data):
+    def from_portal(cls, portal_data, model, **kargs):
         """
 
         TimeLine.from_portal(portal_data) -> TimeLine
@@ -203,6 +203,27 @@ class TimePeriod(TagsMixIn):
 
         Method extracts a TimeLine from portal_data.
         """
+        period_start = date_from_iso(portal_data['period_start'])
+        period_end = date_from_iso(portal_data['period_end'])
+        new = cls(period_start, period_end)
+
+        new.parameters = Parameters.from_portal(portal_data['parameters'])
+        # convert unit_parameters keys to UUID
+        new.unit_parameters.add({
+            ID.from_portal(k).bbid: v
+            for k, v in
+            Parameters.from_portal(portal_data['unit_parameters']).items()
+        })
+
+        # old = model.get_timeline(resolution=time_line.resolution, name=time_line.name)
+        # old = old[new.end]
+
+        time_line = kargs['time_line']
+        time_line.add_period(new)
+        for data in portal_data['financials']:
+            Financials.from_portal(data, model=model, period=new, **kargs)
+
+        return new
 
     def to_portal(self):
         """
@@ -214,9 +235,16 @@ class TimePeriod(TagsMixIn):
         result = {
             'period_end': format(self.end),
             'period_start': format(self.start),
-            'parameters': {},
-            'unit_parameters': {},
+            'parameters': list(self.parameters.to_portal()),
+            'unit_parameters': list(self.unit_parameters.to_portal()),
+            'financials': [],
         }
+        for buid, fins in self.financials.items():
+            data = {
+                'buid': buid.hex,
+            }
+            data.update(fins.to_portal())
+            result['financials'].append(data)
         return result
 
     def clear(self):

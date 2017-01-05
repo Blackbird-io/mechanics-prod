@@ -33,7 +33,7 @@ import bb_settings
 
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
-from .statement import Statement
+from .line_item import Statement, LineItem
 from .statements import BalanceSheet
 from .statements import CashFlow
 from .equalities import Equalities
@@ -80,6 +80,7 @@ class Financials:
         self.ending = BalanceSheet("Ending Balance Sheet", parent=self)
         self.ledger = None
         self.id = ID()  # does not get its own bbid, just holds namespace
+        # parent for Financials is BusinessUnit
         self.relationships = Relationships(self, parent=parent)
         self.period = period
         self.filled = False
@@ -184,6 +185,68 @@ class Financials:
             border="***",
         )
 
+        return result
+
+    @classmethod
+    def from_portal(cls, portal_data, model, **kargs):
+        """
+
+        Financials.from_portal(portal_data) -> Financials
+
+        **CLASS METHOD**
+
+        Method extracts Financials from portal_data.
+        """
+        period = kargs['period']
+
+        buid = ID.from_portal(portal_data['buid']).bbid
+        company = model.get_company(buid)
+        new = cls(parent=company, period=period)
+
+        if portal_data['complete'] is not None:
+            new.complete = portal_data['complete']
+        if portal_data['periods_used'] is not None:
+            new.periods_used = int(portal_data['periods_used'])
+
+        period.financials[buid] = new
+
+        for data in portal_data['statements']:
+            attr_name = data['name']
+            if attr_name != 'starting':
+                statement = Statement.from_portal(
+                    data, model=model, financials=new, **kargs
+                )
+                setattr(new, attr_name, statement)
+                if attr_name not in new._full_order:
+                    new._full_order.append(attr_name)
+                # deserialize all LineItems
+                LineItem.from_portal(
+                    data['lines'], model=model, statement=statement, **kargs
+                )
+
+        return new
+
+    def to_portal(self):
+        """
+
+        Financials.to_portal() -> dict
+
+        Method yields a serialized representation of self.
+        """
+        statements = []
+        for name in self._full_order:
+            statement = getattr(self, name, None)
+            if statement:
+                data = {
+                    'name': name,
+                }
+                data.update(statement.to_portal())
+                statements.append(data)
+        result = {
+            'statements': statements,
+            'complete': self.complete,
+            'periods_used': self.periods_used,
+        }
         return result
 
     def chef_ordered(self):
@@ -347,7 +410,6 @@ class Financials:
         """
         self.run_on_all("summarize")
 
-
     def peer_locator(self):
         """
 
@@ -362,3 +424,23 @@ class Financials:
             peer = bu.get_financials(kargs['period'])
             return peer
         return locator
+
+    def find_line(self, line_id):
+        """
+
+
+        Financials.find_line() -> LineItem
+
+        --``line_id`` bbid of line
+
+        Finds a LineItem across all statements by its bbid.
+        """
+        if isinstance(line_id, str):
+            line_id = ID.from_portal(line_id).bbid
+
+        for name in self._full_order:
+            statement = getattr(self, name, None)
+            if statement:
+                for line in statement.get_full_ordered():
+                    if line.id.bbid == line_id:
+                        return line
