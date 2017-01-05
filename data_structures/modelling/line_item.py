@@ -237,14 +237,16 @@ class LineItem(Statement, HistoryLine):
         line_info = {}
         for data in portal_data:
             new = cls(
-                name=data['title'],
+                name=data['name'],
                 value=data['_local_value'],
                 parent=None,
             )
+            new.set_title(data['title'])
             new.id = ID.from_portal(data['bbid'])
             new.xl = xl_mgmt.LineData.from_portal(
                 data['xl'], model=model, **kargs
             )
+
             for attr in (
                 'position',
                 'summary_type',
@@ -317,6 +319,7 @@ class LineItem(Statement, HistoryLine):
         parent = self.relationships.parent
         while isinstance(parent, Statement):
             parent = parent.relationships.parent
+
         # parent is Financials at this point
         bu = parent.relationships.parent
         locator = dict(
@@ -326,12 +329,17 @@ class LineItem(Statement, HistoryLine):
 
         period = parent.period
         if period:
+            period_end = format(period.end)
             time_line = period.relationships.parent
-            locator.update(
-                period=format(period.end),
-                resolution=time_line.resolution,
-                name=time_line.name,
-            )
+        else:
+            period_end = None
+            time_line = bu.relationships.model.time_line
+
+        locator.update(
+            period=period_end,
+            resolution=time_line.resolution,
+            name=time_line.name,
+        )
 
         return locator
 

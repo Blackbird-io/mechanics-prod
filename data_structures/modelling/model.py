@@ -249,6 +249,13 @@ class Model(TagsMixIn):
                 timelines[key] = TimeLine.from_portal(data, model=M)
             M.timelines = timelines
 
+        # post-process financials in the current period, make sure they get
+        # assigned back to the proper BU
+        now = M.time_line.current_period
+        for bu in M.bu_directory.values():
+            fins = now.financials[bu.id.bbid]
+            bu.set_financials(fins)
+
         return M
 
     def to_portal(self):
@@ -258,6 +265,14 @@ class Model(TagsMixIn):
 
         Method yields a serialized representation of self.
         """
+
+        # pre-process financials in the current period, make sure they get
+        # serialized in th database
+        now = self.time_line.current_period
+        for bu in self.bu_directory.values():
+            fins = bu.financials
+            now.financials[bu.id.bbid] = fins
+
         # serialized representation has a list of timelines attached
         # with (resolution, name) as properties
         timelines = []
