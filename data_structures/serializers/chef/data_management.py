@@ -278,11 +278,11 @@ class LineData(Range):
             new.consolidated.labels = portal_data['consolidated']['labels']
             new.consolidated.sources.clear()
             for locator in portal_data['consolidated']['sources']:
-                print(locator)
                 buid = ID.from_portal(locator['buid']).bbid
                 bbid = ID.from_portal(locator['bbid']).bbid
                 if locator.get('period'):
-                    end = date_from_iso(locator['period'])
+                    # end = date_from_iso(locator['period'])
+                    end = locator['period']
                     resolution = locator['resolution']
                     name = locator['name']
                     time_line = model.get_timeline(
@@ -291,7 +291,13 @@ class LineData(Range):
                     period = time_line[end]
                 else:
                     period = None
-                financials = model.get_financials(buid, period)
+
+                if period:
+                    financials = model.get_financials(buid, period)
+                else:
+                    use_bu = model.get_company(buid=buid)
+                    financials = use_bu.financials
+
                 financials.find_line(bbid)
 
         return new
@@ -320,7 +326,7 @@ class LineData(Range):
         if self.format:
             row['format'] = self.format.to_portal()
 
-        return  row
+        return row
 
     def get_coordinates(self, include_sheet=True):
         """

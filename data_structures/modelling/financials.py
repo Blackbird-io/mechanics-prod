@@ -212,7 +212,7 @@ class Financials:
 
         for data in portal_data['statements']:
             attr_name = data['name']
-            if attr_name != 'starting':
+            if attr_name != 'starting' or period.past is None:
                 statement = Statement.from_portal(
                     data, model=model, financials=new, **kargs
                 )
