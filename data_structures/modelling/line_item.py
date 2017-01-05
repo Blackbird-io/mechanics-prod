@@ -242,7 +242,9 @@ class LineItem(Statement, HistoryLine):
                 parent=None,
             )
             new.id = ID.from_portal(data['bbid'])
-            new.xl = xl_mgmt.LineData.from_portal(data['xl'], model=model)
+            new.xl = xl_mgmt.LineData.from_portal(
+                data['xl'], model=model, **kargs
+            )
             for attr in (
                 'position',
                 'summary_type',
