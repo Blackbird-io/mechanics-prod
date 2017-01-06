@@ -172,6 +172,8 @@ class Tags:
 
         Method for setting the name of an object.
         """
+        if name is not None:
+            name = name.strip()
 
         self._name = deCase(name)
         self._title = name
@@ -186,6 +188,8 @@ class Tags:
 
         Method for setting the title of an object.
         """
+        if title is not None:
+            title = title.strip()
 
         self._title = title
 
