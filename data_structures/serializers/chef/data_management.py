@@ -281,8 +281,9 @@ class LineData(Range):
                 buid = ID.from_portal(locator['buid']).bbid
                 bbid = ID.from_portal(locator['bbid']).bbid
                 if locator.get('period'):
-                    # end = date_from_iso(locator['period'])
                     end = locator['period']
+                    if isinstance(end, str):
+                        end = date_from_iso(locator['period'])
                     resolution = locator['resolution']
                     name = locator['name']
                     time_line = model.get_timeline(

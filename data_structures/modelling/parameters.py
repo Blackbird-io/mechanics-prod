@@ -92,10 +92,12 @@ class Parameters(dict):
         return result
 
     @classmethod
-    def from_portal(cls, portal_data):
+    def from_portal(cls, portal_data, target=None):
         """
 
         Parameters.from_portal(portal_data) -> Parameters
+
+        --``target`` if given, will filter the rows based on 'target' field
 
         **CLASS METHOD**
 
@@ -103,6 +105,8 @@ class Parameters(dict):
         """
         result = cls()
         for data in portal_data:
+            if target and portal_data.get('target') != target:
+                continue
             keyhold = result
             keypath = data['key_path'].split('\n')
             while keypath:

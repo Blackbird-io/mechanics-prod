@@ -207,16 +207,20 @@ class TimePeriod(TagsMixIn):
         period_end = date_from_iso(portal_data['period_end'])
         new = cls(period_start, period_end)
 
-        new.parameters = Parameters.from_portal(portal_data['parameters'])
+        new.parameters.add(
+            Parameters.from_portal(
+                portal_data['parameters'], target='parameters'
+            )
+        )
+
         # convert unit_parameters keys to UUID
         new.unit_parameters.add({
             ID.from_portal(k).bbid: v
             for k, v in
-            Parameters.from_portal(portal_data['unit_parameters']).items()
+            Parameters.from_portal(
+                portal_data['unit_parameters'], target='unit_parameters'
+            ).items()
         })
-
-        # old = model.get_timeline(resolution=time_line.resolution, name=time_line.name)
-        # old = old[new.end]
 
         time_line = kargs['time_line']
         time_line.add_period(new)
