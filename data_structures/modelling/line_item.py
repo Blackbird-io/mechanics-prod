@@ -37,6 +37,7 @@ import tools.for_printing as printing_tools
 from data_structures.guidance.guide import Guide
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
+from data_structures.system.tags import Tags
 from pydoc import locate
 
 from .statement import Statement
@@ -238,10 +239,10 @@ class LineItem(Statement, HistoryLine):
         line_info = {}
         for data in portal_data:
             new = cls(
-                name=data['name'],
                 parent=None,
             )
-            new.set_title(data['title'])
+            new.tags = Tags.from_portal(data['tags'])
+
             new.id = ID.from_portal(data['bbid'])
             new.xl = xl_mgmt.LineData.from_portal(
                 data['xl'], model=model, **kargs
@@ -306,6 +307,7 @@ class LineItem(Statement, HistoryLine):
             '_include_details': self._include_details,
             '_sum_details': self._sum_details,
             'xl': self.xl.to_portal(),
+            'tags': self.tags.to_portal(),
         }
 
         # return this line

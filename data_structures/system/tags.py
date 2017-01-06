@@ -231,6 +231,45 @@ class Tags:
             if badTag in source:
                 source.remove(badTag)
 
+    @classmethod
+    def from_portal(cls, data):
+        """
+
+
+        LineItem.from_portal() -> None
+
+        **CLASS METHOD**
+
+        Method deserializes all LineItems belonging to ``statement``.
+        """
+        new = cls()
+
+        new._name = data['name']
+        new._title = data['title']
+        new._required = set(data['required'])
+        new._prohibited = set(data['prohibited'])
+        new._optional = set(data['optional'])
+
+        return new
+
+    def to_portal(self, parent_line=None):
+        """
+
+
+        Tags.to_portal() -> dict
+
+        Method yields a serialized representation of tags
+        """
+        row = {
+            'optional': list(self.optional),
+            'required': list(self.required),
+            'prohibited': list(self.prohibited),
+            'name': self.name,
+            'title': self.title,
+        }
+
+        return row
+
     # *************************************************************************#
     #                           NON-PUBLIC METHODS                             #
     # *************************************************************************#
