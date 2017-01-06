@@ -397,7 +397,7 @@ class Model(TagsMixIn):
 
         Method returns the specified version of financials.
         """
-        if bbid in period.financials:
+        if period and bbid in period.financials:
             fins = period.financials[bbid]
         else:
             unit = self.bu_directory[bbid]
@@ -417,6 +417,25 @@ class Model(TagsMixIn):
         Method returns the timeline for specified resolution (if any).
         """
         key = (resolution, name)
+        if key in self.timelines:
+            return self.timelines[key]
+
+    def get_line(self, **kargs):
+        """
+
+        Model.get_line() -> LineItem
+
+        --``bbid`` is bbid of line
+        --``buid`` is BU id
+
+        Method finds a LineItem matching the locator.
+        """
+        period = kargs.get('period')
+        key = (
+            kargs.get('resolution', 'monthly'),
+            kargs.get('name', 'default'),
+        )
+
         if key in self.timelines:
             return self.timelines[key]
 
