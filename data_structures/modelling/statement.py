@@ -442,6 +442,7 @@ class Statement(Equalities, TagsMixIn):
         For most removal tasks, find_first(remove=True) will offer significantly
         more comfort at a relatively small performance cost.
         """
+        ancestor_tree = [a.strip() for a in ancestor_tree]
         result = []
 
         caseless_root_name = ancestor_tree[0].casefold()
@@ -500,6 +501,8 @@ class Statement(Equalities, TagsMixIn):
         The best way to reinsert an item you accidentally removed is to find
         its parent using detail.relationships.parent and insert the item directly back.
         """
+        ancestor_tree = [a.strip() for a in ancestor_tree]
+
         result = None
 
         caseless_root_name = ancestor_tree[0].casefold()

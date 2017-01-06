@@ -287,6 +287,8 @@ class Financials:
             use_name = title or name
             statement = Statement(use_name)
 
+        statement.relationships.set_parent(self)
+
         self.__dict__[name] = statement
 
         if position:
