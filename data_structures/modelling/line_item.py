@@ -336,7 +336,8 @@ class LineItem(Statement, HistoryLine):
 
         period = parent.period
         if period:
-            period_end = format(period.end)
+            # period_end = period.end.strftime('%Y-%m-%d')
+            period_end = period.end
             time_line = period.relationships.parent
         else:
             period_end = None
