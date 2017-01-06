@@ -37,6 +37,7 @@ import tools.for_printing as printing_tools
 from data_structures.guidance.guide import Guide
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
+from pydoc import locate
 
 from .statement import Statement
 from .history_line import HistoryLine
@@ -238,7 +239,6 @@ class LineItem(Statement, HistoryLine):
         for data in portal_data:
             new = cls(
                 name=data['name'],
-                value=data['_local_value'],
                 parent=None,
             )
             new.set_title(data['title'])
@@ -247,11 +247,17 @@ class LineItem(Statement, HistoryLine):
                 data['xl'], model=model, **kargs
             )
 
+            typ = data['_local_value_type'] or 'float'
+            val = data['_local_value']
+
+            if val is not None:
+                val = locate(typ)(val)
+            new._local_value = val
+
             for attr in (
                 'position',
                 'summary_type',
                 'summary_count',
-                '_local_value',
                 '_hardcoded',
                 '_consolidate',
                 '_replica',
@@ -293,6 +299,7 @@ class LineItem(Statement, HistoryLine):
             'summary_type': self.summary_type,
             'summary_count': self.summary_count,
             '_local_value': self._local_value,
+            '_local_value_type': type(self._local_value).__name__,
             '_hardcoded': self._hardcoded,
             '_consolidate': self._consolidate,
             '_replica': self._replica,
