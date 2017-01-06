@@ -105,7 +105,7 @@ class Parameters(dict):
         """
         result = cls()
         for data in portal_data:
-            if target and portal_data.get('target') != target:
+            if target and data.get('target') and data['target'] != target:
                 continue
             keyhold = result
             keypath = data['key_path'].split('\n')
