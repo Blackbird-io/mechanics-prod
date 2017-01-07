@@ -209,6 +209,12 @@ class Financials:
         if portal_data['periods_used'] is not None:
             new.periods_used = int(portal_data['periods_used'])
 
+        for attr in ('_chef_order',
+                     '_compute_order',
+                     '_exclude_statements',
+                     '_full_order'):
+            setattr(new, attr, portal_data[attr])
+
         period.financials[buid] = new
 
         for data in portal_data['statements']:
@@ -247,6 +253,10 @@ class Financials:
             'statements': statements,
             'complete': self.complete,
             'periods_used': self.periods_used,
+            '_chef_order': self._chef_order,
+            '_compute_order': self._compute_order,
+            '_exclude_statements': self._exclude_statements,
+            '_full_order': self._full_order,
         }
         return result
 
@@ -287,6 +297,8 @@ class Financials:
         if not statement:
             use_name = title or name
             statement = Statement(use_name)
+
+        statement.relationships.set_parent(self)
 
         self.__dict__[name] = statement
 
