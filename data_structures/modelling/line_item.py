@@ -243,9 +243,9 @@ class LineItem(Statement, HistoryLine):
             )
             new.set_title(data['title'])
             new.id = ID.from_portal(data['bbid'])
-            new.xl = xl_mgmt.LineData.from_portal(
-                data['xl'], model=model, **kargs
-            )
+
+            # defer resolution of .xl
+            new.xl = data['xl']
 
             typ = data['_local_value_type'] or 'float'
             val = data['_local_value']

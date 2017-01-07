@@ -38,8 +38,13 @@ from data_structures.system.bbid import ID
 from data_structures.modelling.line_item import LineItem
 from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.system.summary_maker import SummaryMaker
+from data_structures.serializers.chef.data_management import LineData
+from tools.parsing import date_from_iso
 from .time_line import TimeLine
 from .taxo_dir import TaxoDir
+
+
+
 
 # constants
 # n/a
@@ -256,6 +261,17 @@ class Model(TagsMixIn):
             fins = now.financials[bu.id.bbid]
             bu.set_financials(fins)
 
+        # once all LineItems have been reconstructed, rebuild links among them
+        for (resolution, name), time_line in M.timelines.items():
+            for end, period in time_line.items():
+                for buid, fins in period.financials.items():
+                    for name in fins._full_order:
+                        statement = getattr(fins, name, None)
+                        if statement:
+                            for line in statement.get_full_ordered():
+                                if isinstance(line.xl, dict):
+                                    line.xl = LineData.from_portal(line.xl, M)
+
         return M
 
     def to_portal(self):
@@ -289,7 +305,6 @@ class Model(TagsMixIn):
         )
 
         return result
-
 
     def calc_summaries(self):
         try:
@@ -430,14 +445,22 @@ class Model(TagsMixIn):
 
         Method finds a LineItem matching the locator.
         """
-        period = kargs.get('period')
-        key = (
-            kargs.get('resolution', 'monthly'),
-            kargs.get('name', 'default'),
-        )
-
-        if key in self.timelines:
-            return self.timelines[key]
+        period_end = kargs['period']
+        bbid = ID.from_portal(kargs['bbid']).bbid
+        buid = ID.from_portal(kargs['buid']).bbid
+        if period_end:
+            end = date_from_iso(period_end)
+            key = (
+                kargs.get('resolution', 'monthly'),
+                kargs.get('name', 'default'),
+            )
+            time_line = self.timelines[key]
+            period = time_line[end]
+        else:
+            period = self.time_line.current_period
+        financials = self.get_financials(buid, period)
+        line = financials.find_line(bbid)
+        return line
 
     def prep_for_monitoring_interview(self):
         """

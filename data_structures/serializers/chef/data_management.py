@@ -278,28 +278,7 @@ class LineData(Range):
             new.consolidated.labels = portal_data['consolidated']['labels']
             new.consolidated.sources.clear()
             for locator in portal_data['consolidated']['sources']:
-                buid = ID.from_portal(locator['buid']).bbid
-                bbid = ID.from_portal(locator['bbid']).bbid
-                if locator.get('period'):
-                    end = locator['period']
-                    if isinstance(end, str):
-                        end = date_from_iso(locator['period'])
-                    resolution = locator['resolution']
-                    name = locator['name']
-                    time_line = model.get_timeline(
-                        resolution=resolution, name=name
-                    )
-                    period = time_line[end]
-                else:
-                    period = None
-
-                if period:
-                    financials = model.get_financials(buid, period)
-                else:
-                    use_bu = model.get_company(buid=buid)
-                    financials = use_bu.financials
-
-                financials.find_line(bbid)
+                new.consolidated.sources.append(model.get_line(**locator))
 
         return new
 
