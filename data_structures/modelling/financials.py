@@ -30,6 +30,7 @@ Financials            a dynamic class that holds standard and custom statements
 import logging
 
 import bb_settings
+import bb_exceptions
 
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
@@ -444,3 +445,7 @@ class Financials:
                 for line in statement.get_full_ordered():
                     if line.id.bbid == line_id:
                         return line
+
+        raise bb_exceptions.StructureError(
+            'Could not find line with id {}'.format(line_id)
+        )
