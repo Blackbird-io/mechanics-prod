@@ -203,8 +203,13 @@ class TimePeriod(TagsMixIn):
 
         Method extracts a TimeLine from portal_data.
         """
-        period_start = portal_data['period_start']
-        period_end = portal_data['period_end']
+        if isinstance(portal_data['period_start'], str):
+            period_start = date_from_iso(portal_data['period_start'])
+            period_end = date_from_iso(portal_data['period_end'])
+        else:
+            period_start = portal_data['period_start']
+            period_end = portal_data['period_end']
+
         new = cls(period_start, period_end)
 
         new.parameters.add(
