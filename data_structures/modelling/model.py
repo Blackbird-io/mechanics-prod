@@ -455,6 +455,8 @@ class Model(TagsMixIn):
                 kargs.get('name', 'default'),
             )
             time_line = self.timelines[key]
+            if isinstance(period_end, str):
+                period_end = date_from_iso(period_end)
             period = time_line[period_end]
         else:
             period = self.time_line.current_period
