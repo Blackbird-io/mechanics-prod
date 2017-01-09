@@ -288,11 +288,7 @@ class Model(TagsMixIn):
         now = self.time_line.current_period
         for bu in self.bu_directory.values():
             fins = bu.financials
-            if now:
-                now.financials[bu.id.bbid] = fins
-            else:
-                import pdb
-                pdb.set_trace()
+            now.financials[bu.id.bbid] = fins
 
         # serialized representation has a list of timelines attached
         # with (resolution, name) as properties
