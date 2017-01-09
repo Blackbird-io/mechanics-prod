@@ -353,7 +353,7 @@ class LineItem(Statement, HistoryLine):
 
         period = financials.period
         if period:
-            period_end = period.end
+            period_end = format(period.end)
             time_line = period.relationships.parent
         else:
             period_end = None
