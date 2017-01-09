@@ -156,7 +156,7 @@ class TimeLine(dict):
         if portal_data['interval'] is not None:
             new.interval = portal_data['interval']
         if portal_data['ref_date']:
-            new.ref_date = date_from_iso(portal_data['ref_date'])
+            new.ref_date = portal_data['ref_date']
             if isinstance(new.ref_date, str):
                 new.ref_date = date_from_iso(new.ref_date)
         if portal_data['has_been_extrapolated'] is not None:

@@ -256,10 +256,11 @@ class Model(TagsMixIn):
 
         # post-process financials in the current period, make sure they get
         # assigned back to the proper BU
-        now = M.time_line.current_period
-        for bu in M.bu_directory.values():
-            fins = now.financials[bu.id.bbid]
-            bu.set_financials(fins)
+        if M.time_line.current_period:
+            now = M.time_line.current_period
+            for bu in M.bu_directory.values():
+                fins = now.financials[bu.id.bbid]
+                bu.set_financials(fins)
 
         # once all LineItems have been reconstructed, rebuild links among them
         for (resolution, name), time_line in M.timelines.items():
@@ -287,7 +288,11 @@ class Model(TagsMixIn):
         now = self.time_line.current_period
         for bu in self.bu_directory.values():
             fins = bu.financials
-            now.financials[bu.id.bbid] = fins
+            if now:
+                now.financials[bu.id.bbid] = fins
+            else:
+                import pdb
+                pdb.set_trace()
 
         # serialized representation has a list of timelines attached
         # with (resolution, name) as properties
