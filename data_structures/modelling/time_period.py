@@ -219,13 +219,9 @@ class TimePeriod(TagsMixIn):
         )
 
         # convert unit_parameters keys to UUID
-        new.unit_parameters.add({
-            ID.from_portal(k).bbid: v
-            for k, v in
-            Parameters.from_portal(
-                portal_data['unit_parameters'], target='unit_parameters'
-            ).items()
-        })
+        for k, v in Parameters.from_portal(portal_data['unit_parameters'],
+                                           target='unit_parameters').items():
+            new.unit_parameters.add({ID.from_portal(k).bbid: v})
 
         time_line = kargs['time_line']
         time_line.add_period(new)
@@ -244,8 +240,9 @@ class TimePeriod(TagsMixIn):
         result = {
             'period_end': self.end,
             'period_start': self.start,
-            'parameters': list(self.parameters.to_portal()),
-            'unit_parameters': list(self.unit_parameters.to_portal()),
+            'parameters': list(self.parameters.to_portal(target='parameters')),
+            'unit_parameters': list(self.unit_parameters.to_portal(
+                target='unit_parameters')),
             'financials': [],
         }
         for buid, fins in self.financials.items():
