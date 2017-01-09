@@ -280,6 +280,16 @@ class LineData(Range):
             for locator in portal_data['consolidated']['sources']:
                 new.consolidated.sources.append(model.get_line(**locator))
 
+        new.reference.direct_source = portal_data['reference']['direct_source']
+        if portal_data['reference']['source']:
+            try:
+                new.reference.source = model.get_line(**portal_data['reference']['source'])
+            except:
+                import pdb
+                pdb.set_trace()
+
+        # .derived.calculations
+
         return new
 
     def to_portal(self):
@@ -297,7 +307,10 @@ class LineData(Range):
                     line.portal_locator() for line in self.consolidated.sources
                 ],
             },
-            'reference': {},
+            'reference': {
+                'source': None,
+                'direct_source': self.reference.direct_source,
+            },
         }
 
         if self.reference.source:

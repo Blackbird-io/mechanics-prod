@@ -265,6 +265,8 @@ class LineItem(Statement, HistoryLine):
                 '_hardcoded',
                 '_include_details',
                 '_sum_details',
+                '_consolidated',
+                'log',
             ):
                 setattr(new, attr, data[attr])
             line_info[data['bbid']] = (new, data)
@@ -308,6 +310,8 @@ class LineItem(Statement, HistoryLine):
             '_sum_details': self._sum_details,
             'xl': self.xl.to_portal(),
             'tags': self.tags.to_portal(),
+            'log': self.log,
+            '_consolidated': self._consolidated,
         }
 
         # return this line
@@ -327,18 +331,34 @@ class LineItem(Statement, HistoryLine):
         """
         parent = self.relationships.parent
         while isinstance(parent, Statement):
+            statement = parent
             parent = parent.relationships.parent
 
         # parent is Financials at this point
-        bu = parent.relationships.parent
+        financials = parent
+
+        statement_attr = None
+        for attr in financials._full_order:
+            stmt = getattr(financials, attr, None)
+            if stmt is statement:
+                statement_attr = attr
+
+        if statement_attr is None:
+            print(financials)
+            print(statement)
+            print(self)
+            import pdb
+            pdb.set_trace()
+
+        bu = financials.relationships.parent
         locator = dict(
             buid=bu.id.bbid.hex,
+            financials_attr=statement_attr,
             bbid=self.id.bbid.hex,
         )
 
-        period = parent.period
+        period = financials.period
         if period:
-            # period_end = period.end.strftime('%Y-%m-%d')
             period_end = period.end
             time_line = period.relationships.parent
         else:

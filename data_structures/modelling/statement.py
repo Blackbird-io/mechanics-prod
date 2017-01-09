@@ -185,6 +185,7 @@ class Statement(Equalities, TagsMixIn):
         """
         financials = kargs['financials']
         new = cls(name=portal_data['title'], parent=financials)
+        new._consolidated = portal_data['_consolidated']
 
         return new
 
@@ -198,6 +199,7 @@ class Statement(Equalities, TagsMixIn):
         result = {
             'title': self.title,
             'lines': [],
+            '_consolidated': self._consolidated,
         }
         for line in self._details.values():
             result['lines'].extend(line.to_portal())
