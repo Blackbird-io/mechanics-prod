@@ -282,11 +282,7 @@ class LineData(Range):
 
         new.reference.direct_source = portal_data['reference']['direct_source']
         if portal_data['reference']['source']:
-            try:
-                new.reference.source = model.get_line(**portal_data['reference']['source'])
-            except:
-                import pdb
-                pdb.set_trace()
+            new.reference.source = model.get_line(**portal_data['reference']['source'])
 
         # .derived.calculations
 

@@ -268,7 +268,8 @@ class LineItem(Statement, HistoryLine):
                 '_consolidated',
                 'log',
             ):
-                setattr(new, attr, data[attr])
+                new.__dict__[attr] = data[attr]
+
             line_info[data['bbid']] = (new, data)
 
         # second pass: place lines
@@ -342,13 +343,6 @@ class LineItem(Statement, HistoryLine):
             stmt = getattr(financials, attr, None)
             if stmt is statement:
                 statement_attr = attr
-
-        if statement_attr is None:
-            print(financials)
-            print(statement)
-            print(self)
-            import pdb
-            pdb.set_trace()
 
         bu = financials.relationships.parent
         locator = dict(
