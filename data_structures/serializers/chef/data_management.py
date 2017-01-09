@@ -160,8 +160,9 @@ class DriverData:
 
         for k, v in new.references.items():
             # this is how we determine if it's a LineItem
-            if all(v.get(c) for c in ('bbid', 'buid', 'period')):
-                new.references[k] = model.get_line(**v)
+            if isinstance(v, dict):
+                if all(v.get(c) for c in ('bbid', 'buid', 'period')):
+                    new.references[k] = model.get_line(**v)
 
         return new
 
