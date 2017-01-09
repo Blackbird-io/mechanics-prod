@@ -115,9 +115,6 @@ class PortalModel(ReadyForPortal):
                 result.update(seed.portal_data)
             #
             seed.portal_data.clear()
-            flattened = pickle.dumps(seed)
-            result["e_model"] = flattened
-            #
             result["industry"] = seed.interview.work_space.get("industry")
             # dict keys serialized by Model itself
             result.update(seed.to_portal())
@@ -127,6 +124,10 @@ class PortalModel(ReadyForPortal):
             else:
                 summary = {"credit capacity": "dummy placeholder"}
             result["summary"] = summary
+
+            seed.timelines.clear()
+            flattened = pickle.dumps(seed)
+            result["e_model"] = flattened
         #
         del result["_var_attrs"]
         #

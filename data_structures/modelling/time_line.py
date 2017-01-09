@@ -138,7 +138,7 @@ class TimeLine(dict):
         return result
 
     @classmethod
-    def from_portal(cls, portal_data, model):
+    def from_portal(cls, portal_data, model, **kargs):
         """
 
         TimeLine.from_portal(portal_data) -> TimeLine
@@ -153,6 +153,8 @@ class TimeLine(dict):
             resolution=portal_data['resolution'],
             name=portal_data['name'],
         )
+        new.master = model.taxo_dir
+
         if portal_data['interval'] is not None:
             new.interval = portal_data['interval']
         if portal_data['ref_date']:
@@ -163,9 +165,6 @@ class TimeLine(dict):
             new.has_been_extrapolated = portal_data['has_been_extrapolated']
         if portal_data['parameters'] is not None:
             new.parameters = Parameters.from_portal(portal_data['parameters'])
-
-        obj = model.timelines[key]
-        new.master = obj.master
 
         for data in portal_data['periods']:
             period = TimePeriod.from_portal(
