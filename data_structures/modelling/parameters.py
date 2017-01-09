@@ -118,7 +118,7 @@ class Parameters(dict):
                     keyhold[k] = locate(data['value_type'])(data['value'])
         return result
 
-    def to_portal(self, key_path=None):
+    def to_portal(self, key_path=None, target=''):
         """
 
         TimeLine.to_portal() -> dict
@@ -128,11 +128,12 @@ class Parameters(dict):
         for k, v in self.items():
             path = '{}\n{}'.format(key_path, k) if key_path else format(k)
             if isinstance(v, dict):
-                yield from v.to_portal(key_path=path)
+                yield from v.to_portal(key_path=path, target=target)
             else:
                 data = dict(
                     key_path=path,
                     value=v,
                     value_type=type(v).__name__,
+                    target=target,
                 )
                 yield data
