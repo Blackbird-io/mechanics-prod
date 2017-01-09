@@ -39,6 +39,7 @@ UnitData              holds the Worksheet for a particular BusinessUnit
 
 # Imports
 import copy
+import datetime as DT
 
 from openpyxl.styles import Side
 
@@ -143,6 +144,43 @@ class DriverData:
         self.name = None
         self.comment = ""
 
+    @classmethod
+    def from_portal(cls, portal_data, model, **kargs):
+        """
+
+
+        DriverData.from_portal() -> DriverData
+
+        **CLASS METHOD**
+
+        Method deserializes a LineData.
+        """
+        new = cls()
+        new.__dict__.update(portal_data)
+
+        for k, v in new.references.items():
+            # this is how we determine if it's a LineItem
+            if all(v.get(c) for c in ('bbid', 'buid', 'period')):
+                new.references[k] = model.get_line(**v)
+
+        return new
+
+    def to_portal(self, **kargs):
+        """
+
+
+        DriverData.to_portal() -> dict
+
+        Method yields a serialized representation of self.
+        """
+        row = self.__dict__.copy()
+
+        for k, v in row['references'].items():
+            # this is how we determine if it's a LineItem
+            if hasattr(v, 'portal_locator'):
+                row['references'][k] = v.portal_locator()
+
+        return row
 
 class Range:
     """
@@ -282,13 +320,18 @@ class LineData(Range):
 
         new.reference.direct_source = portal_data['reference']['direct_source']
         if portal_data['reference']['source']:
-            new.reference.source = model.get_line(**portal_data['reference']['source'])
+            new.reference.source = model.get_line(
+                **portal_data['reference']['source']
+            )
 
-        # .derived.calculations
+        new.derived.calculations = [
+            DriverData.from_portal(calc, model=model)
+            for calc in portal_data['derived']['calculations']
+        ]
 
         return new
 
-    def to_portal(self):
+    def to_portal(self, **kargs):
         """
 
 
@@ -303,6 +346,9 @@ class LineData(Range):
                     line.portal_locator() for line in self.consolidated.sources
                 ],
             },
+            'derived': {
+                'calculations': [],
+            },
             'reference': {
                 'source': None,
                 'direct_source': self.reference.direct_source,
@@ -314,6 +360,10 @@ class LineData(Range):
 
         if self.format:
             row['format'] = self.format.to_portal()
+
+        if self.derived.calculations:
+            for calc in self.derived.calculations:
+                row['derived']['calculations'].append(calc.to_portal())
 
         return row
 
