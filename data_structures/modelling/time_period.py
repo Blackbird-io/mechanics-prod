@@ -203,8 +203,8 @@ class TimePeriod(TagsMixIn):
 
         Method extracts a TimeLine from portal_data.
         """
-        period_start = date_from_iso(portal_data['period_start'])
-        period_end = date_from_iso(portal_data['period_end'])
+        period_start = portal_data['period_start']
+        period_end = portal_data['period_end']
         new = cls(period_start, period_end)
 
         new.parameters.add(
@@ -237,8 +237,8 @@ class TimePeriod(TagsMixIn):
         Method yields a serialized representation of self.
         """
         result = {
-            'period_end': format(self.end),
-            'period_start': format(self.start),
+            'period_end': self.end,
+            'period_start': self.start,
             'parameters': list(self.parameters.to_portal()),
             'unit_parameters': list(self.unit_parameters.to_portal()),
             'financials': [],

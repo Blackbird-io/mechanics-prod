@@ -448,18 +448,18 @@ class Model(TagsMixIn):
         period_end = kargs['period']
         bbid = ID.from_portal(kargs['bbid']).bbid
         buid = ID.from_portal(kargs['buid']).bbid
+        fins_attr = kargs['financials_attr']
         if period_end:
-            end = date_from_iso(period_end)
             key = (
                 kargs.get('resolution', 'monthly'),
                 kargs.get('name', 'default'),
             )
             time_line = self.timelines[key]
-            period = time_line[end]
+            period = time_line[period_end]
         else:
             period = self.time_line.current_period
         financials = self.get_financials(buid, period)
-        line = financials.find_line(bbid)
+        line = financials.find_line(bbid, fins_attr)
         return line
 
     def prep_for_monitoring_interview(self):

@@ -212,24 +212,25 @@ class Financials:
         for attr in ('_chef_order',
                      '_compute_order',
                      '_exclude_statements',
-                     '_full_order'):
-            setattr(new, attr, portal_data[attr])
+                     '_full_order',
+                     'filled'):
+            new.__dict__[attr] = portal_data[attr]
 
         period.financials[buid] = new
 
         for data in portal_data['statements']:
             attr_name = data['name']
-            if attr_name != 'starting' or period.past is None:
-                statement = Statement.from_portal(
-                    data, model=model, financials=new, **kargs
-                )
-                setattr(new, attr_name, statement)
-                if attr_name not in new._full_order:
-                    new._full_order.append(attr_name)
-                # deserialize all LineItems
-                LineItem.from_portal(
-                    data['lines'], model=model, statement=statement, **kargs
-                )
+
+            statement = Statement.from_portal(
+                data, model=model, financials=new
+            )
+
+            new.__dict__[attr_name] = statement
+
+            # deserialize all LineItems
+            LineItem.from_portal(
+                data['lines'], model=model, statement=statement, **kargs
+            )
 
         return new
 
@@ -242,6 +243,11 @@ class Financials:
         """
         statements = []
         for name in self._full_order:
+            if name == 'starting' and self.period:
+                if self.period.past is not None:
+                    # enforce SSOT in database
+                    continue
+
             statement = getattr(self, name, None)
             if statement:
                 data = {
@@ -253,6 +259,7 @@ class Financials:
             'statements': statements,
             'complete': self.complete,
             'periods_used': self.periods_used,
+            'filled': self.filled,
             '_chef_order': self._chef_order,
             '_compute_order': self._compute_order,
             '_exclude_statements': self._exclude_statements,
@@ -438,7 +445,7 @@ class Financials:
             return peer
         return locator
 
-    def find_line(self, line_id):
+    def find_line(self, line_id, statement_attr):
         """
 
 
@@ -451,12 +458,11 @@ class Financials:
         if isinstance(line_id, str):
             line_id = ID.from_portal(line_id).bbid
 
-        for name in self._full_order:
-            statement = getattr(self, name, None)
-            if statement:
-                for line in statement.get_full_ordered():
-                    if line.id.bbid == line_id:
-                        return line
+        statement = getattr(self, statement_attr, None)
+        if statement:
+            for line in statement.get_full_ordered():
+                if line.id.bbid == line_id:
+                    return line
 
         raise bb_exceptions.StructureError(
             'Could not find line with id {}'.format(line_id)
