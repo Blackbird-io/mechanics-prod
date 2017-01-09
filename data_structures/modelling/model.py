@@ -259,7 +259,7 @@ class Model(TagsMixIn):
         if M.time_line.current_period:
             now = M.time_line.current_period
             for bu in M.bu_directory.values():
-                fins = now.financials[bu.id.bbid]
+                fins = M.get_financials(bu.id.bbid, now)
                 bu.set_financials(fins)
 
         # once all LineItems have been reconstructed, rebuild links among them
