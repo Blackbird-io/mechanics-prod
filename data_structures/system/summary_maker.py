@@ -290,6 +290,7 @@ class SummaryMaker:
                 bal_enter = source_fins.starting.copy()
                 bal_enter.link_to(source_fins.starting)
                 period_fins.starting = bal_enter
+                bal_enter.relationships.set_parent(period_fins)
 
             logger.debug('{}:{} -> {}:{} new {}'.format(
                 source.start, source.end, period.start, period.end, self.onkey
@@ -323,6 +324,7 @@ class SummaryMaker:
             bal_close = source_fins.ending.copy()
             bal_close.link_to(source_fins.ending)
             target_fins.ending = bal_close
+            bal_close.relationships.set_parent(target_fins)
 
             logger.debug('{}:{} -> {}:{} flush {}'.format(
                 source.start, source.end, target.start, target.end, self.onkey
