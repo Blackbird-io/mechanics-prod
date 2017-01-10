@@ -134,6 +134,8 @@ class Model(TagsMixIn):
 
         self._company = None
         self.target = None
+
+        self.summary_maker = None
         # target is BU from which to get path and interview info, default
         # points to top-level business unit/company
 
@@ -272,6 +274,12 @@ class Model(TagsMixIn):
                             for line in statement.get_full_ordered():
                                 if isinstance(line.xl, dict):
                                     line.xl = LineData.from_portal(line.xl, M)
+
+        if M.summary_maker:
+            tnam = M.summary_maker['timeline_name']
+            temp_sm = SummaryMaker(M, timeline_name=tnam, init=False)
+            temp_sm._fiscal_year_end = M.summary_maker['_fiscal_year_end']
+            M.summary_maker = temp_sm
 
         return M
 

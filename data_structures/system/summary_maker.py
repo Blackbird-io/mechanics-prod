@@ -79,12 +79,13 @@ class SummaryMaker:
     ANNUAL_KEY = "annual"
     QUARTERLY_KEY = "quarterly"
 
-    def __init__(self, model, timeline_name='default'):
+    def __init__(self, model, timeline_name='default', init=True):
         self._fiscal_year_end = None
         self.model = model
         self.timeline_name = timeline_name
         self.buid = model.get_company().id.bbid
-        self.init_summaries()
+        if init:
+            self.init_summaries()
 
     @property
     def fiscal_year_end(self):

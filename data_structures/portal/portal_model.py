@@ -125,10 +125,24 @@ class PortalModel(ReadyForPortal):
                 summary = {"credit capacity": "dummy placeholder"}
             result["summary"] = summary
 
-            seed.timelines.clear()
+            del seed.timelines
+            for bu in seed.bu_directory.values():
+                del bu.financials
+
+            if seed.summary_maker:
+                sum_dict = {'_fiscal_year_end': seed.summary_maker._fiscal_year_end,
+                            'timeline_name': seed.summary_maker.timeline_name,
+                            }
+                seed.summary_maker = sum_dict
+
             flattened = pickle.dumps(seed)
+
+            f = open(r'C:\Blackbird\pickle_sizes_no_tl_fins.txt', 'a')
+            f.write(str(len(flattened))+'\n')
+            f.close()
+
             result["e_model"] = flattened
-        #
+
         del result["_var_attrs"]
-        #
+
         return result
