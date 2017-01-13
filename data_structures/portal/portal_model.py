@@ -136,11 +136,6 @@ class PortalModel(ReadyForPortal):
                 seed.summary_maker = sum_dict
 
             flattened = pickle.dumps(seed)
-
-            f = open(r'C:\Blackbird\pickle_sizes_no_tl_fins.txt', 'a')
-            f.write(str(len(flattened))+'\n')
-            f.close()
-
             result["e_model"] = flattened
 
         del result["_var_attrs"]
