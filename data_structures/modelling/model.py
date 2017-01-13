@@ -78,6 +78,7 @@ class Model(TagsMixIn):
     id                    instance of ID object, carries bbid for model
     interview             property; points to target BusinessUnit.interview
     portal_data           dict; stores data from Portal related to the instance
+    report_summary        dict: stores data that Portal reads for reporting
     stage                 property; points to target BusinessUnit.stage
     started               bool; property, tracks whether engine has begun work
     summary               P; pointer to current period summary
@@ -139,6 +140,7 @@ class Model(TagsMixIn):
         # target is BU from which to get path and interview info, default
         # points to top-level business unit/company
 
+        self.report_summary = None
 
     # DYNAMIC ATTRIBUTES
     @property
