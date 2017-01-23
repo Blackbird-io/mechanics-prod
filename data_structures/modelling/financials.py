@@ -204,6 +204,8 @@ class Financials:
         company = model.get_company(buid)
         new = cls(parent=company, period=period)
 
+        new.id.set_namespace(company.id.bbid)
+
         if portal_data['complete'] is not None:
             new.complete = portal_data['complete']
         if portal_data['periods_used'] is not None:

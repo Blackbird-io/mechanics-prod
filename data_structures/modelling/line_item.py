@@ -243,7 +243,8 @@ class LineItem(Statement, HistoryLine):
             )
             new.tags = Tags.from_portal(data['tags'])
 
-            new.id = ID.from_portal(data['bbid'])
+            # new.id = ID.from_portal(data['bbid'])
+            # new.id.set_namespace(ID.from_portal(data['parent_bbid']).bbid)
 
             # defer resolution of .xl
             new.xl = data['xl']
@@ -568,7 +569,7 @@ class LineItem(Statement, HistoryLine):
         self.id.assign(self.name)
 
         for line in self.get_ordered():
-            line.register(namespace=self.id.namespace)
+            line.register(namespace=self.id.bbid)
 
     def set_consolidate(self, val):
         """

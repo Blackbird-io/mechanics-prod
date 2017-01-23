@@ -1106,7 +1106,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         """
         self.id.set_namespace(namespace)
         self.id.assign(self.tags.name)
-        self.financials.register(namespace=namespace)
+        self.financials.register(namespace=self.id.bbid)
         # This unit now has an id in the namespace. Now pass our bbid down as
         # the namespace for all downstream components.
 
