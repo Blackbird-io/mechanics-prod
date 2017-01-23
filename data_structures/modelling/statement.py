@@ -186,6 +186,8 @@ class Statement(Equalities, TagsMixIn):
         financials = kargs['financials']
         new = cls(name=portal_data['title'], parent=financials)
         new._consolidated = portal_data['_consolidated']
+        new.id.set_namespace(financials.id.namespace)
+        new.id.assign(new.name)
 
         return new
 
@@ -658,7 +660,7 @@ class Statement(Equalities, TagsMixIn):
         self.id.assign(self.name)
 
         for line in self.get_ordered():
-            line.register(namespace=self.id.namespace)
+            line.register(namespace=self.id.bbid)
 
     def reset(self):
         """
@@ -730,7 +732,11 @@ class Statement(Equalities, TagsMixIn):
         Set instance as line parent, add line to details.
         """
         line.relationships.set_parent(self)
-        line.register(namespace=self.id.namespace)
+
+        if self.id.bbid:
+            line.register(namespace=self.id.bbid)
+        else:
+            line.register(namespace=self.id.namespace)
 
         self._details[line.tags.name] = line
 
