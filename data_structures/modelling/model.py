@@ -260,8 +260,8 @@ class Model(TagsMixIn):
 
         # post-process financials in the current period, make sure they get
         # assigned back to the proper BU
-        if M.time_line.current_period:
-            now = M.time_line.current_period
+        now = M.time_line.current_period
+        if now:
             for bu in M.bu_directory.values():
                 fins = M.get_financials(bu.id.bbid, now)
                 bu.set_financials(fins)
