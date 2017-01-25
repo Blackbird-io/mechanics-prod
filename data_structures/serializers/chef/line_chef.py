@@ -452,6 +452,7 @@ class LineChef:
         if not line.xl.derived.calculations:
             pass
         else:
+            print(line.name)
             set_param_rows(line, sheet)
             for data_cluster in line.xl.derived.calculations:
                 self._add_driver_calculation(

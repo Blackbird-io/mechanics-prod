@@ -601,7 +601,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         Recompute a particular statement on financials.  If ``adjust_future``
          is True, will repeat for all future snapshots.
         """
-        self.reset_statement(statement_name, period=None)
+        self.reset_statement(statement_name, period=period)
         self.compute(statement_name, period=period)
 
         if adjust_future and period and period.future:
