@@ -278,6 +278,7 @@ class SummaryMaker:
             # create target financials
             bu = self.model.get_company()
             period_fins = Financials(parent=bu, period=period)
+            period_fins.register(self.buid)
             period.financials[self.buid] = period_fins
 
             # add to timeline
@@ -488,6 +489,7 @@ class SummaryMaker:
             timeline_summary = self.summaries[key]
             timeline_summary.summary_period = None
             timeline_summary.source = None
+
         self.period_sources = None
         self.period = None
 
