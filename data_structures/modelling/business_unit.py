@@ -587,6 +587,27 @@ class BusinessUnit(TagsMixIn, Equalities):
         if adjust_future and period and period.future:
             self.recalculate(adjust_future=True, period=period.future)
 
+    def recompute(self, statement_name, period=None, adjust_future=True):
+        """
+
+
+        BusinessUnit.recompute () -> None
+
+        --``statement_name`` is the string name of the statement attribute on
+        financials
+        --``period`` is an instance of TimePeriod
+        --``adjust_future`` is a boolean, whether to run in future periods
+
+        Recompute a particular statement on financials.  If ``adjust_future``
+         is True, will repeat for all future snapshots.
+        """
+        self.reset_statement(statement_name, period=period)
+        self.compute(statement_name, period=period)
+
+        if adjust_future and period and period.future:
+            self.recompute(statement_name, adjust_future=adjust_future,
+                           period=period.future)
+
     def reset_financials(self, period=None, recur=True):
         """
 
@@ -605,6 +626,28 @@ class BusinessUnit(TagsMixIn, Equalities):
 
             for bu in pool:
                 bu.reset_financials(period=period, recur=recur)
+
+    def reset_statement(self, statement_name, period=None, recur=True):
+        """
+
+
+        BusinessUnit.reset_statement() -> None
+
+        --``statement_name`` is the string name of the statement attribute on
+        financials
+        --``period`` is an instance of TimePeriod
+        --``recur`` is a bool; whether to reset components
+
+        Method resets the given statement for this unit and optionally each
+        of its components.
+        """
+        fins = self.get_financials(period)
+        statement = getattr(fins, statement_name)
+        statement.reset()
+
+        if recur:
+            for unit in self.components.get_all():
+                unit.reset_statement(statement_name, period=period)
 
     def set_analytics(self, atx):
         """
