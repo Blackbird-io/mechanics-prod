@@ -111,6 +111,10 @@ class TimePeriod(TagsMixIn):
         self.parameters = Parameters()
         self.unit_parameters = Parameters()
 
+        self._line_item_storage = dict()
+        # {"value": ,
+        #     "xl_info:}
+
         # The current approach to indexing units within a period assumes that
         # Blackbird will rarely remove existing units from a model. both
         # The ``bu`` and ``ty`` directories are static: they do not know if
@@ -410,3 +414,12 @@ class TimePeriod(TagsMixIn):
 
         # Step 3: return container
         return result
+
+    def update_line_value(self, line):
+        # THESE SHOULD NOT BE RUN BY TOPICS
+        line_dict = self._line_item_storage[line.id.bbid.hex]
+        line_dict['value'] = line._local_value
+
+    def update_line_xl(self, line):
+        line_dict = self._line_item_storage[line.id.bbid.hex]
+        line_dict['xl_info'] = line.xl.to_portal(include_format=False)

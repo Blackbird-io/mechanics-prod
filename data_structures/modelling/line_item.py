@@ -179,6 +179,18 @@ class LineItem(Statement, HistoryLine):
             raise(TypeError(msg))
 
     @property
+    def period(self):
+        parent = self.relationships.parent
+        while isinstance(parent, Statement):
+            parent = parent.relationships.parent
+
+        # parent is Financials at this point
+        financials = parent
+        period = financials.period
+
+        return period
+
+    @property
     def replica(self):
         """
         read-only property
@@ -473,6 +485,7 @@ class LineItem(Statement, HistoryLine):
             if self.consolidate and consolidating:
                 self.xl.consolidated.sources.append(matching_line)
                 self.xl.consolidated.labels.append(xl_label)
+                self._update_stored_xl()
         else:
             if signature is None:
                 signature = self.SIGNATURE_FOR_INCREMENTATION
@@ -491,6 +504,11 @@ class LineItem(Statement, HistoryLine):
                     # if line does NOT exist, make it
                     if con_line_name not in self._details:
                         new_line = LineItem(name=con_line_name)
+
+                        if self._restricted:
+                            c = "Trying to add line to restricted parent line"
+                            raise ValueError(c)
+
                         self.append(new_line)
 
                     # 3) increment line with the matching_line
@@ -512,6 +530,7 @@ class LineItem(Statement, HistoryLine):
 
                         self.xl.consolidated.sources.append(matching_line)
                         self.xl.consolidated.labels.append(xl_label)
+                        self._update_stored_xl()
 
     def increment_value(self, matching_line):
         """
@@ -553,6 +572,7 @@ class LineItem(Statement, HistoryLine):
             # this part should only live in LineItem since statements don't
             # have xl data
             self.xl.reference.source = matching_line
+            self._update_stored_xl()
 
     def register(self, namespace):
         """
@@ -662,6 +682,7 @@ class LineItem(Statement, HistoryLine):
 
         log_entry = (signature, time.time(), value)
         self.log.append(log_entry)
+        self._update_stored_value()
 
     def peer_locator(self):
         """
@@ -696,6 +717,9 @@ class LineItem(Statement, HistoryLine):
             self.xl.derived.calculations,
             self.hardcoded,
         ))
+
+    def restrict(self):
+        self._restricted = True
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
@@ -830,3 +854,9 @@ class LineItem(Statement, HistoryLine):
                 result = result or 0
                 result += detail.value
         return result
+
+    def _update_stored_value(self):
+        self.period.update_line_value(self)
+
+    def _update_stored_xl(self):
+        self.period.update_line_xl(self)

@@ -332,7 +332,7 @@ class LineData(Range):
 
         return new
 
-    def to_portal(self, **kargs):
+    def to_portal(self, include_format=True):
         """
 
 
@@ -359,12 +359,12 @@ class LineData(Range):
         if self.reference.source:
             row['reference']['source'] = self.reference.source.portal_locator()
 
-        if self.format:
-            row['format'] = self.format.to_portal()
-
         if self.derived.calculations:
             for calc in self.derived.calculations:
                 row['derived']['calculations'].append(calc.to_portal())
+
+        if self.format and include_format:
+            row['format'] = self.format.to_portal()
 
         return row
 

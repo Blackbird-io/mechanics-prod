@@ -117,7 +117,9 @@ class Statement(Equalities, TagsMixIn):
         self._details = dict()
         self.relationships = Relationships(self, parent=parent)
         self.POSITION_SPACING = max(1, int(spacing))
-        self.id = ID() # does not get its own bbid, just holds namespace
+        self.id = ID()  # does not get its own bbid, just holds namespace
+        self._restricted = False  # whether user can modify structure,
+        # user can only modify structure in current period
 
     def __eq__(self, comparator, trace=False, tab_width=4):
         """
@@ -220,56 +222,57 @@ class Statement(Equalities, TagsMixIn):
         with existing line, method will place it at the requested position
         and push back all of the lines behind it by POSITION_SPACING.
         """
-        self._inspect_line_for_insertion(new_line)
+        if not self._restricted:
+            self._inspect_line_for_insertion(new_line)
 
-        if position is None:
-            self.append(new_line)
-
-        else:
-            new_line.position = position
-
-            if not self._details:
-                self._bind_and_record(new_line)
-                # This block differs from append in that we preserve the
-                # requested line position
+            if position is None:
+                self.append(new_line)
 
             else:
-                ordered = self.get_ordered()
+                new_line.position = position
 
-                if new_line.position < ordered[0].position or ordered[-1].position < new_line.position:
-
+                if not self._details:
                     self._bind_and_record(new_line)
-                    # Requested position falls outside existing range. No
-                    # conflict, insert line as is.
+                    # This block differs from append in that we preserve the
+                    # requested line position
 
                 else:
+                    ordered = self.get_ordered()
 
-                    # Potential conflict in positions. Spot existing, adjust as
-                    # necessary.
-                    for i in range(len(ordered)):
-                        existing_line = ordered[i]
+                    if new_line.position < ordered[0].position or ordered[-1].position < new_line.position:
 
-                        if new_line.position < existing_line.position:
-                            self._bind_and_record(new_line)
-                            break
-                            # If we get here, ok to insert as-is. New position
-                            # could only conflict with lines below the current
-                            # because we are going through the lines in order.
-                            # But we know that the line does not because the
-                            # conflict block breaks the loop.
+                        self._bind_and_record(new_line)
+                        # Requested position falls outside existing range. No
+                        # conflict, insert line as is.
 
-                        elif new_line.position == existing_line.position:
-                            # Conflict resolution block.
+                    else:
 
-                            tail = ordered[i:]
-                            for pushed_line in tail:
-                                pushed_line.position += self.POSITION_SPACING
+                        # Potential conflict in positions. Spot existing, adjust as
+                        # necessary.
+                        for i in range(len(ordered)):
+                            existing_line = ordered[i]
 
-                            self._bind_and_record(new_line)
-                            break
+                            if new_line.position < existing_line.position:
+                                self._bind_and_record(new_line)
+                                break
+                                # If we get here, ok to insert as-is. New position
+                                # could only conflict with lines below the current
+                                # because we are going through the lines in order.
+                                # But we know that the line does not because the
+                                # conflict block breaks the loop.
 
-                        else:
-                            continue
+                            elif new_line.position == existing_line.position:
+                                # Conflict resolution block.
+
+                                tail = ordered[i:]
+                                for pushed_line in tail:
+                                    pushed_line.position += self.POSITION_SPACING
+
+                                self._bind_and_record(new_line)
+                                break
+
+                            else:
+                                continue
 
     def add_line_to(self, line, *ancestor_tree):
         """
@@ -310,14 +313,15 @@ class Statement(Equalities, TagsMixIn):
             footwear .......................None
               sandals..........................6
         """
-        if ancestor_tree:
-            detail = self.find_first(*ancestor_tree)
-            if detail is None:
-                raise KeyError(ancestor_tree)
+        if not self._restricted:
+            if ancestor_tree:
+                detail = self.find_first(*ancestor_tree)
+                if detail is None:
+                    raise KeyError(ancestor_tree)
+                else:
+                    detail.add_line(line)
             else:
-                detail.add_line(line)
-        else:
-            self.append(line)
+                self.append(line)
 
     def add_top_line(self, line, after=None):
         """
@@ -334,11 +338,12 @@ class Statement(Equalities, TagsMixIn):
         be the name of the item after which caller wants to insert line. If
         ``after`` == None, method appends line to self.
         """
-        if after:
-            new_position = self._details[after].position + self.POSITION_SPACING
-            self.add_line(line, new_position)
-        else:
-            self.append(line)
+        if not self._restricted:
+            if after:
+                new_position = self._details[after].position + self.POSITION_SPACING
+                self.add_line(line, new_position)
+            else:
+                self.append(line)
 
     def append(self, line):
         """
@@ -349,18 +354,19 @@ class Statement(Equalities, TagsMixIn):
 
         Add line to instance in final position.
         """
-        self._inspect_line_for_insertion(line)
-        # Will throw exception if problem
+        if not self._restricted:
+            self._inspect_line_for_insertion(line)
+            # Will throw exception if problem
 
-        ordered = self.get_ordered()
-        if ordered:
-            last_position = ordered[-1].position
-        else:
-            last_position = 0
-        new_position = last_position + self.POSITION_SPACING
-        line.position = new_position
+            ordered = self.get_ordered()
+            if ordered:
+                last_position = ordered[-1].position
+            else:
+                last_position = 0
+            new_position = last_position + self.POSITION_SPACING
+            line.position = new_position
 
-        self._bind_and_record(line)
+            self._bind_and_record(line)
 
     def copy(self, check_include_details=False, clean=False):
         """
@@ -415,12 +421,13 @@ class Statement(Equalities, TagsMixIn):
 
         lines can be either an ordered container or a Statement object
         """
-        try:
-            for line in lines:
-                self.append(line)
-        except TypeError:
-            for line in lines.get_ordered():
-                self.append(line)
+        if not self._restricted:
+            try:
+                for line in lines:
+                    self.append(line)
+            except TypeError:
+                for line in lines.get_ordered():
+                    self.append(line)
 
     def find_all(self, *ancestor_tree, remove=False):
         """
@@ -627,6 +634,10 @@ class Statement(Equalities, TagsMixIn):
                             self._add_lines_in_chef(local_copy, external_line,
                                                     xl_label=xl_label)
 
+                    if self._restricted:
+                        c = "Trying to add line to restricted statement"
+                        raise ValueError(c)
+
                     self.add_line(local_copy, local_copy.position)
                     # For speed, could potentially add all the lines and then
                     # fix positions once.
@@ -689,13 +700,18 @@ class Statement(Equalities, TagsMixIn):
         Given a parent container from another time period, return a function
         locating a copy of ourselves within that container.
         """
-
         def locator(financials, **kargs):
             for stub in financials._full_order:
                 peer = getattr(financials, stub)
                 if peer.name == self.name:
                     return peer
         return locator
+
+    def restrict(self):
+        # recursively set statement and all contained lines to restricted=True
+        self._restricted = True
+        for line in self.get_full_ordered():
+            line.restrict()
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
