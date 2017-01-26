@@ -389,12 +389,14 @@ class SummaryMaker:
                     source_line.value, "SummaryMaker", override=False
                 )
                 target_line.xl.reference.source = source_line
+                target_line._update_stored_xl()
         elif summary_type == 'last':
             # assume period show up in order, last one overrides
             target_line.set_value(
                 source_line.value, "SummaryMaker", override=True
             )
             target_line.xl.reference.source = source_line
+            target_line._update_stored_xl()
         elif summary_type:
             c = 'we have not yet implemented summary_type: {}'.format(
                 summary_type
@@ -406,6 +408,7 @@ class SummaryMaker:
                 source_line.value, "SummaryMaker", override=True
             )
             target_line.xl.reference.source = source_line
+            target_line._update_stored_xl()
 
     def add_statement_summary(self, source, statement_name):
         """

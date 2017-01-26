@@ -377,6 +377,17 @@ class Financials:
         new_instance.register(self.id.namespace)
         return new_instance
 
+    def populate_from_stored_values(self, period):
+        for statement in self.full_ordered:
+            for line in statement.get_full_ordered():
+                value = period.get_line_value(line.id.bbid.hex)
+                new_xl = period.get_xl_info(line.id.bbid.hex)
+                new_xl.format = line.xl.format
+                line.xl = new_xl
+
+                if value is not None:
+                    line._local_value = value
+
     def register(self, namespace):
         """
 

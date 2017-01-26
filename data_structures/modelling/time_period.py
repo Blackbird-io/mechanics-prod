@@ -33,6 +33,7 @@ import logging
 import bb_settings
 import bb_exceptions
 
+from data_structures.serializers.chef.data_management import LineData
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
 from data_structures.system.tags_mixin import TagsMixIn
@@ -356,6 +357,25 @@ class TimePeriod(TagsMixIn):
             # This logic should really run on the business unit
 
         return result
+
+    def get_line_value(self, bbid_hex):
+        line_dict = self._line_item_storage.get(bbid_hex, None)
+        if line_dict:
+            stored_value = line_dict['xl_info']
+        else:
+            stored_value = None
+
+        return stored_value
+
+    def get_xl_info(self, bbid_hex):
+        line_dict = self._line_item_storage.get(bbid_hex, None)
+        if line_dict:
+            flat_xl = line_dict['xl_info']
+            stored_xl = LineData.from_portal(flat_xl)
+        else:
+            stored_xl = LineData()
+
+        return stored_xl
 
     def ex_to_default(self, target):
         """
