@@ -100,6 +100,8 @@ class Financials:
         self._compute_order = ['overview', 'income', 'cash']
         self._exclude_statements = ['valuation', 'starting']
 
+        self._restricted = False
+
     @property
     def compute_order(self):
         return self._compute_order.copy()
@@ -302,39 +304,39 @@ class Financials:
         position in instance.full_order.  If no position is provided, the
         new statement will be added at the end.
         """
+        if not self._restricted:
+            if not statement:
+                use_name = title or name
+                statement = Statement(use_name)
 
-        if not statement:
-            use_name = title or name
-            statement = Statement(use_name)
+            statement.relationships.set_parent(self)
 
-        statement.relationships.set_parent(self)
+            self.__dict__[name] = statement
 
-        self.__dict__[name] = statement
+            if position:
+                self._full_order.insert(position, name)
+            else:
+                self._full_order.append(name)
 
-        if position:
-            self._full_order.insert(position, name)
-        else:
-            self._full_order.append(name)
+            if compute:
+                # include statement to be computed during fill_out in the same
+                # order it is in full_order
+                full = set(self.full_order)
+                comp = set(self._compute_order) | {name}
 
-        if compute:
-            # include statement to be computed during fill_out in the same
-            # order it is in full_order
-            full = set(self.full_order)
-            comp = set(self._compute_order) | {name}
+                rem_terms = full - comp
 
-            rem_terms = full - comp
+                new_compute = self.full_order
+                for term in rem_terms:
+                    new_compute.remove(term)
 
-            new_compute = self.full_order
-            for term in rem_terms:
-                new_compute.remove(term)
+                self._compute_order = new_compute
+                self._chef_order.append(name)
+            else:
+                self._exclude_statements.append(name)
 
-            self._compute_order = new_compute
-            self._chef_order.append(name)
-        else:
-            self._exclude_statements.append(name)
-
-        if self.id.namespace:
-            statement.register(self.id.namespace)
+            if self.id.namespace:
+                statement.register(self.id.namespace)
 
     def build_tables(self):
         """
@@ -469,3 +471,8 @@ class Financials:
         raise bb_exceptions.StructureError(
             'Could not find line with id {}'.format(line_id)
         )
+
+    def restrict(self):
+        self._restricted = True
+        for statement in self.full_ordered:
+            statement.restricted()

@@ -427,6 +427,7 @@ class Driver(TagsMixIn):
                     data_cluster.formula = output.steps
 
                     line.xl.derived.calculations.append(data_cluster)
+                    line._update_stored_xl()
 
                 # Each function is "disposable", so we explicitly delete the
                 # pointer after each use.
