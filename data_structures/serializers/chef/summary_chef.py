@@ -480,6 +480,9 @@ class SummaryChef:
             # Statements
             statement_rowgroup = output_rows.add_group('statements', offset=1)
             for name, statement in financials.chef_ordered():
+                if name == 'covenants':
+                    continue
+
                 if statement is not None:
                     # to handle the hard link from starting to ending financials
                     if name == 'starting':

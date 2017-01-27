@@ -85,6 +85,9 @@ class ID:
         self._prior_namespace = None
         self._namespace = None
 
+    def __str__(self):
+        return self.bbid.hex
+
     @property
     def namespace(self):
         """
@@ -192,5 +195,25 @@ class ID:
 
         return result
 
+    @classmethod
+    def from_portal(cls, portal_data):
+        """
 
+        ID.from_portal(portal_data) -> ID
 
+        **CLASS METHOD**
+
+        Method extracts ID from portal_data.
+        """
+        new = cls()
+        new.bbid = uuid.UUID(portal_data)
+        return new
+
+    def to_portal(self):
+        """
+
+        TimeLine.to_portal() -> dict
+
+        Method yields a serialized representation of self.
+        """
+        return self.bbid.hex

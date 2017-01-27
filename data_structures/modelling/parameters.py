@@ -26,6 +26,8 @@ Parameters            dictionary with overwrite controls
 
 
 # Imports
+from pydoc import locate
+
 import bb_exceptions
 
 
@@ -88,3 +90,50 @@ class Parameters(dict):
         result.update(dict_copy)
 
         return result
+
+    @classmethod
+    def from_portal(cls, portal_data, target=None):
+        """
+
+        Parameters.from_portal(portal_data) -> Parameters
+
+        --``target`` if given, will filter the rows based on 'target' field
+
+        **CLASS METHOD**
+
+        Method extracts Parameters from portal_data.
+        """
+        result = cls()
+        for data in portal_data:
+            if target and data.get('target') and data['target'] != target:
+                continue
+            keyhold = result
+            keypath = data['key_path'].split('\n')
+            while keypath:
+                k = keypath.pop(0)
+                if keypath:
+                    keyhold = keyhold.setdefault(k, cls())
+                else:
+                    # cast value to the stored type
+                    keyhold[k] = locate(data['value_type'])(data['value'])
+        return result
+
+    def to_portal(self, key_path=None, target=''):
+        """
+
+        TimeLine.to_portal() -> dict
+
+        Method yields a serialized representation of self.
+        """
+        for k, v in self.items():
+            path = '{}\n{}'.format(key_path, k) if key_path else format(k)
+            if isinstance(v, dict):
+                yield from v.to_portal(key_path=path, target=target)
+            else:
+                data = dict(
+                    key_path=path,
+                    value=v,
+                    value_type=type(v).__name__,
+                    target=target,
+                )
+                yield data

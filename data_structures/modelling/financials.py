@@ -30,10 +30,11 @@ Financials            a dynamic class that holds standard and custom statements
 import logging
 
 import bb_settings
+import bb_exceptions
 
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
-from .statement import Statement
+from .line_item import Statement, LineItem
 from .statements import BalanceSheet
 from .statements import CashFlow
 from .equalities import Equalities
@@ -80,6 +81,7 @@ class Financials:
         self.ending = BalanceSheet("Ending Balance Sheet", parent=self)
         self.ledger = None
         self.id = ID()  # does not get its own bbid, just holds namespace
+        # parent for Financials is BusinessUnit
         self.relationships = Relationships(self, parent=parent)
         self.period = period
         self.filled = False
@@ -186,6 +188,85 @@ class Financials:
 
         return result
 
+    @classmethod
+    def from_portal(cls, portal_data, model, **kargs):
+        """
+
+        Financials.from_portal(portal_data) -> Financials
+
+        **CLASS METHOD**
+
+        Method extracts Financials from portal_data.
+        """
+        period = kargs['period']
+
+        buid = ID.from_portal(portal_data['buid']).bbid
+        company = model.get_company(buid)
+        new = cls(parent=company, period=period)
+
+        if portal_data['complete'] is not None:
+            new.complete = portal_data['complete']
+        if portal_data['periods_used'] is not None:
+            new.periods_used = int(portal_data['periods_used'])
+
+        for attr in ('_chef_order',
+                     '_compute_order',
+                     '_exclude_statements',
+                     '_full_order',
+                     'filled'):
+            new.__dict__[attr] = portal_data[attr]
+
+        period.financials[buid] = new
+
+        for data in portal_data['statements']:
+            attr_name = data['name']
+
+            statement = Statement.from_portal(
+                data, model=model, financials=new
+            )
+
+            new.__dict__[attr_name] = statement
+
+            # deserialize all LineItems
+            LineItem.from_portal(
+                data['lines'], model=model, statement=statement, **kargs
+            )
+
+        return new
+
+    def to_portal(self):
+        """
+
+        Financials.to_portal() -> dict
+
+        Method yields a serialized representation of self.
+        """
+        statements = []
+        for name in self._full_order:
+            if name == 'starting' and self.period:
+                if self.period.past is not None:
+                    # enforce SSOT in database
+                    continue
+
+            statement = getattr(self, name, None)
+            if statement:
+                data = {
+                    'name': name,
+                }
+                data.update(statement.to_portal())
+                statements.append(data)
+        result = {
+            'statements': statements,
+            'complete': self.complete,
+            'periods_used': self.periods_used,
+            'filled': self.filled,
+            '_chef_order': self._chef_order,
+            '_compute_order': self._compute_order,
+            '_exclude_statements': self._exclude_statements,
+            '_full_order': self._full_order,
+        }
+        return result
+
     def chef_ordered(self):
         """
 
@@ -223,6 +304,8 @@ class Financials:
         if not statement:
             use_name = title or name
             statement = Statement(use_name)
+
+        statement.relationships.set_parent(self)
 
         self.__dict__[name] = statement
 
@@ -347,7 +430,6 @@ class Financials:
         """
         self.run_on_all("summarize")
 
-
     def peer_locator(self):
         """
 
@@ -362,3 +444,26 @@ class Financials:
             peer = bu.get_financials(kargs['period'])
             return peer
         return locator
+
+    def find_line(self, line_id, statement_attr):
+        """
+
+
+        Financials.find_line() -> LineItem
+
+        --``line_id`` bbid of line
+
+        Finds a LineItem across all statements by its bbid.
+        """
+        if isinstance(line_id, str):
+            line_id = ID.from_portal(line_id).bbid
+
+        statement = getattr(self, statement_attr, None)
+        if statement:
+            for line in statement.get_full_ordered():
+                if line.id.bbid == line_id:
+                    return line
+
+        raise bb_exceptions.StructureError(
+            'Could not find line with id {}'.format(line_id)
+        )

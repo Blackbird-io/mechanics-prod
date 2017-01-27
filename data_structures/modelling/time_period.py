@@ -36,6 +36,8 @@ import bb_exceptions
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
 from data_structures.system.tags_mixin import TagsMixIn
+from data_structures.modelling.financials import Financials
+from tools.parsing import date_from_iso
 
 from .parameters import Parameters
 
@@ -100,13 +102,11 @@ class TimePeriod(TagsMixIn):
 
         self.financials = dict()
 
-        self.summary = None
         self.id = ID()
         self.relationships = Relationships(self)
 
         self.past_end = None
         self.next_end = None
-
 
         self.parameters = Parameters()
         self.unit_parameters = Parameters()
@@ -193,6 +193,65 @@ class TimePeriod(TagsMixIn):
         """
         pass
 
+    @classmethod
+    def from_portal(cls, portal_data, model, **kargs):
+        """
+
+        TimeLine.from_portal(portal_data) -> TimeLine
+
+        **CLASS METHOD**
+
+        Method extracts a TimeLine from portal_data.
+        """
+        if isinstance(portal_data['period_start'], str):
+            period_start = date_from_iso(portal_data['period_start'])
+            period_end = date_from_iso(portal_data['period_end'])
+        else:
+            period_start = portal_data['period_start']
+            period_end = portal_data['period_end']
+
+        new = cls(period_start, period_end)
+
+        new.parameters.add(
+            Parameters.from_portal(
+                portal_data['parameters'], target='parameters'
+            )
+        )
+
+        # convert unit_parameters keys to UUID
+        for k, v in Parameters.from_portal(portal_data['unit_parameters'],
+                                           target='unit_parameters').items():
+            new.unit_parameters.add({ID.from_portal(k).bbid: v})
+
+        time_line = kargs['time_line']
+        time_line.add_period(new)
+        for data in portal_data['financials']:
+            Financials.from_portal(data, model=model, period=new, **kargs)
+
+        return new
+
+    def to_portal(self):
+        """
+
+        TimeLine.to_portal() -> dict
+
+        Method yields a serialized representation of self.
+        """
+        result = {
+            'period_end': self.end,
+            'period_start': self.start,
+            'parameters': list(self.parameters.to_portal(target='parameters')),
+            'unit_parameters': list(self.unit_parameters.to_portal(
+                target='unit_parameters')),
+            'financials': [],
+        }
+        for buid, fins in self.financials.items():
+            data = {
+                'buid': buid.hex,
+            }
+            data.update(fins.to_portal())
+            result['financials'].append(data)
+        return result
 
     def clear(self):
         """

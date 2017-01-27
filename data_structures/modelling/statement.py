@@ -173,6 +173,38 @@ class Statement(Equalities, TagsMixIn):
         """
         return self._consolidated
 
+    @classmethod
+    def from_portal(cls, portal_data, model, **kargs):
+        """
+
+        Statement.from_portal(portal_data) -> Statement
+
+        **CLASS METHOD**
+
+        Method extracts a Statement from portal_data.
+        """
+        financials = kargs['financials']
+        new = cls(name=portal_data['title'], parent=financials)
+        new._consolidated = portal_data['_consolidated']
+
+        return new
+
+    def to_portal(self):
+        """
+
+        Statement.to_portal() -> dict
+
+        Method yields a serialized representation of self.
+        """
+        result = {
+            'title': self.title,
+            'lines': [],
+            '_consolidated': self._consolidated,
+        }
+        for line in self._details.values():
+            result['lines'].extend(line.to_portal())
+        return result
+
     def add_line(self, new_line, position=None):
         """
 
@@ -412,6 +444,7 @@ class Statement(Equalities, TagsMixIn):
         For most removal tasks, find_first(remove=True) will offer significantly
         more comfort at a relatively small performance cost.
         """
+        ancestor_tree = [a.strip() for a in ancestor_tree]
         result = []
 
         caseless_root_name = ancestor_tree[0].casefold()
@@ -470,6 +503,8 @@ class Statement(Equalities, TagsMixIn):
         The best way to reinsert an item you accidentally removed is to find
         its parent using detail.relationships.parent and insert the item directly back.
         """
+        ancestor_tree = [a.strip() for a in ancestor_tree]
+
         result = None
 
         caseless_root_name = ancestor_tree[0].casefold()
