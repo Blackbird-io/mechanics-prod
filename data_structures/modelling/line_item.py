@@ -28,6 +28,7 @@ LineItem              a Statement that has its own value
 # Imports
 import copy
 import time
+import json
 
 import bb_settings
 import bb_exceptions
@@ -36,6 +37,8 @@ import tools.for_printing as printing_tools
 from data_structures.guidance.guide import Guide
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
+from data_structures.system.tags import Tags
+from pydoc import locate
 
 from .statement import Statement
 from .history_line import HistoryLine
@@ -221,98 +224,148 @@ class LineItem(Statement, HistoryLine):
         return result
 
     @classmethod
-    def from_portal(cls, parent, portal_data):
+    def from_portal(cls, portal_data, model, **kargs):
         """
 
 
-        LineItem.from_portal(portal_model) -> Model
+        LineItem.from_portal() -> None
 
         **CLASS METHOD**
 
-        Method deserializes a LineItem.
+        Method deserializes all LineItems belonging to ``statement``.
         """
-        line_data = portal_data['myself']
-        line = parent.find_first(line_data['line_name'])
-        if not line:
-            line = cls(
-                line_data['line_title'], line_data['_local_value'], parent
+        statement = kargs['statement']
+        # first pass: create a dict of lines
+        line_info = {}
+        for data in portal_data:
+            new = cls(
+                parent=None,
             )
-            parent.add_line(line, position=line_data['position'])
-        for attr in (
-            'position',
-            'summary_type',
-            'summary_count',
-            '_local_value',
-            '_hardcoded',
-            '_consolidate',
-            '_replica',
-            '_hardcoded',
-            '_include_details',
-            '_sum_details',
-        ):
-            setattr(line, attr, line_data[attr])
+            new.tags = Tags.from_portal(data['tags'])
 
-        for attr, value in line_data['xl'].items():
-            setattr(line.xl.format, attr, value)
+            new.id = ID.from_portal(data['bbid'])
 
-        for line_id, sub_data in portal_data['subset'].items():
-            cls.from_portal(line, sub_data)
+            # defer resolution of .xl
+            new.xl = data['xl']
 
-        line.xl.reference.direct_source = line_data.get('xl_reference')
+            typ = data['_local_value_type'] or 'float'
+            val = data['_local_value']
 
-        return line
+            if val is not None:
+                val = locate(typ)(val)
+            new._local_value = val
 
-    def to_portal(
-        self, period, buid, statement, statement_attr, line_index,
-        line_parent=None
-    ):
+            for attr in (
+                'position',
+                'summary_type',
+                'summary_count',
+                '_hardcoded',
+                '_consolidate',
+                '_replica',
+                '_hardcoded',
+                '_include_details',
+                '_sum_details',
+                '_consolidated',
+                'log',
+            ):
+                new.__dict__[attr] = data[attr]
+
+            line_info[data['bbid']] = (new, data)
+
+        # second pass: place lines
+        for bbid, (line, data) in line_info.items():
+            parent_bbid = data['parent_bbid']
+            if parent_bbid:
+                # another LineItem is the parent
+                parent = line_info.get(parent_bbid)[0]
+            else:
+                # Statement is the parent
+                parent = statement
+            position = data['position']
+            position = int(position) if position else None
+            line.relationships.set_parent(parent)
+            parent.add_line(line, position=position)
+
+    def to_portal(self, parent_line=None):
         """
 
 
-        LineItem.to_portal(portal_model) -> iter(dict)
+        LineItem.to_portal() -> iter(dict)
 
         Method yields a serialized representation of a LineItem.
         """
-        try:
-            direct_source = self.xl.reference.direct_source
-        except AttributeError:
-            direct_source = None
-
         row = {
-            'buid': buid,
-            'line_id': self.id.bbid.hex,
-            # 'line_index': line_index,
-            'line_name': self.name,
-            'line_title': self.title,
-            'line_parent_id': line_parent.id.bbid.hex if line_parent else None,
-            'statement_name': statement.name,
-            'statement_attr': statement_attr,
+            'bbid': self.id.bbid.hex,
+            'parent_bbid': parent_line.id.bbid.hex if parent_line else None,
+            'name': self.name,
+            'title': self.title,
             'position': self.position,
             'summary_type': self.summary_type,
             'summary_count': self.summary_count,
             '_local_value': self._local_value,
+            '_local_value_type': type(self._local_value).__name__,
             '_hardcoded': self._hardcoded,
             '_consolidate': self._consolidate,
             '_replica': self._replica,
-            '_hardcoded': self._hardcoded,
             '_include_details': self._include_details,
             '_sum_details': self._sum_details,
-            'xl': {
-                'blank_row_before': self.xl.format.blank_row_before,
-                'blank_row_after': self.xl.format.blank_row_after,
-                'number_format': self.xl.format.number_format,
-            },
-            'xl_reference': direct_source,
+            'xl': self.xl.to_portal(),
+            'tags': self.tags.to_portal(),
+            'log': self.log,
+            '_consolidated': self._consolidated,
         }
 
         # return this line
         yield row
         # return child lines
         for stub_index, stub in enumerate(self.get_ordered()):
-            yield from stub.to_portal(
-                period, buid, statement, statement_attr, stub_index,
-                line_parent=self,
-            )
+            yield from stub.to_portal(parent_line=self)
+
+    def portal_locator(self):
+        """
+
+
+        LineItem.portal_locator() -> dict
+
+        Method returns a dict with info needed to locate this line within
+        a model without object references.
+        """
+        parent = self.relationships.parent
+        while isinstance(parent, Statement):
+            statement = parent
+            parent = parent.relationships.parent
+
+        # parent is Financials at this point
+        financials = parent
+
+        statement_attr = None
+        for attr in financials._full_order:
+            stmt = getattr(financials, attr, None)
+            if stmt is statement:
+                statement_attr = attr
+
+        bu = financials.relationships.parent
+        locator = dict(
+            buid=bu.id.bbid.hex,
+            financials_attr=statement_attr,
+            bbid=self.id.bbid.hex,
+        )
+
+        period = financials.period
+        if period:
+            period_end = format(period.end)
+            time_line = period.relationships.parent
+        else:
+            period_end = None
+            time_line = bu.relationships.model.time_line
+
+        locator.update(
+            period=period_end,
+            resolution=time_line.resolution,
+            name=time_line.name,
+        )
+
+        return locator
 
     def __str__(self):
         result = "\n".join(self._get_line_strings())
@@ -416,7 +469,7 @@ class LineItem(Statement, HistoryLine):
             # all of its value data. Statement.increment() will copy those
             # details to this instance.
         elif matching_line.value is None:
-            if self.consolidate:
+            if self.consolidate and consolidating:
                 self.xl.consolidated.sources.append(matching_line)
                 self.xl.consolidated.labels.append(xl_label)
         else:
@@ -534,7 +587,7 @@ class LineItem(Statement, HistoryLine):
             msg = "lineitem._consolidate can only be set to a boolean value"
             raise(TypeError(msg))
 
-    def set_hardcoded(self, val):
+    def set_hardcoded(self, val, recur=False):
         """
 
 
@@ -552,6 +605,10 @@ class LineItem(Statement, HistoryLine):
         else:
             msg = "lineitem._hardcoded can only be set to a boolean value"
             raise(TypeError(msg))
+
+        if recur:
+            for line in self._details.values():
+                line.set_hardcoded(val, recur=recur)
 
     def setValue(self, value, signature,
                  overrideValueManagement=False):

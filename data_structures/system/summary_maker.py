@@ -35,6 +35,7 @@ from dateutil.relativedelta import relativedelta
 
 import bb_settings
 import bb_exceptions
+from datetime import datetime
 
 from data_structures.modelling.financials import Financials
 from data_structures.modelling.time_period import TimePeriod
@@ -78,12 +79,13 @@ class SummaryMaker:
     ANNUAL_KEY = "annual"
     QUARTERLY_KEY = "quarterly"
 
-    def __init__(self, model, timeline_name='default'):
+    def __init__(self, model, timeline_name='default', init=True):
         self._fiscal_year_end = None
         self.model = model
         self.timeline_name = timeline_name
         self.buid = model.get_company().id.bbid
-        self.init_summaries()
+        if init:
+            self.init_summaries()
 
     @property
     def fiscal_year_end(self):
@@ -289,6 +291,7 @@ class SummaryMaker:
                 bal_enter = source_fins.starting.copy()
                 bal_enter.link_to(source_fins.starting)
                 period_fins.starting = bal_enter
+                bal_enter.relationships.set_parent(period_fins)
 
             logger.debug('{}:{} -> {}:{} new {}'.format(
                 source.start, source.end, period.start, period.end, self.onkey
@@ -322,6 +325,7 @@ class SummaryMaker:
             bal_close = source_fins.ending.copy()
             bal_close.link_to(source_fins.ending)
             target_fins.ending = bal_close
+            bal_close.relationships.set_parent(target_fins)
 
             logger.debug('{}:{} -> {}:{} flush {}'.format(
                 source.start, source.end, target.start, target.end, self.onkey
@@ -331,11 +335,6 @@ class SummaryMaker:
             before = target.past
             if before:
                 before_fins = self.model.get_financials(self.buid, before)
-                # bal_enter = before_fins.ending.copy()
-                # bal_enter.reset()
-                # bal_enter.link_to(before_finls.ending)
-                # bal_enter.set_name('starting balance sheet')
-                # target_fins.starting = bal_enter
                 target_fins.starting = before_fins.ending
 
             # add formula calculations
@@ -424,10 +423,12 @@ class SummaryMaker:
         # summary fins
         timeline_summary = self.summaries[self.onkey]
         target = timeline_summary.summary_period
+
         target_fins = self.model.get_financials(self.buid, target)
 
         source_statement = getattr(source_fins, statement_name, None)
         target_statement = getattr(target_fins, statement_name, None)
+
         if not source_statement:
             return
         if not target_statement:
@@ -442,9 +443,12 @@ class SummaryMaker:
             target_line = target_statement.find_first(source_line.name)
             if not target_line:
                 target_line = source_line.copy()
-                target_line.set_hardcoded(False)
+                target_line.set_hardcoded(False, recur=True)
                 target_line.clear(recur=True, force=True)
                 target_statement.add_line(target_line)
+
+            target_line.set_hardcoded(False, recur=True)
+
             self.add_line_summary(source_line, target_line, label=label)
 
     def summarize(self):

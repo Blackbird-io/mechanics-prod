@@ -36,6 +36,7 @@ import bb_settings
 import tools.for_printing as views
 
 from data_structures.system.bbid import ID
+from tools.parsing import date_from_iso
 from .parameters import Parameters
 from .time_period import TimePeriod
 
@@ -134,6 +135,71 @@ class TimeLine(dict):
             lines = views.view_as_time_line(self)
         line_end = "\n"
         result = line_end.join(lines)
+        return result
+
+    @classmethod
+    def from_portal(cls, portal_data, model, **kargs):
+        """
+
+        TimeLine.from_portal(portal_data) -> TimeLine
+
+        **CLASS METHOD**
+
+        Method extracts a TimeLine from portal_data.
+        """
+        key = tuple(portal_data[k] for k in ('resolution', 'name'))
+        new = cls(
+            model,
+            resolution=portal_data['resolution'],
+            name=portal_data['name'],
+        )
+        new.master = model.taxo_dir
+
+        if portal_data['interval'] is not None:
+            new.interval = portal_data['interval']
+        if portal_data['ref_date']:
+            new.ref_date = portal_data['ref_date']
+            if isinstance(new.ref_date, str):
+                new.ref_date = date_from_iso(new.ref_date)
+        if portal_data['has_been_extrapolated'] is not None:
+            new.has_been_extrapolated = portal_data['has_been_extrapolated']
+        if portal_data['parameters'] is not None:
+            new.parameters = Parameters.from_portal(portal_data['parameters'])
+
+        for data in portal_data['periods']:
+            period = TimePeriod.from_portal(
+                data,
+                model=model,
+                time_line=new,
+            )
+            # new.add_period(period)
+
+        for period in new.iter_ordered():
+            if period.past:
+                for bbid, fins_curr in period.financials.items():
+                    fins_past = period.past.financials.get(bbid)
+                    if fins_past:
+                        fins_curr.starting = fins_past.ending
+
+        return new
+
+    def to_portal(self):
+        """
+
+        TimeLine.to_portal() -> dict
+
+        Method yields a serialized representation of self.
+        """
+        periods = [
+            period.to_portal() for period in self.values()
+        ]
+        result = {
+            'periods': periods,
+            'interval': self.interval,
+            'ref_date': format(self.ref_date) if self.ref_date else None,
+            'has_been_extrapolated': self.has_been_extrapolated,
+            'parameters': list(self.parameters.to_portal()),
+        }
         return result
 
     def copy_structure(self):
@@ -327,7 +393,7 @@ class TimeLine(dict):
         """
         return list(self.iter_ordered())
 
-    def extrapolate(self, seed=None):
+    def extrapolate(self, seed=None, calc_summaries=True):
         """
 
 
@@ -360,7 +426,7 @@ class TimeLine(dict):
                 company.reset_financials(period=period)
                 company.fill_out(period=period)
 
-            if bb_settings.MAKE_ANNUAL_SUMMARIES:
+            if bb_settings.MAKE_ANNUAL_SUMMARIES and calc_summaries:
                 if period.end >= self.current_period.end:
                     summary_maker.parse_period(period)
 
@@ -370,7 +436,7 @@ class TimeLine(dict):
                     if period.past.past.end > self.current_period.end:
                         period.past.past.financials.clear()
 
-        if bb_settings.MAKE_ANNUAL_SUMMARIES:
+        if bb_settings.MAKE_ANNUAL_SUMMARIES and calc_summaries:
             summary_maker.wrap()
 
         # import devhooks

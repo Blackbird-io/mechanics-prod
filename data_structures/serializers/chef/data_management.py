@@ -39,10 +39,13 @@ UnitData              holds the Worksheet for a particular BusinessUnit
 
 # Imports
 import copy
+import datetime as DT
 
 from openpyxl.styles import Side
 
 from bb_exceptions import ExcelPrepError
+from data_structures.system.bbid import ID
+from tools.parsing import date_from_iso
 
 from .field_names import FieldNames
 from .axis_group import AxisGroup
@@ -141,6 +144,44 @@ class DriverData:
         self.name = None
         self.comment = ""
 
+    @classmethod
+    def from_portal(cls, portal_data, model, **kargs):
+        """
+
+
+        DriverData.from_portal() -> DriverData
+
+        **CLASS METHOD**
+
+        Method deserializes a LineData.
+        """
+        new = cls()
+        new.__dict__.update(portal_data)
+
+        for k, v in new.references.items():
+            # this is how we determine if it's a LineItem
+            if isinstance(v, dict):
+                if all(v.get(c) for c in ('bbid', 'buid', 'period')):
+                    new.references[k] = model.get_line(**v)
+
+        return new
+
+    def to_portal(self, **kargs):
+        """
+
+
+        DriverData.to_portal() -> dict
+
+        Method yields a serialized representation of self.
+        """
+        row = self.__dict__.copy()
+
+        for k, v in row['references'].items():
+            # this is how we determine if it's a LineItem
+            if hasattr(v, 'portal_locator'):
+                row['references'][k] = v.portal_locator()
+
+        return row
 
 class Range:
     """
@@ -254,6 +295,79 @@ class LineData(Range):
     def number_format(self, value):
         self.format.number_format = value
 
+    @classmethod
+    def from_portal(cls, portal_data, model, **kargs):
+        """
+
+
+        LineData.from_portal() -> LineData
+
+        **CLASS METHOD**
+
+        Method deserializes a LineData.
+        """
+        new = cls()
+
+        if portal_data.get('format'):
+            new.format = LineFormat.from_portal(
+                portal_data['format'], model=model, **kargs
+            )
+
+        if portal_data['consolidated']['sources']:
+            new.consolidated.labels = portal_data['consolidated']['labels']
+            new.consolidated.sources.clear()
+            for locator in portal_data['consolidated']['sources']:
+                new.consolidated.sources.append(model.get_line(**locator))
+
+        new.reference.direct_source = portal_data['reference']['direct_source']
+        if portal_data['reference']['source']:
+            new.reference.source = model.get_line(
+                **portal_data['reference']['source']
+            )
+
+        new.derived.calculations = [
+            DriverData.from_portal(calc, model=model)
+            for calc in portal_data['derived']['calculations']
+        ]
+
+        return new
+
+    def to_portal(self, **kargs):
+        """
+
+
+        LineData.to_portal() -> dict
+
+        Method yields a serialized representation of self.
+        """
+        row = {
+            'consolidated': {
+                'labels': self.consolidated.labels,
+                'sources': [
+                    line.portal_locator() for line in self.consolidated.sources
+                ],
+            },
+            'derived': {
+                'calculations': [],
+            },
+            'reference': {
+                'source': None,
+                'direct_source': self.reference.direct_source,
+            },
+        }
+
+        if self.reference.source:
+            row['reference']['source'] = self.reference.source.portal_locator()
+
+        if self.format:
+            row['format'] = self.format.to_portal()
+
+        if self.derived.calculations:
+            for calc in self.derived.calculations:
+                row['derived']['calculations'].append(calc.to_portal())
+
+        return row
+
     def get_coordinates(self, include_sheet=True):
         """
 
@@ -340,6 +454,31 @@ class LineFormat:
     @border.deleter
     def border(self):
         self._border = None
+
+    @classmethod
+    def from_portal(cls, portal_data, model, **kargs):
+        """
+
+
+        LineFormat.from_portal() -> LineFormat
+
+        **CLASS METHOD**
+
+        Method deserializes a LineFormat object.
+        """
+        new = cls()
+        new.__dict__.update(portal_data)
+        return new
+
+    def to_portal(self):
+        """
+
+
+        LineFormat.to_portal() -> dict
+
+        Method yields a serialized representation of self.
+        """
+        return self.__dict__
 
     def copy(self):
         """

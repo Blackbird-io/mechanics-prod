@@ -340,7 +340,12 @@ def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
     math.isclose() method in Python 3.5.
 
     """
-    return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+    try:
+        res = abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+    except TypeError:
+        res = False
+
+    return res
 
 
 def rows_to_coordinates(*pargs, lookup, column):

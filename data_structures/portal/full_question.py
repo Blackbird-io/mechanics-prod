@@ -40,6 +40,7 @@ from .input_elements.bool import BoolInput
 from .input_elements.choice import ChoiceInput
 from .input_elements.date import DateInput
 from .input_elements.date_range import DateRangeInput
+from .input_elements.file import FileInput
 from .input_elements.number import NumberInput
 from .input_elements.number_range import NumberRangeInput
 from .input_elements.text import TextInput
@@ -118,6 +119,7 @@ class FullQuestion:
     _klasses["choice"] = ChoiceInput
     _klasses["date"] = DateInput
     _klasses["date-range"] = DateRangeInput
+    _klasses["file"] = FileInput
     _klasses["number"] = NumberInput
     _klasses["number-range"] = NumberRangeInput
     _klasses["time"] = TimeInput
