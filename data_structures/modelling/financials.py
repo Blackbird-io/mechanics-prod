@@ -379,14 +379,15 @@ class Financials:
 
     def populate_from_stored_values(self, period):
         for statement in self.full_ordered:
-            for line in statement.get_full_ordered():
-                value = period.get_line_value(line.id.bbid.hex)
-                new_xl = period.get_xl_info(line.id.bbid.hex)
-                new_xl.format = line.xl.format
-                line.xl = new_xl
+            if statement is not None:
+                for line in statement.get_full_ordered():
+                    value = period.get_line_value(line.id.bbid.hex)
+                    new_xl = period.get_xl_info(line.id.bbid.hex)
+                    new_xl.format = line.xl.format
+                    line.xl = new_xl
 
-                if value is not None:
-                    line._local_value = value
+                    if value is not None:
+                        line._local_value = value
 
     def register(self, namespace):
         """
@@ -486,4 +487,5 @@ class Financials:
     def restrict(self):
         self._restricted = True
         for statement in self.full_ordered:
-            statement.restricted()
+            if statement is not None:
+                statement.restrict()

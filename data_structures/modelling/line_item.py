@@ -844,7 +844,9 @@ class LineItem(Statement, HistoryLine):
         return result
 
     def _update_stored_value(self):
-        self.period.update_line_value(self)
+        if self.period:
+            self.period.update_line_value(self)
 
     def _update_stored_xl(self):
-        self.period.update_line_xl(self)
+        if self.period:
+            self.period.update_line_xl(self)
