@@ -268,6 +268,7 @@ class TimePeriod(TagsMixIn):
         Method erases all Financials data.
         """
         self.financials = dict()
+        self._line_item_storage = dict()
 
     def copy(self, clean=False):
         """

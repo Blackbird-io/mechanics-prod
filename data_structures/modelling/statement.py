@@ -193,6 +193,22 @@ class Statement(Equalities, TagsMixIn):
 
         return new
 
+    @property
+    def model(self):
+        return self.period.relationships.parent.model
+
+    @property
+    def period(self):
+        parent = self.relationships.parent
+        while isinstance(parent, Statement):
+            parent = parent.relationships.parent
+
+        # parent is Financials at this point
+        financials = parent
+        period = financials.period
+
+        return period
+
     def to_portal(self):
         """
 
@@ -209,7 +225,7 @@ class Statement(Equalities, TagsMixIn):
             result['lines'].extend(line.to_portal())
         return result
 
-    def add_line(self, new_line, position=None):
+    def add_line(self, new_line, position=None, noclear=False):
         """
 
 
@@ -226,13 +242,13 @@ class Statement(Equalities, TagsMixIn):
             self._inspect_line_for_insertion(new_line)
 
             if position is None:
-                self.append(new_line)
+                self.append(new_line, noclear=noclear)
 
             else:
                 new_line.position = position
 
                 if not self._details:
-                    self._bind_and_record(new_line)
+                    self._bind_and_record(new_line, noclear=noclear)
                     # This block differs from append in that we preserve the
                     # requested line position
 
@@ -241,7 +257,7 @@ class Statement(Equalities, TagsMixIn):
 
                     if new_line.position < ordered[0].position or ordered[-1].position < new_line.position:
 
-                        self._bind_and_record(new_line)
+                        self._bind_and_record(new_line, noclear=noclear)
                         # Requested position falls outside existing range. No
                         # conflict, insert line as is.
 
@@ -253,7 +269,7 @@ class Statement(Equalities, TagsMixIn):
                             existing_line = ordered[i]
 
                             if new_line.position < existing_line.position:
-                                self._bind_and_record(new_line)
+                                self._bind_and_record(new_line, noclear=noclear)
                                 break
                                 # If we get here, ok to insert as-is. New position
                                 # could only conflict with lines below the current
@@ -268,13 +284,13 @@ class Statement(Equalities, TagsMixIn):
                                 for pushed_line in tail:
                                     pushed_line.position += self.POSITION_SPACING
 
-                                self._bind_and_record(new_line)
+                                self._bind_and_record(new_line, noclear=noclear)
                                 break
 
                             else:
                                 continue
 
-    def add_line_to(self, line, *ancestor_tree):
+    def add_line_to(self, line, *ancestor_tree, noclear=False):
         """
 
         **OBSOLETE**
@@ -319,11 +335,11 @@ class Statement(Equalities, TagsMixIn):
                 if detail is None:
                     raise KeyError(ancestor_tree)
                 else:
-                    detail.add_line(line)
+                    detail.add_line(line, noclear=noclear)
             else:
-                self.append(line)
+                self.append(line, noclear=noclear)
 
-    def add_top_line(self, line, after=None):
+    def add_top_line(self, line, after=None, noclear=False):
         """
 
         **OBSOLETE**
@@ -341,11 +357,11 @@ class Statement(Equalities, TagsMixIn):
         if not self._restricted:
             if after:
                 new_position = self._details[after].position + self.POSITION_SPACING
-                self.add_line(line, new_position)
+                self.add_line(line, new_position, noclear=noclear)
             else:
-                self.append(line)
+                self.append(line, noclear=noclear)
 
-    def append(self, line):
+    def append(self, line, noclear=False):
         """
 
 
@@ -366,7 +382,7 @@ class Statement(Equalities, TagsMixIn):
             new_position = last_position + self.POSITION_SPACING
             line.position = new_position
 
-            self._bind_and_record(line)
+            self._bind_and_record(line, noclear=noclear)
 
     def copy(self, check_include_details=False, clean=False):
         """
@@ -407,12 +423,14 @@ class Statement(Equalities, TagsMixIn):
                 new_line = own_line.copy(check_include_details=cid,
                                          clean=clean)
 
-                result.add_line(new_line, position=own_line.position)
+                result.add_line(new_line, position=own_line.position,
+                                noclear=True)
+
             # Preserve relative order
 
         return result
 
-    def extend(self, lines):
+    def extend(self, lines, noclear=False):
         """
 
 
@@ -424,10 +442,10 @@ class Statement(Equalities, TagsMixIn):
         if not self._restricted:
             try:
                 for line in lines:
-                    self.append(line)
+                    self.append(line, noclear=noclear)
             except TypeError:
                 for line in lines.get_ordered():
-                    self.append(line)
+                    self.append(line, noclear=noclear)
 
     def find_all(self, *ancestor_tree, remove=False):
         """
@@ -738,7 +756,7 @@ class Statement(Equalities, TagsMixIn):
 
                 self._add_lines_in_chef(l, detail_to_append, xl_label)
 
-    def _bind_and_record(self, line):
+    def _bind_and_record(self, line, noclear=False):
         """
 
 
@@ -755,6 +773,10 @@ class Statement(Equalities, TagsMixIn):
             line.register(namespace=self.id.namespace)
 
         self._details[line.tags.name] = line
+
+        if not noclear:
+            # the only time we would ever not do this is on a copy call
+            self.model.clear_fins_storage()
 
     def _inspect_line_for_insertion(self, line):
         """
