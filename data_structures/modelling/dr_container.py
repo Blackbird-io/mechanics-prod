@@ -156,7 +156,7 @@ class DrContainer(Components, TagsMixIn):
                     print(num, " ", item, "\n")
                 print()
                 print(self[key])
-                raise Exception(c)
+                raise bb_exceptions.BBAnalyticalError(c)
             else:
                 record[new_driver.position] = new_driver.id.bbid
 
