@@ -179,18 +179,6 @@ class LineItem(Statement, HistoryLine):
             raise(TypeError(msg))
 
     @property
-    def period(self):
-        parent = self.relationships.parent
-        while isinstance(parent, Statement):
-            parent = parent.relationships.parent
-
-        # parent is Financials at this point
-        financials = parent
-        period = financials.period
-
-        return period
-
-    @property
     def replica(self):
         """
         read-only property
@@ -725,7 +713,7 @@ class LineItem(Statement, HistoryLine):
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
 
-    def _bind_and_record(self, line):
+    def _bind_and_record(self, line, noclear=False):
         """
 
 
@@ -742,7 +730,7 @@ class LineItem(Statement, HistoryLine):
         if self._local_value and not self._details and self.sum_details:
             self._bring_down_local_value()
 
-        Statement._bind_and_record(self,line)
+        Statement._bind_and_record(self, line, noclear=noclear)
 
     def _bring_down_local_value(self):
         """

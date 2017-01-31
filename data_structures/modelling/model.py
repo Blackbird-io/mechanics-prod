@@ -92,6 +92,7 @@ class Model(TagsMixIn):
 
     FUNCTIONS:
     change_ref_date()     updates timeline to use new reference date
+    clear_fins_storage()  clears financial data from non SSOT financials
     copy()                returns a copy of Model instance
     from_portal()         class method, extracts model out of API-format
     get_company()         method to get top-level company unit
@@ -360,8 +361,19 @@ class Model(TagsMixIn):
         self.ref_date = ref_date
         self.set_timeline(new_tl, overwrite=True)
 
-    def clear_excel(self):
-        self.time_line.clear_excel()
+    def clear_fins_storage(self):
+        """
+
+
+        Model.clear_fins_storage() --> None
+
+
+        Method clears financial values and xl data storage after modification
+        to SSOT financials.
+        """
+        for tl in self.timelines.values():
+            for per in tl.values():
+                per.clear()
 
     def copy(self):
         """
