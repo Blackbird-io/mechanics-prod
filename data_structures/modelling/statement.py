@@ -195,7 +195,12 @@ class Statement(Equalities, TagsMixIn):
 
     @property
     def model(self):
-        return self.period.relationships.parent.model
+        if self.period:
+            model = self.period.relationships.parent.model
+        else:
+            model = None
+
+        return model
 
     @property
     def period(self):
@@ -205,7 +210,13 @@ class Statement(Equalities, TagsMixIn):
 
         # parent is Financials at this point
         financials = parent
-        period = financials.period
+        if financials:
+            try:
+                period = financials.period
+            except AttributeError:
+                period = None
+        else:
+            period = None
 
         return period
 
@@ -774,7 +785,7 @@ class Statement(Equalities, TagsMixIn):
 
         self._details[line.tags.name] = line
 
-        if not noclear:
+        if not noclear and self.model is not None:
             # the only time we would ever not do this is on a copy call
             self.model.clear_fins_storage()
 

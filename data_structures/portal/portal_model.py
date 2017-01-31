@@ -125,9 +125,9 @@ class PortalModel(ReadyForPortal):
                 summary = {"credit capacity": "dummy placeholder"}
             result["summary"] = summary
 
-            del seed.timelines
+            seed.timelines = dict()
             for bu in seed.bu_directory.values():
-                del bu.financials
+                bu.financials = None
 
             if seed.summary_maker:
                 sum_dict = {'_fiscal_year_end': seed.summary_maker._fiscal_year_end,

@@ -73,7 +73,7 @@ class BalanceSheet(Statement):
             line.xl.format.blank_row_after = True
             self.add_top_line(line)
 
-    def add_line(self, new_line, position=None):
+    def add_line(self, new_line, position=None, noclear=False):
         """
 
 
@@ -89,7 +89,7 @@ class BalanceSheet(Statement):
 
         Statement.add_line(self, new_line, position=position)
 
-    def add_line_to(self, line, *ancestor_tree):
+    def add_line_to(self, line, *ancestor_tree, noclear=False):
         """
 
 
@@ -103,9 +103,9 @@ class BalanceSheet(Statement):
         """
         line.sum_over_time = False
 
-        Statement.add_line_to(self, line, ancestor_tree)
+        Statement.add_line_to(self, line, ancestor_tree, noclear=noclear,)
 
-    def add_top_line(self, line, after=None):
+    def add_top_line(self, line, after=None, noclear=False):
         """
 
 
@@ -119,9 +119,9 @@ class BalanceSheet(Statement):
         """
         line.sum_over_time = False
 
-        Statement.add_top_line(self, line, after=after)
+        Statement.add_top_line(self, line, after=after, noclear=noclear)
 
-    def append(self, line):
+    def append(self, line, noclear=False):
         """
 
 
@@ -134,9 +134,9 @@ class BalanceSheet(Statement):
         """
         line.sum_over_time = False
 
-        Statement.append(self, line)
+        Statement.append(self, line, noclear=noclear)
 
-    def extend(self, lines):
+    def extend(self, lines, noclear=False):
         """
 
 
@@ -150,4 +150,4 @@ class BalanceSheet(Statement):
         for line in lines:
             line.sum_over_time = False
 
-        Statement.extend(self, lines)
+        Statement.extend(self, lines, noclear=noclear)

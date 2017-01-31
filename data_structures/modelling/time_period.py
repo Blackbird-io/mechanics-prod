@@ -362,7 +362,7 @@ class TimePeriod(TagsMixIn):
     def get_line_value(self, bbid_hex):
         line_dict = self._line_item_storage.get(bbid_hex, None)
         if line_dict:
-            stored_value = line_dict['xl_info']
+            stored_value = line_dict['value']
         else:
             stored_value = None
 
@@ -372,7 +372,7 @@ class TimePeriod(TagsMixIn):
         line_dict = self._line_item_storage.get(bbid_hex, None)
         if line_dict:
             flat_xl = line_dict['xl_info']
-            stored_xl = LineData.from_portal(flat_xl)
+            stored_xl = LineData.from_portal(flat_xl, self.relationships.parent.model)
         else:
             stored_xl = LineData()
 
@@ -438,9 +438,20 @@ class TimePeriod(TagsMixIn):
 
     def update_line_value(self, line):
         # THESE SHOULD NOT BE RUN BY TOPICS
-        line_dict = self._line_item_storage[line.id.bbid.hex]
+        if line.id.bbid.hex in self._line_item_storage:
+            line_dict = self._line_item_storage[line.id.bbid.hex]
+        else:
+            line_dict = dict()
+            self._line_item_storage[line.id.bbid.hex] = line_dict
+
         line_dict['value'] = line._local_value
 
     def update_line_xl(self, line):
-        line_dict = self._line_item_storage[line.id.bbid.hex]
+        # THESE SHOULD NOT BE RUN BY TOPICS
+        if line.id.bbid.hex in self._line_item_storage:
+            line_dict = self._line_item_storage[line.id.bbid.hex]
+        else:
+            line_dict = dict()
+            self._line_item_storage[line.id.bbid.hex] = line_dict
+
         line_dict['xl_info'] = line.xl.to_portal(include_format=False)
