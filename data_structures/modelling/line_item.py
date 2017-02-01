@@ -641,11 +641,16 @@ class LineItem(Statement, HistoryLine):
         control.
         """
         if not override:
-            test = value + 1
+            try:
+                test = value + 1
+            except TypeError:
+                print(self)
+                c = "Cannot perform arithmetic on LineItem! override=False"
+                raise bb_exceptions.BBAnalyticalError(c)
             # Will throw exception if value doesn't support arithmetic
 
             if self.hardcoded:
-                return  # Do Nothing if line is hardcoded
+                return  # Do  Nothing if line is hardcoded
                 # c = "Line %s is hardcoded. Cannot write." % self.name
                 # raise bb_exceptions.BBPermissionError(c, self)
 
@@ -654,6 +659,7 @@ class LineItem(Statement, HistoryLine):
             self._local_value = new_value
         else:
             if self._details and self.sum_details:
+                print(self)
                 m = "Cannot assign new value to a line with existing details."
                 raise bb_exceptions.BBPermissionError(m)
             else:
