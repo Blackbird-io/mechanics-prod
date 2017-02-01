@@ -137,14 +137,17 @@ class BusinessUnit(TagsMixIn, Equalities):
 
         self.filled = False
 
-        self.financials = None
-        self.set_financials(fins)
-
         self.life = LifeCycle()
         self.location = None
 
         self.relationships = Relationships(self, model=model)
-        
+
+        # financials must follow relationships in __init__ because we set the
+        # period on financials, an the period is retrieved from model, which
+        # is stored on relationships.
+        self.financials = None
+        self.set_financials(fins)
+
         self.size = 1
         self.summary = BusinessSummary()
         self.valuation = CompanyValue()
@@ -680,6 +683,7 @@ class BusinessUnit(TagsMixIn, Equalities):
             fins = Financials(parent=self)
 
         fins.relationships.set_parent(self)
+        fins.period = self.get_current_period()
         self.financials = fins
 
     def synchronize(self, recur=True):

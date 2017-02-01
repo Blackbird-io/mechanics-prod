@@ -44,7 +44,7 @@ class CashFlowStatement(Statement):
 
         net_cash_line = LineItem('Total net cash flow')
         net_cash_line.xl.format.blank_row_after = True
-        self.add_top_line(net_cash_line)
+        self.add_top_line(net_cash_line, noclear=True)
 
         operating = LineItem(name="Cash from operations")
         investing = LineItem(name="Cash from investing")
@@ -52,4 +52,4 @@ class CashFlowStatement(Statement):
 
         for line in [operating, investing, financing]:
             line.xl.format.blank_row_after = True
-            net_cash_line.append(line)
+            net_cash_line.append(line, noclear=True)

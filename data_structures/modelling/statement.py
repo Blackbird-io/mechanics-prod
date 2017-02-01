@@ -211,11 +211,10 @@ class Statement(Equalities, TagsMixIn):
         # parent is Financials at this point
         financials = parent
         if financials:
-            try:
-                period = financials.period
-            except AttributeError:
-                period = None
+            period = financials.period
         else:
+            # this happens when the statement is not registered in Financials,
+            # typically this means the statement is holding the path
             period = None
 
         return period

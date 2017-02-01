@@ -71,7 +71,7 @@ class BalanceSheet(Statement):
 
         for line in [assets, liabilities, equity]:
             line.xl.format.blank_row_after = True
-            self.add_top_line(line)
+            self.add_top_line(line, noclear=True)
 
     def add_line(self, new_line, position=None, noclear=False):
         """
@@ -87,7 +87,7 @@ class BalanceSheet(Statement):
         """
         new_line.sum_over_time = False
 
-        Statement.add_line(self, new_line, position=position)
+        Statement.add_line(self, new_line, position=position, noclear=noclear)
 
     def add_line_to(self, line, *ancestor_tree, noclear=False):
         """
@@ -103,7 +103,7 @@ class BalanceSheet(Statement):
         """
         line.sum_over_time = False
 
-        Statement.add_line_to(self, line, ancestor_tree, noclear=noclear,)
+        Statement.add_line_to(self, line, ancestor_tree, noclear=noclear)
 
     def add_top_line(self, line, after=None, noclear=False):
         """
