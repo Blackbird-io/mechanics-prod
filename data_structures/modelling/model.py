@@ -358,16 +358,14 @@ class Model(TagsMixIn):
             if not per:
                 all_periods_exist = False
 
-        new_current_period = self.time_line.find_period(ref_date)
-        if not new_current_period and build and ntls == 1:
+        if build and ntls == 1:
             new_tl = TimeLine(self)
             new_tl.parameters = self.time_line.parameters.copy()
             new_tl.master = self.time_line.master
             new_tl.build(ref_date=ref_date)
             new_tl.id.set_namespace(self.id.bbid)
             self.set_timeline(new_tl, overwrite=True)
-            new_current_period = self.time_line.current_period
-        elif not new_current_period and build and ntls > 1:
+        elif build and ntls > 1:
             c = "ERROR: Cannot build arbitrary timelines."
             raise (ValueError(c))
         elif not all_periods_exist and not build:
@@ -376,6 +374,8 @@ class Model(TagsMixIn):
             raise (ValueError(c))
 
         self._ref_date = ref_date
+
+        new_current_period = self.time_line.current_period
         for bu in self.bu_directory.values():
             bu.set_financials(bu.get_financials(new_current_period))
             bu.financials.period = new_current_period
