@@ -111,7 +111,7 @@ class Model(TagsMixIn):
         TagsMixIn.__init__(self, name)
 
         self._started = False
-        self.ref_date = None
+        self._ref_date = None
         self.id = ID()
         self.id.assign(name)
         # Models carry uuids in the origin namespace.
@@ -146,6 +146,10 @@ class Model(TagsMixIn):
     @property
     def interview(self):
         return self.target.interview
+
+    @property
+    def ref_date(self):
+        return self._ref_date
 
     @property
     def stage(self):
@@ -336,8 +340,7 @@ class Model(TagsMixIn):
 
         summary_builder.wrap()
 
-    def change_ref_date(self, ref_date, fwd=TimeLine.DEFAULT_PERIODS_FORWARD,
-                        back=TimeLine.DEFAULT_PERIODS_BACK, year_end=True):
+    def change_ref_date(self, ref_date, build=False):
         """
 
 
@@ -345,27 +348,37 @@ class Model(TagsMixIn):
 
         --``ref_date`` is datetime.date to use as the reference date for updated
                        timeline
-        --``fwd`` is int number of periods to build forward of the ref_date
-        --``back`` is int number of period to build before the ref_date
-        --``year_end`` is bool for whether to build through the end of the year
 
         Method updates time_line to use adjusted ref_date.
         """
+        ntls = len(self.timelines.values())
+        all_periods_exist = True
+        for tl in self.timelines.values():
+            per = tl.find_period(ref_date)
+            if not per:
+                all_periods_exist = False
 
-        if self.time_line.has_been_extrapolated:
-            return
+        new_current_period = self.time_line.find_period(ref_date)
+        if not new_current_period and build and ntls == 1:
+            new_tl = TimeLine(self)
+            new_tl.parameters = self.time_line.parameters.copy()
+            new_tl.master = self.time_line.master
+            new_tl.build(ref_date=ref_date)
+            new_tl.id.set_namespace(self.id.bbid)
+            self.set_timeline(new_tl, overwrite=True)
+            new_current_period = self.time_line.current_period
+        elif not new_current_period and build and ntls > 1:
+            c = "ERROR: Cannot build arbitrary timelines."
+            raise (ValueError(c))
+        elif not all_periods_exist and not build:
+            c = "ERROR: TimePeriod corresponding to ref_date does not exist " \
+                "in all timelines."
+            raise (ValueError(c))
 
-        new_tl = TimeLine(self)
-        new_tl.parameters = self.time_line.parameters.copy()
-        new_tl.master = self.time_line.master
-        new_tl.build(ref_date=ref_date, fwd=fwd, back=back, year_end=year_end)
-        new_tl.id.set_namespace(self.id.bbid)
-
-        self.ref_date = ref_date
-        self.set_timeline(new_tl, overwrite=True)
-
+        self._ref_date = ref_date
         for bu in self.bu_directory.values():
-            bu.financials.period = self.time_line.current_period
+            bu.set_financials(bu.get_financials(new_current_period))
+            bu.financials.period = new_current_period
 
     def clear_excel(self):
         self.time_line.clear_excel()
@@ -381,7 +394,7 @@ class Model(TagsMixIn):
         relevant classes to copy attributes.
         """
         result = Model(self.tags.title)
-        result.ref_date = self.ref_date
+        result._ref_date = self._ref_date
         result._started = self._started
         result.portal_data = self.portal_data.copy()
         result.taxonomy = self.taxonomy.copy()
