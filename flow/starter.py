@@ -97,7 +97,7 @@ class Starter:
             model = Model(bb_settings.DEFAULT_MODEL_NAME)
 
         model.start()
-        model.ref_date = ref_date
+        model._ref_date = ref_date
 
         # officially ``start`` the model so that it never comes back here;
         # otherwise, starter.process() will destroy all existing model data.
