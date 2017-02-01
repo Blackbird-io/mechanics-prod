@@ -81,6 +81,7 @@ class Financials:
         self.ending = BalanceSheet("Ending Balance Sheet", parent=self)
         self.ledger = None
         self.id = ID()  # does not get its own bbid, just holds namespace
+
         # parent for Financials is BusinessUnit
         self.relationships = Relationships(self, parent=parent)
         self.period = period
