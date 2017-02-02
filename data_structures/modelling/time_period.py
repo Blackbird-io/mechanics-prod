@@ -509,13 +509,22 @@ class TimePeriod(TagsMixIn):
         lines_out = list()
 
         for bbid in self._line_item_storage:
+            val = typ = None
+            xl_info = dict()
             ln_dict = self._line_item_storage[bbid]
+
+            if 'value' in ln_dict:
+                val = ln_dict['value']
+                typ = type(ln_dict['value']).__name__
+
+            if 'xl_info' in ln_dict:
+                xl_info = ln_dict['xl_info']
 
             row = dict()
             row['bbid'] = bbid
-            row['_local_value'] = ln_dict['value']
-            row['_local_value_type'] = type(ln_dict['value']).__name__
-            row['xl_info'] = ln_dict['xl_info']
+            row['_local_value'] = val
+            row['_local_value_type'] = typ
+            row['xl_info'] = xl_info
 
             lines_out.append(row)
 
