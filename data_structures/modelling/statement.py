@@ -175,24 +175,6 @@ class Statement(Equalities, TagsMixIn):
         """
         return self._consolidated
 
-    @classmethod
-    def from_portal(cls, portal_data, model, **kargs):
-        """
-
-        Statement.from_portal(portal_data) -> Statement
-
-        **CLASS METHOD**
-
-        Method extracts a Statement from portal_data.
-        """
-        financials = kargs['financials']
-        new = cls(name=portal_data['title'], parent=financials)
-        new._consolidated = portal_data['_consolidated']
-        new.id.set_namespace(financials.id.namespace)
-        new.id.assign(new.name)
-
-        return new
-
     @property
     def model(self):
         if self.period:
@@ -219,6 +201,24 @@ class Statement(Equalities, TagsMixIn):
 
         return period
 
+    @classmethod
+    def from_portal(cls, portal_data, model, **kargs):
+        """
+
+        Statement.from_portal(portal_data) -> Statement
+
+        **CLASS METHOD**
+
+        Method extracts a Statement from portal_data.
+        """
+        financials = kargs['financials']
+        new = cls(name=portal_data['title'], parent=financials)
+        new._consolidated = portal_data['_consolidated']
+        new.id.set_namespace(financials.id.namespace)
+        new.id.assign(new.name)
+
+        return new
+
     def to_portal(self):
         """
 
@@ -233,6 +233,7 @@ class Statement(Equalities, TagsMixIn):
         }
         for line in self._details.values():
             result['lines'].extend(line.to_portal())
+
         return result
 
     def add_line(self, new_line, position=None, noclear=False):
