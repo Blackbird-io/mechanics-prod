@@ -174,12 +174,12 @@ class TimeLine(dict):
             )
             # new.add_period(period)
 
-        for period in new.iter_ordered():
-            if period.past:
-                for bbid, fins_curr in period.financials.items():
-                    fins_past = period.past.financials.get(bbid)
-                    if fins_past:
-                        fins_curr.starting = fins_past.ending
+        # for period in new.iter_ordered():
+        #     if period.past:
+        #         for bbid, fins_curr in period.financials.items():
+        #             fins_past = period.past.financials.get(bbid)
+        #             if fins_past:
+        #                 fins_curr.starting = fins_past.ending
 
         return new
 

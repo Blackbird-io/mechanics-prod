@@ -239,6 +239,8 @@ class Model(TagsMixIn):
         If portal_model does not specify a Model object, method creates a new
         instance. Method stores all portal data other than the Model in the
         output's .portal_data dictionary.
+
+        NEED TO MAKE SURE WE UNPACK ALL BU'S TO CURRENT_PERIOD.FINANCIALS
         """
         flat_model = portal_model["e_model"]
 
@@ -274,11 +276,11 @@ class Model(TagsMixIn):
             """
             for fins in portal_model['financials_structure']:
                 # Deserialize structure
-                new_fins = Financials.from_portal(fins, M)
+                new_fins = Financials.from_portal(fins, M, period=now)
 
                 # Set period attribute and add values
-                new_fins.period = now
-                new_fins.populate_from_stored_values()
+                # new_fins.period = now
+                new_fins.populate_from_stored_values(now)
 
                 # Associate Financials with appropriate BU
                 bu = M.bu_directory[ID.from_portal(fins['buid']).bbid]
@@ -301,6 +303,8 @@ class Model(TagsMixIn):
         Model.to_portal() -> dict
 
         Method yields a serialized representation of self.
+
+        NEED TO MAKE SURE WE CAPTURE FINS FROM EACH BU
         """
         result = dict()
 
@@ -308,9 +312,12 @@ class Model(TagsMixIn):
         # serialized in th database to maintain structure data
         now = self.time_line.current_period
         fins_structure = list()
-        for buid, fins in now.financials.items():
+
+        for bu in self.bu_directory.values():
+            fins = bu.financials
+
             data = {
-                'buid': buid.hex,
+                'buid': bu.id.bbid.hex,
             }
             data.update(fins.to_portal())
             fins_structure.append(data)
@@ -394,9 +401,11 @@ class Model(TagsMixIn):
         self._ref_date = ref_date
 
         new_current_period = self.time_line.current_period
+
         for bu in self.bu_directory.values():
             bu.set_financials(bu.get_financials(new_current_period))
             bu.financials.period = new_current_period
+            new_current_period.financials[bu.id.bbid] = bu.financials
 
     def clear_fins_storage(self):
         """
