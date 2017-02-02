@@ -37,7 +37,6 @@ from data_structures.serializers.chef.data_management import LineData
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
 from data_structures.system.tags_mixin import TagsMixIn
-from data_structures.modelling.financials import Financials
 from pydoc import locate
 from tools.parsing import date_from_iso
 
@@ -233,8 +232,6 @@ class TimePeriod(TagsMixIn):
 
         time_line = kargs['time_line']
         time_line.add_period(new)
-        # for data in portal_data['financials']:
-        #     Financials.from_portal(data, model=model, period=new, **kargs)
 
         return new
 
@@ -494,7 +491,7 @@ class TimePeriod(TagsMixIn):
             line_dict = dict()
             self._line_item_storage[line.id.bbid.hex] = line_dict
 
-        line_dict['xl_info'] = line.xl.to_portal(include_format=False)
+        line_dict['xl_info'] = line.xl.to_portal()
 
     # ************************************************************************#
     #                           NON-PUBLIC METHODS                            #
