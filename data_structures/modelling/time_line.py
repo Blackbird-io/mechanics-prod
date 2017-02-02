@@ -232,6 +232,11 @@ class TimeLine(dict):
 
         TimeLine.build() -> None
 
+         --``ref_date`` is datetime.date to use as the reference date for the
+         timeline
+        --``fwd`` is int number of periods to build forward of the ref_date
+        --``back`` is int number of period to build before the ref_date
+        --``year_end`` is bool for whether to build through the end of the year
 
         Method creates a chain of TimePeriods with adjacent start and end
         points. The chain is at least ``fwd`` periods long into the future
