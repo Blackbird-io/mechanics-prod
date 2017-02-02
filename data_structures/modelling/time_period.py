@@ -38,6 +38,7 @@ from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
 from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.modelling.financials import Financials
+from pydoc import locate
 from tools.parsing import date_from_iso
 
 from .parameters import Parameters
@@ -113,8 +114,8 @@ class TimePeriod(TagsMixIn):
         self.unit_parameters = Parameters()
 
         self._line_item_storage = dict()
-        # {"value": ,
-        #     "xl_info:}
+        # {"value": value of any primitive type,
+        #  "xl_info": flat LineData object without styles info}
 
         # The current approach to indexing units within a period assumes that
         # Blackbird will rarely remove existing units from a model. both
@@ -223,6 +224,8 @@ class TimePeriod(TagsMixIn):
             )
         )
 
+        new._inflate_line_storage(portal_data['financials_values'])
+
         # convert unit_parameters keys to UUID
         for k, v in Parameters.from_portal(portal_data['unit_parameters'],
                                            target='unit_parameters').items():
@@ -230,8 +233,8 @@ class TimePeriod(TagsMixIn):
 
         time_line = kargs['time_line']
         time_line.add_period(new)
-        for data in portal_data['financials']:
-            Financials.from_portal(data, model=model, period=new, **kargs)
+        # for data in portal_data['financials']:
+        #     Financials.from_portal(data, model=model, period=new, **kargs)
 
         return new
 
@@ -248,14 +251,8 @@ class TimePeriod(TagsMixIn):
             'parameters': list(self.parameters.to_portal(target='parameters')),
             'unit_parameters': list(self.unit_parameters.to_portal(
                 target='unit_parameters')),
-            'financials': [],
+            'financials_values': self._deflate_line_storage(),                 # _line_item_storage is already pretty flat, but we have to do some minor work to make each line's entry into a row
         }
-        for buid, fins in self.financials.items():
-            data = {
-                'buid': buid.hex,
-            }
-            data.update(fins.to_portal())
-            result['financials'].append(data)
         return result
 
     def clear(self):
@@ -359,25 +356,6 @@ class TimePeriod(TagsMixIn):
 
         return result
 
-    def get_line_value(self, bbid_hex):
-        line_dict = self._line_item_storage.get(bbid_hex, None)
-        if line_dict:
-            stored_value = line_dict['value']
-        else:
-            stored_value = None
-
-        return stored_value
-
-    def get_xl_info(self, bbid_hex):
-        line_dict = self._line_item_storage.get(bbid_hex, None)
-        if line_dict:
-            flat_xl = line_dict['xl_info']
-            stored_xl = LineData.from_portal(flat_xl, self.relationships.parent.model)
-        else:
-            stored_xl = LineData()
-
-        return stored_xl
-
     def ex_to_default(self, target):
         """
 
@@ -436,8 +414,60 @@ class TimePeriod(TagsMixIn):
         # Step 3: return container
         return result
 
+    def get_line_value(self, bbid_hex):
+        """
+
+
+        TimePeriod.get_line_value() -> any primitive
+
+        --``bbid_hex`` is the string representation of a BBID
+
+        Method returns the value of the specified line.  Method retrieves
+        value from _line_item_storage and returns.
+        """
+        line_dict = self._line_item_storage.get(bbid_hex, None)
+        if line_dict:
+            stored_value = line_dict['value']
+        else:
+            stored_value = None
+
+        return stored_value
+
+    def get_xl_info(self, bbid_hex):
+        """
+
+
+        TimePeriod.get_xl_info() -> LineData
+
+        --``bbid_hex`` is the string representation of a BBID
+
+        Method returns the LineData object containing information pertinent to
+        the specified line.  Method retrieves flat data from
+        _line_item_storage, converts it to a rich object, and returns.
+        """
+
+        line_dict = self._line_item_storage.get(bbid_hex, None)
+        if line_dict:
+            flat_xl = line_dict['xl_info']
+            stored_xl = LineData.from_portal(flat_xl,
+                                             self.relationships.parent.model)
+        else:
+            stored_xl = LineData()
+
+        return stored_xl
+
     def update_line_value(self, line):
-        # THESE SHOULD NOT BE RUN BY TOPICS
+        """
+
+
+        TimePeriod.update_line_value() -> None
+
+        --``line`` is the LineItem whose value record to update
+
+        Method updates the value stored for this LineItem in the data hoard.
+        """
+
+        # THIS SHOULD NOT BE RUN BY TOPICS
         if line.id.bbid.hex in self._line_item_storage:
             line_dict = self._line_item_storage[line.id.bbid.hex]
         else:
@@ -447,7 +477,17 @@ class TimePeriod(TagsMixIn):
         line_dict['value'] = line._local_value
 
     def update_line_xl(self, line):
-        # THESE SHOULD NOT BE RUN BY TOPICS
+        """
+
+
+        TimePeriod.update_line_value() -> None
+
+        --``line`` is the LineItem whose xl record to update
+
+        Method updates the xl calculation info stored for this LineItem in the
+        data hoard.
+        """
+        # THIS SHOULD NOT BE RUN BY TOPICS
         if line.id.bbid.hex in self._line_item_storage:
             line_dict = self._line_item_storage[line.id.bbid.hex]
         else:
@@ -455,3 +495,55 @@ class TimePeriod(TagsMixIn):
             self._line_item_storage[line.id.bbid.hex] = line_dict
 
         line_dict['xl_info'] = line.xl.to_portal(include_format=False)
+
+    # ************************************************************************#
+    #                           NON-PUBLIC METHODS                            #
+    # ************************************************************************#
+
+    def _deflate_line_storage(self):
+        """
+
+
+        TimePeriod._deflate_line_storage() -> list
+
+        Method flattens _line_item_storage dictionary into a list of dicts
+        representing rows in the database.
+        """
+        lines_out = list()
+
+        for bbid in self._line_item_storage:
+            ln_dict = self._line_item_storage[bbid]
+
+            row = dict()
+            row['bbid'] = bbid
+            row['_local_value'] = ln_dict['value']
+            row['_local_value_type'] = type(ln_dict['value']).__name__
+            row['xl_info'] = ln_dict['xl_info']
+
+            lines_out.append(row)
+
+        return lines_out
+
+    def _inflate_line_storage(self, rows):
+        """
+
+
+        TimePeriod._inflate_line_storage() -> None
+
+        Method recreates _line_item_storage dictionary from a list of dicts
+        representing rows in the database.
+        """
+
+        for row in rows:
+            val = row['_local_value']
+            typ = row['_local_value_type'] or float
+            bbid = row['bbid']
+
+            if val is not None:
+                val = locate(typ)(val)
+
+            ln_dict = dict()
+            ln_dict['value'] = val
+            ln_dict['xl_info'] = row['xl_info']
+
+            self._line_item_storage[bbid] = ln_dict
