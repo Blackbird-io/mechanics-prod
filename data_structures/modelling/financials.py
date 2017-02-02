@@ -32,6 +32,7 @@ import logging
 import bb_settings
 import bb_exceptions
 
+from data_structures.serializers.chef.data_management import LineData
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
 from .line_item import Statement, LineItem
@@ -379,16 +380,26 @@ class Financials:
         return new_instance
 
     def populate_from_stored_values(self, period):
+        """
+
+
+        Financials.populate_from_stored_values() -> None
+
+        --``period`` is the TimePeriod from which to retrieve values
+
+        Method uses financials data (values and excel info) stored in the
+        period to fill in the line values in the instance.
+        """
+
         for statement in self.full_ordered:
             if statement is not None:
                 for line in statement.get_full_ordered():
-                    value = period.get_line_value(line.id.bbid.hex)
-                    new_xl = period.get_xl_info(line.id.bbid.hex)
+                    new_xl = LineData()
                     new_xl.format = line.xl.format
                     line.xl = new_xl
 
-                    if value is not None:
-                        line._local_value = value
+                    value = period.get_line_value(line.id.bbid.hex)
+                    line._local_value = value
 
     def register(self, namespace):
         """

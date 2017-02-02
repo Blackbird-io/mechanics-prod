@@ -305,13 +305,9 @@ class LineData(Range):
         **CLASS METHOD**
 
         Method deserializes a LineData.
+        DOES NOT INCLUDE FORMAT
         """
         new = cls()
-
-        if portal_data.get('format'):
-            new.format = LineFormat.from_portal(
-                portal_data['format'], model=model, **kargs
-            )
 
         if portal_data['consolidated']['sources']:
             new.consolidated.labels = portal_data['consolidated']['labels']
@@ -332,13 +328,15 @@ class LineData(Range):
 
         return new
 
-    def to_portal(self, include_format=True):
+    def to_portal(self):
         """
 
 
         LineData.to_portal() -> dict
 
         Method yields a serialized representation of self.
+
+        DOES NOT INCLUDE FORMAT
         """
         row = {
             'consolidated': {
@@ -362,9 +360,6 @@ class LineData(Range):
         if self.derived.calculations:
             for calc in self.derived.calculations:
                 row['derived']['calculations'].append(calc.to_portal())
-
-        if self.format and include_format:
-            row['format'] = self.format.to_portal()
 
         return row
 

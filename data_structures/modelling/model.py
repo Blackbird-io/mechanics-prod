@@ -34,6 +34,7 @@ import bb_exceptions
 import bb_settings
 import tools.for_tag_operations
 from chef_settings import DEFAULT_SCENARIOS
+from data_structures.modelling.financials import Financials
 from data_structures.system.bbid import ID
 from data_structures.modelling.line_item import LineItem
 from data_structures.system.tags_mixin import TagsMixIn
@@ -263,20 +264,24 @@ class Model(TagsMixIn):
         # assigned back to the proper BU
         now = M.time_line.current_period
         if now:
-            for bu in M.bu_directory.values():
-                fins = M.get_financials(bu.id.bbid, now)
-                bu.set_financials(fins)
+            """
+            Here we will want to actually deserialize financials in the current
+            period for all BU's, then call fins.populate_from_stored_values()
+            """
+            for fins in portal_model['financials_structure']:
+                # Deserialize structure
+                new_fins = Financials.from_portal(fins, M)
 
-        # once all LineItems have been reconstructed, rebuild links among them
-        # for (resolution, name), time_line in M.timelines.items():
-        #     for end, period in time_line.items():
-        #         for buid, fins in period.financials.items():
-        #             for name in fins._full_order:
-        #                 statement = getattr(fins, name, None)
-        #                 if statement:
-        #                     for line in statement.get_full_ordered():
-        #                         if isinstance(line.xl, dict):
-        #                             line.xl = LineData.from_portal(line.xl, M)
+                # Set period attribute and add values
+                new_fins.period = now
+                new_fins.populate_from_stored_values()
+
+                # Associate Financials with appropriate BU
+                bu = M.bu_directory[ID.from_portal(fins['buid']).bbid]
+                bu.set_financials(new_fins)
+
+                # Save Fins in current_period directory
+                now.financials[bu.id.bbid] = new_fins
 
         if M.summary_maker:
             tnam = M.summary_maker['timeline_name']
@@ -293,9 +298,10 @@ class Model(TagsMixIn):
 
         Method yields a serialized representation of self.
         """
+        result = dict()
 
         # pre-process financials in the current period, make sure they get
-        # serialized in th database
+        # serialized in th database to maintain structure data
         now = self.time_line.current_period
         fins_structure = list()
         for buid, fins in now.financials.items():
@@ -304,6 +310,7 @@ class Model(TagsMixIn):
             }
             data.update(fins.to_portal())
             fins_structure.append(data)
+        result['financials_structure'] = fins_structure
 
         # serialized representation has a list of timelines attached
         # with (resolution, name) as properties
@@ -317,11 +324,7 @@ class Model(TagsMixIn):
             data.update(time_line.to_portal())
             timelines.append(data)
 
-        result = dict(
-            timelines=timelines,
-        )
-
-        result['financials_structure'] = fins_structure
+        result['timelines'] =timelines
 
         return result
 
@@ -500,6 +503,19 @@ class Model(TagsMixIn):
         financials = self.get_financials(buid, period)
         line = financials.find_line(bbid, fins_attr)
         return line
+
+    def populate_xl_data(self):
+        # once all LineItems have been reconstructed, rebuild links among them
+        for (resolution, name), time_line in self.timelines.items():
+            for end, period in time_line.items():
+                for buid, fins in period.financials.items():
+                    for name in fins._full_order:
+                        statement = getattr(fins, name, None)
+                        if statement:
+                            for line in statement.get_full_ordered():
+                                if isinstance(line.xl, dict):
+                                    line.xl = LineData.from_portal(line.xl,
+                                                                   self)
 
     def prep_for_monitoring_interview(self):
         """

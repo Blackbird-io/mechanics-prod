@@ -247,14 +247,9 @@ class LineItem(Statement, HistoryLine):
             # new.id.set_namespace(ID.from_portal(data['parent_bbid']).bbid)
 
             # defer resolution of .xl
-            new.xl = data['xl']
-
-            typ = data['_local_value_type'] or 'float'
-            val = data['_local_value']
-
-            if val is not None:
-                val = locate(typ)(val)
-            new._local_value = val
+            new.xl = xl_mgmt.LineData()
+            new.xl.format = xl_mgmt.LineFormat.from_portal(data['xl_format'],
+                                                           model=model)
 
             for attr in (
                 'position',
