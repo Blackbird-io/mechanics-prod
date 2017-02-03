@@ -277,7 +277,7 @@ class SummaryMaker:
 
             # create target financials
             bu = self.model.get_company()
-            period_fins = Financials(parent=bu, period=period)
+            period_fins = bu.get_financials(period) #Financials(parent=bu, period=period)
             period_fins.register(self.buid)
             period.financials[self.buid] = period_fins
 
@@ -449,6 +449,7 @@ class SummaryMaker:
                 target_line = source_line.copy()
                 target_line.set_hardcoded(False, recur=True)
                 target_line.clear(recur=True, force=True)
+                print(target_line.name)
                 target_statement.add_line(target_line)
 
             target_line.set_hardcoded(False, recur=True)

@@ -417,6 +417,10 @@ class Model(TagsMixIn):
         Method clears financial values and xl data storage after modification
         to SSOT financials.
         """
+        if self.time_line.has_been_extrapolated:
+            import pdb
+            pdb.set_trace()
+
         for tl in self.timelines.values():
             for per in tl.values():
                 per.clear()
