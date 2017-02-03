@@ -110,7 +110,7 @@ class Statement(Equalities, TagsMixIn):
     keyAttributes = ["_details"]
     # Should rename this comparable_attributes
 
-    def __init__(self, name=None, spacing=100, parent=None):
+    def __init__(self, name=None, spacing=100, parent=None, period=None):
         TagsMixIn.__init__(self, name)
 
         self._consolidated = False
@@ -119,6 +119,7 @@ class Statement(Equalities, TagsMixIn):
         self.POSITION_SPACING = max(1, int(spacing))
         self.id = ID()  # does not get its own bbid, just holds namespace
         self._restricted = False  # whether user can modify structure,
+        self._period = period
         # user can only modify structure in current period
 
     def __eq__(self, comparator, trace=False, tab_width=4):
@@ -186,20 +187,7 @@ class Statement(Equalities, TagsMixIn):
 
     @property
     def period(self):
-        parent = self.relationships.parent
-        while isinstance(parent, Statement):
-            parent = parent.relationships.parent
-
-        # parent is Financials at this point
-        financials = parent
-        if financials:
-            period = financials.period
-        else:
-            # this happens when the statement is not registered in Financials,
-            # typically this means the statement is holding the path
-            period = None
-
-        return period
+        return self._period
 
     @classmethod
     def from_portal(cls, portal_data, model, **kargs):
@@ -742,6 +730,11 @@ class Statement(Equalities, TagsMixIn):
         for line in self.get_full_ordered():
             line.restrict()
 
+    def set_period(self, period):
+        self._period = period
+        for line in self.get_full_ordered():
+            line._period = period
+
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
     #*************************************************************************#
@@ -777,6 +770,7 @@ class Statement(Equalities, TagsMixIn):
         Set instance as line parent, add line to details.
         """
         line.relationships.set_parent(self)
+        line._period = self._period
 
         if self.id.bbid:
             line.register(namespace=self.id.bbid)

@@ -269,7 +269,7 @@ class SummaryMaker:
             new_info = self.period_sources[self.onkey][source.end]
             enter = new_info['enter']
             close = new_info['close']
-            period = TimePeriod(enter, close, model=self.model)
+            period = TimePeriod(enter, close, parent=timeline_summary)
             # counter of months used in the summary
             period.periods_used = 0
             # what sort of timeline does the period belong to

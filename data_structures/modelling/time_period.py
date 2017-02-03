@@ -94,7 +94,7 @@ class TimePeriod(TagsMixIn):
     get_lowest_units()    return list of units w/o components from bbid pool
     ====================  ======================================================
     """
-    def __init__(self, start_date, end_date, model=None):
+    def __init__(self, start_date, end_date, parent=None, **kargs):
         # TimePeriodBase.__init__(self, start_date, end_date, model=model)
         TagsMixIn.__init__(self)
 
@@ -105,6 +105,7 @@ class TimePeriod(TagsMixIn):
 
         self.id = ID()
         self.relationships = Relationships(self)
+        self.relationships.set_parent(parent)
 
         self.past_end = None
         self.next_end = None
