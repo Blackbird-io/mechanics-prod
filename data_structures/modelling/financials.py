@@ -74,18 +74,21 @@ class Financials:
     """
 
     def __init__(self, parent=None, period=None):
-        self.overview = Statement(name="overview", parent=self)
-        self.income = Statement(name="income statement", parent=self)
-        self.cash = CashFlow(parent=self)
-        self.valuation = Statement("Valuation", parent=self)
-        self.starting = BalanceSheet("Starting Balance Sheet", parent=self)
-        self.ending = BalanceSheet("Ending Balance Sheet", parent=self)
+        self.overview = Statement(name="overview", parent=self, period=period)
+        self.income = Statement(name="income statement", parent=self,
+                                period=period)
+        self.cash = CashFlow(parent=self, period=period)
+        self.valuation = Statement("Valuation", parent=self, period=period)
+        self.starting = BalanceSheet("Starting Balance Sheet", parent=self,
+                                     period=period)
+        self.ending = BalanceSheet("Ending Balance Sheet", parent=self,
+                                   period=period)
         self.ledger = None
         self.id = ID()  # does not get its own bbid, just holds namespace
 
         # parent for Financials is BusinessUnit
         self.relationships = Relationships(self, parent=parent)
-        self.period = period
+        self._period = period
         self.filled = False
 
         # defaults for monthly; quarterly and annual need to overwrite
@@ -154,6 +157,18 @@ class Financials:
             result.append(statement)
 
         return result
+
+    @property
+    def period(self):
+        return self._period
+
+    @period.setter
+    def period(self, value):
+        self._period = value
+        for statement in self.full_ordered:
+            if statement:
+                if statement.relationships.parent is self:
+                    statement.set_period(value)
 
     def __str__(self):
         header = ''
@@ -309,7 +324,7 @@ class Financials:
         if not self._restricted:
             if not statement:
                 use_name = title or name
-                statement = Statement(use_name)
+                statement = Statement(use_name, period=self.period)
 
             statement.relationships.set_parent(self)
 
@@ -390,8 +405,16 @@ class Financials:
         Method uses financials data (values and excel info) stored in the
         period to fill in the line values in the instance.
         """
+        tl = period.relationships.parent
+        if len(tl.keys()) > 0:
+            min_dt = min(tl.keys())
+            first = tl[min_dt]
+        else:
+            first = None
+
         for statement in self.full_ordered:
-            if statement is not None and statement is not self.starting:
+            if statement is not None and (statement is not self.starting or
+                                                  period is first):
                 for line in statement.get_full_ordered():
                     new_xl = LineData()
                     new_xl.format = line.xl.format
@@ -417,6 +440,8 @@ class Financials:
 
                     value = past.get_line_value(line.id.bbid.hex)
                     line._local_value = value
+
+                self.starting.set_period(past)
 
         # And if fins exist in period.future
         if future:

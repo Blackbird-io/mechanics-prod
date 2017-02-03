@@ -746,7 +746,8 @@ class BusinessUnit(TagsMixIn, Equalities):
             fins.relationships.set_parent(self)
             fins.period = period
             fins.populate_from_stored_values(period)
-            fins.restrict()
+            if period.end > now.end:
+                fins.restrict()
             period.financials[self.id.bbid] = fins
 
         return fins

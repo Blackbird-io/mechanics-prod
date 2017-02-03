@@ -39,8 +39,9 @@ from ..line_item import LineItem
 
 # Classes
 class CashFlowStatement(Statement):
-    def __init__(self, parent=None):
-        Statement.__init__(self, name="cash flow statement", parent=parent)
+    def __init__(self, parent=None, period=None):
+        Statement.__init__(self, name="cash flow statement", parent=parent,
+                           period=period)
 
         net_cash_line = LineItem('Total net cash flow')
         net_cash_line.xl.format.blank_row_after = True
