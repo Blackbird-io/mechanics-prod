@@ -399,7 +399,26 @@ class Financials:
                     line.xl = new_xl
 
                     value = period.get_line_value(line.id.bbid.hex)
+                    # if value is None and period._line_item_storage:
+                    #     import pdb
+                    #     pdb.set_trace()
+
                     line._local_value = value
+
+        buid = self.relationships.parent.id.bbid
+        past = period.past
+        future = period.future
+        # Now check if fins exist in period.past
+        if past:
+            if buid in past.financials:
+                past_fins = past.financials[buid]
+                self.starting = past_fins.ending
+
+        # And if fins exist in period.future
+        if future:
+            if buid in future.financials:
+                future_fins = future.financials[buid]
+                future_fins.starting = self.ending
 
     def register(self, namespace):
         """
@@ -499,5 +518,5 @@ class Financials:
     def restrict(self):
         self._restricted = True
         for statement in self.full_ordered:
-            if statement is not None:
+            if statement is not None and statement is not self.starting:
                 statement.restrict()

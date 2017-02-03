@@ -280,7 +280,7 @@ class LineItem(Statement, HistoryLine):
             position = data['position']
             position = int(position) if position else None
             line.relationships.set_parent(parent)
-            parent.add_line(line, position=position)
+            parent.add_line(line, position=position, noclear=True)
 
     def to_portal(self, parent_line=None):
         """

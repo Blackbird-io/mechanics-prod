@@ -743,22 +743,21 @@ class BusinessUnit(TagsMixIn, Equalities):
             period.financials[self.id.bbid] = fins
         else:
             fins = self.financials.copy(clean=True)
-            fins.populate_from_stored_values(period)
             fins.relationships.set_parent(self)
             fins.period = period
+            fins.populate_from_stored_values(period)
             fins.restrict()
             period.financials[self.id.bbid] = fins
-
-            # Link all line tags to original master financials
-            for statement_name in self.financials.order:
-                master_stmt = getattr(self.financials, statement_name, None)
-                if master_stmt:
-                    for master_line in master_stmt.get_full_ordered():
-                        new_stmt = getattr(fins, statement_name, None)
-                        if new_stmt:
-                            new_line = new_stmt.find_first(master_line.name)
-                            if new_line:
-                                new_line.tags = master_line.tags
+            # # Link all line tags to original master financials
+            # for statement_name in self.financials.order:
+            #     master_stmt = getattr(self.financials, statement_name, None)
+            #     if master_stmt:
+            #         for master_line in master_stmt.get_full_ordered():
+            #             new_stmt = getattr(fins, statement_name, None)
+            #             if new_stmt:
+            #                 new_line = new_stmt.find_first(master_line.name)
+            #                 if new_line:
+            #                     new_line.tags = master_line.tags
 
         return fins
     
