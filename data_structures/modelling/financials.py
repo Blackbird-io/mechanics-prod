@@ -390,29 +390,33 @@ class Financials:
         Method uses financials data (values and excel info) stored in the
         period to fill in the line values in the instance.
         """
-
         for statement in self.full_ordered:
-            if statement is not None:
+            if statement is not None and statement is not self.starting:
                 for line in statement.get_full_ordered():
                     new_xl = LineData()
                     new_xl.format = line.xl.format
                     line.xl = new_xl
 
                     value = period.get_line_value(line.id.bbid.hex)
-                    # if value is None and period._line_item_storage:
-                    #     import pdb
-                    #     pdb.set_trace()
-
                     line._local_value = value
 
         buid = self.relationships.parent.id.bbid
         past = period.past
         future = period.future
+
         # Now check if fins exist in period.past
         if past:
             if buid in past.financials:
                 past_fins = past.financials[buid]
                 self.starting = past_fins.ending
+            else:
+                for line in self.starting.get_full_ordered():
+                    new_xl = LineData()
+                    new_xl.format = line.xl.format
+                    line.xl = new_xl
+
+                    value = past.get_line_value(line.id.bbid.hex)
+                    line._local_value = value
 
         # And if fins exist in period.future
         if future:
