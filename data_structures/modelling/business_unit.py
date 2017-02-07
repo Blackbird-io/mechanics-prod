@@ -587,6 +587,8 @@ class BusinessUnit(TagsMixIn, Equalities):
         Recalculate instance finanicals. If ``adjust_future`` is True, will
         repeat for all future snapshots.
         """
+        period.clear()
+
         self.reset_financials(period=period)
         self.fill_out(period=period)
         if adjust_future and period and period.future:

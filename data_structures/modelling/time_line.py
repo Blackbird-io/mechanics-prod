@@ -413,8 +413,15 @@ class TimeLine(dict):
             seed = self.current_period
 
         company = self.model.get_company()
-        company.reset_financials(period=seed)
-        company.fill_out(period=seed)
+
+        company.recalculate(period=seed.past, adjust_future=False)
+        company.recalculate(period=seed, adjust_future=False)
+
+        # company.reset_financials(period=seed.past)
+        # company.fill_out(period=seed.past)
+        #
+        # company.reset_financials(period=seed)
+        # company.fill_out(period=seed)
 
         summary_maker = self.model.prep_summaries()
 
