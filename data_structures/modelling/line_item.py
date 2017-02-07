@@ -569,6 +569,9 @@ class LineItem(Statement, HistoryLine):
         self.id.set_namespace(namespace)
         self.id.assign(self.name)
 
+        self._update_stored_hc()
+        self._update_stored_value()
+
         for line in self.get_ordered():
             line.register(namespace=self.id.bbid)
 
@@ -608,9 +611,16 @@ class LineItem(Statement, HistoryLine):
             msg = "lineitem._hardcoded can only be set to a boolean value"
             raise(TypeError(msg))
 
+        self._update_stored_hc()
+
         if recur:
             for line in self._details.values():
                 line.set_hardcoded(val, recur=recur)
+
+    def set_period(self, period):
+        self._period = period
+        for line in self._details.values():
+            line.set_period(period)
 
     def setValue(self, value, signature,
                  overrideValueManagement=False):
@@ -731,6 +741,9 @@ class LineItem(Statement, HistoryLine):
 
         Statement._bind_and_record(self, line, noclear=noclear)
 
+        self._update_stored_hc()
+        self._update_stored_value()
+
     def _bring_down_local_value(self):
         """
 
@@ -846,6 +859,16 @@ class LineItem(Statement, HistoryLine):
         if self.period:
             self.period.update_line_value(self)
 
+        for line in self._details.values():
+            line._update_stored_value()
+
     def _update_stored_xl(self):
         if self.period:
             self.period.update_line_xl(self)
+
+    def _update_stored_hc(self):
+        if self.period:
+            self.period.update_line_hardcoded(self)
+
+        for line in self._details.values():
+            line._update_stored_hc()

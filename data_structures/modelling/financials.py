@@ -423,6 +423,9 @@ class Financials:
                     value = period.get_line_value(line.id.bbid.hex)
                     line._local_value = value
 
+                    hc = period.get_line_hc(line.id.bbid.hex)
+                    line._hardcoded = hc
+
         buid = self.relationships.parent.id.bbid
         past = period.past
         future = period.future
@@ -440,6 +443,9 @@ class Financials:
 
                     value = past.get_line_value(line.id.bbid.hex)
                     line._local_value = value
+
+                    hc = past.get_line_hc(line.id.bbid.hex)
+                    line._hardcoded = hc
 
                 self.starting.set_period(past)
 

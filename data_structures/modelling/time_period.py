@@ -263,7 +263,10 @@ class TimePeriod(TagsMixIn):
         Method erases all Financials data.
         """
         self.financials = dict()
-        self._line_item_storage = dict()
+        for key, value in self._line_item_storage.items():
+            hc = value.get('hardcoded', False)
+            if not hc:
+                self._line_item_storage.pop(key)
 
     def copy(self, clean=False):
         """
@@ -454,6 +457,27 @@ class TimePeriod(TagsMixIn):
 
         return stored_xl
 
+    def get_line_hc(self, bbid_hex):
+        """
+
+
+        TimePeriod.get_xl_info() -> LineData
+
+        --``bbid_hex`` is the string representation of a BBID
+
+        Method returns the LineData object containing information pertinent to
+        the specified line.  Method retrieves flat data from
+        _line_item_storage, converts it to a rich object, and returns.
+        """
+
+        line_dict = self._line_item_storage.get(bbid_hex, None)
+        if line_dict:
+            hc = line_dict['hardcoded']
+        else:
+            hc = False
+
+        return hc
+
     def update_line_value(self, line):
         """
 
@@ -494,6 +518,16 @@ class TimePeriod(TagsMixIn):
 
         line_dict['xl_info'] = line.xl.to_portal()
 
+    def update_line_hardcoded(self, line):
+        # THIS SHOULD NOT BE RUN BY TOPICS
+        if line.id.bbid.hex in self._line_item_storage:
+            line_dict = self._line_item_storage[line.id.bbid.hex]
+        else:
+            line_dict = dict()
+            self._line_item_storage[line.id.bbid.hex] = line_dict
+
+        line_dict['hardcoded'] = line.hardcoded
+
     # ************************************************************************#
     #                           NON-PUBLIC METHODS                            #
     # ************************************************************************#
@@ -510,22 +544,19 @@ class TimePeriod(TagsMixIn):
         lines_out = list()
 
         for bbid in self._line_item_storage:
-            val = typ = None
-            xl_info = dict()
             ln_dict = self._line_item_storage[bbid]
 
-            if 'value' in ln_dict:
-                val = ln_dict['value']
-                typ = type(ln_dict['value']).__name__
-
-            if 'xl_info' in ln_dict:
-                xl_info = ln_dict['xl_info']
+            val = ln_dict.get('value', None)
+            typ = type(val).__name__
+            xl_info = ln_dict.get('xl_info', dict())
+            hardcoded = ln_dict.get('hardcoded', False)
 
             row = dict()
             row['bbid'] = bbid
             row['_local_value'] = val
             row['_local_value_type'] = typ
             row['xl_info'] = xl_info
+            row['hardcoded'] = hardcoded
 
             lines_out.append(row)
 
@@ -552,5 +583,6 @@ class TimePeriod(TagsMixIn):
             ln_dict = dict()
             ln_dict['value'] = val
             ln_dict['xl_info'] = row['xl_info']
+            ln_dict['hardcoded'] = row['hardcoded']
 
             self._line_item_storage[bbid] = ln_dict

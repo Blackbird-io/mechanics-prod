@@ -770,7 +770,11 @@ class Statement(Equalities, TagsMixIn):
         Set instance as line parent, add line to details.
         """
         line.relationships.set_parent(self)
-        line._period = self._period
+
+        try:
+            line.set_period(self._period)
+        except AttributeError:
+            pass
 
         if self.id.bbid:
             line.register(namespace=self.id.bbid)
