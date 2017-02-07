@@ -263,7 +263,10 @@ class TimePeriod(TagsMixIn):
         Method erases all Financials data.
         """
         self.financials = dict()
-        for key, value in self._line_item_storage.items():
+        keys = self._line_item_storage.keys()
+        keys = list(keys)
+        for key in keys:
+            value = self._line_item_storage[key]
             hc = value.get('hardcoded', False)
             if not hc:
                 self._line_item_storage.pop(key)
@@ -428,7 +431,7 @@ class TimePeriod(TagsMixIn):
         """
         line_dict = self._line_item_storage.get(bbid_hex, None)
         if line_dict:
-            stored_value = line_dict['value']
+            stored_value = line_dict.get('value', None)
         else:
             stored_value = None
 
@@ -449,7 +452,7 @@ class TimePeriod(TagsMixIn):
 
         line_dict = self._line_item_storage.get(bbid_hex, None)
         if line_dict:
-            flat_xl = line_dict['xl_info']
+            flat_xl = line_dict.get('xl_info', LineData())
             stored_xl = LineData.from_portal(flat_xl,
                                              self.relationships.parent.model)
         else:
@@ -472,7 +475,7 @@ class TimePeriod(TagsMixIn):
 
         line_dict = self._line_item_storage.get(bbid_hex, None)
         if line_dict:
-            hc = line_dict['hardcoded']
+            hc = line_dict.get('hardcoded', False)
         else:
             hc = False
 

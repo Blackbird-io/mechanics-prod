@@ -421,7 +421,7 @@ class Model(TagsMixIn):
 
         for tl in self.timelines.values():
             for per in tl.values():
-                if per is not now and per is not now.past:
+                if per is not now:
                     per.clear()
 
     def copy(self):
