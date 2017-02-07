@@ -269,7 +269,7 @@ class Model(TagsMixIn):
         # post-process financials in the current period, make sure they get
         # assigned back to the proper BU
         now = M.time_line.current_period
-        if now:
+        if now is not None:
             """
             Here we will want to actually deserialize financials in the current
             period for all BU's, then call fins.populate_from_stored_values()
@@ -417,13 +417,12 @@ class Model(TagsMixIn):
         Method clears financial values and xl data storage after modification
         to SSOT financials.
         """
-        if self.time_line.has_been_extrapolated:
-            import pdb
-            pdb.set_trace()
+        now = self.time_line.current_period
 
         for tl in self.timelines.values():
             for per in tl.values():
-                per.clear()
+                if per is not now and per is not now.past:
+                    per.clear()
 
     def copy(self):
         """

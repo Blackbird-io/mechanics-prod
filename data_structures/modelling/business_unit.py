@@ -515,6 +515,8 @@ class BusinessUnit(TagsMixIn, Equalities):
         BusinessUnit.derive() will never run again for that LineItem, either at
         that component or any parent or ancestor of that component.
         """
+        print("######### FILL OUT ########")
+
         financials = self.get_financials(period)
         if not financials.filled:
             if not period:
@@ -733,6 +735,7 @@ class BusinessUnit(TagsMixIn, Equalities):
             # method allows a call with a blank period
             # in which case bu must have financials attached
             fins = self.financials
+            now.financials[self.id.bbid] = self.financials
         elif self.id.bbid in period.financials:
             # the best case we expect: financials have been assigned to a period
             fins = period.financials[self.id.bbid]
@@ -746,8 +749,8 @@ class BusinessUnit(TagsMixIn, Equalities):
             fins.relationships.set_parent(self)
             fins.period = period
             fins.populate_from_stored_values(period)
-            if period.end > now.end:
-                fins.restrict()
+            fins.restrict()
+
             period.financials[self.id.bbid] = fins
 
         return fins
