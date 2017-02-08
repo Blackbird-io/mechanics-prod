@@ -79,10 +79,7 @@ class Financials:
                                 period=period)
         self.cash = CashFlow(parent=self, period=period)
         self.valuation = Statement("Valuation", parent=self, period=period)
-        self.starting = BalanceSheet("Starting Balance Sheet", parent=self,
-                                     period=period)
-        self.ending = BalanceSheet("Ending Balance Sheet", parent=self,
-                                   period=period)
+        self.starting = self.ending = BalanceSheet("Ending Balance Sheet", parent=self, period=period)
         self.ledger = None
         self.id = ID()  # does not get its own bbid, just holds namespace
 
@@ -250,6 +247,8 @@ class Financials:
             LineItem.from_portal(
                 data['lines'], model=model, statement=statement, **kargs
             )
+
+        new.starting = new.ending
 
         return new
 

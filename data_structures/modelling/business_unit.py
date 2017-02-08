@@ -438,6 +438,12 @@ class BusinessUnit(TagsMixIn, Equalities):
         self._consolidate(statement_name, period)
         self._derive(statement_name, period)
 
+    def consolidate_fins_structure(self):
+        for statement in self.financials.full_order:
+            self._consolidate(statement, period=None, struct=True)
+
+        self.relationships.model.clear_fins_storage()
+
     def copy(self):
         """
 
@@ -520,6 +526,8 @@ class BusinessUnit(TagsMixIn, Equalities):
 
         financials = self.get_financials(period)
         if not financials.filled:
+            financials = self.get_financials(period)
+
             if not period:
                 period = self.get_current_period()
             self._load_starting_balance(period)
@@ -690,6 +698,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         fins.relationships.set_parent(self)
         fins.period = self.get_current_period()
         self.financials = fins
+        # self.financials.starting = self.financials.ending
 
     def synchronize(self, recur=True):
         """
@@ -881,7 +890,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         self._derive("ending", period)
         # Derive() will overwrite ending balance sheet where appropriate
 
-    def _consolidate(self, statement_name, period=None):
+    def _consolidate(self, statement_name, period=None, struct=False):
         """
 
 
@@ -897,9 +906,9 @@ class BusinessUnit(TagsMixIn, Equalities):
         # would look different (even though the bottom line would be the same).
 
         for unit in pool:
-            self._consolidate_unit(unit, statement_name, period)
+            self._consolidate_unit(unit, statement_name, period, struct=struct)
 
-    def _consolidate_unit(self, sub, statement_name, period=None):
+    def _consolidate_unit(self, sub, statement_name, period=None, struct=False):
         """
 
 
@@ -916,15 +925,20 @@ class BusinessUnit(TagsMixIn, Equalities):
         Method delegates to Statement.increment() for actual consolidation work.
         """
         # Step Only: Actual consolidation
-        sub_fins = sub.get_financials(period)
-        top_fins = self.get_financials(period)
+        if struct:
+            sub_fins = sub.financials
+            top_fins = self.financials
+        else:
+            sub_fins = sub.get_financials(period)
+            top_fins = self.get_financials(period)
+
         sub_statement = getattr(sub_fins, statement_name, None)
         top_statement = getattr(top_fins, statement_name, None)
 
-        if sub.life.conceived(period):
-            xl_only = False
-        else:
-            xl_only = True
+        xl_only = True
+        if period:
+            if sub.life.conceived(period):
+                xl_only = False
 
         if sub_statement and top_statement:
             top_statement.increment(
