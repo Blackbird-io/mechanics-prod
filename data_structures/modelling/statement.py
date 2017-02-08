@@ -652,6 +652,9 @@ class Statement(Equalities, TagsMixIn):
                                                     xl_label=xl_label)
 
                     if self._restricted:
+                        print(self)
+                        print(local_copy)
+
                         c = "Trying to add line to restricted statement"
                         raise ValueError(c)
 
