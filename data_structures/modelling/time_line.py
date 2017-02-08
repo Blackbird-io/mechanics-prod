@@ -120,6 +120,11 @@ class TimeLine(dict):
             cp = self.find_period(self.model.ref_date)
             return cp
 
+    @property
+    def first_period(self):
+        min_date = min(self.keys())
+        return self[min_date]
+
     def __str__(self, lines=None):
         """
 

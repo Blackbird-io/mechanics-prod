@@ -51,6 +51,7 @@ from .components import Components
 from .equalities import Equalities
 from .life import Life as LifeCycle
 from .parameters import Parameters
+from .statements import BalanceSheet
 
 
 
@@ -734,22 +735,29 @@ class BusinessUnit(TagsMixIn, Equalities):
         now = model.get_timeline().current_period if model else None
 
         if not period:
-            # method allows a call with a blank period
-            # in which case bu must have financials attached
-            fins = self.financials
-            now.financials[self.id.bbid] = self.financials
-        elif self.id.bbid in period.financials:
+            period = now
+
+        timeline = period.relationships.parent
+
+        if period is None:
+            c = "PERIOD IS NONE!!!!! CANNOT GET FINANCIALS"
+            raise ValueError(c)
+
+        if self.id.bbid in period.financials:
             # the best case we expect: financials have been assigned to a period
             fins = period.financials[self.id.bbid]
-        elif period is now:
-            # fallback if financials are not on period
-            # financials are assigned to bu before period is
-            fins = self.financials
-            period.financials[self.id.bbid] = fins
         else:
             fins = self.financials.copy(clean=True)
             fins.relationships.set_parent(self)
             fins.period = period
+
+            if period is timeline.first_period:
+                fins.starting = BalanceSheet("Starting Balance Sheet",
+                                             parent=fins,
+                                             period=period)
+                fins.starting.increment(fins.ending)
+                fins.starting.reset()
+
             fins.populate_from_stored_values(period)
             fins.restrict()
 

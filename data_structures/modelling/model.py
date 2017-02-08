@@ -276,18 +276,12 @@ class Model(TagsMixIn):
             """
             for fins in portal_model['financials_structure']:
                 # Deserialize structure
-                new_fins = Financials.from_portal(fins, M, period=now)
-
-                # Set period attribute and add values
-                # new_fins.period = now
-                new_fins.populate_from_stored_values(now)
+                new_fins = Financials.from_portal(fins, M, period=None)
 
                 # Associate Financials with appropriate BU
                 bu = M.bu_directory[ID.from_portal(fins['buid']).bbid]
                 bu.set_financials(new_fins)
-
-                # Save Fins in current_period directory
-                now.financials[bu.id.bbid] = new_fins
+                bu.financials.starting = bu.financials.ending
 
         if M.summary_maker:
             tnam = M.summary_maker['timeline_name']

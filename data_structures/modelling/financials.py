@@ -237,8 +237,6 @@ class Financials:
                      'filled'):
             new.__dict__[attr] = portal_data[attr]
 
-        period.financials[buid] = new
-
         for data in portal_data['statements']:
             attr_name = data['name']
 
@@ -553,5 +551,5 @@ class Financials:
     def restrict(self):
         self._restricted = True
         for statement in self.full_ordered:
-            if statement is not None and statement is not self.starting:
+            if statement is not None:
                 statement.restrict()
