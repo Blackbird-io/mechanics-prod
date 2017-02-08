@@ -429,25 +429,22 @@ class TimeLine(dict):
         company.recalculate(period=seed.past, adjust_future=False)
         company.recalculate(period=seed, adjust_future=False)
 
-        # company.reset_financials(period=seed.past)
-        # company.fill_out(period=seed.past)
-        #
-        # company.reset_financials(period=seed)
-        # company.fill_out(period=seed)
-
         summary_maker = self.model.prep_summaries()
 
         for period in self.iter_ordered(open=seed.end):
             if period.end > seed.end:
                 logger.info(period.end)
+
                 # reset content and directories
                 period.clear()
+
                 # combine tags
                 period.tags = seed.tags.extrapolate_to(period.tags)
+
                 # propagate parameters from past to current
                 period.combine_parameters()
+
                 # copy and fill out content
-                company.reset_financials(period=period)
                 company.fill_out(period=period)
 
             if bb_settings.MAKE_ANNUAL_SUMMARIES and calc_summaries:
