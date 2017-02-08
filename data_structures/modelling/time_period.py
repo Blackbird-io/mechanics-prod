@@ -270,6 +270,8 @@ class TimePeriod(TagsMixIn):
             hc = value.get('hardcoded', False)
             if not hc:
                 self._line_item_storage.pop(key)
+            else:
+                print("HARDCODED!")
 
     def copy(self, clean=False):
         """
