@@ -432,7 +432,7 @@ class LineItem(Statement, HistoryLine):
                 new_line.set_value(self.value, self.SIGNATURE_FOR_COPY,
                                    override=True)
         else:
-            new_line.set_hardcoded(False)
+            new_line._hardcoded = False
             new_line._local_value = None
             new_line.log = []
 

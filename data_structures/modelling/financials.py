@@ -410,8 +410,7 @@ class Financials:
             first = None
 
         for statement in self.full_ordered:
-            if statement is not None and (statement is not self.starting or
-                                                  period is first):
+            if statement is not None and (statement is not self.starting or period is first):
                 for line in statement.get_full_ordered():
                     new_xl = LineData()
                     new_xl.format = line.xl.format

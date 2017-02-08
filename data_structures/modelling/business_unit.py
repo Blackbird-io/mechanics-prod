@@ -429,6 +429,8 @@ class BusinessUnit(TagsMixIn, Equalities):
         Method recursively runs consolidation and derivation logic on
         statements for instance and components.
         """
+        print("######### COMPUTE ########")
+
         if not period:
             period = self.relationships.model.get_timeline().current_period
 
@@ -596,6 +598,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         Recalculate instance finanicals. If ``adjust_future`` is True, will
         repeat for all future snapshots.
         """
+        print("######### RECALCULATE ########")
         period.clear()
 
         self.reset_financials(period=period)
@@ -617,6 +620,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         Recompute a particular statement on financials.  If ``adjust_future``
          is True, will repeat for all future snapshots.
         """
+        print("######### RECOMPUTE ########")
         self.reset_statement(statement_name, period=period)
         self.compute(statement_name, period=period)
 
@@ -696,7 +700,6 @@ class BusinessUnit(TagsMixIn, Equalities):
             fins = Financials(parent=self)
 
         fins.relationships.set_parent(self)
-        fins.period = self.get_current_period()
         self.financials = fins
         # self.financials.starting = self.financials.ending
 
@@ -764,8 +767,8 @@ class BusinessUnit(TagsMixIn, Equalities):
                 fins.starting = BalanceSheet("Starting Balance Sheet",
                                              parent=fins,
                                              period=period)
-                fins.starting.increment(fins.ending)
-                fins.starting.reset()
+                # fins.starting.increment(fins.ending)
+                # fins.starting.reset()
 
             fins.populate_from_stored_values(period)
             fins.restrict()
