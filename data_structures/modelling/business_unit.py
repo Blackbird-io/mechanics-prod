@@ -600,7 +600,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         """
         period.clear()
 
-        self.reset_financials(period=period)
+        # self.reset_financials(period=period)
         self.fill_out(period=period)
         if adjust_future and period and period.future:
             self.recalculate(adjust_future=True, period=period.future)
