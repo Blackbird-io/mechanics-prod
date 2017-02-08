@@ -122,8 +122,13 @@ class TimeLine(dict):
 
     @property
     def first_period(self):
-        min_date = min(self.keys())
-        return self[min_date]
+        if not self.keys():
+            per = None
+        else:
+            min_date = min(self.keys())
+            per = self[min_date]
+
+        return per
 
     def __str__(self, lines=None):
         """
@@ -418,6 +423,8 @@ class TimeLine(dict):
             seed = self.current_period
 
         company = self.model.get_company()
+
+        company.consolidate_fins_structure()
 
         company.recalculate(period=seed.past, adjust_future=False)
         company.recalculate(period=seed, adjust_future=False)
