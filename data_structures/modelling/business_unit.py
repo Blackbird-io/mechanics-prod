@@ -429,8 +429,6 @@ class BusinessUnit(TagsMixIn, Equalities):
         Method recursively runs consolidation and derivation logic on
         statements for instance and components.
         """
-        print("######### COMPUTE ########")
-
         if not period:
             period = self.relationships.model.get_timeline().current_period
 
@@ -441,6 +439,10 @@ class BusinessUnit(TagsMixIn, Equalities):
         self._derive(statement_name, period)
 
     def consolidate_fins_structure(self):
+
+        for unit in self.components.get_all():
+            unit.consolidate_fins_structure()
+
         for statement in self.financials.full_order:
             self._consolidate(statement, period=None, struct=True)
 
@@ -524,8 +526,6 @@ class BusinessUnit(TagsMixIn, Equalities):
         BusinessUnit.derive() will never run again for that LineItem, either at
         that component or any parent or ancestor of that component.
         """
-        print("######### FILL OUT ########")
-
         financials = self.get_financials(period)
         if not financials.filled:
             financials = self.get_financials(period)
@@ -598,7 +598,6 @@ class BusinessUnit(TagsMixIn, Equalities):
         Recalculate instance finanicals. If ``adjust_future`` is True, will
         repeat for all future snapshots.
         """
-        print("######### RECALCULATE ########")
         period.clear()
 
         self.reset_financials(period=period)
@@ -620,7 +619,6 @@ class BusinessUnit(TagsMixIn, Equalities):
         Recompute a particular statement on financials.  If ``adjust_future``
          is True, will repeat for all future snapshots.
         """
-        print("######### RECOMPUTE ########")
         self.reset_statement(statement_name, period=period)
         self.compute(statement_name, period=period)
 
@@ -767,10 +765,18 @@ class BusinessUnit(TagsMixIn, Equalities):
                 fins.starting = BalanceSheet("Starting Balance Sheet",
                                              parent=fins,
                                              period=period)
-                # fins.starting.increment(fins.ending)
-                # fins.starting.reset()
+                #
+                # for end_line in fins.ending.get_ordered():
+                #     start_line = fins.starting.find_first(end_line.name)
+                #     if start_line:
+                #         self._check_line(start_line, end_line)
+                #     else:
+                #         new_line = end_line.copy()
+                #         new_line.clear(force=True)
+                #         fins.starting.add_line(new_line, position=end_line.position, noclear=True)
 
             fins.populate_from_stored_values(period)
+
             fins.restrict()
 
             period.financials[self.id.bbid] = fins
@@ -832,7 +838,8 @@ class BusinessUnit(TagsMixIn, Equalities):
                 new_line = end_line.copy()
                 new_line.clear(force=True)
                 financials.starting.add_line(
-                    new_line, position=end_line.position
+                    new_line, position=end_line.position,
+                    noclear=True
                 )
 
     def _check_line(self, start_line, end_line):
@@ -844,7 +851,6 @@ class BusinessUnit(TagsMixIn, Equalities):
         Compares starting and ending balances. Adds missing lines to starting
         balance to keep layout consistent.
         """
-
         if end_line._details:
             for end in end_line.get_ordered():
                 start = start_line.find_first(end.name)
@@ -853,7 +859,7 @@ class BusinessUnit(TagsMixIn, Equalities):
                 else:
                     new_line = end.copy()
                     new_line.clear(force=True)
-                    start_line.add_line(new_line, position=end.position)
+                    start_line.add_line(new_line, position=end.position, noclear=True)
 
     def _compute_ending_balance(self, period):
         """
@@ -942,6 +948,9 @@ class BusinessUnit(TagsMixIn, Equalities):
         if period:
             if sub.life.conceived(period):
                 xl_only = False
+
+        if struct:
+            xl_only = False
 
         if sub_statement and top_statement:
             top_statement.increment(
@@ -1032,11 +1041,6 @@ class BusinessUnit(TagsMixIn, Equalities):
             before_fins = self.get_financials(period.past)
             if before_fins:
                 period_fins.starting = before_fins.ending
-                # bal_start = before_fins.ending.copy()
-                # bal_start.link_to(before_fins.ending)
-                # bal_start.set_name('starting balance sheet')
-                # period_fins.starting = bal_start
-                # Connect to the past
 
     def _register_in_dir(self, recur=True, overwrite=True):
         """
