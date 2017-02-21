@@ -79,7 +79,8 @@ class Financials:
                                 period=period)
         self.cash = CashFlow(parent=self, period=period)
         self.valuation = Statement("Valuation", parent=self, period=period)
-        self.starting = self.ending = BalanceSheet("Ending Balance Sheet", parent=self, period=period)
+        self.starting = BalanceSheet("Starting Balance Sheet", parent=self, period=period)
+        self.ending = BalanceSheet("Ending Balance Sheet", parent=self, period=period)
         self.ledger = None
         self.id = ID()  # does not get its own bbid, just holds namespace
 
@@ -248,7 +249,8 @@ class Financials:
                 data['lines'], model=model, statement=statement, **kargs
             )
 
-        new.starting = new.ending
+        new.starting.increment(new.ending, consolidating=False, xl_only=True)
+        new.ending.increment(new.starting, consolidating=False, xl_only=True)
 
         return new
 
@@ -429,12 +431,20 @@ class Financials:
         # Now check if fins exist in period.past
         if past:
             if buid in past.financials:
+                # past financials already exist as rich objects,
+                # so we can just link to existing ending balance sheet
                 past_fins = past.financials[buid]
                 self.starting = past_fins.ending
             else:
+                # past financials have not yet been re-inflated, so we have to
+                # make an Ending Balance Sheet and pretend it belongs to the
+                # preceding period
+                self.starting = self.ending.copy()
+                self.starting.reset()
+
                 for line in self.starting.get_full_ordered():
                     new_xl = LineData()
-                    new_xl.format = line.xl.format
+                    # new_xl.format = line.xl.format
                     line.xl = new_xl
 
                     value = past.get_line_value(line.id.bbid.hex)
@@ -444,6 +454,7 @@ class Financials:
                     line._hardcoded = hc
 
                 self.starting.set_period(past)
+                self.starting.relationships.set_parent(None)
 
         # And if fins exist in period.future
         if future:

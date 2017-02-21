@@ -760,21 +760,6 @@ class BusinessUnit(TagsMixIn, Equalities):
             fins = self.financials.copy(clean=True)
             fins.relationships.set_parent(self)
             fins.period = period
-
-            if period is timeline.first_period:
-                fins.starting = BalanceSheet("Starting Balance Sheet",
-                                             parent=fins,
-                                             period=period)
-                #
-                # for end_line in fins.ending.get_ordered():
-                #     start_line = fins.starting.find_first(end_line.name)
-                #     if start_line:
-                #         self._check_line(start_line, end_line)
-                #     else:
-                #         new_line = end_line.copy()
-                #         new_line.clear(force=True)
-                #         fins.starting.add_line(new_line, position=end_line.position, noclear=True)
-
             fins.populate_from_stored_values(period)
 
             fins.restrict()
@@ -1037,10 +1022,10 @@ class BusinessUnit(TagsMixIn, Equalities):
             unit._load_starting_balance(period)
 
         if period.past:
-            period_fins = self.get_financials(period)
             before_fins = self.get_financials(period.past)
-            if before_fins:
-                period_fins.starting = before_fins.ending
+            period_fins = self.get_financials(period)
+
+            period_fins.starting = before_fins.ending
 
     def _register_in_dir(self, recur=True, overwrite=True):
         """

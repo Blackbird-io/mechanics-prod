@@ -258,30 +258,26 @@ class Model(TagsMixIn):
         M.portal_data.update(portal_model)
         del M.portal_data["e_model"]
 
-        # TODO: remove when serialization is complete
+        # post-process financials in the current period, make sure they get
+        # assigned back to the proper BU
+        """
+        Here we will want to actually deserialize financials in the current
+        period for all BU's, then call fins.populate_from_stored_values()
+        """
+        for fins in portal_model.get('financials_structure', list()):
+            # Deserialize structure
+            new_fins = Financials.from_portal(fins, M, period=None)
+
+            # Associate Financials with appropriate BU
+            bu = M.bu_directory[ID.from_portal(fins['buid']).bbid]
+            bu.set_financials(new_fins)
+
         if portal_model.get('timelines'):
             timelines = {}
             for data in portal_model['timelines']:
                 key = (data['resolution'], data['name'])
                 timelines[key] = TimeLine.from_portal(data, model=M)
             M.timelines = timelines
-
-        # post-process financials in the current period, make sure they get
-        # assigned back to the proper BU
-        now = M.time_line.current_period
-        if now is not None:
-            """
-            Here we will want to actually deserialize financials in the current
-            period for all BU's, then call fins.populate_from_stored_values()
-            """
-            for fins in portal_model['financials_structure']:
-                # Deserialize structure
-                new_fins = Financials.from_portal(fins, M, period=None)
-
-                # Associate Financials with appropriate BU
-                bu = M.bu_directory[ID.from_portal(fins['buid']).bbid]
-                bu.set_financials(new_fins)
-                bu.financials.starting = bu.financials.ending
 
         if M.summary_maker:
             tnam = M.summary_maker['timeline_name']
