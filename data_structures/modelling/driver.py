@@ -114,6 +114,7 @@ class Driver(TagsMixIn):
     formula_bbid          bbid for formula that Driver applies
     position              int; from 0 to 100
     relationships         instance of Relationships class
+    run_on_past           bool; default is False, whether to run driver in past
     signature             string; how the driver signs lines it modifies
     workConditions        dict; criteria for objects driver will process
 
@@ -160,6 +161,8 @@ class Driver(TagsMixIn):
         # order in which drivers apply to a line.
 
         self.signature = signature
+
+        self.run_on_past = False
 
         self.workConditions = {}
         self.workConditions["name"] = ["FAIL"]
@@ -387,6 +390,13 @@ class Driver(TagsMixIn):
 
         Method is a no-op if instance is not active.
         """
+
+        tl = period.relationships.parent
+        if tl is tl.model.time_line:
+            if period is tl.current_period.past:
+                if not self.run_on_past:
+                    return
+
         if all((
             self.active,
             not line.hardcoded,
