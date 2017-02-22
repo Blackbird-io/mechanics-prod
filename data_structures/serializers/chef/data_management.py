@@ -284,6 +284,8 @@ class LineData(Range):
         self.cell = None
         self.format = LineFormat()
 
+        self.built = False
+
     @property
     def number_format(self):
         """

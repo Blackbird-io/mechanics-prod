@@ -91,6 +91,7 @@ class ModelChef:
         instance of BB_Workbook.  BB_Workbook contains an Excel workbook with
         dynamic links.
         """
+        model.populate_xl_data()
 
         if base_file is not None:
             obook = xlio.load_workbook(base_file)
@@ -137,8 +138,13 @@ class ModelChef:
         report.
         """
 
+        # TODO: VERY IMPORTANT TO MAKE SURE THAT WE ARE ONLY RETRIEVING THE
+        # PERIODS WE WANT TO MAKE REPORTS FOR
+
         if not model.time_line.has_been_extrapolated:
             model.time_line.extrapolate()
+
+        model.populate_xl_data()
 
         forecast_color = '4f6228'
         actual_color = '000000'

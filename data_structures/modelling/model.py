@@ -407,11 +407,8 @@ class Model(TagsMixIn):
         Method clears financial values and xl data storage after modification
         to SSOT financials.
         """
-        now = self.time_line.current_period
-
         for tl in self.timelines.values():
             for per in tl.values():
-                # if per is not now:
                 per.clear()
 
     def copy(self):
@@ -530,14 +527,18 @@ class Model(TagsMixIn):
         # once all LineItems have been reconstructed, rebuild links among them
         for (resolution, name), time_line in self.timelines.items():
             for end, period in time_line.items():
-                for buid, fins in period.financials.items():
+                for bu in self.bu_directory.values():
+                    fins = bu.get_financials(period)
                     for name in fins._full_order:
                         statement = getattr(fins, name, None)
                         if statement:
                             for line in statement.get_full_ordered():
-                                if isinstance(line.xl, dict):
-                                    line.xl = LineData.from_portal(line.xl,
-                                                                   self)
+                                if not line.xl.built:
+                                    id = line.id.bbid.hex
+                                    new_data = period.get_xl_info(id)
+                                    new_data.format = line.xl.format
+                                    new_data.built = True
+                                    line.xl = new_data
 
     def prep_for_monitoring_interview(self):
         """
