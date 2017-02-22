@@ -289,10 +289,7 @@ class SummaryMaker:
             # link to the starting balance of the first source period
             if len(timeline_summary) == 1:
                 source_fins = self.model.get_financials(self.buid, source)
-                bal_enter = source_fins.starting.copy()
-                bal_enter.link_to(source_fins.starting)
-                period_fins.starting = bal_enter
-                bal_enter.relationships.set_parent(period_fins)
+                period_fins.starting.link_to(source_fins.starting)
 
             logger.debug('{}:{} -> {}:{} new {}'.format(
                 source.start, source.end, period.start, period.end, self.onkey
@@ -323,10 +320,7 @@ class SummaryMaker:
             # add link to ending financials of last processed source
             source_fins = self.model.get_financials(self.buid, source)
             target_fins = self.model.get_financials(self.buid, target)
-            bal_close = source_fins.ending.copy()
-            bal_close.link_to(source_fins.ending)
-            target_fins.ending = bal_close
-            bal_close.relationships.set_parent(target_fins)
+            target_fins.ending.link_to(source_fins.ending)
 
             logger.debug('{}:{} -> {}:{} flush {}'.format(
                 source.start, source.end, target.start, target.end, self.onkey
@@ -449,7 +443,6 @@ class SummaryMaker:
                 target_line = source_line.copy()
                 target_line.set_hardcoded(False, recur=True)
                 target_line.clear(recur=True, force=True)
-                print(target_line.name)
                 target_statement.add_line(target_line)
 
             target_line.set_hardcoded(False, recur=True)
