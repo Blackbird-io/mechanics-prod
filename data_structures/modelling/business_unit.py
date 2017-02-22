@@ -759,14 +759,11 @@ class BusinessUnit(TagsMixIn, Equalities):
         fins_struct = self.financials
         fins_struct.starting.increment(fins_struct.ending, consolidating=False,
                                        xl_only=True)
-
         fins_struct.ending.increment(fins_struct.starting, consolidating=False,
                                      xl_only=True)
 
         if not period:
             period = now
-
-        timeline = period.relationships.parent
 
         if period is None:
             c = "PERIOD IS NONE!!!!! CANNOT GET FINANCIALS"
