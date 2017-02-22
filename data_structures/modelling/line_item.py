@@ -106,6 +106,7 @@ class LineItem(Statement, HistoryLine):
     SIGNATURE_FOR_VALUE_RESET = "LineItem.resetValue"
     SIGNATURE_FOR_REPLICA_MANAGEMENT = "Bringing down value."
     SIGNATURE_FOR_INCREMENTATION = "Incremented "
+    SIGNATURE_FOR_LINKING_STATEMENTS = "LineItem.link_to"
 
     SUMMARY_PREFIX = ""  # "total "
 
@@ -552,6 +553,9 @@ class LineItem(Statement, HistoryLine):
         else:
             # this part should only live in LineItem since statements don't
             # have xl data
+            self.set_value(matching_line.value,
+                           signature=self.SIGNATURE_FOR_LINKING_STATEMENTS,
+                           override=True)
             self.xl.reference.source = matching_line
             self._update_stored_xl()
 

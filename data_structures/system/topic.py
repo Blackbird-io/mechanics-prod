@@ -426,6 +426,8 @@ class Topic:
         back out to the portal. Instead, Analyzer internally selects a different
         topic and passes the message on to it.
         """
+        print(self.tags.name)
+
         if self.record_on_exit:
             self.record_work()
         M = self.MR.activeModel

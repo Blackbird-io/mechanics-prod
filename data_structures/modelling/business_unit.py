@@ -418,6 +418,18 @@ class BusinessUnit(TagsMixIn, Equalities):
         self._used_archive.append(self.used)
         self.used = set()
 
+    def check_statement_structure(self, statement_name, period=None):
+        if not period:
+            period = self.relationships.model.get_timeline().current_period
+
+        struct_stmt = getattr(self.financials, statement_name)
+        struct_stmt = struct_stmt.copy(clean=True)
+
+        fins = self.get_financials(period)
+        fins.__dict__[statement_name] = struct_stmt
+        struct_stmt.relationships.set_parent(fins)
+        struct_stmt.set_period(period)
+
     def compute(self, statement_name, period=None):
         """
 
