@@ -137,10 +137,6 @@ class ModelChef:
         specific_dates keyword must be set, otherwise will produce latest
         report.
         """
-
-        # TODO: VERY IMPORTANT TO MAKE SURE THAT WE ARE ONLY RETRIEVING THE
-        # PERIODS WE WANT TO MAKE REPORTS FOR
-
         if not model.time_line.has_been_extrapolated:
             model.time_line.extrapolate()
 
