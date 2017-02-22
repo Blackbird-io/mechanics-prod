@@ -444,8 +444,11 @@ class Financials:
 
                 for line in self.starting.get_full_ordered():
                     new_xl = LineData()
-                    # new_xl.format = line.xl.format
+                    new_xl.format = line.xl.format  # for posterity, and for
+                    #  Chef to appropriately style lines
                     line.xl = new_xl
+                    #  We'll add the rest of the XL stuff later, right before
+                    #  chop
 
                     value = past.get_line_value(line.id.bbid.hex)
                     line._local_value = value
