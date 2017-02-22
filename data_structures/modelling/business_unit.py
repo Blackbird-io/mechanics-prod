@@ -743,6 +743,13 @@ class BusinessUnit(TagsMixIn, Equalities):
         """
         model = self.relationships.model
         now = model.get_timeline().current_period if model else None
+        
+        fins_struct = self.financials
+        fins_struct.starting.increment(fins_struct.ending, consolidating=False,
+                                       xl_only=True)
+
+        fins_struct.ending.increment(fins_struct.starting, consolidating=False,
+                                     xl_only=True)
 
         if not period:
             period = now

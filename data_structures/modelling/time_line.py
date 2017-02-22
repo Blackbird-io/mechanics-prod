@@ -419,6 +419,7 @@ class TimeLine(dict):
         financial summaries.  Updates all summaries contained in
         instance.summaries.
         """
+        print('--------EXTRAPOLATE----------')
         if seed is None:
             seed = self.current_period
 
