@@ -449,14 +449,15 @@ class TimePeriod(TagsMixIn):
         the specified line.  Method retrieves flat data from
         _line_item_storage, converts it to a rich object, and returns.
         """
+        stored_xl = LineData()
 
         line_dict = self._line_item_storage.get(bbid_hex, None)
         if line_dict:
-            flat_xl = line_dict.get('xl_info', LineData())
-            stored_xl = LineData.from_portal(flat_xl,
-                                             self.relationships.parent.model)
-        else:
-            stored_xl = LineData()
+            model = self.relationships.parent.model
+            flat_xl = line_dict.get('xl_info', {})
+            if flat_xl:
+                stored_xl = LineData.from_portal(flat_xl,
+                                                 model)
 
         return stored_xl
 
