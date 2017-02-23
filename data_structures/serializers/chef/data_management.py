@@ -155,6 +155,7 @@ class DriverData:
 
         Method deserializes a LineData.
         """
+
         new = cls()
         new.__dict__.update(portal_data)
 

@@ -757,6 +757,7 @@ class Statement(Equalities, TagsMixIn):
         if not local_copy._details:
             local_copy.xl.consolidated.sources.append(external_line)
             local_copy.xl.consolidated.labels.append(xl_label)
+            local_copy._update_stored_xl()
         else:
             for n, l in local_copy._details.items():
                 detail_to_append = external_line._details.get(n)
