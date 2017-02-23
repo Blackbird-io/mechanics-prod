@@ -755,12 +755,6 @@ class BusinessUnit(TagsMixIn, Equalities):
         """
         model = self.relationships.model
         now = model.get_timeline().current_period if model else None
-        
-        fins_struct = self.financials
-        fins_struct.starting.increment(fins_struct.ending, consolidating=False,
-                                       xl_only=True)
-        fins_struct.ending.increment(fins_struct.starting, consolidating=False,
-                                     xl_only=True)
 
         if not period:
             period = now
@@ -773,6 +767,9 @@ class BusinessUnit(TagsMixIn, Equalities):
             # the best case we expect: financials have been assigned to a period
             fins = period.financials[self.id.bbid]
         else:
+            # make sure balance sheets have matching structures
+            self.financials.check_balance_sheets()
+
             fins = self.financials.copy(clean=True)
             fins.relationships.set_parent(self)
             fins.period = period
