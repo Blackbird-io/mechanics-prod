@@ -526,7 +526,7 @@ class Model(TagsMixIn):
     def populate_xl_data(self):
         # once all LineItems have been reconstructed, rebuild links among them
         for (resolution, name), time_line in self.timelines.items():
-            for end, period in time_line.items():
+            for period in time_line.iter_ordered():
                 for bu in self.bu_directory.values():
                     fins = bu.get_financials(period)
                     for name in fins._full_order:
