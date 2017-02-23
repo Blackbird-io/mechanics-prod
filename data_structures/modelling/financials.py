@@ -365,6 +365,20 @@ class Financials:
         """
         self.run_on_all("build_tables")
 
+    def check_balance_sheets(self):
+        start_lines = self.starting.get_full_ordered()
+        start_names = [line.name for line in start_lines]
+
+        end_lines = self.ending.get_full_ordered()
+        end_names = [line.name for line in end_lines]
+
+        if start_names != end_names:
+            # only run the increments if there is a mismatch
+            self.starting.increment(self.ending, consolidating=False,
+                                    over_time=True)
+            self.ending.increment(self.starting, consolidating=False,
+                                  over_time=True)
+
     def copy(self, clean=False):
         """
 

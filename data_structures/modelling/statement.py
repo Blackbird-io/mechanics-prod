@@ -632,7 +632,7 @@ class Statement(Equalities, TagsMixIn):
                                        xl_only=xl_only, over_time=over_time)
             else:
                 # Option B
-                if external_line.consolidate:
+                if external_line.consolidate or over_time:
                     chk = not over_time
                     local_copy = external_line.copy(check_include_details=chk)
                     # Dont enforce rules to track old line.replicate() method
