@@ -249,9 +249,6 @@ class Financials:
                 data['lines'], model=model, statement=statement, **kargs
             )
 
-        new.starting.increment(new.ending, consolidating=False, xl_only=True)
-        new.ending.increment(new.starting, consolidating=False, xl_only=True)
-
         return new
 
     def to_portal(self):
@@ -261,6 +258,8 @@ class Financials:
 
         Method yields a serialized representation of self.
         """
+        self.check_balance_sheets()
+
         statements = []
         for name in self._full_order:
             if name == 'starting' and self.period:
@@ -454,24 +453,18 @@ class Financials:
                 # make an Ending Balance Sheet and pretend it belongs to the
                 # preceding period
                 self.starting = self.ending.copy()
-                self.starting.reset()
+                self.starting.set_period(past)
 
                 for line in self.starting.get_full_ordered():
                     new_xl = LineData()
                     new_xl.format = line.xl.format  # for posterity, and for
-                    #  Chef to appropriately style lines
                     line.xl = new_xl
-                    #  We'll add the rest of the XL stuff later, right before
-                    #  chop
 
                     value = past.get_line_value(line.id.bbid.hex)
                     line._local_value = value
 
                     hc = past.get_line_hc(line.id.bbid.hex)
                     line._hardcoded = hc
-
-                self.starting.set_period(past)
-                self.starting.relationships.set_parent(None)
 
         # And if fins exist in period.future
         if future:

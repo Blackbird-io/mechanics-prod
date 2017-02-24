@@ -827,6 +827,7 @@ class LineItem(Statement, HistoryLine):
 
         # Replicas don't have any details of their own. Can't run .clear() here
         # because instance and replica initially point to the same details dict.
+        replica._period = self.period
         replica._replica = True
         replica.position = 0
         replica.register(namespace=self.id.namespace)

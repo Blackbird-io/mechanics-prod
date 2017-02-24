@@ -86,6 +86,7 @@ class Model(TagsMixIn):
     target                P; pointer to target BusinessUnit
     taxo_dir              instance of TaxoDir, has a dict {bbid: taxonomy units}
     taxonomy              dict with tree of business unit templates
+    topic_list            list of topic names run on model
     time_line             list of TimePeriod objects
     transcript            list of entries that tracks Engine processing
     ty_directory          dict; key = strings, val = sets of bbids
@@ -143,6 +144,7 @@ class Model(TagsMixIn):
         # points to top-level business unit/company
 
         self.report_summary = None
+        self.topic_list = []
 
     # DYNAMIC ATTRIBUTES
     @property
@@ -300,7 +302,6 @@ class Model(TagsMixIn):
 
         # pre-process financials in the current period, make sure they get
         # serialized in th database to maintain structure data
-        now = self.time_line.current_period
         fins_structure = list()
 
         for bu in self.bu_directory.values():
