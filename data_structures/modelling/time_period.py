@@ -115,7 +115,11 @@ class TimePeriod(TagsMixIn):
 
         self._line_item_storage = dict()
         # {"value": value of any primitive type,
-        #  "xl_info": flat LineData object without styles info}
+        #  "xl_info": flat LineData object without styles info,
+        #  "hardcoded": bool}
+
+        self.complete = True
+        self.periods_used = 1
 
         # The current approach to indexing units within a period assumes that
         # Blackbird will rarely remove existing units from a model. both
@@ -218,6 +222,9 @@ class TimePeriod(TagsMixIn):
 
         new = cls(period_start, period_end)
 
+        new.complete = portal_data.get('complete') or False
+        new.periods_used = portal_data.get('periods_used') or 1
+
         new.parameters.add(
             Parameters.from_portal(
                 portal_data['parameters'], target='parameters'
@@ -250,6 +257,8 @@ class TimePeriod(TagsMixIn):
             'unit_parameters': list(self.unit_parameters.to_portal(
                 target='unit_parameters')),
             'financials_values': self._deflate_line_storage(),                 # _line_item_storage is already pretty flat, but we have to do some minor work to make each line's entry into a row
+            'periods_used': self.periods_used,
+            'complete': self.complete,
         }
         return result
 

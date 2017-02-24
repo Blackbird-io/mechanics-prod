@@ -136,7 +136,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         self.drivers = None
         self._set_drivers()  # Only used in copy()
 
-        self.filled = False
+        # self.filled = False
 
         self.life = LifeCycle()
         self.location = None
@@ -539,22 +539,17 @@ class BusinessUnit(TagsMixIn, Equalities):
         that component or any parent or ancestor of that component.
         """
         financials = self.get_financials(period)
-        if not financials.filled:
-            financials = self.get_financials(period)
 
-            if not period:
-                period = self.get_current_period()
-            self._load_starting_balance(period)
+        if not period:
+            period = self.get_current_period()
+        self._load_starting_balance(period)
 
-            for statement in financials.compute_order:
-                self.compute(statement, period)
+        for statement in financials.compute_order:
+            self.compute(statement, period)
 
-            self._compute_ending_balance(period)
+        self._compute_ending_balance(period)
 
-            self._check_start_balance(period)
-
-            self.filled = True
-            financials.filled = True
+        self._check_start_balance(period)
 
     def kill(self, date=None, recur=True):
         """
@@ -648,7 +643,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         Method resets financials for instance and, if ``recur`` is True, for
         each of the components. Method sets instance.filled to False.
         """
-        self.filled = False
+        # self.filled = False
         financials = self.get_financials(period)
         financials.reset()
         if recur:

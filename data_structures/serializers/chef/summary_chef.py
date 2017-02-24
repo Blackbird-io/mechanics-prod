@@ -468,13 +468,13 @@ class SummaryChef:
             # Complete T/F
             address = complete_label_rows.get_corner_address(column)
             cell = sheet.cell(address)
-            cell.value = financials.complete
+            cell.value = period.complete
             cell.alignment = Alignment(horizontal='right', vertical='center')
 
             # Available months
             address = available_months_rows.get_corner_address(column)
             cell = sheet.cell(address)
-            cell.value = financials.periods_used
+            cell.value = period.periods_used
             cell.alignment = Alignment(horizontal='right', vertical='center')
 
             # Statements
