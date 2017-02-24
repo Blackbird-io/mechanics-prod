@@ -875,19 +875,6 @@ class BusinessUnit(TagsMixIn, Equalities):
             unit._compute_ending_balance(period)
 
         financials = self.get_financials(period)
-        ending_balance = financials.ending
-        starting_balance = financials.starting
-
-        ending_balance.increment(
-            starting_balance, consolidating=False, over_time=True
-        )
-        ending_balance.reset()
-        # Our goal is to pick up shape, so clear values.
-
-        # By default, the ending balance sheet should look the same as the
-        # starting one. Here, we copy the starting structure and zero out
-        # the values. We will fill in the values later through
-        # consolidate(), update_balance(), and derive().
 
         self._consolidate("ending", period)
 
