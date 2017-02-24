@@ -87,11 +87,11 @@ class Financials:
         # parent for Financials is BusinessUnit
         self.relationships = Relationships(self, parent=parent)
         self._period = period
-        self.filled = False
+        # self.filled = False
 
         # defaults for monthly; quarterly and annual need to overwrite
-        self.complete = True
-        self.periods_used = 1
+        # self.complete = True
+        # self.periods_used = 1
 
         self._full_order = [
             "overview", "income", "cash", "starting", "ending",
@@ -223,16 +223,15 @@ class Financials:
 
         new.id.set_namespace(company.id.bbid)
 
-        if portal_data['complete'] is not None:
-            new.complete = portal_data['complete']
-        if portal_data['periods_used'] is not None:
-            new.periods_used = int(portal_data['periods_used'])
+        # if portal_data['complete'] is not None:
+        #     new.complete = portal_data['complete']
+        # if portal_data['periods_used'] is not None:
+        #     new.periods_used = int(portal_data['periods_used'])
 
         for attr in ('_chef_order',
                      '_compute_order',
                      '_exclude_statements',
-                     '_full_order',
-                     'filled'):
+                     '_full_order'):
             new.__dict__[attr] = portal_data[attr]
 
         for data in portal_data['statements']:
@@ -276,9 +275,9 @@ class Financials:
                 statements.append(data)
         result = {
             'statements': statements,
-            'complete': self.complete,
-            'periods_used': self.periods_used,
-            'filled': self.filled,
+            # 'complete': self.complete,
+            # 'periods_used': self.periods_used,
+            # 'filled': self.filled,
             '_chef_order': self._chef_order,
             '_compute_order': self._compute_order,
             '_exclude_statements': self._exclude_statements,
@@ -499,7 +498,7 @@ class Financials:
         Reset each defined statement.
         """
         self.run_on_all("reset")
-        self.filled = False
+        # self.filled = False
 
     def run_on_all(self, action, *kargs, **pargs):
         """
