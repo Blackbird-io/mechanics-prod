@@ -394,6 +394,10 @@ class Statement(Equalities, TagsMixIn):
         ```` is True, copy will conform to ``out`` rules.
         """
         result = copy.copy(self)
+
+        if clean:
+            result.set_period(None)
+
         result._consolidated = False
         result.tags = self.tags.copy()
         result.relationships = self.relationships.copy()
