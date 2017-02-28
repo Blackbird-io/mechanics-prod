@@ -84,6 +84,14 @@ class SummaryMaker:
         self.model = model
         self.timeline_name = timeline_name
         self.buid = model.get_company().id.bbid
+
+        self.summaries = dict()
+        self.complete_periods = dict()
+        self.period_sources = dict()
+        self.period = None
+
+        self.onkey = None
+
         if init:
             self.init_summaries()
 

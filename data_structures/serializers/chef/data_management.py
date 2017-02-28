@@ -158,12 +158,12 @@ class DriverData:
 
         new = cls()
         new.__dict__.update(portal_data)
+        new.references = dict()
 
-        for k, v in new.references.items():
+        for k, v in portal_data['references'].items():
             # this is how we determine if it's a LineItem
-            if isinstance(v, dict):
-                if all(v.get(c) for c in ('bbid', 'buid', 'period')):
-                    new.references[k] = model.get_line(**v)
+            if all(v.get(c) for c in ('bbid', 'buid', 'period')):
+                new.references[k] = model.get_line(**v)
 
         return new
 
@@ -176,13 +176,13 @@ class DriverData:
         Method yields a serialized representation of self.
         """
         row = self.__dict__.copy()
+        row['references'] = dict()
 
-        for k, v in row['references'].items():
-            # this is how we determine if it's a LineItem
-            if hasattr(v, 'portal_locator'):
-                row['references'][k] = v.portal_locator()
+        for k, v in self.references.items():
+            row['references'][k] = v.portal_locator()
 
         return row
+
 
 class Range:
     """
@@ -265,8 +265,8 @@ class LineData(Range):
 
         self.consolidated = Range()
         self.consolidated.sources = list()
-        self.consolidated.labels = list()
         # List should contain pointers to source lines
+        self.consolidated.labels = list()
         self.consolidated.cell = None
         # Cells created from consolidation sources
         self.consolidated.array = []

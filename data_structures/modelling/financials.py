@@ -451,7 +451,7 @@ class Financials:
                 # past financials have not yet been re-inflated, so we have to
                 # make an Ending Balance Sheet and pretend it belongs to the
                 # preceding period
-                self.starting = self.ending.copy(clean=True)
+                self.starting = self.ending.copy()
                 self.starting.set_period(past)
 
                 for line in self.starting.get_full_ordered():
