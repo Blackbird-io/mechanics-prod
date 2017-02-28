@@ -223,11 +223,6 @@ class Financials:
 
         new.id.set_namespace(company.id.bbid)
 
-        # if portal_data['complete'] is not None:
-        #     new.complete = portal_data['complete']
-        # if portal_data['periods_used'] is not None:
-        #     new.periods_used = int(portal_data['periods_used'])
-
         for attr in ('_chef_order',
                      '_compute_order',
                      '_exclude_statements',
@@ -275,9 +270,6 @@ class Financials:
                 statements.append(data)
         result = {
             'statements': statements,
-            # 'complete': self.complete,
-            # 'periods_used': self.periods_used,
-            # 'filled': self.filled,
             '_chef_order': self._chef_order,
             '_compute_order': self._compute_order,
             '_exclude_statements': self._exclude_statements,
