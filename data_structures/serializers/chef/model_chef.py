@@ -137,9 +137,6 @@ class ModelChef:
         specific_dates keyword must be set, otherwise will produce latest
         report.
         """
-        if not model.time_line.has_been_extrapolated:
-            model.time_line.extrapolate()
-
         model.populate_xl_data()
 
         forecast_color = '4f6228'

@@ -302,9 +302,6 @@ class TimePeriod(TagsMixIn):
         for bbid, unit_dict in self.unit_parameters.items():
             result.unit_parameters[bbid] = unit_dict.copy()
 
-        for bbid, fins in self.financials.items():
-            result.financials[bbid] = fins.copy(clean=clean)
-
         return result
 
     def combine_parameters(self):
@@ -465,6 +462,9 @@ class TimePeriod(TagsMixIn):
             model = self.relationships.parent.model
             flat_xl = line_dict.get('xl_info', {})
             if flat_xl:
+                file = open(r'C:\Blackbird\check_flat_xl.txt', 'a')
+                file.write(flat_xl.__str__())
+                file.close()
                 stored_xl = LineData.from_portal(flat_xl,
                                                  model)
 

@@ -391,13 +391,6 @@ class Model(TagsMixIn):
 
         self._ref_date = ref_date
 
-        new_current_period = self.time_line.current_period
-
-        for bu in self.bu_directory.values():
-            bu.set_financials(bu.get_financials(new_current_period))
-            bu.financials.period = new_current_period
-            new_current_period.financials[bu.id.bbid] = bu.financials
-
     def clear_fins_storage(self):
         """
 
@@ -526,20 +519,33 @@ class Model(TagsMixIn):
 
     def populate_xl_data(self):
         # once all LineItems have been reconstructed, rebuild links among them
-        for (resolution, name), time_line in self.timelines.items():
+        for time_line in self.timelines.values():
             for period in time_line.iter_ordered():
                 for bu in self.bu_directory.values():
                     fins = bu.get_financials(period)
-                    for name in fins._full_order:
-                        statement = getattr(fins, name, None)
+                    for statement in fins.full_ordered:
                         if statement:
                             for line in statement.get_full_ordered():
                                 if not line.xl.built:
                                     id = line.id.bbid.hex
+
+                                    if period.relationships.parent.model is not self:
+                                        import pdb
+                                        pdb.set_trace()
+
+                                    if line.period.relationships.parent.model is not self:
+                                        import pdb
+                                        pdb.set_trace()
+
                                     new_data = period.get_xl_info(id)
                                     new_data.format = line.xl.format
                                     new_data.built = True
                                     line.xl = new_data
+
+                                    if line.xl.cell:
+                                        print("WTF WHERE DID YOU COME FROM")
+                                        import pdb
+                                        pdb.set_trace()
 
     def prep_for_monitoring_interview(self):
         """

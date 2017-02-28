@@ -244,9 +244,6 @@ class LineItem(Statement, HistoryLine):
             )
             new.tags = Tags.from_portal(data['tags'])
 
-            # new.id = ID.from_portal(data['bbid'])
-            # new.id.set_namespace(ID.from_portal(data['parent_bbid']).bbid)
-
             # defer resolution of .xl
             new.xl = xl_mgmt.LineData()
             new.xl.format = xl_mgmt.LineFormat.from_portal(data['xl_format'],
@@ -394,6 +391,8 @@ class LineItem(Statement, HistoryLine):
 
             if keep_format:
                 self.xl.format = format2keep
+
+            self._update_stored_xl()
 
             self.set_consolidate(consolidate)
             # Start with a clean slate for Excel tracking, except for
