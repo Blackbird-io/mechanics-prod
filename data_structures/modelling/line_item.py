@@ -253,13 +253,10 @@ class LineItem(Statement, HistoryLine):
                 'position',
                 'summary_type',
                 'summary_count',
-                '_hardcoded',
                 '_consolidate',
                 '_replica',
-                '_hardcoded',
                 '_include_details',
                 '_sum_details',
-                '_consolidated',
                 'log',
             ):
                 new.__dict__[attr] = data[attr]
@@ -296,7 +293,6 @@ class LineItem(Statement, HistoryLine):
             'position': self.position,
             'summary_type': self.summary_type,
             'summary_count': self.summary_count,
-            '_hardcoded': self._hardcoded,
             '_consolidate': self._consolidate,
             '_replica': self._replica,
             '_include_details': self._include_details,
@@ -304,7 +300,6 @@ class LineItem(Statement, HistoryLine):
             'xl_format': self.xl.format.to_portal(),
             'tags': self.tags.to_portal(),
             'log': self.log,
-            '_consolidated': self._consolidated,
         }
 
         # return this line
