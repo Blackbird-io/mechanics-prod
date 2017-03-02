@@ -567,7 +567,11 @@ class TimePeriod(TagsMixIn):
         Method flattens _line_item_storage dictionary into a list of dicts
         representing rows in the database.
         """
-        lines_out = list(self._line_item_storage.values())
+        lines_out = list()
+        for bbid, row in self._line_item_storage.items():
+            row['bbid'] = bbid
+            lines_out.append(row)
+
         return lines_out
 
     def _inflate_line_storage(self, rows):
