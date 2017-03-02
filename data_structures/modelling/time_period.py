@@ -51,6 +51,12 @@ from .parameters import Parameters
 # Globals
 logger = logging.getLogger(bb_settings.LOGNAME_MAIN)
 
+blank_row = dict()
+blank_row['hardcoded'] = False
+blank_row['xl_info'] = dict()
+blank_row['_local_value'] = None
+blank_row['_local_value_type'] = None
+
 # Classes
 class TimePeriod(TagsMixIn):
     """
@@ -437,7 +443,13 @@ class TimePeriod(TagsMixIn):
         """
         line_dict = self._line_item_storage.get(bbid_hex, None)
         if line_dict:
-            stored_value = line_dict.get('value', None)
+            val = line_dict.get('_local_value', None)
+            typ = line_dict.get('_local_value_type', float)
+
+            if val is not None:
+                val = locate(typ)(val)
+
+            stored_value = val
         else:
             stored_value = None
 
@@ -462,9 +474,6 @@ class TimePeriod(TagsMixIn):
             model = self.relationships.parent.model
             flat_xl = line_dict.get('xl_info', {})
             if flat_xl:
-                file = open(r'C:\Blackbird\check_flat_xl.txt', 'a')
-                file.write(flat_xl.__str__())
-                file.close()
                 stored_xl = LineData.from_portal(flat_xl,
                                                  model)
 
@@ -506,10 +515,14 @@ class TimePeriod(TagsMixIn):
         if line.id.bbid.hex in self._line_item_storage:
             line_dict = self._line_item_storage[line.id.bbid.hex]
         else:
-            line_dict = dict()
+            line_dict = blank_row.copy()
             self._line_item_storage[line.id.bbid.hex] = line_dict
 
-        line_dict['value'] = line._local_value
+        val = line._local_value
+        typ = type(val).__name__
+
+        line_dict['_local_value'] = val
+        line_dict['_local_value_type'] = typ
 
     def update_line_xl(self, line):
         """
@@ -526,7 +539,7 @@ class TimePeriod(TagsMixIn):
         if line.id.bbid.hex in self._line_item_storage:
             line_dict = self._line_item_storage[line.id.bbid.hex]
         else:
-            line_dict = dict()
+            line_dict = blank_row.copy()
             self._line_item_storage[line.id.bbid.hex] = line_dict
 
         line_dict['xl_info'] = line.xl.to_portal()
@@ -536,7 +549,7 @@ class TimePeriod(TagsMixIn):
         if line.id.bbid.hex in self._line_item_storage:
             line_dict = self._line_item_storage[line.id.bbid.hex]
         else:
-            line_dict = dict()
+            line_dict = blank_row.copy()
             self._line_item_storage[line.id.bbid.hex] = line_dict
 
         line_dict['hardcoded'] = line.hardcoded
@@ -554,25 +567,7 @@ class TimePeriod(TagsMixIn):
         Method flattens _line_item_storage dictionary into a list of dicts
         representing rows in the database.
         """
-        lines_out = list()
-
-        for bbid in self._line_item_storage:
-            ln_dict = self._line_item_storage[bbid]
-
-            val = ln_dict.get('value', None)
-            typ = type(val).__name__
-            xl_info = ln_dict.get('xl_info', dict())
-            hardcoded = ln_dict.get('hardcoded', False)
-
-            row = dict()
-            row['bbid'] = bbid
-            row['_local_value'] = val
-            row['_local_value_type'] = typ
-            row['xl_info'] = xl_info
-            row['hardcoded'] = hardcoded
-
-            lines_out.append(row)
-
+        lines_out = list(self._line_item_storage.values())
         return lines_out
 
     def _inflate_line_storage(self, rows):
@@ -584,18 +579,5 @@ class TimePeriod(TagsMixIn):
         Method recreates _line_item_storage dictionary from a list of dicts
         representing rows in the database.
         """
-
         for row in rows:
-            val = row['_local_value']
-            typ = row['_local_value_type'] or float
-            bbid = row['bbid']
-
-            if val is not None:
-                val = locate(typ)(val)
-
-            ln_dict = dict()
-            ln_dict['value'] = val
-            ln_dict['xl_info'] = row['xl_info']
-            ln_dict['hardcoded'] = row['hardcoded']
-
-            self._line_item_storage[bbid] = ln_dict
+            self._line_item_storage[row['bbid']] = row
