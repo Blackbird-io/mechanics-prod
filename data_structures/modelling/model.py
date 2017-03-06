@@ -37,6 +37,7 @@ from chef_settings import DEFAULT_SCENARIOS
 from data_structures.modelling.financials import Financials
 from data_structures.system.bbid import ID
 from data_structures.modelling.line_item import LineItem
+from data_structures.modelling.dr_container import DriverContainer
 from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.system.summary_maker import SummaryMaker
 from data_structures.serializers.chef.data_management import LineData
@@ -113,37 +114,41 @@ class Model(TagsMixIn):
     def __init__(self, name):
         TagsMixIn.__init__(self, name)
 
-        self._started = False
+        self._company = None
         self._ref_date = None
+        self._started = False
+
+        self.drivers = DriverContainer()
+
         self.id = ID()
         self.id.assign(name)
         # Models carry uuids in the origin namespace.
+
         self.portal_data = dict()
 
-        self.taxonomy = dict()
+        self.report_summary = None
+
         self.taxo_dir = TaxoDir(model=self)
-        self.transcript = []
-        time_line = TimeLine(self)
-        # dict holding various timelines
+        self.taxonomy = dict()
+
         self.timelines = dict()
-        # main TimeLine is (resolution='monthly', name='forecast')
+        time_line = TimeLine(self)
         self.set_timeline(time_line)
 
-        self.bu_directory = {}
-        self.ty_directory = {}
+        self.transcript = []
 
+        # business units
+        self.target = None
+        self.bu_directory = dict()
+        self.ty_directory = dict()
+
+        # scenarios parameters
         self.scenarios = dict()
         for s in DEFAULT_SCENARIOS:
             self.scenarios[s] = dict()
 
-        self._company = None
-        self.target = None
-
         self.summary_maker = None
-        # target is BU from which to get path and interview info, default
-        # points to top-level business unit/company
 
-        self.report_summary = None
         self.topic_list = []
 
     # DYNAMIC ATTRIBUTES

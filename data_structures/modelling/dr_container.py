@@ -1,6 +1,6 @@
 # PROPRIETARY AND CONFIDENTIAL
 # Property of Blackbird Logical Applications, LLC
-# Copyright Blackbird Logical Applications, LLC 2016
+# Copyright Blackbird Logical Applications, LLC 2017
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 # Blackbird Environment
@@ -20,7 +20,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-DrContainer           subclass of Components
+DriverContainer       class for organizing and storing Drivers
 ====================  ==========================================================
 """
 
@@ -28,14 +28,7 @@ DrContainer           subclass of Components
 
 
 #imports
-import copy
-
 import bb_exceptions
-
-from data_structures.system.tags_mixin import TagsMixIn
-
-from .components import Components
-from .driver import Driver
 
 
 
@@ -43,228 +36,131 @@ from .driver import Driver
 #globals
 #n/a
 
+
 #classes
-class DrContainer(Components, TagsMixIn):
+class DriverContainer():
     """
 
-    The DrContainer class provides organization and storage for drivers that
-    work on a particular business unit.
-
-    Each instance is a Components-type dictionary with supplemental attributes,
-    including a second dictionary called dr_directory.
-
-    The main dictionary stores records of known drivers for each key. The keys
-    are usually tags or line names. The records are a dictionary of position to
-    driver bbid.
-
-    The directory stores driver objects keyed by bbid. When a client needs to
-    access the actual drivers for a given line, she calls the get_drivers()
-    method for the line name. This container then delivers a list of drivers
-    in order of increasing position.
-
-    The class configures drivers to point to the DrContainer's parent business
-    unit as the driver's own parent. This hook makes it easier for drivers to
-    work on the parent.
-
-    NOTE: Equivalence (``==``) operations on DrContainers run through
-    dict.__eq__ and compare only the main content (keys and sets of bbids), not
-    the actual driver objects associated with those bbids.
+    The DriverContainer class provides organization and storage for drivers.
+    
+    The main directory stores records of known drivers by id.  The by_name
+    directory maps driver names to ID's to enable easy lookup by name.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
-    dr_blank              empty Driver() object for checking driver registration
-    dr_directory          dictionary of bbid:driver objects
+    directory             dict; holds drivers keyed by BBID
+    by_name               dict; maps driver name to BBID
 
     FUNCTIONS:
-    add_item()             adds bbid for applicable tags, object to directory
+    add()                 adds a new driver
     copy()                returns a deep copy of self and all keys and drivers
-    get_drivers()         returns a list of drivers associated with a tag
-    get_ordered()         returns a list of all drivers sorted by bbid
-    remove_driver()       remove a driver from this driver container
-    setPartOf()           sets parentObject for instance **and** drivers
+    get()                 retrieves a driver by id
+    get_by_name()         retrieves a driver by name
+    remove()              removes a driver by id
     ====================  ======================================================
     """
 
-    def __init__(self, name="DrContainer"):
-        Components.__init__(self, name)
-        TagsMixIn.__init__(self, name)
+    def __init__(self):
+        self.directory = dict()
+        self.by_name = dict()
 
-        self[None] = set()
-        self.dr_blank = Driver()
-        self.dr_directory = {}
-
-    def add_item(self, new_driver, *other_keys):
+    def add(self, driver):
         """
 
 
-        DrContainer.addItem(newDriver, *otherKeys) -> None
+        DriverContainer.add() -> None
 
+        --``driver`` is an instance of Driver
 
-        Method creates sets of bbids for drivers associated with a specific tag.
-
-        Method registers the driver's bbid under the driver's
-        workConditons["name"] and ["all"] keys. Method will skip
-        registration for a workConditions key if that workCondition is empty
-        (e.g, ``[None]``) or equivalent to that of the dummy blank driver on the
-        instance. Method then also registers the driver under every key provided
-        as part of the ``otherKeys`` argument.
-
-        Method also adds the driver to the instance's dr_directory.
-
-        Upon registration, Method updates driver's parentObject attribute to
-        point to the instance's parentObject (ie, the business unit housing this
-        particular DrContainer).
-
-        NOTE: Method will overwrite old versions of a driver with new versions.
+        Method checks that driver has a valid name and ID and that these
+        attributes do not conflict with existing entries before adding the
+        new driver.
         """
-        if not self.relationships.parent:
-            c = "Cannot add driver. DrContainer does not have a parent object."
-            raise bb_exceptions.IOPMechanicalError(c)
 
-        if not new_driver.id.bbid:
+        # Make sure this driver is valid
+        if not driver.id.bbid:
             c = "Cannot add driver that does not have a valid bbid."
             raise bb_exceptions.IDError(c)
 
-        # Could prohibit implicit overwrites, but would be cumbersome. Would
-        # have to check whether a bbid is already in a given key's set.
+        if not driver.name:
+            c = "Cannot add driver that does not have a valid name."
+            raise bb_exceptions.BBAnalyticalError(c)
 
-        self.dr_directory[new_driver.id.bbid] = new_driver
+        if driver.id.bbid in self.directory:
+            c = "Cannot overwrite existing driver. Driver with id %s already" \
+                " exists in directory." % driver.id.bbid.hex
+            raise bb_exceptions.BBAnalyticalError(c)
 
-        # Build the set of keys where we are going to register the driver
-        keys = set()
-        for trigger_tags in new_driver.workConditions.values():
-            keys = keys | set(trigger_tags)
-        keys = keys | set(other_keys)
-        # Stip out muck
-        keys = keys - {None}
-        keys = keys - set(self.dr_blank.workConditions["name"])
-        #  driver.workConditions[x] == "FAIL" by default
-
-        keys = {key.casefold() for key in keys}
-        for key in keys:
-            record = self.setdefault(key, dict())
-            if new_driver.position in record:
-                c = (
-                    "A single record can only have one driver "
-                    "with a given position.\n"
-                    "position {} already exists for key ``{}``\n"
-                    "unable to insert driver ``{}``"
-                ).format(new_driver.position, key, new_driver.tags.name)
-                for num, item in enumerate(self.items()):
-                    print(num, " ", item, "\n")
-                print()
-                print(self[key])
-                raise bb_exceptions.BBAnalyticalError(c)
-            else:
-                record[new_driver.position] = new_driver.id.bbid
+        if driver.name in self.by_name:
+            c = "Cannot overwrite existing driver. Driver named %s already" \
+                " exists in directory." % driver.name
+            raise bb_exceptions.BBAnalyticalError(c)
+        
+        self.directory[driver.id.bbid] = driver
+        self.by_name[driver.name.casefold()] = driver.id.bbid
 
     def copy(self):
         """
 
 
-        DrContainer.copy([]) -> DrContainer
+        DriverContainer.copy() -> DriverContainer
 
-
-        Method returns a new DrContainer instance. The items in the copy
+        Method returns a new DriverContainer instance. The items in the copy
         instance itself (tag : set of bbids) are identical to that of the
-        original. The drivers in the copy directory are copies of the drivers in
-        the original directory.
-
-        ```` toggles whether driver copies in the copy.dr_directory
-        comply with any applicable tag rules.
-        """
-        #
-        # Make container
-        result = copy.copy(self)
-        result.tags = self.tags.copy()
-        result.relationships = self.relationships.copy()
-        result.clear()
-        result.dr_directory = {}
-        # Make a clean empty dictionary for new directory
-        #
-        # Configure and fill the container
-        result.dr_blank = self.dr_blank.copy()
-
-        for (k, position_dict) in self.items():
-            result[k] = position_dict.copy()
-            # Set-specific copy; new set of same bbids
-
-        for (bbid,dr) in self.dr_directory.items():
-            result.dr_directory[bbid] = dr.copy()
-        #
-        # Return
-        return result
-
-    def get_drivers(self, tag):
+        original. The drivers in the copy directory are copies of the drivers
+        in the original directory.
         """
 
+        result = DriverContainer()
 
-        DrContainer.get_drivers() -> list
-
-
-        Method returns a list of drivers associated with the tag, ordered by
-        driver bbid.
-        """
-        result = []
-        available = self[tag]
-        # ``available`` is a int:bbid dictionary
-
-        for position, bbid in sorted(available.items()):
-            # Lambda may be faster here, not using for clarity
-            bbid = available[position]
-            driver = self.dr_directory[bbid]
-            result.append(driver)
+        for driver in self.directory.values():
+            result.add_item(driver.copy())
 
         return result
 
-    def get_ordered(self):
+    def get(self, bbid):
         """
 
 
-        DrContainer.get_ordered() -> set()
+        DriverContainer.get() -> Driver or None
 
+        --``bbid`` is a UUID corresponding to a Driver
 
-        Method returns a list of all drivers contained in instance sorted by
-        driver.id.bbid.
+        Method returns driver with provided BBID or None.
         """
-        result = []
-        for bbid in sorted(self.dr_directory.keys()):
-            dr = self.dr_directory[bbid]
-            result.append(dr)
+        result = None
+        if bbid:
+            result = self.directory.get(bbid, None)
+
+        return result
+    
+    def get_by_name(self, name):
+        """
+
+
+        DriverContainer.get_by_name() -> Driver or None
+
+        --``name`` is the name of a Driver
+
+        Method uses provided name to search for and return a Driver or None.
+        """
+        result = None
+        bbid = self.by_name.get(name, None)
+        if bbid:
+            result = self.directory.get(bbid, None)
+
         return result
 
-    def remove_driver(self, line_name_key):
+    def remove(self, bbid):
         """
 
 
-        DrContainer.remove_driver(line_name_key) -> None
+        DriverContainer.remove() -> None
 
-
-        Method removes all drivers with specified line_name_key.
-        Note that DrContainer's dictionary keys are all line names,
-        which come from Driver.workConditions['line_name']
+        Method removes driver with given BBID.
         """
-        dr_list = self.get_drivers(line_name_key)
-        for dr in dr_list:
-            # Remove from dr_directory dictionary
-            bbid = dr.id.bbid
-            del(self.dr_directory[bbid])
-            # Remove from DrContainer dictionary
-            del(self[line_name_key])
-
-    def setPartOf(self, parentObj, recur=True):
-        """
-
-
-        DrContainer.relationships.set_parent(parentObj,recur = True) -> None
-
-
-        Method runs Tags.setPartOf() on the instance, and, if ``recur`` is True,
-        all drivers in the instance.
-        """
-        self.relationships.set_parent(parentObj)
-        if recur:
-            for dr in self.dr_directory.values():
-                dr.relationships.set_parent(parentObj)
+        dr = self.directory.pop(id, None)
+        if dr:
+            self.by_name.pop(dr.name)
