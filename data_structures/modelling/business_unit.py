@@ -987,15 +987,9 @@ class BusinessUnit(TagsMixIn, Equalities):
                     self._derive_line(detail, period)
 
         # look for drivers based on line name, line parent name, all line tags
-        keys = [line.tags.name]
-        keys.append(line.relationships.parent.name.casefold())
-        keys.extend(line.tags.all)
-
-        for key in keys:
-            if key in self.drivers:
-                matching_drivers = self.drivers.get_drivers(key)
-                for driver in matching_drivers:
-                    driver.workOnThis(line, bu=self, period=period)
+        driver = line.get_driver()
+        if driver:
+            driver.workOnThis(line, bu=self, period=period)
 
     def _load_starting_balance(self, period):
         """
