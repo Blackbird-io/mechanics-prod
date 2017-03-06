@@ -85,8 +85,10 @@ class LineItem(Statement, HistoryLine):
     xl                    instance of LineData record set
 
     FUNCTIONS:
+    assign_driver()       assigns driver ID to the line for derivation
     clear()               if modification permitted, sets value to None
     copy()                returns a new line w copies of key attributes
+    get_driver()          return Driver assigned to the line
     increment()           add data from another line
     link_to()             links lines in Excel
     set_consolidate()     sets private attribute _consolidate
@@ -134,6 +136,8 @@ class LineItem(Statement, HistoryLine):
         self._include_details = True
         self._sum_details = True
         self.id = ID()
+
+        self._driver_id = None
 
         if value is not None:
             # BU.consolidate() will NOT increment items with value==None. On the
@@ -359,6 +363,19 @@ class LineItem(Statement, HistoryLine):
         result += "\n"
         return result
 
+    def assign_driver(self, driver_id):
+        """
+
+
+        LineItem.assign_driver() -> None
+
+        --``driver_id`` is the UUID associated with the driver that should run
+        on the line
+
+        Method assigns the given driver_id to the Line.
+        """
+        self._driver_id = driver_id
+
     def clear(self, recur=True, force=False, keep_format=True):
         """
 
@@ -416,6 +433,7 @@ class LineItem(Statement, HistoryLine):
         new_line._sum_over_time = self.sum_over_time
         new_line._include_details = self.include_details
         new_line._sum_details = self.sum_details
+        new_line._driver_id = copy.copy(self._driver_id)
         new_line.set_consolidate(self._consolidate)
         new_line.id = copy.copy(self.id)
         new_line.xl = xl_mgmt.LineData()
@@ -432,6 +450,26 @@ class LineItem(Statement, HistoryLine):
             new_line.log = []
 
         return new_line
+
+    def get_driver(self):
+        """
+
+
+        LineItem.get_driver() -> Driver or None
+
+        Method returns Driver object that is assigned to the instance or None.
+        """
+        dr = None
+        if self._driver_id:
+            parent = self.relationships.parent
+            while isinstance(parent, Statement):
+                parent = parent.relationships.parent
+
+            bu = parent.relationships.parent
+            mo = bu.relationships.model
+            dr = mo.drivers.get(self._driver_id)
+
+        return dr
 
     def increment(self, matching_line, signature=None, consolidating=False,
                   xl_label=None, override=False, xl_only=False,
