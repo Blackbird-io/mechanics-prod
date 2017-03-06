@@ -258,6 +258,9 @@ class Driver(TagsMixIn):
         self.id.set_namespace(formula.id.namespace)
         self.id.assign(seed=base)
 
+        if not self.name:
+            self.set_name(self.signature)
+
     def copy(self):
         """
 
