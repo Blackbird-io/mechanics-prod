@@ -40,6 +40,7 @@ from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.guidance.guide import Guide
 from data_structures.guidance.interview_tracker import InterviewTracker
 from data_structures.modelling.statement import Statement
+from data_structures.system.tags import Tags
 from data_structures.valuation.business_summary import BusinessSummary
 from data_structures.valuation.company_value import CompanyValue
 
@@ -123,23 +124,18 @@ class BusinessUnit(TagsMixIn, Equalities):
     _UPDATE_BALANCE_SIGNATURE = "Update balance"
 
     def __init__(self, name, fins=None, model=None):
-
         TagsMixIn.__init__(self, name)
 
+        self._parameters = Parameters()
         self._type = None
-
-        self.complete = True
+        self.id = ID()
+        self.life = LifeCycle()
+        self.location = None
+        self.size = 1
+        self.xl = xl_mgmt.UnitData()
 
         self.components = None
         self._set_components()  # Only used in copy()
-
-        self.drivers = DrContainer()
-        # self._set_drivers()  # Only used in copy()
-
-        # self.filled = False
-
-        self.life = LifeCycle()
-        self.location = None
 
         self.relationships = Relationships(self, model=model)
 
@@ -149,26 +145,88 @@ class BusinessUnit(TagsMixIn, Equalities):
         self.financials = None
         self.set_financials(fins)
 
-        self.size = 1
-        self.summary = BusinessSummary()
-        self.valuation = CompanyValue()
-
-        self.id = ID()
-        # Get the id functionality but do NOT assign a bbid yet
-
-        self._parameters = Parameters()
-
-        self.xl = xl_mgmt.UnitData()
-
         # Attributes related to Path
         self._stage = None
+        self.used = set()
         self.guide = Guide()
         self.interview = InterviewTracker()
-        self.used = set()
+        self.summary = BusinessSummary()
+        self.valuation = CompanyValue()
 
         # for monitoring, temporary storage for existing path and used sets
         self._path_archive = list()
         self._used_archive = list()
+        
+        # OBSOLETE
+        self.complete = True
+        self.drivers = DrContainer()
+
+    @classmethod
+    def from_portal(cls, portal_data):
+        new = cls()
+        new.tags = Tags.from_portal(portal_data['tags'])
+        new._parameters = Parameters.from_portal(portal_data['_parameters'],
+                                                 target='business_unit')
+        new._type = portal_data['_type']
+        # portal_data['id'] = new.id.bbid
+        new.life = LifeCycle.from_portal(portal_data['life'])
+        new.location = portal_data['location']
+        new.size = portal_data['size']
+        new.used = set(portal_data['used'])
+        new.guide = Guide.from_portal(portal_data['guide'])
+
+        # portal_data['interview'] = new.interview.to_portal()
+        # portal_data['summary'] = new.summary.to_portal()
+        # portal_data['valuation'] = new.valuation.to_portal()
+
+        # stage = portal_data['_stage']
+        # if stage == 'summary':
+        #     new._stage = new.summary
+        # elif stage == 'valuation':
+        #     new._stage = new.valuation
+
+        for path in portal_data['_path_archive']:
+            new._path_archive.append(path.from_portal(path))
+
+        new._used_archive = portal_data['_used_archive']
+        
+        return new
+
+    def to_portal(self):
+        data = dict()
+
+        data['_parameters'] = self._parameters.to_portal(target='business_unit')
+        data['_type'] = self._type
+        data['id'] = self.id.bbid
+        data['life'] = self.life.to_portal()
+        data['location'] = self.location
+        data['size'] = self.size = 1
+        data['parent'] = self.relationships.parent.id.bbid if \
+            self.relationships.parent else None
+        data['tags'] = self.tags.to_portal()
+        
+        if self._stage is self.summary:
+            stage = 'summary'
+        elif self._stage is self.valuation:
+            stage = 'valuation'
+        else:
+            stage = None      
+        data['_stage'] = stage
+        
+        data['used'] = list(self.used)
+        data['guide'] = self.guide.to_portal()
+        # data['interview'] = self.interview.to_portal()
+        # data['summary'] = self.summary.to_portal()
+        # data['valuation'] = self.valuation.to_portal()
+
+        # for monitoring, temporary storage for existing path and used sets
+        old_paths = list()
+        for path in self._path_archive:
+            old_paths.append(path.to_portal())
+        data['_path_archive'] = old_paths
+        data['_used_archive'] = self._used_archive
+
+        return data
 
     @property
     def parameters(self):
