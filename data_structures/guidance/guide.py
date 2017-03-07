@@ -83,3 +83,24 @@ class Guide:
         G.reset() -> None
         """
         Guide.__init__(self)
+
+    @classmethod
+    def from_portal(cls, portal_data):
+        new = cls()
+        new.complete = portal_data['complete']
+        new.attention = AttentionTracker.from_portal(portal_data['attention'])
+        new.priority = Counter.from_portal(portal_data['priority'])
+        new.quality = QualityTracker.from_portal(portal_data['quality'])
+        new.selection = SelectionTracker.from_portal(portal_data['selection'])
+
+        return new
+
+    def to_portal(self):
+        data = dict()
+        data['attention'] = self.attention.to_portal()
+        data['complete'] = self.complete
+        data['priority'] = self.priority.to_portal()
+        data['quality'] = self.quality.to_portal()
+        data['selection'] = self.selection.to_portal()
+
+        return data

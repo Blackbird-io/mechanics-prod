@@ -54,7 +54,17 @@ class Counter:
         self.current = start
         self.cut_off = cut_off
 
-    def increment(self, step = 1):
+    @classmethod
+    def from_portal(cls, portal_data):
+        new = cls()
+        new.__dict__.update(portal_data)
+        return new
+
+    def to_portal(self):
+        data = self.__dict__
+        return data
+
+    def increment(self, step=1):
         """
 
 
