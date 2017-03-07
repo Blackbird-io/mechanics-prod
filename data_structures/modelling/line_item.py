@@ -696,11 +696,7 @@ class LineItem(Statement, HistoryLine):
             except TypeError:
                 print(self)
                 c = "Cannot perform arithmetic on LineItem! override=False"
-
-                import pdb
-                pdb.set_trace()
-
-                # raise bb_exceptions.BBAnalyticalError(c)
+                raise bb_exceptions.BBAnalyticalError(c)
             # Will throw exception if value doesn't support arithmetic
 
             if self.hardcoded:
