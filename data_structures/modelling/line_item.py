@@ -38,7 +38,6 @@ from data_structures.guidance.guide import Guide
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
-from pydoc import locate
 
 from .statement import Statement
 from .history_line import HistoryLine

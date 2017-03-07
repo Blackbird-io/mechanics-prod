@@ -292,6 +292,10 @@ class Model(TagsMixIn):
             temp_sm._fiscal_year_end = M.summary_maker['_fiscal_year_end']
             M.summary_maker = temp_sm
 
+        drivers = portal_model.get('drivers')
+        if drivers:
+            M.drivers = DriverContainer.from_portal(drivers)
+
         return M
 
     def to_portal(self):
@@ -331,7 +335,8 @@ class Model(TagsMixIn):
             data.update(time_line.to_portal())
             timelines.append(data)
 
-        result['timelines'] =timelines
+        result['timelines'] = timelines
+        result['drivers'] = self.drivers.to_portal()
 
         return result
 
