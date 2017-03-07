@@ -58,6 +58,7 @@ class DriverContainer():
     add()                 adds a new driver
     copy()                returns a deep copy of self and all keys and drivers
     get()                 retrieves a driver by id
+    get_or_create()       retrieves or creates a driver matching provided info
     get_by_name()         retrieves a driver by name
     remove()              removes a driver by id
     ====================  ======================================================
