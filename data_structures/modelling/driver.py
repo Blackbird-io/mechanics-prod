@@ -171,8 +171,6 @@ class Driver(TagsMixIn):
         # We set condition values to a default that must be overwritten to make
         # sure default configuration doesnt apply to every lineItem.
 
-        self.summary_type = None
-
     def __eq__(self, comp, trace=False, tab_width=4):
         """
 

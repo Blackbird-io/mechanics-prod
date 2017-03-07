@@ -153,14 +153,11 @@ class DriverContainer():
             result = self.directory.get(bbid, None)
         return result
 
-    def get_or_create(self, name, data, formula, summary_type=None):
+    def get_or_create(self, name, data, formula):
         driver = self.get_by_name(name)
         if not driver:
             driver = Driver(name)
             driver.configure(data, formula)
-            if summary_type:
-                driver.summary_type = summary_type
-
             self.add(driver)  # Adding to Current BU
 
         return driver
