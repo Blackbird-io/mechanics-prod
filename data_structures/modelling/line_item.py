@@ -261,6 +261,7 @@ class LineItem(Statement, HistoryLine):
                 '_replica',
                 '_include_details',
                 '_sum_details',
+                '_driver_id',
                 'log',
             ):
                 new.__dict__[attr] = data[attr]
@@ -304,6 +305,7 @@ class LineItem(Statement, HistoryLine):
             'xl_format': self.xl.format.to_portal(),
             'tags': self.tags.to_portal(),
             'log': self.log,
+            '_driver_id': self._driver_id,
         }
 
         # return this line
@@ -694,7 +696,11 @@ class LineItem(Statement, HistoryLine):
             except TypeError:
                 print(self)
                 c = "Cannot perform arithmetic on LineItem! override=False"
-                raise bb_exceptions.BBAnalyticalError(c)
+
+                import pdb
+                pdb.set_trace()
+
+                # raise bb_exceptions.BBAnalyticalError(c)
             # Will throw exception if value doesn't support arithmetic
 
             if self.hardcoded:
