@@ -29,6 +29,7 @@ DriverContainer       class for organizing and storing Drivers
 
 #imports
 import bb_exceptions
+from data_structures.modelling.driver import Driver
 
 
 
@@ -150,8 +151,19 @@ class DriverContainer():
         bbid = self.by_name.get(name, None)
         if bbid:
             result = self.directory.get(bbid, None)
-
         return result
+
+    def get_or_create(self, name, data, formula, summary_type=None):
+        driver = self.get_by_name(name)
+        if not driver:
+            driver = Driver(name)
+            driver.configure(data, formula)
+            if summary_type:
+                driver.summary_type = summary_type
+
+            self.add(driver)  # Adding to Current BU
+
+        return driver
 
     def remove(self, bbid):
         """

@@ -247,6 +247,9 @@ class Driver(TagsMixIn):
 
         self._set_formula(formula)
 
+        if not self.name:
+            self.set_name(self.signature)
+
         # get namespace for driver
         base = self.name or formula.tags.name
         for k, wc in self.workConditions.items():
@@ -257,9 +260,6 @@ class Driver(TagsMixIn):
 
         self.id.set_namespace(formula.id.namespace)
         self.id.assign(seed=base)
-
-        if not self.name:
-            self.set_name(self.signature)
 
     def copy(self):
         """
@@ -533,26 +533,26 @@ class Driver(TagsMixIn):
         """
 
         # must be careful not to split strings (names) into letters with set()
-        if self.workConditions["name"]:
-            if not set(self.workConditions["name"]).issubset(
-                set((None, line.name))
-            ):
-                return False
-
-        if self.workConditions["partOf"]:
-            try:
-                part_of = set((None, line.relationships.parent.name))
-            except AttributeError:
-                part_of = {None}
-
-            if not set(self.workConditions["partOf"]).issubset(part_of):
-                return False
-
-        if self.workConditions["all"]:
-            all_tags = line.tags.all | set((None, line.name))
-
-            if not set(self.workConditions["all"]).issubset(all_tags):
-                return False
+        # if self.workConditions["name"]:
+        #     if not set(self.workConditions["name"]).issubset(
+        #         set((None, line.name))
+        #     ):
+        #         return False
+        #
+        # if self.workConditions["partOf"]:
+        #     try:
+        #         part_of = set((None, line.relationships.parent.name))
+        #     except AttributeError:
+        #         part_of = {None}
+        #
+        #     if not set(self.workConditions["partOf"]).issubset(part_of):
+        #         return False
+        #
+        # if self.workConditions["all"]:
+        #     all_tags = line.tags.all | set((None, line.name))
+        #
+        #     if not set(self.workConditions["all"]).issubset(all_tags):
+        #         return False
 
         return True
 

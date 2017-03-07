@@ -45,7 +45,7 @@ from data_structures.valuation.company_value import CompanyValue
 
 from . import common_events
 
-from .dr_container import DrContainer
+from .dr_container import DriverContainer as DrContainer
 from .financials import Financials
 from .components import Components
 from .equalities import Equalities
@@ -133,8 +133,8 @@ class BusinessUnit(TagsMixIn, Equalities):
         self.components = None
         self._set_components()  # Only used in copy()
 
-        self.drivers = None
-        self._set_drivers()  # Only used in copy()
+        self.drivers = DrContainer()
+        # self._set_drivers()  # Only used in copy()
 
         # self.filled = False
 
@@ -494,7 +494,8 @@ class BusinessUnit(TagsMixIn, Equalities):
         result._set_components(r_comps)
 
         r_drivers = self.drivers.copy()
-        result._set_drivers(r_drivers)
+        # result._set_drivers(r_drivers)
+        result.drivers = r_drivers
 
         r_fins = self.financials.copy()
         result.set_financials(r_fins)
