@@ -215,13 +215,9 @@ class Driver(TagsMixIn):
             raise bb_exceptions.IDAssignmentError(c)
         return hash(self.id.bbid)
 
-        # Ideally, drivers should hash to a combination of the instance formula,
-        # params, conversion table, and work conditions. These attributes define
-        # what it means for the driver to be the same.
-        #
-        # The issue is that params and conversion table are mutable containers.
-        # So either have to make them immutable or figure out some other
-        # approach.
+    @property
+    def signature(self):
+        return self.name
 
     def configure(self, data, formula, conversion_table=None):
         """
@@ -246,9 +242,6 @@ class Driver(TagsMixIn):
         # multiple times.
 
         self._set_formula(formula)
-
-        if not self.name:
-            self.set_name(self.signature)
 
         # get namespace for driver
         base = self.name or formula.tags.name
@@ -277,9 +270,6 @@ class Driver(TagsMixIn):
         Original object copies tags to result using Tags._copy_tags_to(), so method
         will enforce tag rules when specified.
 
-        Result.relationships.parent points to the same object as original because the
-        default shallow copy runs on the ``parentObject`` attribute.
-
         NOTE: Result points to same object as original on ``id`` and
         ``formula_bbid``. Therefore, the result should continue to point to the
         same formula even if that formula's id changes in place. The result
@@ -290,60 +280,10 @@ class Driver(TagsMixIn):
         """
         result = copy.copy(self)
         result.tags = self.tags.copy()
-        result.relationships = self.relationships.copy()
         result.parameters = copy.deepcopy(self.parameters)
-        result.workConditions = copy.deepcopy(self.workConditions)
+        result.formula_bbid = copy.copy(self.formula_bbid)
+
         return result
-
-    def setSignature(self, newSig):
-        """
-
-
-        Driver.setSignature() -> None
-
-
-        Method sets self.signature to the specified value.
-        """
-        self.signature = newSig
-
-    def setWorkConditions(self, nameCondition, partCondition=None, *tagConditions):
-        """
-
-
-        Driver.setWorkConditions() -> None
-
-
-        Method sets workConditions for the instance. ``tagConditions`` collects
-        arbitrarily many tags. Method stores each condition as a list. That is,
-        self.workConditions["name"] = [nameCondition]. This approach allows for
-        use of set operations for checking alignment without breaking
-        string-based tags.
-
-        Setting the value for a given condition to None means all objects match
-        that value. If all three conditions are set to None or an empty list,
-        the driver will apply to all objects.
-        """
-        names = []
-        parts = []
-        tags = []
-
-        if nameCondition:
-            names.append(nameCondition.casefold())
-        else:
-            names.append(nameCondition)
-        if partCondition:
-            parts.append(partCondition.casefold())
-        else:
-            parts.append(partCondition)
-        for tag in tagConditions:
-            if tag:
-                tags.append(tag.casefold())
-            else:
-                tags.append(tag)
-
-        self.workConditions["name"]=names
-        self.workConditions["partOf"]=parts
-        self.workConditions["all"]=tags
 
     def validate(self, check_data=True, parent=None):
         """
@@ -405,46 +345,43 @@ class Driver(TagsMixIn):
             not line.hardcoded,
             not line.has_been_consolidated,
         )):
-            if self._can_work_on_this(line):
-                line.clear(recur=False)
+            line.clear(recur=False)
 
-                formula = self._FM.local_catalog.issue(self.formula_bbid)
-                # formula_catalog.issue() only performs dict retrieval and
-                # return for key.
+            formula = self._FM.local_catalog.issue(self.formula_bbid)
+            # formula_catalog.issue() only performs dict retrieval and
+            # return for key.
 
-                params = self._build_params(parent=bu, period=period)
+            params = self._build_params(parent=bu, period=period)
 
-                if not bb_settings.PREP_FOR_EXCEL:
+            if not bb_settings.PREP_FOR_EXCEL:
+                formula.func(line, bu, params, self.signature)
+            else:
+                output = formula.func(line, bu, params, self.signature)
 
-                    formula.func(line, bu, params, self.signature)
+                if not output.steps:
+                    c = (
+                        "Formula did not return all required information\n"
+                        "Name: {name}\n"
+                        "BBID: {bbid}\n"
+                        "Excel formula template missing!"
+                    ).format(
+                        name=formula.tags.name,
+                        bbid=self.formula_bbid,
+                    )
+                    raise bb_exceptions.ExcelPrepError(c)
 
-                else:
-                    output = formula.func(line, bu, params, self.signature)
+                data_cluster = self.to_excel()
+                data_cluster.references = output.references
+                data_cluster.name = formula.tags.name
+                data_cluster.comment = output.comment
+                data_cluster.formula = output.steps
 
-                    if not output.steps:
-                        c = (
-                            "Formula did not return all required information\n"
-                            "Name: {name}\n"
-                            "BBID: {bbid}\n"
-                            "Excel formula template missing!"
-                        ).format(
-                            name=formula.tags.name,
-                            bbid=self.formula_bbid,
-                        )
-                        raise bb_exceptions.ExcelPrepError(c)
+                line.xl.derived.calculations.append(data_cluster)
+                line._update_stored_xl()
 
-                    data_cluster = self.to_excel()
-                    data_cluster.references = output.references
-                    data_cluster.name = formula.tags.name
-                    data_cluster.comment = output.comment
-                    data_cluster.formula = output.steps
-
-                    line.xl.derived.calculations.append(data_cluster)
-                    line._update_stored_xl()
-
-                # Each function is "disposable", so we explicitly delete the
-                # pointer after each use.
-                del formula
+            # Each function is "disposable", so we explicitly delete the
+            # pointer after each use.
+            del formula
 
     def to_excel(self):
         """
@@ -507,54 +444,6 @@ class Driver(TagsMixIn):
         params['period'] = period
 
         return params
-
-    def _can_work_on_this(self, line):
-        """
-
-
-        Driver._can_work_on_this() -> bool
-
-
-        This method checks whether the line satisfies workConditions.
-        If the line satisfies each of the workConditions specified for
-        the instance, the method returns True. Otherwise, the method returns
-        False.
-
-        To satisfy the allTags condition, an object must carry each tag in
-        instance.workConditions["all"] (ie, instance.wC[allTags] must be
-        a subset of target.tags.all).
-
-        NOTE: driver.workConditions keys may include None as values to indicate
-        absence of a constraint. Accordingly, match is evaluated against
-        candidate attributes plus a None element.
-
-        A workCondition with a value equal to None or an empty list will be
-        satisfied for all lineItems.
-        """
-
-        # must be careful not to split strings (names) into letters with set()
-        # if self.workConditions["name"]:
-        #     if not set(self.workConditions["name"]).issubset(
-        #         set((None, line.name))
-        #     ):
-        #         return False
-        #
-        # if self.workConditions["partOf"]:
-        #     try:
-        #         part_of = set((None, line.relationships.parent.name))
-        #     except AttributeError:
-        #         part_of = {None}
-        #
-        #     if not set(self.workConditions["partOf"]).issubset(part_of):
-        #         return False
-        #
-        # if self.workConditions["all"]:
-        #     all_tags = line.tags.all | set((None, line.name))
-        #
-        #     if not set(self.workConditions["all"]).issubset(all_tags):
-        #         return False
-
-        return True
 
     def _check_data(self, parent=None):
         """
@@ -631,6 +520,10 @@ class Driver(TagsMixIn):
         """
         new_data = copy.deepcopy(new_data)
         self.parameters.add(new_data, overwrite)
+
+    def setWorkConditions(self, *kwargs):
+        # OBSOLETE
+        pass
 
 # Connect Driver class to FormulaManager. Now all instances of Driver will be
 # able to access FormulaManager.catalog resources.
