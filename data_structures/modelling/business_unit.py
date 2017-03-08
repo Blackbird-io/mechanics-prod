@@ -174,7 +174,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         new.size = portal_data['size']
         new.used = set(portal_data['used'])
         new.guide = Guide.from_portal(portal_data['guide'])
-
+        new.components = portal_data['components']
         # portal_data['interview'] = new.interview.to_portal()
         # portal_data['summary'] = new.summary.to_portal()
         # portal_data['valuation'] = new.valuation.to_portal()
@@ -197,7 +197,8 @@ class BusinessUnit(TagsMixIn, Equalities):
 
         data['_parameters'] = self._parameters.to_portal(target='business_unit')
         data['_type'] = self._type
-        data['id'] = self.id.bbid
+        data['components'] = list(self.components.keys())
+        data['bbid'] = self.id.bbid
         data['life'] = self.life.to_portal()
         data['location'] = self.location
         data['size'] = self.size = 1
