@@ -637,6 +637,8 @@ class Statement(Equalities, TagsMixIn):
                 if external_line.consolidate or over_time:
                     chk = not over_time
                     local_copy = external_line.copy(check_include_details=chk)
+                    if not over_time:
+                        local_copy.remove_driver(recur=True)
                     # Dont enforce rules to track old line.replicate() method
 
                     if consolidating:

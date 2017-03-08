@@ -36,6 +36,7 @@ import tools.for_tag_operations
 from chef_settings import DEFAULT_SCENARIOS
 from data_structures.modelling.financials import Financials
 from data_structures.system.bbid import ID
+from data_structures.modelling.business_unit import BusinessUnit
 from data_structures.modelling.line_item import LineItem
 from data_structures.modelling.dr_container import DriverContainer
 from data_structures.system.tags_mixin import TagsMixIn
@@ -265,12 +266,30 @@ class Model(TagsMixIn):
         M.portal_data.update(portal_model)
         del M.portal_data["e_model"]
 
+        # # first deserialize BusinessUnits into directory
+        # for flat_bu in portal_model.get('business_units', list()):
+        #     rich_bu = BusinessUnit.from_portal(flat_bu)
+        #     rich_bu.relationships.model = M
+        #     M.bu_directory[flat_bu['bbid']] = rich_bu
+        #
+        # # now rebuild structure
+        # company_id = portal_model.get('company', None)
+        # if company_id:
+        #     def build_bu_structure(seed, directory):
+        #         component_list = seed.components
+        #         seed.components = None
+        #         seed._set_components()
+        #         for component_id in component_list:
+        #             sub_bu = directory[component_id]
+        #             seed.components.add_item(sub_bu)
+        #             build_bu_structure(sub_bu, directory)
+        #
+        #     top_bu = M.bu_directory[company_id]
+        #     build_bu_structure(top_bu, M.bu_directory)
+        #     M.set_company(top_bu)
+
         # post-process financials in the current period, make sure they get
         # assigned back to the proper BU
-        """
-        Here we will want to actually deserialize financials in the current
-        period for all BU's, then call fins.populate_from_stored_values()
-        """
         for fins in portal_model.get('financials_structure', list()):
             # Deserialize structure
             new_fins = Financials.from_portal(fins, M, period=None)
@@ -305,10 +324,12 @@ class Model(TagsMixIn):
         """
         result = dict()
 
+        result['company'] = self._company.id.bbid if self._company else None
+
         # pre-process financials in the current period, make sure they get
         # serialized in th database to maintain structure data
         fins_structure = list()
-
+        # bu_list = list()
         for bu in self.bu_directory.values():
             fins = bu.financials
 
@@ -317,7 +338,12 @@ class Model(TagsMixIn):
             }
             data.update(fins.to_portal())
             fins_structure.append(data)
+
+            bu.financials = None
+            # bu_list.append(bu.to_portal())
+
         result['financials_structure'] = fins_structure
+        # result['business_units'] = bu_list
 
         # serialized representation has a list of timelines attached
         # with (resolution, name) as properties
