@@ -30,6 +30,7 @@ from pydoc import locate
 
 import bb_exceptions
 
+from datetime import timedelta
 from tools.parsing import date_from_iso
 
 
@@ -119,6 +120,11 @@ class Parameters(dict):
                     typ = data['value_type']
                     if typ == 'date':
                         keyhold[k] = date_from_iso(data['value'])
+                    elif typ == 'timedelta':
+                        if isinstance(data['value'], str):
+                            keyhold[k] = timedelta(int(data['value']))
+                        else:
+                            keyhold[k] = data['value']
                     else:
                         keyhold[k] = locate(typ)(data['value'])
 
