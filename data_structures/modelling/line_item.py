@@ -91,6 +91,7 @@ class LineItem(Statement, HistoryLine):
     get_driver()          return Driver assigned to the line
     increment()           add data from another line
     link_to()             links lines in Excel
+    remove_driver()       removes driver assignment
     set_consolidate()     sets private attribute _consolidate
     set_hardcoded()       sets private attribute _hardcoded
     set_value()           sets value to input, records signature
@@ -525,6 +526,8 @@ class LineItem(Statement, HistoryLine):
                             c = "Trying to add line to restricted parent line"
                             raise ValueError(c)
 
+                        if not over_time:
+                            new_line.remove_driver()
                         self.append(new_line)
 
                     # 3) increment line with the matching_line
@@ -592,6 +595,19 @@ class LineItem(Statement, HistoryLine):
                            override=True)
             self.xl.reference.source = matching_line
             self._update_stored_xl()
+
+    def remove_driver(self, recur=False):
+        """
+
+
+        LineItem.remove_driver() -> None
+
+        Method removes driver ID assignment.
+        """
+        self._driver_id = None
+        if recur:
+            for line in self._details.values():
+                line.remove_driver(recur=recur)
 
     def register(self, namespace):
         """
