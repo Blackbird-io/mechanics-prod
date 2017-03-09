@@ -202,14 +202,21 @@ def view_as_base(
     data = {}
 
     # name
-    data["NAME"] = _compact_name(company.title, data_width)
+    try:
+        data["NAME"] = _compact_name(company.title, data_width)
+    except:
+        import pdb
+        pdb.set_trace()
 
     id_dots = "..."
     tail_width = data_width - len(id_dots)
     id_tail = str(company.id.bbid)[-tail_width:]
     data["ID"] = id_dots + id_tail
 
-    data["COMPS"] = str(len(company.components.get_all()))
+    try:
+        data["COMPS"] = str(len(company.components.get_all()))
+    except:
+        data["COMPS"] = str(len(company.components))
 
     lines = []
     top_border = reg_corner + top_element * (box_width - 2) + reg_corner
