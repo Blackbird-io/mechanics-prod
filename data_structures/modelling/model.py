@@ -266,27 +266,60 @@ class Model(TagsMixIn):
         M.portal_data.update(portal_model)
         del M.portal_data["e_model"]
 
-        # # first deserialize BusinessUnits into directory
-        # for flat_bu in portal_model.get('business_units', list()):
-        #     rich_bu = BusinessUnit.from_portal(flat_bu)
-        #     rich_bu.relationships.model = M
-        #     M.bu_directory[flat_bu['bbid']] = rich_bu
-        #
-        # # now rebuild structure
-        # company_id = portal_model.get('company', None)
-        # if company_id:
-        #     def build_bu_structure(seed, directory):
-        #         component_list = seed.components
-        #         seed.components = None
-        #         seed._set_components()
-        #         for component_id in component_list:
-        #             sub_bu = directory[component_id]
-        #             seed.components.add_item(sub_bu)
-        #             build_bu_structure(sub_bu, directory)
-        #
-        #     top_bu = M.bu_directory[company_id]
-        #     build_bu_structure(top_bu, M.bu_directory)
-        #     M.set_company(top_bu)
+        # Make blank TaxoDir structure
+        M.taxo_dir = TaxoDir(M)
+
+        # first deserialize BusinessUnits into directory
+        temp_directory = dict()
+        for flat_bu in portal_model.get('business_units', list()):
+            rich_bu = BusinessUnit.from_portal(flat_bu)
+            rich_bu.relationships.set_model(M)
+            temp_directory[flat_bu['bbid']] = rich_bu
+
+        # now rebuild structure
+        company_id = portal_model.get('company', None)
+        if company_id:
+            def build_bu_structure(seed, directory):
+                component_list = seed.components
+                seed.components = None
+                seed._set_components()
+                for component_id in component_list:
+                    try:
+                        sub_bu = directory[component_id]
+                    except:
+                        import pdb
+                        pdb.set_trace()
+
+                    seed.add_component(sub_bu)
+                    build_bu_structure(sub_bu, directory)
+
+            top_bu = temp_directory[company_id]
+            build_bu_structure(top_bu, temp_directory)
+            M.set_company(top_bu)
+
+        # Target
+        target_id = portal_model.get('target', None)
+        if target_id:
+            M.target = M.bu_directory[target_id]
+
+        # Taxonomy
+        M.taxonomy = dict()
+        taxo_list = portal_model.get('taxonomy', list())
+        for taxo_unit in taxo_list:
+            key_list = taxo_unit.pop('keys')
+            temp = M.taxonomy
+            for k in key_list:
+                this_dict = temp
+                this_dict.setdefault(k, dict())
+                temp = this_dict[k]
+
+            new_taxo = BusinessUnit.from_portal(taxo_unit)
+            new_taxo._set_components()
+            this_dict[k] = new_taxo
+
+        # TaxoDir
+        if portal_model.get('taxo_dir', None):
+            M.taxo_dir = TaxoDir.from_portal(portal_model['taxo_dir'], M)
 
         # post-process financials in the current period, make sure they get
         # assigned back to the proper BU
@@ -314,6 +347,12 @@ class Model(TagsMixIn):
         drivers = portal_model.get('drivers')
         if drivers:
             M.drivers = DriverContainer.from_portal(drivers)
+        else:
+            M.drivers = DriverContainer()
+
+        if not M.taxo_dir:
+            import pdb
+            pdb.set_trace()
 
         return M
 
@@ -329,12 +368,12 @@ class Model(TagsMixIn):
         result = dict()
 
         result['company'] = self._company.id.bbid if self._company else None
-
+        result['target'] = self.target.id.bbid if self.target else None
         # pre-process financials in the current period, make sure they get
         # serialized in th database to maintain structure data
         fins_structure = list()
-        # bu_list = list()
-        for bu in self.bu_directory.values():
+        bu_list = list()
+        for id, bu in self.bu_directory.items():
             fins = bu.financials
 
             data = {
@@ -344,10 +383,50 @@ class Model(TagsMixIn):
             fins_structure.append(data)
 
             bu.financials = None
-            # bu_list.append(bu.to_portal())
+            if id != bu.id.bbid:
+                print('to portal')
+                import pdb
+                pdb.set_trace()
+
+            bu_list.append(bu.to_portal())
 
         result['financials_structure'] = fins_structure
-        # result['business_units'] = bu_list
+        result['business_units'] = bu_list
+
+        taxo_list = list()
+        def get_taxo_rows(row, value, row_list):
+            if isinstance(value, BusinessUnit):
+                row.update(value.to_portal())
+                row_list.append(row)
+            else:
+                for key, val in value.items():
+                    row['keys'].append(key)
+                    get_taxo_rows(row.copy(), val, row_list=row_list)
+
+        row_list = list()
+        for key, value in self.taxonomy.items():
+            row = dict()
+            row['keys'] = [key]
+            get_taxo_rows(row, value, row_list)
+        taxo_list.extend(row_list)
+
+        result['taxonomy'] = taxo_list
+        result['taxo_dir'] = self.taxo_dir.to_portal()
+
+        print("TAXONOMY")
+        taxo_dir_ids = [taxo['bbid'] for taxo in result['taxonomy']]
+        print(taxo_dir_ids)
+
+        print("TAXO_DIR")
+        print(result['taxo_dir'])
+
+        print("BU_DIRECTORY")
+        bu_dir_ids = [bu['bbid'] for bu in result['business_units']]
+        print(bu_dir_ids)
+
+        if set(taxo_dir_ids) & set(bu_dir_ids):
+            import pdb
+            pdb.set_trace()
 
         # serialized representation has a list of timelines attached
         # with (resolution, name) as properties
@@ -488,7 +567,7 @@ class Model(TagsMixIn):
         self.bu_directory.clear()
         self.ty_directory.clear()
         self.register(company, update_id=True, overwrite=False, recur=True)
-        self._company = company
+        self._company = self.target = company
 
     def get_financials(self, bbid, period):
         """
@@ -577,11 +656,6 @@ class Model(TagsMixIn):
                                     new_data.format = line.xl.format
                                     new_data.built = True
                                     line.xl = new_data
-
-                                    if line.xl.cell:
-                                        print("WTF WHERE DID YOU COME FROM")
-                                        import pdb
-                                        pdb.set_trace()
 
     def prep_for_monitoring_interview(self):
         """
@@ -799,7 +873,6 @@ class Model(TagsMixIn):
                     name=self.bu_directory[bu.id.bbid].tags.name,
                     mine=bu.tags.name,
                 )
-                print(self.bu_directory)
                 raise bb_exceptions.IDCollisionError(c)
 
         self.bu_directory[bu.id.bbid] = bu
@@ -812,7 +885,8 @@ class Model(TagsMixIn):
 
         if recur:
             for child_bu in bu.components.values():
-                child_bu._register_in_period(recur=True, overwrite=overwrite)
+                self.register(child_bu, update_id=update_id,
+                              overwrite=overwrite, recur=recur)
 
     def prep_summaries(self):
         """
