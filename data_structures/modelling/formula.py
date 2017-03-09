@@ -29,6 +29,7 @@ Formula               placeholder for formula functions from content modules
 #imports
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
+from data_structures.system.tags_mixin import TagsMixIn
 
 
 
@@ -37,7 +38,7 @@ from data_structures.system.tags import Tags
 #n/a
 
 #classes
-class Formula:
+class Formula(TagsMixIn):
     """
     Formula objects provide a lattice for identifying, tagging, and storing
     work functions in the formula catalog.
@@ -56,10 +57,8 @@ class Formula:
     n/a
     ====================  ======================================================
     """
-    def __init__(self):
+    def __init__(self, name=None):
+        TagsMixIn.__init__(self, name=name)
         self.func = None
         self.id = ID()
         self.source = None
-        self.tags = Tags()
-
-
