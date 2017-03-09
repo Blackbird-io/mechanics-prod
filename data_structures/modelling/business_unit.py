@@ -163,27 +163,26 @@ class BusinessUnit(TagsMixIn, Equalities):
 
     @classmethod
     def from_portal(cls, portal_data):
-        new = cls()
+        new = cls(None)
         new.tags = Tags.from_portal(portal_data['tags'])
         new._parameters = Parameters.from_portal(portal_data['_parameters'],
                                                  target='business_unit')
         new._type = portal_data['_type']
-        # portal_data['id'] = new.id.bbid
         new.life = LifeCycle.from_portal(portal_data['life'])
         new.location = portal_data['location']
         new.size = portal_data['size']
         new.used = set(portal_data['used'])
         new.guide = Guide.from_portal(portal_data['guide'])
         new.components = portal_data['components']
-        # portal_data['interview'] = new.interview.to_portal()
-        # portal_data['summary'] = new.summary.to_portal()
-        # portal_data['valuation'] = new.valuation.to_portal()
+        new.interview = portal_data['interview']
+        new.summary = portal_data['summary']
+        new.valuation = portal_data['valuation']
 
-        # stage = portal_data['_stage']
-        # if stage == 'summary':
-        #     new._stage = new.summary
-        # elif stage == 'valuation':
-        #     new._stage = new.valuation
+        stage = portal_data['_stage']
+        if stage == 'summary':
+            new._stage = new.summary
+        elif stage == 'valuation':
+            new._stage = new.valuation
 
         for path in portal_data['_path_archive']:
             new._path_archive.append(path.from_portal(path))
@@ -198,14 +197,19 @@ class BusinessUnit(TagsMixIn, Equalities):
         data['_parameters'] = self._parameters.to_portal(target='business_unit')
         data['_type'] = self._type
         data['components'] = list(self.components.keys())
+
+        for id, bu in self.components.items():
+            if id != bu.id.bbid:
+                import pdb
+                pdb.set_trace()
+
         data['bbid'] = self.id.bbid
         data['life'] = self.life.to_portal()
         data['location'] = self.location
+        data['name'] = self.name
         data['size'] = self.size = 1
-        data['parent'] = self.relationships.parent.id.bbid if \
-            self.relationships.parent else None
         data['tags'] = self.tags.to_portal()
-        
+
         if self._stage is self.summary:
             stage = 'summary'
         elif self._stage is self.valuation:
@@ -216,9 +220,9 @@ class BusinessUnit(TagsMixIn, Equalities):
         
         data['used'] = list(self.used)
         data['guide'] = self.guide.to_portal()
-        # data['interview'] = self.interview.to_portal()
-        # data['summary'] = self.summary.to_portal()
-        # data['valuation'] = self.valuation.to_portal()
+        data['interview'] = self.interview  #.to_portal()
+        data['summary'] = self.summary  #.to_portal()
+        data['valuation'] = self.valuation  #.to_portal()
 
         # for monitoring, temporary storage for existing path and used sets
         old_paths = list()
@@ -421,7 +425,39 @@ class BusinessUnit(TagsMixIn, Equalities):
 
         # Step 3: Register the units. Will raise errors on collisions.
         if register_in_dir:
+            mod_dir = False
+            if self.id.bbid in self.relationships.model.bu_directory:
+                print("MODEL.BU_DIRECTORY")
+                mod_dir = True
+
+            taxo_dir = False
+            if self.id.bbid in self.relationships.model.taxo_dir.bu_directory:
+                print("TAXONOMY.BU_DIRECTORY")
+                taxo_dir = True
+
+            if mod_dir and taxo_dir:
+                import pdb
+                pdb.set_trace()
+
             bu._register_in_dir(recur=True, overwrite=overwrite)
+
+    def remove_component(self, buid):
+        """
+
+
+        BusinessUnit.add_component() -> None
+
+
+        """
+        # Step 1: remove from directories
+        mo = self.relationships.model
+        bu = self.components[buid]
+
+        mo.ty_directory[bu.type] -= {bu.id.bbid}
+        mo.bu_directory.pop(bu.id.bbid)
+
+        # Step 2: remove component
+        self.components.remove_item(buid)
 
     def add_driver(self, newDriver, *otherKeys):
         """
@@ -766,7 +802,11 @@ class BusinessUnit(TagsMixIn, Equalities):
 
         fins.relationships.set_parent(self)
         self.financials = fins
-        # self.financials.starting = self.financials.ending
+
+    def set_name(self, name):
+        self.tags.set_name(name)
+        mo = self.relationships.model
+        mo.set_company(mo.get_company())
 
     def synchronize(self, recur=True):
         """
@@ -1139,7 +1179,6 @@ class BusinessUnit(TagsMixIn, Equalities):
                     name=bu_directory[self.id.bbid].tags.name,
                     mine=self.tags.name,
                 )
-                print(bu_directory)
                 raise bb_exceptions.IDCollisionError(c)
 
         bu_directory[self.id.bbid] = self
@@ -1148,7 +1187,12 @@ class BusinessUnit(TagsMixIn, Equalities):
         brethren.add(self.id.bbid)
 
         if recur:
-            for unit in self.components.values():
+            try:
+                components = self.components.values()
+            except AttributeError:
+                components = list()
+
+            for unit in components:
                 unit._register_in_dir(recur, overwrite)
 
     def _set_components(self, comps=None):
@@ -1229,7 +1273,12 @@ class BusinessUnit(TagsMixIn, Equalities):
         # the namespace for all downstream components.
 
         if recur:
-            for unit in self.components.values():
+            try:
+                components = self.components.values()
+            except AttributeError:
+                components = list()
+
+            for unit in components:
                 unit._update_id(namespace=self.id.bbid, recur=True)
                 
     def _update_lines(self, start_line, end_line):
