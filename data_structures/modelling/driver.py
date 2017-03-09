@@ -351,6 +351,7 @@ class Driver(TagsMixIn):
             self.active,
             not line.hardcoded,
             not line.has_been_consolidated,
+            not (line.sum_details and line._details)
         )):
             line.clear(recur=False)
 
