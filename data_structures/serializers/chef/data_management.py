@@ -454,7 +454,7 @@ class LineFormat:
         self._border = None
 
     @classmethod
-    def from_portal(cls, portal_data, model, **kargs):
+    def from_portal(cls, portal_data):
         """
 
 

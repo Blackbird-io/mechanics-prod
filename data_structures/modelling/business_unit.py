@@ -188,7 +188,11 @@ class BusinessUnit(TagsMixIn, Equalities):
             new._path_archive.append(path.from_portal(path))
 
         new._used_archive = portal_data['_used_archive']
-        
+
+        fins = portal_data.get('financials_structure')
+        new_fins = Financials.from_portal(fins, new, period=None)
+        new.set_financials(new_fins)
+
         return new
 
     def to_portal(self):
@@ -197,18 +201,13 @@ class BusinessUnit(TagsMixIn, Equalities):
         data['_parameters'] = self._parameters.to_portal(target='business_unit')
         data['_type'] = self._type
         data['components'] = list(self.components.keys())
-
-        for id, bu in self.components.items():
-            if id != bu.id.bbid:
-                import pdb
-                pdb.set_trace()
-
         data['bbid'] = self.id.bbid
         data['life'] = self.life.to_portal()
         data['location'] = self.location
         data['name'] = self.name
         data['size'] = self.size = 1
         data['tags'] = self.tags.to_portal()
+        data['financials_structure'] = self.financials.to_portal()
 
         if self._stage is self.summary:
             stage = 'summary'

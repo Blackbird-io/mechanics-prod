@@ -91,8 +91,6 @@ class Taxonomy(dict):
 
         Method deserializes TaxoDir into a rich object from flat portal data.
         """
-
-        # Taxonomy
         new = cls(taxo_dir)
 
         for taxo_unit in portal_data:
@@ -108,9 +106,6 @@ class Taxonomy(dict):
 
             bu = new.taxo_dir.get(taxo_unit['bbid'])
             dict.__setitem__(this_dict, k, bu)
-
-        print("TAXONOMY FROM PORTAL")
-        print(new)
 
         return new
 
