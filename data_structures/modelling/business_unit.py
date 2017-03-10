@@ -320,15 +320,11 @@ class BusinessUnit(TagsMixIn, Equalities):
                 if self is model.bu_directory[self.id.bbid]:
                     ty_directory = model.ty_directory
                     in_model = True
-                else:
-                    print("Warning, another BU has same ID in model")
 
             if self.id.bbid in model.taxo_dir.bu_directory:
                 if self is model.taxo_dir.bu_directory[self.id.bbid]:
                     ty_directory = model.taxo_dir.ty_directory
                     in_taxonomy = True
-                else:
-                    print("Warning, another BU has same ID in taxonomy")
 
             if in_model and in_taxonomy:
                 print(self.name + " is both model.bu_dir and taxo_dir!!")
@@ -424,22 +420,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         self.components.add_item(bu)
 
         # Step 3: Register the units. Will raise errors on collisions.
-        if register_in_dir:
-            mod_dir = False
-            if self.id.bbid in self.relationships.model.bu_directory:
-                print("MODEL.BU_DIRECTORY")
-                mod_dir = True
-
-            taxo_dir = False
-            if self.id.bbid in self.relationships.model.taxo_dir.bu_directory:
-                print("TAXONOMY.BU_DIRECTORY")
-                taxo_dir = True
-
-            if mod_dir and taxo_dir:
-                import pdb
-                pdb.set_trace()
-
-            bu._register_in_dir(recur=True, overwrite=overwrite)
+        bu._register_in_dir(recur=True, overwrite=overwrite)
 
     def remove_component(self, buid):
         """
@@ -805,8 +786,15 @@ class BusinessUnit(TagsMixIn, Equalities):
 
     def set_name(self, name):
         self.tags.set_name(name)
+
         mo = self.relationships.model
-        mo.set_company(mo.get_company())
+        if mo:
+            if self.id.bbid in mo.bu_directory:
+                mo.set_company(mo.get_company())
+            else:
+                self._update_id(self.id.namespace)
+        else:
+            self._update_id(self.id.namespace)
 
     def synchronize(self, recur=True):
         """
@@ -1280,6 +1268,11 @@ class BusinessUnit(TagsMixIn, Equalities):
 
             for unit in components:
                 unit._update_id(namespace=self.id.bbid, recur=True)
+
+            try:
+                self.components.refresh_ids()
+            except AttributeError:
+                pass
                 
     def _update_lines(self, start_line, end_line):
         """
