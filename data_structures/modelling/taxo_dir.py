@@ -209,6 +209,15 @@ class TaxoDir:
 
         return tagged_dict
 
+    def refresh_ids(self):
+        units = list(self.bu_directory.values())
+        self.clear()
+
+        for unit in units:
+            self.bu_directory[unit.id.bbid] = unit
+            type_set = self.ty_directory.setdefault(unit.type, set())
+            type_set.add(unit.id.bbid)
+
     def register(self, bu, update_id=True, overwrite=False, recur=True):
         """
 
@@ -236,11 +245,11 @@ class TaxoDir:
                     "the same bbid as this unit. \n"
                     "unit id:         {bbid}\n"
                     "known unit name: {name}\n"
-                    "new unit name:   {mine}\n\n"
+                    "new unit name:   {new_name}\n\n"
                 ).format(
                     bbid=self.id.bbid,
                     name=self.bu_directory[bu.id.bbid].tags.name,
-                    mine=self.tags.name,
+                    new_name=bu.name,
                 )
                 raise bb_exceptions.IDCollisionError(c)
 

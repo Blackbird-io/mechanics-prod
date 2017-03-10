@@ -294,7 +294,11 @@ class Model(TagsMixIn):
         # Target
         target_id = portal_model.get('target', None)
         if target_id:
-            M.target = M.bu_directory[target_id]
+            try:
+                M.target = M.bu_directory[target_id]
+            except KeyError:
+                import pdb
+                pdb.set_trace()
 
         # TaxoDir
         data = portal_model.get('taxo_dir', None)
@@ -353,6 +357,16 @@ class Model(TagsMixIn):
 
         result['company'] = self._company.id.bbid if self._company else None
         result['target'] = self.target.id.bbid if self.target else None
+
+        if self.target.id.bbid not in self.bu_directory:
+            import pdb
+            pdb.set_trace()
+
+        if self.target.id.bbid in self.bu_directory:
+            if self.bu_directory[self.target.id.bbid].id.bbid != self.target.id.bbid:
+                import pdb
+                pdb.set_trace()
+
         # pre-process financials in the current period, make sure they get
         # serialized in th database to maintain structure data
         fins_structure = list()
