@@ -791,6 +791,9 @@ class BusinessUnit(TagsMixIn, Equalities):
         if mo:
             if self.id.bbid in mo.bu_directory:
                 mo.set_company(mo.get_company())
+            elif self.id.bbid in mo.taxo_dir.bu_directory:
+                self._update_id(self.id.namespace)
+                mo.taxo_dir.refresh_ids()
             else:
                 self._update_id(self.id.namespace)
         else:

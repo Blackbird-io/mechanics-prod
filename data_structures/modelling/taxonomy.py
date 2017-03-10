@@ -70,13 +70,6 @@ class Taxonomy(dict):
         dict.__init__(self)
         self.taxo_dir = taxo_dir
 
-    def __getitem__(self, key):
-        own_item = dict.__getitem__(self, key)
-        if isinstance(own_item, Taxonomy):
-            return own_item
-        else:
-            return self.taxo_dir.get(own_item)
-
     def __setitem__(self, key, value):
         if isinstance(value, dict):
             if not isinstance(value, Taxonomy):
@@ -84,7 +77,7 @@ class Taxonomy(dict):
             dict.__setitem__(self, key, value)
         else:
             self.taxo_dir.add(value)
-            dict.__setitem__(self, key, value.id.bbid)
+            dict.__setitem__(self, key, value)
 
     @classmethod
     def from_portal(cls, portal_data, taxo_dir):
@@ -113,8 +106,12 @@ class Taxonomy(dict):
                     dict.__setitem__(this_dict, k, cls(taxo_dir))
                     temp = dict.__getitem__(this_dict, k)
 
-            dict.__setitem__(new, k, taxo_unit['bbid'])
-        
+            bu = new.taxo_dir.get(taxo_unit['bbid'])
+            dict.__setitem__(this_dict, k, bu)
+
+        print("TAXONOMY FROM PORTAL")
+        print(new)
+
         return new
 
     def to_portal(self):
@@ -128,10 +125,11 @@ class Taxonomy(dict):
         def get_taxo_rows(r, v, rl):
             if isinstance(v, Taxonomy):
                 for k, val in v.items():
-                    r['keys'].append(k)
-                    get_taxo_rows(r.copy(), val, rl)
+                    new_r = copy.deepcopy(r)
+                    new_r['keys'].append(k)
+                    get_taxo_rows(new_r, val, rl)
             else:
-                r.update({"bbid": v})
+                r.update({"bbid": v.id.bbid})
                 rl.append(r)         
         
         row_list = list()
