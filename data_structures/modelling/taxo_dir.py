@@ -94,8 +94,20 @@ class TaxoDir:
         Method deserializes TaxoDir into a rich object from flat portal data.
         """
         new = cls(model)
+
+        temp_dir = dict()
         for unit in portal_data['taxonomy_units']:
-            new.register(BusinessUnit.from_portal(unit))
+            tmp = BusinessUnit.from_portal(unit)
+            temp_dir[unit['bbid']] = tmp
+
+            if tmp.components:
+                import pdb
+                pdb.set_trace()
+            else:
+                tmp._set_components()
+
+            new.register(tmp)
+
         return new
 
     def to_portal(self):
@@ -176,7 +188,7 @@ class TaxoDir:
 
         return templates
 
-    def get_tagged(self, *tags):
+    def get_tagged(self, *tags, pool=None):
         """
 
 
@@ -187,7 +199,8 @@ class TaxoDir:
         Return a dictionary of units (by bbid) that carry the specified tags.
         Delegates all selection work to tools.for_tag_operations.get_tagged()
         """
-        pool = self.bu_directory.values()
+        if not pool:
+            pool = self.bu_directory.values()
 
         # We want a consistent order for the pool across run times
         pool = sorted(pool, key=lambda bu: bu.id.bbid)
@@ -229,7 +242,6 @@ class TaxoDir:
                     name=self.bu_directory[bu.id.bbid].tags.name,
                     mine=self.tags.name,
                 )
-                print(self.bu_directory)
                 raise bb_exceptions.IDCollisionError(c)
 
         # Register the unit.

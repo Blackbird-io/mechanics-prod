@@ -133,12 +133,6 @@ class Components(dict, TagsMixIn, Equalities):
         return Equalities.__ne__(self, comparator, trace, tab_width)
 
     def __setitem__(self, key, value):
-        try:
-            print(key)
-            print(value)
-        except:
-            import pdb
-            pdb.set_trace()
         dict.__setitem__(self, key, value)
 
     def copy(self):
@@ -288,6 +282,15 @@ class Components(dict, TagsMixIn, Equalities):
             else:
                 continue
 
+    def refresh_ids(self):
+        units = list(self.values())
+        self.clear()
+        self.by_name.clear()
+
+        for unit in units:
+            self[unit.id.bbid] = unit
+            self.by_name[unit.name] = unit.id.bbid
+
     def add_item(self, bu):
         """
 
@@ -302,7 +305,6 @@ class Components(dict, TagsMixIn, Equalities):
         Method also registers each unit's id under the unit's name in
         instance.by_name.
         """
-        print("ADD ITEM")
         if not bu.id.bbid:
             c = "Cannot add a component that does not have a valid bbid."
             raise bb_exceptions.IDError(c)
@@ -323,7 +325,6 @@ class Components(dict, TagsMixIn, Equalities):
         Method returns the removed item (usually a BU)
         For Drivers, use Dr_Container.remove_driver() instead
         """
-        print("REMOVE ITEM")
         bu = self.pop(bbid)
         bu.relationships.set_parent(None)
         if bu.tags.name:

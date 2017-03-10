@@ -41,11 +41,10 @@ from data_structures.modelling.line_item import LineItem
 from data_structures.modelling.dr_container import DriverContainer
 from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.system.summary_maker import SummaryMaker
-from data_structures.serializers.chef.data_management import LineData
 from tools.parsing import date_from_iso
 from .time_line import TimeLine
 from .taxo_dir import TaxoDir
-
+from .taxonomy import Taxonomy
 
 
 
@@ -130,7 +129,7 @@ class Model(TagsMixIn):
         self.report_summary = None
 
         self.taxo_dir = TaxoDir(model=self)
-        self.taxonomy = dict()
+        self.taxonomy = Taxonomy(self.taxo_dir)
 
         self.timelines = dict()
         time_line = TimeLine(self)
@@ -284,12 +283,7 @@ class Model(TagsMixIn):
                 seed.components = None
                 seed._set_components()
                 for component_id in component_list:
-                    try:
-                        sub_bu = directory[component_id]
-                    except:
-                        import pdb
-                        pdb.set_trace()
-
+                    sub_bu = directory[component_id]
                     seed.add_component(sub_bu)
                     build_bu_structure(sub_bu, directory)
 
@@ -302,24 +296,18 @@ class Model(TagsMixIn):
         if target_id:
             M.target = M.bu_directory[target_id]
 
-        # Taxonomy
-        M.taxonomy = dict()
-        taxo_list = portal_model.get('taxonomy', list())
-        for taxo_unit in taxo_list:
-            key_list = taxo_unit.pop('keys')
-            temp = M.taxonomy
-            for k in key_list:
-                this_dict = temp
-                this_dict.setdefault(k, dict())
-                temp = this_dict[k]
-
-            new_taxo = BusinessUnit.from_portal(taxo_unit)
-            new_taxo._set_components()
-            this_dict[k] = new_taxo
-
         # TaxoDir
-        if portal_model.get('taxo_dir', None):
-            M.taxo_dir = TaxoDir.from_portal(portal_model['taxo_dir'], M)
+        data = portal_model.get('taxo_dir', None)
+        if data:
+            M.taxo_dir = TaxoDir.from_portal(data, M)
+        else:
+            M.taxo_dir = TaxoDir(M)
+
+        data = portal_model.get('taxonomy', None)
+        if data:
+            M.taxonomy = Taxonomy.from_portal(data, M.taxo_dir)
+        else:
+            M.taxonomy = Taxonomy(M.taxo_dir)
 
         # post-process financials in the current period, make sure they get
         # assigned back to the proper BU
@@ -350,10 +338,6 @@ class Model(TagsMixIn):
         else:
             M.drivers = DriverContainer()
 
-        if not M.taxo_dir:
-            import pdb
-            pdb.set_trace()
-
         return M
 
     def to_portal(self):
@@ -383,50 +367,12 @@ class Model(TagsMixIn):
             fins_structure.append(data)
 
             bu.financials = None
-            if id != bu.id.bbid:
-                print('to portal')
-                import pdb
-                pdb.set_trace()
-
             bu_list.append(bu.to_portal())
 
         result['financials_structure'] = fins_structure
         result['business_units'] = bu_list
-
-        taxo_list = list()
-        def get_taxo_rows(row, value, row_list):
-            if isinstance(value, BusinessUnit):
-                row.update(value.to_portal())
-                row_list.append(row)
-            else:
-                for key, val in value.items():
-                    row['keys'].append(key)
-                    get_taxo_rows(row.copy(), val, row_list=row_list)
-
-        row_list = list()
-        for key, value in self.taxonomy.items():
-            row = dict()
-            row['keys'] = [key]
-            get_taxo_rows(row, value, row_list)
-        taxo_list.extend(row_list)
-
-        result['taxonomy'] = taxo_list
+        result['taxonomy'] = self.taxonomy.to_portal()
         result['taxo_dir'] = self.taxo_dir.to_portal()
-
-        print("TAXONOMY")
-        taxo_dir_ids = [taxo['bbid'] for taxo in result['taxonomy']]
-        print(taxo_dir_ids)
-
-        print("TAXO_DIR")
-        print(result['taxo_dir'])
-
-        print("BU_DIRECTORY")
-        bu_dir_ids = [bu['bbid'] for bu in result['business_units']]
-        print(bu_dir_ids)
-
-        if set(taxo_dir_ids) & set(bu_dir_ids):
-            import pdb
-            pdb.set_trace()
 
         # serialized representation has a list of timelines attached
         # with (resolution, name) as properties
@@ -855,6 +801,7 @@ class Model(TagsMixIn):
         # Make sure unit has an id in the right namespace.
         if update_id:
             bu._update_id(namespace=self.id.namespace, recur=True)
+
         if not bu.id.bbid:
             c = "Cannot add content without a valid bbid."
             raise bb_exceptions.IDError(c)
@@ -885,7 +832,7 @@ class Model(TagsMixIn):
 
         if recur:
             for child_bu in bu.components.values():
-                self.register(child_bu, update_id=update_id,
+                self.register(child_bu, update_id=False,
                               overwrite=overwrite, recur=recur)
 
     def prep_summaries(self):

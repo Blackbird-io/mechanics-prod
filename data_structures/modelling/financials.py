@@ -218,7 +218,12 @@ class Financials:
         period = kargs['period']
 
         buid = ID.from_portal(portal_data['buid']).bbid
-        company = model.get_company(buid)
+        try:
+            company = model.get_company(buid)
+        except KeyError:
+            import pdb
+            pdb.set_trace()
+
         new = cls(parent=company, period=period)
 
         new.id.set_namespace(company.id.bbid)
