@@ -291,15 +291,6 @@ class Model(TagsMixIn):
             build_bu_structure(top_bu, temp_directory)
             M.set_company(top_bu)
 
-        # Target
-        target_id = portal_model.get('target', None)
-        if target_id:
-            try:
-                M.target = M.bu_directory[target_id]
-            except KeyError:
-                import pdb
-                pdb.set_trace()
-
         # TaxoDir
         data = portal_model.get('taxo_dir', None)
         if data:
@@ -307,21 +298,20 @@ class Model(TagsMixIn):
         else:
             M.taxo_dir = TaxoDir(M)
 
+        # Taxonomy
         data = portal_model.get('taxonomy', None)
         if data:
             M.taxonomy = Taxonomy.from_portal(data, M.taxo_dir)
         else:
             M.taxonomy = Taxonomy(M.taxo_dir)
 
-        # post-process financials in the current period, make sure they get
-        # assigned back to the proper BU
-        for fins in portal_model.get('financials_structure', list()):
-            # Deserialize structure
-            new_fins = Financials.from_portal(fins, M, period=None)
-
-            # Associate Financials with appropriate BU
-            bu = M.bu_directory[ID.from_portal(fins['buid']).bbid]
-            bu.set_financials(new_fins)
+        # Target
+        target_id = portal_model.get('target', None)
+        if target_id:
+            try:
+                M.target = M.bu_directory[target_id]
+            except KeyError:
+                M.target = M.taxo_dir.bu_directory[target_id]
 
         if portal_model.get('timelines'):
             timelines = {}
@@ -358,32 +348,17 @@ class Model(TagsMixIn):
         result['company'] = self._company.id.bbid if self._company else None
         result['target'] = self.target.id.bbid if self.target else None
 
-        if self.target.id.bbid not in self.bu_directory:
-            import pdb
-            pdb.set_trace()
-
-        if self.target.id.bbid in self.bu_directory:
-            if self.bu_directory[self.target.id.bbid].id.bbid != self.target.id.bbid:
+        if self.target:
+            if self.target.id.bbid is None:
                 import pdb
                 pdb.set_trace()
 
         # pre-process financials in the current period, make sure they get
         # serialized in th database to maintain structure data
-        fins_structure = list()
         bu_list = list()
         for id, bu in self.bu_directory.items():
-            fins = bu.financials
-
-            data = {
-                'buid': bu.id.bbid.hex,
-            }
-            data.update(fins.to_portal())
-            fins_structure.append(data)
-
-            bu.financials = None
             bu_list.append(bu.to_portal())
 
-        result['financials_structure'] = fins_structure
         result['business_units'] = bu_list
         result['taxonomy'] = self.taxonomy.to_portal()
         result['taxo_dir'] = self.taxo_dir.to_portal()
@@ -527,7 +502,7 @@ class Model(TagsMixIn):
         self.bu_directory.clear()
         self.ty_directory.clear()
         self.register(company, update_id=True, overwrite=False, recur=True)
-        self._company = self.target = company
+        self._company = company
 
     def get_financials(self, bbid, period):
         """

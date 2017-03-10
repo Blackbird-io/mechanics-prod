@@ -190,7 +190,7 @@ class Statement(Equalities, TagsMixIn):
         return self._period
 
     @classmethod
-    def from_portal(cls, portal_data, model, **kargs):
+    def from_portal(cls, portal_data, financials):
         """
 
         Statement.from_portal(portal_data) -> Statement
@@ -199,7 +199,6 @@ class Statement(Equalities, TagsMixIn):
 
         Method extracts a Statement from portal_data.
         """
-        financials = kargs['financials']
         new = cls(name=portal_data['title'], parent=financials)
         new.id.set_namespace(financials.id.namespace)
         new.id.assign(new.name)

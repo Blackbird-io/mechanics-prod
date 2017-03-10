@@ -229,7 +229,7 @@ class LineItem(Statement, HistoryLine):
         return result
 
     @classmethod
-    def from_portal(cls, portal_data, model, **kargs):
+    def from_portal(cls, portal_data, statement):
         """
 
 
@@ -239,7 +239,6 @@ class LineItem(Statement, HistoryLine):
 
         Method deserializes all LineItems belonging to ``statement``.
         """
-        statement = kargs['statement']
         # first pass: create a dict of lines
         line_info = {}
         for data in portal_data:
@@ -250,8 +249,7 @@ class LineItem(Statement, HistoryLine):
 
             # defer resolution of .xl
             new.xl = xl_mgmt.LineData()
-            new.xl.format = xl_mgmt.LineFormat.from_portal(data['xl_format'],
-                                                           model=model)
+            new.xl.format = xl_mgmt.LineFormat.from_portal(data['xl_format'])
 
             for attr in (
                 'position',
