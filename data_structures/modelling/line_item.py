@@ -249,6 +249,10 @@ class LineItem(Statement, HistoryLine):
             )
             new.tags = Tags.from_portal(data['tags'])
 
+            id_str = data['_driver_id']
+            if id_str:
+                new._driver_id = ID.from_portal(id_str).bbid
+
             # defer resolution of .xl
             new.xl = xl_mgmt.LineData()
             new.xl.format = xl_mgmt.LineFormat.from_portal(data['xl_format'],
@@ -262,7 +266,6 @@ class LineItem(Statement, HistoryLine):
                 '_replica',
                 '_include_details',
                 '_sum_details',
-                '_driver_id',
                 'log',
             ):
                 new.__dict__[attr] = data[attr]
@@ -306,7 +309,7 @@ class LineItem(Statement, HistoryLine):
             'xl_format': self.xl.format.to_portal(),
             'tags': self.tags.to_portal(),
             'log': self.log,
-            '_driver_id': self._driver_id,
+            '_driver_id': self._driver_id.hex if self._driver_id else None,
         }
 
         # return this line

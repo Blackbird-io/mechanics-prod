@@ -45,7 +45,6 @@ from data_structures.valuation.company_value import CompanyValue
 
 from . import common_events
 
-from .dr_container import DriverContainer as DrContainer
 from .financials import Financials
 from .components import Components
 from .equalities import Equalities
@@ -75,7 +74,6 @@ class BusinessUnit(TagsMixIn, Equalities):
     DATA:
     complete              bool; if financials are complete for unit in period
     components            instance of Components class, stores business units
-    drivers               dict; tag/line name : set of driver bbids
     filled                bool; True if fill_out() has run to completion
     financials            instance of Financials object
     guide                 instance of Guide object
@@ -132,11 +130,6 @@ class BusinessUnit(TagsMixIn, Equalities):
 
         self.components = None
         self._set_components()  # Only used in copy()
-
-        self.drivers = DrContainer()
-        # self._set_drivers()  # Only used in copy()
-
-        # self.filled = False
 
         self.life = LifeCycle()
         self.location = None
@@ -364,29 +357,6 @@ class BusinessUnit(TagsMixIn, Equalities):
         if register_in_dir:
             bu._register_in_dir(recur=True, overwrite=overwrite)
 
-    def add_driver(self, newDriver, *otherKeys):
-        """
-
-
-        BusinessUnit.add_driver() -> None
-
-
-        Method registers a driver to names and tags of lines it supports.
-        Method delegates all work to DrContainer.addItem().
-        """
-        newDriver.validate(parent=self)
-        # Validation call will throw DefinitionError if driver does not have
-        # sufficient data to run in this instance at the time of insertion.
-
-        # Topics may inject drivers into business units at time A with the
-        # intent that these drivers work only at some future time B (when their
-        # work conditions or other logic has been satisfied). Time B may be
-        # arbitrarily far away in the future. This method looks to avoid
-        # confusing future errors by making sure that the Topic author is aware
-        # of the required formula parameters at the time the Topic runs.
-
-        self.drivers.add_item(newDriver, *otherKeys)
-
     def archive_path(self):
         """
 
@@ -475,7 +445,6 @@ class BusinessUnit(TagsMixIn, Equalities):
         deep or class-specific copies of the instance values:
 
         - components
-        - drivers
         - financials
         - header.profile
         - id (vanilla shallow copy)
@@ -492,10 +461,6 @@ class BusinessUnit(TagsMixIn, Equalities):
         #
         r_comps = self.components.copy()
         result._set_components(r_comps)
-
-        r_drivers = self.drivers.copy()
-        # result._set_drivers(r_drivers)
-        result.drivers = r_drivers
 
         r_fins = self.financials.copy()
         result.set_financials(r_fins)
@@ -1108,22 +1073,6 @@ class BusinessUnit(TagsMixIn, Equalities):
         comps.relationships.set_parent(self)
         self.components = comps
 
-    def _set_drivers(self, dr_c=None):
-        """
-
-
-        BusinessUnit._set_drivers() -> None
-
-
-        Method for initializing instance.drivers with a properly configured
-        DrContainer object. Method sets instance as the parentObject for
-        DrContainer and any drivers in DrContainer.
-        """
-        if not dr_c:
-            dr_c = DrContainer()
-        dr_c.setPartOf(self, recur=True)
-        self.drivers = dr_c
-        
     def _update_balance(self, period):
         """
 

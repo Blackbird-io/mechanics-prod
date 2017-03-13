@@ -266,28 +266,6 @@ class Model(TagsMixIn):
         M.portal_data.update(portal_model)
         del M.portal_data["e_model"]
 
-        # # first deserialize BusinessUnits into directory
-        # for flat_bu in portal_model.get('business_units', list()):
-        #     rich_bu = BusinessUnit.from_portal(flat_bu)
-        #     rich_bu.relationships.model = M
-        #     M.bu_directory[flat_bu['bbid']] = rich_bu
-        #
-        # # now rebuild structure
-        # company_id = portal_model.get('company', None)
-        # if company_id:
-        #     def build_bu_structure(seed, directory):
-        #         component_list = seed.components
-        #         seed.components = None
-        #         seed._set_components()
-        #         for component_id in component_list:
-        #             sub_bu = directory[component_id]
-        #             seed.components.add_item(sub_bu)
-        #             build_bu_structure(sub_bu, directory)
-        #
-        #     top_bu = M.bu_directory[company_id]
-        #     build_bu_structure(top_bu, M.bu_directory)
-        #     M.set_company(top_bu)
-
         # post-process financials in the current period, make sure they get
         # assigned back to the proper BU
         for fins in portal_model.get('financials_structure', list()):
@@ -340,10 +318,8 @@ class Model(TagsMixIn):
             fins_structure.append(data)
 
             bu.financials = None
-            # bu_list.append(bu.to_portal())
 
         result['financials_structure'] = fins_structure
-        # result['business_units'] = bu_list
 
         # serialized representation has a list of timelines attached
         # with (resolution, name) as properties
@@ -559,24 +535,10 @@ class Model(TagsMixIn):
                             for line in statement.get_full_ordered():
                                 if not line.xl.built:
                                     id = line.id.bbid.hex
-
-                                    if period.relationships.parent.model is not self:
-                                        import pdb
-                                        pdb.set_trace()
-
-                                    if line.period.relationships.parent.model is not self:
-                                        import pdb
-                                        pdb.set_trace()
-
                                     new_data = period.get_xl_info(id)
                                     new_data.format = line.xl.format
                                     new_data.built = True
                                     line.xl = new_data
-
-                                    if line.xl.cell:
-                                        print("WTF WHERE DID YOU COME FROM")
-                                        import pdb
-                                        pdb.set_trace()
 
     def prep_for_monitoring_interview(self):
         """

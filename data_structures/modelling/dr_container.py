@@ -154,15 +154,42 @@ class DriverContainer():
             result = self.directory.get(bbid, None)
         return result
 
-    def get_or_create(self, name, data, formula, summary_type=None):
+    def get_or_create(self, name, data, formula, run_on_past=False):
+        """
+
+
+        DriverContainer.get_or_create() -> Driver
+
+        --``name`` is the name of a Driver
+        --``data`` is a dictionary containing data for the Driver
+        --``formula`` is a formula object
+        --``run_on_past`` is a bool; whether to run the driver on past periods
+
+        Method retrieve a driver by name if it exists, or creates a new driver
+        from the provided information.  Raises error if a driver with ``name``
+        exists, but has attibutes that don't match provided data and formula.
+        """
         driver = self.get_by_name(name)
+
         if not driver:
             driver = Driver(name)
             driver.configure(data, formula)
-            if summary_type:
-                driver.summary_type = summary_type
-
+            driver.run_on_past = run_on_past
             self.add(driver)  # Adding to Current BU
+        else:
+            # check data
+            data_chk = driver.parameters == data
+
+            # check formula
+            form_chk = driver.formula_bbid == formula.id.bbid
+
+            # check run_on_past
+            rop_chk = driver.run_on_past == run_on_past
+
+            if not all([data_chk, form_chk, rop_chk]):
+                c = "A driver named '%s' exists but has different attributes" \
+                    " than those specified as arguments." % name
+                raise AssertionError(c)
 
         return driver
 

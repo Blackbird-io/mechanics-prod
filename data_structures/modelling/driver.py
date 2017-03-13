@@ -143,24 +143,13 @@ class Driver(TagsMixIn):
     def _set_formula_manager(cls, new_FM):
         cls._FM = new_FM
 
-    def __init__(self, signature=None):
-        TagsMixIn.__init__(self)
+    def __init__(self, name=None):
+        TagsMixIn.__init__(self, name=name)
 
-        self.active = True
         self.conversion_table = dict()
         self.parameters = Parameters()
         self.formula_bbid = None
         self.id = ID()
-        self.relationships = Relationships(self)
-        # TopicManager will assign a specific uuid to the driver when
-        # during topic catalog configuration. Each Driver gets an id within the
-        # namespace of its defining topic.
-
-        self.position = 10
-        # ``position`` must be an integer value between 0 and 100. used to sort
-        # order in which drivers apply to a line.
-
-        self.signature = signature
 
         self.run_on_past = False
 
@@ -170,8 +159,6 @@ class Driver(TagsMixIn):
         self.workConditions["all"] = ["FAIL"]
         # We set condition values to a default that must be overwritten to make
         # sure default configuration doesnt apply to every lineItem.
-
-        self.summary_type = None
 
     def __eq__(self, comp, trace=False, tab_width=4):
         """
@@ -341,7 +328,6 @@ class Driver(TagsMixIn):
                     return
 
         if all((
-            self.active,
             not line.hardcoded,
             not line.has_been_consolidated,
             not (line.sum_details and line._details)
