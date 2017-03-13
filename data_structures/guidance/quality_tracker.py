@@ -73,7 +73,8 @@ class QualityTracker(Counter):
         return new
 
     def to_portal(self):
-        data = self.__dict__
+        import copy
+        data = copy.deepcopy(self.__dict__)
         return data
 
     def set_standard(self, standard):

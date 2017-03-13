@@ -31,7 +31,7 @@ Step                  single logical step, compatible with selection algos
 #imports
 import tools.for_printing as printing_tools
 
-from data_structures.guidance.guide import Guide
+from .guide import Guide
 from data_structures.system.print_as_line import PrintAsLine
 from data_structures.system.relationships import Relationships
 from data_structures.system.tags_mixin import TagsMixIn

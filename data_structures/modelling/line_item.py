@@ -229,7 +229,7 @@ class LineItem(Statement, HistoryLine):
         return result
 
     @classmethod
-    def from_portal(cls, portal_data, statement):
+    def from_portal(cls, portal_data, statement, noadd=False):
         """
 
 
@@ -241,6 +241,7 @@ class LineItem(Statement, HistoryLine):
         """
         # first pass: create a dict of lines
         line_info = {}
+        lines = list()
         for data in portal_data:
             new = cls(
                 parent=None,
@@ -264,6 +265,8 @@ class LineItem(Statement, HistoryLine):
             ):
                 new.__dict__[attr] = data[attr]
 
+            new.guide = Guide.from_portal(data['guide'])
+
             line_info[data['bbid']] = (new, data)
 
         # second pass: place lines
@@ -278,7 +281,13 @@ class LineItem(Statement, HistoryLine):
             position = data['position']
             position = int(position) if position else None
             line.relationships.set_parent(parent)
-            parent.add_line(line, position=position, noclear=True)
+
+            if not noadd:
+                parent.add_line(line, position=position, noclear=True)
+
+            lines.append(line)
+
+        return lines
 
     def to_portal(self, parent_line=None):
         """
@@ -304,6 +313,8 @@ class LineItem(Statement, HistoryLine):
             'tags': self.tags.to_portal(),
             'log': self.log,
             '_driver_id': self._driver_id,
+            'link': False,
+            'guide': self.guide.to_portal(),
         }
 
         # return this line

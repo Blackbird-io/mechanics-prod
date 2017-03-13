@@ -246,8 +246,6 @@ class Model(TagsMixIn):
         If portal_model does not specify a Model object, method creates a new
         instance. Method stores all portal data other than the Model in the
         output's .portal_data dictionary.
-
-        NEED TO MAKE SURE WE UNPACK ALL BU'S TO CURRENT_PERIOD.FINANCIALS
         """
         flat_model = portal_model["e_model"]
 
@@ -268,10 +266,11 @@ class Model(TagsMixIn):
         # Make blank TaxoDir structure
         M.taxo_dir = TaxoDir(M)
 
+        link_list = list()
         # first deserialize BusinessUnits into directory
         temp_directory = dict()
         for flat_bu in portal_model.get('business_units', list()):
-            rich_bu = BusinessUnit.from_portal(flat_bu)
+            rich_bu = BusinessUnit.from_portal(flat_bu, link_list)
             rich_bu.relationships.set_model(M)
             temp_directory[flat_bu['bbid']] = rich_bu
 
@@ -294,9 +293,13 @@ class Model(TagsMixIn):
         # TaxoDir
         data = portal_model.get('taxo_dir', None)
         if data:
-            M.taxo_dir = TaxoDir.from_portal(data, M)
+            M.taxo_dir = TaxoDir.from_portal(data, M, link_list)
         else:
             M.taxo_dir = TaxoDir(M)
+
+        if link_list:
+            import pdb
+            pdb.set_trace()
 
         # Taxonomy
         data = portal_model.get('taxonomy', None)

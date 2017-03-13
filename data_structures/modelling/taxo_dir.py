@@ -82,7 +82,7 @@ class TaxoDir:
         self.id.assign(seed='taxonomy directory')
 
     @classmethod
-    def from_portal(cls, portal_data, model):
+    def from_portal(cls, portal_data, model, link_list):
         """
 
 
@@ -97,7 +97,7 @@ class TaxoDir:
 
         temp_dir = dict()
         for unit in portal_data['taxonomy_units']:
-            tmp = BusinessUnit.from_portal(unit)
+            tmp = BusinessUnit.from_portal(unit, link_list)
             temp_dir[unit['bbid']] = tmp
 
             if tmp.components:
