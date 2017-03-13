@@ -162,7 +162,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         self.drivers = DrContainer()
 
     @classmethod
-    def from_portal(cls, portal_data):
+    def from_portal(cls, portal_data, link_list=list()):
         new = cls(None)
         new.tags = Tags.from_portal(portal_data['tags'])
         new._parameters = Parameters.from_portal(portal_data['_parameters'],
@@ -174,7 +174,10 @@ class BusinessUnit(TagsMixIn, Equalities):
         new.used = set(portal_data['used'])
         new.guide = Guide.from_portal(portal_data['guide'])
         new.components = portal_data['components']
-        new.interview = portal_data['interview']
+        new.interview = InterviewTracker.from_portal(portal_data['interview'],
+                                                     link_list)
+        # new.interview = portal_data['interview']
+
         new.summary = portal_data['summary']
         new.valuation = portal_data['valuation']
 
@@ -192,6 +195,12 @@ class BusinessUnit(TagsMixIn, Equalities):
         fins = portal_data.get('financials_structure')
         new_fins = Financials.from_portal(fins, new, period=None)
         new.set_financials(new_fins)
+
+        file = open(r'C:\Blackbird\log_interview_YESserial.txt','a')
+        file.write('FROM PORTAL\n')
+        file.write(new.name + '\n')
+        file.write(new.interview.__dict__.__str__()+'\n')
+        file.close()
 
         return new
 
@@ -216,10 +225,16 @@ class BusinessUnit(TagsMixIn, Equalities):
         else:
             stage = None      
         data['_stage'] = stage
-        
+
+        file = open(r'C:\Blackbird\log_interview_YESserial.txt','a')
+        file.write('TO PORTAL\n')
+        file.write(self.name + '\n')
+        file.write(self.interview.__dict__.__str__()+'\n')
+        file.close()
+
         data['used'] = list(self.used)
         data['guide'] = self.guide.to_portal()
-        data['interview'] = self.interview  #.to_portal()
+        data['interview'] = self.interview.to_portal()
         data['summary'] = self.summary  #.to_portal()
         data['valuation'] = self.valuation  #.to_portal()
 
@@ -227,6 +242,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         old_paths = list()
         for path in self._path_archive:
             old_paths.append(path.to_portal())
+
         data['_path_archive'] = old_paths
         data['_used_archive'] = self._used_archive
 
