@@ -50,7 +50,8 @@ from .components import Components
 from .equalities import Equalities
 from .life import Life as LifeCycle
 from .parameters import Parameters
-from .statements import BalanceSheet
+from .statements.balance_sheet import BalanceSheet
+from .capital_structure.cap_table import CapTable
 
 
 
@@ -72,6 +73,7 @@ class BusinessUnit(TagsMixIn, Equalities):
     ====================  ======================================================
 
     DATA:
+    cap_table             instance of CapTable class
     complete              bool; if financials are complete for unit in period
     components            instance of Components class, stores business units
     filled                bool; True if fill_out() has run to completion
@@ -162,6 +164,8 @@ class BusinessUnit(TagsMixIn, Equalities):
         # for monitoring, temporary storage for existing path and used sets
         self._path_archive = list()
         self._used_archive = list()
+
+        self.cap_table = CapTable()
 
     @property
     def parameters(self):
