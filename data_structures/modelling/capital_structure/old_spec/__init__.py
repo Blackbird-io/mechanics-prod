@@ -3,7 +3,6 @@
 # Copyright Blackbird Logical Applications, LLC 2016
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 # Blackbird Environment
-# Module: data_structures.modelling.capital_structure.__init__
+# Module: data_structures.modelling.old_spec.__init__
 """
-Package that contains objects that Blackbird uses to analyze capital structure.
 """
