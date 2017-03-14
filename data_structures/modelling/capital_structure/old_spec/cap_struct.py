@@ -2,7 +2,7 @@
 
 
 
-from .ledger import Ledger
+from data_structures.modelling.capital_structure.old_spec.ledger import Ledger
 
 from data_structures.modelling.container import Container
 from data_structures.system.bbid import ID

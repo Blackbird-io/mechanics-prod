@@ -4,10 +4,10 @@
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 # Blackbird Environment
-# Module: data_structures.modelling.round
+# Module: data_structures.modelling.record
 """
 
-Module defines Round class
+Module defines Record class
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -19,44 +19,43 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-Round                 Object representing information from a funding round
+Record                Object representing information from a funding record
 ====================  ==========================================================
 """
 
 
 
+import bb_exceptions
 from data_structures.system.bbid import ID
 
 
 
 
-class Round:
+class Record:
     """
 
-    The Round class defines a round of investment. A Round can also be thought
-    of as a class of shares ("Common Stock", "Series A", or "Options Pool").
+    The Record class defines a record of cash investment in exchange for shares
 
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
-    name                  string
-    id                    ID()
-    size                  float, size of investment in dollars
-    valuation             float, post money company valuation in dollars
-    preference            float, liquidation preference
+    owner_name            string, name of investor or employee who owns shares
+    round_name            string, name of round or class of shares
+    units                 float, number of shares or options
+    cash                  float, amount of cash invested to buy shares
 
     FUNCTIONS:
 
     ====================  ======================================================
     """
-    def __init__(self, name, size, valuation, preference=None):
-        self.name = name
-        self.id = ID()
-        self.size = size
-        self.valuation = valuation
-        self.preference = preference
+    def __init__(self, owner_name, round_name, units, cash):
+        self.owner_name = owner_name
+        self.round_name = round_name
+        self.units = units
+        self.cash = cash
+        # self.id = ID()
         # self.date = date
 
 
