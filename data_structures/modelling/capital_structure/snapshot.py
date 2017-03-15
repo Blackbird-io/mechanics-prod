@@ -43,8 +43,8 @@ class Snapshot:
     ====================  ======================================================
 
     DATA:
-    as_of_date            datetime.date
-    created_date          datetime.date
+    ref_date              datetime.date, which this snapshot refers to
+    created_date          datetime.date, which this snapshot was created
     records               dict, key=(owner_name, round_name), value=Record()
 
     FUNCTIONS:
@@ -53,8 +53,8 @@ class Snapshot:
     get_records_by_round() returns list of records from a single round
     ====================  ======================================================
     """
-    def __init__(self, as_of_date, created_date=None):
-        self.as_of_date = as_of_date
+    def __init__(self, ref_date, created_date=None):
+        self.ref_date = ref_date
         self.created_date = created_date or date.today()
         self.records = dict()
 
