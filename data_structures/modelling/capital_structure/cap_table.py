@@ -51,6 +51,8 @@ class CapTable:
     add_round()           adds a Round to self.rounds
     add_snapshot()        adds a Snapshot to self.snapshots
     get_last_snapshot()   returns most recent Snapshot
+    get_ownership_summary()  returns a Portal schema to display Ownership Table
+    get_rounds_summary()     returns a Portal schema to display Rounds Table
     ====================  ======================================================
     """
     def __init__(self):
@@ -136,3 +138,116 @@ class CapTable:
             # c = "No Snapshots exist before %s" % date
             # raise bb_exceptions.BBAnalyticalError(c)
 
+    def get_ownership_summary(self):
+        """
+
+
+        CapTable.get_ownership_summary() -> dict, schema below
+
+        {
+            "type" : "debt",
+            "rows" : [
+                {"shareholder":"Series B Preferred", "shares":3500, "investment":1000, "ownership":0.350},
+                {"shareholder":"Series A Preferred", "shares":1900, "investment":2000, "ownership":0.190},
+                {"shareholder":"Common Equity", "shares":1700, "investment":3000, "ownership":0.170}                 ],
+            "total" :  {"shares":7100, "investment":6000, "ownership":1.0}
+        }
+
+
+        Method returns information for the Ownership Table to be displayed in
+        the portal.
+        """
+        result = dict()
+        result["type"] = "equity"
+        result["rows"] = []
+        result['total'] = dict()
+
+        snapshot = self.get_last_snapshot()
+
+        # Get a unique list of owners and total outstanding shares
+        owner_list = []
+        total_shares = 0
+        total_investment = 0
+        total_ownership = 0
+        for key in snapshot.records:
+            # key is (owner_name, round_name)
+            owner_name = key[0]
+            if owner_name not in owner_list:
+                owner_list.append(owner_name)
+
+            record = snapshot.records[key]
+            total_shares += record.units or 0
+            total_investment += result.cash or 0
+
+        # Create entries in result["rows"]
+        for owner_name in owner_list:
+            records_list = snapshot.get_records_by_owner(owner_name)
+
+            owner_units = 0
+            owner_cash = 0
+
+            for record in records_list:
+                owner_units += record.units
+                owner_cash += record.cash
+
+            new_row = dict()
+            new_row["shareholder"] = owner_name
+            new_row["shares"] = owner_units
+            new_row["investment"] = owner_cash
+            new_row["ownership"] = owner_units/total_shares
+            result['rows'].append(new_row)
+
+            total_ownership += new_row["ownership"]
+
+        result['total']['shares'] = total_shares
+        result['total']['investment'] = total_investment
+        result['total']['ownership'] = total_ownership
+
+
+    def get_rounds_summary(self):
+        """
+
+
+        CapTable.get_rounds_summary() -> dict, schema below
+
+        {
+            "rounds" : [
+                {
+                    "round": "Series A Preferred",
+                    "date": "2010-01-01",
+                    "investment": 1000,
+                    "participants": "Ares Capital",
+                    "participant_summary": [
+                        {"participant":"Accel", "investment":1000},
+                        {"participant":"JPM", "investment":1000},
+                        {"participant":"Total", "investment":3000}
+                        ]
+                    "detail_summary": [
+                        {"item": "Pre-Money Valuation", "value": "1000"},
+                        {"item": "Post-Money Valuation", "value": "10.0"},
+                        {"item": "Participation", "value":"1x"},
+                        ]
+                },
+                {
+                    "round": "Series B Preferred",
+                    "date": "2010-01-01",
+                    "investment": 1000,
+                    "participants": "Ares Capital",
+                    "participant_summary": [
+                         {"participant":"Accel", "investment":1000},
+                         {"participant":"JPM", "investment":1000},
+                         {"participant":"Total", "investment":3000}
+                        ]
+                    "detail_summary": [
+                        {"item": "Pre-Money Valuation", "value": "1000"},
+                        {"item": "Post-Money Valuation", "value": "10.0"},
+                        {"item":"Participation", "value":"1x"},
+                        ]
+                },
+            ],
+            "rounds_total": {"investment": 3000},
+        }
+        Method returns information for the Rounds Table to be displayed in
+        the portal.
+        """
+        pass
