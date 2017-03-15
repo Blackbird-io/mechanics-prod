@@ -145,7 +145,7 @@ class CapTable:
         CapTable.get_ownership_summary() -> dict, schema below
 
         {
-            "type" : "debt",
+            "type" : "equity",
             "rows" : [
                 {"shareholder":"Series B Preferred",
                  "shares":3500,
@@ -158,8 +158,11 @@ class CapTable:
                 {"shareholder":"Common Equity",
                  "shares":1700,
                  "investment":3000,
-                 "ownership":0.170}                 ],
-            "total" :  {"shares":7100, "investment":6000, "ownership":1.0}
+                 "ownership":0.170}
+                {"shareholder":"Totals",
+                 "shares":7100, "investment":6000,
+                 "ownership":1.0}
+                ],
         }
 
         Method returns information for the Ownership Table to be displayed in
@@ -168,7 +171,7 @@ class CapTable:
         result = dict()
         result["type"] = "equity"
         result["rows"] = []
-        result['total'] = dict()
+        # result['total'] = dict()
 
         snapshot = self.get_last_snapshot()
 
@@ -207,9 +210,12 @@ class CapTable:
 
             total_ownership += new_row["ownership"]
 
-        result['total']['shares'] = total_shares
-        result['total']['investment'] = total_investment
-        result['total']['ownership'] = total_ownership
+        totals_row = dict()
+        totals_row['shareholder'] = "Totals"
+        totals_row['shares'] = total_shares
+        totals_row['investment'] = total_investment
+        totals_row['ownership'] = total_ownership
+        result['rows'].append(totals_row)
 
         return result
 
