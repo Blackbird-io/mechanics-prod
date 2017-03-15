@@ -26,6 +26,7 @@ CapTable              storage for capital structure information
 
 
 import bb_exceptions
+from collections import OrderedDict
 from datetime import date
 from data_structures.system.bbid import ID
 
@@ -42,7 +43,7 @@ class CapTable:
     ====================  ======================================================
 
     DATA:
-    rounds                dict, {round_name: Round()}
+    rounds                OrderedDict, {round_name: Round()}
     snapshots             dict, {date: Snapshot()}
 
     FUNCTIONS:
@@ -51,7 +52,7 @@ class CapTable:
     ====================  ======================================================
     """
     def __init__(self):
-        self.rounds = dict()
+        self.rounds = OrderedDict()
         self.snapshots = dict()
 
     def add_round(self, new_round, overwrite=False):

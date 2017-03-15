@@ -49,7 +49,8 @@ class Snapshot:
 
     FUNCTIONS:
     add_record()          adds a record to self.records
-
+    get_records_by_owner() returns list of records from a single owner
+    get_records_by_round() returns list of records from a single round
     ====================  ======================================================
     """
     def __init__(self, as_of_date, created_date=None):
@@ -61,7 +62,7 @@ class Snapshot:
         """
 
 
-        Container.add_record() -> None
+        Snapshot.add_record() -> None
 
         --``record`` is an instance of record
         --``overwrite`` is False by default
@@ -81,4 +82,38 @@ class Snapshot:
 
         self.records[key] = record
 
+    def get_records_by_owner(self, owner_name):
+        """
 
+
+        Snapshot.get_records_by_owner() -> list of Records
+
+        --``owner_name`` string
+
+        Method returns a list of Records belonging to a single owner.
+        """
+        records_list = []
+        
+        for key in self.records:
+            if key[0] == owner_name:
+                records_list.append(self.records[key])
+            
+        return records_list
+       
+    def get_records_by_round(self, round_name):
+        """
+
+
+        Snapshot.get_records_by_round() -> list of Records
+
+        --``owner_name`` string
+
+        Method returns a list of Records belonging to a single round.
+        """
+
+        records_list = []
+        for key in self.records:
+            if key[1] == round_name:
+                records_list.append(self.records[key])
+
+        return records_list
