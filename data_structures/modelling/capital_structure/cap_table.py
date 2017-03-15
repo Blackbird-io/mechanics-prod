@@ -167,7 +167,7 @@ class CapTable:
         }
 
         Method returns information for the Ownership Table to be displayed in
-        the portal.
+        the portal. Returns None if no Snapshots exist
         """
         result = dict()
         result["type"] = "equity"
@@ -175,6 +175,8 @@ class CapTable:
         # result['total'] = dict()
 
         snapshot = self.get_last_snapshot()
+        if not snapshot:
+            return None
 
         # Get a unique list of owners and total outstanding shares
         owner_list = []
@@ -272,10 +274,11 @@ class CapTable:
         }
         
         Method returns information for the Rounds Table to be displayed in
-        the portal.
+        the portal. Returns None if no Snapshots exist
         """
-
         snapshot = self.get_last_snapshot()
+        if not snapshot:
+            return None
         
         result = dict()
         result['rounds'] = list()
