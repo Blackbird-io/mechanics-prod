@@ -235,7 +235,7 @@ class CapTable:
                     "participant_summary": [
                         {"participant":"Accel", "investment":1000},
                         {"participant":"JPM", "investment":1000},
-                        {"participant":"Total", "investment":3000}
+                        {"participant":"Total", "investment":2000}
                         ]
                     "detail_summary": [
                         {"item": "Pre-Money Valuation", "value": "1000"},
@@ -251,7 +251,7 @@ class CapTable:
                     "participant_summary": [
                          {"participant":"Accel", "investment":1000},
                          {"participant":"JPM", "investment":1000},
-                         {"participant":"Total", "investment":3000}
+                         {"participant":"Total", "investment":2000}
                         ]
                     "detail_summary": [
                         {"item": "Pre-Money Valuation", "value": "1000"},
@@ -260,7 +260,7 @@ class CapTable:
                         ]
                 },
             ],
-            "rounds_total": {"investment": 3000},
+            "rounds_total": {"investment": 4000},
         }
         
         Method returns information for the Rounds Table to be displayed in
@@ -278,8 +278,6 @@ class CapTable:
 
             records_list = snapshot.get_records_by_round(round_name)
 
-            round_units = 0
-            round_cash = 0
             owners_list = []
             participant_summary = []
             detail_summary = []
@@ -298,6 +296,8 @@ class CapTable:
             detail_summary.append({"item": "Preference",
                                    "value": "%.1fx" % round.preference})
 
+            round_units = 0
+            round_cash = 0
             for record in records_list:
                 round_units += record.units
                 round_cash += record.cash
@@ -308,11 +308,16 @@ class CapTable:
                     participant_dict["investment"] = record.cash
                     participant_summary.append(participant_dict)
 
+            total_participant_dict = dict()
+            total_participant_dict["participant"] = "Totals"
+            total_participant_dict["investment"] = round_cash
+            participant_summary.append(total_participant_dict)
+
             new_round_dict = dict()
             new_round_dict['round'] = round_name
             new_round_dict["date"] = None
             new_round_dict["investment"] = round_cash
-            new_round_dict["participants"] = owners_list
+            new_round_dict["participants"] = ", ".join(owners_list)
             new_round_dict["participant_summary"] = participant_summary
             new_round_dict["detail_summary"] = detail_summary
 
