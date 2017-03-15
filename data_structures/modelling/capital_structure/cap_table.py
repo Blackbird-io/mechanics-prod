@@ -147,9 +147,18 @@ class CapTable:
         {
             "type" : "debt",
             "rows" : [
-                {"shareholder":"Series B Preferred", "shares":3500, "investment":1000, "ownership":0.350},
-                {"shareholder":"Series A Preferred", "shares":1900, "investment":2000, "ownership":0.190},
-                {"shareholder":"Common Equity", "shares":1700, "investment":3000, "ownership":0.170}                 ],
+                {"shareholder":"Series B Preferred",
+                 "shares":3500,
+                 "investment":1000,
+                 "ownership":0.350},
+                {"shareholder":"Series A Preferred",
+                 "shares":1900,
+                 "investment":2000,
+                 "ownership":0.190},
+                {"shareholder":"Common Equity",
+                 "shares":1700,
+                 "investment":3000,
+                 "ownership":0.170}                 ],
             "total" :  {"shares":7100, "investment":6000, "ownership":1.0}
         }
 
@@ -177,7 +186,7 @@ class CapTable:
 
             record = snapshot.records[key]
             total_shares += record.units or 0
-            total_investment += result.cash or 0
+            total_investment += record.cash or 0
 
         # Create entries in result["rows"]
         for owner_name in owner_list:
@@ -203,6 +212,7 @@ class CapTable:
         result['total']['investment'] = total_investment
         result['total']['ownership'] = total_ownership
 
+        return result
 
     def get_rounds_summary(self):
         """
@@ -241,13 +251,70 @@ class CapTable:
                     "detail_summary": [
                         {"item": "Pre-Money Valuation", "value": "1000"},
                         {"item": "Post-Money Valuation", "value": "10.0"},
-                        {"item":"Participation", "value":"1x"},
+                        {"item": "Participation", "value":"1x"},
                         ]
                 },
             ],
             "rounds_total": {"investment": 3000},
         }
+        
         Method returns information for the Rounds Table to be displayed in
         the portal.
         """
-        pass
+
+        snapshot = self.get_last_snapshot()
+        
+        result = dict()
+        result['rounds'] = list()
+        result['rounds_total'] = dict()
+
+        total_investment = 0
+        for round_name in self.rounds:
+
+            records_list = snapshot.get_records_by_round(round_name)
+
+            round_units = 0
+            round_cash = 0
+            owners_list = []
+            participant_summary = []
+            detail_summary = []
+
+            round = self.rounds[round_name]
+            if round.valuation:
+                pre_money_val = round.valuation - round.size
+            else:
+                pre_money_val = None
+            detail_summary.append({"item": "Pre-Money Valuation",
+                                   "value": pre_money_val})
+            detail_summary.append({"item": "Post-Money Valuation",
+                                   "value": round.valuation})
+            # detail_summary.append({"item": "Participation",
+            #                        "value": "%.1fx" % round.participation})
+            detail_summary.append({"item": "Preference",
+                                   "value": "%.1fx" % round.preference})
+
+            for record in records_list:
+                round_units += record.units
+                round_cash += record.cash
+                if record.owner_name not in owners_list:
+                    owners_list.append(record.owner_name)
+                    participant_dict = dict()
+                    participant_dict["participant"] = record.owner_name
+                    participant_dict["investment"] = record.cash
+                    participant_summary.append(participant_dict)
+
+            new_round_dict = dict()
+            new_round_dict['round'] = round_name
+            new_round_dict["date"] = None
+            new_round_dict["investment"] = round_cash
+            new_round_dict["participants"] = owners_list
+            new_round_dict["participant_summary"] = participant_summary
+            new_round_dict["detail_summary"] = detail_summary
+
+            result['rounds'].append(new_round_dict)
+
+            total_investment += round_cash
+
+        result['rounds_total'] = {"investment": total_investment}
+
+        return result
