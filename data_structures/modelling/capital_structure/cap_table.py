@@ -162,7 +162,6 @@ class CapTable:
             "total" :  {"shares":7100, "investment":6000, "ownership":1.0}
         }
 
-
         Method returns information for the Ownership Table to be displayed in
         the portal.
         """
