@@ -160,7 +160,8 @@ class CapTable:
                  "investment":3000,
                  "ownership":0.170}
                 {"shareholder":"Totals",
-                 "shares":7100, "investment":6000,
+                 "shares":7100,
+                 "investment":6000,
                  "ownership":1.0}
                 ],
         }
@@ -236,12 +237,12 @@ class CapTable:
                         {"participant":"Accel", "investment":1000},
                         {"participant":"JPM", "investment":1000},
                         {"participant":"Total", "investment":2000}
-                        ]
+                    ]
                     "detail_summary": [
                         {"item": "Pre-Money Valuation", "value": "1000"},
                         {"item": "Post-Money Valuation", "value": "10.0"},
                         {"item": "Participation", "value":"1x"},
-                        ]
+                    ]
                 },
                 {
                     "round": "Series B Preferred",
@@ -252,15 +253,22 @@ class CapTable:
                          {"participant":"Accel", "investment":1000},
                          {"participant":"JPM", "investment":1000},
                          {"participant":"Total", "investment":2000}
-                        ]
+                    ]
                     "detail_summary": [
                         {"item": "Pre-Money Valuation", "value": "1000"},
                         {"item": "Post-Money Valuation", "value": "10.0"},
                         {"item": "Participation", "value":"1x"},
-                        ]
+                    ]
+                },
+                {
+                    "round": "Totals",
+                    "date": None,
+                    "investment": 2000,
+                    "participants": None,
+                    "participant_summary": []
+                    "detail_summary": []
                 },
             ],
-            "rounds_total": {"investment": 4000},
         }
         
         Method returns information for the Rounds Table to be displayed in
@@ -271,7 +279,7 @@ class CapTable:
         
         result = dict()
         result['rounds'] = list()
-        result['rounds_total'] = dict()
+        # result['rounds_total'] = dict()
 
         total_investment = 0
         for round_name in self.rounds:
@@ -325,6 +333,15 @@ class CapTable:
 
             total_investment += round_cash
 
-        result['rounds_total'] = {"investment": total_investment}
+        total_round_dict = dict()
+        total_round_dict["round"] = "Totals"
+        total_round_dict["date"] = None
+        total_round_dict["investment"] = total_investment
+        total_round_dict["participants"] = None
+        total_round_dict["participant_summary"] = []
+        total_round_dict["detail_summary"] = []
+        result['rounds'].append(total_round_dict)
+
+        # result['rounds_total'] = {"investment": total_investment}
 
         return result
