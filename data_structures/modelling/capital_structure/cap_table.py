@@ -298,6 +298,7 @@ class CapTable:
                 pre_money_val = round.valuation - round.size
             else:
                 pre_money_val = None
+
             detail_summary.append({"item": "Pre-Money Valuation",
                                    "value": pre_money_val})
             detail_summary.append({"item": "Post-Money Valuation",
@@ -320,7 +321,7 @@ class CapTable:
                     participant_summary.append(participant_dict)
 
             total_participant_dict = dict()
-            total_participant_dict["participant"] = "Totals"
+            total_participant_dict["participant"] = "Total"
             total_participant_dict["investment"] = round_cash
             participant_summary.append(total_participant_dict)
 
@@ -344,7 +345,5 @@ class CapTable:
         total_round_dict["participant_summary"] = []
         total_round_dict["detail_summary"] = []
         result['rounds'].append(total_round_dict)
-
-        # result['rounds_total'] = {"investment": total_investment}
 
         return result
