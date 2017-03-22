@@ -74,8 +74,9 @@ class LineChef:
     chop_statement()      writes Statements to Excel (except Starting Balance)
     ====================  =====================================================
     """
-    def __init__(self, values_only=False):
+    def __init__(self, values_only=False, include_ids=False):
         self.values_only = values_only
+        self.include_ids = include_ids
 
     @staticmethod
     def attempt_reference_resolution(sheet, calc, materials):
@@ -163,7 +164,6 @@ class LineChef:
             # if row_container.groups or not row_container.offset:
             sheet.bb.need_spacer = True
 
-        line_label = indent * " " + line.title
         matter = row_container.add_group(
             line.title, offset=int(sheet.bb.need_spacer)
         )
@@ -271,7 +271,7 @@ class LineChef:
 
     def chop_statement(
         self, sheet, column, statement, row_container=None,
-        start_bal=False, title=None, set_labels=False
+        start_bal=False, title=None, set_labels=False,
     ):
         """
 
@@ -419,7 +419,11 @@ class LineChef:
             }
 
             summation = FormulaTemplates.SUM_RANGE.format(**summation_params)
-            line_label = indent * " " + line.title
+            if self.include_ids:
+                line_label = indent * " " + line.title + " - ID: " + line.id.bbid.hex
+            else:
+                line_label = indent * " " + line.title
+
             finish = row_container.add_group(
                 line.title, size=1, label=line_label
             )
@@ -498,6 +502,7 @@ class LineChef:
 
             private_label = row_data[FieldNames.LABELS]
             private_value = row_data[FieldNames.VALUES]
+
             line_label = (indent + LineItem.TAB_WIDTH) * " " + private_label
 
             group_lines(sheet)
@@ -598,7 +603,10 @@ class LineChef:
                 line_label = (indent + LineItem.TAB_WIDTH) * " " + key
                 outline = sheet.bb.outline_level + 1
             else:
-                line_label = indent * " " + line.title
+                if self.include_ids:
+                    line_label = indent * " " + line.title + " - ID: " + line.id.bbid.hex
+                else:
+                    line_label = indent * " " + line.title
                 outline = sheet.bb.outline_level
             finish = row_container.add_group(
                 key, size=1, label=line_label, outline=outline
@@ -690,7 +698,10 @@ class LineChef:
         (e.g. new_cell.value = '=C18')
         """
         if line.xl.reference.direct_source and not self.values_only:
-            line_label = indent * " " + line.title  # + ': ref'
+            if self.include_ids:
+                line_label = indent * " " + line.title + " - ID: " + line.id.bbid.hex
+            else:
+                line_label = indent * " " + line.title  # + ': ref'
             finish = row_container.add_group(
                 line.title, size=1, label=line_label
             )
@@ -706,7 +717,11 @@ class LineChef:
             if update_cell:
                 line.xl.cell = cell
         elif line.xl.reference.source:
-            line_label = indent * " " + line.title  # + ': ref'
+            if self.include_ids:
+                line_label = indent * " " + line.title + " - ID: " + line.id.bbid.hex
+            else:
+                line_label = indent * " " + line.title  # + ': ref'
+
             finish = row_container.add_group(
                 line.title, size=1, label=line_label
             )
@@ -753,7 +768,10 @@ class LineChef:
         write_value = not processed
 
         if write_value:
-            line_label = indent * " " + line.title  # + ': segment'
+            if self.include_ids:
+                line_label = indent * " " + line.title + " - ID: " + line.id.bbid.hex
+            else:
+                line_label = indent * " " + line.title  # + ': segment'
             finish = row_container.add_group(
                 line.title, size=1, label=line_label
             )
@@ -818,7 +836,10 @@ class LineChef:
                     row_container.add_group('spacer_details', size=1)
 
                 # subtotal row for details
-                line_label = indent * " " + line.title
+                if self.include_ids:
+                    line_label = indent * " " + line.title + " - ID: " + line.id.bbid.hex
+                else:
+                    line_label = indent * " " + line.title
                 finish = row_container.add_group(
                     line_label, size=1, label=line_label
                 )
