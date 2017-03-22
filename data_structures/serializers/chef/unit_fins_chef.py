@@ -83,7 +83,8 @@ class UnitFinsChef:
         self.model = model
         self.timeline = timeline
 
-    def chop_financials(self, sheet, unit, values_only=False):
+    def chop_financials(self, sheet, unit, values_only=False,
+                        include_ids=False):
         """
 
         UnitChef.add_financials() -> None
@@ -95,7 +96,7 @@ class UnitFinsChef:
 
         Method adds financials to Unit worksheet.
         """
-        line_chef = LineChef(values_only)
+        line_chef = LineChef(values_only, include_ids)
 
         now = getattr(self.timeline, 'current_period', None)
         if now is None:

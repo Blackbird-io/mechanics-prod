@@ -56,7 +56,7 @@ REPLACEMENT_CHAR = None
 # from sheet titles.
 bad_char_table = {ord(c): REPLACEMENT_CHAR for c in _INVALID_CHARS}
 get_column_letter = xlio.utils.get_column_letter
-line_chef = LineChef()
+
 
 # Classes
 class UnitChef:
@@ -91,8 +91,9 @@ class UnitChef:
                           makes and fills Valuation tab
     ====================  =====================================================
     """
-    def __init__(self, model, timeline=None):
+    def __init__(self, model, timeline=None, include_ids=False):
         self.model = model
+        self.include_ids = include_ids
 
         if timeline is not None:
             self.timeline = timeline
@@ -163,7 +164,8 @@ class UnitChef:
 
         # 2.4.  spread fins
         fins_chef = UnitFinsChef(model, timeline)
-        fins_chef.chop_financials(sheet, unit, values_only=values_only)
+        fins_chef.chop_financials(sheet, unit, values_only=values_only,
+                                  include_ids=self.include_ids)
 
         # 2.5 add area and statement labels and sheet formatting
         SheetStyle.style_sheet(sheet)
@@ -268,6 +270,8 @@ class UnitChef:
         financials = self.model.get_financials(unit.id.bbid, now)
         statement = financials.valuation
         statement_rows = fins_chef.add_statement_container(sheet, statement)
+
+        line_chef = LineChef(include_ids=self.include_ids)
         line_chef.chop_statement(
             sheet=sheet,
             column=current,

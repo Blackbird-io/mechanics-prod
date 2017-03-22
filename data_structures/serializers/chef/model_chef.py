@@ -79,7 +79,7 @@ class ModelChef:
     ====================  =====================================================
     """
 
-    def chop_model(self, model, base_file=None):
+    def chop_model(self, model, base_file=None, include_ids=False):
         """
 
 
@@ -105,7 +105,7 @@ class ModelChef:
         structure_chef = StructureChef(model)
         structure_chef.chop(book)
 
-        unit_chef = UnitChef(model)
+        unit_chef = UnitChef(model, include_ids=include_ids)
         unit_chef.chop_multi(book)
 
         if bb_settings.MAKE_ANNUAL_SUMMARIES:
