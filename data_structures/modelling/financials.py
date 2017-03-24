@@ -422,8 +422,9 @@ class Financials:
                     new_xl.format = line.xl.format
                     line.xl = new_xl
 
-                    value = period.get_line_value(line.id.bbid.hex)
-                    line._local_value = value
+                    if not line._details or not line.sum_details:
+                        value = period.get_line_value(line.id.bbid.hex)
+                        line._local_value = value
 
                     hc = period.get_line_hc(line.id.bbid.hex)
                     line._hardcoded = hc
@@ -451,8 +452,9 @@ class Financials:
                     new_xl.format = line.xl.format  # for posterity, and for
                     line.xl = new_xl
 
-                    value = past.get_line_value(line.id.bbid.hex)
-                    line._local_value = value
+                    if not line._details or not line.sum_details:
+                        value = past.get_line_value(line.id.bbid.hex)
+                        line._local_value = value
 
                     hc = past.get_line_hc(line.id.bbid.hex)
                     line._hardcoded = hc
