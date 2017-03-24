@@ -518,7 +518,7 @@ class TimePeriod(TagsMixIn):
             line_dict = blank_row.copy()
             self._line_item_storage[line.id.bbid.hex] = line_dict
 
-        val = line._local_value
+        val = line.value
         typ = type(val).__name__
 
         line_dict['_local_value'] = val

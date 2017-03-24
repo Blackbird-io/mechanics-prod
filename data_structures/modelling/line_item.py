@@ -799,7 +799,7 @@ class LineItem(Statement, HistoryLine):
         Statement._bind_and_record(self, line, noclear=noclear)
 
         self._update_stored_hc()
-        self._update_stored_value()
+        line._update_stored_value()
 
     def _bring_down_local_value(self):
         """
@@ -917,8 +917,9 @@ class LineItem(Statement, HistoryLine):
         if self.period:
             self.period.update_line_value(self)
 
-        for line in self._details.values():
-            line._update_stored_value()
+        parent = self.relationships.parent
+        if isinstance(parent, LineItem):
+            parent._update_stored_value()
 
     def _update_stored_xl(self):
         if self.period:
