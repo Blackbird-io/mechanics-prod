@@ -23,30 +23,23 @@ Model                 structured snapshots of a company across time periods
 ====================  ==========================================================
 """
 
-
-
-
 # imports
 import pickle
 import time
-
 import bb_exceptions
 import bb_settings
 import tools.for_tag_operations
+
 from chef_settings import DEFAULT_SCENARIOS
 from data_structures.modelling.financials import Financials
 from data_structures.system.bbid import ID
-from data_structures.modelling.business_unit import BusinessUnit
 from data_structures.modelling.line_item import LineItem
 from data_structures.modelling.dr_container import DriverContainer
 from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.system.summary_maker import SummaryMaker
-from data_structures.serializers.chef.data_management import LineData
 from tools.parsing import date_from_iso
 from .time_line import TimeLine
 from .taxo_dir import TaxoDir
-
-
 
 
 # constants
@@ -95,23 +88,37 @@ class Model(TagsMixIn):
     valuation             P; pointer to current period valuation
 
     FUNCTIONS:
+    calc_summaries()      creates or updates standard summaries for model
     change_ref_date()     updates timeline to use new reference date
     clear_fins_storage()  clears financial data from non SSOT financials
     copy()                returns a copy of Model instance
-    from_portal()         class method, extracts model out of API-format
+    create_timeline()     creates a timeline with the specified attributes
     get_company()         method to get top-level company unit
     get_financials()      method to get financials for a given unit and time
-    get_timeline()        method to get timeline at specific resolution (m,q,a)
-    get_units()           return list of units from bbid pool
+    get_line()            finds LineItem from specified parameters
     get_lowest_units()    return list of units w/o components from bbid pool
     get_tagged_units()    return dict of units (by bbid) with specified tags
+    get_timeline()        method to get timeline at specific resolution (m,q,a)
+    get_units()           return list of units from bbid pool
+    populate_xl_data()    method populates xl attr on all line items pre-chop
+    prep_for_monitoring_interview()  sets up path entry point for reporting
+    prep_for_revision_interview()  sets up path entry point for revision
+    prep_summaries()      creates SummaryMaker based on default timeline
+    register()            registers item in model namespace
+    set_company()         method sets BusinessUnit as top-level company
+    set_timeline()        method sets default timeline
     start()               sets _started and started to True
+    to_portal()           creates a flattened version of model for Portal
     transcribe()          append message and timestamp to transcript
+
+    CLASS METHODS:
+    from_portal()         class method, extracts model out of API-format
     ====================  ======================================================
 
     ``P`` indicates attributes decorated as properties. See attribute-level doc
     string for more information.
     """
+
     def __init__(self, name):
         TagsMixIn.__init__(self, name)
 
@@ -150,12 +157,19 @@ class Model(TagsMixIn):
 
         self.summary_maker = None
 
+        # read-only attribute
+        self._processing_status = 'intake'
+
         self.topic_list = []
 
     # DYNAMIC ATTRIBUTES
     @property
     def interview(self):
         return self.target.interview
+
+    @property
+    def processing_status(self):
+        return self._processing_status
 
     @property
     def ref_date(self):
@@ -266,8 +280,10 @@ class Model(TagsMixIn):
         M.portal_data.update(portal_model)
         del M.portal_data["e_model"]
 
-        # post-process financials in the current period, make sure they get
-        # assigned back to the proper BU
+        # set processing stage
+        M._processing_status = M.portal_data.pop('processing_status', 'intake')
+
+        # reinflate financial structure SSOT
         for fins in portal_model.get('financials_structure', list()):
             # Deserialize structure
             new_fins = Financials.from_portal(fins, M, period=None)
@@ -276,6 +292,7 @@ class Model(TagsMixIn):
             bu = M.bu_directory[ID.from_portal(fins['buid']).bbid]
             bu.set_financials(new_fins)
 
+        # reinflate timelines
         if portal_model.get('timelines'):
             timelines = {}
             for data in portal_model['timelines']:
@@ -283,6 +300,7 @@ class Model(TagsMixIn):
                 timelines[key] = TimeLine.from_portal(data, model=M)
             M.timelines = timelines
 
+        # reinflate summary maker, if any
         if M.summary_maker:
             tnam = M.summary_maker['timeline_name']
             temp_sm = SummaryMaker(M, timeline_name=tnam, init=False)
@@ -333,7 +351,7 @@ class Model(TagsMixIn):
             data.update(time_line.to_portal())
             timelines.append(data)
 
-        result['timelines'] =timelines
+        result['timelines'] = timelines
 
         return result
 
@@ -437,6 +455,28 @@ class Model(TagsMixIn):
 
         return result
 
+    def create_timeline(
+            self, resolution='monthly', name='default', add=True,
+            overwrite=False
+    ):
+        """
+
+        Model.create_timeline() -> TimeLine
+
+        --``resolution`` is 'monthly', 'quarterly', 'annually' or any available
+          summary resolution'
+
+        Method creates a timeline and adds it to the dictionary of own
+        timelines.
+        """
+        time_line = TimeLine(self, resolution=resolution, name=name)
+        if add:
+            self.set_timeline(
+                time_line, resolution=resolution, name=name,
+                overwrite=overwrite
+            )
+        return time_line
+
     def get_company(self, buid=None):
         """
 
@@ -448,18 +488,6 @@ class Model(TagsMixIn):
             return self.bu_directory[buid]
         else:
             return self._company
-
-    def set_company(self, company):
-        """
-
-        Model.set_company() -> None
-
-        Method sets the company as the top-level unit.
-        """
-        self.bu_directory.clear()
-        self.ty_directory.clear()
-        self.register(company, update_id=True, overwrite=False, recur=True)
-        self._company = company
 
     def get_financials(self, bbid, period):
         """
@@ -479,21 +507,6 @@ class Model(TagsMixIn):
             fins = unit.get_financials(period)
 
         return fins
-
-    def get_timeline(self, resolution='monthly', name='default'):
-        """
-
-        Model.get_timeline() -> TimeLine
-
-        --``resolution`` is 'monthly', 'quarterly', 'annually' or any available
-          summary resolution'
-        --``name`` is 'default', 'actual', forecast', 'budget'
-
-        Method returns the timeline for specified resolution (if any).
-        """
-        key = (resolution, name)
-        if key in self.timelines:
-            return self.timelines[key]
 
     def get_line(self, **kargs):
         """
@@ -523,143 +536,6 @@ class Model(TagsMixIn):
         financials = self.get_financials(buid, period)
         line = financials.find_line(bbid, fins_attr)
         return line
-
-    def populate_xl_data(self):
-        # once all LineItems have been reconstructed, rebuild links among them
-        for time_line in self.timelines.values():
-            for period in time_line.iter_ordered():
-                for bu in self.bu_directory.values():
-                    fins = bu.get_financials(period)
-                    for statement in fins.full_ordered:
-                        if statement:
-                            for line in statement.get_full_ordered():
-                                if not line.xl.built:
-                                    id = line.id.bbid.hex
-                                    new_data = period.get_xl_info(id)
-                                    new_data.format = line.xl.format
-                                    new_data.built = True
-                                    line.xl = new_data
-
-    def prep_for_monitoring_interview(self):
-        """
-
-
-        prep_monitoring_interview(portal_model) -> PortalModel
-
-        --``portal_model`` is an instance of PortalModel
-
-        Function sets path for monitoring interview after projections are set.
-        Function runs after pressing the "update" button on the model card.
-        """
-        if not self.started:
-            self.start()
-
-        # set company as target
-        co = self.get_company()
-        co._stage = None
-        self.target = co
-
-        # preserve existing path and set fresh BU.used and BU.stage.path
-        co.archive_path()
-        co.archive_used()
-
-        # set monitoring path:
-        new_line = LineItem("monitoring path")
-        self.target.stage.path.append(new_line)
-
-        if not self.target.stage.focal_point:
-            self.target.stage.set_focal_point(new_line)
-
-    def set_timeline(
-        self, time_line, resolution='monthly', name='default', overwrite=False
-    ):
-        """
-
-        Model.set_timeline() -> None
-
-        --``resolution`` is 'monthly', 'quarterly', 'annually' or any available
-          summary resolution'
-        --``name`` is 'default', 'actual', forecast', 'budget'
-
-        Method adds the timeline for specified resolution (if any).
-        """
-        key = (resolution, name)
-        if key in self.timelines and not overwrite:
-            c = (
-                "TimeLine (resolution='{}', name='{}') "
-                "already exists".format(*key)
-            )
-            raise KeyError(c)
-
-        time_line.resolution = resolution
-        time_line.name = name
-
-        self.timelines[key] = time_line
-
-    def create_timeline(
-        self, resolution='monthly', name='default', add=True, overwrite=False
-    ):
-        """
-
-        Model.create_timeline() -> TimeLine
-
-        --``resolution`` is 'monthly', 'quarterly', 'annually' or any available
-          summary resolution'
-
-        Method creates a timeline and adds it to the dictionary of own
-        timelines.
-        """
-        time_line = TimeLine(self, resolution=resolution, name=name)
-        if add:
-            self.set_timeline(
-                time_line, resolution=resolution, name=name, overwrite=overwrite
-            )
-        return time_line
-
-    def start(self):
-        """
-
-
-        Model.start() -> None
-
-
-        Method sets instance._started (and ``started`` property) to True.
-        """
-        self._started = True
-
-    def transcribe(self, message):
-        """
-
-
-        Model.transcribe(message) -> None
-
-
-        Appends a tuple of (message ,time of call) to instance.transcript.
-        """
-        time_stamp = time.time()
-        record = (message, time_stamp)
-        self.transcript.append(record)
-
-    def get_units(self, pool):
-        """
-
-
-        Model.get_units() -> list
-
-
-        Method returns a list of objects from instance.bu_directory that
-        correspond to each bbid in ``pool``. Method sorts pool prior to
-        processing.
-
-        Method expects ``pool`` to be an iterable of bbids.
-        """
-        pool = sorted(pool)
-        # make sure to sort pool for stable output order
-        units = []
-        for bbid in pool:
-            u = self.bu_directory[bbid]
-            units.append(u)
-        return units
 
     def get_lowest_units(self, pool=None, run_on_empty=False):
         """
@@ -719,6 +595,130 @@ class Model(TagsMixIn):
 
         return tagged_dict
 
+    def get_timeline(self, resolution='monthly', name='default'):
+        """
+
+        Model.get_timeline() -> TimeLine
+
+        --``resolution`` is 'monthly', 'quarterly', 'annually' or any available
+          summary resolution'
+        --``name`` is 'default', 'actual', forecast', 'budget'
+
+        Method returns the timeline for specified resolution (if any).
+        """
+        key = (resolution, name)
+        if key in self.timelines:
+            return self.timelines[key]
+
+    def get_units(self, pool):
+        """
+
+
+        Model.get_units() -> list
+
+
+        Method returns a list of objects from instance.bu_directory that
+        correspond to each bbid in ``pool``. Method sorts pool prior to
+        processing.
+
+        Method expects ``pool`` to be an iterable of bbids.
+        """
+        pool = sorted(pool)
+        # make sure to sort pool for stable output order
+        units = []
+        for bbid in pool:
+            u = self.bu_directory[bbid]
+            units.append(u)
+        return units
+
+    def populate_xl_data(self):
+        """
+
+
+        Model.populate_xl_data() -> None
+
+        Method populates "xl" attributes on all line items in preparation for
+        chopping.
+        """
+        # once all LineItems have been reconstructed, rebuild links among them
+        for time_line in self.timelines.values():
+            for period in time_line.iter_ordered():
+                for bu in self.bu_directory.values():
+                    fins = bu.get_financials(period)
+                    for statement in fins.full_ordered:
+                        if statement:
+                            for line in statement.get_full_ordered():
+                                if not line.xl.built:
+                                    id = line.id.bbid.hex
+                                    new_data = period.get_xl_info(id)
+                                    new_data.format = line.xl.format
+                                    new_data.built = True
+                                    line.xl = new_data
+
+    def prep_for_monitoring_interview(self):
+        """
+
+
+        Model.prep_monitoring_interview() -> None
+
+
+        Function sets path for monitoring interview after projections are set.
+        Function runs after pressing the "update" button on the model card.
+        """
+        # set company as target
+        co = self.get_company()
+        co._stage = None
+        self.target = co
+
+        # preserve existing path and set fresh BU.used and BU.stage.path
+        co.archive_path()
+        co.archive_used()
+
+        # set monitoring path:
+        new_line = LineItem("monitoring path")
+        self.target.stage.path.append(new_line)
+
+        if not self.target.stage.focal_point:
+            self.target.stage.set_focal_point(new_line)
+
+    def prep_for_revision_interview(self):
+        """
+
+
+        prep_revision_interview() -> None
+
+
+        Function sets path for monitoring interview after projections are set.
+        Function runs after pressing the "update" button on the model card.
+        """
+        # set company as target
+        co = self.get_company()
+        co._stage = None
+        self.target = co
+
+        # preserve existing path and set fresh BU.used and BU.stage.path
+        co.archive_path()
+        co.archive_used()
+
+        # set monitoring path:
+        new_line = LineItem("revision path")
+        self.target.stage.path.append(new_line)
+
+        if not self.target.stage.focal_point:
+            self.target.stage.set_focal_point(new_line)
+
+    def prep_summaries(self):
+        """
+
+
+        Model.prep_summaries() -> SummaryMaker
+
+
+        Create a SummaryMaker instance with default timelines.
+        """
+        self.summary_maker = SummaryMaker(self)
+        return self.summary_maker
+
     def register(self, bu, update_id=True, overwrite=False, recur=True):
         """
 
@@ -771,14 +771,65 @@ class Model(TagsMixIn):
             for child_bu in bu.components.values():
                 child_bu._register_in_period(recur=True, overwrite=overwrite)
 
-    def prep_summaries(self):
+    def set_company(self, company):
+        """
+
+        Model.set_company() -> None
+
+        Method sets the company as the top-level unit.
+        """
+        self.bu_directory.clear()
+        self.ty_directory.clear()
+        self.register(company, update_id=True, overwrite=False, recur=True)
+        self._company = company
+
+    def set_timeline(
+            self, time_line, resolution='monthly', name='default',
+            overwrite=False
+    ):
+        """
+
+        Model.set_timeline() -> None
+
+        --``resolution`` is 'monthly', 'quarterly', 'annually' or any available
+          summary resolution'
+        --``name`` is 'default', 'actual', forecast', 'budget'
+
+        Method adds the timeline for specified resolution (if any).
+        """
+        key = (resolution, name)
+        if key in self.timelines and not overwrite:
+            c = (
+                "TimeLine (resolution='{}', name='{}') "
+                "already exists".format(*key)
+            )
+            raise KeyError(c)
+
+        time_line.resolution = resolution
+        time_line.name = name
+
+        self.timelines[key] = time_line
+
+    def start(self):
         """
 
 
-        Model.prep_summaries() -> SummaryMaker
+        Model.start() -> None
 
 
-        Create a SummaryMaker instance with default timelines.
+        Method sets instance._started (and ``started`` property) to True.
         """
-        self.summary_maker = SummaryMaker(self)
-        return self.summary_maker
+        self._started = True
+
+    def transcribe(self, message):
+        """
+
+
+        Model.transcribe(message) -> None
+
+
+        Appends a tuple of (message ,time of call) to instance.transcript.
+        """
+        time_stamp = time.time()
+        record = (message, time_stamp)
+        self.transcript.append(record)
