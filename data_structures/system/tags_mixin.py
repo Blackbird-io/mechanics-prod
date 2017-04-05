@@ -53,8 +53,8 @@ class TagsMixIn:
     set_name              sets name of instance
     """
 
-    def __init__(self, name=None):
-        self.tags = Tags(name)
+    def __init__(self, name=None, title=None):
+        self.tags = Tags(name=name, title=title)
 
     @property
     def name(self):

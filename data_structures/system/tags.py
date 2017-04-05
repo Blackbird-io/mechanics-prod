@@ -80,12 +80,13 @@ class Tags:
     attrmap[0] = attrmap["_required"] = attrmap["r"]
     attrmap[1] = attrmap["_optional"] = attrmap["o"]
 
-    def __init__(self, name=None):
+    def __init__(self, name=None, title=None):
         self._optional = set()
         self._required = set()
         self._prohibited = set()
         self._name = None
-        self._title = None
+
+        self.set_title(title)
         self.set_name(name)
 
     @property
@@ -121,7 +122,7 @@ class Tags:
 
         Method returns a shallow copy of the instance.
         """
-        result = Tags(self.title)
+        result = Tags(self.name, self.title)
         self._copy_tags_to(result)
 
         return result
@@ -176,7 +177,9 @@ class Tags:
             name = name.strip()
 
         self._name = deCase(name)
-        self._title = name
+
+        if self._title is None:
+            self.set_title(name)
 
     def set_title(self, title):
         """
