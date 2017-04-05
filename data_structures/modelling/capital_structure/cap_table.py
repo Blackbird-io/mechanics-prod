@@ -295,14 +295,16 @@ class CapTable:
 
             round = self.rounds[round_name]
             if round.valuation:
-                pre_money_val = round.valuation - round.size
+                post_money_val = "${:,.0f}".format(round.valuation)
+                pre_money_val = "${:,.0f}".format(round.valuation - round.size)
             else:
+                post_money_val = None
                 pre_money_val = None
 
             detail_summary.append({"item": "Pre-Money Valuation",
                                    "value": pre_money_val})
             detail_summary.append({"item": "Post-Money Valuation",
-                                   "value": round.valuation})
+                                   "value": post_money_val})
             # detail_summary.append({"item": "Participation",
             #                        "value": "%.1fx" % round.participation})
             detail_summary.append({"item": "Preference",
