@@ -275,7 +275,7 @@ class TimeLine(dict):
 
         # Make fwd chain
         i = 0
-        while True:
+        while fwd or year_end:
             # pick up where ref period analysis leaves off
             curr_start_date = fwd_start_date
             fwd_start_date = self._get_fwd_start_date(curr_start_date)
