@@ -110,8 +110,9 @@ class Statement(Equalities, TagsMixIn):
     keyAttributes = ["_details"]
     # Should rename this comparable_attributes
 
-    def __init__(self, name=None, spacing=100, parent=None, period=None):
-        TagsMixIn.__init__(self, name)
+    def __init__(self, name=None, title=None, spacing=100, parent=None,
+                 period=None):
+        TagsMixIn.__init__(self, name=name, title=title)
 
         self._consolidated = False
         self._details = dict()
@@ -200,7 +201,9 @@ class Statement(Equalities, TagsMixIn):
         Method extracts a Statement from portal_data.
         """
         financials = kargs['financials']
-        new = cls(name=portal_data['title'], parent=financials)
+        title = portal_data['title']
+        name = portal_data.get('real_name', title)
+        new = cls(name=name, title=title, parent=financials)
         new.id.set_namespace(financials.id.namespace)
         new.id.assign(new.name)
 
@@ -215,6 +218,7 @@ class Statement(Equalities, TagsMixIn):
         """
         result = {
             'title': self.title,
+            'real_name': self.name,
             'lines': [],
         }
         for line in self._details.values():
@@ -531,7 +535,7 @@ class Statement(Equalities, TagsMixIn):
         The best way to reinsert an item you accidentally removed is to find
         its parent using detail.relationships.parent and insert the item directly back.
         """
-        ancestor_tree = [a.strip() for a in ancestor_tree]
+        ancestor_tree = [a.strip().casefold() for a in ancestor_tree]
 
         result = None
 
