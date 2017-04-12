@@ -126,7 +126,8 @@ def add_projections(xl_serial, engine_model):
     # set default timeline to only contain relevant dates
     new_timeline = TimeLine(model)
     model.set_timeline(new_timeline, overwrite=True)
-    model.time_line.build(first_date, fwd=len(xl_dates)-1, year_end=False)
+    # model.time_line.build(first_date, fwd=len(xl_dates)-1, year_end=False)
+    model.time_line.build(first_date, fwd=0, year_end=False)
     model.change_ref_date(first_date)
 
     proj_tl = model.time_line
@@ -482,27 +483,27 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f):
         dt = col[0].value.date()
         timeline_name = col[TIMELINE_ROW-1].value
 
-        if timeline_name in ("True", "TRUE", True, "ACTUAL", "Actual"):
-            actl_pd = actl_tl.find_period(dt)
-            if not actl_pd:
-                start_dt = date(dt.year, dt.month, 1)
-                end_dt = date(dt.year, dt.month, 28)
-                while end_dt.month == start_dt.month:
-                    end_dt += timedelta(1)
-                end_dt -= timedelta(1)
+        start_dt = date(dt.year, dt.month, 1)
+        end_dt = date(dt.year, dt.month, 28)
+        while end_dt.month == start_dt.month:
+            end_dt += timedelta(1)
+        end_dt -= timedelta(1)
 
+        # Always add a proj_pd regardless of if something is forecast or actual
+        proj_pd = proj_tl.find_period(dt)
+        if not proj_pd:
+            proj_pd = TimePeriod(start_date=start_dt,
+                                 end_date=end_dt,
+                                 model=model)
+            proj_tl.add_period(proj_pd)
+
+        actl_pd = actl_tl.find_period(dt)
+        if timeline_name in ("True", "TRUE", True, "ACTUAL", "Actual"):
+            if not actl_pd:
                 actl_pd = TimePeriod(start_date=start_dt,
                                      end_date=end_dt,
                                      model=model)
-
                 actl_tl.add_period(actl_pd)
-
-        actl_pd = actl_tl.find_period(dt)
-        if actl_pd:
-            actl_fins = bu.get_financials(actl_pd)
-
-        proj_pd = proj_tl.find_period(dt)
-        proj_fins = bu.get_financials(proj_pd)
 
         # Loop across Lines (Top to Down on Excel)
         for cell in col[FIRST_ROW-1:]:
@@ -536,7 +537,9 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f):
 
             # # print(statement_name, line_name, parent_name)
             if actl_pd:
+                actl_fins = bu.get_financials(actl_pd)
                 actl_stmt = getattr(actl_fins, statement_name, None)
+            proj_fins = bu.get_financials(proj_pd)
             proj_stmt = getattr(proj_fins, statement_name, None)
 
             # Always match number formats
