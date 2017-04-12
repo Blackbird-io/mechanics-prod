@@ -152,6 +152,57 @@ def add_projections(xl_serial, engine_model):
     return model
 
 
+def revise_projections(xl_serial, engine_model):
+    """
+
+
+    revise_projections(xl_serial, engine_model) -> EngineModel()
+
+    --``xl_serial``     serialized string of an Excel workbook (".xlsx")
+    --``engine_model``  instance of Engine Model
+
+    Function revises projection values while keeping existing actuals values
+    Function takes a serialized Excel workbook in a specific format
+    and converts it to an EngineModel with LineItem values. 
+    
+    Function delegates to:
+        _check_xl_projections()
+        _build_fins_from_sheet()
+        _populate_fins_from_sheet()
+
+    """
+    model = engine_model
+
+    # 1) Extract xl_serial. Make sure it is in the right format
+    wb = xlio.load_workbook(xl_serial, data_only=True)  # Includes Values Only
+    wb_f = xlio.load_workbook(xl_serial, data_only=False)  # Includes Formulas
+
+    # For testing local excel files:
+    # filename = r"C:\Workbooks\Forecast_Rimini8.xlsx"
+    # wb = xlio.load_workbook(filename=filename, data_only=True)
+
+    sheet = wb.worksheets[0]
+    sheet_f = wb_f.worksheets[0]
+
+    # Make sure sheet is valid format
+    _check_xl_projection(sheet)
+
+    company = model.get_company()
+
+    # 3) Determine Line Structure from Excel upload
+    _build_fins_from_sheet(company, sheet)
+
+    # 4) Make sure actuals timeline has same structure
+    actl_tl = model.get_timeline('monthly', name='actual')
+    if not actl_tl:
+        actl_tl = TimeLine(model)
+        model.set_timeline(actl_tl, resolution='monthly', name='actual')
+
+    # 5) Write values to both actuals and projected.
+    _populate_fins_from_sheet(model, sheet, sheet_f)
+
+
+
 def _check_xl_projection(sheet):
     """
 
