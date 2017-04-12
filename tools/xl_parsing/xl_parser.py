@@ -31,12 +31,14 @@ n/a
 
 
 # Imports
+import bb_settings
 import bb_exceptions
 import openpyxl as xlio
 import json
 
 from openpyxl.formula import Tokenizer
 from data_structures.serializers.chef.model_chef import ModelChef
+from data_structures.modelling.model import Model
 from data_structures.modelling.business_unit import BusinessUnit
 from data_structures.modelling.line_item import LineItem
 from data_structures.modelling.time_line import TimeLine
@@ -153,14 +155,14 @@ def add_projections(xl_serial, engine_model):
     return model
 
 
-def revise_projections(xl_serial, engine_model):
+def revise_projections(xl_serial, old_model):
     """
 
 
     revise_projections(xl_serial, engine_model) -> EngineModel()
 
     --``xl_serial``     serialized string of an Excel workbook (".xlsx")
-    --``engine_model``  instance of Engine Model
+    --``old_model``     old instance of Engine Model
 
     Function revises projection values while keeping existing actuals values
     Function takes a serialized Excel workbook in a specific format
@@ -172,7 +174,9 @@ def revise_projections(xl_serial, engine_model):
         _populate_fins_from_sheet()
 
     """
-    model = engine_model
+    new_model = Model(bb_settings.DEFAULT_MODEL_NAME)
+    new_model.start()
+    # new_model._ref_date = old_model._ref_date
 
     # 1) Extract xl_serial. Make sure it is in the right format
     wb = xlio.load_workbook(xl_serial, data_only=True)  # Includes Values Only
@@ -188,20 +192,24 @@ def revise_projections(xl_serial, engine_model):
     # Make sure sheet is valid format
     _check_xl_projection(sheet)
 
-    company = model.get_company()
+    company = new_model.get_company()
 
-    # 3) Determine Line Structure from Excel upload
+    # 2) Determine Line Structure from Excel upload
     _build_fins_from_sheet(company, sheet)
 
+    # 3) Add any missing lines from old model
+    _combine_fins_structure(old_model, new_model)
+
     # 4) Make sure actuals timeline has same structure
-    actl_tl = model.get_timeline('monthly', name='actual')
+    actl_tl = new_model.get_timeline('monthly', name='actual')
     if not actl_tl:
-        actl_tl = TimeLine(model)
-        model.set_timeline(actl_tl, resolution='monthly', name='actual')
+        actl_tl = TimeLine(new_model)
+        new_model.set_timeline(actl_tl, resolution='monthly', name='actual')
 
     # 5) Write values to both actuals and projected.
-    _populate_fins_from_sheet(model, sheet, sheet_f)
+    _populate_fins_from_sheet(new_model, sheet, sheet_f)
 
+    return new_model
 
 
 def _check_xl_projection(sheet):
@@ -456,6 +464,49 @@ def _build_fins_from_sheet(bu, sheet):
             for t in tags_list:
                 new_tag = t.strip()  # Remove white space from both sides
                 line.tags.add(new_tag)
+
+
+def _combine_fins_structure(old_model, new_model):
+    """
+
+
+    _build_fins_from_sheet(financials, sheet) -> None
+
+    --``old_model``     old instance of Engine Model
+    --``new_model``     new instance of Engine Model
+    
+    Function combines line structure from the old and new models
+    """
+    old_bu = old_model.get_company()
+    new_bu = new_model.get_company()
+
+    old_fins = old_bu.financials
+    new_fins = new_bu.financials
+
+    for old_stmt in old_fins.full_ordered:
+        stmt_name = old_stmt.name.split()[0].casefold()
+        new_stmt = getattr(new_fins, stmt_name, None)
+        if not new_stmt:
+            c = 'Old %s doesn exist!' % old_stmt.name
+            raise bb_exceptions.BBAnalyticalError(c)
+
+        last_position = 0
+        for old_line in old_stmt.get_full_ordered():
+            old_parent = old_line.relationships.parent
+            if old_parent:
+                new_line = new_stmt.find_first([old_line.name, old_parent.name])
+            else:
+                new_line = new_stmt.find_first(old_line.name)
+
+            if not new_line:
+                new_line = old_line.copy()
+                if old_parent:
+                    new_parent = new_stmt.find_first(old_parent.name)
+                    new_parent.add_line(new_line, last_position + 1)
+                else:
+                    new_stmt.add_line(new_line, last_position + 1)
+
+            last_position = new_line.position
 
 
 def _populate_fins_from_sheet(engine_model, sheet, sheet_f):
