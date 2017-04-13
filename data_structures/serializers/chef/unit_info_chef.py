@@ -247,7 +247,7 @@ class UnitInfoChef:
         body_rows.calc_size()
 
         timeline_range = getattr(sheet.bb, FieldNames.TIMELINE)
-        time_line = self.model.get_timeline()
+        time_line = self.timeline
         now = time_line.current_period
         template = FormulaTemplates.ADD_COORDINATES
         master_column = self.MASTER_COLUMN
@@ -364,7 +364,7 @@ class UnitInfoChef:
             val_col = min(sheet.bb.time_line.columns.by_name.keys())
         else:
             model = unit.relationships.model
-            now = model.time_line.current_period
+            now = self.timeline.current_period
             val_col = sheet.bb.time_line.columns.get_position(now.end)
 
         param_area = getattr(sheet.bb, FieldNames.PARAMETERS)
@@ -457,7 +457,7 @@ class UnitInfoChef:
 
         # fill in cell by period
         timeline_range = getattr(sheet.bb, FieldNames.TIMELINE)
-        time_line = self.model.get_timeline()
+        time_line = self.timeline
         now = time_line.current_period
         for period in time_line.iter_ordered(open=now.end):
             period_column = timeline_range.columns.get_position(period.end)
@@ -671,7 +671,7 @@ class UnitInfoChef:
         timeline_params = timeline_range.rows.by_name.keys()
 
         param_lines = sheet.bb.row_axis.get_group('body', 'drivers', 'lines')
-        time_line = self.model.get_timeline()
+        time_line = self.timeline
         now = time_line.current_period
         template = FormulaTemplates.LINK_TO_COORDINATES
 
@@ -805,7 +805,7 @@ class UnitInfoChef:
 
         if current_only:
             model = unit.relationships.model
-            now = model.time_line.current_period
+            now = self.timeline.current_period
             src_vals = [now.end]
 
         active_column = self.VALUE_COLUMN
