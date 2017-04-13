@@ -176,7 +176,7 @@ def revise_projections(xl_serial, old_model):
     """
     new_model = Model(bb_settings.DEFAULT_MODEL_NAME)
     new_model.start()
-    # new_model._ref_date = old_model._ref_date
+    new_model._ref_date = old_model._ref_date
 
     # 1) Extract xl_serial. Make sure it is in the right format
     wb = xlio.load_workbook(xl_serial, data_only=True)  # Includes Values Only
@@ -193,6 +193,10 @@ def revise_projections(xl_serial, old_model):
     _check_xl_projection(sheet)
 
     company = new_model.get_company()
+    if not company:
+        company = BusinessUnit(new_model.name)
+        new_model.set_company(company)
+        new_model.target = company
 
     # 2) Determine Line Structure from Excel upload
     _build_fins_from_sheet(company, sheet)
@@ -208,6 +212,9 @@ def revise_projections(xl_serial, old_model):
 
     # 5) Write values to both actuals and projected.
     _populate_fins_from_sheet(new_model, sheet, sheet_f)
+
+    # 6) Retain any actual values from old model that are hardcoded
+    _populate_old_actuals(old_model, new_model)
 
     return new_model
 
@@ -484,6 +491,10 @@ def _combine_fins_structure(old_model, new_model):
     new_fins = new_bu.financials
 
     for old_stmt in old_fins.full_ordered:
+        if not old_stmt:
+            # Valuation is empty
+            continue
+
         stmt_name = old_stmt.name.split()[0].casefold()
         new_stmt = getattr(new_fins, stmt_name, None)
         if not new_stmt:
@@ -492,21 +503,85 @@ def _combine_fins_structure(old_model, new_model):
 
         last_position = 0
         for old_line in old_stmt.get_full_ordered():
-            old_parent = old_line.relationships.parent
-            if old_parent:
-                new_line = new_stmt.find_first([old_line.name, old_parent.name])
+            old_parent = old_line.relationships.parent # Can be stmt or line
+            if isinstance(old_parent, LineItem):
+                new_line = new_stmt.find_first(old_parent.name, old_line.name)
             else:
                 new_line = new_stmt.find_first(old_line.name)
 
             if not new_line:
+                # print(old_line)
+                # import pdb
+                # pdb.set_trace()
                 new_line = old_line.copy()
-                if old_parent:
+                if isinstance(old_parent, LineItem):
                     new_parent = new_stmt.find_first(old_parent.name)
                     new_parent.add_line(new_line, last_position + 1)
                 else:
                     new_stmt.add_line(new_line, last_position + 1)
 
             last_position = new_line.position
+
+
+def _populate_old_actuals(old_model, new_model):
+    """
+
+
+    _populate_old_actuals() -> None
+
+    --``old_model``     old instance of Engine Model
+    --``new_model``     new instance of Engine Model
+
+    Function looks for hardcoded actuals in old model and copies thier value 
+    onto the the new model.
+    """
+    old_bu = old_model.get_company()
+    new_bu = new_model.get_company()
+
+    old_actl_tl = old_model.get_timeline(resolution='monthly', name='actual')
+    new_actl_tl = new_model.get_timeline(resolution='monthly', name='actual')
+    new_proj_tl = new_model.get_timeline(resolution='monthly', name='default')
+
+    for old_pd in old_actl_tl.iter_ordered():
+
+        # If there are actuals, we want to populate both actl and proj timelines
+        for tl in [new_actl_tl, new_proj_tl]:
+            new_pd = tl.find_period(old_pd.end)
+            if not new_pd:
+                # new_pd = old_pd.copy()
+                new_pd = TimePeriod(start_date=old_pd.start,
+                                    end_date=old_pd.end,
+                                    model=new_model)
+                tl.add_period(new_pd)
+
+            old_fins = old_bu.get_financials(old_pd)
+            new_fins = new_bu.get_financials(new_pd)
+
+            for old_stmt in old_fins.full_ordered:
+                if not old_stmt:
+                    # Valuation is empty
+                    continue
+
+                stmt_name = old_stmt.name.split()[0].casefold()
+                new_stmt = getattr(new_fins, stmt_name, None)
+                if not new_stmt:
+                    c = 'Old %s doesn exist!' % old_stmt.name
+                    raise bb_exceptions.BBAnalyticalError(c)
+
+                for old_line in old_stmt.get_full_ordered():
+                    old_parent = old_line.relationships.parent
+                    if isinstance(old_parent, LineItem):
+                        new_line = new_stmt.find_first(old_parent.name,
+                                                       old_line.name)
+                    else:
+                        new_line = new_stmt.find_first(old_line.name)
+
+                    if old_line.hardcoded:
+                        new_line.set_value(old_line.value,
+                                           signature='old hardcoded value',
+                                           override=True)
+                        new_line.set_hardcoded(True)
+
 
 
 def _populate_fins_from_sheet(engine_model, sheet, sheet_f):
