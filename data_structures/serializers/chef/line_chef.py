@@ -165,7 +165,7 @@ class LineChef:
             sheet.bb.need_spacer = True
 
         matter = row_container.add_group(
-            line.title, offset=int(sheet.bb.need_spacer)
+            line.title, offset=int(sheet.bb.need_spacer), bbid=line.id.bbid.hex
         )
 
         if sheet.bb.need_spacer:
@@ -397,7 +397,8 @@ class LineChef:
                 if batch_summation:
                     finish = cons_rows.add_group(
                         label_line, size=1, label=label_line, outline=1,
-                        formatter=CellStyles.format_consolidated_label
+                        formatter=CellStyles.format_consolidated_label,
+                        bbid=line.id.bbid.hex
                     )
                     batch_cell = sheet.cell(column=column, row=finish.number())
                     batch_cell.set_explicit_value(
@@ -419,13 +420,10 @@ class LineChef:
             }
 
             summation = FormulaTemplates.SUM_RANGE.format(**summation_params)
-            if self.include_ids:
-                line_label = indent * " " + line.title + " - ID: " + line.id.bbid.hex
-            else:
-                line_label = indent * " " + line.title
+            line_label = indent * " " + line.title
 
             finish = row_container.add_group(
-                line.title, size=1, label=line_label
+                line.title, size=1, label=line_label, bbid=line.id.bbid.hex
             )
             summation_cell = sheet.cell(column=column, row=finish.number())
             summation_cell.set_explicit_value(
@@ -507,7 +505,8 @@ class LineChef:
 
             group_lines(sheet)
             finish = param_rows.add_group(
-                line_label, size=1, label=line_label, outline=0
+                line_label, size=1, label=line_label, outline=0,
+                bbid=line.id.bbid.hex
             )
             param_cell = sheet.cell(column=period_column, row=finish.number())
 
@@ -603,13 +602,11 @@ class LineChef:
                 line_label = (indent + LineItem.TAB_WIDTH) * " " + key
                 outline = sheet.bb.outline_level + 1
             else:
-                if self.include_ids:
-                    line_label = indent * " " + line.title + " - ID: " + line.id.bbid.hex
-                else:
-                    line_label = indent * " " + line.title
+                line_label = indent * " " + line.title
                 outline = sheet.bb.outline_level
             finish = row_container.add_group(
-                key, size=1, label=line_label, outline=outline
+                key, size=1, label=line_label, outline=outline,
+                bbid=line.id.bbid.hex
             )
 
             try:
@@ -698,12 +695,9 @@ class LineChef:
         (e.g. new_cell.value = '=C18')
         """
         if line.xl.reference.direct_source and not self.values_only:
-            if self.include_ids:
-                line_label = indent * " " + line.title + " - ID: " + line.id.bbid.hex
-            else:
-                line_label = indent * " " + line.title  # + ': ref'
+            line_label = indent * " " + line.title  # + ': ref'
             finish = row_container.add_group(
-                line.title, size=1, label=line_label
+                line.title, size=1, label=line_label, bbid=line.id.bbid.hex
             )
             cell = sheet.cell(column=column, row=finish.number())
 
@@ -717,13 +711,10 @@ class LineChef:
             if update_cell:
                 line.xl.cell = cell
         elif line.xl.reference.source:
-            if self.include_ids:
-                line_label = indent * " " + line.title + " - ID: " + line.id.bbid.hex
-            else:
-                line_label = indent * " " + line.title  # + ': ref'
+            line_label = indent * " " + line.title  # + ': ref'
 
             finish = row_container.add_group(
-                line.title, size=1, label=line_label
+                line.title, size=1, label=line_label, bbid=line.id.bbid.hex
             )
             cell = sheet.cell(column=column, row=finish.number())
 
@@ -768,12 +759,9 @@ class LineChef:
         write_value = not processed
 
         if write_value:
-            if self.include_ids:
-                line_label = indent * " " + line.title + " - ID: " + line.id.bbid.hex
-            else:
-                line_label = indent * " " + line.title  # + ': segment'
+            line_label = indent * " " + line.title  # + ': segment'
             finish = row_container.add_group(
-                line.title, size=1, label=line_label
+                line.title, size=1, label=line_label, bbid=line.id.bbid.hex
             )
             cell = sheet.cell(column=column, row=finish.number())
 
@@ -836,12 +824,9 @@ class LineChef:
                     row_container.add_group('spacer_details', size=1)
 
                 # subtotal row for details
-                if self.include_ids:
-                    line_label = indent * " " + line.title + " - ID: " + line.id.bbid.hex
-                else:
-                    line_label = indent * " " + line.title
+                line_label = indent * " " + line.title
                 finish = row_container.add_group(
-                    line_label, size=1, label=line_label
+                    line_label, size=1, label=line_label, bbid=line.id.bbid.hex
                 )
                 subtotal_cell = sheet.cell(column=column, row=finish.number())
                 subtotal_cell.set_explicit_value(
