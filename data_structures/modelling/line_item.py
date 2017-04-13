@@ -38,7 +38,6 @@ from data_structures.guidance.guide import Guide
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
-from pydoc import locate
 
 from .statement import Statement
 from .history_line import HistoryLine
@@ -230,7 +229,7 @@ class LineItem(Statement, HistoryLine):
         return result
 
     @classmethod
-    def from_portal(cls, portal_data, model, **kargs):
+    def from_portal(cls, portal_data, statement, noadd=False):
         """
 
 
@@ -240,9 +239,9 @@ class LineItem(Statement, HistoryLine):
 
         Method deserializes all LineItems belonging to ``statement``.
         """
-        statement = kargs['statement']
         # first pass: create a dict of lines
         line_info = {}
+        lines = list()
         for data in portal_data:
             new = cls(
                 parent=None,
@@ -255,8 +254,7 @@ class LineItem(Statement, HistoryLine):
 
             # defer resolution of .xl
             new.xl = xl_mgmt.LineData()
-            new.xl.format = xl_mgmt.LineFormat.from_portal(data['xl_format'],
-                                                           model=model)
+            new.xl.format = xl_mgmt.LineFormat.from_portal(data['xl_format'])
 
             for attr in (
                 'position',
@@ -269,6 +267,8 @@ class LineItem(Statement, HistoryLine):
                 'log',
             ):
                 new.__dict__[attr] = data[attr]
+
+            new.guide = Guide.from_portal(data['guide'])
 
             line_info[data['bbid']] = (new, data)
 
@@ -284,7 +284,13 @@ class LineItem(Statement, HistoryLine):
             position = data['position']
             position = int(position) if position else None
             line.relationships.set_parent(parent)
-            parent.add_line(line, position=position, noclear=True)
+
+            if not noadd:
+                parent.add_line(line, position=position, noclear=True)
+
+            lines.append(line)
+
+        return lines
 
     def to_portal(self, parent_line=None):
         """
@@ -310,6 +316,8 @@ class LineItem(Statement, HistoryLine):
             'tags': self.tags.to_portal(),
             'log': self.log,
             '_driver_id': self._driver_id.hex if self._driver_id else None,
+            'link': False,
+            'guide': self.guide.to_portal(),
         }
 
         # return this line
@@ -598,6 +606,19 @@ class LineItem(Statement, HistoryLine):
                            override=True)
             self.xl.reference.source = matching_line
             self._update_stored_xl()
+
+    def remove_driver(self, recur=False):
+        """
+
+
+        LineItem.remove_driver() -> None
+
+        Method removes driver ID assignment.
+        """
+        self._driver_id = None
+        if recur:
+            for line in self._details.values():
+                line.remove_driver(recur=recur)
 
     def remove_driver(self, recur=False):
         """

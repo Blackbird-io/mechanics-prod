@@ -132,6 +132,9 @@ class Components(dict, TagsMixIn, Equalities):
         """
         return Equalities.__ne__(self, comparator, trace, tab_width)
 
+    def __setitem__(self, key, value):
+        dict.__setitem__(self, key, value)
+
     def copy(self):
         """
 
@@ -278,6 +281,15 @@ class Components(dict, TagsMixIn, Equalities):
                 self.by_name[bu.tags.name] = bu.id.bbid
             else:
                 continue
+
+    def refresh_ids(self):
+        units = list(self.values())
+        self.clear()
+        self.by_name.clear()
+
+        for unit in units:
+            self[unit.id.bbid] = unit
+            self.by_name[unit.name] = unit.id.bbid
 
     def add_item(self, bu):
         """

@@ -175,8 +175,24 @@ class Life(Equalities):
         # Can modify these for advanced functionality. For example, if you
         # want your unit to be born again on a "rebranding" event.
         self._ref_date = None
-
         self.events = dict()
+
+    @classmethod
+    def from_portal(cls, portal_data):
+        new = cls()
+        new._birth_event_names = set(portal_data['_birth_event_names'])
+        new._death_event_names = set(portal_data['_death_event_names'])
+        new._ref_date = portal_data['_ref_date']
+        new.events = portal_data['events']
+        return new
+
+    def to_portal(self):
+        data = dict()
+        data['_birth_event_names'] = list(self._birth_event_names)
+        data['_death_event_names'] = list(self._death_event_names)
+        data['_ref_date'] = self._ref_date
+        data['events'] = self.events
+        return data
 
     @property
     def _clock_starts(self):

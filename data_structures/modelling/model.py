@@ -33,6 +33,7 @@ import tools.for_tag_operations
 from chef_settings import DEFAULT_SCENARIOS
 from data_structures.modelling.financials import Financials
 from data_structures.system.bbid import ID
+from data_structures.modelling.business_unit import BusinessUnit
 from data_structures.modelling.line_item import LineItem
 from data_structures.modelling.dr_container import DriverContainer
 from data_structures.system.tags_mixin import TagsMixIn
@@ -40,7 +41,7 @@ from data_structures.system.summary_maker import SummaryMaker
 from tools.parsing import date_from_iso
 from .time_line import TimeLine
 from .taxo_dir import TaxoDir
-
+from .taxonomy import Taxonomy
 
 # constants
 # n/a
@@ -137,7 +138,7 @@ class Model(TagsMixIn):
         self.report_summary = None
 
         self.taxo_dir = TaxoDir(model=self)
-        self.taxonomy = dict()
+        self.taxonomy = Taxonomy(self.taxo_dir)
 
         self.timelines = dict()
         time_line = TimeLine(self)
@@ -261,8 +262,6 @@ class Model(TagsMixIn):
         If portal_model does not specify a Model object, method creates a new
         instance. Method stores all portal data other than the Model in the
         output's .portal_data dictionary.
-
-        NEED TO MAKE SURE WE UNPACK ALL BU'S TO CURRENT_PERIOD.FINANCIALS
         """
         flat_model = portal_model["e_model"]
 
@@ -280,17 +279,61 @@ class Model(TagsMixIn):
         M.portal_data.update(portal_model)
         del M.portal_data["e_model"]
 
+        # Make blank TaxoDir structure
+        M.taxo_dir = TaxoDir(M)
+        
         # set processing stage
         M._processing_status = M.portal_data.pop('processing_status', 'intake')
 
-        # reinflate financial structure SSOT
-        for fins in portal_model.get('financials_structure', list()):
-            # Deserialize structure
-            new_fins = Financials.from_portal(fins, M, period=None)
+        link_list = list()
+        # first deserialize BusinessUnits into directory
+        temp_directory = dict()
+        for flat_bu in portal_model.get('business_units', list()):
+            rich_bu = BusinessUnit.from_portal(flat_bu, link_list)
+            rich_bu.relationships.set_model(M)
+            temp_directory[flat_bu['bbid']] = rich_bu
 
-            # Associate Financials with appropriate BU
-            bu = M.bu_directory[ID.from_portal(fins['buid']).bbid]
-            bu.set_financials(new_fins)
+        # now rebuild structure
+        company_id = portal_model.get('company', None)
+        if company_id:
+            def build_bu_structure(seed, directory):
+                component_list = seed.components
+                seed.components = None
+                seed._set_components()
+                for component_id in component_list:
+                    sub_bu = directory[component_id]
+                    seed.add_component(sub_bu)
+                    build_bu_structure(sub_bu, directory)
+
+            top_bu = temp_directory[company_id]
+            build_bu_structure(top_bu, temp_directory)
+            M.set_company(top_bu)
+
+        # TaxoDir
+        data = portal_model.get('taxo_dir', None)
+        if data:
+            M.taxo_dir = TaxoDir.from_portal(data, M, link_list)
+        else:
+            M.taxo_dir = TaxoDir(M)
+
+        if link_list:
+            import pdb
+            pdb.set_trace()
+
+        # Taxonomy
+        data = portal_model.get('taxonomy', None)
+        if data:
+            M.taxonomy = Taxonomy.from_portal(data, M.taxo_dir)
+        else:
+            M.taxonomy = Taxonomy(M.taxo_dir)
+
+        # Target
+        target_id = portal_model.get('target', None)
+        if target_id:
+            try:
+                M.target = M.bu_directory[target_id]
+            except KeyError:
+                M.target = M.taxo_dir.bu_directory[target_id]
 
         # reinflate timelines
         if portal_model.get('timelines'):
@@ -307,6 +350,12 @@ class Model(TagsMixIn):
             temp_sm._fiscal_year_end = M.summary_maker['_fiscal_year_end']
             M.summary_maker = temp_sm
 
+        drivers = portal_model.get('drivers')
+        if drivers:
+            M.drivers = DriverContainer.from_portal(drivers)
+        else:
+            M.drivers = DriverContainer()
+
         return M
 
     def to_portal(self):
@@ -321,23 +370,22 @@ class Model(TagsMixIn):
         result = dict()
 
         result['company'] = self._company.id.bbid if self._company else None
+        result['target'] = self.target.id.bbid if self.target else None
+
+        if self.target:
+            if self.target.id.bbid is None:
+                import pdb
+                pdb.set_trace()
 
         # pre-process financials in the current period, make sure they get
         # serialized in th database to maintain structure data
-        fins_structure = list()
-        # bu_list = list()
-        for bu in self.bu_directory.values():
-            fins = bu.financials
+        bu_list = list()
+        for id, bu in self.bu_directory.items():
+            bu_list.append(bu.to_portal())
 
-            data = {
-                'buid': bu.id.bbid.hex,
-            }
-            data.update(fins.to_portal())
-            fins_structure.append(data)
-
-            bu.financials = None
-
-        result['financials_structure'] = fins_structure
+        result['business_units'] = bu_list
+        result['taxonomy'] = self.taxonomy.to_portal()
+        result['taxo_dir'] = self.taxo_dir.to_portal()
 
         # serialized representation has a list of timelines attached
         # with (resolution, name) as properties
@@ -352,6 +400,7 @@ class Model(TagsMixIn):
             timelines.append(data)
 
         result['timelines'] = timelines
+        result['drivers'] = self.drivers.to_portal()
 
         return result
 
@@ -738,6 +787,7 @@ class Model(TagsMixIn):
         # Make sure unit has an id in the right namespace.
         if update_id:
             bu._update_id(namespace=self.id.namespace, recur=True)
+
         if not bu.id.bbid:
             c = "Cannot add content without a valid bbid."
             raise bb_exceptions.IDError(c)
@@ -756,7 +806,6 @@ class Model(TagsMixIn):
                     name=self.bu_directory[bu.id.bbid].tags.name,
                     mine=bu.tags.name,
                 )
-                print(self.bu_directory)
                 raise bb_exceptions.IDCollisionError(c)
 
         self.bu_directory[bu.id.bbid] = bu
@@ -769,7 +818,8 @@ class Model(TagsMixIn):
 
         if recur:
             for child_bu in bu.components.values():
-                child_bu._register_in_period(recur=True, overwrite=overwrite)
+                self.register(child_bu, update_id=False,
+                              overwrite=overwrite, recur=recur)
 
     def set_company(self, company):
         """

@@ -30,6 +30,8 @@ from pydoc import locate
 
 import bb_exceptions
 
+from datetime import timedelta
+from tools.parsing import date_from_iso
 
 
 
@@ -115,7 +117,17 @@ class Parameters(dict):
                     keyhold = keyhold.setdefault(k, cls())
                 else:
                     # cast value to the stored type
-                    keyhold[k] = locate(data['value_type'])(data['value'])
+                    typ = data['value_type']
+                    if typ == 'date':
+                        keyhold[k] = date_from_iso(data['value'])
+                    elif typ == 'timedelta':
+                        if isinstance(data['value'], str):
+                            keyhold[k] = timedelta(int(data['value']))
+                        else:
+                            keyhold[k] = data['value']
+                    else:
+                        keyhold[k] = locate(typ)(data['value'])
+
         return result
 
     def to_portal(self, key_path=None, target=''):
@@ -130,10 +142,14 @@ class Parameters(dict):
             if isinstance(v, dict):
                 yield from v.to_portal(key_path=path, target=target)
             else:
+                typ = type(v).__name__
+                if typ == 'date':
+                    v = v.isoformat()
+
                 data = dict(
                     key_path=path,
                     value=v,
-                    value_type=type(v).__name__,
+                    value_type=typ,
                     target=target,
                 )
                 yield data

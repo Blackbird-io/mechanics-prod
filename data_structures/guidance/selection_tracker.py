@@ -67,7 +67,17 @@ class SelectionTracker(Counter):
         self.finished_catalog = False
         self.eligible = []
         self.used = []
-    
+
+    @classmethod
+    def from_portal(cls, portal_data):
+        new = cls()
+        new.__dict__.update(portal_data)
+        return new
+
+    def to_portal(self):
+        data = self.__dict__
+        return data
+
     def record_dry_run(self):
         """
 
