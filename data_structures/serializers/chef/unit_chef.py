@@ -328,6 +328,11 @@ class UnitChef:
                         if group.outline:
                             r = sheet.row_dimensions[row]
                             r.outline_level = group.outline
+
+                        if self.include_ids:
+                            label_cell = sheet.cell(row=row, column=col + 2)
+                            label_cell.value = group.extra.get('bbid')
+
             if group.extra.get('hidden'):
                 for rownum in range(
                     group.number(),
