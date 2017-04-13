@@ -105,8 +105,13 @@ class ModelChef:
         structure_chef = StructureChef(model)
         structure_chef.chop(book)
 
-        unit_chef = UnitChef(model, include_ids=include_ids)
+        proj = model.get_timeline(resolution='monthly', name='default')
+        unit_chef = UnitChef(model, timeline=proj, include_ids=include_ids)
         unit_chef.chop_multi(book)
+
+        actl = model.get_timeline(resolution='monthly', name='actual')
+        unit_chef = UnitChef(model, timeline=actl)
+        unit_chef.chop_multi(book, tab_name='Actual')
 
         if bb_settings.MAKE_ANNUAL_SUMMARIES:
             summary_chef = SummaryChef(model)
