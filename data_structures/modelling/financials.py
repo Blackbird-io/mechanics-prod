@@ -206,7 +206,7 @@ class Financials:
         return result
 
     @classmethod
-    def from_portal(cls, portal_data, model, **kargs):
+    def from_portal(cls, portal_data, company, **kargs):
         """
 
         Financials.from_portal(portal_data) -> Financials
@@ -216,11 +216,7 @@ class Financials:
         Method extracts Financials from portal_data.
         """
         period = kargs['period']
-
-        buid = ID.from_portal(portal_data['buid']).bbid
-        company = model.get_company(buid)
         new = cls(parent=company, period=period)
-
         new.id.set_namespace(company.id.bbid)
 
         for attr in ('_chef_order',
@@ -233,14 +229,14 @@ class Financials:
             attr_name = data['name']
 
             statement = Statement.from_portal(
-                data, model=model, financials=new
+                data, financials=new
             )
 
             new.__dict__[attr_name] = statement
 
             # deserialize all LineItems
             LineItem.from_portal(
-                data['lines'], model=model, statement=statement, **kargs
+                data['lines'], statement=statement
             )
 
         return new

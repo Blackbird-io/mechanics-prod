@@ -1,10 +1,10 @@
-#PROPRIETARY AND CONFIDENTIAL
-#Property of Blackbird Logical Applications, LLC
-#Copyright Blackbird Logical Applications, LLC 2014
-#NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL OF ILYA PODOLYAKO
+# PROPRIETARY AND CONFIDENTIAL
+# Property of Blackbird Logical Applications, LLC
+# Copyright Blackbird Logical Applications, LLC 2017
+# NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
-#Blackbird Environment
-#Module: data_structures.guidance.quality_tracker
+# Blackbird Environment
+# Module: data_structures.guidance.quality_tracker
 
 """
 This module subclasses Counter into a QualityTracker object
@@ -62,9 +62,20 @@ class QualityTracker(Counter):
     QUALITY_MAX = 10
     
     def __init__(self, standard=QUALITY_DEFAULT):
-        #
         Counter.__init__(self, cut_off=self.QUALITY_MAX)
+        self.standard = None
         self.set_standard(standard)
+
+    @classmethod
+    def from_portal(cls, portal_data):
+        new = cls()
+        new.__dict__.update(portal_data)
+        return new
+
+    def to_portal(self):
+        import copy
+        data = copy.deepcopy(self.__dict__)
+        return data
 
     def set_standard(self, standard):
         """

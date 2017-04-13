@@ -33,6 +33,7 @@ import bb_settings
 
 from data_structures.system.relationships import Relationships
 from data_structures.system.tags_mixin import TagsMixIn
+from data_structures.system.tags import Tags
 from data_structures.system.bbid import ID
 
 from .equalities import Equalities
@@ -190,7 +191,7 @@ class Statement(Equalities, TagsMixIn):
         return self._period
 
     @classmethod
-    def from_portal(cls, portal_data, model, **kargs):
+    def from_portal(cls, portal_data, financials):
         """
 
         Statement.from_portal(portal_data) -> Statement
@@ -199,10 +200,11 @@ class Statement(Equalities, TagsMixIn):
 
         Method extracts a Statement from portal_data.
         """
-        financials = kargs['financials']
         new = cls(name=portal_data['title'], parent=financials)
-        new.id.set_namespace(financials.id.namespace)
-        new.id.assign(new.name)
+        new.tags = Tags.from_portal(portal_data['tags'])
+        if financials:
+            new.id.set_namespace(financials.id.namespace)
+            new.id.assign(new.name)
 
         return new
 
@@ -216,6 +218,7 @@ class Statement(Equalities, TagsMixIn):
         result = {
             'title': self.title,
             'lines': [],
+            'tags': self.tags.to_portal(),
         }
         for line in self._details.values():
             result['lines'].extend(line.to_portal())

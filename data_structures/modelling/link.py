@@ -57,3 +57,22 @@ class Link(LineItem):
     def __init__(self, target):
         LineItem.__init__(self, target.tags.title)
         self.target = target
+
+    @classmethod
+    def from_portal(cls, portal_data, statement):
+        target = portal_data.pop('target')
+        line_items = LineItem.from_portal([portal_data], statement, noadd=True)
+        line_item = line_items[0]
+
+        new = cls(None)
+        new.__dict__.update(line_item.__dict__)
+        new.target = target
+
+        return new
+
+    def to_portal(self):
+        data = LineItem.to_portal(self)
+        data['target'] = self.target.id.bbid
+        data['link'] = True
+
+        return data

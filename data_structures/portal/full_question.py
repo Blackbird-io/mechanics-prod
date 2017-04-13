@@ -48,7 +48,7 @@ from .input_elements.time import TimeInput
 from .input_elements.time_range import TimeRangeInput
 
 from ..system.bbid import ID
-from ..system.tags import Tags
+from ..system.tags_mixin import TagsMixIn
 
 
 
@@ -57,7 +57,7 @@ from ..system.tags import Tags
 decimal.getcontext().prec = 6
 
 #classes
-class FullQuestion:
+class FullQuestion(TagsMixIn):
     """
 
     Class defines object that stores all details relevant to both Engine in
@@ -126,9 +126,9 @@ class FullQuestion:
     _klasses["time-range"] = TimeRangeInput
     _klasses["text"] = TextInput
 
-    def __init__(self):
+    def __init__(self, name=None):
+        TagsMixIn.__init__(self, name=name)
         self.id = ID()
-        self.tags = Tags()
         #
         self.array_caption = None
         self.comment = None

@@ -40,11 +40,13 @@ from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.guidance.guide import Guide
 from data_structures.guidance.interview_tracker import InterviewTracker
 from data_structures.modelling.statement import Statement
+from data_structures.system.tags import Tags
 from data_structures.valuation.business_summary import BusinessSummary
 from data_structures.valuation.company_value import CompanyValue
 
 from . import common_events
 
+from .dr_container import DriverContainer as DrContainer
 from .financials import Financials
 from .components import Components
 from .equalities import Equalities
@@ -123,18 +125,18 @@ class BusinessUnit(TagsMixIn, Equalities):
     _UPDATE_BALANCE_SIGNATURE = "Update balance"
 
     def __init__(self, name, fins=None, model=None):
-
         TagsMixIn.__init__(self, name)
 
+        self._parameters = Parameters()
         self._type = None
-
-        self.complete = True
+        self.id = ID()
+        self.life = LifeCycle()
+        self.location = None
+        self.size = 1
+        self.xl = xl_mgmt.UnitData()
 
         self.components = None
         self._set_components()  # Only used in copy()
-
-        self.life = LifeCycle()
-        self.location = None
 
         self.relationships = Relationships(self, model=model)
 
@@ -144,28 +146,110 @@ class BusinessUnit(TagsMixIn, Equalities):
         self.financials = None
         self.set_financials(fins)
 
-        self.size = 1
-        self.summary = BusinessSummary()
-        self.valuation = CompanyValue()
-
-        self.id = ID()
-        # Get the id functionality but do NOT assign a bbid yet
-
-        self._parameters = Parameters()
-
-        self.xl = xl_mgmt.UnitData()
-
         # Attributes related to Path
         self._stage = None
+        self.used = set()
         self.guide = Guide()
         self.interview = InterviewTracker()
-        self.used = set()
+        self.summary = BusinessSummary()
+        self.valuation = CompanyValue()
 
         # for monitoring, temporary storage for existing path and used sets
         self._path_archive = list()
         self._used_archive = list()
-
+        
         self.cap_table = CapTable()
+
+        # OBSOLETE
+        self.complete = True
+        self.drivers = DrContainer()
+
+    @classmethod
+    def from_portal(cls, portal_data, link_list=list()):
+        new = cls(None)
+        new.tags = Tags.from_portal(portal_data['tags'])
+        new._parameters = Parameters.from_portal(portal_data['_parameters'],
+                                                 target='business_unit')
+        new._type = portal_data['_type']
+        new.life = LifeCycle.from_portal(portal_data['life'])
+        new.location = portal_data['location']
+        new.size = portal_data['size']
+        new.used = set(portal_data['used'])
+        new.guide = Guide.from_portal(portal_data['guide'])
+        new.components = portal_data['components']
+        new.interview = InterviewTracker.from_portal(portal_data['interview'],
+                                                     link_list)
+        # new.interview = portal_data['interview']
+
+        new.summary = portal_data['summary']
+        new.valuation = portal_data['valuation']
+
+        stage = portal_data['_stage']
+        if stage == 'summary':
+            new._stage = new.summary
+        elif stage == 'valuation':
+            new._stage = new.valuation
+
+        for path in portal_data['_path_archive']:
+            new._path_archive.append(path.from_portal(path))
+
+        new._used_archive = portal_data['_used_archive']
+
+        fins = portal_data.get('financials_structure')
+        new_fins = Financials.from_portal(fins, new, period=None)
+        new.set_financials(new_fins)
+
+        file = open(r'C:\Blackbird\log_interview_YESserial.txt','a')
+        file.write('FROM PORTAL\n')
+        file.write(new.name + '\n')
+        file.write(new.interview.__dict__.__str__()+'\n')
+        file.close()
+
+        return new
+
+    def to_portal(self):
+        data = dict()
+
+        data['_parameters'] = self._parameters.to_portal(target='business_unit')
+        data['_type'] = self._type
+        data['components'] = list(self.components.keys())
+        data['bbid'] = self.id.bbid
+        data['life'] = self.life.to_portal()
+        data['location'] = self.location
+        data['name'] = self.name
+        data['size'] = self.size = 1
+        data['tags'] = self.tags.to_portal()
+        data['financials_structure'] = self.financials.to_portal()
+
+        if self._stage is self.summary:
+            stage = 'summary'
+        elif self._stage is self.valuation:
+            stage = 'valuation'
+        else:
+            stage = None      
+        data['_stage'] = stage
+
+        file = open(r'C:\Blackbird\log_interview_YESserial.txt','a')
+        file.write('TO PORTAL\n')
+        file.write(self.name + '\n')
+        file.write(self.interview.__dict__.__str__()+'\n')
+        file.close()
+
+        data['used'] = list(self.used)
+        data['guide'] = self.guide.to_portal()
+        data['interview'] = self.interview.to_portal()
+        data['summary'] = self.summary  #.to_portal()
+        data['valuation'] = self.valuation  #.to_portal()
+
+        # for monitoring, temporary storage for existing path and used sets
+        old_paths = list()
+        for path in self._path_archive:
+            old_paths.append(path.to_portal())
+
+        data['_path_archive'] = old_paths
+        data['_used_archive'] = self._used_archive
+
+        return data
 
     @property
     def parameters(self):
@@ -254,15 +338,11 @@ class BusinessUnit(TagsMixIn, Equalities):
                 if self is model.bu_directory[self.id.bbid]:
                     ty_directory = model.ty_directory
                     in_model = True
-                else:
-                    print("Warning, another BU has same ID in model")
 
             if self.id.bbid in model.taxo_dir.bu_directory:
                 if self is model.taxo_dir.bu_directory[self.id.bbid]:
                     ty_directory = model.taxo_dir.ty_directory
                     in_taxonomy = True
-                else:
-                    print("Warning, another BU has same ID in taxonomy")
 
             if in_model and in_taxonomy:
                 print(self.name + " is both model.bu_dir and taxo_dir!!")
@@ -358,8 +438,25 @@ class BusinessUnit(TagsMixIn, Equalities):
         self.components.add_item(bu)
 
         # Step 3: Register the units. Will raise errors on collisions.
-        if register_in_dir:
-            bu._register_in_dir(recur=True, overwrite=overwrite)
+        bu._register_in_dir(recur=True, overwrite=overwrite)
+
+    def remove_component(self, buid):
+        """
+
+
+        BusinessUnit.add_component() -> None
+
+
+        """
+        # Step 1: remove from directories
+        mo = self.relationships.model
+        bu = self.components[buid]
+
+        mo.ty_directory[bu.type] -= {bu.id.bbid}
+        mo.bu_directory.pop(bu.id.bbid)
+
+        # Step 2: remove component
+        self.components.remove_item(buid)
 
     def archive_path(self):
         """
@@ -676,7 +773,21 @@ class BusinessUnit(TagsMixIn, Equalities):
 
         fins.relationships.set_parent(self)
         self.financials = fins
-        # self.financials.starting = self.financials.ending
+
+    def set_name(self, name):
+        self.tags.set_name(name)
+
+        mo = self.relationships.model
+        if mo:
+            if self.id.bbid in mo.bu_directory:
+                mo.set_company(mo.get_company())
+            elif self.id.bbid in mo.taxo_dir.bu_directory:
+                self._update_id(self.id.namespace)
+                mo.taxo_dir.refresh_ids()
+            else:
+                self._update_id(self.id.namespace)
+        else:
+            self._update_id(self.id.namespace)
 
     def synchronize(self, recur=True):
         """
@@ -1049,7 +1160,6 @@ class BusinessUnit(TagsMixIn, Equalities):
                     name=bu_directory[self.id.bbid].tags.name,
                     mine=self.tags.name,
                 )
-                print(bu_directory)
                 raise bb_exceptions.IDCollisionError(c)
 
         bu_directory[self.id.bbid] = self
@@ -1058,7 +1168,12 @@ class BusinessUnit(TagsMixIn, Equalities):
         brethren.add(self.id.bbid)
 
         if recur:
-            for unit in self.components.values():
+            try:
+                components = self.components.values()
+            except AttributeError:
+                components = list()
+
+            for unit in components:
                 unit._register_in_dir(recur, overwrite)
 
     def _set_components(self, comps=None):
@@ -1123,8 +1238,18 @@ class BusinessUnit(TagsMixIn, Equalities):
         # the namespace for all downstream components.
 
         if recur:
-            for unit in self.components.values():
+            try:
+                components = self.components.values()
+            except AttributeError:
+                components = list()
+
+            for unit in components:
                 unit._update_id(namespace=self.id.bbid, recur=True)
+
+            try:
+                self.components.refresh_ids()
+            except AttributeError:
+                pass
                 
     def _update_lines(self, start_line, end_line):
         """

@@ -34,7 +34,7 @@ import bb_settings
 
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
-from data_structures.system.relationships import Relationships
+from data_structures.system.tags import Tags
 from data_structures.system.tags_mixin import TagsMixIn
 import formula_manager as FormulaManager
 
@@ -147,19 +147,13 @@ class Driver(TagsMixIn):
         TagsMixIn.__init__(self, name=name)
 
         self.conversion_table = dict()
-        self.parameters = Parameters()
         self.formula_bbid = None
         self.id = ID()
-
+        self.parameters = Parameters()
         self.run_on_past = False
-
-        self.workConditions = {}
-        self.workConditions["name"] = ["FAIL"]
-        self.workConditions["partOf"] = ["FAIL"]
-        self.workConditions["all"] = ["FAIL"]
-        # We set condition values to a default that must be overwritten to make
-        # sure default configuration doesnt apply to every lineItem.
-
+        # OBSOLETE
+        self.workConditions = dict()
+        self.active = True
     def __eq__(self, comp, trace=False, tab_width=4):
         """
 
@@ -206,6 +200,33 @@ class Driver(TagsMixIn):
     def signature(self):
         return self.name
 
+    @classmethod
+    def from_portal(cls, portal_data):
+        new = cls()
+        new.tags = Tags.from_portal(portal_data.get('tags'))
+        new.conversion_table = portal_data.get('conversion_table')
+        new.formula_bbid = portal_data.get('formula_bbid')
+        new.parameters = Parameters.from_portal(portal_data.get('parameters'),
+                                                target='driver_parameters')
+        new.run_on_past = portal_data.get('run_on_past', False)
+
+        formula = cls._FM.local_catalog.issue(new.formula_bbid)
+        new.id.set_namespace(formula.id.namespace)
+        new.id.assign(new.name or formula.tags.name)
+
+        return new
+
+    def to_portal(self):
+        data = dict()
+        data['tags'] = self.tags.to_portal()
+        data['conversion_table'] = self.conversion_table
+        data['formula_bbid'] = self.formula_bbid
+        data['parameters'] = list(self.parameters.to_portal(
+            target='driver_parameters'))
+        data['run_on_past'] = self.run_on_past
+
+        return data
+
     def configure(self, data, formula, conversion_table=None):
         """
 
@@ -232,12 +253,6 @@ class Driver(TagsMixIn):
 
         # get namespace for driver
         base = self.name or formula.tags.name
-        for k, wc in self.workConditions.items():
-            wc = set(c.casefold() for c in wc if c is not None)
-            if wc:
-                tmp = '||WorkConditions||{}:{}'.format(k, ','.join(wc))
-                base += tmp
-
         self.id.set_namespace(formula.id.namespace)
         self.id.assign(seed=base)
 
