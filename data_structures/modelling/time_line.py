@@ -419,7 +419,8 @@ class TimeLine(dict):
 
         company.consolidate_fins_structure()
 
-        company.recalculate(period=seed.past, adjust_future=False)
+        if seed.past:
+            company.recalculate(period=seed.past, adjust_future=False)
         company.recalculate(period=seed, adjust_future=False)
 
         summary_maker = self.model.prep_summaries()
