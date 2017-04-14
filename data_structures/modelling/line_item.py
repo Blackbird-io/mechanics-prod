@@ -229,7 +229,7 @@ class LineItem(Statement, HistoryLine):
         return result
 
     @classmethod
-    def from_portal(cls, portal_data, statement, noadd=False):
+    def from_portal(cls, data, statement):
         """
 
 
@@ -240,59 +240,63 @@ class LineItem(Statement, HistoryLine):
         Method deserializes all LineItems belonging to ``statement``.
         """
         # first pass: create a dict of lines
-        line_info = {}
-        lines = list()
-        for data in portal_data:
-            new = cls(
-                parent=None,
-            )
-            new.tags = Tags.from_portal(data['tags'])
 
-            id_str = data['_driver_id']
-            if id_str:
-                new._driver_id = ID.from_portal(id_str).bbid
+        new = cls(
+            parent=None,
+        )
+        new.tags = Tags.from_portal(data['tags'])
 
-            # defer resolution of .xl
-            new.xl = xl_mgmt.LineData()
-            new.xl.format = xl_mgmt.LineFormat.from_portal(data['xl_format'])
+        id_str = data['_driver_id']
+        if id_str:
+            new._driver_id = ID.from_portal(id_str).bbid
 
-            for attr in (
-                'position',
-                'summary_type',
-                'summary_count',
-                '_consolidate',
-                '_replica',
-                '_include_details',
-                '_sum_details',
-                'log',
-            ):
-                new.__dict__[attr] = data[attr]
+        # defer resolution of .xl
+        new.xl = xl_mgmt.LineData()
+        new.xl.format = xl_mgmt.LineFormat.from_portal(data['xl_format'])
 
-            new.guide = Guide.from_portal(data['guide'])
+        for attr in (
+            'position',
+            'summary_type',
+            'summary_count',
+            '_consolidate',
+            '_replica',
+            '_include_details',
+            '_sum_details',
+            'log',
+        ):
+            new.__dict__[attr] = data[attr]
 
-            line_info[data['bbid']] = (new, data)
+        new.guide = Guide.from_portal(data['guide'])
 
         # second pass: place lines
-        for bbid, (line, data) in line_info.items():
-            parent_bbid = data['parent_bbid']
-            if parent_bbid:
-                # another LineItem is the parent
-                parent = line_info.get(parent_bbid)[0]
+        parent_bbid = data['parent_bbid']
+        if parent_bbid is None:
+            # belongs to statement
+            parent = statement
+        else:
+            all_lines = statement.get_full_ordered()
+            for l in all_lines:
+                if l.id.bbid.hex == parent_bbid:
+                    parent = l
+                    break
             else:
-                # Statement is the parent
-                parent = statement
+                parent = None
+
             position = data['position']
             position = int(position) if position else None
-            line.relationships.set_parent(parent)
 
-            if not noadd:
-                parent.add_line(line, position=position, noclear=True)
 
-            lines.append(line)
+            if parent is None:
+                import pdb
+                pdb.set_trace()
 
-        return lines
+            parent.add_line(new, position=position, no_clear=True)
+            # new.position = position
+            # new.relationships.set_parent(parent)
+        #
+        # return new
 
-    def to_portal(self, parent_line=None):
+    def to_portal(self, top_level=False):
         """
 
 
@@ -300,9 +304,14 @@ class LineItem(Statement, HistoryLine):
 
         Method yields a serialized representation of a LineItem.
         """
+        parent_bbid = None
+        if not top_level:
+            parent_line = self.relationships.parent
+            parent_bbid = parent_line.id.bbid.hex if parent_line else None
+
         row = {
             'bbid': self.id.bbid.hex,
-            'parent_bbid': parent_line.id.bbid.hex if parent_line else None,
+            'parent_bbid': parent_bbid,
             'name': self.name,
             'title': self.title,
             'position': self.position,
@@ -320,11 +329,7 @@ class LineItem(Statement, HistoryLine):
             'guide': self.guide.to_portal(),
         }
 
-        # return this line
-        yield row
-        # return child lines
-        for stub_index, stub in enumerate(self.get_ordered()):
-            yield from stub.to_portal(parent_line=self)
+        return row
 
     def portal_locator(self):
         """
