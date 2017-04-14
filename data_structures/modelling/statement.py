@@ -220,8 +220,15 @@ class Statement(Equalities, TagsMixIn):
             'lines': [],
             'tags': self.tags.to_portal(),
         }
-        for line in self._details.values():
-            result['lines'].extend(line.to_portal())
+        lines = list()
+        for line in self.get_full_ordered():
+            top_level = False
+            if line.relationships.parent is self:
+                top_level = True
+
+            lines.append(line.to_portal(top_level=top_level))
+
+        result['lines'] = lines
 
         return result
 

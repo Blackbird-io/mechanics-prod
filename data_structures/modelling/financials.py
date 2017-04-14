@@ -36,6 +36,7 @@ from data_structures.serializers.chef.data_management import LineData
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
 from .line_item import Statement, LineItem
+from .link import Link
 from .statements import BalanceSheet
 from .statements import CashFlow
 from .equalities import Equalities
@@ -235,9 +236,15 @@ class Financials:
             new.__dict__[attr_name] = statement
 
             # deserialize all LineItems
-            LineItem.from_portal(
-                data['lines'], statement=statement
-            )
+            for row in data['lines']:
+                if row.get('link'):
+                    Link.from_portal(row, statement)
+                else:
+                    LineItem.from_portal(row, statement)
+
+            # LineItem.from_portal(
+            #     data['lines'], statement=statement
+            # )
 
         return new
 
