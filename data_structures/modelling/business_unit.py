@@ -199,12 +199,6 @@ class BusinessUnit(TagsMixIn, Equalities):
         new_fins = Financials.from_portal(fins, new, period=None)
         new.set_financials(new_fins)
 
-        file = open(r'C:\Blackbird\log_interview_YESserial.txt','a')
-        file.write('FROM PORTAL\n')
-        file.write(new.name + '\n')
-        file.write(new.interview.__dict__.__str__()+'\n')
-        file.close()
-
         return new
 
     def to_portal(self):
@@ -228,13 +222,6 @@ class BusinessUnit(TagsMixIn, Equalities):
         else:
             stage = None      
         data['_stage'] = stage
-
-        file = open(r'C:\Blackbird\log_interview_YESserial.txt','a')
-        file.write('TO PORTAL\n')
-        file.write(self.name + '\n')
-        file.write(self.interview.__dict__.__str__()+'\n')
-        file.close()
-
         data['used'] = list(self.used)
         data['guide'] = self.guide.to_portal()
         data['interview'] = self.interview.to_portal()

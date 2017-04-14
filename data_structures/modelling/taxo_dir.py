@@ -99,13 +99,7 @@ class TaxoDir:
         for unit in portal_data['taxonomy_units']:
             tmp = BusinessUnit.from_portal(unit, link_list)
             temp_dir[unit['bbid']] = tmp
-
-            if tmp.components:
-                import pdb
-                pdb.set_trace()
-            else:
-                tmp._set_components()
-
+            tmp._set_components()
             new.register(tmp)
 
         return new
