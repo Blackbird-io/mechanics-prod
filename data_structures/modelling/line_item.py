@@ -39,7 +39,7 @@ from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
 
-from .statement import Statement
+from .base_financial_component import BaseFinancialsComponent
 from .history_line import HistoryLine
 
 
@@ -52,7 +52,7 @@ SUMMARY_TYPES = ('skip', 'derive', 'sum', 'average', 'ending', 'starting')
 
 
 # Classes
-class LineItem(Statement, HistoryLine):
+class LineItem(BaseFinancialsComponent, HistoryLine):
     """
 
     A LineItem is a Statement that can have a value and a position.
@@ -96,8 +96,9 @@ class LineItem(Statement, HistoryLine):
     set_value()           sets value to input, records signature
     ====================  ======================================================
     """
-    keyAttributes = Statement.keyAttributes + ["value", "tags.required",
-                                               "tags.optional"]
+    keyAttributes = BaseFinancialsComponent.keyAttributes + ["value",
+                                                             "tags.required",
+                                                             "tags.optional"]
 
     # Make sure that equality analysis skips potentially circular pointers like
     # .relationships.parent. Otherwise, comparing children could look to parent, which
@@ -116,7 +117,10 @@ class LineItem(Statement, HistoryLine):
 
     def __init__(self, name=None, value=None, parent=None, period=None):
 
-        Statement.__init__(self, name, parent=parent, period=period)
+        BaseFinancialsComponent.__init__(self,
+                                         name=name,
+                                         parent=parent,
+                                         period=period)
         # We intentionally use inheritance for the Statement relationship here
         # because then the .find_ and .add_ methods map right on top of each
         # other by default.
@@ -267,34 +271,13 @@ class LineItem(Statement, HistoryLine):
             new.__dict__[attr] = data[attr]
 
         new.guide = Guide.from_portal(data['guide'])
+        new.id.bbid = ID.from_portal(data['bbid']).bbid
 
-        # second pass: place lines
-        parent_bbid = data['parent_bbid']
-        if parent_bbid is None:
-            # belongs to statement
-            parent = statement
-        else:
-            all_lines = statement.get_full_ordered()
-            for l in all_lines:
-                if l.id.bbid.hex == parent_bbid:
-                    parent = l
-                    break
-            else:
-                parent = None
+        position = data['position']
+        position = int(position) if position else None
+        new.position = position
 
-            position = data['position']
-            position = int(position) if position else None
-
-
-            if parent is None:
-                import pdb
-                pdb.set_trace()
-
-            parent.add_line(new, position=position, no_clear=True)
-            # new.position = position
-            # new.relationships.set_parent(parent)
-        #
-        # return new
+        return new
 
     def to_portal(self, top_level=False):
         """
@@ -341,7 +324,7 @@ class LineItem(Statement, HistoryLine):
         a model without object references.
         """
         parent = self.relationships.parent
-        while isinstance(parent, Statement):
+        while isinstance(parent, BaseFinancialsComponent):
             statement = parent
             parent = parent.relationships.parent
 
@@ -412,7 +395,7 @@ class LineItem(Statement, HistoryLine):
             if self._details:
                 self._bring_down_local_value()
                 if recur:
-                    Statement.reset(self)
+                    BaseFinancialsComponent.reset(self)
 
             sig = self.SIGNATURE_FOR_VALUE_RESET
             self.set_value(None, sig, override=True)
@@ -441,7 +424,7 @@ class LineItem(Statement, HistoryLine):
         Return a deep copy of the instance and its details. If  is
         True, copy conforms to ``out`` rules.
         """
-        new_line = Statement.copy(self,
+        new_line = BaseFinancialsComponent.copy(self,
                                   check_include_details=check_include_details,
                                   clean=clean)
         # Shallow copy, should pick up _local_value as is, and then create
@@ -480,12 +463,7 @@ class LineItem(Statement, HistoryLine):
         """
         dr = None
         if self._driver_id:
-            parent = self.relationships.parent
-            while isinstance(parent, Statement):
-                parent = parent.relationships.parent
-
-            bu = parent.relationships.parent
-            mo = bu.relationships.model
+            mo = self.model
             dr = mo.drivers.get(self._driver_id)
 
         return dr
@@ -506,10 +484,12 @@ class LineItem(Statement, HistoryLine):
         send_to_statement = matching_line._details and \
                             (matching_line.include_details or over_time)
         if send_to_statement:
-            Statement.increment(self, matching_line,
-                                consolidating=consolidating,
-                                xl_label=xl_label, over_time=over_time,
-                                override=override, xl_only=xl_only)
+            BaseFinancialsComponent.increment(self, matching_line,
+                                              consolidating=consolidating,
+                                              xl_label=xl_label,
+                                              over_time=over_time,
+                                              override=override,
+                                              xl_only=xl_only)
             # Use Statement method here because we're treating the matching
             # line as a Statement too. We assume that its details represent
             # all of its value data. Statement.increment() will copy those
@@ -700,6 +680,11 @@ class LineItem(Statement, HistoryLine):
             for line in self._details.values():
                 line.set_hardcoded(val, recur=recur)
 
+    def set_name(self, name):
+        # SHOULD REMOVE OLD VALUES FROM PERIOD DATA CACHE!!!!
+        BaseFinancialsComponent.set_name(self, name)
+        self.register(self.id.namespace)
+
     def set_period(self, period):
         self._period = period
         for line in self._details.values():
@@ -822,7 +807,7 @@ class LineItem(Statement, HistoryLine):
         if self._local_value and not self._details and self.sum_details:
             self._bring_down_local_value()
 
-        Statement._bind_and_record(self, line, noclear=noclear)
+        BaseFinancialsComponent._bind_and_record(self, line, noclear=noclear)
 
         self._update_stored_hc()
         line._update_stored_value()
@@ -876,7 +861,9 @@ class LineItem(Statement, HistoryLine):
                 # Will always return a list of strings
                 result.extend(view)
 
-            footer = printing_tools.format_as_line(self, prefix=self.SUMMARY_PREFIX, left_tab=indent)
+            footer = printing_tools.format_as_line(self,
+                                                   prefix=self.SUMMARY_PREFIX,
+                                                   left_tab=indent)
             result.append(footer)
 
         return result

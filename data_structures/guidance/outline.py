@@ -94,13 +94,6 @@ class Outline(Step):
 
         # rebuild the path
         new.path = Statement.from_portal(portal_data['path'], None)
-        for line in portal_data['path']['lines']:
-            if line['link']:
-                new_link = Link.from_portal(line, new.path)
-                # link_list.append(new_link)
-                # new.path.append(new_link)
-            else:
-                LineItem.from_portal(line, new.path)
 
         # find the right step to assign as focal point
         if new.focal_point:

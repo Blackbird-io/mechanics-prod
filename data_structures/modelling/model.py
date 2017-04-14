@@ -368,9 +368,6 @@ class Model(TagsMixIn):
         result['company'] = self._company.id.bbid if self._company else None
         result['target'] = self.target.id.bbid if self.target else None
 
-        if self.target:
-            print('TARGET TO: ' + self.target.name)
-
         # pre-process financials in the current period, make sure they get
         # serialized in th database to maintain structure data
         bu_list = list()
