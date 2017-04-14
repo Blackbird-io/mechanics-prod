@@ -316,6 +316,19 @@ class Model(TagsMixIn):
         else:
             M.taxo_dir = TaxoDir(M)
 
+        # Fix Links
+        if link_list:
+            for link in link_list:
+                targ_id = link.target
+
+                if targ_id in M.bu_directory:
+                    link.target = M.bu_directory[targ_id]
+                elif targ_id in M.taxo_dir.bu_directory:
+                    link.target = M.taxo_dir.bu_directory[targ_id]
+                else:
+                    c = "ERROR: Cannot locate link target: "+targ_id.hex
+                    raise LookupError(c)
+
         # Taxonomy
         data = portal_model.get('taxonomy', None)
         if data:

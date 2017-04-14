@@ -95,6 +95,10 @@ class Outline(Step):
         # rebuild the path
         new.path = Statement.from_portal(portal_data['path'], None)
 
+        for step in new.path.get_full_ordered():
+            if isinstance(step, Link):
+                link_list.append(step)
+
         # find the right step to assign as focal point
         if new.focal_point:
             fp = new.path.find_first(new.focal_point)
