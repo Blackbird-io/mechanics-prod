@@ -55,7 +55,12 @@ class Link(LineItem):
     ====================  =====================================================
     """
     def __init__(self, target):
-        LineItem.__init__(self, target.tags.title)
+        if target:
+            name = target.title
+        else:
+            name = None
+
+        LineItem.__init__(self, name)
         self.target = target
 
     @classmethod
@@ -75,3 +80,4 @@ class Link(LineItem):
         data['link'] = True
 
         return data
+
