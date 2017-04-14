@@ -417,6 +417,7 @@ def _build_fins_from_sheet(bu, sheet):
 
         # Set line title must happen after line name is set
         line.set_title(line_title)
+        # print(line.name, line.title)
 
         # Add comparison ("<" or ">") as a tag for KPI and Covenant analysis
         if COMPARISON_COL:
@@ -646,7 +647,9 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f):
             statement_name = statement_str.split()[0].casefold()
             line_name = sheet.cell(row=row_num, column=LINE_NAME_COL).value
             parent_name = sheet.cell(row=row_num, column=PARENT_NAME_COL).value
-
+            # print(line_name, parent_name)
+            # import pdb
+            # pdb.set_trace()
             # Handle rows where we just want to add a parameter value
             if statement_name in ("parameters", "parameter"):
                 if parent_name in ("Timeline", "timeline"):
@@ -950,6 +953,10 @@ def _populate_line_from_cell(cell, line_name, parent_name, statement):
     else:
         line = statement.find_first(line_name)
 
+    # if not line:
+    #     print(line_name)
+    #     import pdb
+    #     pdb.set_trace()
     if line._details and line.sum_details:
         pass
         # if line.value is not None:
