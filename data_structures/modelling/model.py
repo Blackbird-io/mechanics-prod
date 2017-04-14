@@ -316,10 +316,6 @@ class Model(TagsMixIn):
         else:
             M.taxo_dir = TaxoDir(M)
 
-        if link_list:
-            import pdb
-            pdb.set_trace()
-
         # Taxonomy
         data = portal_model.get('taxonomy', None)
         if data:
@@ -373,9 +369,7 @@ class Model(TagsMixIn):
         result['target'] = self.target.id.bbid if self.target else None
 
         if self.target:
-            if self.target.id.bbid is None:
-                import pdb
-                pdb.set_trace()
+            print('TARGET TO: ' + self.target.name)
 
         # pre-process financials in the current period, make sure they get
         # serialized in th database to maintain structure data
