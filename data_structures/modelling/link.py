@@ -61,7 +61,7 @@ class Link(LineItem):
     @classmethod
     def from_portal(cls, portal_data, statement):
         target = portal_data.pop('target')
-        line_item = LineItem.from_portal([portal_data], statement)
+        line_item = LineItem.from_portal(portal_data, statement)
 
         new = cls(None)
         new.__dict__.update(line_item.__dict__)
