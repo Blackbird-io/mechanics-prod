@@ -35,8 +35,9 @@ import bb_exceptions
 from data_structures.serializers.chef.data_management import LineData
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
-from .line_item import Statement, LineItem
+from .line_item import LineItem
 from .link import Link
+from .statement import Statement
 from .statements import BalanceSheet
 from .statements import CashFlow
 from .equalities import Equalities
@@ -87,6 +88,7 @@ class Financials:
 
         # parent for Financials is BusinessUnit
         self.relationships = Relationships(self, parent=parent)
+
         self._period = period
         # self.filled = False
 
@@ -218,7 +220,7 @@ class Financials:
         """
         period = kargs['period']
         new = cls(parent=company, period=period)
-        new.id.set_namespace(company.id.bbid)
+        new.register(company.id.bbid)
 
         for attr in ('_chef_order',
                      '_compute_order',
@@ -234,17 +236,6 @@ class Financials:
             )
 
             new.__dict__[attr_name] = statement
-
-            # deserialize all LineItems
-            for row in data['lines']:
-                if row.get('link'):
-                    Link.from_portal(row, statement)
-                else:
-                    LineItem.from_portal(row, statement)
-
-            # LineItem.from_portal(
-            #     data['lines'], statement=statement
-            # )
 
         return new
 
@@ -271,6 +262,7 @@ class Financials:
                 }
                 data.update(statement.to_portal())
                 statements.append(data)
+
         result = {
             'statements': statements,
             '_chef_order': self._chef_order,
@@ -394,10 +386,12 @@ class Financials:
             if own_statement is not None:
                 new_statement = own_statement.copy(clean=clean)
                 new_statement.relationships.set_parent(new_instance)
-                setattr(new_instance, name, new_statement)
+
+                new_instance.__dict__[name] = new_statement
 
         new_instance.id = ID()
         new_instance.register(self.id.namespace)
+
         return new_instance
 
     def populate_from_stored_values(self, period):
