@@ -69,9 +69,6 @@ class Statement(BaseFinancialsComponent):
         BaseFinancialsComponent.__init__(self, name=name, spacing=spacing,
                                          parent=parent, period=period)
 
-        print("***TYPE***")
-        print(type(self))
-
     @classmethod
     def from_portal(cls, portal_data, financials):
         """
