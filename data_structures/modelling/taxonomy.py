@@ -73,8 +73,10 @@ class Taxonomy(dict):
     def __setitem__(self, key, value):
         if isinstance(value, dict):
             if not isinstance(value, Taxonomy):
-                value = Taxonomy(self.taxo_dir)
-            dict.__setitem__(self, key, value)
+                new_value = Taxonomy(self.taxo_dir)
+                for k, v in value.items():
+                    new_value[k] = v
+            dict.__setitem__(self, key, new_value)
         else:
             self.taxo_dir.add(value)
             dict.__setitem__(self, key, value)
