@@ -54,7 +54,8 @@ SUMMARY_TYPES = ('skip', 'derive', 'sum', 'average', 'ending', 'starting')
 class LineItem(BaseFinancialsComponent, HistoryLine):
     """
 
-    A LineItem is a Statement that can have a value and a position.
+    A LineItem is a BaseFinancialsComponent that can have a value and a
+    position.
 
     A LineItem can have value in two ways. First, an instance can define
      local value. A local value is written directly to that instance via
@@ -118,8 +119,8 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
                                                              "tags.optional"]
 
     # Make sure that equality analysis skips potentially circular pointers like
-    # .relationships.parent. Otherwise, comparing children could look to parent, which
-    # could look to child, and so on.
+    # .relationships.parent. Otherwise, comparing children could look to
+    # parent, which could look to child, and so on.
 
     SIGNATURE_FOR_COPY = "LineItem.copy"
     SIGNATURE_FOR_CREATION = "__init__"
@@ -133,24 +134,23 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
     TAB_WIDTH = 3
 
     def __init__(self, name=None, value=None, parent=None, period=None):
-
         BaseFinancialsComponent.__init__(self,
                                          name=name,
                                          parent=parent,
                                          period=period)
-        # We intentionally use inheritance for the Statement relationship here
-        # because then the .find_ and .add_ methods map right on top of each
-        # other by default.
 
         self._local_value = None
 
         self.guide = Guide(priority=3, quality=1)
         self.log = []
         self.position = None
+
         # summary_type determines how the line is summarized
         self.summary_type = 'sum'
+
         # summary_count is used for summary_type == 'average'
         self.summary_count = 0
+
         self._consolidate = True
         self._replica = False
         self._hardcoded = False
@@ -161,20 +161,14 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         self._driver_id = None
 
         if value is not None:
-            # BU.consolidate() will NOT increment items with value==None. On the
-            # other hand, BU.consolidate() will increment items with value == 0.
-            # Once consolidate() changes a lineitem, derive() will skip it. To
-            # allow derivation of empty lineitems, must start w value==None.
             self.set_value(value, self.SIGNATURE_FOR_CREATION)
 
         self.xl = xl_mgmt.LineData()
 
-    # Lines can contain a mutable set of details, so we don't include a hash
-    # method. Since it's difficult to compare lines to each other unless you
-    # know exactly what the user has in mind, we don't support set operations
-    # out of the box. Otherwise, you might get a response that a line is "in"
-    # a particular set that actually contains an instance with the
-    # same value but very different details.
+    def __str__(self):
+        result = "\n".join(self._get_line_strings())
+        result += "\n"
+        return result
 
     @property
     def consolidate(self):
@@ -300,20 +294,19 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         """
 
 
-        LineItem.to_portal() -> iter(dict)
+        LineItem.to_portal() -> dict
 
-        Method yields a serialized representation of a LineItem.
+        Method returns a serialized representation of a LineItem.
         """
         parent_bbid = None
         if not top_level:
             parent_line = self.relationships.parent
             parent_bbid = parent_line.id.bbid.hex if parent_line else None
 
+        result = BaseFinancialsComponent.to_portal(self)
+
         row = {
-            'bbid': self.id.bbid.hex,
             'parent_bbid': parent_bbid,
-            'name': self.name,
-            'title': self.title,
             'position': self.position,
             'summary_type': self.summary_type,
             'summary_count': self.summary_count,
@@ -322,64 +315,14 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             '_include_details': self._include_details,
             '_sum_details': self._sum_details,
             'xl_format': self.xl.format.to_portal(),
-            'tags': self.tags.to_portal(),
             'log': self.log,
             '_driver_id': self._driver_id.hex if self._driver_id else None,
             'link': False,
             'guide': self.guide.to_portal(),
         }
 
-        return row
+        result.update(row)
 
-    def portal_locator(self):
-        """
-
-
-        LineItem.portal_locator() -> dict
-
-        Method returns a dict with info needed to locate this line within
-        a model without object references.
-        """
-        parent = self.relationships.parent
-        while isinstance(parent, BaseFinancialsComponent):
-            statement = parent
-            parent = parent.relationships.parent
-
-        # parent is Financials at this point
-        financials = parent
-
-        statement_attr = None
-        for attr in financials._full_order:
-            stmt = getattr(financials, attr, None)
-            if stmt is statement:
-                statement_attr = attr
-
-        bu = financials.relationships.parent
-        locator = dict(
-            buid=bu.id.bbid.hex,
-            financials_attr=statement_attr,
-            bbid=self.id.bbid.hex,
-        )
-
-        period = financials.period
-        if period:
-            period_end = format(period.end)
-            time_line = period.relationships.parent
-        else:
-            period_end = None
-            time_line = bu.relationships.model.time_line
-
-        locator.update(
-            period=period_end,
-            resolution=time_line.resolution,
-            name=time_line.name,
-        )
-
-        return locator
-
-    def __str__(self):
-        result = "\n".join(self._get_line_strings())
-        result += "\n"
         return result
 
     def assign_driver(self, driver_id):
@@ -484,6 +427,21 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             dr = mo.drivers.get(self._driver_id)
 
         return dr
+
+    def has_own_content(self):
+        """
+
+
+        LineItem.has_own_content() -> Bool
+
+        Checks if line has content. A line with own content should have no
+        children with own content, and should not consolidate
+        """
+        return any((
+            len(self._details) > 0,
+            self.xl.derived.calculations,
+            self.hardcoded,
+        ))
 
     def increment(self, matching_line, signature=None, consolidating=False,
                   xl_label=None, override=False, xl_only=False,
@@ -609,6 +567,72 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             self.xl.reference.source = matching_line
             self._update_stored_xl()
 
+    def peer_locator(self):
+        """
+
+
+        LineItem.peer_locator() -> LineItem
+
+        Given a parent container from another time period, return a function
+        locating a copy of ourselves within that container.
+        """
+
+        def locator(statement, create=True, **kargs):
+            peer = statement.find_first(self.name)
+            if create and not peer:
+                peer = self.copy()
+                peer.clear()
+                statement.add_line(peer)
+            return peer
+
+        return locator
+
+    def portal_locator(self):
+        """
+
+
+        LineItem.portal_locator() -> dict
+
+        Method returns a dict with info needed to locate this line within
+        a model without object references.
+        """
+        parent = self.relationships.parent
+        while isinstance(parent, BaseFinancialsComponent):
+            statement = parent
+            parent = parent.relationships.parent
+
+        # parent is Financials at this point
+        financials = parent
+
+        statement_attr = None
+        for attr in financials._full_order:
+            stmt = getattr(financials, attr, None)
+            if stmt is statement:
+                statement_attr = attr
+
+        bu = financials.relationships.parent
+        locator = dict(
+            buid=bu.id.bbid.hex,
+            financials_attr=statement_attr,
+            bbid=self.id.bbid.hex,
+        )
+
+        period = financials.period
+        if period:
+            period_end = format(period.end)
+            time_line = period.relationships.parent
+        else:
+            period_end = None
+            time_line = bu.relationships.model.time_line
+
+        locator.update(
+            period=period_end,
+            resolution=time_line.resolution,
+            name=time_line.name,
+        )
+
+        return locator
+
     def remove_driver(self, recur=False):
         """
 
@@ -681,6 +705,18 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
                 line.set_hardcoded(val, recur=recur)
 
     def set_name(self, name):
+        """
+
+
+        LineItem.set_name() -> None
+
+        --``name`` is the string name to assign to the LineItem
+
+        Method sets the name on the LineItem and updates its ID to reflect the
+         name change.  Line's details also get their IDs updated.
+
+        Delegates to base-class method.
+        """
         # SHOULD REMOVE OLD VALUES FROM PERIOD DATA CACHE!!!!
         BaseFinancialsComponent.set_name(self, name)
         self.register(self.id.namespace)
@@ -722,12 +758,10 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
                 print(self)
                 c = "Cannot perform arithmetic on LineItem! override=False"
                 raise bb_exceptions.BBAnalyticalError(c)
-            # Will throw exception if value doesn't support arithmetic
+                # Will throw exception if value doesn't support arithmetic
 
             if self.hardcoded:
                 return  # Do  Nothing if line is hardcoded
-                # c = "Line %s is hardcoded. Cannot write." % self.name
-                # raise bb_exceptions.BBPermissionError(c, self)
 
         new_value = value
         if new_value is None:
@@ -743,41 +777,6 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         log_entry = (signature, time.time(), value)
         self.log.append(log_entry)
         self._update_stored_value()
-
-    def peer_locator(self):
-        """
-
-
-        LineItem.peer_locator() -> LineItem
-
-        Given a parent container from another time period, return a function
-        locating a copy of ourselves within that container.
-        """
-
-        def locator(statement, create=True, **kargs):
-            peer = statement.find_first(self.name)
-            if create and not peer:
-                peer = self.copy()
-                peer.clear()
-                statement.add_line(peer)
-            return peer
-
-        return locator
-
-    def has_own_content(self):
-        """
-
-
-        LineItem.has_own_content() -> Bool
-
-        Checks if line has content. A line with own content should have no
-        children with own content, and should not consolidate
-        """
-        return any((
-            len(self._details) > 0,
-            self.xl.derived.calculations,
-            self.hardcoded,
-        ))
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
@@ -861,39 +860,6 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
 
         return result
 
-    def _make_replica(self):
-        """
-
-
-        LineItem._make_replica() -> None
-
-
-        Create a replica, add replica to details
-        """
-        replica = copy.copy(self)
-        replica.tags = self.tags.copy()
-        # Start with a shallow copy that picks up all the tags, including ones
-        # like "hardcoded" or "do not touch" that don't normally go ``out``. If
-        #  is True, these would not transfer to the replica because
-        # the copy counts as an "out" move. Then, if the original value was to
-        # somehow get reset to None, the lineitem could get behind and the
-        # entire financials unit could lose a special processing trigger.
-
-        replica._details = dict()
-        replica.xl = xl_mgmt.LineData()
-        replica.xl.format = self.xl.format.copy()
-        replica.set_consolidate(self._consolidate)
-
-        # Replicas don't have any details of their own. Can't run .clear() here
-        # because instance and replica initially point to the same details dict.
-        replica._period = self.period
-        replica._replica = True
-        replica.position = 0
-        replica.register(namespace=self.id.namespace)
-
-        self._details[replica.tags.name] = replica
-        # Add replica in first position.
-
     def _get_sum_of_details(self):
         """
 
@@ -919,7 +885,33 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
                 result += detail.value
         return result
 
+    def _make_replica(self):
+        """
+
+
+        LineItem._make_replica() -> None
+
+
+        Create a replica, add replica to details
+        """
+        replica = copy.copy(self)
+        replica.tags = self.tags.copy()
+        replica._details = dict()
+        replica.xl = xl_mgmt.LineData()
+        replica.xl.format = self.xl.format.copy()
+        replica.set_consolidate(self._consolidate)
+        replica._period = self.period
+        replica._replica = True
+        replica.position = 0
+        replica.register(namespace=self.id.namespace)
+
+        self._details[replica.tags.name] = replica
+
     def _update_stored_value(self):
+        """
+        Method updates cached value in the Period's value directory so that it
+         will be preserved in the database.
+        """
         if self.period:
             self.period.update_line_value(self)
 
@@ -928,10 +920,18 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             parent._update_stored_value()
 
     def _update_stored_xl(self):
+        """
+        Method updates cached Excel data in the Period's value directory
+        so that it will be preserved in the database.
+        """
         if self.period:
             self.period.update_line_xl(self)
 
     def _update_stored_hc(self):
+        """
+        Method updates cached hardcoded value in the Period's value directory
+        so that it will be preserved in the database.
+        """
         if self.period:
             self.period.update_line_hardcoded(self)
 
