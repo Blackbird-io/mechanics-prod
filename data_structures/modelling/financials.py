@@ -257,10 +257,8 @@ class Financials:
 
             statement = getattr(self, name, None)
             if statement:
-                data = {
-                    'name': name,
-                }
-                data.update(statement.to_portal())
+                data = statement.to_portal()
+                data.update({'name': name})
                 statements.append(data)
 
         result = {

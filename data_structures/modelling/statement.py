@@ -26,11 +26,6 @@ Statement             container that stores, updates, and organizes LineItems
 
 
 # Imports
-import copy
-
-import bb_exceptions
-import bb_settings
-
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
 
@@ -50,62 +45,32 @@ from .link import Link
 # Classes
 class Statement(BaseFinancialsComponent):
     """
-
-    A Statement is a container that supports fast lookup and ordered views.
-
-    CONTAINER:
-
-    Statements generally contain Lines, which may themselves contain additional
-    Lines. You can use Statement.find_first() or find_all() to locate the
-    item you need from the top level of any statement.
-
-    You can add details to a statement through add_line(). Statements also
-    support the append() and extend() list interfaces.
-
-    You can easily combine statements by running stmt_a.increment(stmt_b).
-
-    ORDER:
-
-    Statements provide ordered views of their contents on demand through
-    get_ordered(). The ordered view is a list of details sorted by their
-    relative position.
-
-    Positions should be integers GTE 0. Positions can (and usually should) be
-    non-consecutive. You can specify your own positions when adding a detail or
-    have the Statement automatically assign a position to the detail. You can
-    change detail order by adjusting the .position attribute of any detail.
-
-    Statement automatically maintains and repairs order. If you add a line in
-    an existing position, the Statement will move the existing lines and all
-    those behind it back. If you manually change the position of one line to
-    conflict with another, Statement will sort them in alphabetical order.
-
-    RECURSION:
-
-    You can view the full, recursive list of all the details in a statement
-    by running stmt.get_full_ordered().
+    Statement is BaseFinancialsComponent that collects structured LineItems.
 
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
-    consolidated          whether Statement has been consolidated
-    POSITION_SPACING      default distance between positions
-    relationships         instance of Relationships class
+    N/A
 
     FUNCTIONS:
-    get_ordered()         return list of instance details
-    get_full_ordered()    return recursive list of details
-    increment()           add data from another statement
-    link_to()             links statements in Excel
-    reset()               clear values
+    to_portal()           creates a flattened version of Statement for Portal
+    peer_locator()        returns a function for locating or creating a copy of
+                          the instance within a given container
+    set_name()            sets instance name and updates ID to reflect the change
+
+    CLASS METHODS:
+    from_portal()         class method, extracts Statement out of API-format
     ====================  ======================================================
     """
 
     def __init__(self, name=None, spacing=100, parent=None, period=None):
         BaseFinancialsComponent.__init__(self, name=name, spacing=spacing,
                                          parent=parent, period=period)
+
+        print("***TYPE***")
+        print(type(self))
 
     @classmethod
     def from_portal(cls, portal_data, financials):
@@ -166,11 +131,7 @@ class Statement(BaseFinancialsComponent):
 
         Method yields a serialized representation of self.
         """
-        result = {
-            'title': self.title,
-            'tags': self.tags.to_portal(),
-            'bbid': self.id.bbid.hex if self.id.bbid else None
-        }
+        result = BaseFinancialsComponent.to_portal(self)
 
         lines = list()
         for line in self.get_full_ordered():
@@ -205,5 +166,17 @@ class Statement(BaseFinancialsComponent):
         return locator
 
     def set_name(self, name):
+        """
+
+
+        Statement.set_name() -> None
+
+        --``name`` is the string name to assign to the Statement
+
+        Method sets the name on the Statement and updates its ID with to
+        reflect the name change.
+
+        Delegates to base-class method.
+        """
         BaseFinancialsComponent.set_name(self, name)
         self.register(self.id.namespace)

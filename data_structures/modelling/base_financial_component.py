@@ -52,34 +52,38 @@ from .equalities import Equalities
 class BaseFinancialsComponent(Equalities, TagsMixIn):
     """
 
-    A Statement is a container that supports fast lookup and ordered views.
+    A BaseFinancialComponent is a container that supports fast lookup and ordered views.
 
     CONTAINER:
 
-    Statements generally contain Lines, which may themselves contain additional
-    Lines. You can use Statement.find_first() or find_all() to locate the
-    item you need from the top level of any statement.
+    BaseFinancialComponents generally contain Lines, which may themselves
+    contain additional Lines. You can use BaseFinancialComponent.find_first()
+    or find_all() to locate the item you need from the top level of any
+    statement.
 
-    You can add details to a statement through add_line(). Statements also
-    support the append() and extend() list interfaces.
+    You can add details to a statement through add_line().
+    BaseFinancialComponents also support the append() and extend() list
+    interfaces.
 
     You can easily combine statements by running stmt_a.increment(stmt_b).
 
     ORDER:
 
-    Statements provide ordered views of their contents on demand through
-    get_ordered(). The ordered view is a list of details sorted by their
-    relative position.
+    BaseFinancialComponents provide ordered views of their contents on demand
+    through get_ordered(). The ordered view is a list of details sorted by
+    their relative position.
 
     Positions should be integers GTE 0. Positions can (and usually should) be
     non-consecutive. You can specify your own positions when adding a detail or
-    have the Statement automatically assign a position to the detail. You can
-    change detail order by adjusting the .position attribute of any detail.
+    have the BaseFinancialComponent automatically assign a position to the
+    detail. You can change detail order by adjusting the .position attribute of
+    any detail.
 
-    Statement automatically maintains and repairs order. If you add a line in
-    an existing position, the Statement will move the existing lines and all
-    those behind it back. If you manually change the position of one line to
-    conflict with another, Statement will sort them in alphabetical order.
+    BaseFinancialComponent automatically maintains and repairs order. If you
+    add a line in an existing position, the BaseFinancialComponent will move
+    the existing lines and all those behind it back. If you manually change the
+    position of one line to conflict with another, BaseFinancialComponent will
+    sort them in alphabetical order.
 
     RECURSION:
 
@@ -96,6 +100,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
     relationships         instance of Relationships class
 
     FUNCTIONS:
+    to_portal()           creates a flattened version of instance for Portal
     add_line()            add line to instance
     append()              add line to instance in final position
     copy()                return deep copy
@@ -123,7 +128,6 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         self.id = ID()  # does not get its own bbid, just holds namespace
         self._restricted = False  # whether user can modify structure,
         self._period = period
-        # user can only modify structure in current period
 
     def __eq__(self, comparator, trace=False, tab_width=4):
         """
@@ -192,11 +196,32 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
     def period(self):
         return self._period
 
+    def to_portal(self):
+        """
+
+
+        BaseFinancialComponent.to_portal() -> dict
+
+        Method returns a serialized representation of a BaseFinancialsComponent
+        """
+        parent_bbid = self.relationships.parent.id.bbid if \
+            self.relationships.parent else None
+
+        row = {
+            'bbid': self.id.bbid.hex if self.id.bbid else None,
+            'parent_bbid': parent_bbid,
+            'name': self.name,
+            'title': self.title,
+            'tags': self.tags.to_portal()
+        }
+
+        return row
+
     def add_line(self, new_line, position=None, noclear=False):
         """
 
 
-        Statement.add_line() -> None
+        BaseFinancialComponent.add_line() -> None
 
 
         Add line to instance at position.
@@ -265,7 +290,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         Legacy interface for find_first() and add_line().
 
 
-        Statement.add_line_to() -> None
+        BaseFinancialComponent.add_line_to() -> None
 
 
         Method adds line to instance. ``ancestor_tree`` is a list of 1+ strings.
@@ -314,7 +339,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         Legacy interface for add_line()
 
 
-        Statement.add_top_line() -> None
+        BaseFinancialComponent.add_top_line() -> None
 
 
         Insert line at the top level of instance. Method expects ``after`` to
@@ -332,7 +357,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         """
 
 
-        Statement.append() -> None
+        BaseFinancialComponent.append() -> None
 
 
         Add line to instance in final position.
@@ -355,7 +380,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         """
 
 
-        Statement.copy() -> Statement
+        BaseFinancialComponent.copy() -> Statement
 
 
         Method returns a deep copy of the instance and any details. If
@@ -386,6 +411,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
                 add_details = False
 
         if add_details:
+            # Preserve relative order
             for own_line in pool:
                 if check_include_details and not own_line.consolidate:
                     continue
@@ -397,15 +423,13 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
                 result.add_line(new_line, position=own_line.position,
                                 noclear=True)
 
-            # Preserve relative order
-
         return result
 
     def extend(self, lines, noclear=False):
         """
 
 
-        Statement.extend() -> None
+        BaseFinancialComponent.extend() -> None
 
 
         lines can be either an ordered container or a Statement object
@@ -422,7 +446,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         """
 
 
-        Statement.find_all() -> list
+        BaseFinancialComponent.find_all() -> list
 
 
         Return a list of details that matches the ancestor_tree.
@@ -476,7 +500,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         """
 
 
-        Statement.find_first() -> Line or None
+        BaseFinancialComponent.find_first() -> Line or None
 
 
         Return a detail that matches the ancestor tree or None.
@@ -535,7 +559,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         """
 
 
-        Statement.get_full_ordered() -> list
+        BaseFinancialComponent.get_full_ordered() -> list
 
 
         Return ordered list of lines and their details. Result will show lines
@@ -558,7 +582,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         """
 
 
-        Statement.get_ordered() -> list
+        BaseFinancialComponent.get_ordered() -> list
 
 
         Return a list of details in order of relative position.
@@ -571,7 +595,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         """
 
 
-        Statement.increment() -> None
+        BaseFinancialComponent.increment() -> None
 
 
         Increment matching lines, add new ones to instance. Works recursively.
@@ -640,7 +664,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         """
 
 
-        Statement.link_to() -> None
+        BaseFinancialComponent.link_to() -> None
 
         --``matching_statement`` is another Statement object
 
@@ -654,7 +678,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         """
 
 
-        Statement.register() -> None
+        BaseFinancialComponent.register() -> None
 
         --``namespace`` is the namespace to assign to instance
 
@@ -671,7 +695,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         """
 
 
-        Statement.reset() -> None
+        BaseFinancialComponent.reset() -> None
 
 
         Clear all values, preserve line shape.
@@ -717,7 +741,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         """
 
 
-        Statement._add_lines_in_chef() -> None
+        BaseFinancialComponent._add_lines_in_chef() -> None
 
 
         Add lines to consolidated.sources list used by Chef.
@@ -739,7 +763,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         """
 
 
-        Statement._bind_and_record() -> None
+        BaseFinancialComponent._bind_and_record() -> None
 
 
         Set instance as line parent, add line to details.
@@ -766,7 +790,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         """
 
 
-        Statement._inspect_line_for_insertion() -> None
+        BaseFinancialComponent._inspect_line_for_insertion() -> None
 
 
         Will throw exception if Line if you can't insert line into instance.
@@ -783,7 +807,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         """
 
 
-        Statement._get_ordered_items_debug() -> list of tuples
+        BaseFinancialComponent._get_ordered_items_debug() -> list of tuples
 
 
         Return a list of _detail dictionary items in order of relative
@@ -804,7 +828,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         """
 
 
-        Statement._repair_order() -> list
+        BaseFinancialComponent._repair_order() -> list
 
 
         Build an ordered list of details, then adjust their positions so
