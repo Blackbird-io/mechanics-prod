@@ -78,7 +78,7 @@ class DriverContainer(Container):
             drivers_out.append(dr.to_portal())
         return drivers_out
     
-    def add(self, driver):
+    def add(self, obj):
         """
 
 
