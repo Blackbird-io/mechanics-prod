@@ -181,6 +181,8 @@ class Tags:
 
         self._name = deCase(name)
 
+        self.set_title(name)
+
     def set_title(self, title):
         """
 
