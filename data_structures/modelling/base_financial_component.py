@@ -1,12 +1,13 @@
 # PROPRIETARY AND CONFIDENTIAL
 # Property of Blackbird Logical Applications, LLC
-# Copyright Blackbird Logical Applications, LLC 2016
+# Copyright Blackbird Logical Applications, LLC 2017
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 # Blackbird Environment
-# Module: data_structures.modelling.statement
+# Module: data_structures.modelling.base_financial_component
 """
 
-Module defines Statement, a container for lines.
+Module defines BaseFinancialsComponent, the parent class for Statements and
+LineItems.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -18,7 +19,8 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-Statement             container that stores, updates, and organizes LineItems
+BaseFinancialsComponent  most basic structure for financial components
+                         (Statements and LineItems)
 ====================  ==========================================================
 """
 
@@ -105,6 +107,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
     increment()           add data from another statement
     link_to()             links statements in Excel
     reset()               clear values
+    set_period()          sets period on instance and its details
     ====================  ======================================================
     """
     keyAttributes = ["_details"]
@@ -686,32 +689,25 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         """
 
 
-        Statement.peer_locator() -> Statement
+        Placeholder method that needs to be overridden by child classes
+        Returns:
 
-        Given a parent container from another time period, return a function
-        locating a copy of ourselves within that container.
         """
-        def locator(financials, **kargs):
-            for stub in financials._full_order:
-                peer = getattr(financials, stub)
-                if peer.name == self.name:
-                    return peer
-        return locator
+        pass
 
     def restrict(self):
         # recursively set statement and all contained lines to restricted=True
         self._restricted = True
-        for line in self.get_full_ordered():
+        for line in self._details.values():
             line.restrict()
 
     def set_name(self, name):
         TagsMixIn.set_name(self, name)
-        self.register(self.id.namespace)
 
     def set_period(self, period):
         self._period = period
-        for line in self.get_full_ordered():
-            line._period = period
+        for line in self._details.values():
+            line.set_period(period)
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #

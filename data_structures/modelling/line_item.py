@@ -6,7 +6,7 @@
 # Module: data_structures.modelling.line_item
 """
 
-Module defines a class of Statemenets with value.
+Module defines a class of BaseFinancialComponent with value.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -28,7 +28,6 @@ LineItem              a Statement that has its own value
 # Imports
 import copy
 import time
-import json
 
 import bb_settings
 import bb_exceptions
@@ -76,11 +75,17 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
     DATA:
     consolidate           bool; whether or not to consolidate line item
     guide                 instance of Guide object
+    id                    instance of ID object, holds unique BBID for instance
     hardcoded             bool; if True, set_value() or clear() will not operate
     include_details       bool; whether or not to consolidate details to parent
     log                   list of entries that modified local value
-    value                 instance value
+    position              int; instance's relative position in a Statement
+    replica               bool; whether line item is replica
+    sum_details           bool; whether line gets its value from summing details
     sum_over_time         bool; whether the line item should be balanced or summed
+    summary_count         int; how many periods contributed to line's value
+    summary_type          str; how to summarize line's value over time
+    value                 instance value
     xl                    instance of LineData record set
 
     FUNCTIONS:
@@ -88,12 +93,24 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
     clear()               if modification permitted, sets value to None
     copy()                returns a new line w copies of key attributes
     get_driver()          return Driver assigned to the line
+    has_own_content()     checks if line has content
     increment()           add data from another line
+    increment_value()     add value from another line
     link_to()             links lines in Excel
+    peer_locator()        returns a function for locating or creating a copy of
+                          the instance within a given container
+    portal_locator()      returns a dict with info needed to locate this line
+                          within a model without object references.
+    register()            registers instance in namespace and assigns ID
     remove_driver()       removes driver assignment
     set_consolidate()     sets private attribute _consolidate
     set_hardcoded()       sets private attribute _hardcoded
+    set_name()            custom method for setting instance name, updates ID
     set_value()           sets value to input, records signature
+    to_portal()           creates a flattened version of LineItem for Portal
+
+    CLASS METHODS:
+    from_portal()         class method, extracts LineItem out of API-format
     ====================  ======================================================
     """
     keyAttributes = BaseFinancialsComponent.keyAttributes + ["value",
@@ -605,19 +622,6 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             for line in self._details.values():
                 line.remove_driver(recur=recur)
 
-    def remove_driver(self, recur=False):
-        """
-
-
-        LineItem.remove_driver() -> None
-
-        Method removes driver ID assignment.
-        """
-        self._driver_id = None
-        if recur:
-            for line in self._details.values():
-                line.remove_driver(recur=recur)
-
     def register(self, namespace):
         """
 
@@ -629,14 +633,10 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         Method sets namespace of instance and assigns BBID.  Method recursively
         registers components.
         """
-        self.id.set_namespace(namespace)
-        self.id.assign(self.name)
+        BaseFinancialsComponent.register(self, namespace)
 
         self._update_stored_hc()
         self._update_stored_value()
-
-        for line in self.get_ordered():
-            line.register(namespace=self.id.bbid)
 
     def set_consolidate(self, val):
         """
@@ -684,11 +684,6 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         # SHOULD REMOVE OLD VALUES FROM PERIOD DATA CACHE!!!!
         BaseFinancialsComponent.set_name(self, name)
         self.register(self.id.namespace)
-
-    def set_period(self, period):
-        self._period = period
-        for line in self._details.values():
-            line.set_period(period)
 
     def setValue(self, value, signature,
                  overrideValueManagement=False):
@@ -766,6 +761,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
                 peer.clear()
                 statement.add_line(peer)
             return peer
+
         return locator
 
     def has_own_content(self):
@@ -782,9 +778,6 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             self.xl.derived.calculations,
             self.hardcoded,
         ))
-
-    def restrict(self):
-        self._restricted = True
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #

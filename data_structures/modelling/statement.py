@@ -95,12 +95,6 @@ class Statement(BaseFinancialsComponent):
     relationships         instance of Relationships class
 
     FUNCTIONS:
-    add_line()            add line to instance
-    append()              add line to instance in final position
-    copy()                return deep copy
-    extend()              append multiple lines to instance in order
-    find_all()            return all matching items
-    find_first()          return the first matching item
     get_ordered()         return list of instance details
     get_full_ordered()    return recursive list of details
     increment()           add data from another statement
@@ -112,14 +106,6 @@ class Statement(BaseFinancialsComponent):
     def __init__(self, name=None, spacing=100, parent=None, period=None):
         BaseFinancialsComponent.__init__(self, name=name, spacing=spacing,
                                          parent=parent, period=period)
-
-    def copy(self, check_include_details=False, clean=False):
-        new_stmt = BaseFinancialsComponent.copy(self,
-                                                check_include_details=
-                                                check_include_details,
-                                                clean=clean)
-
-        return new_stmt
 
     @classmethod
     def from_portal(cls, portal_data, financials):
@@ -171,10 +157,6 @@ class Statement(BaseFinancialsComponent):
 
             build_line_structure(new, catalog)
 
-        if catalog:
-            import pdb
-            pdb.set_trace()
-
         return new
 
     def to_portal(self):
@@ -201,3 +183,27 @@ class Statement(BaseFinancialsComponent):
         result['lines'] = lines
 
         return result
+
+    def peer_locator(self):
+        """
+
+
+        Statement.peer_locator() -> Statement
+
+        Given a parent container from another time period, return a function
+        locating a copy of ourselves within that container.
+
+        Overrides base-class method.
+        """
+
+        def locator(financials, **kargs):
+            for stub in financials._full_order:
+                peer = getattr(financials, stub)
+                if peer.name == self.name:
+                    return peer
+
+        return locator
+
+    def set_name(self, name):
+        BaseFinancialsComponent.set_name(self, name)
+        self.register(self.id.namespace)
