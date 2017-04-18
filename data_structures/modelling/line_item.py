@@ -423,7 +423,12 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         """
         dr = None
         if self._driver_id:
-            mo = self.model
+            parent = self.relationships.parent
+            while isinstance(parent, BaseFinancialsComponent):
+                parent = parent.relationships.parent
+
+            bu = parent.relationships.parent
+            mo = bu.relationships.model
             dr = mo.drivers.get(self._driver_id)
 
         return dr
