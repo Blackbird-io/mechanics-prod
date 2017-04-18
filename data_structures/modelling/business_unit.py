@@ -212,7 +212,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         data['location'] = self.location
         data['name'] = self.name
         data['title'] = self.title
-        data['size'] = self.size = 1
+        data['size'] = self.size
         data['tags'] = self.tags.to_portal()
         data['financials_structure'] = self.financials.to_portal()
 
