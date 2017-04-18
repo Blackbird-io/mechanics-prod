@@ -211,6 +211,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         data['life'] = self.life.to_portal()
         data['location'] = self.location
         data['name'] = self.name
+        data['title'] = self.title
         data['size'] = self.size = 1
         data['tags'] = self.tags.to_portal()
         data['financials_structure'] = self.financials.to_portal()
