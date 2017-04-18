@@ -190,9 +190,8 @@ class BusinessUnit(TagsMixIn, Equalities):
         elif stage == 'valuation':
             new._stage = new.valuation
 
-        for path in portal_data['_path_archive']:
-            new._path_archive.append(path.from_portal(path))
-
+        new._path_archive = portal_data['_path_archive'] # don't bother reinfl-
+        # ating archived paths, they won't be used
         new._used_archive = portal_data['_used_archive']
 
         fins = portal_data.get('financials_structure')
@@ -230,11 +229,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         data['valuation'] = self.valuation  #.to_portal()
 
         # for monitoring, temporary storage for existing path and used sets
-        old_paths = list()
-        for path in self._path_archive:
-            old_paths.append(path.to_portal())
-
-        data['_path_archive'] = old_paths
+        data['_path_archive'] = self._path_archive
         data['_used_archive'] = self._used_archive
 
         return data
@@ -458,7 +453,7 @@ class BusinessUnit(TagsMixIn, Equalities):
          pre-process before setting the monitoring path.
         """
         if self.stage.path is not None:
-            self._path_archive.append(self.stage.path)
+            self._path_archive.append(self.stage.path.to_portal())
 
         new_path = Statement()
         self.stage.set_path(new_path)

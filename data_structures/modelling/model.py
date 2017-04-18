@@ -724,8 +724,13 @@ class Model(TagsMixIn):
         self.target = co
 
         # preserve existing path and set fresh BU.used and BU.stage.path
-        co.archive_path()
-        co.archive_used()
+        for bu in self.bu_directory.values():
+            bu.archive_path()
+            bu.archive_used()
+
+        for bu in self.taxo_dir.bu_directory.values():
+            bu.archive_path()
+            bu.archive_used()
 
         # set monitoring path:
         new_line = LineItem("monitoring path")
