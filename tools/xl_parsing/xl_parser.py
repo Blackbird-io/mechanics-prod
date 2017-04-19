@@ -47,35 +47,10 @@ from data_structures.modelling.driver import Driver
 
 from formula_manager import local_catalog as FC
 from datetime import datetime, date, timedelta
+from . import column_tracker
 
-
-
-
-# Other Globals
-# EXCEL LOCATIONS:
-# Note that first row in excel is 1, But first row in a row_list is row_list[0]
-STATEMENT_COL = None
-LINE_TITLE_COL = None
-LINE_NAME_COL = None
-PARENT_NAME_COL = None
-COMPARISON_COL = None
-SUM_DETAILS_COL = None
-REPORT_COL = None
-MONITOR_COL = None
-PARSE_FORMULA_COL = None
-ADD_TO_PATH_COL = None
-BEHAVIOR_COL = None
-ALERT_COMMENTARY_COL = None
-STATUS_COL = None
-TAGS_COL = None
-FIRST_PERIOD_COL = None  # First column with a period date and line values
-
-DATES_ROW = 1
-TIMELINE_ROW = 2    # "Actual" or "Forecast"
-FIRST_ROW = 3  # First row with LineItem data
-
-MC = ModelChef()
-
+#
+# MC = ModelChef()
 
 def add_projections(xl_serial, engine_model):
     """
@@ -98,6 +73,12 @@ def add_projections(xl_serial, engine_model):
     """
     model = engine_model
 
+    # Initialize a ColumnTracker object
+    ct = column_tracker.ColumnTracker()
+    ct.DATES_ROW = 1
+    ct.TIMELINE_ROW = 2  # "Actual" or "Forecast"
+    ct.FIRST_ROW = 3  # First row with LineItem data
+
     # 1) Extract xl_serial. Make sure it is in the right format
     wb = xlio.load_workbook(xl_serial, data_only=True)  # Includes Values Only
     wb_f = xlio.load_workbook(xl_serial, data_only=False)  # Includes Formulas
@@ -110,14 +91,14 @@ def add_projections(xl_serial, engine_model):
     sheet_f = wb_f.worksheets[0]
 
     # Make sure sheet is valid format
-    _check_xl_projection(sheet)
+    _check_xl_projection(sheet, ct)
 
     model.tags.add(sheet.title.casefold())  # Tab Name triggers topic path
 
     # 2) Align model.time_line to ref_date. Add additional periods as needed
     header_row = sheet.rows[0]
     xl_dates = []
-    for cell in header_row[FIRST_PERIOD_COL-1:]:
+    for cell in header_row[ct.FIRST_PERIOD_COL-1:]:
         if isinstance(cell.value, datetime):
             xl_dates.append(cell.value.date())
 
@@ -132,8 +113,6 @@ def add_projections(xl_serial, engine_model):
     model.time_line.build(first_date, fwd=0, year_end=False)
     model.change_ref_date(first_date)
 
-    proj_tl = model.time_line
-
     company = model.get_company()
     if not company:
         company = BusinessUnit(model.name)
@@ -141,7 +120,7 @@ def add_projections(xl_serial, engine_model):
         model.target = company
 
     # 3) Determine Line Structure from Excel upload
-    _build_fins_from_sheet(company, sheet)
+    _build_fins_from_sheet(company, sheet, ct)
 
     # 4) Make sure actuals timeline has same structure
     actl_tl = model.get_timeline('monthly', name='actual')
@@ -150,7 +129,7 @@ def add_projections(xl_serial, engine_model):
         model.set_timeline(actl_tl, resolution='monthly', name='actual')
 
     # 5) Write values to both actuals and projected.
-    _populate_fins_from_sheet(model, sheet, sheet_f)
+    _populate_fins_from_sheet(model, sheet, sheet_f, ct)
 
     return model
 
@@ -178,6 +157,12 @@ def revise_projections(xl_serial, old_model):
     new_model.start()
     new_model._ref_date = old_model._ref_date
 
+    # Initialize a ColumnTracker object
+    ct = column_tracker.ColumnTracker()
+    ct.DATES_ROW = 1
+    ct.TIMELINE_ROW = 2  # "Actual" or "Forecast"
+    ct.FIRST_ROW = 3  # First row with LineItem data
+
     # 1) Extract xl_serial. Make sure it is in the right format
     wb = xlio.load_workbook(xl_serial, data_only=True)  # Includes Values Only
     wb_f = xlio.load_workbook(xl_serial, data_only=False)  # Includes Formulas
@@ -190,7 +175,7 @@ def revise_projections(xl_serial, old_model):
     sheet_f = wb_f.worksheets[0]
 
     # Make sure sheet is valid format
-    _check_xl_projection(sheet)
+    _check_xl_projection(sheet, ct)
 
     company = new_model.get_company()
     if not company:
@@ -199,7 +184,7 @@ def revise_projections(xl_serial, old_model):
         new_model.target = company
 
     # 2) Determine Line Structure from Excel upload
-    _build_fins_from_sheet(company, sheet)
+    _build_fins_from_sheet(company, sheet, ct)
 
     # 3) Add any missing lines from old model
     _combine_fins_structure(old_model, new_model)
@@ -211,7 +196,7 @@ def revise_projections(xl_serial, old_model):
         new_model.set_timeline(actl_tl, resolution='monthly', name='actual')
 
     # 5) Write values to both actuals and projected.
-    _populate_fins_from_sheet(new_model, sheet, sheet_f)
+    _populate_fins_from_sheet(new_model, sheet, sheet_f, ct)
 
     # 6) Retain any actual values from old model that are hardcoded
     _populate_old_actuals(old_model, new_model)
@@ -219,14 +204,15 @@ def revise_projections(xl_serial, old_model):
     return new_model
 
 
-def _check_xl_projection(sheet):
+def _check_xl_projection(sheet, ct):
     """
 
 
-    _check_xl_projection(sheet) -> None
+    _check_xl_projection(sheet, ct) -> None
 
     --``sheet`` is an instance of openpyxl.WorkSheets
-
+    --``ct`` is an instance of ColumnTracker
+    
     Function checks if the uploaded excel sheet is in the right format.
     Raises Error if format is violated. Function also finds and sets the Column
     numbers for each field.
@@ -235,81 +221,65 @@ def _check_xl_projection(sheet):
     header_row = sheet.rows[0]
 
     # Next few columns can be in any order
-    global STATEMENT_COL
-    global LINE_TITLE_COL
-    global LINE_NAME_COL
-    global PARENT_NAME_COL
-    global COMPARISON_COL
-    global SUM_DETAILS_COL
-    global REPORT_COL
-    global MONITOR_COL
-    global PARSE_FORMULA_COL
-    global ADD_TO_PATH_COL
-    global BEHAVIOR_COL
-    global ALERT_COMMENTARY_COL
-    global TAGS_COL
-    global FIRST_PERIOD_COL
-    global STATUS_COL
-
     for cell in header_row:
         if cell.value == "STATEMENT":
-            STATEMENT_COL = cell.col_idx
+            ct.STATEMENT_COL = cell.col_idx
         elif cell.value == "LINE_TITLE":
-            LINE_TITLE_COL = cell.col_idx
+            ct.LINE_TITLE_COL = cell.col_idx
         elif cell.value == "LINE_NAME":
-            LINE_NAME_COL = cell.col_idx
+            ct.LINE_NAME_COL = cell.col_idx
         elif cell.value == "LINE_PARENT_NAME":
-            PARENT_NAME_COL = cell.col_idx
+            ct.PARENT_NAME_COL = cell.col_idx
         elif cell.value == "COMPARISON":
-            COMPARISON_COL = cell.col_idx
+            ct.COMPARISON_COL = cell.col_idx
         elif cell.value == "SUM_DETAILS":
-            SUM_DETAILS_COL = cell.col_idx
+            ct.SUM_DETAILS_COL = cell.col_idx
         elif cell.value == "REPORT":
-            REPORT_COL = cell.col_idx
+            ct.REPORT_COL = cell.col_idx
         elif cell.value == "MONITOR":
-            MONITOR_COL = cell.col_idx
+            ct.MONITOR_COL = cell.col_idx
         elif cell.value == "PARSE_FORMULA":
-            PARSE_FORMULA_COL = cell.col_idx
+            ct.PARSE_FORMULA_COL = cell.col_idx
         elif cell.value in ("ADD_TO_PATH", "TOPIC_FORMULA"):
-            ADD_TO_PATH_COL = cell.col_idx
+            ct.ADD_TO_PATH_COL = cell.col_idx
         elif cell.value == "BEHAVIOR":
-            BEHAVIOR_COL = cell.col_idx
+            ct.BEHAVIOR_COL = cell.col_idx
         elif cell.value == "ALERT_COMMENTARY":
-            ALERT_COMMENTARY_COL = cell.col_idx
+            ct.ALERT_COMMENTARY_COL = cell.col_idx
         elif cell.value == "STATUS":
-            STATUS_COL = cell.col_idx
+            ct.STATUS_COL = cell.col_idx
         elif cell.value == "TAGS":
-            TAGS_COL = cell.col_idx
+            ct.TAGS_COL = cell.col_idx
         elif isinstance(cell.value, datetime):
-            FIRST_PERIOD_COL = cell.col_idx
+            ct.FIRST_PERIOD_COL = cell.col_idx
             break
 
-    if STATEMENT_COL is None:
+    if ct.STATEMENT_COL is None:
         c = "No STATEMENT header!"
         raise bb_exceptions.ExcelPrepError(c)
-    if LINE_TITLE_COL is None:
+    if ct.LINE_TITLE_COL is None:
         c = "No LINE_TITLE header!"
         raise bb_exceptions.ExcelPrepError(c)
-    if LINE_NAME_COL is None:
+    if ct.LINE_NAME_COL is None:
         c = "No LINE_NAME header!"
         raise bb_exceptions.ExcelPrepError(c)
-    if PARENT_NAME_COL is None:
+    if ct.PARENT_NAME_COL is None:
         c = "No LINE_PARENT_NAME header!"
         raise bb_exceptions.ExcelPrepError(c)
 
-    # print(COMPARISON_COL,
-    #       SUM_DETAILS_COL,
-    #       REPORT_COL,
-    #       MONITOR_COL,
-    #       PARSE_FORMULA_COL,
-    #       ADD_TO_PATH_COL,
-    #       BEHAVIOR_COL,
-    #       TAGS_COL,
-    #       FIRST_PERIOD_COL)
+    # print(ct.COMPARISON_COL,
+    #       ct.SUM_DETAILS_COL,
+    #       ct.REPORT_COL,
+    #       ct.MONITOR_COL,
+    #       ct.PARSE_FORMULA_COL,
+    #       ct.ADD_TO_PATH_COL,
+    #       ct.BEHAVIOR_COL,
+    #       ct.TAGS_COL,
+    #       ct.FIRST_PERIOD_COL)
 
-    # Make sure everything after FIRST_PERIOD_COL is all in a date format.
-    for cell in header_row[FIRST_PERIOD_COL-1:]:
-        if cell.value is None and cell is header_row[FIRST_PERIOD_COL-1:][-1]:
+    # Make sure everything after ct.FIRST_PERIOD_COL is all in a date format.
+    for cell in header_row[ct.FIRST_PERIOD_COL-1:]:
+        if cell.value is None and cell is header_row[ct.FIRST_PERIOD_COL-1:][-1]:
             # Sometimes the last blank column cell is read in
             continue
         if not isinstance(cell.value, datetime):
@@ -318,7 +288,7 @@ def _check_xl_projection(sheet):
             raise bb_exceptions.ExcelPrepError(c)
 
 
-def _build_fins_from_sheet(bu, sheet):
+def _build_fins_from_sheet(bu, sheet, ct):
     """
 
 
@@ -326,7 +296,8 @@ def _build_fins_from_sheet(bu, sheet):
 
     --``bu`` is the instance of Business Unit we want build Financials on
     --``sheet`` is an instance of openpyxl.WorkSheet
-
+    --``ct`` is an instance of ColumnTracker
+    
     Function extracts information from 'sheet' to build the LineItem structure
     in 'financials'. Functions creates new statements if necessary.
     """
@@ -335,14 +306,14 @@ def _build_fins_from_sheet(bu, sheet):
     line = None
 
     # Loop through each row that contains LineItem information
-    for row in sheet.iter_rows(row_offset=FIRST_ROW-1, column_offset=0):
-        if not row[STATEMENT_COL-1].value:
+    for row in sheet.iter_rows(row_offset=ct.FIRST_ROW-1, column_offset=0):
+        if not row[ct.STATEMENT_COL-1].value:
             if line:
                 line.xl.format.blank_row_after = True
             # Skip blank rows
             continue
 
-        full_statement_name = row[STATEMENT_COL-1].value.casefold()
+        full_statement_name = row[ct.STATEMENT_COL-1].value.casefold()
         statement_name = full_statement_name.split()[0]
         # IE: full_statement_name -> "Ending Balance Sheet"
         #     statement_name -> "ending"
@@ -351,15 +322,15 @@ def _build_fins_from_sheet(bu, sheet):
             # Ignore parameters
             continue
 
-        line_name = row[LINE_NAME_COL-1].value
+        line_name = row[ct.LINE_NAME_COL-1].value
         if not line_name:
             continue  # Must have line name
 
-        line_title = row[LINE_TITLE_COL-1].value
+        line_title = row[ct.LINE_TITLE_COL-1].value
         if not line_title:
             continue  # Must have line title
 
-        parent_name = row[PARENT_NAME_COL-1].value or ""  # Always need a str.
+        parent_name = row[ct.PARENT_NAME_COL-1].value or ""  # Always need a str.
 
         # # print(statement_name, line_name, parent_name)
 
@@ -420,45 +391,45 @@ def _build_fins_from_sheet(bu, sheet):
         # print(line.name, line.title)
 
         # Add comparison ("<" or ">") as a tag for KPI and Covenant analysis
-        if COMPARISON_COL:
-            comparison_str = row[COMPARISON_COL-1].value
+        if ct.COMPARISON_COL:
+            comparison_str = row[ct.COMPARISON_COL-1].value
             if comparison_str in ('<', '<=', '>', '>='):
                 # Only tag valid comparisons
                 line.tags.add(comparison_str)
 
         # Add sum_details attribute if FALSE (TRUE is default for blank cells)
-        if SUM_DETAILS_COL:
-            sum_details = row[SUM_DETAILS_COL-1].value
+        if ct.SUM_DETAILS_COL:
+            sum_details = row[ct.SUM_DETAILS_COL-1].value
             if sum_details in ("False", "FALSE", False, "No"):
                 line.sum_details = False
 
         # Tag line with which summary report we want to display it on.
-        if REPORT_COL:
-            report_str = row[REPORT_COL-1].value
+        if ct.REPORT_COL:
+            report_str = row[ct.REPORT_COL-1].value
             if report_str:
                 if report_str.casefold() in ('kpi', 'covenants', 'overall'):
                     # Only tag valid comparisons
                     line.tags.add(report_str)
 
-        if MONITOR_COL:
-            monitor_bool = row[MONITOR_COL-1].value
+        if ct.MONITOR_COL:
+            monitor_bool = row[ct.MONITOR_COL-1].value
             if monitor_bool in ("True", "TRUE", True, "Yes"):
                 line.tags.add('monitor')
 
-        if PARSE_FORMULA_COL:
-            parse_formula_bool = row[PARSE_FORMULA_COL-1].value
+        if ct.PARSE_FORMULA_COL:
+            parse_formula_bool = row[ct.PARSE_FORMULA_COL-1].value
             if parse_formula_bool in ("True", "TRUE", True, "Yes"):
                 line.tags.add('parse formula')
 
-        if ADD_TO_PATH_COL:
-            topic_formula_bool = row[ADD_TO_PATH_COL - 1].value
+        if ct.ADD_TO_PATH_COL:
+            topic_formula_bool = row[ct.ADD_TO_PATH_COL - 1].value
             if topic_formula_bool in ("True", "TRUE", True, "Yes"):
                 new_path_line = LineItem(line.name)
                 bu.stage.path.append(new_path_line)
                 line.tags.add('topic formula')
 
-        if ALERT_COMMENTARY_COL:
-            alert_bool = row[ALERT_COMMENTARY_COL - 1].value
+        if ct.ALERT_COMMENTARY_COL:
+            alert_bool = row[ct.ALERT_COMMENTARY_COL - 1].value
             if alert_bool in ("True", "TRUE", True, "Yes"):
                 new_path_line = LineItem(line.name + " alert")
                 new_path_line.tags.add('alert commentary')
@@ -466,7 +437,7 @@ def _build_fins_from_sheet(bu, sheet):
                 line.tags.add('alert commentary')
 
         # Tag line with one or more tags.
-        tags_str = row[TAGS_COL-1].value
+        tags_str = row[ct.TAGS_COL-1].value
         if tags_str:
             tags_list = tags_str.split(",")
             for t in tags_list:
@@ -585,7 +556,7 @@ def _populate_old_actuals(old_model, new_model):
 
 
 
-def _populate_fins_from_sheet(engine_model, sheet, sheet_f):
+def _populate_fins_from_sheet(engine_model, sheet, sheet_f, ct):
     """
 
 
@@ -594,6 +565,7 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f):
     --``engine_model`` is the instance of EngineModel
     --``sheet`` is an instance of openpyxl.WorkSheet with Values
     --``sheet_f`` is an instance of openpyxl.WorkSheet with Formulas as str
+    --``ct`` is an instance of ColumnTracker
 
     Function extracts LineItem values from 'sheet' and writes them to
     'financials' for multiple periods. Function assumes that the structure
@@ -606,9 +578,9 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f):
     ssot_fins = bu.financials
 
     # Loop across periods (Left to Right on Excel)
-    for col in sheet.columns[FIRST_PERIOD_COL-1:]:
+    for col in sheet.columns[ct.FIRST_PERIOD_COL-1:]:
         dt = col[0].value.date()
-        timeline_name = col[TIMELINE_ROW-1].value
+        timeline_name = col[ct.TIMELINE_ROW-1].value
 
         start_dt = date(dt.year, dt.month, 1)
         end_dt = date(dt.year, dt.month, 28)
@@ -633,7 +605,7 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f):
                 actl_tl.add_period(actl_pd)
 
         # Loop across Lines (Top to Down on Excel)
-        for cell in col[FIRST_ROW-1:]:
+        for cell in col[ct.FIRST_ROW-1:]:
             # Skip blank cells
             if cell.value in (None, ""):
                 continue
@@ -641,12 +613,12 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f):
             row_num = cell.row
             col_num = cell.col_idx
 
-            statement_str = sheet.cell(row=row_num, column=STATEMENT_COL).value
+            statement_str = sheet.cell(row=row_num, column=ct.STATEMENT_COL).value
             if not statement_str:
                 continue
             statement_name = statement_str.split()[0].casefold()
-            line_name = sheet.cell(row=row_num, column=LINE_NAME_COL).value
-            parent_name = sheet.cell(row=row_num, column=PARENT_NAME_COL).value
+            line_name = sheet.cell(row=row_num, column=ct.LINE_NAME_COL).value
+            parent_name = sheet.cell(row=row_num, column=ct.PARENT_NAME_COL).value
             # print(line_name, parent_name)
             # import pdb
             # pdb.set_trace()
@@ -678,8 +650,8 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f):
                 ssot_line.xl.format.number_format = cell.number_format
 
             # Status column
-            if STATUS_COL:
-                status_str = sheet.cell(row=row_num, column=STATUS_COL).value
+            if ct.STATUS_COL:
+                status_str = sheet.cell(row=row_num, column=ct.STATUS_COL).value
 
                 if status_str:
                     try:
@@ -708,8 +680,9 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f):
                     bu.stage.work_space[ssot_line.name] = status_dict
 
             # Behaviour column
-            if BEHAVIOR_COL:
-                behavior_str = sheet.cell(row=row_num, column=BEHAVIOR_COL).value
+            if ct.BEHAVIOR_COL:
+                behavior_str = sheet.cell(row=row_num,
+                                          column=ct.BEHAVIOR_COL).value
 
                 if behavior_str:
                     try:
@@ -741,7 +714,7 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f):
             # Look to see if Formula should be automatically imported
             cell_f = sheet_f.cell(row=row_num, column=col_num)
 
-            can_parse = _parse_formula(sheet, cell_f, bu)
+            can_parse = _parse_formula(sheet, cell_f, bu, ct)
 
             # Otherwise, set the lowest level lines to a hardcoded value
             if can_parse is False:
@@ -752,7 +725,7 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f):
                     _populate_line_from_cell(cell, line_name, parent_name, actl_stmt)
 
 
-def _parse_formula(sheet, cell_f, bu):
+def _parse_formula(sheet, cell_f, bu, ct):
     """
 
 
@@ -761,6 +734,7 @@ def _parse_formula(sheet, cell_f, bu):
     --``sheet`` is an instance of openpyxl.WorkSheet with Values
     --``cell_f`` is an instance of openpyxl.Cell with Formulas as str
     --``bu`` is the instance of EngineModel.BusinessUnit
+    --``ct`` is an instance of ColumnTracker    
 
     Function takes a formula string from excel and creates a driver that will
     provide the same value in the Blackbird Engine. Function returns False if
@@ -774,13 +748,13 @@ def _parse_formula(sheet, cell_f, bu):
     if cell.value is None:
         return False
 
-    parse_formula_bool_cell = sheet.cell(row=row, column=PARSE_FORMULA_COL)
+    parse_formula_bool_cell = sheet.cell(row=row, column=ct.PARSE_FORMULA_COL)
     if parse_formula_bool_cell.value not in ("True", "TRUE", True, "Yes"):
         return False
 
-    line_name = sheet.cell(row=row, column=LINE_NAME_COL).value
-    parent_name = sheet.cell(row=row, column=PARENT_NAME_COL).value
-    stmt_name = sheet.cell(row=row, column=STATEMENT_COL).value
+    line_name = sheet.cell(row=row, column=ct.LINE_NAME_COL).value
+    parent_name = sheet.cell(row=row, column=ct.PARENT_NAME_COL).value
+    stmt_name = sheet.cell(row=row, column=ct.STATEMENT_COL).value
 
     stmt_str = stmt_name.casefold().split()[0]
     statement = getattr(bu.financials, stmt_str)
@@ -827,7 +801,7 @@ def _parse_formula(sheet, cell_f, bu):
     f_id = FC.by_name["custom formula from tokens."]
     formula = FC.issue(f_id)
 
-    # if col == FIRST_PERIOD_COL:  # Only insert drivers in first column
+    # if col == ct.FIRST_PERIOD_COL:  # Only insert drivers in first column
     if not line.get_driver():
         data = dict()
 
@@ -878,16 +852,16 @@ def _parse_formula(sheet, cell_f, bu):
                 source_col = source_cell.col_idx
 
                 source_line_name = sheet.cell(row=source_row,
-                                              column=LINE_NAME_COL).value
+                                              column=ct.LINE_NAME_COL).value
                 source_statement = sheet.cell(row=source_row,
-                                              column=STATEMENT_COL).value
+                                              column=ct.STATEMENT_COL).value
                 source_statement = source_statement.split()[0].casefold()
                 data[t_name] = source_line_name
                 data[t_type] = "source"
                 data[t_name + "_statement"] = source_statement
                 if source_addr[0] == "$":
                     # Fixed Dates (source is always same column)
-                    data[t_fixed_dt] = sheet.cell(row=DATES_ROW,
+                    data[t_fixed_dt] = sheet.cell(row=ct.DATES_ROW,
                                                   column=source_col).value
                 elif source_col != cell_f.col_idx:
                     # Relative Periods (n periods past or future)
