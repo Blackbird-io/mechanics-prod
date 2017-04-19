@@ -244,7 +244,7 @@ def _check_xl_projection(sheet, ct):
             ct.ADD_TO_PATH_COL = cell.col_idx
         elif cell.value == "BEHAVIOR":
             ct.BEHAVIOR_COL = cell.col_idx
-        elif cell.value == "ALERT_COMMENTARY":
+        elif cell.value in ("ALERT_COMMENTARY", "ALERT"):
             ct.ALERT_COMMENTARY_COL = cell.col_idx
         elif cell.value == "STATUS":
             ct.STATUS_COL = cell.col_idx
