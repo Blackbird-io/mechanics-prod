@@ -36,6 +36,7 @@ import bb_settings
 import tools.for_printing as views
 
 from data_structures.system.bbid import ID
+from data_structures.system.summary_maker import SummaryMaker
 from tools.parsing import date_from_iso
 from .parameters import Parameters
 from .time_period import TimePeriod
@@ -422,7 +423,7 @@ class TimeLine(dict):
         company.recalculate(period=seed.past, adjust_future=False)
         company.recalculate(period=seed, adjust_future=False)
 
-        summary_maker = self.model.prep_summaries()
+        summary_maker = SummaryMaker(self.model)
 
         for period in self.iter_ordered(open=seed.end):
             if period.end > seed.end:
