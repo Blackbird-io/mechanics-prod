@@ -203,8 +203,8 @@ class BusinessUnit(TagsMixIn, Equalities):
     def to_portal(self):
         data = dict()
 
-        data['_parameters'] = self._parameters.to_portal(target='business_unit')
-        data['_type'] = self._type
+        data['parameters'] = self._parameters.to_portal(target='business_unit')
+        data['type'] = self._type
         data['components'] = list(self.components.keys())
         data['bbid'] = self.id.bbid
         data['life'] = self.life.to_portal()
@@ -221,7 +221,7 @@ class BusinessUnit(TagsMixIn, Equalities):
             stage = 'valuation'
         else:
             stage = None      
-        data['_stage'] = stage
+        data['stage'] = stage
         data['used'] = list(self.used)
         data['guide'] = self.guide.to_portal()
         data['interview'] = self.interview.to_portal()
@@ -229,8 +229,8 @@ class BusinessUnit(TagsMixIn, Equalities):
         data['valuation'] = self.valuation  #.to_portal()
 
         # for monitoring, temporary storage for existing path and used sets
-        data['_path_archive'] = self._path_archive
-        data['_used_archive'] = self._used_archive
+        data['path_archive'] = self._path_archive
+        data['used_archive'] = self._used_archive
 
         return data
 
