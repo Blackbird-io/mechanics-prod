@@ -154,6 +154,7 @@ class Driver(TagsMixIn):
         # OBSOLETE
         self.workConditions = dict()
         self.active = True
+
     def __eq__(self, comp, trace=False, tab_width=4):
         """
 
