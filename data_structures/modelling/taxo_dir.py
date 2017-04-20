@@ -95,10 +95,8 @@ class TaxoDir:
         """
         new = cls(model)
 
-        temp_dir = dict()
-        for unit in portal_data['taxonomy_units']:
+        for unit in portal_data:
             tmp = BusinessUnit.from_portal(unit, link_list)
-            temp_dir[unit['bbid']] = tmp
             tmp._set_components()
             new.register(tmp)
 
@@ -112,15 +110,11 @@ class TaxoDir:
 
         Method flattens TaxoDir into a serialized dictionary.
         """
-        data = dict()
-
         taxo_list = list()
         for unit in self.bu_directory.values():
             taxo_list.append(unit.to_portal())
 
-        data['taxonomy_units'] = taxo_list
-
-        return data
+        return taxo_list
 
     def add(self, template, overwrite=False):
         """
