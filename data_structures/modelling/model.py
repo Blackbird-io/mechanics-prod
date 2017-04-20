@@ -74,23 +74,30 @@ class Model(TagsMixIn):
 
     DATA:
     bu_directory          dict; key = bbid, val = business units
+    drivers               instance of DriverContainer; stores Driver objects
+    fiscal_year_end       P (date); fiscal year end, default is 12/31
     id                    instance of ID object, carries bbid for model
-    interview             property; points to target BusinessUnit.interview
+    interview             P; points to target BusinessUnit.interview
     portal_data           dict; stores data from Portal related to the instance
-    report_summary        dict: stores data that Portal reads for reporting
-    stage                 property; points to target BusinessUnit.stage
-    started               bool; property, tracks whether engine has begun work
+    processing_status     P (str); name of processing stage ("intake", etc.)
+    ref_date              P (date); reference date for Model, specifies current period
+    report_summary        dict; stores data that Portal reads for reporting
+    scenarios             dict; stores alternate parameter values
+    stage                 P; points to target BusinessUnit.stage
+    started               P (bool); tracks whether engine has begun work
     summary               P; pointer to current period summary
     target                P; pointer to target BusinessUnit
     taxo_dir              instance of TaxoDir, has a dict {bbid: taxonomy units}
-    taxonomy              dict with tree of business unit templates
+    taxonomy              instance of Taxonomy; holds BU templates and links to taxo_dir
     topic_list            list of topic names run on model
-    time_line             list of TimePeriod objects
+    time_line             P; pointer to default TimeLine object
+    time_lines            list of TimeLine objects
     transcript            list of entries that tracks Engine processing
     ty_directory          dict; key = strings, val = sets of bbids
     valuation             P; pointer to current period valuation
 
     FUNCTIONS:
+    to_portal()           creates a flattened version of model for Portal
     calc_summaries()      creates or updates standard summaries for model
     change_ref_date()     updates timeline to use new reference date
     clear_fins_storage()  clears financial data from non SSOT financials
@@ -106,12 +113,10 @@ class Model(TagsMixIn):
     populate_xl_data()    method populates xl attr on all line items pre-chop
     prep_for_monitoring_interview()  sets up path entry point for reporting
     prep_for_revision_interview()  sets up path entry point for revision
-    prep_summaries()      creates SummaryMaker based on default timeline
     register()            registers item in model namespace
     set_company()         method sets BusinessUnit as top-level company
     set_timeline()        method sets default timeline
     start()               sets _started and started to True
-    to_portal()           creates a flattened version of model for Portal
     transcribe()          append message and timestamp to transcript
 
     CLASS METHODS:
@@ -128,16 +133,21 @@ class Model(TagsMixIn):
 
         TagsMixIn.__init__(self, name)
 
+        # read-only attributes
         self._company = None
+        self._fiscal_year_end = None
+        self._processing_status = 'intake'
         self._ref_date = None
         self._started = False
 
+        # container for holding Drivers
         self.drivers = DriverContainer()
 
+        # set and assign unique ID - models carry uuids in the origin namespace
         self.id = ID()
         self.id.assign(name)
-        # Models carry uuids in the origin namespace.
-        
+
+        # set up Portal data, this is used primarily by Wrapper
         self.portal_data = dict()
         self.portal_data['industry'] = None
         self.portal_data['summary'] = None
@@ -154,10 +164,7 @@ class Model(TagsMixIn):
         self.taxonomy = Taxonomy(self.taxo_dir)
 
         self.timelines = dict()
-        time_line = TimeLine(self)
-        self.set_timeline(time_line)
-
-        self.transcript = list()
+        self.set_timeline()
 
         # business units
         self.target = None
@@ -169,14 +176,8 @@ class Model(TagsMixIn):
         for s in DEFAULT_SCENARIOS:
             self.scenarios[s] = dict()
 
-        self.summary_maker = None
-
-        # read-only attribute
-        self._processing_status = 'intake'
-
+        self.transcript = list()
         self.topic_list = list()
-
-        self._fiscal_year_end = None
 
     # DYNAMIC ATTRIBUTES
     @property
@@ -184,7 +185,7 @@ class Model(TagsMixIn):
         """
 
 
-        SummaryMaker.fiscal_year_end() -> date
+        Model.fiscal_year_end() -> date
 
         Return self._fiscal_year_end or calendar year end.
         """
@@ -202,7 +203,7 @@ class Model(TagsMixIn):
         """
 
 
-        SummaryMaker.fiscal_year_end() -> date
+        Model.fiscal_year_end() -> date
 
         Set self._fiscal_year_end.
         """
@@ -315,12 +316,8 @@ class Model(TagsMixIn):
 
         Method extracts a Model from portal_model.
 
-        Method expects ``portal_model`` to be a string serialized by dill (or
-        pickle).
-
-        If portal_model does not specify a Model object, method creates a new
-        instance. Method stores all portal data other than the Model in the
-        output's .portal_data dictionary.
+        Method expects ``portal_model`` to be nested dictionary containing
+        all necessary information for rebuilding a Model instance.
         """
         name = portal_model.pop('name', None)
 
@@ -437,9 +434,7 @@ class Model(TagsMixIn):
 
         Model.to_portal() -> dict
 
-        Method yields a serialized representation of self.
-
-        NEED TO MAKE SURE WE CAPTURE FINS FROM EACH BU
+        Method returns a serialized representation of self.
         """
         result = dict()
 
@@ -611,7 +606,10 @@ class Model(TagsMixIn):
 
         Model.get_company() -> BusinessUnit
 
-        Method returns model.company or a business unit with a specific bbid.
+        --``buid`` is the bbid of the BusinessUnit to return
+
+        Method returns model.company or a business unit with a specific bbid,
+        or the company if none is provided.
         """
         if buid:
             return self.bu_directory[buid]
@@ -907,7 +905,7 @@ class Model(TagsMixIn):
         self._company = company
 
     def set_timeline(
-            self, time_line, resolution='monthly', name='default',
+            self, time_line=None, resolution='monthly', name='default',
             overwrite=False
     ):
         """
@@ -920,6 +918,9 @@ class Model(TagsMixIn):
 
         Method adds the timeline for specified resolution (if any).
         """
+        if not time_line:
+            time_line = TimeLine(self)
+
         key = (resolution, name)
         if key in self.timelines and not overwrite:
             c = (
