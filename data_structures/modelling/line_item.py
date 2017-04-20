@@ -261,7 +261,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         )
         new.tags = Tags.from_portal(data['tags'])
 
-        id_str = data['_driver_id']
+        id_str = data['driver_id']
         if id_str:
             new._driver_id = ID.from_portal(id_str).bbid
 
@@ -269,17 +269,13 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         new.xl = xl_mgmt.LineData()
         new.xl.format = xl_mgmt.LineFormat.from_portal(data['xl_format'])
 
-        for attr in (
-            'position',
-            'summary_type',
-            'summary_count',
-            '_consolidate',
-            '_replica',
-            '_include_details',
-            '_sum_details',
-            'log',
-        ):
-            new.__dict__[attr] = data[attr]
+        new.summary_type = data['summary_type']
+        new.summary_count = data['summary_count']
+        new._consolidate = data['consolidate']
+        new._replica = data['replica']
+        new._include_details = data['include_details']
+        new._sum_details = data['sum_details']
+        new.log = data['log']
 
         new.guide = Guide.from_portal(data['guide'])
         new.id.bbid = ID.from_portal(data['bbid']).bbid
@@ -310,13 +306,13 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             'position': self.position,
             'summary_type': self.summary_type,
             'summary_count': self.summary_count,
-            '_consolidate': self._consolidate,
-            '_replica': self._replica,
-            '_include_details': self._include_details,
-            '_sum_details': self._sum_details,
+            'consolidate': self._consolidate,
+            'replica': self._replica,
+            'include_details': self._include_details,
+            'sum_details': self._sum_details,
             'xl_format': self.xl.format.to_portal(),
             'log': self.log,
-            '_driver_id': self._driver_id.hex if self._driver_id else None,
+            'driver_id': self._driver_id.hex if self._driver_id else None,
             'link': False,
             'guide': self.guide.to_portal(),
         }
