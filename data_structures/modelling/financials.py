@@ -222,14 +222,13 @@ class Financials:
         new = cls(parent=company, period=period)
         new.register(company.id.bbid)
 
-        for attr in ('_chef_order',
-                     '_compute_order',
-                     '_exclude_statements',
-                     '_full_order'):
-            new.__dict__[attr] = portal_data[attr]
+        new._chef_order = portal_data['chef_order']
+        new._compute_order = portal_data['compute_order']
+        new._exclude_statements = portal_data['exclude_statements']
+        new._full_order = portal_data['full_order']
 
         for data in portal_data['statements']:
-            attr_name = data['name']
+            attr_name = data['attr_name']
 
             statement = Statement.from_portal(
                 data, financials=new
@@ -258,15 +257,15 @@ class Financials:
             statement = getattr(self, name, None)
             if statement:
                 data = statement.to_portal()
-                data.update({'name': name})
+                data['attr_name'] = name
                 statements.append(data)
 
         result = {
             'statements': statements,
-            '_chef_order': self._chef_order,
-            '_compute_order': self._compute_order,
-            '_exclude_statements': self._exclude_statements,
-            '_full_order': self._full_order,
+            'chef_order': self._chef_order,
+            'compute_order': self._compute_order,
+            'exclude_statements': self._exclude_statements,
+            'full_order': self._full_order,
         }
         return result
 
