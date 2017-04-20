@@ -417,14 +417,7 @@ class Model(TagsMixIn):
                 timelines[key] = TimeLine.from_portal(data, model=M)
             M.timelines = timelines
 
-        # reinflate summary maker, if any
-        sum_dict = M.portal_data.pop('summary_maker', None)
-        if sum_dict:
-            tnam = sum_dict['timeline_name']
-            temp_sm = SummaryMaker(M, timeline_name=tnam, init=False)
-            temp_sm._fiscal_year_end = sum_dict['_fiscal_year_end']
-            M.summary_maker = temp_sm
-
+        # reinflate drivers
         drivers = M.portal_data.pop('drivers')
         if drivers:
             M.drivers = DriverContainer.from_portal(drivers)
