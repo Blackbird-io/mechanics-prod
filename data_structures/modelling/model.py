@@ -24,18 +24,17 @@ Model                 structured snapshots of a company across time periods
 """
 
 # imports
-import pickle
 import time
 import bb_exceptions
 import bb_settings
 import tools.for_tag_operations
 
 from chef_settings import DEFAULT_SCENARIOS
-from data_structures.modelling.financials import Financials
 from data_structures.system.bbid import ID
 from data_structures.modelling.business_unit import BusinessUnit
 from data_structures.modelling.line_item import LineItem
 from data_structures.modelling.dr_container import DriverContainer
+from data_structures.system.tags import Tags
 from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.system.summary_maker import SummaryMaker
 from tools.parsing import date_from_iso
@@ -121,6 +120,9 @@ class Model(TagsMixIn):
     """
 
     def __init__(self, name):
+        if not name:
+            name = bb_settings.DEFAULT_MODEL_NAME
+
         TagsMixIn.__init__(self, name)
 
         self._company = None
@@ -132,8 +134,16 @@ class Model(TagsMixIn):
         self.id = ID()
         self.id.assign(name)
         # Models carry uuids in the origin namespace.
-
+        
         self.portal_data = dict()
+        self.portal_data['industry'] = None
+        self.portal_data['summary'] = None
+        self.portal_data['business_name'] = None
+        self.portal_data['business_id'] = 99999999
+        self.portal_data['user_context'] = None
+        self.portal_data['tags'] = None
+        self.portal_data['update_count'] = 0
+        self.portal_data['monitoring'] = False
 
         self.report_summary = None
 
@@ -144,7 +154,7 @@ class Model(TagsMixIn):
         time_line = TimeLine(self)
         self.set_timeline(time_line)
 
-        self.transcript = []
+        self.transcript = list()
 
         # business units
         self.target = None
@@ -161,7 +171,7 @@ class Model(TagsMixIn):
         # read-only attribute
         self._processing_status = 'intake'
 
-        self.topic_list = []
+        self.topic_list = list()
 
     # DYNAMIC ATTRIBUTES
     @property
@@ -263,38 +273,42 @@ class Model(TagsMixIn):
         instance. Method stores all portal data other than the Model in the
         output's .portal_data dictionary.
         """
-        flat_model = portal_model["e_model"]
+        name = portal_model.pop('name', None)
 
-        if flat_model:
-            M = pickle.loads(flat_model)
-            business_name = portal_model["business_name"]
-            if business_name:
-                M.set_name(business_name)
-        else:
-            business_name = portal_model["business_name"]
-            if not business_name:
-                business_name = bb_settings.DEFAULT_MODEL_NAME
-            M = cls(business_name)
-
+        M = cls(name)
         M.portal_data.update(portal_model)
-        del M.portal_data["e_model"]
+
+        business_name = portal_model.get("business_name", None)
+        del portal_model
+
+        M.tags = Tags.from_portal(M.portal_data.pop('tags'))
+
+        # set basic attributes
+        M._processing_status = M.portal_data.pop('processing_status', 'intake')
+        M._ref_date = M.portal_data.pop('ref_date')
+        M._started = M.portal_data.pop('started')
+        M.topic_list = M.portal_data.pop('topic_list')
+        M.transcript = M.portal_data.pop('transcript')
+
+        M.scenarios = M.portal_data.pop('scenarios')
+        if not M.scenarios:
+            for s in DEFAULT_SCENARIOS:
+                M.scenarios[s] = dict()
 
         # Make blank TaxoDir structure
         M.taxo_dir = TaxoDir(M)
-        
-        # set processing stage
-        M._processing_status = M.portal_data.pop('processing_status', 'intake')
 
         link_list = list()
         # first deserialize BusinessUnits into directory
         temp_directory = dict()
-        for flat_bu in portal_model.get('business_units', list()):
+        bu_list = M.portal_data.pop('business_units', list())
+        for flat_bu in bu_list:
             rich_bu = BusinessUnit.from_portal(flat_bu, link_list)
             rich_bu.relationships.set_model(M)
             temp_directory[flat_bu['bbid']] = rich_bu
 
         # now rebuild structure
-        company_id = portal_model.get('company', None)
+        company_id = M.portal_data.pop('company', None)
         if company_id:
             def build_bu_structure(seed, directory):
                 component_list = seed.components
@@ -310,7 +324,7 @@ class Model(TagsMixIn):
             M.set_company(top_bu)
 
         # TaxoDir
-        data = portal_model.get('taxo_dir', None)
+        data = M.portal_data.pop('taxo_dir', None)
         if data:
             M.taxo_dir = TaxoDir.from_portal(data, M, link_list)
         else:
@@ -330,14 +344,14 @@ class Model(TagsMixIn):
                     raise LookupError(c)
 
         # Taxonomy
-        data = portal_model.get('taxonomy', None)
+        data = M.portal_data.pop('taxonomy', None)
         if data:
             M.taxonomy = Taxonomy.from_portal(data, M.taxo_dir)
         else:
             M.taxonomy = Taxonomy(M.taxo_dir)
 
         # Target
-        target_id = portal_model.get('target', None)
+        target_id = M.portal_data.pop('target', None)
         if target_id:
             try:
                 M.target = M.bu_directory[target_id]
@@ -345,25 +359,33 @@ class Model(TagsMixIn):
                 M.target = M.taxo_dir.bu_directory[target_id]
 
         # reinflate timelines
-        if portal_model.get('timelines'):
+        timeline_data = M.portal_data.pop('timelines', list())
+        if timeline_data:
             timelines = {}
-            for data in portal_model['timelines']:
+            for data in timeline_data:
                 key = (data['resolution'], data['name'])
                 timelines[key] = TimeLine.from_portal(data, model=M)
             M.timelines = timelines
 
         # reinflate summary maker, if any
-        if M.summary_maker:
-            tnam = M.summary_maker['timeline_name']
+        sum_dict = M.portal_data.pop('summary_maker', None)
+        if sum_dict:
+            tnam = sum_dict['timeline_name']
             temp_sm = SummaryMaker(M, timeline_name=tnam, init=False)
-            temp_sm._fiscal_year_end = M.summary_maker['_fiscal_year_end']
+            temp_sm._fiscal_year_end = sum_dict['_fiscal_year_end']
             M.summary_maker = temp_sm
 
-        drivers = portal_model.get('drivers')
+        drivers = M.portal_data.pop('drivers')
         if drivers:
             M.drivers = DriverContainer.from_portal(drivers)
         else:
             M.drivers = DriverContainer()
+
+        if business_name and business_name != M.title:
+            M.set_name(business_name)
+
+        M.portal_data.pop('title')
+        M.portal_data.pop('bbid')
 
         return M
 
@@ -378,8 +400,18 @@ class Model(TagsMixIn):
         """
         result = dict()
 
+        for k, v in self.portal_data.items():
+            result[k] = v
+
         result['company'] = self._company.id.bbid if self._company else None
+        result['ref_date'] = self._ref_date
+        result['started'] = self._started
         result['target'] = self.target.id.bbid if self.target else None
+        result['topic_list'] = self.topic_list
+        result['transcript'] = self.transcript
+        result['scenarios'] = self.scenarios
+        result['tags'] = self.tags.to_portal()
+        result['name'] = self.name
 
         # pre-process financials in the current period, make sure they get
         # serialized in th database to maintain structure data
@@ -405,6 +437,20 @@ class Model(TagsMixIn):
 
         result['timelines'] = timelines
         result['drivers'] = self.drivers.to_portal()
+
+        if self.summary_maker:
+            sum_dict = {
+                '_fiscal_year_end': self.summary_maker._fiscal_year_end,
+                'timeline_name': self.summary_maker.timeline_name,
+            }
+        else:
+            sum_dict = dict()
+
+        result['summary_maker'] = sum_dict # will be preserved as JSON
+
+        # One-way attributes (will not be used in de-serialization):
+        result['bbid'] = self.id.bbid.hex
+        result['title'] = self.title
 
         return result
 
