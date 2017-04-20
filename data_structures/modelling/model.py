@@ -164,7 +164,8 @@ class Model(TagsMixIn):
         self.taxonomy = Taxonomy(self.taxo_dir)
 
         self.timelines = dict()
-        self.set_timeline()
+        timeline = TimeLine(self)
+        self.set_timeline(timeline)
 
         # business units
         self.target = None
@@ -905,7 +906,7 @@ class Model(TagsMixIn):
         self._company = company
 
     def set_timeline(
-            self, time_line=None, resolution='monthly', name='default',
+            self, time_line, resolution='monthly', name='default',
             overwrite=False
     ):
         """
@@ -918,9 +919,6 @@ class Model(TagsMixIn):
 
         Method adds the timeline for specified resolution (if any).
         """
-        if not time_line:
-            time_line = TimeLine(self)
-
         key = (resolution, name)
         if key in self.timelines and not overwrite:
             c = (
