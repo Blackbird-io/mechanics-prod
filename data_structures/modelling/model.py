@@ -372,7 +372,7 @@ class Model(TagsMixIn):
             M.set_company(top_bu)
 
         # TaxoDir
-        data = M.portal_data.pop('taxo_dir', None)
+        data = M.portal_data.pop('taxonomy_units', list())
         if data:
             M.taxo_dir = TaxoDir.from_portal(data, M, link_list)
         else:
@@ -454,13 +454,9 @@ class Model(TagsMixIn):
 
         # pre-process financials in the current period, make sure they get
         # serialized in th database to maintain structure data
-        bu_list = list()
-        for id, bu in self.bu_directory.items():
-            bu_list.append(bu.to_portal())
-
-        result['business_units'] = bu_list
+        result['business_units'] = [bu.to_portal() for bu in self.bu_directory.values()]
         result['taxonomy'] = self.taxonomy.to_portal()
-        result['taxo_dir'] = self.taxo_dir.to_portal()
+        result['taxonomy_units'] = self.taxo_dir.to_portal()
 
         # serialized representation has a list of timelines attached
         # with (resolution, name) as properties
