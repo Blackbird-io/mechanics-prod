@@ -261,7 +261,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         )
         new.tags = Tags.from_portal(data['tags'])
 
-        id_str = data['_driver_id']
+        id_str = data['driver_id']
         if id_str:
             new._driver_id = ID.from_portal(id_str).bbid
 

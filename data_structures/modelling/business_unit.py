@@ -168,9 +168,9 @@ class BusinessUnit(TagsMixIn, Equalities):
     def from_portal(cls, portal_data, link_list=list()):
         new = cls(None)
         new.tags = Tags.from_portal(portal_data['tags'])
-        new._parameters = Parameters.from_portal(portal_data['_parameters'],
+        new._parameters = Parameters.from_portal(portal_data['parameters'],
                                                  target='business_unit')
-        new._type = portal_data['_type']
+        new._type = portal_data['type']
         new.life = LifeCycle.from_portal(portal_data['life'])
         new.location = portal_data['location']
         new.size = portal_data['size']
@@ -184,15 +184,15 @@ class BusinessUnit(TagsMixIn, Equalities):
         new.summary = portal_data['summary']
         new.valuation = portal_data['valuation']
 
-        stage = portal_data['_stage']
+        stage = portal_data['stage']
         if stage == 'summary':
             new._stage = new.summary
         elif stage == 'valuation':
             new._stage = new.valuation
 
-        new._path_archive = portal_data['_path_archive'] # don't bother reinfl-
+        new._path_archive = portal_data['path_archive'] # don't bother reinfl-
         # ating archived paths, they won't be used
-        new._used_archive = portal_data['_used_archive']
+        new._used_archive = portal_data['used_archive']
 
         fins = portal_data.get('financials_structure')
         new_fins = Financials.from_portal(fins, new, period=None)
