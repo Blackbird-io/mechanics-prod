@@ -24,6 +24,8 @@ Model                 structured snapshots of a company across time periods
 """
 
 # imports
+import calendar
+import datetime
 import time
 import bb_exceptions
 import bb_settings
@@ -37,6 +39,7 @@ from data_structures.modelling.dr_container import DriverContainer
 from data_structures.system.tags import Tags
 from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.system.summary_maker import SummaryMaker
+from dateutil.relativedelta import relativedelta
 from tools.parsing import date_from_iso
 from .time_line import TimeLine
 from .taxo_dir import TaxoDir
@@ -173,7 +176,53 @@ class Model(TagsMixIn):
 
         self.topic_list = list()
 
+        self._fiscal_year_end = None
+
     # DYNAMIC ATTRIBUTES
+    @property
+    def fiscal_year_end(self):
+        """
+
+
+        SummaryMaker.fiscal_year_end() -> date
+
+        Return self._fiscal_year_end or calendar year end.
+        """
+        if not self._fiscal_year_end:
+            time_line = self.get_timeline()
+            year = time_line.current_period.end.year
+            fye = datetime.date(year, 12, 31)
+        else:
+            fye = self._fiscal_year_end
+
+        return fye
+
+    @fiscal_year_end.setter
+    def fiscal_year_end(self, fye):
+        """
+
+
+        SummaryMaker.fiscal_year_end() -> date
+
+        Set self._fiscal_year_end.
+        """
+        # maybe make fiscal_year_end a property and do this on assignment
+        last_day = calendar.monthrange(fye.year, fye.month)[1]
+        if last_day - fye.day > fye.day:
+            # closer to the beginning of the month, use previous month
+            # for fiscal_year_end
+            temp = fye - relativedelta(months=1)
+            last_month = temp.month
+            last_day = calendar.monthrange(fye.year, last_month)[1]
+
+            fye = datetime.date(fye.year, last_month, last_day)
+        else:
+            # use end of current month
+            last_day = calendar.monthrange(fye.year, fye.month)[1]
+            fye = datetime.date(fye.year, fye.month, last_day)
+
+        self._fiscal_year_end = fye
+
     @property
     def interview(self):
         return self.target.interview
@@ -289,6 +338,7 @@ class Model(TagsMixIn):
         M._started = M.portal_data.pop('started')
         M.topic_list = M.portal_data.pop('topic_list')
         M.transcript = M.portal_data.pop('transcript')
+        M._fiscal_year_end = M.portal_data.pop('fiscal_year_end')
 
         M.scenarios = M.portal_data.pop('scenarios')
         if not M.scenarios:
@@ -437,16 +487,7 @@ class Model(TagsMixIn):
 
         result['timelines'] = timelines
         result['drivers'] = self.drivers.to_portal()
-
-        if self.summary_maker:
-            sum_dict = {
-                '_fiscal_year_end': self.summary_maker._fiscal_year_end,
-                'timeline_name': self.summary_maker.timeline_name,
-            }
-        else:
-            sum_dict = dict()
-
-        result['summary_maker'] = sum_dict # will be preserved as JSON
+        result['fiscal_year_end'] = self._fiscal_year_end
 
         # One-way attributes (will not be used in de-serialization):
         result['bbid'] = self.id.bbid.hex
@@ -462,12 +503,8 @@ class Model(TagsMixIn):
 
         Method deletes existing summaries and recalculates.
         """
-        try:
-            self.timelines.pop(('quarterly', 'default'))
-            self.timelines.pop(('annual', 'default'))
-        except KeyError:
-            # explicitly silence
-            pass
+        self.timelines.pop(('quarterly', 'default'), None)
+        self.timelines.pop(('annual', 'default'), None)
 
         summary_builder = SummaryMaker(self)
 
@@ -810,18 +847,6 @@ class Model(TagsMixIn):
 
         if not self.target.stage.focal_point:
             self.target.stage.set_focal_point(new_line)
-
-    def prep_summaries(self):
-        """
-
-
-        Model.prep_summaries() -> SummaryMaker
-
-
-        Create a SummaryMaker instance with default timelines.
-        """
-        self.summary_maker = SummaryMaker(self)
-        return self.summary_maker
 
     def register(self, bu, update_id=True, overwrite=False, recur=True):
         """

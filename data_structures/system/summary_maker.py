@@ -80,7 +80,6 @@ class SummaryMaker:
     QUARTERLY_KEY = "quarterly"
 
     def __init__(self, model, timeline_name='default', init=True):
-        self._fiscal_year_end = None
         self.model = model
         self.timeline_name = timeline_name
         self.buid = model.get_company().id.bbid
@@ -104,56 +103,7 @@ class SummaryMaker:
 
         Return self._fiscal_year_end or calendar year end.
         """
-        if not self._fiscal_year_end:
-            time_line = self.model.get_timeline()
-            year = time_line.current_period.end.year
-            fye = DT.date(year, 12, 31)
-        else:
-            fye = self._fiscal_year_end
-
-        return fye
-
-    @fiscal_year_end.setter
-    def fiscal_year_end(self, fye):
-        """
-
-
-        SummaryMaker.fiscal_year_end() -> date
-
-        Set self._fiscal_year_end.
-        """
-        # maybe make fiscal_year_end a property and do this on assignment
-        last_day = calendar.monthrange(fye.year, fye.month)[1]
-        if last_day - fye.day > fye.day:
-            # closer to the beginning of the month, use previous month
-            # for fiscal_year_end
-            temp = fye - relativedelta(months=1)
-            last_month = temp.month
-            last_day = calendar.monthrange(fye.year, last_month)[1]
-
-            fye = DT.date(fye.year, last_month, last_day)
-        else:
-            # use end of current month
-            last_day = calendar.monthrange(fye.year, fye.month)[1]
-            fye = DT.date(fye.year, fye.month, last_day)
-
-        self._fiscal_year_end = fye
-
-    def copy(self):
-        """
-
-
-        SummaryMaker.copy() -> obj
-
-        Method makes a copy of the instance, maintaining original link to
-        time_line, and returns it.
-        """
-        result = SummaryMaker(self.model)
-        result._fiscal_year_end = self._fiscal_year_end
-        for key, value in self.summaries.items():
-            result.summaries[key] = value.copy()
-
-        return result
+        return self.model.fiscal_year_end
 
     def init_summaries(self):
         """
@@ -208,10 +158,10 @@ class SummaryMaker:
         period = self.period
         # determine end of FY in which this period falls
         year = period.end.year
-        if not self._fiscal_year_end:
+        if not self.fiscal_year_end:
             yr_close = DT.date(year, 12, 31)
         else:
-            month = self._fiscal_year_end.month
+            month = self.fiscal_year_end.month
             last_day = calendar.monthrange(year, month)[1]
             yr_close = DT.date(year, month, last_day)
             # if FY end has passed this year, bump FY up by one year
