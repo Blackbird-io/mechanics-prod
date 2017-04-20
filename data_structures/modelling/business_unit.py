@@ -168,9 +168,9 @@ class BusinessUnit(TagsMixIn, Equalities):
     def from_portal(cls, portal_data, link_list=list()):
         new = cls(None)
         new.tags = Tags.from_portal(portal_data['tags'])
-        new._parameters = Parameters.from_portal(portal_data['_parameters'],
+        new._parameters = Parameters.from_portal(portal_data['parameters'],
                                                  target='business_unit')
-        new._type = portal_data['_type']
+        new._type = portal_data['type']
         new.life = LifeCycle.from_portal(portal_data['life'])
         new.location = portal_data['location']
         new.size = portal_data['size']
@@ -184,15 +184,15 @@ class BusinessUnit(TagsMixIn, Equalities):
         new.summary = portal_data['summary']
         new.valuation = portal_data['valuation']
 
-        stage = portal_data['_stage']
+        stage = portal_data['stage']
         if stage == 'summary':
             new._stage = new.summary
         elif stage == 'valuation':
             new._stage = new.valuation
 
-        new._path_archive = portal_data['_path_archive'] # don't bother reinfl-
+        new._path_archive = portal_data['path_archive'] # don't bother reinfl-
         # ating archived paths, they won't be used
-        new._used_archive = portal_data['_used_archive']
+        new._used_archive = portal_data['used_archive']
 
         fins = portal_data.get('financials_structure')
         new_fins = Financials.from_portal(fins, new, period=None)
@@ -203,8 +203,8 @@ class BusinessUnit(TagsMixIn, Equalities):
     def to_portal(self):
         data = dict()
 
-        data['_parameters'] = self._parameters.to_portal(target='business_unit')
-        data['_type'] = self._type
+        data['parameters'] = self._parameters.to_portal(target='business_unit')
+        data['type'] = self._type
         data['components'] = list(self.components.keys())
         data['bbid'] = self.id.bbid
         data['life'] = self.life.to_portal()
@@ -221,7 +221,7 @@ class BusinessUnit(TagsMixIn, Equalities):
             stage = 'valuation'
         else:
             stage = None      
-        data['_stage'] = stage
+        data['stage'] = stage
         data['used'] = list(self.used)
         data['guide'] = self.guide.to_portal()
         data['interview'] = self.interview.to_portal()
@@ -229,8 +229,8 @@ class BusinessUnit(TagsMixIn, Equalities):
         data['valuation'] = self.valuation  #.to_portal()
 
         # for monitoring, temporary storage for existing path and used sets
-        data['_path_archive'] = self._path_archive
-        data['_used_archive'] = self._used_archive
+        data['path_archive'] = self._path_archive
+        data['used_archive'] = self._used_archive
 
         return data
 
