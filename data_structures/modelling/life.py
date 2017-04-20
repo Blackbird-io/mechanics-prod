@@ -180,9 +180,9 @@ class Life(Equalities):
     @classmethod
     def from_portal(cls, portal_data):
         new = cls()
-        new._birth_event_names = set(portal_data['_birth_event_names'])
-        new._death_event_names = set(portal_data['_death_event_names'])
-        new._ref_date = portal_data['_ref_date']
+        new._birth_event_names = set(portal_data['birth_event_names'])
+        new._death_event_names = set(portal_data['death_event_names'])
+        new._ref_date = portal_data['ref_date']
         new.events = portal_data['events']
 
         new.gestation = portal_data['gestation']
@@ -194,9 +194,9 @@ class Life(Equalities):
 
     def to_portal(self):
         data = dict()
-        data['_birth_event_names'] = list(self._birth_event_names)
-        data['_death_event_names'] = list(self._death_event_names)
-        data['_ref_date'] = self._ref_date
+        data['birth_event_names'] = list(self._birth_event_names)
+        data['death_event_names'] = list(self._death_event_names)
+        data['ref_date'] = self._ref_date
         data['events'] = self.events
 
         data['gestation'] = self.gestation

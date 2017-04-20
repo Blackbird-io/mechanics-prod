@@ -54,8 +54,8 @@ logger = logging.getLogger(bb_settings.LOGNAME_MAIN)
 blank_row = dict()
 blank_row['hardcoded'] = False
 blank_row['xl_info'] = dict()
-blank_row['_local_value'] = None
-blank_row['_local_value_type'] = None
+blank_row['value'] = None
+blank_row['value_type'] = None
 
 # Classes
 class TimePeriod(TagsMixIn):
@@ -443,8 +443,8 @@ class TimePeriod(TagsMixIn):
         """
         line_dict = self._line_item_storage.get(bbid_hex, None)
         if line_dict:
-            val = line_dict.get('_local_value', None)
-            typ = line_dict.get('_local_value_type', float)
+            val = line_dict.get('value', None)
+            typ = line_dict.get('value_type', float)
 
             if val is not None:
                 val = locate(typ)(val)
@@ -521,8 +521,8 @@ class TimePeriod(TagsMixIn):
         val = line.value
         typ = type(val).__name__
 
-        line_dict['_local_value'] = val
-        line_dict['_local_value_type'] = typ
+        line_dict['value'] = val
+        line_dict['value_type'] = typ
 
     def update_line_xl(self, line):
         """
