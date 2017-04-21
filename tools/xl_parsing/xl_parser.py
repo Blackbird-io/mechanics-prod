@@ -106,7 +106,7 @@ def add_projections(xl_serial, engine_model):
     _check_xl_projection(sheet, ct)
 
     # 2) Align model.time_line to ref_date. Add additional periods as needed
-    header_row = sheet.rows[0]
+    header_row = sheet.rows[parser_settings.HEADER_ROW-1]
     xl_dates = []
     for cell in header_row[ct.FIRST_PERIOD_COL-1:]:
         if isinstance(cell.value, datetime):
@@ -240,7 +240,7 @@ def _check_xl_projection(sheet, ct):
     numbers for each field.
     """
 
-    header_row = sheet.rows[0]
+    header_row = sheet.rows[parser_settings.HEADER_ROW-1]
 
     # Next few columns can be in any order
     for cell in header_row:
@@ -505,9 +505,6 @@ def _combine_fins_structure(old_model, new_model):
                 new_line = new_stmt.find_first(old_line.name)
 
             if not new_line:
-                # print(old_line)
-                # import pdb
-                # pdb.set_trace()
                 new_line = old_line.copy()
                 if isinstance(old_parent, LineItem):
                     new_parent = new_stmt.find_first(old_parent.name)
@@ -714,7 +711,7 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, ct):
                         c = "Invalid JSON String: " + behavior_str
                         raise bb_exceptions.BBAnalyticalError(c)
 
-                    required_keys = {"source", "statement", "horizon", "operation"}
+                    required_keys = parser_settings.ROLLING_SUM_KEYS
                     if len(required_keys - behavior_dict.keys()) == 0:
                         if behavior_dict['operation'] == 'sum':
                             if not ssot_line.get_driver():
@@ -763,6 +760,8 @@ def _parse_formula(sheet, cell_f, bu, ct):
     provide the same value in the Blackbird Engine. Function returns False if
     it was not able to parse the formula and True if the driver was added.
     """
+    f_id = FC.by_name["custom formula from tokens."]
+    formula = FC.issue(f_id)
 
     row = cell_f.row
     col = cell_f.col_idx
@@ -821,9 +820,6 @@ def _parse_formula(sheet, cell_f, bu, ct):
             if ":" in t.value and t.subtype == "RANGE":
                 return False  # Don't include ranged sources "A1:A8"
 
-    f_id = FC.by_name["custom formula from tokens."]
-    formula = FC.issue(f_id)
-
     # if col == ct.FIRST_PERIOD_COL:  # Only insert drivers in first column
     if not line.get_driver():
         data = dict()
@@ -852,16 +848,8 @@ def _parse_formula(sheet, cell_f, bu, ct):
                 data[t_type] = "constant"
 
             elif t.type == "OPERAND" and t.subtype == "TEXT":  # "EBITDA < 0"
-                # Should move these into bb_settings later
-                ALLOWABLE_TEXT = [
-                    "EBITDA<=0",
-                    "Net Debt<=0",
-                    "Overperforming",
-                    "Performing",
-                    "Needs Review",
-                ]
-                # t.value might be '"EBITDA<="'
-                if t.value[1:-1] in ALLOWABLE_TEXT:
+                # t.value might be '"EBITDA<="', we just want "EBITDA<="
+                if t.value[1:-1] in parser_settings.ALLOWABLE_XL_TEXT:
                     data[t_name] = t.value
                 else:
                     data[t_name] = ""
@@ -950,10 +938,6 @@ def _populate_line_from_cell(cell, line_name, parent_name, statement):
     else:
         line = statement.find_first(line_name)
 
-    # if not line:
-    #     print(line_name)
-    #     import pdb
-    #     pdb.set_trace()
     if line._details and line.sum_details:
         pass
         # if line.value is not None:
