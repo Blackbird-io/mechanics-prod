@@ -244,49 +244,49 @@ def _check_xl_projection(sheet, ct):
 
     # Next few columns can be in any order
     for cell in header_row:
-        if cell.value == "STATEMENT":
+        if cell.value == parser_settings.STATEMENT:
             ct.STATEMENT_COL = cell.col_idx
-        elif cell.value == "LINE_TITLE":
+        elif cell.value == parser_settings.LINE_TITLE:
             ct.LINE_TITLE_COL = cell.col_idx
-        elif cell.value == "LINE_NAME":
+        elif cell.value == parser_settings.LINE_NAME:
             ct.LINE_NAME_COL = cell.col_idx
-        elif cell.value == "LINE_PARENT_NAME":
+        elif cell.value == parser_settings.PARENT_NAME:
             ct.PARENT_NAME_COL = cell.col_idx
-        elif cell.value == "COMPARISON":
+        elif cell.value == parser_settings.COMPARISON:
             ct.COMPARISON_COL = cell.col_idx
-        elif cell.value == "SUM_DETAILS":
+        elif cell.value == parser_settings.SUM_DETAILS:
             ct.SUM_DETAILS_COL = cell.col_idx
-        elif cell.value == "REPORT":
+        elif cell.value == parser_settings.REPORT:
             ct.REPORT_COL = cell.col_idx
-        elif cell.value == "MONITOR":
+        elif cell.value == parser_settings.MONITOR:
             ct.MONITOR_COL = cell.col_idx
-        elif cell.value == "PARSE_FORMULA":
+        elif cell.value == parser_settings.PARSE_FORMULA:
             ct.PARSE_FORMULA_COL = cell.col_idx
-        elif cell.value in ("ADD_TO_PATH", "TOPIC_FORMULA"):
+        elif cell.value in parser_settings.ADD_TO_PATH:
             ct.ADD_TO_PATH_COL = cell.col_idx
-        elif cell.value == "BEHAVIOR":
+        elif cell.value == parser_settings.BEHAVIOR:
             ct.BEHAVIOR_COL = cell.col_idx
-        elif cell.value in ("ALERT_COMMENTARY", "ALERT"):
+        elif cell.value in parser_settings.ALERT:
             ct.ALERT_COMMENTARY_COL = cell.col_idx
-        elif cell.value == "STATUS":
+        elif cell.value == parser_settings.STATUS:
             ct.STATUS_COL = cell.col_idx
-        elif cell.value == "TAGS":
+        elif cell.value == parser_settings.TAGS:
             ct.TAGS_COL = cell.col_idx
         elif isinstance(cell.value, datetime):
             ct.FIRST_PERIOD_COL = cell.col_idx
             break
 
     if ct.STATEMENT_COL is None:
-        c = "No STATEMENT header!"
+        c = "No header for %s" % parser_settings.STATEMENT
         raise bb_exceptions.ExcelPrepError(c)
     if ct.LINE_TITLE_COL is None:
-        c = "No LINE_TITLE header!"
+        c = "No header for %s" % parser_settings.LINE_TITLE
         raise bb_exceptions.ExcelPrepError(c)
     if ct.LINE_NAME_COL is None:
-        c = "No LINE_NAME header!"
+        c = "No header for %s" % parser_settings.LINE_NAME
         raise bb_exceptions.ExcelPrepError(c)
     if ct.PARENT_NAME_COL is None:
-        c = "No LINE_PARENT_NAME header!"
+        c = "No header for %s" % parser_settings.PARENT_NAME
         raise bb_exceptions.ExcelPrepError(c)
 
     # print(ct.COMPARISON_COL,
