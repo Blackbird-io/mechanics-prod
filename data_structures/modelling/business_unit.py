@@ -46,13 +46,11 @@ from data_structures.valuation.company_value import CompanyValue
 
 from . import common_events
 
-from .dr_container import DriverContainer as DrContainer
 from .financials import Financials
 from .components import Components
 from .equalities import Equalities
 from .life import Life as LifeCycle
 from .parameters import Parameters
-from .statements.balance_sheet import BalanceSheet
 from .capital_structure.cap_table import CapTable
 
 
@@ -162,7 +160,6 @@ class BusinessUnit(TagsMixIn, Equalities):
 
         # OBSOLETE
         self.complete = True
-        self.drivers = DrContainer()
 
     @classmethod
     def from_portal(cls, portal_data, link_list=list()):
