@@ -56,8 +56,12 @@ ROLLING_SUM_KEYS = {
 }
 
 ALLOWABLE_XL_TEXT = [
+    "EBITDA<0",
     "EBITDA<=0",
     "Net Debt<=0",
+    "Net Debt<0",
+    "Debt<0",
+    "Debt<=0",
     "Overperforming",
     "Performing",
     "Needs Review",
