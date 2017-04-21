@@ -36,21 +36,20 @@ import bb_exceptions
 import openpyxl as xlio
 import json
 
-from openpyxl.formula import Tokenizer
-from data_structures.serializers.chef.model_chef import ModelChef
 from data_structures.modelling.model import Model
 from data_structures.modelling.business_unit import BusinessUnit
 from data_structures.modelling.line_item import LineItem
 from data_structures.modelling.time_line import TimeLine
 from data_structures.modelling.time_period import TimePeriod
-from data_structures.modelling.driver import Driver
 
 from formula_manager import local_catalog as FC
 from datetime import datetime, date, timedelta
+from openpyxl.formula import Tokenizer
 from . import column_tracker
+from . import parser_settings
 
-#
-# MC = ModelChef()
+
+
 
 def add_projections(xl_serial, engine_model):
     """
@@ -87,8 +86,20 @@ def add_projections(xl_serial, engine_model):
     # filename = r"C:\Workbooks\Forecast_Rimini8.xlsx"
     # wb = xlio.load_workbook(filename=filename, data_only=True)
 
-    sheet = wb.worksheets[0]
-    sheet_f = wb_f.worksheets[0]
+    # Look for the BB Metadata tab
+    metadata_names = parser_settings.BB_METADATA_NAMES
+
+    bb_tabname = None
+    for tab in wb:
+        if tab.title.casefold() in metadata_names:
+            bb_tabname = tab.title
+            break
+    if not bb_tabname:
+        c = "No BB Metadata Tab!"
+        raise bb_exceptions.BBAnalyticalError(c)
+
+    sheet = wb[bb_tabname]
+    sheet_f = wb_f[bb_tabname]
 
     # Make sure sheet is valid format
     _check_xl_projection(sheet, ct)
@@ -171,8 +182,20 @@ def revise_projections(xl_serial, old_model):
     # filename = r"C:\Workbooks\Forecast_Rimini8.xlsx"
     # wb = xlio.load_workbook(filename=filename, data_only=True)
 
-    sheet = wb.worksheets[0]
-    sheet_f = wb_f.worksheets[0]
+    # Look for the BB Metadata tab
+    metadata_names = parser_settings.BB_METADATA_NAMES
+
+    bb_tabname = None
+    for tab in wb:
+        if tab.title.casefold() in metadata_names:
+            bb_tabname = tab.title
+            break
+    if not bb_tabname:
+        c = "No BB Metadata Tab!"
+        raise bb_exceptions.BBAnalyticalError(c)
+
+    sheet = wb[bb_tabname]
+    sheet_f = wb_f[bb_tabname]
 
     # Make sure sheet is valid format
     _check_xl_projection(sheet, ct)
