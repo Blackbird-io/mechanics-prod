@@ -158,9 +158,6 @@ class BusinessUnit(TagsMixIn, Equalities):
         
         self.cap_table = CapTable()
 
-        # OBSOLETE
-        self.complete = True
-
     @classmethod
     def from_portal(cls, portal_data, link_list=list()):
         new = cls(None)
