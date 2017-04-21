@@ -430,7 +430,7 @@ def _build_fins_from_sheet(bu, sheet, ct):
         if ct.REPORT_COL:
             report_str = row[ct.REPORT_COL-1].value
             if report_str:
-                if report_str.casefold() in ('kpi', 'covenants', 'overall'):
+                if report_str.casefold() in parser_settings.VALID_REPORTS:
                     # Only tag valid comparisons
                     line.tags.add(report_str)
 

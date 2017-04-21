@@ -38,3 +38,10 @@ BB_METADATA_NAMES = [
     "bb meta",
 ]
 
+# Valid strings that can be input in to the REPORT column for intake upload
+VALID_REPORTS = [
+    "kpi",
+    "covenants",
+    "financials",
+    "overall",
+]
