@@ -30,6 +30,8 @@ from datetime import date
 
 
 
+HEADER_ROW = 1
+
 # Possible tab names for BB Metadata
 BB_METADATA_NAMES = [
     "bb_metadata",
@@ -44,4 +46,19 @@ VALID_REPORTS = [
     "covenants",
     "financials",
     "overall",
+]
+
+ROLLING_SUM_KEYS = {
+    "source",
+    "statement",
+    "horizon",
+    "operation"
+}
+
+ALLOWABLE_XL_TEXT = [
+    "EBITDA<=0",
+    "Net Debt<=0",
+    "Overperforming",
+    "Performing",
+    "Needs Review",
 ]
