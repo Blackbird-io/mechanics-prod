@@ -39,6 +39,7 @@ import json
 from data_structures.modelling.model import Model
 from data_structures.modelling.business_unit import BusinessUnit
 from data_structures.modelling.line_item import LineItem
+from data_structures.modelling.statement import Statement
 from data_structures.modelling.time_line import TimeLine
 from data_structures.modelling.time_period import TimePeriod
 
@@ -103,8 +104,6 @@ def add_projections(xl_serial, engine_model):
 
     # Make sure sheet is valid format
     _check_xl_projection(sheet, ct)
-
-    model.tags.add(sheet.title.casefold())  # Tab Name triggers topic path
 
     # 2) Align model.time_line to ref_date. Add additional periods as needed
     header_row = sheet.rows[0]
@@ -357,9 +356,10 @@ def _build_fins_from_sheet(bu, sheet, ct):
 
         # # print(statement_name, line_name, parent_name)
 
-        if not getattr(financials, statement_name, None):
-            financials.add_statement(statement_name)
-        statement = getattr(financials, statement_name)
+        statement = getattr(financials, statement_name, None)
+        if not statement:
+            statement = Statement(statement_name)
+            financials.add_statement(name=statement_name, statement=statement)
 
         # Look for line in most specific area in case there are same names
         parent = statement.find_first(parent_name)
