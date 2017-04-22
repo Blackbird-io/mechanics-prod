@@ -248,7 +248,6 @@ class Tags:
         Method deserializes all LineItems belonging to ``statement``.
         """
         new = cls()
-
         new._name = data['name']
         new._title = data['title']
         new._required = set(data['required'])
