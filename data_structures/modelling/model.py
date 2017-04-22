@@ -328,20 +328,23 @@ class Model(TagsMixIn):
         business_name = portal_model.get("business_name", None)
         del portal_model
 
-        M.tags = Tags.from_portal(M.portal_data.pop('tags'))
+        tags = M.portal_data.pop('tags')
+        if tags:
+            M.tags = Tags.from_portal(tags)
 
         # set basic attributes
         M._processing_status = M.portal_data.pop('processing_status', 'intake')
         M._ref_date = M.portal_data.pop('ref_date')
         M._started = M.portal_data.pop('started')
-        M.topic_list = M.portal_data.pop('topic_list')
-        M.transcript = M.portal_data.pop('transcript')
+        M.topic_list = M.portal_data.pop('topic_list') if \
+            M.portal_data.pop('topic_list') else list()
+        M.transcript = M.portal_data.pop('transcript') if \
+            M.portal_data.pop('transcript') else list()
         M._fiscal_year_end = M.portal_data.pop('fiscal_year_end')
 
-        M.scenarios = M.portal_data.pop('scenarios')
-        if not M.scenarios:
-            for s in DEFAULT_SCENARIOS:
-                M.scenarios[s] = dict()
+        scen = M.portal_data.pop('scenarios')
+        if scen is not None:
+            M.scenarios = scen
 
         # Make blank TaxoDir structure
         M.taxo_dir = TaxoDir(M)
@@ -375,8 +378,6 @@ class Model(TagsMixIn):
         data = M.portal_data.pop('taxonomy_units', list())
         if data:
             M.taxo_dir = TaxoDir.from_portal(data, M, link_list)
-        else:
-            M.taxo_dir = TaxoDir(M)
 
         # Fix Links
         if link_list:
@@ -395,8 +396,6 @@ class Model(TagsMixIn):
         data = M.portal_data.pop('taxonomy', None)
         if data:
             M.taxonomy = Taxonomy.from_portal(data, M.taxo_dir)
-        else:
-            M.taxonomy = Taxonomy(M.taxo_dir)
 
         # Target
         target_id = M.portal_data.pop('target', None)
@@ -416,11 +415,9 @@ class Model(TagsMixIn):
             M.timelines = timelines
 
         # reinflate drivers
-        drivers = M.portal_data.pop('drivers')
+        drivers = M.portal_data.pop('drivers', list())
         if drivers:
             M.drivers = DriverContainer.from_portal(drivers)
-        else:
-            M.drivers = DriverContainer()
 
         if business_name and business_name != M.title:
             M.set_name(business_name)
