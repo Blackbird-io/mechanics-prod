@@ -452,12 +452,20 @@ def _build_fins_from_sheet(bu, sheet, ct):
                 line.tags.add('topic formula')
 
         if ct.ALERT_COMMENTARY_COL:
-            alert_bool = row[ct.ALERT_COMMENTARY_COL - 1].value
-            if alert_bool in ("True", "TRUE", True, "Yes"):
+            alert_val = row[ct.ALERT_COMMENTARY_COL - 1].value
+            if alert_val is not None:
                 new_path_line = LineItem(line.name + " alert")
                 new_path_line.tags.add('alert commentary')
                 bu.stage.path.append(new_path_line)
                 line.tags.add('alert commentary')
+
+                try:
+                    conditions_dict = json.loads(alert_val)
+                    bu.stage.work_space[new_path_line.name] = conditions_dict
+                except ValueError:
+                    c = "Invalid JSON String: " + alert_val
+                    print(c)
+                    # raise bb_exceptions.BBAnalyticalError(c)
 
         # Tag line with one or more tags.
         tags_str = row[ct.TAGS_COL-1].value
