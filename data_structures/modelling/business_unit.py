@@ -176,10 +176,9 @@ class BusinessUnit(TagsMixIn, Equalities):
         new.components = portal_data['components']
         new.interview = InterviewTracker.from_portal(portal_data['interview'],
                                                      link_list)
-        # new.interview = portal_data['interview']
 
-        new.summary = portal_data['summary']
-        new.valuation = portal_data['valuation']
+        # new.summary = portal_data['summary']
+        # new.valuation = portal_data['valuation']
 
         stage = portal_data['stage']
         if stage == 'summary':
@@ -222,8 +221,8 @@ class BusinessUnit(TagsMixIn, Equalities):
         data['used'] = [id.hex for id in self.used]
         data['guide'] = self.guide.to_portal()
         data['interview'] = self.interview.to_portal()
-        data['summary'] = self.summary  #.to_portal()
-        data['valuation'] = self.valuation  #.to_portal()
+        data['summary'] = dict() #self.summary  #.to_portal()
+        data['valuation'] = dict() #self.valuation  #.to_portal()
 
         # for monitoring, temporary storage for existing path and used sets
         data['path_archive'] = self._path_archive
