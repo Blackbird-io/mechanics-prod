@@ -1,13 +1,13 @@
 # PROPRIETARY AND CONFIDENTIAL
 # Property of Blackbird Logical Applications, LLC
-# Copyright Blackbird Logical Applications, LLC 2016
+# Copyright Blackbird Logical Applications, LLC 2017
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 # Blackbird Environment
 # Module: column tracker
 
 """
 
-Module defines the ColumnTracker class. ColumnTracker objects store column
+Module defines the ColumnTracker class. ColumnTracker objects stores column
 index locations for the xl_parser
 ====================  ==========================================================
 Attribute             Description
@@ -20,7 +20,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-Level                 list that groups items by priority
+ColumnTracker         storage for column indexes
 ====================  ==========================================================
 """
 
@@ -39,8 +39,7 @@ Level                 list that groups items by priority
 class ColumnTracker():
     """
 
-    ColumnTracker objects provide a specialized list with two descriptive attributes.
-    Other modules use Level objects to group items of equal priority. 
+    ColumnTracker stores column index locations for the xl_parser module
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
