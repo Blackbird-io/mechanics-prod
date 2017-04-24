@@ -1,6 +1,6 @@
 # PROPRIETARY AND CONFIDENTIAL
 # Property of Blackbird Logical Applications, LLC
-# Copyright Blackbird Logical Applications, LLC 2016
+# Copyright Blackbird Logical Applications, LLC 2017
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 # Blackbird Environment
@@ -34,6 +34,7 @@ HEADER_ROW = 1
 
 # Possible tab names for BB Metadata
 BB_METADATA_NAMES = [
+    "_bb_metadata",
     "bb_metadata",
     "bb metadata",
     "bb_meta",

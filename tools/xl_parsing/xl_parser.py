@@ -1,6 +1,6 @@
 # PROPRIETARY AND CONFIDENTIAL
 # Property of Blackbird Logical Applications, LLC
-# Copyright Blackbird Logical Applications, LLC 2016
+# Copyright Blackbird Logical Applications, LLC 2017
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 
 # Blackbird Environment
@@ -63,7 +63,7 @@ def add_projections(xl_serial, engine_model):
 
     Function takes a serialized Excel workbook in a specific format
     and converts it to an EngineModel with LineItem values. Model input will
-    determine which model card on the web page we are adding projections to.
+    determine which investment card we are adding projections to.
 
     Function delegates to:
         _check_xl_projections()
