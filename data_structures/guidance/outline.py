@@ -28,6 +28,7 @@ Outline               container for organizing steps into a path
 
 
 #imports
+import pickle
 import time
 
 from .step import Step
@@ -92,6 +93,8 @@ class Outline(Step):
         new = cls(None)
         new.__dict__.update(portal_data)
 
+        # new.completion_rule = pickle.loads(portal_data['completion_rule'])
+
         # rebuild the path
         new.path = Statement.from_portal(portal_data['path'], None)
 
@@ -116,7 +119,7 @@ class Outline(Step):
         data['attention_budget'] = self.attention_budget
 
         # need to implement completion rule serialization eventually
-        data['completion_rule'] = self.completion_rule
+        # data['completion_rule'] = pickle.dumps(self.completion_rule)
 
         data['focal_point'] = self.focal_point.name if self.focal_point else None
         data['path'] = self.path.to_portal()
