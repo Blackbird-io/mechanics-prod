@@ -58,6 +58,7 @@ class TaxoDir(TagsMixIn):
     ====================  ======================================================
 
     DATA:
+    model                 pointer to Model
     bu_directory          dict; key = bbid, val = business units
     ty_directory          dict; key = strings, val = sets of bbids
     id                    instance of ID class
@@ -76,7 +77,6 @@ class TaxoDir(TagsMixIn):
         self.model = model
         self.ty_directory = dict()
         self.bu_directory = dict()
-        self.financials = dict()
         self.id = ID()
         if model:
             self.id.set_namespace(model.id.bbid)
