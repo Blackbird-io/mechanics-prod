@@ -197,7 +197,7 @@ class BusinessUnit(TagsMixIn, Equalities):
     def to_portal(self):
         data = dict()
 
-        data['parameters'] = self._parameters.to_portal(target='business_unit')
+        data['parameters'] = list(self._parameters.to_portal(target='business_unit'))
         data['type'] = self._type
         data['components'] = list(self.components.keys())
         data['bbid'] = self.id.bbid
