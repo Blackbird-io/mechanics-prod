@@ -46,6 +46,7 @@ VALID_REPORTS = [
     "covenants",
     "financials",
     "overall",
+    "business summary",
 ]
 
 ROLLING_SUM_KEYS = {
