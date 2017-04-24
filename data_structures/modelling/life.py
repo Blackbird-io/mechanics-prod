@@ -36,6 +36,8 @@ import bb_exceptions
 from . import common_events
 from .equalities import Equalities
 
+from tools.parsing import date_from_iso
+
 
 
 
@@ -182,11 +184,12 @@ class Life(Equalities):
         new = cls()
         new._birth_event_names = set(portal_data['birth_event_names'])
         new._death_event_names = set(portal_data['death_event_names'])
-        new._ref_date = portal_data['ref_date']
+        new._ref_date = date_from_iso(portal_data['ref_date']) if \
+            portal_data['ref_date'] else portal_data['ref_date']
         new.events = portal_data['events']
 
-        new.gestation = portal_data['gestation']
-        new.life_span = portal_data['life_span']
+        new.gestation = datetime.timedelta(portal_data['gestation'])
+        new.life_span = datetime.timedelta(portal_data['life_span'])
         new.percent_maturity = portal_data['percent_maturity']
         new.percent_old_age = portal_data['percent_old_age']
 
@@ -196,11 +199,12 @@ class Life(Equalities):
         data = dict()
         data['birth_event_names'] = list(self._birth_event_names)
         data['death_event_names'] = list(self._death_event_names)
-        data['ref_date'] = self._ref_date
+        data['ref_date'] = self._ref_date.strftime('%Y-%m-%d') if \
+            self._ref_date else self._ref_date
         data['events'] = self.events
 
-        data['gestation'] = self.gestation
-        data['life_span'] = self.life_span
+        data['gestation'] = self.gestation.days
+        data['life_span'] = self.life_span.days
         data['percent_maturity'] = self.percent_maturity
         data['percent_old_age'] = self.percent_old_age
 
