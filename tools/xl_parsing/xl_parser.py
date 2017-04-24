@@ -459,13 +459,16 @@ def _build_fins_from_sheet(bu, sheet, ct):
                 bu.stage.path.append(new_path_line)
                 line.tags.add('alert commentary')
 
+                # Backwards compatibility when ALERT was a bool column
+                if alert_val in ("True", "TRUE", True, "Yes"):
+                    alert_val = '{"comparison":"=","limit":"Needs Review"}'
+
                 try:
                     conditions_dict = json.loads(alert_val)
                     bu.stage.work_space[new_path_line.name] = conditions_dict
                 except ValueError:
                     c = "Invalid JSON String: " + alert_val
-                    print(c)
-                    # raise bb_exceptions.BBAnalyticalError(c)
+                    raise bb_exceptions.BBAnalyticalError(c)
 
         # Tag line with one or more tags.
         tags_str = row[ct.TAGS_COL-1].value
