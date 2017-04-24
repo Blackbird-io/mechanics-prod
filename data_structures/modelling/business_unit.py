@@ -168,7 +168,10 @@ class BusinessUnit(TagsMixIn, Equalities):
         new.life = LifeCycle.from_portal(portal_data['life'])
         new.location = portal_data['location']
         new.size = portal_data['size']
-        new.used = set(portal_data['used'])
+
+        ids = portal_data['used']
+        real_ids = [ID.from_portal(id).bbid for id in ids]
+        new.used = set(real_ids)
         new.guide = Guide.from_portal(portal_data['guide'])
         new.components = portal_data['components']
         new.interview = InterviewTracker.from_portal(portal_data['interview'],
@@ -199,8 +202,8 @@ class BusinessUnit(TagsMixIn, Equalities):
 
         data['parameters'] = list(self._parameters.to_portal(target='business_unit'))
         data['type'] = self._type
-        data['components'] = list(self.components.keys())
-        data['bbid'] = self.id.bbid
+        data['components'] = [k.hex for k in self.components.keys()]
+        data['bbid'] = self.id.bbid.hex
         data['life'] = self.life.to_portal()
         data['location'] = self.location
         data['name'] = self.name
@@ -216,7 +219,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         else:
             stage = None      
         data['stage'] = stage
-        data['used'] = list(self.used)
+        data['used'] = [id.hex for id in self.used]
         data['guide'] = self.guide.to_portal()
         data['interview'] = self.interview.to_portal()
         data['summary'] = self.summary  #.to_portal()
@@ -463,7 +466,8 @@ class BusinessUnit(TagsMixIn, Equalities):
         BusinessUnit._used_archive and sets used to a new empty set. Method is
         used by monitoring to pre-process before setting the monitoring path.
         """
-        self._used_archive.append(self.used)
+        used = set([id.hex for id in self.used])
+        self._used_archive.append(used)
         self.used = set()
 
     def check_statement_structure(self, statement_name, period=None):
