@@ -349,14 +349,14 @@ class Model(TagsMixIn):
         if scen is not None:
             M.scenarios = scen
 
-        # Make blank TaxoDir structure
-        M.taxo_dir = TaxoDir(M)
-
         link_list = list()
         # first deserialize BusinessUnits into directory
         temp_directory = dict()
         bu_list = M.portal_data.pop('business_units', list())
-        for flat_bu in bu_list:
+        reg_bus = [bu for bu in bu_list if not bu.get('taxonomy', False)]
+        taxo_bus = [bu for bu in bu_list if bu.get('taxonomy', False)]
+
+        for flat_bu in reg_bus:
             rich_bu = BusinessUnit.from_portal(flat_bu, link_list)
             rich_bu.relationships.set_model(M)
             bbid = ID.from_portal(flat_bu['bbid']).bbid
@@ -366,16 +366,14 @@ class Model(TagsMixIn):
         company_id = M.portal_data.pop('company', None)
         if company_id:
             company_id = ID.from_portal(company_id).bbid
+
             def build_bu_structure(seed, directory):
                 component_list = seed.components
                 seed.components = None
                 seed._set_components()
+
                 for component_id in component_list:
-                    try:
-                        sub_bu = directory[component_id]
-                    except KeyError:
-                        import pdb
-                        pdb.set_trace()
+                    sub_bu = directory[component_id]
                     seed.add_component(sub_bu)
                     build_bu_structure(sub_bu, directory)
 
@@ -384,9 +382,8 @@ class Model(TagsMixIn):
             M.set_company(top_bu)
 
         # TaxoDir
-        data = M.portal_data.pop('taxonomy_units', list())
-        if data:
-            M.taxo_dir = TaxoDir.from_portal(data, M, link_list)
+        if taxo_bus:
+            M.taxo_dir = TaxoDir.from_portal(taxo_bus, M, link_list)
 
         # Fix Links
         if link_list:
@@ -462,9 +459,10 @@ class Model(TagsMixIn):
 
         # pre-process financials in the current period, make sure they get
         # serialized in th database to maintain structure data
-        result['business_units'] = [bu.to_portal() for bu in self.bu_directory.values()]
+        bus = [bu.to_portal() for bu in self.bu_directory.values()]
+        bus.extend(self.taxo_dir.to_portal())
+        result['business_units'] = bus
         result['taxonomy'] = self.taxonomy.to_portal()
-        result['taxonomy_units'] = self.taxo_dir.to_portal()
 
         # serialized representation has a list of timelines attached
         # with (resolution, name) as properties

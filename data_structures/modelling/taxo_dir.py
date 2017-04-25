@@ -112,7 +112,8 @@ class TaxoDir:
         """
         taxo_list = list()
         for unit in self.bu_directory.values():
-            taxo_list.append(unit.to_portal())
+            data = unit.to_portal(taxonomy=True)
+            taxo_list.append(data)
 
         return taxo_list
 

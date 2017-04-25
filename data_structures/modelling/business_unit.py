@@ -177,8 +177,13 @@ class BusinessUnit(TagsMixIn, Equalities):
         new.interview = InterviewTracker.from_portal(portal_data['interview'],
                                                      link_list)
 
-        # new.summary = portal_data['summary']
-        # new.valuation = portal_data['valuation']
+        # summary = portal_data['summary']
+        # if summary:
+        #     new.summary = BusinessSummary.from_portal(summary)
+
+        # valuation = portal_data['valuation']
+        # if valuation:
+        #     new.valuation = CompanyValue.from_portal(valuation)
 
         stage = portal_data['stage']
         if stage == 'summary':
@@ -196,7 +201,7 @@ class BusinessUnit(TagsMixIn, Equalities):
 
         return new
 
-    def to_portal(self):
+    def to_portal(self, taxonomy=False):
         data = dict()
 
         data['parameters'] = list(self._parameters.to_portal(target='business_unit'))
@@ -211,22 +216,24 @@ class BusinessUnit(TagsMixIn, Equalities):
         data['tags'] = self.tags.to_portal()
         data['financials_structure'] = self.financials.to_portal()
 
-        if self._stage is self.summary:
+        if self._stage is self.summary and self._stage is not None:
             stage = 'summary'
-        elif self._stage is self.valuation:
+        elif self._stage is self.valuation and self._stage is not None:
             stage = 'valuation'
         else:
-            stage = None      
+            stage = None
+
         data['stage'] = stage
         data['used'] = [id.hex for id in self.used]
         data['guide'] = self.guide.to_portal()
         data['interview'] = self.interview.to_portal()
-        data['summary'] = dict() #self.summary  #.to_portal()
-        data['valuation'] = dict() #self.valuation  #.to_portal()
+        data['summary'] = dict()  # self.summary.to_portal() if self.summary else None
+        data['valuation'] = dict()  # self.valuation.to_portal() if self.valuation else None
 
         # for monitoring, temporary storage for existing path and used sets
         data['path_archive'] = self._path_archive
         data['used_archive'] = self._used_archive
+        data['taxonomy'] = taxonomy
 
         return data
 
