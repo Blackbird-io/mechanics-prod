@@ -73,6 +73,7 @@ class SheetMap():
         self.cols[ps.TAGS] = None
         self.cols["FIRST_PERIOD"] = None   # First column with a period date
 
+        self.rows["HEADER"] = 1
         self.rows["DATES"] = 1
         self.rows["TIMELINE"] = 2  # "Actual" or "Forecast"
         self.rows["FIRST_DATA"] = 3  # First row with LineItem data
