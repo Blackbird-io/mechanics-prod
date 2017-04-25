@@ -354,17 +354,23 @@ class Model(TagsMixIn):
         for flat_bu in bu_list:
             rich_bu = BusinessUnit.from_portal(flat_bu, link_list)
             rich_bu.relationships.set_model(M)
-            temp_directory[flat_bu['bbid']] = rich_bu
+            bbid = ID.from_portal(flat_bu['bbid']).bbid
+            temp_directory[bbid] = rich_bu
 
         # now rebuild structure
         company_id = M.portal_data.pop('company', None)
         if company_id:
+            company_id = ID.from_portal(company_id).bbid
             def build_bu_structure(seed, directory):
                 component_list = seed.components
                 seed.components = None
                 seed._set_components()
                 for component_id in component_list:
-                    sub_bu = directory[component_id]
+                    try:
+                        sub_bu = directory[component_id]
+                    except KeyError:
+                        import pdb
+                        pdb.set_trace()
                     seed.add_component(sub_bu)
                     build_bu_structure(sub_bu, directory)
 
@@ -953,7 +959,5 @@ class Model(TagsMixIn):
             message['q_out'] = message['q_out'].to_portal()
 
         record = (message, time_stamp)
-
-        print(record)
 
         self.transcript.append(record)

@@ -173,7 +173,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         real_ids = [ID.from_portal(id).bbid for id in ids]
         new.used = set(real_ids)
         new.guide = Guide.from_portal(portal_data['guide'])
-        new.components = portal_data['components']
+        new.components = [ID.from_portal(id).bbid for id in portal_data['components']]
         new.interview = InterviewTracker.from_portal(portal_data['interview'],
                                                      link_list)
 
