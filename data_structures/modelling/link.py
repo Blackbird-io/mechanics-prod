@@ -29,6 +29,7 @@ Link                  a LineItem with a pointer to a target business unit
 # Imports
 from .line_item import LineItem
 
+from data_structures.system.bbid import ID
 
 
 
@@ -70,13 +71,13 @@ class Link(LineItem):
 
         new = cls(None)
         new.__dict__.update(line_item.__dict__)
-        new.target = target
+        new.target = ID.from_portal(target).bbid
 
         return new
 
     def to_portal(self, top_level=False):
         data = LineItem.to_portal(self, top_level=top_level)
-        data['target'] = self.target.id.bbid
+        data['target'] = self.target.id.bbid.hex
         data['link'] = True
 
         return data
