@@ -28,7 +28,7 @@ n/a
 
 
 
-HEADER_ROW = 1
+# HEADER_ROW = 1
 
 # Possible tab names for BB Metadata
 # This will be the Excel tab that xl_parser will operate on
@@ -84,3 +84,10 @@ ALERT = ("ALERT", "ALERT_COMMENTARY")
 STATUS = "STATUS"
 ON_CARD = "ON_CARD"
 TAGS = "TAGS"
+
+REQUIRED_COLS = [
+    STATEMENT,
+    LINE_TITLE,
+    LINE_NAME,
+    PARENT_NAME,
+]

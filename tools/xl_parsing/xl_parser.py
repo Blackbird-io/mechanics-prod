@@ -19,7 +19,7 @@ FUNCTIONS:
 add_projections()          creates a EngineModel with projections values from xl
 
 _build_fins_from_sheet()    builds LineItem structure
-_check_xl_projections()     checks if upload xl projections is the right format
+check_xl_projections()     checks if upload xl projections is the right format
 _populate_fins_from_sheet() writes projected line values to financials
 
 
@@ -66,7 +66,7 @@ def add_projections(xl_serial, engine_model):
     determine which investment card we are adding projections to.
 
     Function delegates to:
-        _check_xl_projections()
+        check_xl_projections()
         _build_fins_from_sheet()
         _populate_fins_from_sheet()
 
@@ -103,10 +103,10 @@ def add_projections(xl_serial, engine_model):
     sheet_f = wb_f[bb_tabname]
 
     # Make sure sheet is valid format
-    _check_xl_projection(sheet, sm)
+    check_xl_projection(sheet, sm)
 
     # 2) Align model.time_line to ref_date. Add additional periods as needed
-    header_row = sheet.rows[ps.HEADER_ROW-1]
+    header_row = sheet.rows[sm.rows["HEADER"]-1]
     xl_dates = []
     for cell in header_row[sm.cols["FIRST_PERIOD"]-1:]:
         if isinstance(cell.value, datetime):
@@ -119,7 +119,6 @@ def add_projections(xl_serial, engine_model):
     # set default timeline to only contain relevant dates
     new_timeline = TimeLine(model)
     model.set_timeline(new_timeline, overwrite=True)
-    # model.time_line.build(first_date, fwd=len(xl_dates)-1, year_end=False)
     model.time_line.build(first_date, fwd=0, year_end=False)
     model.change_ref_date(first_date)
 
@@ -158,7 +157,7 @@ def revise_projections(xl_serial, old_model):
     and converts it to an EngineModel with LineItem values. 
     
     Function delegates to:
-        _check_xl_projections()
+        check_xl_projections()
         _build_fins_from_sheet()
         _populate_fins_from_sheet()
 
@@ -197,7 +196,7 @@ def revise_projections(xl_serial, old_model):
     sheet_f = wb_f[bb_tabname]
 
     # Make sure sheet is valid format
-    sm = _check_xl_projection(sheet, sm)
+    sm = check_xl_projection(sheet, sm)
 
     company = new_model.get_company()
     if not company:
@@ -226,11 +225,11 @@ def revise_projections(xl_serial, old_model):
     return new_model
 
 
-def _check_xl_projection(sheet, sm):
+def check_xl_projection(sheet, sm):
     """
 
 
-    _check_xl_projection(sheet, sm) -> SheetMap()
+    check_xl_projection(sheet, sm) -> SheetMap()
 
     --``sheet`` is an instance of openpyxl.WorkSheets
     --``ct`` is an instance of SheetMap
@@ -240,55 +239,33 @@ def _check_xl_projection(sheet, sm):
     numbers for each field.
     """
 
-    header_row = sheet.rows[ps.HEADER_ROW-1]
+    header_row = sheet.rows[sm.rows["HEADER"]-1]
 
     # Next few columns can be in any order
     for cell in header_row:
-        if cell.value == ps.STATEMENT:
-            sm.cols[ps.STATEMENT] = cell.col_idx
-        elif cell.value == ps.LINE_TITLE:
-            sm.cols[ps.LINE_TITLE] = cell.col_idx
-        elif cell.value == ps.LINE_NAME:
-            sm.cols[ps.LINE_NAME] = cell.col_idx
-        elif cell.value == ps.PARENT_NAME:
-            sm.cols[ps.PARENT_NAME] = cell.col_idx
-        elif cell.value == ps.COMPARISON:
-            sm.cols[ps.COMPARISON] = cell.col_idx
-        elif cell.value == ps.SUM_DETAILS:
-            sm.cols[ps.SUM_DETAILS] = cell.col_idx
-        elif cell.value == ps.REPORT:
-            sm.cols[ps.REPORT] = cell.col_idx
-        elif cell.value == ps.MONITOR:
-            sm.cols[ps.MONITOR] = cell.col_idx
-        elif cell.value == ps.PARSE_FORMULA:
-            sm.cols[ps.PARSE_FORMULA] = cell.col_idx
-        elif cell.value in ps.ADD_TO_PATH:
-            sm.cols[ps.ADD_TO_PATH[0]] = cell.col_idx
-        elif cell.value == ps.BEHAVIOR:
-            sm.cols[ps.BEHAVIOR] = cell.col_idx
-        elif cell.value in ps.ALERT:
-            sm.cols[ps.ALERT[0]] = cell.col_idx
-        elif cell.value == ps.STATUS:
-            sm.cols[ps.STATUS] = cell.col_idx
-        elif cell.value == ps.ON_CARD:
-            sm.cols[ps.ON_CARD] = cell.col_idx
-        elif cell.value == ps.TAGS:
-            sm.cols[ps.TAGS] = cell.col_idx
-        elif isinstance(cell.value, datetime):
+        if isinstance(cell.value, datetime):
             sm.cols["FIRST_PERIOD"] = cell.col_idx
             break
 
-    if sm.cols[ps.STATEMENT] is None:
-        c = "No header for %s" % ps.STATEMENT
-        raise bb_exceptions.ExcelPrepError(c)
-    if sm.cols[ps.LINE_TITLE] is None:
-        c = "No header for %s" % ps.LINE_TITLE
-        raise bb_exceptions.ExcelPrepError(c)
-    if sm.cols[ps.LINE_NAME] is None:
-        c = "No header for %s" % ps.LINE_NAME
-        raise bb_exceptions.ExcelPrepError(c)
-    if sm.cols[ps.PARENT_NAME] is None:
-        c = "No header for %s" % ps.PARENT_NAME
+        # Ensure backwards compatibility with old column names
+        col_name = cell.value
+        if col_name in ps.ALERT:
+            col_name = ps.ALERT[0]
+        elif col_name in ps.ADD_TO_PATH:
+            col_name = ps.ADD_TO_PATH[0]
+
+        if col_name in sm.cols.keys():
+            sm.cols[col_name] = cell.col_idx
+        else:
+            import pdb
+            pdb.set_trace()
+
+    missing_columns = []
+    for col in ps.REQUIRED_COLS:
+        if sm.cols[col] is None:
+            missing_columns.append(col)
+    if missing_columns:
+        c = "No header for %s" % missing_columns
         raise bb_exceptions.ExcelPrepError(c)
 
     # Make sure everything after sm.cols["FIRST_PERIOD"] is all in a date format.
@@ -321,7 +298,10 @@ def _build_fins_from_sheet(bu, sheet, sm):
     line = None
 
     # Loop through each row that contains LineItem information
-    for row in sheet.iter_rows(row_offset=sm.rows["FIRST_DATA"]-1, column_offset=0):
+    # Start at the first row that has line data
+    iter_rows = sheet.iter_rows(row_offset=sm.rows["FIRST_DATA"]-1,
+                                column_offset=0)
+    for row in iter_rows:
         if not row[sm.cols[ps.STATEMENT]-1].value:
             if line:
                 line.xl.format.blank_row_after = True
