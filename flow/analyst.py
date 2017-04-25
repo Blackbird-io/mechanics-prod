@@ -35,6 +35,7 @@ import bb_settings
 from .interviewer import Interviewer
 from .yenta import Yenta
 
+from data_structures.system.bbid import ID
 from tools.for_messages import \
     TOPIC_NEEDED, PENDING_RESPONSE, END_SESSION, \
     check_engine_message as check
@@ -186,7 +187,8 @@ class Analyst:
             model = message[0]
             #
             if self.status == PENDING_RESPONSE:
-                topic_bbid = model.transcript[-1][0]["topic_bbid"]
+                topic_bbid_hex = model.transcript[-1][0]["topic_bbid"]
+                topic_bbid = ID.from_portal(topic_bbid_hex).bbid
                 topic = yenta.TM.local_catalog.issue(topic_bbid)
                 logger.info('{} {}'.format(self.status, topic.source))
                 message = topic.process(message)

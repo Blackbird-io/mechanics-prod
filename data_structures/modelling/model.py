@@ -336,10 +336,8 @@ class Model(TagsMixIn):
         M._processing_status = M.portal_data.pop('processing_status', 'intake')
         M._ref_date = M.portal_data.pop('ref_date')
         M._started = M.portal_data.pop('started')
-        M.topic_list = M.portal_data.pop('topic_list') if \
-            M.portal_data.pop('topic_list') else list()
-        M.transcript = M.portal_data.pop('transcript') if \
-            M.portal_data.pop('transcript') else list()
+        M.topic_list = M.portal_data.pop('topic_list', list())
+        M.transcript = M.portal_data.pop('transcript', list())
         M._fiscal_year_end = M.portal_data.pop('fiscal_year_end')
 
         scen = M.portal_data.pop('scenarios')
@@ -946,5 +944,22 @@ class Model(TagsMixIn):
         Appends a tuple of (message ,time of call) to instance.transcript.
         """
         time_stamp = time.time()
+
+        # flatten
+        message['topic_bbid'] = message['topic_bbid'].hex
+
+        if message['q_in'] is not None:
+            print(type(message['q_in']))
+            import pdb
+            pdb.set_trace()
+
+            message['q_in'] = message['q_in'].to_portal()
+
+        if message['q_out'] is not None:
+            message['q_out'] = message['q_out'].to_portal()
+
         record = (message, time_stamp)
+
+        print(record)
+
         self.transcript.append(record)
