@@ -3,11 +3,11 @@
 # Copyright Blackbird Logical Applications, LLC 2017
 # NOT TO BE CIRCULATED OR REPRODUCED WITHOUT PRIOR WRITTEN APPROVAL
 # Blackbird Environment
-# Module: column tracker
+# Module: Sheet Map
 
 """
 
-Module defines the ColumnTracker class. ColumnTracker objects stores column
+Module defines the SheetMap class. SheetMap objects stores column
 index locations for the xl_parser
 ====================  ==========================================================
 Attribute             Description
@@ -20,7 +20,7 @@ FUNCTIONS:
 n/a
 
 CLASSES:
-ColumnTracker         storage for column indexes
+SheetMap         storage for column indexes
 ====================  ==========================================================
 """
 
@@ -36,10 +36,10 @@ ColumnTracker         storage for column indexes
 #n/a
 
 #classes
-class ColumnTracker():
+class SheetMap():
     """
 
-    ColumnTracker stores column index locations for the xl_parser module
+    SheetMap stores column index locations for the xl_parser module
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
