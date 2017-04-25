@@ -31,6 +31,8 @@ n/a
 HEADER_ROW = 1
 
 # Possible tab names for BB Metadata
+# This will be the Excel tab that xl_parser will operate on
+# Strings are lowercase to support caseless matching
 BB_METADATA_NAMES = [
     "_bb_metadata",
     "bb_metadata",
@@ -78,7 +80,7 @@ MONITOR = "MONITOR"
 PARSE_FORMULA = "PARSE_FORMULA"
 ADD_TO_PATH = ("ADD_TO_PATH", "TOPIC_FORMULA")
 BEHAVIOR = "BEHAVIOR"
-ALERT = ("ALERT_COMMENTARY", "ALERT")
+ALERT = ("ALERT", "ALERT_COMMENTARY")
 STATUS = "STATUS"
 ON_CARD = "ON_CARD"
 TAGS = "TAGS"
