@@ -58,6 +58,7 @@ class ColumnTracker():
     BEHAVIOR_COL          int, column index
     ALERT_COMMENTARY_COL  int, column index
     STATUS_COL            int, column index  
+    ON_CARD_COL           int, column index
     TAGS_COL              int, column index  
     FIRST_PERIOD_COL      int, column index           
 
@@ -79,6 +80,7 @@ class ColumnTracker():
         self.BEHAVIOR_COL = None
         self.ALERT_COMMENTARY_COL = None
         self.STATUS_COL = None
+        self.ON_CARD_COL = None
         self.TAGS_COL = None
         self.FIRST_PERIOD_COL = None  # First column with a period date and line values
 
