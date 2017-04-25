@@ -398,6 +398,7 @@ class Model(TagsMixIn):
         # Target
         target_id = M.portal_data.pop('target', None)
         if target_id:
+            target_id = ID.from_portal(target_id).bbid
             try:
                 M.target = M.bu_directory[target_id]
             except KeyError:
@@ -437,10 +438,10 @@ class Model(TagsMixIn):
         for k, v in self.portal_data.items():
             result[k] = v
 
-        result['company'] = self._company.id.bbid if self._company else None
+        result['company'] = self._company.id.bbid.hex if self._company else None
         result['ref_date'] = self._ref_date
         result['started'] = self._started
-        result['target'] = self.target.id.bbid if self.target else None
+        result['target'] = self.target.id.bbid.hex if self.target else None
         result['topic_list'] = self.topic_list
         result['transcript'] = self.transcript
         result['scenarios'] = self.scenarios
@@ -947,13 +948,6 @@ class Model(TagsMixIn):
 
         # flatten
         message['topic_bbid'] = message['topic_bbid'].hex
-
-        if message['q_in'] is not None:
-            print(type(message['q_in']))
-            import pdb
-            pdb.set_trace()
-
-            message['q_in'] = message['q_in'].to_portal()
 
         if message['q_out'] is not None:
             message['q_out'] = message['q_out'].to_portal()
