@@ -334,7 +334,13 @@ class Model(TagsMixIn):
 
         # set basic attributes
         M._processing_status = M.portal_data.pop('processing_status', 'intake')
+
         M._ref_date = M.portal_data.pop('ref_date')
+        print("Ref date:")
+        print(M._ref_date)
+        if isinstance(M._ref_date, str):
+            M._ref_date = date_from_iso(M._ref_date)
+
         M._started = M.portal_data.pop('started')
         M.topic_list = M.portal_data.pop('topic_list', list())
         M.transcript = M.portal_data.pop('transcript', list())

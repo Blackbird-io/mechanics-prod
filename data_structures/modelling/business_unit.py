@@ -465,7 +465,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         BusinessUnit._used_archive and sets used to a new empty set. Method is
         used by monitoring to pre-process before setting the monitoring path.
         """
-        used = set([id.hex for id in self.used])
+        used = [id.hex for id in self.used]
         self._used_archive.append(used)
         self.used = set()
 
