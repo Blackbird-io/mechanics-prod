@@ -271,6 +271,7 @@ def build_sheet_map(sheet):
 
     return sm
 
+
 def _build_fins_from_sheet(bu, sheet, sm):
     """
 
@@ -375,77 +376,93 @@ def _build_fins_from_sheet(bu, sheet, sm):
 
         # Set line title must happen after line name is set
         line.set_title(line_title)
-        # print(line.name, line.title)
+        _add_line_effects(line, bu, row, sm)
 
-        # Add comparison ("<" or ">") as a tag for KPI and Covenant analysis
-        if sm.cols[ps.COMPARISON]:
-            comparison_str = row[sm.cols[ps.COMPARISON]-1].value
-            if comparison_str in ('<', '<=', '>', '>='):
+
+def _add_line_effects(line, bu, row, sm):
+    """
+
+
+    _add_line_effects(financials, sheet) -> None
+
+    --``line`` is the target LineItem 
+    --``bu`` is the instance of Business Unit that the line belongs to
+    --``row`` is list of openpyxl.Cells in the same row
+    --``sm`` is an instance of SheetMap
+
+    Function validates column values. This information and stores on the line 
+    so that the Engine knows what to do with line later.
+    """
+
+    # Add comparison ("<" or ">") as a tag for KPI and Covenant analysis
+    if sm.cols[ps.COMPARISON]:
+        comparison_str = row[sm.cols[ps.COMPARISON]-1].value
+        if comparison_str in ('<', '<=', '>', '>='):
+            # Only tag valid comparisons
+            line.tags.add(comparison_str)
+
+    # Add sum_details attribute if FALSE (TRUE is default for blank cells)
+    if sm.cols[ps.SUM_DETAILS]:
+        sum_details = row[sm.cols[ps.SUM_DETAILS]-1].value
+        if sum_details in ("False", "FALSE", False, "No"):
+            line.sum_details = False
+
+    # Tag line with which summary report we want to display it on.
+    if sm.cols[ps.REPORT]:
+        report_str = row[sm.cols[ps.REPORT]-1].value
+        if report_str:
+            if report_str.casefold() in ps.VALID_REPORTS:
                 # Only tag valid comparisons
-                line.tags.add(comparison_str)
+                line.tags.add(report_str)
 
-        # Add sum_details attribute if FALSE (TRUE is default for blank cells)
-        if sm.cols[ps.SUM_DETAILS]:
-            sum_details = row[sm.cols[ps.SUM_DETAILS]-1].value
-            if sum_details in ("False", "FALSE", False, "No"):
-                line.sum_details = False
+    if sm.cols[ps.MONITOR]:
+        monitor_bool = row[sm.cols[ps.MONITOR]-1].value
+        if monitor_bool in ("True", "TRUE", True, "Yes"):
+            line.tags.add('monitor')
 
-        # Tag line with which summary report we want to display it on.
-        if sm.cols[ps.REPORT]:
-            report_str = row[sm.cols[ps.REPORT]-1].value
-            if report_str:
-                if report_str.casefold() in ps.VALID_REPORTS:
-                    # Only tag valid comparisons
-                    line.tags.add(report_str)
+    if sm.cols[ps.PARSE_FORMULA]:
+        parse_formula_bool = row[sm.cols[ps.PARSE_FORMULA]-1].value
+        if parse_formula_bool in ("True", "TRUE", True, "Yes"):
+            line.tags.add('parse formula')
 
-        if sm.cols[ps.MONITOR]:
-            monitor_bool = row[sm.cols[ps.MONITOR]-1].value
-            if monitor_bool in ("True", "TRUE", True, "Yes"):
-                line.tags.add('monitor')
+    if sm.cols[ps.ADD_TO_PATH[0]]:
+        topic_formula_bool = row[sm.cols[ps.ADD_TO_PATH[0]] - 1].value
+        if topic_formula_bool in ("True", "TRUE", True, "Yes"):
+            new_path_line = LineItem(line.name)
+            bu.stage.path.append(new_path_line)
+            line.tags.add('topic formula')
 
-        if sm.cols[ps.PARSE_FORMULA]:
-            parse_formula_bool = row[sm.cols[ps.PARSE_FORMULA]-1].value
-            if parse_formula_bool in ("True", "TRUE", True, "Yes"):
-                line.tags.add('parse formula')
+    if sm.cols[ps.ALERT[0]]:
+        alert_val = row[sm.cols[ps.ALERT[0]] - 1].value
+        if alert_val is not None:
+            new_path_line = LineItem(line.name + " alert")
+            new_path_line.tags.add('alert commentary')
+            bu.stage.path.append(new_path_line)
+            line.tags.add('alert commentary')
 
-        if sm.cols[ps.ADD_TO_PATH[0]]:
-            topic_formula_bool = row[sm.cols[ps.ADD_TO_PATH[0]] - 1].value
-            if topic_formula_bool in ("True", "TRUE", True, "Yes"):
-                new_path_line = LineItem(line.name)
-                bu.stage.path.append(new_path_line)
-                line.tags.add('topic formula')
+            # Backwards compatibility when ALERT was a bool column
+            if alert_val in ("True", "TRUE", True, "Yes"):
+                alert_val = '{"comparison":"=","limit":"Needs Review"}'
 
-        if sm.cols[ps.ALERT[0]]:
-            alert_val = row[sm.cols[ps.ALERT[0]] - 1].value
-            if alert_val is not None:
-                new_path_line = LineItem(line.name + " alert")
-                new_path_line.tags.add('alert commentary')
-                bu.stage.path.append(new_path_line)
-                line.tags.add('alert commentary')
+            try:
+                conditions_dict = json.loads(alert_val)
+                bu.stage.work_space[new_path_line.name] = conditions_dict
+            except ValueError:
+                c = "Invalid JSON String: " + alert_val
+                raise bb_exceptions.BBAnalyticalError(c)
 
-                # Backwards compatibility when ALERT was a bool column
-                if alert_val in ("True", "TRUE", True, "Yes"):
-                    alert_val = '{"comparison":"=","limit":"Needs Review"}'
+    if sm.cols[ps.ON_CARD]:
+        on_card_bool = row[sm.cols[ps.ON_CARD] - 1].value
+        if on_card_bool in ("True", "TRUE", True, "Yes"):
+            line.tags.add('business summary')
 
-                try:
-                    conditions_dict = json.loads(alert_val)
-                    bu.stage.work_space[new_path_line.name] = conditions_dict
-                except ValueError:
-                    c = "Invalid JSON String: " + alert_val
-                    raise bb_exceptions.BBAnalyticalError(c)
-
-        if sm.cols[ps.ON_CARD]:
-            on_card_bool = row[sm.cols[ps.ON_CARD] - 1].value
-            if on_card_bool in ("True", "TRUE", True, "Yes"):
-                line.tags.add('business summary')
-
-        # Tag line with one or more tags.
-        tags_str = row[sm.cols[ps.TAGS]-1].value
-        if tags_str:
-            tags_list = tags_str.split(",")
-            for t in tags_list:
-                new_tag = t.strip()  # Remove white space from both sides
-                line.tags.add(new_tag)
+    # Tag line with one or more tags.
+    tags_str = row[sm.cols[ps.TAGS]-1].value
+    if tags_str:
+        tags_list = tags_str.split(",")
+        for t in tags_list:
+            new_tag = t.strip()  # Remove white space from both sides
+            line.tags.add(new_tag)
 
 
 def _combine_fins_structure(old_model, new_model):
