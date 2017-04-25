@@ -30,6 +30,8 @@ TaxoDir               Directory for Taxonomy units
 import copy
 import logging
 
+from data_structures.system.bbid import ID
+
 
 
 
@@ -106,7 +108,9 @@ class Taxonomy(dict):
                     dict.__setitem__(this_dict, k, cls(taxo_dir))
                     temp = dict.__getitem__(this_dict, k)
 
-            bu = new.taxo_dir.get(taxo_unit['bbid'])
+            id_hex = taxo_unit['bbid']
+            bbid = ID.from_portal(id_hex).bbid if id_hex else None
+            bu = new.taxo_dir.get(bbid)
             dict.__setitem__(this_dict, k, bu)
 
         return new
@@ -126,7 +130,7 @@ class Taxonomy(dict):
                     new_r['keys'].append(k)
                     get_taxo_rows(new_r, val, rl)
             else:
-                r.update({"bbid": v.id.bbid})
+                r.update({"bbid": v.id.bbid.hex if v else None})
                 rl.append(r)         
         
         row_list = list()
