@@ -47,7 +47,7 @@ from formula_manager import local_catalog as FC
 from datetime import datetime, date, timedelta
 from openpyxl.formula import Tokenizer
 from . import sheet_map
-from . import parser_settings
+from . import parser_settings as ps
 
 
 
@@ -75,9 +75,9 @@ def add_projections(xl_serial, engine_model):
 
     # Initialize a SheetMap object
     sm = sheet_map.SheetMap()
-    sm.DATES_ROW = 1
-    sm.TIMELINE_ROW = 2  # "Actual" or "Forecast"
-    sm.FIRST_ROW = 3  # First row with LineItem data
+    sm.rows["DATES"] = 1
+    sm.rows["TIMELINE"] = 2  # "Actual" or "Forecast"
+    sm.rows["FIRST_DATA"] = 3  # First row with LineItem data
 
     # 1) Extract xl_serial. Make sure it is in the right format
     wb = xlio.load_workbook(xl_serial, data_only=True)  # Includes Values Only
@@ -88,7 +88,7 @@ def add_projections(xl_serial, engine_model):
     # wb = xlio.load_workbook(filename=filename, data_only=True)
 
     # Look for the BB Metadata tab
-    metadata_names = parser_settings.BB_METADATA_NAMES
+    metadata_names = ps.BB_METADATA_NAMES
 
     bb_tabname = None
     for tab in wb:
@@ -106,9 +106,9 @@ def add_projections(xl_serial, engine_model):
     _check_xl_projection(sheet, sm)
 
     # 2) Align model.time_line to ref_date. Add additional periods as needed
-    header_row = sheet.rows[parser_settings.HEADER_ROW-1]
+    header_row = sheet.rows[ps.HEADER_ROW-1]
     xl_dates = []
-    for cell in header_row[sm.FIRST_PERIOD_COL-1:]:
+    for cell in header_row[sm.cols["FIRST_PERIOD"]-1:]:
         if isinstance(cell.value, datetime):
             xl_dates.append(cell.value.date())
 
@@ -169,9 +169,9 @@ def revise_projections(xl_serial, old_model):
 
     # Initialize a SheetMap object
     sm = sheet_map.SheetMap()
-    sm.DATES_ROW = 1
-    sm.TIMELINE_ROW = 2  # "Actual" or "Forecast"
-    sm.FIRST_ROW = 3  # First row with LineItem data
+    sm.rows["DATES"] = 1
+    sm.rows["TIMELINE"] = 2  # "Actual" or "Forecast"
+    sm.rows["FIRST_DATA"] = 3  # First row with LineItem data
 
     # 1) Extract xl_serial. Make sure it is in the right format
     wb = xlio.load_workbook(xl_serial, data_only=True)  # Includes Values Only
@@ -182,7 +182,7 @@ def revise_projections(xl_serial, old_model):
     # wb = xlio.load_workbook(filename=filename, data_only=True)
 
     # Look for the BB Metadata tab
-    metadata_names = parser_settings.BB_METADATA_NAMES
+    metadata_names = ps.BB_METADATA_NAMES
 
     bb_tabname = None
     for tab in wb:
@@ -240,70 +240,60 @@ def _check_xl_projection(sheet, sm):
     numbers for each field.
     """
 
-    header_row = sheet.rows[parser_settings.HEADER_ROW-1]
+    header_row = sheet.rows[ps.HEADER_ROW-1]
 
     # Next few columns can be in any order
     for cell in header_row:
-        if cell.value == parser_settings.STATEMENT:
-            sm.STATEMENT_COL = cell.col_idx
-        elif cell.value == parser_settings.LINE_TITLE:
-            sm.LINE_TITLE_COL = cell.col_idx
-        elif cell.value == parser_settings.LINE_NAME:
-            sm.LINE_NAME_COL = cell.col_idx
-        elif cell.value == parser_settings.PARENT_NAME:
-            sm.PARENT_NAME_COL = cell.col_idx
-        elif cell.value == parser_settings.COMPARISON:
-            sm.COMPARISON_COL = cell.col_idx
-        elif cell.value == parser_settings.SUM_DETAILS:
-            sm.SUM_DETAILS_COL = cell.col_idx
-        elif cell.value == parser_settings.REPORT:
-            sm.REPORT_COL = cell.col_idx
-        elif cell.value == parser_settings.MONITOR:
-            sm.MONITOR_COL = cell.col_idx
-        elif cell.value == parser_settings.PARSE_FORMULA:
-            sm.PARSE_FORMULA_COL = cell.col_idx
-        elif cell.value in parser_settings.ADD_TO_PATH:
-            sm.ADD_TO_PATH_COL = cell.col_idx
-        elif cell.value == parser_settings.BEHAVIOR:
-            sm.BEHAVIOR_COL = cell.col_idx
-        elif cell.value in parser_settings.ALERT:
-            sm.ALERT_COMMENTARY_COL = cell.col_idx
-        elif cell.value == parser_settings.STATUS:
-            sm.STATUS_COL = cell.col_idx
-        elif cell.value == parser_settings.ON_CARD:
-            sm.ON_CARD_COL = cell.col_idx
-        elif cell.value == parser_settings.TAGS:
-            sm.TAGS_COL = cell.col_idx
+        if cell.value == ps.STATEMENT:
+            sm.cols[ps.STATEMENT] = cell.col_idx
+        elif cell.value == ps.LINE_TITLE:
+            sm.cols[ps.LINE_TITLE] = cell.col_idx
+        elif cell.value == ps.LINE_NAME:
+            sm.cols[ps.LINE_NAME] = cell.col_idx
+        elif cell.value == ps.PARENT_NAME:
+            sm.cols[ps.PARENT_NAME] = cell.col_idx
+        elif cell.value == ps.COMPARISON:
+            sm.cols[ps.COMPARISON] = cell.col_idx
+        elif cell.value == ps.SUM_DETAILS:
+            sm.cols[ps.SUM_DETAILS] = cell.col_idx
+        elif cell.value == ps.REPORT:
+            sm.cols[ps.REPORT] = cell.col_idx
+        elif cell.value == ps.MONITOR:
+            sm.cols[ps.MONITOR] = cell.col_idx
+        elif cell.value == ps.PARSE_FORMULA:
+            sm.cols[ps.PARSE_FORMULA] = cell.col_idx
+        elif cell.value in ps.ADD_TO_PATH:
+            sm.cols[ps.ADD_TO_PATH[0]] = cell.col_idx
+        elif cell.value == ps.BEHAVIOR:
+            sm.cols[ps.BEHAVIOR] = cell.col_idx
+        elif cell.value in ps.ALERT:
+            sm.cols[ps.ALERT[0]] = cell.col_idx
+        elif cell.value == ps.STATUS:
+            sm.cols[ps.STATUS] = cell.col_idx
+        elif cell.value == ps.ON_CARD:
+            sm.cols[ps.ON_CARD] = cell.col_idx
+        elif cell.value == ps.TAGS:
+            sm.cols[ps.TAGS] = cell.col_idx
         elif isinstance(cell.value, datetime):
-            sm.FIRST_PERIOD_COL = cell.col_idx
+            sm.cols["FIRST_PERIOD"] = cell.col_idx
             break
 
-    if sm.STATEMENT_COL is None:
-        c = "No header for %s" % parser_settings.STATEMENT
+    if sm.cols[ps.STATEMENT] is None:
+        c = "No header for %s" % ps.STATEMENT
         raise bb_exceptions.ExcelPrepError(c)
-    if sm.LINE_TITLE_COL is None:
-        c = "No header for %s" % parser_settings.LINE_TITLE
+    if sm.cols[ps.LINE_TITLE] is None:
+        c = "No header for %s" % ps.LINE_TITLE
         raise bb_exceptions.ExcelPrepError(c)
-    if sm.LINE_NAME_COL is None:
-        c = "No header for %s" % parser_settings.LINE_NAME
+    if sm.cols[ps.LINE_NAME] is None:
+        c = "No header for %s" % ps.LINE_NAME
         raise bb_exceptions.ExcelPrepError(c)
-    if sm.PARENT_NAME_COL is None:
-        c = "No header for %s" % parser_settings.PARENT_NAME
+    if sm.cols[ps.PARENT_NAME] is None:
+        c = "No header for %s" % ps.PARENT_NAME
         raise bb_exceptions.ExcelPrepError(c)
 
-    # print(sm.COMPARISON_COL,
-    #       sm.SUM_DETAILS_COL,
-    #       sm.REPORT_COL,
-    #       sm.MONITOR_COL,
-    #       sm.PARSE_FORMULA_COL,
-    #       sm.ADD_TO_PATH_COL,
-    #       sm.BEHAVIOR_COL,
-    #       sm.TAGS_COL,
-    #       sm.FIRST_PERIOD_COL)
-
-    # Make sure everything after sm.FIRST_PERIOD_COL is all in a date format.
-    for cell in header_row[sm.FIRST_PERIOD_COL-1:]:
-        if cell.value is None and cell is header_row[sm.FIRST_PERIOD_COL-1:][-1]:
+    # Make sure everything after sm.cols["FIRST_PERIOD"] is all in a date format.
+    for cell in header_row[sm.cols["FIRST_PERIOD"]-1:]:
+        if cell.value is None and cell is header_row[sm.cols["FIRST_PERIOD"]-1:][-1]:
             # Sometimes the last blank column cell is read in
             continue
         if not isinstance(cell.value, datetime):
@@ -331,14 +321,14 @@ def _build_fins_from_sheet(bu, sheet, sm):
     line = None
 
     # Loop through each row that contains LineItem information
-    for row in sheet.iter_rows(row_offset=sm.FIRST_ROW-1, column_offset=0):
-        if not row[sm.STATEMENT_COL-1].value:
+    for row in sheet.iter_rows(row_offset=sm.rows["FIRST_DATA"]-1, column_offset=0):
+        if not row[sm.cols[ps.STATEMENT]-1].value:
             if line:
                 line.xl.format.blank_row_after = True
             # Skip blank rows
             continue
 
-        full_statement_name = row[sm.STATEMENT_COL-1].value.casefold()
+        full_statement_name = row[sm.cols[ps.STATEMENT]-1].value.casefold()
         statement_name = full_statement_name.split()[0]
         # IE: full_statement_name -> "Ending Balance Sheet"
         #     statement_name -> "ending"
@@ -347,15 +337,15 @@ def _build_fins_from_sheet(bu, sheet, sm):
             # Ignore parameters
             continue
 
-        line_name = row[sm.LINE_NAME_COL-1].value
+        line_name = row[sm.cols[ps.LINE_NAME]-1].value
         if not line_name:
             continue  # Must have line name
 
-        line_title = row[sm.LINE_TITLE_COL-1].value
+        line_title = row[sm.cols[ps.LINE_TITLE]-1].value
         if not line_title:
             continue  # Must have line title
 
-        parent_name = row[sm.PARENT_NAME_COL-1].value or ""  # Always need a str.
+        parent_name = row[sm.cols[ps.PARENT_NAME]-1].value or ""  # Always need a str.
 
         # # print(statement_name, line_name, parent_name)
 
@@ -417,45 +407,45 @@ def _build_fins_from_sheet(bu, sheet, sm):
         # print(line.name, line.title)
 
         # Add comparison ("<" or ">") as a tag for KPI and Covenant analysis
-        if sm.COMPARISON_COL:
-            comparison_str = row[sm.COMPARISON_COL-1].value
+        if sm.cols[ps.COMPARISON]:
+            comparison_str = row[sm.cols[ps.COMPARISON]-1].value
             if comparison_str in ('<', '<=', '>', '>='):
                 # Only tag valid comparisons
                 line.tags.add(comparison_str)
 
         # Add sum_details attribute if FALSE (TRUE is default for blank cells)
-        if sm.SUM_DETAILS_COL:
-            sum_details = row[sm.SUM_DETAILS_COL-1].value
+        if sm.cols[ps.SUM_DETAILS]:
+            sum_details = row[sm.cols[ps.SUM_DETAILS]-1].value
             if sum_details in ("False", "FALSE", False, "No"):
                 line.sum_details = False
 
         # Tag line with which summary report we want to display it on.
-        if sm.REPORT_COL:
-            report_str = row[sm.REPORT_COL-1].value
+        if sm.cols[ps.REPORT]:
+            report_str = row[sm.cols[ps.REPORT]-1].value
             if report_str:
-                if report_str.casefold() in parser_settings.VALID_REPORTS:
+                if report_str.casefold() in ps.VALID_REPORTS:
                     # Only tag valid comparisons
                     line.tags.add(report_str)
 
-        if sm.MONITOR_COL:
-            monitor_bool = row[sm.MONITOR_COL-1].value
+        if sm.cols[ps.MONITOR]:
+            monitor_bool = row[sm.cols[ps.MONITOR]-1].value
             if monitor_bool in ("True", "TRUE", True, "Yes"):
                 line.tags.add('monitor')
 
-        if sm.PARSE_FORMULA_COL:
-            parse_formula_bool = row[sm.PARSE_FORMULA_COL-1].value
+        if sm.cols[ps.PARSE_FORMULA]:
+            parse_formula_bool = row[sm.cols[ps.PARSE_FORMULA]-1].value
             if parse_formula_bool in ("True", "TRUE", True, "Yes"):
                 line.tags.add('parse formula')
 
-        if sm.ADD_TO_PATH_COL:
-            topic_formula_bool = row[sm.ADD_TO_PATH_COL - 1].value
+        if sm.cols[ps.ADD_TO_PATH[0]]:
+            topic_formula_bool = row[sm.cols[ps.ADD_TO_PATH[0]] - 1].value
             if topic_formula_bool in ("True", "TRUE", True, "Yes"):
                 new_path_line = LineItem(line.name)
                 bu.stage.path.append(new_path_line)
                 line.tags.add('topic formula')
 
-        if sm.ALERT_COMMENTARY_COL:
-            alert_val = row[sm.ALERT_COMMENTARY_COL - 1].value
+        if sm.cols[ps.ALERT[0]]:
+            alert_val = row[sm.cols[ps.ALERT[0]] - 1].value
             if alert_val is not None:
                 new_path_line = LineItem(line.name + " alert")
                 new_path_line.tags.add('alert commentary')
@@ -473,13 +463,13 @@ def _build_fins_from_sheet(bu, sheet, sm):
                     c = "Invalid JSON String: " + alert_val
                     raise bb_exceptions.BBAnalyticalError(c)
 
-        if sm.ON_CARD_COL:
-            on_card_bool = row[sm.ON_CARD_COL - 1].value
+        if sm.cols[ps.ON_CARD]:
+            on_card_bool = row[sm.cols[ps.ON_CARD] - 1].value
             if on_card_bool in ("True", "TRUE", True, "Yes"):
                 line.tags.add('business summary')
 
         # Tag line with one or more tags.
-        tags_str = row[sm.TAGS_COL-1].value
+        tags_str = row[sm.cols[ps.TAGS]-1].value
         if tags_str:
             tags_list = tags_str.split(",")
             for t in tags_list:
@@ -617,9 +607,9 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
     ssot_fins = bu.financials
 
     # Loop across periods (Left to Right on Excel)
-    for col in sheet.columns[sm.FIRST_PERIOD_COL-1:]:
+    for col in sheet.columns[sm.cols["FIRST_PERIOD"]-1:]:
         dt = col[0].value.date()
-        timeline_name = col[sm.TIMELINE_ROW-1].value
+        timeline_name = col[sm.rows["TIMELINE"]-1].value
 
         start_dt = date(dt.year, dt.month, 1)
         end_dt = date(dt.year, dt.month, 28)
@@ -644,7 +634,7 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
                 actl_tl.add_period(actl_pd)
 
         # Loop across Lines (Top to Down on Excel)
-        for cell in col[sm.FIRST_ROW-1:]:
+        for cell in col[sm.rows["FIRST_DATA"]-1:]:
             # Skip blank cells
             if cell.value in (None, ""):
                 continue
@@ -652,12 +642,12 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
             row_num = cell.row
             col_num = cell.col_idx
 
-            statement_str = sheet.cell(row=row_num, column=sm.STATEMENT_COL).value
+            statement_str = sheet.cell(row=row_num, column=sm.cols[ps.STATEMENT]).value
             if not statement_str:
                 continue
             statement_name = statement_str.split()[0].casefold()
-            line_name = sheet.cell(row=row_num, column=sm.LINE_NAME_COL).value
-            parent_name = sheet.cell(row=row_num, column=sm.PARENT_NAME_COL).value
+            line_name = sheet.cell(row=row_num, column=sm.cols[ps.LINE_NAME]).value
+            parent_name = sheet.cell(row=row_num, column=sm.cols[ps.PARENT_NAME]).value
             # print(line_name, parent_name)
             # import pdb
             # pdb.set_trace()
@@ -689,8 +679,8 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
                 ssot_line.xl.format.number_format = cell.number_format
 
             # Status column
-            if sm.STATUS_COL:
-                status_str = sheet.cell(row=row_num, column=sm.STATUS_COL).value
+            if sm.cols[ps.STATUS]:
+                status_str = sheet.cell(row=row_num, column=sm.cols[ps.STATUS]).value
 
                 if status_str:
                     try:
@@ -719,9 +709,9 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
                     bu.stage.work_space[ssot_line.name] = status_dict
 
             # Behaviour column
-            if sm.BEHAVIOR_COL:
+            if sm.cols[ps.BEHAVIOR]:
                 behavior_str = sheet.cell(row=row_num,
-                                          column=sm.BEHAVIOR_COL).value
+                                          column=sm.cols[ps.BEHAVIOR]).value
 
                 if behavior_str:
                     try:
@@ -730,7 +720,7 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
                         c = "Invalid JSON String: " + behavior_str
                         raise bb_exceptions.BBAnalyticalError(c)
 
-                    required_keys = parser_settings.ROLLING_SUM_KEYS
+                    required_keys = ps.ROLLING_SUM_KEYS
                     if len(required_keys - behavior_dict.keys()) == 0:
                         if behavior_dict['operation'] == 'sum':
                             if not ssot_line.get_driver():
@@ -789,13 +779,13 @@ def _parse_formula(sheet, cell_f, bu, sm):
     if cell.value is None:
         return False
 
-    parse_formula_bool_cell = sheet.cell(row=row, column=sm.PARSE_FORMULA_COL)
+    parse_formula_bool_cell = sheet.cell(row=row, column=sm.cols[ps.PARSE_FORMULA])
     if parse_formula_bool_cell.value not in ("True", "TRUE", True, "Yes"):
         return False
 
-    line_name = sheet.cell(row=row, column=sm.LINE_NAME_COL).value
-    parent_name = sheet.cell(row=row, column=sm.PARENT_NAME_COL).value
-    stmt_name = sheet.cell(row=row, column=sm.STATEMENT_COL).value
+    line_name = sheet.cell(row=row, column=sm.cols[ps.LINE_NAME]).value
+    parent_name = sheet.cell(row=row, column=sm.cols[ps.PARENT_NAME]).value
+    stmt_name = sheet.cell(row=row, column=sm.cols[ps.STATEMENT]).value
 
     stmt_str = stmt_name.casefold().split()[0]
     statement = getattr(bu.financials, stmt_str)
@@ -839,7 +829,7 @@ def _parse_formula(sheet, cell_f, bu, sm):
             if ":" in t.value and t.subtype == "RANGE":
                 return False  # Don't include ranged sources "A1:A8"
 
-    # if col == sm.FIRST_PERIOD_COL:  # Only insert drivers in first column
+    # if col == sm.cols["FIRST_PERIOD"]:  # Only insert drivers in first column
     if not line.get_driver():
         data = dict()
 
@@ -868,7 +858,7 @@ def _parse_formula(sheet, cell_f, bu, sm):
 
             elif t.type == "OPERAND" and t.subtype == "TEXT":  # "EBITDA < 0"
                 # t.value might be '"EBITDA<="', we just want "EBITDA<="
-                if t.value[1:-1] in parser_settings.ALLOWABLE_XL_TEXT:
+                if t.value[1:-1] in ps.ALLOWABLE_XL_TEXT:
                     data[t_name] = t.value
                 else:
                     data[t_name] = ""
@@ -882,16 +872,16 @@ def _parse_formula(sheet, cell_f, bu, sm):
                 source_col = source_cell.col_idx
 
                 source_line_name = sheet.cell(row=source_row,
-                                              column=sm.LINE_NAME_COL).value
+                                              column=sm.cols[ps.LINE_NAME]).value
                 source_statement = sheet.cell(row=source_row,
-                                              column=sm.STATEMENT_COL).value
+                                              column=sm.cols[ps.STATEMENT]).value
                 source_statement = source_statement.split()[0].casefold()
                 data[t_name] = source_line_name
                 data[t_type] = "source"
                 data[t_name + "_statement"] = source_statement
                 if source_addr[0] == "$":
                     # Fixed Dates (source is always same column)
-                    data[t_fixed_dt] = sheet.cell(row=sm.DATES_ROW,
+                    data[t_fixed_dt] = sheet.cell(row=sm.rows["DATES"],
                                                   column=source_col).value
                 elif source_col != cell_f.col_idx:
                     # Relative Periods (n periods past or future)
