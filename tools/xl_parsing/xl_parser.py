@@ -19,7 +19,7 @@ FUNCTIONS:
 add_projections()          creates a EngineModel with projections values from xl
 
 _build_fins_from_sheet()    builds LineItem structure
-check_xl_projections()     checks if upload xl projections is the right format
+build_sheet_maps()     checks if upload xl projections is the right format
 _populate_fins_from_sheet() writes projected line values to financials
 
 
@@ -66,18 +66,12 @@ def add_projections(xl_serial, engine_model):
     determine which investment card we are adding projections to.
 
     Function delegates to:
-        check_xl_projections()
+        build_sheet_map()
         _build_fins_from_sheet()
         _populate_fins_from_sheet()
 
     """
     model = engine_model
-
-    # Initialize a SheetMap object
-    sm = sheet_map.SheetMap()
-    sm.rows["DATES"] = 1
-    sm.rows["TIMELINE"] = 2  # "Actual" or "Forecast"
-    sm.rows["FIRST_DATA"] = 3  # First row with LineItem data
 
     # 1) Extract xl_serial. Make sure it is in the right format
     wb = xlio.load_workbook(xl_serial, data_only=True)  # Includes Values Only
@@ -103,7 +97,7 @@ def add_projections(xl_serial, engine_model):
     sheet_f = wb_f[bb_tabname]
 
     # Make sure sheet is valid format
-    check_xl_projection(sheet, sm)
+    sm = build_sheet_map(sheet)
 
     # 2) Align model.time_line to ref_date. Add additional periods as needed
     header_row = sheet.rows[sm.rows["HEADER"]-1]
@@ -157,7 +151,7 @@ def revise_projections(xl_serial, old_model):
     and converts it to an EngineModel with LineItem values. 
     
     Function delegates to:
-        check_xl_projections()
+        build_sheet_maps()
         _build_fins_from_sheet()
         _populate_fins_from_sheet()
 
@@ -165,12 +159,6 @@ def revise_projections(xl_serial, old_model):
     new_model = Model(bb_settings.DEFAULT_MODEL_NAME)
     new_model.start()
     new_model._ref_date = old_model._ref_date
-
-    # Initialize a SheetMap object
-    sm = sheet_map.SheetMap()
-    sm.rows["DATES"] = 1
-    sm.rows["TIMELINE"] = 2  # "Actual" or "Forecast"
-    sm.rows["FIRST_DATA"] = 3  # First row with LineItem data
 
     # 1) Extract xl_serial. Make sure it is in the right format
     wb = xlio.load_workbook(xl_serial, data_only=True)  # Includes Values Only
@@ -196,7 +184,7 @@ def revise_projections(xl_serial, old_model):
     sheet_f = wb_f[bb_tabname]
 
     # Make sure sheet is valid format
-    sm = check_xl_projection(sheet, sm)
+    sm = build_sheet_map(sheet)
 
     company = new_model.get_company()
     if not company:
@@ -225,20 +213,23 @@ def revise_projections(xl_serial, old_model):
     return new_model
 
 
-def check_xl_projection(sheet, sm):
+def build_sheet_map(sheet):
     """
 
 
-    check_xl_projection(sheet, sm) -> SheetMap()
+    build_sheet_map(sheet) -> SheetMap()
 
     --``sheet`` is an instance of openpyxl.WorkSheets
-    --``ct`` is an instance of SheetMap
     
     Function checks if the uploaded excel sheet is in the right format.
     Raises Error if format is violated. Function also finds and sets the Column
     numbers for each field.
     """
-
+    # Initialize a SheetMap object
+    sm = sheet_map.SheetMap()
+    sm.rows["DATES"] = 1
+    sm.rows["TIMELINE"] = 2  # "Actual" or "Forecast"
+    sm.rows["FIRST_DATA"] = 3  # First row with LineItem data
     header_row = sheet.rows[sm.rows["HEADER"]-1]
 
     # Next few columns can be in any order
@@ -288,7 +279,7 @@ def _build_fins_from_sheet(bu, sheet, sm):
 
     --``bu`` is the instance of Business Unit we want build Financials on
     --``sheet`` is an instance of openpyxl.WorkSheet
-    --``ct`` is an instance of SheetMap
+    --``sm`` is an instance of SheetMap
     
     Function extracts information from 'sheet' to build the LineItem structure
     in 'financials'. Functions creates new statements if necessary.
@@ -574,7 +565,7 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
     --``engine_model`` is the instance of EngineModel
     --``sheet`` is an instance of openpyxl.WorkSheet with Values
     --``sheet_f`` is an instance of openpyxl.WorkSheet with Formulas as str
-    --``ct`` is an instance of SheetMap
+    --``sm`` is an instance of SheetMap
 
     Function extracts LineItem values from 'sheet' and writes them to
     'financials' for multiple periods. Function assumes that the structure
@@ -743,7 +734,7 @@ def _parse_formula(sheet, cell_f, bu, sm):
     --``sheet`` is an instance of openpyxl.WorkSheet with Values
     --``cell_f`` is an instance of openpyxl.Cell with Formulas as str
     --``bu`` is the instance of EngineModel.BusinessUnit
-    --``ct`` is an instance of SheetMap    
+    --``sm`` is an instance of SheetMap    
 
     Function takes a formula string from excel and creates a driver that will
     provide the same value in the Blackbird Engine. Function returns False if
