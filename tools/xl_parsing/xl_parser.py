@@ -270,6 +270,8 @@ def _check_xl_projection(sheet, ct):
             ct.ALERT_COMMENTARY_COL = cell.col_idx
         elif cell.value == parser_settings.STATUS:
             ct.STATUS_COL = cell.col_idx
+        elif cell.value == parser_settings.ON_CARD:
+            ct.ON_CARD_COL = cell.col_idx
         elif cell.value == parser_settings.TAGS:
             ct.TAGS_COL = cell.col_idx
         elif isinstance(cell.value, datetime):
@@ -469,6 +471,11 @@ def _build_fins_from_sheet(bu, sheet, ct):
                 except ValueError:
                     c = "Invalid JSON String: " + alert_val
                     raise bb_exceptions.BBAnalyticalError(c)
+
+        if ct.ON_CARD_COL:
+            on_card_bool = row[ct.ON_CARD_COL - 1].value
+            if on_card_bool in ("True", "TRUE", True, "Yes"):
+                line.tags.add('business summary')
 
         # Tag line with one or more tags.
         tags_str = row[ct.TAGS_COL-1].value
