@@ -85,5 +85,16 @@ class MiniQuestion:
             c = "MiniQuestion class acts as template, restricts new attributes."
             raise bb_exceptions.ManagedAttributeError(c)
 
+    def to_portal(self):
+        result = dict()
+        result["id"] = self.id.bbid.hex
+        result["tags"] = self.tags.to_portal()
+        # above are generally read-only
+        result["context"] = self.context
+        result["progress"] = self.progress
+        result["topic_name"] = self.topic_name
+        result["input_array"] = [i.to_portal() for i in self.input_array]
+
+
     
     
