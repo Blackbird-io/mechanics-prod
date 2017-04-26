@@ -89,7 +89,7 @@ class Outline(Step):
         self.work_space = {}
 
     @classmethod
-    def from_portal(cls, portal_data, link_list):
+    def from_portal(cls, portal_data, link_list=list()):
         new = cls(None)
         new.__dict__.update(portal_data)
 
@@ -112,7 +112,7 @@ class Outline(Step):
 
         return new
 
-    def to_portal(self):
+    def to_portal(self, **kwargs):
         data = dict()
         data['guide'] = self.guide.to_portal()
         data['tags'] = self.tags.to_portal()
