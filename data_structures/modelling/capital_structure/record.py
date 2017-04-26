@@ -55,7 +55,23 @@ class Record:
         self.round_name = round_name
         self.units = units
         self.cash = cash
-        # self.id = ID()
-        # self.date = date
+    
+    def to_portal(self):
+        result = dict()
+        result['owner_name'] = self.owner_name
+        result['round_name'] = self.round_name
+        result['units'] = self.units
+        result['cash'] = self.cash
+        
+        return result
 
+    @classmethod
+    def from_portal(cls, data):
+        owner_name = data['owner_name']
+        round_name = data['round_name']
+        units = float(data['units'])
+        cash = float(data['cash'])
 
+        result = cls(owner_name, round_name, units, cash)
+
+        return result
