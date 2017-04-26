@@ -63,6 +63,23 @@ class BusinessSummary(Outline):
         self.data = dict.fromkeys(mandatory_summary_fields)
         self.set_path()
 
+    def to_portal(self):
+        result = dict()
+        result['outline'] = Outline.to_portal(self)
+        result['data'] = self.data
+
+        return result
+
+    @classmethod
+    def from_portal(cls, data):
+        outline = Outline.from_portal(data['outline'], list())
+
+        result = cls()
+        result.__dict__.update(outline.__dict__)
+        result.data = data['data']
+
+        return result
+
     def set_path(self):
         """
 
@@ -78,23 +95,3 @@ class BusinessSummary(Outline):
                  Step("credit capacity"),
                  BookMark("end Summary", "Summary", "endStatement")]
         self.path.extend(steps)
-
-    def to_portal(self):
-        """
-
-
-        BusinessSummary.to_portal() -> dict
-
-
-        Method returns a dictionary with instance data.
-        """
-        result = dict.copy(self.data)
-        #
-        return result
-
-        #ideas for better content storage:
-        #1. a ``.contents`` attr that points to a financials object, with lines
-        #   and everything
-        
-                 
-        

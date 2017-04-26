@@ -34,6 +34,7 @@ import tools.for_printing as printing_tools
 from .guide import Guide
 from data_structures.system.print_as_line import PrintAsLine
 from data_structures.system.relationships import Relationships
+from data_structures.system.tags import Tags
 from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.system.bbid import ID
 
@@ -74,6 +75,21 @@ class Step(PrintAsLine, TagsMixIn):
         self.guide = Guide(priority, quality)
         self.relationships = Relationships(self)
         self.id = ID()
+
+    def to_portal(self, **kwargs):
+        result = dict()
+        result['tags'] = self.tags.to_portal()
+        result['guide'] = self.guide.to_portal()
+
+        return result
+
+    @classmethod
+    def from_portal(cls, data):
+        result = cls()
+        result.tags = Tags.from_portal(data['tags'])
+        result.guide = Guide.from_portal(data['guide'])
+
+        return result
 
     def pre_format(self, **kargs):
         #custom formatting logic
