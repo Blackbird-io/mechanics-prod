@@ -186,7 +186,11 @@ class Life(Equalities):
         new._death_event_names = set(portal_data['death_event_names'])
         new._ref_date = date_from_iso(portal_data['ref_date']) if \
             portal_data['ref_date'] else portal_data['ref_date']
-        new.events = portal_data['events']
+
+        event_list = portal_data['events']
+        if event_list:
+            for event in event_list:
+                new.events[event['event']] = event['date']
 
         new.gestation = datetime.timedelta(portal_data['gestation'])
         new.life_span = datetime.timedelta(portal_data['life_span'])
@@ -201,7 +205,11 @@ class Life(Equalities):
         data['death_event_names'] = list(self._death_event_names)
         data['ref_date'] = self._ref_date.strftime('%Y-%m-%d') if \
             self._ref_date else self._ref_date
-        data['events'] = self.events
+
+        event_list = list()
+        for event, date in self.events.items():
+            event_list.append({"date": date, "event": event})
+        data['events'] = event_list
 
         data['gestation'] = self.gestation.days
         data['life_span'] = self.life_span.days
