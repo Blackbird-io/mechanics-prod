@@ -75,13 +75,39 @@ class Landscape(dict, Step):
     trim()                cuts off ref points outside an external range
     ====================  ======================================================
     """
-    def __init__(self, name = None):
+    def __init__(self, name=None):
         dict.__init__(self)
         Step.__init__(self, name)
         self.keep_forecasts = True
 
+    def to_portal(self, **kwargs):
+        result = dict()
+        result['step'] = Step.to_portal(self)
+
+        result['data'] = dict()
+        for k, v in self.items():
+            result['data'][k] = v
+
+        result['keep_forecasts'] = self.keep_forecasts
+
+        return result
+
+    @classmethod
+    def from_portal(cls, data):
+        step = Step.from_portal(data['step'])
+
+        result = cls()
+        result.__dict__.update(step.__dict__)
+
+        for k, v in data['data'].items():
+            result[k] = v
+
+        result.keep_forecasts = data['keep_forecasts']
+
+        return result
+
     def build_main(self, price_curve, multiplier,
-                   standard_scenario = None, store = False):
+                   standard_scenario=None, store=False):
         """
 
 

@@ -65,16 +65,53 @@ class CreditCapacity(Step):
     """
 
     def __init__(self):
-        #
-        Step.__init__(self, name = "credit capacity")
+        Step.__init__(self, name="credit capacity")
+
         self.asset_backed = Landscape("asset backed loans")
         self.bonds = None
         self.combined = None
         self.converts = None
         self.lev_loans = Landscape("leveraged loans")
-        #bonds and converts should be a landscape in the future
+
         for obj in [self.asset_backed, self.lev_loans]:
             obj.relationships.set_parent(self)
+
+    def to_portal(self, **kwargs):
+        result = dict()
+
+        result['asset_backed'] = self.asset_backed.to_portal() if self.asset_backed else None
+        result['bonds'] = self.bonds.to_portal() if self.bonds else None
+        result['combined'] = self.combined.to_portal() if self.combined else None
+        result['converts'] = self.converts.to_portal() if self.converts else None
+        result['lev_loans'] = self.lev_loans.to_portal() if self.lev_loans else None
+
+        return result
+
+    @classmethod
+    def from_portal(cls, data):
+        result = cls()
+
+        if data['asset_backed']:
+            result.asset_backed = Landscape.from_portal(data['asset_backed'])
+            result.asset_backed.relationships.set_parent(result)
+
+        if data['bonds']:
+            result.bonds = Landscape.from_portal(data['bonds'])
+            result.bonds.relationships.set_parent(result)
+
+        if data['combined']:
+            result.combined = Landscape.from_portal(data['combined'])
+            result.combined.relationships.set_parent(result)
+
+        if data['converts']:
+            result.converts = Landscape.from_portal(data['converts'])
+            result.converts.relationships.set_parent(result)
+
+        if data['lev_loans']:
+            result.lev_loans = Landscape.from_portal(data['lev_loans'])
+            result.lev_loans.relationships.set_parent(result)
+
+        return result
 
     def combine(self):
         """
@@ -96,20 +133,17 @@ class CreditCapacity(Step):
             self.combined["size"] = copy.deepcopy(market_segments[0])
         else:
             by_size = self.combined.combine(market_segments,
-                                            x_axis = "size",
-                                            y_axis = "price")
+                                            x_axis="size",
+                                            y_axis="price")
             by_size = self.combined.label(by_size,
-                                          x_axis = "size",
-                                          y_axis = "price")
+                                          x_axis="size",
+                                          y_axis="price")
             self.combined["size"] = by_size
             #
             by_price = self.combined.pivot([by_size],
-                                           x_axis = "price",
-                                           y_axis = "size")
+                                           x_axis="price",
+                                           y_axis="size")
             by_price = self.combined.label(by_price,
-                                           x_axis = "price",
-                                           y_axis = "size")
+                                           x_axis="price",
+                                           y_axis="size")
             self.combined["price"] = by_price
-        
-                    
-                

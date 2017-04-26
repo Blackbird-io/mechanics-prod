@@ -184,9 +184,12 @@ class BusinessUnit(TagsMixIn, Equalities):
             # preserve None values here
             new.summary = summary
 
-        # valuation = portal_data['valuation']
-        # if valuation:
-        #     new.valuation = CompanyValue.from_portal(valuation)
+        valuation = portal_data['valuation']
+        if valuation:
+            new.valuation = CompanyValue.from_portal(valuation)
+        else:
+            # preserve None values here
+            new.valuation = valuation
 
         stage = portal_data['stage']
         if stage == 'summary':
@@ -234,7 +237,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         data['interview'] = self.interview.to_portal()
 
         data['summary'] = self.summary.to_portal() if self.summary else None
-        data['valuation'] = dict()  # self.valuation.to_portal() if self.valuation else None
+        data['valuation'] = self.valuation.to_portal() if self.valuation else None
 
         # for monitoring, temporary storage for existing path and used sets
         data['path_archive'] = self._path_archive

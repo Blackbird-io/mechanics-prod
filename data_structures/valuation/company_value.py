@@ -58,13 +58,32 @@ class CompanyValue(Outline):
     set_path()            make a list of important attributes for controllers
     ====================  ======================================================
     """
-    def __init__(self, name = "valuation"):
+    def __init__(self, name="valuation"):
         Outline.__init__(self, name)
         self.credit = CreditCapacity()
         self.ev = EnterpriseValue()
-        #
+
         self.set_path()
-        self.tags.add("valuation", field = "req")
+        self.tags.add("valuation", field="req")
+
+    def to_portal(self):
+        result = dict()
+        Outline.set_path(self)
+        result['outline'] = Outline.to_portal(self)
+        result['credit'] = self.credit.to_portal()
+
+        return result
+
+    @classmethod
+    def from_portal(cls, data):
+        outline = Outline.from_portal(data['outline'])
+
+        result = cls()
+        result.__dict__.update(outline.__dict__)
+        result.credit = CreditCapacity.from_portal(data['credit'])
+        result.set_path()
+
+        return result
 
     def set_path(self):
         """
