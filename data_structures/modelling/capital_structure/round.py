@@ -53,10 +53,26 @@ class Round:
     """
     def __init__(self, name, size, valuation, preference=None):
         self.name = name
-        self.id = ID()
         self.size = size
         self.valuation = valuation
         self.preference = preference
-        # self.date = date
-
-
+        
+    def to_portal(self):
+        result = dict()
+        result['name'] = self.name
+        result['size'] = self.size
+        result['valuation'] = self.valuation
+        result['preference'] = self.preference
+        
+        return result
+    
+    @classmethod
+    def from_portal(cls, data):
+        name = data['name']
+        size = float(data['size'])
+        valuation = float(data['valuation'])
+        preference = float(data['preference'])
+        
+        result = cls(name, size, valuation, preference)
+        
+        return result

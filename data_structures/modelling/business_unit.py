@@ -199,6 +199,8 @@ class BusinessUnit(TagsMixIn, Equalities):
         new_fins = Financials.from_portal(fins, new, period=None)
         new.set_financials(new_fins)
 
+        new.cap_table = CapTable.from_portal(portal_data['cap_table'])
+
         return new
 
     def to_portal(self, taxonomy=False):
@@ -234,6 +236,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         data['path_archive'] = self._path_archive
         data['used_archive'] = self._used_archive
         data['taxonomy'] = taxonomy
+        data['cap_table'] = self.cap_table.to_portal()
 
         return data
 

@@ -28,6 +28,9 @@ Snapshot              represents capital structure at a single point in time
 import bb_exceptions
 from datetime import date
 from data_structures.system.bbid import ID
+from tools.parsing import date_from_iso
+
+from .record import Record
 
 
 
@@ -57,6 +60,39 @@ class Snapshot:
         self.ref_date = ref_date
         self.created_date = created_date or date.today()
         self.records = dict()
+
+    def to_portal(self):
+        result = dict()
+        result['ref_date'] = self.ref_date.strftime('%Y-%m-%d')
+        result['created_date'] = self.created_date.strftime('%Y-%m-%d')
+
+        records = list()
+        for record in self.records.values():
+            records.append(record.to_portal())
+        result['records'] = records
+
+        return result
+
+    @classmethod
+    def from_portal(cls, data):
+        if isinstance(data['ref_date'], str):
+            ref_date = date_from_iso(data['ref_date'])
+        else:
+            ref_date = data['ref_date']
+
+        if isinstance(data['created_date'], str):
+            created_date = date_from_iso(data['created_date'])
+        else:
+            created_date = data['created_date']
+
+        result = cls(ref_date, created_date=created_date)
+
+        for flat_rec in data['records']:
+            record = Record.from_portal(flat_rec)
+            key = (record.owner_name, record.round_name)
+            result.records[key] = record
+
+        return result
 
     def add_record(self, record, overwrite=False):
         """
