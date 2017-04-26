@@ -26,6 +26,7 @@ Statement             container that stores, updates, and organizes LineItems
 
 
 # Imports
+from data_structures.guidance.step import Step
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
 
@@ -90,10 +91,12 @@ class Statement(BaseFinancialsComponent):
         for row in portal_data['lines']:
             if row.get('link'):
                 new_line = Link.from_portal(row, new)
-            else:
+            elif 'driver_id' in row:
                 new_line = LineItem.from_portal(row, new)
+            else:
+                new_line = Step.from_portal(row)
 
-            parent_id = row['parent_bbid']
+            parent_id = row.get('parent_bbid', None)
             if parent_id is None and new.id.bbid is not None:
                 # no parent id, top-level line belongs to statement
                 parent_id = new.id.bbid.hex
@@ -110,9 +113,9 @@ class Statement(BaseFinancialsComponent):
             def build_line_structure(seed, catalog):
                 details = catalog.pop(seed.id.bbid, list())
                 for line in details:
-                    # IMPORT PDB THIS IS WEIRD
                     old_bbid = line.id.bbid
-                    seed.add_line(line, position=line.position, noclear=True)
+                    position = getattr(line, 'position', None)
+                    seed.add_line(line, position=position, noclear=True)
                     line.id.bbid = old_bbid
 
                     build_line_structure(line, catalog)

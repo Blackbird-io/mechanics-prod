@@ -177,9 +177,12 @@ class BusinessUnit(TagsMixIn, Equalities):
         new.interview = InterviewTracker.from_portal(portal_data['interview'],
                                                      link_list)
 
-        # summary = portal_data['summary']
-        # if summary:
-        #     new.summary = BusinessSummary.from_portal(summary)
+        summary = portal_data['summary']
+        if summary:
+            new.summary = BusinessSummary.from_portal(summary)
+        else:
+            # preserve None values here
+            new.summary = summary
 
         # valuation = portal_data['valuation']
         # if valuation:
@@ -229,7 +232,8 @@ class BusinessUnit(TagsMixIn, Equalities):
         data['used'] = [id.hex for id in self.used]
         data['guide'] = self.guide.to_portal()
         data['interview'] = self.interview.to_portal()
-        data['summary'] = dict()  # self.summary.to_portal() if self.summary else None
+
+        data['summary'] = self.summary.to_portal() if self.summary else None
         data['valuation'] = dict()  # self.valuation.to_portal() if self.valuation else None
 
         # for monitoring, temporary storage for existing path and used sets
