@@ -163,7 +163,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         new = cls(None)
         new.tags = Tags.from_portal(portal_data['tags'])
         new._parameters = Parameters.from_portal(portal_data['parameters'],
-                                                 target='business_unit')
+                                                 target='parameters')
         new._type = portal_data['type']
         new.life = LifeCycle.from_portal(portal_data['life'])
         new.location = portal_data['location']
@@ -211,8 +211,7 @@ class BusinessUnit(TagsMixIn, Equalities):
 
     def to_portal(self, taxonomy=False):
         data = dict()
-
-        data['parameters'] = list(self._parameters.to_portal(target='business_unit'))
+        data['parameters'] = list(self._parameters.to_portal(target='parameters'))
         data['type'] = self._type
         data['components'] = [k.hex for k in self.components.keys()]
         data['bbid'] = self.id.bbid.hex
