@@ -35,7 +35,9 @@ import bb_exceptions
 from data_structures.serializers.chef.data_management import LineData
 from data_structures.system.bbid import ID
 from data_structures.system.relationships import Relationships
-from .line_item import Statement, LineItem
+from .line_item import LineItem
+from .link import Link
+from .statement import Statement
 from .statements import BalanceSheet
 from .statements import CashFlow
 from .equalities import Equalities
@@ -86,6 +88,7 @@ class Financials:
 
         # parent for Financials is BusinessUnit
         self.relationships = Relationships(self, parent=parent)
+
         self._period = period
         # self.filled = False
 
@@ -206,7 +209,7 @@ class Financials:
         return result
 
     @classmethod
-    def from_portal(cls, portal_data, model, **kargs):
+    def from_portal(cls, portal_data, company, **kargs):
         """
 
         Financials.from_portal(portal_data) -> Financials
@@ -216,32 +219,22 @@ class Financials:
         Method extracts Financials from portal_data.
         """
         period = kargs['period']
-
-        buid = ID.from_portal(portal_data['buid']).bbid
-        company = model.get_company(buid)
         new = cls(parent=company, period=period)
+        new.register(company.id.bbid)
 
-        new.id.set_namespace(company.id.bbid)
-
-        for attr in ('_chef_order',
-                     '_compute_order',
-                     '_exclude_statements',
-                     '_full_order'):
-            new.__dict__[attr] = portal_data[attr]
+        new._chef_order = portal_data['chef_order']
+        new._compute_order = portal_data['compute_order']
+        new._exclude_statements = portal_data['exclude_statements']
+        new._full_order = portal_data['full_order']
 
         for data in portal_data['statements']:
-            attr_name = data['name']
+            attr_name = data['attr_name']
 
             statement = Statement.from_portal(
-                data, model=model, financials=new
+                data, financials=new
             )
 
             new.__dict__[attr_name] = statement
-
-            # deserialize all LineItems
-            LineItem.from_portal(
-                data['lines'], model=model, statement=statement, **kargs
-            )
 
         return new
 
@@ -263,17 +256,16 @@ class Financials:
 
             statement = getattr(self, name, None)
             if statement:
-                data = {
-                    'name': name,
-                }
-                data.update(statement.to_portal())
+                data = statement.to_portal()
+                data['attr_name'] = name
                 statements.append(data)
+
         result = {
             'statements': statements,
-            '_chef_order': self._chef_order,
-            '_compute_order': self._compute_order,
-            '_exclude_statements': self._exclude_statements,
-            '_full_order': self._full_order,
+            'chef_order': self._chef_order,
+            'compute_order': self._compute_order,
+            'exclude_statements': self._exclude_statements,
+            'full_order': self._full_order,
         }
         return result
 
@@ -391,10 +383,12 @@ class Financials:
             if own_statement is not None:
                 new_statement = own_statement.copy(clean=clean)
                 new_statement.relationships.set_parent(new_instance)
-                setattr(new_instance, name, new_statement)
+
+                new_instance.__dict__[name] = new_statement
 
         new_instance.id = ID()
         new_instance.register(self.id.namespace)
+
         return new_instance
 
     def populate_from_stored_values(self, period):

@@ -6,7 +6,7 @@
 # Module: data_structures.modelling.line_item
 """
 
-Module defines a class of Statemenets with value.
+Module defines a class of BaseFinancialComponent with value.
 ====================  ==========================================================
 Attribute             Description
 ====================  ==========================================================
@@ -28,7 +28,6 @@ LineItem              a Statement that has its own value
 # Imports
 import copy
 import time
-import json
 
 import bb_settings
 import bb_exceptions
@@ -38,9 +37,8 @@ from data_structures.guidance.guide import Guide
 from data_structures.serializers.chef import data_management as xl_mgmt
 from data_structures.system.bbid import ID
 from data_structures.system.tags import Tags
-from pydoc import locate
 
-from .statement import Statement
+from .base_financial_component import BaseFinancialsComponent
 from .history_line import HistoryLine
 
 
@@ -53,10 +51,11 @@ SUMMARY_TYPES = ('skip', 'derive', 'sum', 'average', 'ending', 'starting')
 
 
 # Classes
-class LineItem(Statement, HistoryLine):
+class LineItem(BaseFinancialsComponent, HistoryLine):
     """
 
-    A LineItem is a Statement that can have a value and a position.
+    A LineItem is a BaseFinancialsComponent that can have a value and a
+    position.
 
     A LineItem can have value in two ways. First, an instance can define
      local value. A local value is written directly to that instance via
@@ -77,11 +76,17 @@ class LineItem(Statement, HistoryLine):
     DATA:
     consolidate           bool; whether or not to consolidate line item
     guide                 instance of Guide object
+    id                    instance of ID object, holds unique BBID for instance
     hardcoded             bool; if True, set_value() or clear() will not operate
     include_details       bool; whether or not to consolidate details to parent
     log                   list of entries that modified local value
-    value                 instance value
+    position              int; instance's relative position in a Statement
+    replica               bool; whether line item is replica
+    sum_details           bool; whether line gets its value from summing details
     sum_over_time         bool; whether the line item should be balanced or summed
+    summary_count         int; how many periods contributed to line's value
+    summary_type          str; how to summarize line's value over time
+    value                 instance value
     xl                    instance of LineData record set
 
     FUNCTIONS:
@@ -89,20 +94,33 @@ class LineItem(Statement, HistoryLine):
     clear()               if modification permitted, sets value to None
     copy()                returns a new line w copies of key attributes
     get_driver()          return Driver assigned to the line
+    has_own_content()     checks if line has content
     increment()           add data from another line
+    increment_value()     add value from another line
     link_to()             links lines in Excel
+    peer_locator()        returns a function for locating or creating a copy of
+                          the instance within a given container
+    portal_locator()      returns a dict with info needed to locate this line
+                          within a model without object references.
+    register()            registers instance in namespace and assigns ID
     remove_driver()       removes driver assignment
     set_consolidate()     sets private attribute _consolidate
     set_hardcoded()       sets private attribute _hardcoded
+    set_name()            custom method for setting instance name, updates ID
     set_value()           sets value to input, records signature
+    to_portal()           creates a flattened version of LineItem for Portal
+
+    CLASS METHODS:
+    from_portal()         class method, extracts LineItem out of API-format
     ====================  ======================================================
     """
-    keyAttributes = Statement.keyAttributes + ["value", "tags.required",
-                                               "tags.optional"]
+    keyAttributes = BaseFinancialsComponent.keyAttributes + ["value",
+                                                             "tags.required",
+                                                             "tags.optional"]
 
     # Make sure that equality analysis skips potentially circular pointers like
-    # .relationships.parent. Otherwise, comparing children could look to parent, which
-    # could look to child, and so on.
+    # .relationships.parent. Otherwise, comparing children could look to
+    # parent, which could look to child, and so on.
 
     SIGNATURE_FOR_COPY = "LineItem.copy"
     SIGNATURE_FOR_CREATION = "__init__"
@@ -116,21 +134,23 @@ class LineItem(Statement, HistoryLine):
     TAB_WIDTH = 3
 
     def __init__(self, name=None, value=None, parent=None, period=None):
-
-        Statement.__init__(self, name, parent=parent, period=period)
-        # We intentionally use inheritance for the Statement relationship here
-        # because then the .find_ and .add_ methods map right on top of each
-        # other by default.
+        BaseFinancialsComponent.__init__(self,
+                                         name=name,
+                                         parent=parent,
+                                         period=period)
 
         self._local_value = None
 
         self.guide = Guide(priority=3, quality=1)
         self.log = []
         self.position = None
+
         # summary_type determines how the line is summarized
         self.summary_type = 'sum'
+
         # summary_count is used for summary_type == 'average'
         self.summary_count = 0
+
         self._consolidate = True
         self._replica = False
         self._hardcoded = False
@@ -141,20 +161,14 @@ class LineItem(Statement, HistoryLine):
         self._driver_id = None
 
         if value is not None:
-            # BU.consolidate() will NOT increment items with value==None. On the
-            # other hand, BU.consolidate() will increment items with value == 0.
-            # Once consolidate() changes a lineitem, derive() will skip it. To
-            # allow derivation of empty lineitems, must start w value==None.
             self.set_value(value, self.SIGNATURE_FOR_CREATION)
 
         self.xl = xl_mgmt.LineData()
 
-    # Lines can contain a mutable set of details, so we don't include a hash
-    # method. Since it's difficult to compare lines to each other unless you
-    # know exactly what the user has in mind, we don't support set operations
-    # out of the box. Otherwise, you might get a response that a line is "in"
-    # a particular set that actually contains an instance with the
-    # same value but very different details.
+    def __str__(self):
+        result = "\n".join(self._get_line_strings())
+        result += "\n"
+        return result
 
     @property
     def consolidate(self):
@@ -230,7 +244,7 @@ class LineItem(Statement, HistoryLine):
         return result
 
     @classmethod
-    def from_portal(cls, portal_data, model, **kargs):
+    def from_portal(cls, data, statement):
         """
 
 
@@ -240,133 +254,71 @@ class LineItem(Statement, HistoryLine):
 
         Method deserializes all LineItems belonging to ``statement``.
         """
-        statement = kargs['statement']
         # first pass: create a dict of lines
-        line_info = {}
-        for data in portal_data:
-            new = cls(
-                parent=None,
-            )
-            new.tags = Tags.from_portal(data['tags'])
 
-            id_str = data['_driver_id']
-            if id_str:
-                new._driver_id = ID.from_portal(id_str).bbid
+        new = cls(
+            parent=None,
+        )
+        new.tags = Tags.from_portal(data['tags'])
 
-            # defer resolution of .xl
-            new.xl = xl_mgmt.LineData()
-            new.xl.format = xl_mgmt.LineFormat.from_portal(data['xl_format'],
-                                                           model=model)
+        id_str = data['driver_id']
+        if id_str:
+            new._driver_id = ID.from_portal(id_str).bbid
 
-            for attr in (
-                'position',
-                'summary_type',
-                'summary_count',
-                '_consolidate',
-                '_replica',
-                '_include_details',
-                '_sum_details',
-                'log',
-            ):
-                new.__dict__[attr] = data[attr]
+        # defer resolution of .xl
+        new.xl = xl_mgmt.LineData()
+        new.xl.format = xl_mgmt.LineFormat.from_portal(data['xl_format'])
 
-            line_info[data['bbid']] = (new, data)
+        new.summary_type = data['summary_type']
+        new.summary_count = data['summary_count']
+        new._consolidate = data['consolidate']
+        new._replica = data['replica']
+        new._include_details = data['include_details']
+        new._sum_details = data['sum_details']
+        new.log = data['log']
 
-        # second pass: place lines
-        for bbid, (line, data) in line_info.items():
-            parent_bbid = data['parent_bbid']
-            if parent_bbid:
-                # another LineItem is the parent
-                parent = line_info.get(parent_bbid)[0]
-            else:
-                # Statement is the parent
-                parent = statement
-            position = data['position']
-            position = int(position) if position else None
-            line.relationships.set_parent(parent)
-            parent.add_line(line, position=position, noclear=True)
+        new.guide = Guide.from_portal(data['guide'])
+        new.id.bbid = ID.from_portal(data['bbid']).bbid
 
-    def to_portal(self, parent_line=None):
+        position = data['position']
+        position = int(position) if position else None
+        new.position = position
+
+        return new
+
+    def to_portal(self, top_level=False):
         """
 
 
-        LineItem.to_portal() -> iter(dict)
+        LineItem.to_portal() -> dict
 
-        Method yields a serialized representation of a LineItem.
+        Method returns a serialized representation of a LineItem.
         """
+        parent_bbid = None
+        if not top_level:
+            parent_line = self.relationships.parent
+            parent_bbid = parent_line.id.bbid.hex if parent_line else None
+
+        result = BaseFinancialsComponent.to_portal(self)
+
         row = {
-            'bbid': self.id.bbid.hex,
-            'parent_bbid': parent_line.id.bbid.hex if parent_line else None,
-            'name': self.name,
-            'title': self.title,
+            'parent_bbid': parent_bbid,
             'position': self.position,
             'summary_type': self.summary_type,
             'summary_count': self.summary_count,
-            '_consolidate': self._consolidate,
-            '_replica': self._replica,
-            '_include_details': self._include_details,
-            '_sum_details': self._sum_details,
+            'consolidate': self._consolidate,
+            'replica': self._replica,
+            'include_details': self._include_details,
+            'sum_details': self._sum_details,
             'xl_format': self.xl.format.to_portal(),
-            'tags': self.tags.to_portal(),
             'log': self.log,
-            '_driver_id': self._driver_id.hex if self._driver_id else None,
+            'driver_id': self._driver_id.hex if self._driver_id else None,
+            'link': False,
+            'guide': self.guide.to_portal(),
         }
 
-        # return this line
-        yield row
-        # return child lines
-        for stub_index, stub in enumerate(self.get_ordered()):
-            yield from stub.to_portal(parent_line=self)
+        result.update(row)
 
-    def portal_locator(self):
-        """
-
-
-        LineItem.portal_locator() -> dict
-
-        Method returns a dict with info needed to locate this line within
-        a model without object references.
-        """
-        parent = self.relationships.parent
-        while isinstance(parent, Statement):
-            statement = parent
-            parent = parent.relationships.parent
-
-        # parent is Financials at this point
-        financials = parent
-
-        statement_attr = None
-        for attr in financials._full_order:
-            stmt = getattr(financials, attr, None)
-            if stmt is statement:
-                statement_attr = attr
-
-        bu = financials.relationships.parent
-        locator = dict(
-            buid=bu.id.bbid.hex,
-            financials_attr=statement_attr,
-            bbid=self.id.bbid.hex,
-        )
-
-        period = financials.period
-        if period:
-            period_end = format(period.end)
-            time_line = period.relationships.parent
-        else:
-            period_end = None
-            time_line = bu.relationships.model.time_line
-
-        locator.update(
-            period=period_end,
-            resolution=time_line.resolution,
-            name=time_line.name,
-        )
-
-        return locator
-
-    def __str__(self):
-        result = "\n".join(self._get_line_strings())
-        result += "\n"
         return result
 
     def assign_driver(self, driver_id):
@@ -399,7 +351,7 @@ class LineItem(Statement, HistoryLine):
             if self._details:
                 self._bring_down_local_value()
                 if recur:
-                    Statement.reset(self)
+                    BaseFinancialsComponent.reset(self)
 
             sig = self.SIGNATURE_FOR_VALUE_RESET
             self.set_value(None, sig, override=True)
@@ -428,7 +380,7 @@ class LineItem(Statement, HistoryLine):
         Return a deep copy of the instance and its details. If  is
         True, copy conforms to ``out`` rules.
         """
-        new_line = Statement.copy(self,
+        new_line = BaseFinancialsComponent.copy(self,
                                   check_include_details=check_include_details,
                                   clean=clean)
         # Shallow copy, should pick up _local_value as is, and then create
@@ -468,7 +420,7 @@ class LineItem(Statement, HistoryLine):
         dr = None
         if self._driver_id:
             parent = self.relationships.parent
-            while isinstance(parent, Statement):
+            while isinstance(parent, BaseFinancialsComponent):
                 parent = parent.relationships.parent
 
             bu = parent.relationships.parent
@@ -476,6 +428,21 @@ class LineItem(Statement, HistoryLine):
             dr = mo.drivers.get(self._driver_id)
 
         return dr
+
+    def has_own_content(self):
+        """
+
+
+        LineItem.has_own_content() -> Bool
+
+        Checks if line has content. A line with own content should have no
+        children with own content, and should not consolidate
+        """
+        return any((
+            len(self._details) > 0,
+            self.xl.derived.calculations,
+            self.hardcoded,
+        ))
 
     def increment(self, matching_line, signature=None, consolidating=False,
                   xl_label=None, override=False, xl_only=False,
@@ -493,10 +460,12 @@ class LineItem(Statement, HistoryLine):
         send_to_statement = matching_line._details and \
                             (matching_line.include_details or over_time)
         if send_to_statement:
-            Statement.increment(self, matching_line,
-                                consolidating=consolidating,
-                                xl_label=xl_label, over_time=over_time,
-                                override=override, xl_only=xl_only)
+            BaseFinancialsComponent.increment(self, matching_line,
+                                              consolidating=consolidating,
+                                              xl_label=xl_label,
+                                              over_time=over_time,
+                                              override=override,
+                                              xl_only=xl_only)
             # Use Statement method here because we're treating the matching
             # line as a Statement too. We assume that its details represent
             # all of its value data. Statement.increment() will copy those
@@ -599,6 +568,72 @@ class LineItem(Statement, HistoryLine):
             self.xl.reference.source = matching_line
             self._update_stored_xl()
 
+    def peer_locator(self):
+        """
+
+
+        LineItem.peer_locator() -> LineItem
+
+        Given a parent container from another time period, return a function
+        locating a copy of ourselves within that container.
+        """
+
+        def locator(statement, create=True, **kargs):
+            peer = statement.find_first(self.name)
+            if create and not peer:
+                peer = self.copy()
+                peer.clear()
+                statement.add_line(peer)
+            return peer
+
+        return locator
+
+    def portal_locator(self):
+        """
+
+
+        LineItem.portal_locator() -> dict
+
+        Method returns a dict with info needed to locate this line within
+        a model without object references.
+        """
+        parent = self.relationships.parent
+        while isinstance(parent, BaseFinancialsComponent):
+            statement = parent
+            parent = parent.relationships.parent
+
+        # parent is Financials at this point
+        financials = parent
+
+        statement_attr = None
+        for attr in financials._full_order:
+            stmt = getattr(financials, attr, None)
+            if stmt is statement:
+                statement_attr = attr
+
+        bu = financials.relationships.parent
+        locator = dict(
+            buid=bu.id.bbid.hex,
+            financials_attr=statement_attr,
+            bbid=self.id.bbid.hex,
+        )
+
+        period = financials.period
+        if period:
+            period_end = format(period.end)
+            time_line = period.relationships.parent
+        else:
+            period_end = None
+            time_line = bu.relationships.model.time_line
+
+        locator.update(
+            period=period_end,
+            resolution=time_line.resolution,
+            name=time_line.name,
+        )
+
+        return locator
+
     def remove_driver(self, recur=False):
         """
 
@@ -623,14 +658,10 @@ class LineItem(Statement, HistoryLine):
         Method sets namespace of instance and assigns BBID.  Method recursively
         registers components.
         """
-        self.id.set_namespace(namespace)
-        self.id.assign(self.name)
+        BaseFinancialsComponent.register(self, namespace)
 
         self._update_stored_hc()
         self._update_stored_value()
-
-        for line in self.get_ordered():
-            line.register(namespace=self.id.bbid)
 
     def set_consolidate(self, val):
         """
@@ -674,10 +705,22 @@ class LineItem(Statement, HistoryLine):
             for line in self._details.values():
                 line.set_hardcoded(val, recur=recur)
 
-    def set_period(self, period):
-        self._period = period
-        for line in self._details.values():
-            line.set_period(period)
+    def set_name(self, name):
+        """
+
+
+        LineItem.set_name() -> None
+
+        --``name`` is the string name to assign to the LineItem
+
+        Method sets the name on the LineItem and updates its ID to reflect the
+         name change.  Line's details also get their IDs updated.
+
+        Delegates to base-class method.
+        """
+        # SHOULD REMOVE OLD VALUES FROM PERIOD DATA CACHE!!!!
+        BaseFinancialsComponent.set_name(self, name)
+        self.register(self.id.namespace)
 
     def setValue(self, value, signature,
                  overrideValueManagement=False):
@@ -716,12 +759,10 @@ class LineItem(Statement, HistoryLine):
                 print(self)
                 c = "Cannot perform arithmetic on LineItem! override=False"
                 raise bb_exceptions.BBAnalyticalError(c)
-            # Will throw exception if value doesn't support arithmetic
+                # Will throw exception if value doesn't support arithmetic
 
             if self.hardcoded:
                 return  # Do  Nothing if line is hardcoded
-                # c = "Line %s is hardcoded. Cannot write." % self.name
-                # raise bb_exceptions.BBPermissionError(c, self)
 
         new_value = value
         if new_value is None:
@@ -737,43 +778,6 @@ class LineItem(Statement, HistoryLine):
         log_entry = (signature, time.time(), value)
         self.log.append(log_entry)
         self._update_stored_value()
-
-    def peer_locator(self):
-        """
-
-
-        LineItem.peer_locator() -> LineItem
-
-        Given a parent container from another time period, return a function
-        locating a copy of ourselves within that container.
-        """
-
-        def locator(statement, create=True, **kargs):
-            peer = statement.find_first(self.name)
-            if create and not peer:
-                peer = self.copy()
-                peer.clear()
-                statement.add_line(peer)
-            return peer
-        return locator
-
-    def has_own_content(self):
-        """
-
-
-        LineItem.has_own_content() -> Bool
-
-        Checks if line has content. A line with own content should have no
-        children with own content, and should not consolidate
-        """
-        return any((
-            len(self._details) > 0,
-            self.xl.derived.calculations,
-            self.hardcoded,
-        ))
-
-    def restrict(self):
-        self._restricted = True
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
@@ -796,7 +800,7 @@ class LineItem(Statement, HistoryLine):
         if self._local_value and not self._details and self.sum_details:
             self._bring_down_local_value()
 
-        Statement._bind_and_record(self, line, noclear=noclear)
+        BaseFinancialsComponent._bind_and_record(self, line, noclear=noclear)
 
         self._update_stored_hc()
         line._update_stored_value()
@@ -850,43 +854,12 @@ class LineItem(Statement, HistoryLine):
                 # Will always return a list of strings
                 result.extend(view)
 
-            footer = printing_tools.format_as_line(self, prefix=self.SUMMARY_PREFIX, left_tab=indent)
+            footer = printing_tools.format_as_line(self,
+                                                   prefix=self.SUMMARY_PREFIX,
+                                                   left_tab=indent)
             result.append(footer)
 
         return result
-
-    def _make_replica(self):
-        """
-
-
-        LineItem._make_replica() -> None
-
-
-        Create a replica, add replica to details
-        """
-        replica = copy.copy(self)
-        replica.tags = self.tags.copy()
-        # Start with a shallow copy that picks up all the tags, including ones
-        # like "hardcoded" or "do not touch" that don't normally go ``out``. If
-        #  is True, these would not transfer to the replica because
-        # the copy counts as an "out" move. Then, if the original value was to
-        # somehow get reset to None, the lineitem could get behind and the
-        # entire financials unit could lose a special processing trigger.
-
-        replica._details = dict()
-        replica.xl = xl_mgmt.LineData()
-        replica.xl.format = self.xl.format.copy()
-        replica.set_consolidate(self._consolidate)
-
-        # Replicas don't have any details of their own. Can't run .clear() here
-        # because instance and replica initially point to the same details dict.
-        replica._period = self.period
-        replica._replica = True
-        replica.position = 0
-        replica.register(namespace=self.id.namespace)
-
-        self._details[replica.tags.name] = replica
-        # Add replica in first position.
 
     def _get_sum_of_details(self):
         """
@@ -913,7 +886,33 @@ class LineItem(Statement, HistoryLine):
                 result += detail.value
         return result
 
+    def _make_replica(self):
+        """
+
+
+        LineItem._make_replica() -> None
+
+
+        Create a replica, add replica to details
+        """
+        replica = copy.copy(self)
+        replica.tags = self.tags.copy()
+        replica._details = dict()
+        replica.xl = xl_mgmt.LineData()
+        replica.xl.format = self.xl.format.copy()
+        replica.set_consolidate(self._consolidate)
+        replica._period = self.period
+        replica._replica = True
+        replica.position = 0
+        replica.register(namespace=self.id.namespace)
+
+        self._details[replica.tags.name] = replica
+
     def _update_stored_value(self):
+        """
+        Method updates cached value in the Period's value directory so that it
+         will be preserved in the database.
+        """
         if self.period:
             self.period.update_line_value(self)
 
@@ -922,10 +921,18 @@ class LineItem(Statement, HistoryLine):
             parent._update_stored_value()
 
     def _update_stored_xl(self):
+        """
+        Method updates cached Excel data in the Period's value directory
+        so that it will be preserved in the database.
+        """
         if self.period:
             self.period.update_line_xl(self)
 
     def _update_stored_hc(self):
+        """
+        Method updates cached hardcoded value in the Period's value directory
+        so that it will be preserved in the database.
+        """
         if self.period:
             self.period.update_line_hardcoded(self)
 

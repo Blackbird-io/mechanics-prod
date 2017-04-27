@@ -201,7 +201,7 @@ def grow_units_by_count(start_dt, end_dt, template, start_num, number):
         copy = template.copy()
         unit_count += 1
         # Name of 1st template created will be labeled (start_num + 1)
-        copy.tags.set_name(copy.tags.name + " " + str(unit_count + start_num))
+        copy.set_name(copy.tags.name + " " + str(unit_count + start_num))
         copy.life.configure_events(birthday)
         # Sets events: conception, birth, death, maturity, old_age
         population.append(copy)
@@ -278,7 +278,7 @@ def grow_batches_by_count(start_dt, end_dt, template, start_num, number, batches
         copy = template.copy()
         # Name of 1st template created will be labeled (start_num + 1)
         new_name = copy.name + " " + str(start_label) + "-" + str(end_label)
-        copy.tags.set_name(new_name)
+        copy.set_name(new_name)
         copy.size = end_label - start_label + 1  # "BU 101-102" is 2 units
 
         # Sets events: conception, birth, death, maturity, old_age
@@ -368,7 +368,7 @@ def grow_units_by_rate(start_dt, end_dt, template, start_num, rate):
     for birthday in birth_dates:
         copy = template.copy()
         unit_count += 1
-        copy.tags.set_name(copy.tags.name + " " + str(unit_count + start_num))
+        copy.set_name(copy.tags.name + " " + str(unit_count + start_num))
         copy.life.configure_events(birthday)
         # Sets events: conception, birth, death, maturity, old_age
         population.append(copy)
@@ -397,7 +397,7 @@ def make_units_linearly(start_dt, end_dt, template, number):
     population = []
     for i in range(number):
         copy = template.copy()
-        copy.tags.set_name(copy.tags.name + " " + str(i+1))
+        copy.set_name(copy.tags.name + " " + str(i+1))
         copy.life.configure_events(birth_index)
         # Sets events: conception, birth, death, maturity, old_age
         birth_index += time_interval
@@ -454,7 +454,7 @@ def make_batches_linearly(start_dt, end_dt, template, start_num, number, batches
 
         copy = template.copy()
         new_name = copy.name + " " + str(start_label) + "-" + str(end_label)
-        copy.tags.set_name(new_name)
+        copy.set_name(new_name)
         copy.size = end_label - start_label + 1
         # Sets events: conception, birth, death, maturity, old_age
         copy.life.configure_events(birth_index)
@@ -500,7 +500,7 @@ def make_closed_units(start_dt, end_dt, template, number, birth_dt=None):
 
     for i in range(number):
         copy = template.copy()
-        copy.tags.set_name(copy.tags.name + " " + str(i+1))
+        copy.set_name(copy.tags.name + " " + str(i+1))
         copy.life.configure_events(birth_dt)
         # Sets events: conception, birth, death, maturity, old_age
         copy.kill(date_index)

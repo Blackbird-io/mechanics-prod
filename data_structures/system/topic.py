@@ -40,7 +40,7 @@ from tools import for_messages as message_tools
 
 from .bbid import ID
 from .messenger import Messenger
-from .tags import Tags
+from .tags_mixin import TagsMixIn
 
 
 
@@ -51,7 +51,7 @@ user_stop = message_tools.USER_STOP
 
 
 # Classes
-class Topic:
+class Topic(TagsMixIn):
     """
 
     Topic objects analyze and modify models.
@@ -121,11 +121,11 @@ class Topic:
 
     trace = True
 
-    def __init__(self):
+    def __init__(self, name=None):
+        TagsMixIn.__init__(self, name=name)
         self.CM = ColorManager
         self.id = ID()
         self.MR = Messenger()
-        self.tags = Tags()
         self.formulas = None
         self.questions = None
         self.record_on_exit = True

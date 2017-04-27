@@ -28,12 +28,18 @@ Outline               container for organizing steps into a path
 
 
 #imports
+import pickle
 import time
 
 from .step import Step
+from .guide import Guide
+
 
 from ..modelling.statement import Statement
+from ..modelling.line_item import LineItem
+from ..modelling.link import Link
 
+from data_structures.system.tags import Tags
 
 
 
@@ -72,7 +78,7 @@ class Outline(Step):
     set_path()                  set path to argument or empty Statement 
     ==========================  ================================================
     """
-    def __init__(self, name = None):
+    def __init__(self, name=None):
         Step.__init__(self, name)
         self.attention_budget = None
         self.completion_rule = None
@@ -81,6 +87,47 @@ class Outline(Step):
         self.protocol_key = 0
         self.track_progress = False
         self.work_space = {}
+
+    @classmethod
+    def from_portal(cls, portal_data, link_list=list()):
+        new = cls(None)
+        new.__dict__.update(portal_data)
+
+        # new.completion_rule = pickle.loads(portal_data['completion_rule'])
+
+        # rebuild the path
+        new.path = Statement.from_portal(portal_data['path'], None)
+
+        for step in new.path.get_full_ordered():
+            if isinstance(step, Link):
+                link_list.append(step)
+
+        # find the right step to assign as focal point
+        if new.focal_point:
+            fp = new.path.find_first(new.focal_point)
+            new.focal_point = fp
+
+        new.tags = Tags.from_portal(portal_data['tags'])
+        new.guide = Guide.from_portal(portal_data['guide'])
+
+        return new
+
+    def to_portal(self, **kwargs):
+        data = dict()
+        data['guide'] = self.guide.to_portal()
+        data['tags'] = self.tags.to_portal()
+        data['attention_budget'] = self.attention_budget
+
+        # need to implement completion rule serialization eventually
+        # data['completion_rule'] = pickle.dumps(self.completion_rule)
+
+        data['focal_point'] = self.focal_point.name if self.focal_point else None
+        data['path'] = self.path.to_portal()
+        data['protocol_key'] = self.protocol_key
+        data['track_progress'] = self.track_progress
+        data['work_space'] = self.work_space
+
+        return data
 
     def clear_cache(self):
         """

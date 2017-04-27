@@ -56,12 +56,28 @@ class DriverContainer(Container):
 
     FUNCTIONS:
     get_or_create()       retrieves or creates a driver matching provided info
+    get_or_create()       retrieves or creates a driver matching provided info
     ====================  ======================================================
     """
 
     def __init__(self):
         Container.__init__(self)
 
+    @classmethod
+    def from_portal(cls, portal_data):
+        new = cls()
+        for dr_data in portal_data:
+            new_dr = Driver.from_portal(dr_data)
+            new.add(new_dr)
+
+        return new
+
+    def to_portal(self):
+        drivers_out = list()
+        for dr in self.directory.values():
+            drivers_out.append(dr.to_portal())
+        return drivers_out
+    
     def add(self, obj):
         """
 
@@ -112,6 +128,21 @@ class DriverContainer(Container):
         from the provided information.  Raises error if a driver with ``name``
         exists, but has attibutes that don't match provided data and formula.
         """
+    def get_or_create(self, name, data, formula, run_on_past=False):
+        """
+
+
+        DriverContainer.get_or_create() -> Driver
+
+        --``name`` is the name of a Driver
+        --``data`` is a dictionary containing data for the Driver
+        --``formula`` is a formula object
+        --``run_on_past`` is a bool; whether to run the driver on past periods
+
+        Method retrieve a driver by name if it exists, or creates a new driver
+        from the provided information.  Raises error if a driver with ``name``
+        exists, but has attibutes that don't match provided data and formula.
+        """
         driver = self.get_by_name(name)
 
         if not driver:
@@ -122,6 +153,17 @@ class DriverContainer(Container):
         else:
             # check data
             data_chk = driver.parameters == data
+
+            # check formula
+            form_chk = driver.formula_bbid == formula.id.bbid
+
+            # check run_on_past
+            rop_chk = driver.run_on_past == run_on_past
+
+            if not all([data_chk, form_chk, rop_chk]):
+                c = "A driver named '%s' exists but has different attributes" \
+                    " than those specified as arguments." % name
+                raise AssertionError(c)
 
             # check formula
             form_chk = driver.formula_bbid == formula.id.bbid

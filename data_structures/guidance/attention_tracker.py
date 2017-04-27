@@ -71,7 +71,17 @@ class AttentionTracker(Counter):
         Counter.__init__(self, cut_off=self.ATTENTION_MAX)
         self.allowance = None
         self.asked = 0
-        
+
+    @classmethod
+    def from_portal(cls, portal_data):
+        new = cls()
+        new.__dict__.update(portal_data)
+        return new
+
+    def to_portal(self):
+        data = self.__dict__
+        return data
+
     def clear_asked(self):
         """
 

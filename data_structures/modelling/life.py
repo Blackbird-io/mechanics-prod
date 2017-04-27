@@ -36,6 +36,8 @@ import bb_exceptions
 from . import common_events
 from .equalities import Equalities
 
+from tools.parsing import date_from_iso
+
 
 
 
@@ -69,7 +71,7 @@ class Life(Equalities):
     Sample use case 1:
       GOAL: Configure a template unit for model taxonomy
       >>>...
-      >>>store_template.LIFE_SPAN = datetime.timedelta(20*365)
+      >>>store_template.life_span = datetime.timedelta(20*365)
       >>>store_template.set_gestation(datetime.timedelta(1.5*365))
       >>>store_template.set_percent_maturity(0.15)
 
@@ -150,16 +152,6 @@ class Life(Equalities):
     KEY_OLD_AGE = common_events.KEY_OLD_AGE
     # These keys should stay constant (can also add kill, renovation)
 
-    # Specify default values as days for timedelta.
-    GESTATION = datetime.timedelta(365)
-    LIFE_SPAN = datetime.timedelta(18250)
-    # Default life span is ~50 years: 365 * 50 = 18250 days
-
-    PERCENT_MATURITY = 30
-    # Assume maturity begins at 30 (first 30% of life spent on growth).
-    PERCENT_OLD_AGE = 70
-    # Assume old age begins at 70.
-
     ORDER = (
         common_events.KEY_CONCEPTION,
         common_events.KEY_BIRTH,
@@ -175,8 +167,58 @@ class Life(Equalities):
         # Can modify these for advanced functionality. For example, if you
         # want your unit to be born again on a "rebranding" event.
         self._ref_date = None
-
         self.events = dict()
+
+        # Specify default values as days for timedelta.
+        self.gestation = datetime.timedelta(365)
+        self.life_span = datetime.timedelta(18250)
+        # Default life span is ~50 years: 365 * 50 = 18250 days
+
+        self.percent_maturity = 30
+        # Assume maturity begins at 30 (first 30% of life spent on growth).
+        self.percent_old_age = 70
+        # Assume old age begins at 70.
+
+    @classmethod
+    def from_portal(cls, portal_data):
+        new = cls()
+        new._birth_event_names = set(portal_data['birth_event_names'])
+        new._death_event_names = set(portal_data['death_event_names'])
+        new._ref_date = date_from_iso(portal_data['ref_date']) if \
+            portal_data['ref_date'] else portal_data['ref_date']
+
+        event_list = portal_data['events']
+        if event_list:
+            for event in event_list:
+                dt = event['date']
+                event_date = date_from_iso(dt) if isinstance(dt, str) else dt
+                new.events[event['event']] = event_date
+
+        new.gestation = datetime.timedelta(portal_data['gestation'])
+        new.life_span = datetime.timedelta(portal_data['life_span'])
+        new.percent_maturity = portal_data['percent_maturity']
+        new.percent_old_age = portal_data['percent_old_age']
+
+        return new
+
+    def to_portal(self):
+        data = dict()
+        data['birth_event_names'] = list(self._birth_event_names)
+        data['death_event_names'] = list(self._death_event_names)
+        data['ref_date'] = self._ref_date.strftime('%Y-%m-%d') if \
+            self._ref_date else self._ref_date
+
+        event_list = list()
+        for event, date in self.events.items():
+            event_list.append({"date": date, "event": event})
+        data['events'] = event_list
+
+        data['gestation'] = self.gestation.days
+        data['life_span'] = self.life_span.days
+        data['percent_maturity'] = self.percent_maturity
+        data['percent_old_age'] = self.percent_old_age
+
+        return data
 
     @property
     def _clock_starts(self):
@@ -242,11 +284,11 @@ class Life(Equalities):
         self.events[self.KEY_DEATH] = death
 
         self.events[self.KEY_MATURITY] = (
-            birth + (value * self.PERCENT_MATURITY / 100)
+            birth + (value * self.percent_maturity / 100)
             )
 
         self.events[self.KEY_OLD_AGE] = (
-            birth + (value * self.PERCENT_OLD_AGE / 100)
+            birth + (value * self.percent_old_age / 100)
             )
 
     def age(self, period=None):
@@ -380,12 +422,14 @@ class Life(Equalities):
         self.events[self.KEY_BIRTH] = date_of_birth
 
         if life_span is None:
-            life_span = self.LIFE_SPAN
+            life_span = self.life_span
+
         self.span = life_span
         # Span will automatically set the date of death, maturity, and old age.
 
         if gestation is None:
-            gestation = self.GESTATION
+            gestation = self.gestation
+
         self.events[self.KEY_CONCEPTION] = date_of_birth - gestation
 
     def copy(self):
@@ -440,7 +484,7 @@ class Life(Equalities):
 
         Set custom gestation period. Expects timedelta.
         """
-        self.GESTATION = value
+        self.gestation = value
 
     def set_percent_maturity(self, value):
         """
@@ -451,7 +495,7 @@ class Life(Equalities):
 
         Set custom maturity trigger as percent of life. Expects float in [0,100]
         """
-        self.PERCENT_MATURITY = value
+        self.percent_maturity = value
 
     def set_percent_old_age(self, value):
         """
@@ -462,9 +506,4 @@ class Life(Equalities):
 
         Set custom old age trigger as percent of life. Expects float in [0,100]
         """
-        self.PERCENT_OLD_AGE = value
-
-
-
-
-
+        self.percent_old_age = value

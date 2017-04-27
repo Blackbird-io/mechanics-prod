@@ -24,23 +24,26 @@ Model                 structured snapshots of a company across time periods
 """
 
 # imports
-import pickle
+import calendar
+import datetime
 import time
 import bb_exceptions
 import bb_settings
 import tools.for_tag_operations
 
 from chef_settings import DEFAULT_SCENARIOS
-from data_structures.modelling.financials import Financials
 from data_structures.system.bbid import ID
+from data_structures.modelling.business_unit import BusinessUnit
 from data_structures.modelling.line_item import LineItem
 from data_structures.modelling.dr_container import DriverContainer
+from data_structures.system.tags import Tags
 from data_structures.system.tags_mixin import TagsMixIn
 from data_structures.system.summary_maker import SummaryMaker
+from dateutil.relativedelta import relativedelta
 from tools.parsing import date_from_iso
 from .time_line import TimeLine
 from .taxo_dir import TaxoDir
-
+from .taxonomy import Taxonomy
 
 # constants
 # n/a
@@ -71,23 +74,30 @@ class Model(TagsMixIn):
 
     DATA:
     bu_directory          dict; key = bbid, val = business units
+    drivers               instance of DriverContainer; stores Driver objects
+    fiscal_year_end       P (date); fiscal year end, default is 12/31
     id                    instance of ID object, carries bbid for model
-    interview             property; points to target BusinessUnit.interview
+    interview             P; points to target BusinessUnit.interview
     portal_data           dict; stores data from Portal related to the instance
-    report_summary        dict: stores data that Portal reads for reporting
-    stage                 property; points to target BusinessUnit.stage
-    started               bool; property, tracks whether engine has begun work
+    processing_status     P (str); name of processing stage ("intake", etc.)
+    ref_date              P (date); reference date for Model, specifies current period
+    report_summary        dict; stores data that Portal reads for reporting
+    scenarios             dict; stores alternate parameter values
+    stage                 P; points to target BusinessUnit.stage
+    started               P (bool); tracks whether engine has begun work
     summary               P; pointer to current period summary
     target                P; pointer to target BusinessUnit
     taxo_dir              instance of TaxoDir, has a dict {bbid: taxonomy units}
-    taxonomy              dict with tree of business unit templates
+    taxonomy              instance of Taxonomy; holds BU templates and links to taxo_dir
     topic_list            list of topic names run on model
-    time_line             list of TimePeriod objects
+    time_line             P; pointer to default TimeLine object
+    time_lines            list of TimeLine objects
     transcript            list of entries that tracks Engine processing
     ty_directory          dict; key = strings, val = sets of bbids
     valuation             P; pointer to current period valuation
 
     FUNCTIONS:
+    to_portal()           creates a flattened version of model for Portal
     calc_summaries()      creates or updates standard summaries for model
     change_ref_date()     updates timeline to use new reference date
     clear_fins_storage()  clears financial data from non SSOT financials
@@ -103,12 +113,10 @@ class Model(TagsMixIn):
     populate_xl_data()    method populates xl attr on all line items pre-chop
     prep_for_monitoring_interview()  sets up path entry point for reporting
     prep_for_revision_interview()  sets up path entry point for revision
-    prep_summaries()      creates SummaryMaker based on default timeline
     register()            registers item in model namespace
     set_company()         method sets BusinessUnit as top-level company
     set_timeline()        method sets default timeline
     start()               sets _started and started to True
-    to_portal()           creates a flattened version of model for Portal
     transcribe()          append message and timestamp to transcript
 
     CLASS METHODS:
@@ -120,30 +128,44 @@ class Model(TagsMixIn):
     """
 
     def __init__(self, name):
+        if not name:
+            name = bb_settings.DEFAULT_MODEL_NAME
+
         TagsMixIn.__init__(self, name)
 
+        # read-only attributes
         self._company = None
+        self._fiscal_year_end = None
+        self._processing_status = 'intake'
         self._ref_date = None
         self._started = False
 
+        # container for holding Drivers
         self.drivers = DriverContainer()
 
+        # set and assign unique ID - models carry uuids in the origin namespace
         self.id = ID()
         self.id.assign(name)
-        # Models carry uuids in the origin namespace.
 
+        # set up Portal data, this is used primarily by Wrapper
         self.portal_data = dict()
+        self.portal_data['industry'] = None
+        self.portal_data['summary'] = None
+        self.portal_data['business_name'] = None
+        self.portal_data['business_id'] = 99999999
+        self.portal_data['user_context'] = None
+        self.portal_data['tags'] = None
+        self.portal_data['update_count'] = 0
+        self.portal_data['monitoring'] = False
 
         self.report_summary = None
 
         self.taxo_dir = TaxoDir(model=self)
-        self.taxonomy = dict()
+        self.taxonomy = Taxonomy(self.taxo_dir)
 
         self.timelines = dict()
-        time_line = TimeLine(self)
-        self.set_timeline(time_line)
-
-        self.transcript = []
+        timeline = TimeLine(self)
+        self.set_timeline(timeline)
 
         # business units
         self.target = None
@@ -155,14 +177,54 @@ class Model(TagsMixIn):
         for s in DEFAULT_SCENARIOS:
             self.scenarios[s] = dict()
 
-        self.summary_maker = None
-
-        # read-only attribute
-        self._processing_status = 'intake'
-
-        self.topic_list = []
+        self.transcript = list()
+        self.topic_list = list()
 
     # DYNAMIC ATTRIBUTES
+    @property
+    def fiscal_year_end(self):
+        """
+
+
+        Model.fiscal_year_end() -> date
+
+        Return self._fiscal_year_end or calendar year end.
+        """
+        if not self._fiscal_year_end:
+            time_line = self.get_timeline()
+            year = time_line.current_period.end.year
+            fye = datetime.date(year, 12, 31)
+        else:
+            fye = self._fiscal_year_end
+
+        return fye
+
+    @fiscal_year_end.setter
+    def fiscal_year_end(self, fye):
+        """
+
+
+        Model.fiscal_year_end() -> date
+
+        Set self._fiscal_year_end.
+        """
+        # maybe make fiscal_year_end a property and do this on assignment
+        last_day = calendar.monthrange(fye.year, fye.month)[1]
+        if last_day - fye.day > fye.day:
+            # closer to the beginning of the month, use previous month
+            # for fiscal_year_end
+            temp = fye - relativedelta(months=1)
+            last_month = temp.month
+            last_day = calendar.monthrange(fye.year, last_month)[1]
+
+            fye = datetime.date(fye.year, last_month, last_day)
+        else:
+            # use end of current month
+            last_day = calendar.monthrange(fye.year, fye.month)[1]
+            fye = datetime.date(fye.year, fye.month, last_day)
+
+        self._fiscal_year_end = fye
+
     @property
     def interview(self):
         return self.target.interview
@@ -255,57 +317,120 @@ class Model(TagsMixIn):
 
         Method extracts a Model from portal_model.
 
-        Method expects ``portal_model`` to be a string serialized by dill (or
-        pickle).
-
-        If portal_model does not specify a Model object, method creates a new
-        instance. Method stores all portal data other than the Model in the
-        output's .portal_data dictionary.
-
-        NEED TO MAKE SURE WE UNPACK ALL BU'S TO CURRENT_PERIOD.FINANCIALS
+        Method expects ``portal_model`` to be nested dictionary containing
+        all necessary information for rebuilding a Model instance.
         """
-        flat_model = portal_model["e_model"]
+        name = portal_model.pop('name', None)
 
-        if flat_model:
-            M = pickle.loads(flat_model)
-            business_name = portal_model["business_name"]
-            if business_name:
-                M.set_name(business_name)
-        else:
-            business_name = portal_model["business_name"]
-            if not business_name:
-                business_name = bb_settings.DEFAULT_MODEL_NAME
-            M = cls(business_name)
-
+        M = cls(name)
         M.portal_data.update(portal_model)
-        del M.portal_data["e_model"]
 
-        # set processing stage
+        business_name = portal_model.get("business_name", None)
+        del portal_model
+
+        tags = M.portal_data.pop('tags')
+        if tags:
+            M.tags = Tags.from_portal(tags)
+
+        # set basic attributes
         M._processing_status = M.portal_data.pop('processing_status', 'intake')
 
-        # reinflate financial structure SSOT
-        for fins in portal_model.get('financials_structure', list()):
-            # Deserialize structure
-            new_fins = Financials.from_portal(fins, M, period=None)
+        M._ref_date = M.portal_data.pop('ref_date')
+        if isinstance(M._ref_date, str):
+            M._ref_date = date_from_iso(M._ref_date)
 
-            # Associate Financials with appropriate BU
-            bu = M.bu_directory[ID.from_portal(fins['buid']).bbid]
-            bu.set_financials(new_fins)
+        M._started = M.portal_data.pop('started')
+        M.topic_list = M.portal_data.pop('topic_list', list())
+        M.transcript = M.portal_data.pop('transcript', list())
+        M.report_summary = M.portal_data.pop('report_summary', None)
+        M._fiscal_year_end = M.portal_data.pop('fiscal_year_end')
+
+        scen = M.portal_data.pop('scenarios')
+        if scen is not None:
+            M.scenarios = scen
+
+        link_list = list()
+        # first deserialize BusinessUnits into directory
+        temp_directory = dict()
+        bu_list = M.portal_data.pop('business_units', list())
+        reg_bus = [bu for bu in bu_list if not bu.get('taxonomy', False)]
+        taxo_bus = [bu for bu in bu_list if bu.get('taxonomy', False)]
+
+        for flat_bu in reg_bus:
+            rich_bu = BusinessUnit.from_portal(flat_bu, link_list)
+            rich_bu.relationships.set_model(M)
+            bbid = ID.from_portal(flat_bu['bbid']).bbid
+            temp_directory[bbid] = rich_bu
+
+        # now rebuild structure
+        company_id = M.portal_data.pop('company', None)
+        if company_id:
+            company_id = ID.from_portal(company_id).bbid
+
+            def build_bu_structure(seed, directory):
+                component_list = seed.components
+                seed.components = None
+                seed._set_components()
+
+                for component_id in component_list:
+                    sub_bu = directory[component_id]
+                    seed.add_component(sub_bu)
+                    build_bu_structure(sub_bu, directory)
+
+            top_bu = temp_directory[company_id]
+            build_bu_structure(top_bu, temp_directory)
+            M.set_company(top_bu)
+
+        # TaxoDir
+        if taxo_bus:
+            M.taxo_dir = TaxoDir.from_portal(taxo_bus, M, link_list)
+
+        # Fix Links
+        if link_list:
+            for link in link_list:
+                targ_id = link.target
+
+                if targ_id in M.bu_directory:
+                    link.target = M.bu_directory[targ_id]
+                elif targ_id in M.taxo_dir.bu_directory:
+                    link.target = M.taxo_dir.bu_directory[targ_id]
+                else:
+                    c = "ERROR: Cannot locate link target: "+targ_id.hex
+                    raise LookupError(c)
+
+        # Taxonomy
+        data = M.portal_data.pop('taxonomy', None)
+        if data:
+            M.taxonomy = Taxonomy.from_portal(data, M.taxo_dir)
+
+        # Target
+        target_id = M.portal_data.pop('target', None)
+        if target_id:
+            target_id = ID.from_portal(target_id).bbid
+            try:
+                M.target = M.bu_directory[target_id]
+            except KeyError:
+                M.target = M.taxo_dir.bu_directory[target_id]
 
         # reinflate timelines
-        if portal_model.get('timelines'):
+        timeline_data = M.portal_data.pop('timelines', list())
+        if timeline_data:
             timelines = {}
-            for data in portal_model['timelines']:
+            for data in timeline_data:
                 key = (data['resolution'], data['name'])
                 timelines[key] = TimeLine.from_portal(data, model=M)
             M.timelines = timelines
 
-        # reinflate summary maker, if any
-        if M.summary_maker:
-            tnam = M.summary_maker['timeline_name']
-            temp_sm = SummaryMaker(M, timeline_name=tnam, init=False)
-            temp_sm._fiscal_year_end = M.summary_maker['_fiscal_year_end']
-            M.summary_maker = temp_sm
+        # reinflate drivers
+        drivers = M.portal_data.pop('drivers', list())
+        if drivers:
+            M.drivers = DriverContainer.from_portal(drivers)
+
+        if business_name and business_name != M.title:
+            M.set_name(business_name)
+
+        M.portal_data.pop('title')
+        M.portal_data.pop('bbid')
 
         return M
 
@@ -314,30 +439,30 @@ class Model(TagsMixIn):
 
         Model.to_portal() -> dict
 
-        Method yields a serialized representation of self.
-
-        NEED TO MAKE SURE WE CAPTURE FINS FROM EACH BU
+        Method returns a serialized representation of self.
         """
         result = dict()
 
-        result['company'] = self._company.id.bbid if self._company else None
+        for k, v in self.portal_data.items():
+            result[k] = v
+
+        result['company'] = self._company.id.bbid.hex if self._company else None
+        result['ref_date'] = self._ref_date
+        result['started'] = self._started
+        result['target'] = self.target.id.bbid.hex if self.target else None
+        result['topic_list'] = self.topic_list
+        result['transcript'] = self.transcript
+        result['scenarios'] = self.scenarios
+        result['tags'] = self.tags.to_portal()
+        result['name'] = self.name
+        result['report_summary'] = self.report_summary
 
         # pre-process financials in the current period, make sure they get
         # serialized in th database to maintain structure data
-        fins_structure = list()
-        # bu_list = list()
-        for bu in self.bu_directory.values():
-            fins = bu.financials
-
-            data = {
-                'buid': bu.id.bbid.hex,
-            }
-            data.update(fins.to_portal())
-            fins_structure.append(data)
-
-            bu.financials = None
-
-        result['financials_structure'] = fins_structure
+        bus = [bu.to_portal() for bu in self.bu_directory.values()]
+        bus.extend(self.taxo_dir.to_portal())
+        result['business_units'] = bus
+        result['taxonomy'] = self.taxonomy.to_portal()
 
         # serialized representation has a list of timelines attached
         # with (resolution, name) as properties
@@ -352,6 +477,12 @@ class Model(TagsMixIn):
             timelines.append(data)
 
         result['timelines'] = timelines
+        result['drivers'] = self.drivers.to_portal()
+        result['fiscal_year_end'] = self._fiscal_year_end
+
+        # One-way attributes (will not be used in de-serialization):
+        result['bbid'] = self.id.bbid.hex
+        result['title'] = self.title
 
         return result
 
@@ -363,12 +494,8 @@ class Model(TagsMixIn):
 
         Method deletes existing summaries and recalculates.
         """
-        try:
-            self.timelines.pop(('quarterly', 'default'))
-            self.timelines.pop(('annual', 'default'))
-        except KeyError:
-            # explicitly silence
-            pass
+        self.timelines.pop(('quarterly', 'default'), None)
+        self.timelines.pop(('annual', 'default'), None)
 
         summary_builder = SummaryMaker(self)
 
@@ -482,7 +609,10 @@ class Model(TagsMixIn):
 
         Model.get_company() -> BusinessUnit
 
-        Method returns model.company or a business unit with a specific bbid.
+        --``buid`` is the bbid of the BusinessUnit to return
+
+        Method returns model.company or a business unit with a specific bbid,
+        or the company if none is provided.
         """
         if buid:
             return self.bu_directory[buid]
@@ -671,8 +801,13 @@ class Model(TagsMixIn):
         self.target = co
 
         # preserve existing path and set fresh BU.used and BU.stage.path
-        co.archive_path()
-        co.archive_used()
+        for bu in self.bu_directory.values():
+            bu.archive_path()
+            bu.archive_used()
+
+        for bu in self.taxo_dir.bu_directory.values():
+            bu.archive_path()
+            bu.archive_used()
 
         # set monitoring path:
         new_line = LineItem("monitoring path")
@@ -707,18 +842,6 @@ class Model(TagsMixIn):
         if not self.target.stage.focal_point:
             self.target.stage.set_focal_point(new_line)
 
-    def prep_summaries(self):
-        """
-
-
-        Model.prep_summaries() -> SummaryMaker
-
-
-        Create a SummaryMaker instance with default timelines.
-        """
-        self.summary_maker = SummaryMaker(self)
-        return self.summary_maker
-
     def register(self, bu, update_id=True, overwrite=False, recur=True):
         """
 
@@ -738,6 +861,7 @@ class Model(TagsMixIn):
         # Make sure unit has an id in the right namespace.
         if update_id:
             bu._update_id(namespace=self.id.namespace, recur=True)
+
         if not bu.id.bbid:
             c = "Cannot add content without a valid bbid."
             raise bb_exceptions.IDError(c)
@@ -756,7 +880,6 @@ class Model(TagsMixIn):
                     name=self.bu_directory[bu.id.bbid].tags.name,
                     mine=bu.tags.name,
                 )
-                print(self.bu_directory)
                 raise bb_exceptions.IDCollisionError(c)
 
         self.bu_directory[bu.id.bbid] = bu
@@ -769,7 +892,8 @@ class Model(TagsMixIn):
 
         if recur:
             for child_bu in bu.components.values():
-                child_bu._register_in_period(recur=True, overwrite=overwrite)
+                self.register(child_bu, update_id=False,
+                              overwrite=overwrite, recur=recur)
 
     def set_company(self, company):
         """
@@ -831,5 +955,13 @@ class Model(TagsMixIn):
         Appends a tuple of (message ,time of call) to instance.transcript.
         """
         time_stamp = time.time()
+
+        # flatten
+        message['topic_bbid'] = message['topic_bbid'].hex
+
+        if message['q_out'] is not None:
+            message['q_out'] = message['q_out'].to_portal()
+
         record = (message, time_stamp)
+
         self.transcript.append(record)
