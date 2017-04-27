@@ -294,6 +294,7 @@ def _build_fins_from_sheet(bu, sheet, sm):
     iter_rows = sheet.iter_rows(row_offset=sm.rows["FIRST_DATA"]-1,
                                 column_offset=0)
     for row in iter_rows:
+
         if not row[sm.cols[ps.STATEMENT]-1].value:
             if line:
                 line.xl.format.blank_row_after = True
@@ -306,8 +307,12 @@ def _build_fins_from_sheet(bu, sheet, sm):
         #     statement_name -> "ending"
 
         if statement_name in ("parameter", "parameters"):
-            # Ignore parameters
-            continue
+            continue  # Ignore parameters
+
+        statement = getattr(financials, statement_name, None)
+        if not statement:
+            statement = Statement(statement_name)
+            financials.add_statement(name=statement_name, statement=statement)
 
         line_name = row[sm.cols[ps.LINE_NAME]-1].value
         if not line_name:
@@ -317,64 +322,67 @@ def _build_fins_from_sheet(bu, sheet, sm):
         if not line_title:
             continue  # Must have line title
 
-        parent_name = row[sm.cols[ps.PARENT_NAME]-1].value or ""  # Always need a str.
+        parent_name = row[sm.cols[ps.PARENT_NAME]-1].value or ""
+        # find_first always needs a str.
 
-        # # print(statement_name, line_name, parent_name)
+        num_parents = len(statement.find_all(parent_name))
+        if num_parents > 1:
+            c = "PARENT_NAME must be unique within a statement!"
+            c += " There are %s occurances of %s" % (num_parents, parent_name)
+            # Current design flaw is that if there are more than one
+            # parent lines with the same name, we do not know which one to use
+            raise bb_exceptions.BBAnalyticalError(c)
 
-        statement = getattr(financials, statement_name, None)
-        if not statement:
-            statement = Statement(statement_name)
-            financials.add_statement(name=statement_name, statement=statement)
-
-        # Look for line in most specific area in case there are same names
         parent = statement.find_first(parent_name)
-        line = statement.find_first(line_name)
-        if line and line.relationships.parent is not statement:
+        if not parent:
+            if parent_name:
+                # Add parent as a top level line, can be moved later
+                parent = LineItem(parent_name)
+                statement.append(parent)
+
+        # Main logic below
+        existing_line = statement.find_first(line_name)
+        # existing_line could be the line we want or another line with the same
+        # name but under a different parent
+
+        if not existing_line:
+            line = LineItem(line_name)
             if parent:
-                line = parent.find_first(line_name)
+                parent.append(line)
             else:
-                # If line is already a detail, create a new line w/ same name
-                line = None
-
-        # # print("P:",parent)
-        # # print("L:",line)
-        if parent_name in ('', None, " "):
-            if line:
-                # Do nothing if top level line already exists
-                pass
-            else:
-                # Add the top level lines to statement
-                line = LineItem(line_name)
                 statement.append(line)
-        elif not parent and not line:
-            # Create a parent line assuming it will be moved later
-            parent = LineItem(parent_name)
-            line = LineItem(line_name)
-            statement.append(parent)
-            parent.append(line)
-        elif not parent and line:
-            if line.relationships.parent is statement:
-                # Remove old line with any details, attach to correct parent
-                line = statement.find_first(line_name, remove=True)
-                parent = LineItem(parent_name)
-                statement.append(parent)
-                parent.append(line)
-            else:
-                # If line is already a detail of another line, create new branch
-                # 2 details can have the same name, but under different parents
-                parent = LineItem(parent_name)
-                line = LineItem(line_name)
-                statement.append(parent)
-                parent.append(line)
-        elif parent and not line:
-            line = LineItem(line_name)
-            parent.append(line)
-        elif parent and line:
-            # Remove old line with any details, attach to correct parent
-            line = statement.find_first(line_name, remove=True)
-            parent.append(line)
 
-        # Set line title must happen after line name is set
+        else:
+            # A line with the same name exists on statement
+            # We want to check if in the right location
+            if parent:
+                if statement.find_first(parent_name, line_name):
+                    # Existing_line is the line we want to edit
+                    # It is already under the correct parent
+                    line = existing_line
+                else:
+                    if existing_line.relationships.parent is statement:
+                        # Existing_line was first created as a parent line,
+                        # Move existing_line to the correct parent
+                        # Existing_line is the line we want to edit
+                        line = statement.find_first(line_name, remove=True)
+                        parent.append(line)
+
+                    else:
+                        # Existing_line is NOT the line we want to edit
+                        # Create a new line, same name, different parent
+                        line = LineItem(line_name)
+                        parent.append(line)
+            else:
+                # Existing_line is the line we want to edit
+                # Its location is correct at the top level
+                line = existing_line
+
+        if not line:
+            c = "Import Error: Line %s, Parent %s" % (line_name, parent_name)
+            c += ". Check financials structure."
+            raise bb_exceptions.BBAnalyticalError(c)
+
         line.set_title(line_title)
         _add_line_effects(line, bu, row, sm)
 
@@ -934,6 +942,11 @@ def _populate_line_from_cell(cell, line_name, parent_name, statement):
         line = parent.find_first(line_name)
     else:
         line = statement.find_first(line_name)
+
+    if line is None:
+        print(line_name, parent_name)
+        import pdb
+        pdb.set_trace()
 
     if line._details and line.sum_details:
         pass
