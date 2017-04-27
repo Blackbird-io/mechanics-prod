@@ -208,7 +208,7 @@ class Driver(TagsMixIn):
         new.conversion_table = portal_data.get('conversion_table')
         new.formula_bbid = ID.from_portal(portal_data.get('formula_bbid')).bbid
         new.parameters = Parameters.from_portal(portal_data.get('parameters'),
-                                                target='driver_parameters')
+                                                target='parameters')
         new.run_on_past = portal_data.get('run_on_past', False)
 
         formula = cls._FM.local_catalog.issue(new.formula_bbid)
@@ -223,7 +223,7 @@ class Driver(TagsMixIn):
         data['conversion_table'] = self.conversion_table
         data['formula_bbid'] = self.formula_bbid.hex
         data['parameters'] = list(self.parameters.to_portal(
-            target='driver_parameters'))
+            target='parameters'))
         data['run_on_past'] = self.run_on_past
 
         return data
