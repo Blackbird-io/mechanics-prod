@@ -190,7 +190,9 @@ class Life(Equalities):
         event_list = portal_data['events']
         if event_list:
             for event in event_list:
-                new.events[event['event']] = event['date']
+                dt = event['date']
+                event_date = date_from_iso(dt) if isinstance(dt, str) else dt
+                new.events[event['event']] = event_date
 
         new.gestation = datetime.timedelta(portal_data['gestation'])
         new.life_span = datetime.timedelta(portal_data['life_span'])
