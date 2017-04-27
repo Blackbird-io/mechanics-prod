@@ -94,7 +94,10 @@ class Tags:
 
     @property
     def title(self):
-        return self._title
+        if self._title:
+            return self._title
+        else:
+            return self._name
 
     @property
     def optional(self):
@@ -121,7 +124,8 @@ class Tags:
 
         Method returns a shallow copy of the instance.
         """
-        result = Tags(self.title)
+        result = Tags(name=self.name)
+        result.set_title(self.title)
         self._copy_tags_to(result)
 
         return result
@@ -176,7 +180,8 @@ class Tags:
             name = name.strip()
 
         self._name = deCase(name)
-        self._title = name
+
+        self.set_title(name)
 
     def set_title(self, title):
         """
@@ -243,7 +248,6 @@ class Tags:
         Method deserializes all LineItems belonging to ``statement``.
         """
         new = cls()
-
         new._name = data['name']
         new._title = data['title']
         new._required = set(data['required'])
@@ -264,8 +268,8 @@ class Tags:
             'optional': list(self.optional),
             'required': list(self.required),
             'prohibited': list(self.prohibited),
-            'name': self.name,
-            'title': self.title,
+            'name': self._name,
+            'title': self._title,
         }
 
         return row

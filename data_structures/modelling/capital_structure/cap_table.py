@@ -30,6 +30,10 @@ from collections import OrderedDict
 from tools.parsing import date_from_iso
 from datetime import date
 from data_structures.system.bbid import ID
+from tools.parsing import date_from_iso
+
+from .round import Round
+from .snapshot import Snapshot
 
 
 
@@ -58,6 +62,37 @@ class CapTable:
     def __init__(self):
         self.rounds = OrderedDict()
         self.snapshots = dict()
+
+    def to_portal(self):
+        result = dict()
+
+        rounds = list()
+        for round in self.rounds.values():
+            rounds.append(round.to_portal())
+        result['rounds'] = rounds
+
+        snapshots = list()
+        for snapshot in self.snapshots.values():
+            snapshots.append(snapshot.to_portal())
+        result['snapshots'] = snapshots
+
+        return result
+
+    @classmethod
+    def from_portal(cls, data):
+        result = cls()
+
+        rounds = data['rounds']
+        while rounds:
+            r = rounds.pop(0)
+            round = Round.from_portal(r)
+            result.rounds[round.name] = round
+
+        for s in data['snapshots']:
+            snap = Snapshot.from_portal(s)
+            result.snapshots[snap.ref_date] = snap
+
+        return result
 
     def add_round(self, new_round, overwrite=False):
         """

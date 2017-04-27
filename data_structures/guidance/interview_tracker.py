@@ -75,7 +75,23 @@ class InterviewTracker(Outline):
         self.progress = 0
         self.protocol_key = 1
         self.track_progress = True
-        
+
+    @classmethod
+    def from_portal(cls, portal_data, link_list):
+        new_outline = Outline.from_portal(portal_data, link_list)
+
+        new = cls()
+        new.__dict__.update(new_outline.__dict__)
+        new.progress = portal_data['progress']
+
+        return new
+
+    def to_portal(self):
+        data = Outline.to_portal(self)
+        data['progress'] = self.progress
+
+        return data
+
     def set_progress(self, p, override = False):
         """
 

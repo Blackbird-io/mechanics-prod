@@ -73,7 +73,7 @@ class BookMark(LineItem):
         # self.tags.add(*self.bmTags)
         self.tags.add(BLACKBIRD_STAMP)
         if bmName:
-            self.tags.set_name(bmName)
+            self.set_name(bmName)
         if tags:
             self.tags.add(*tags)
         
@@ -81,7 +81,7 @@ class BookMark(LineItem):
         """
 
 
-        BookMark.tags.set_name(newName) -> None
+        BookMark.set_name(newName) -> None
 
 
         Method adds the BLACKBIRD_STAMP prefix to the name and then sets the

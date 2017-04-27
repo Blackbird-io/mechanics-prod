@@ -27,6 +27,7 @@ SelectionTracker      specialized gauge to track topic selections
 
 #imports
 from .counter import Counter
+from data_structures.system.bbid import ID
 
 
 
@@ -67,7 +68,20 @@ class SelectionTracker(Counter):
         self.finished_catalog = False
         self.eligible = []
         self.used = []
-    
+
+    @classmethod
+    def from_portal(cls, portal_data):
+        new = cls()
+        new.__dict__.update(portal_data)
+        new.used = [ID.from_portal(id).bbid for id in portal_data['used']]
+
+        return new
+
+    def to_portal(self):
+        data = self.__dict__.copy()
+        data['used'] = [id.hex for id in self.used]
+        return data
+
     def record_dry_run(self):
         """
 

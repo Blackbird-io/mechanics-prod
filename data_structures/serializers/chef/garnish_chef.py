@@ -219,7 +219,7 @@ class GarnishChef:
             questions = []
             for i in model.transcript:
                 q = i[0]['q_in']
-                if q:
+                if q is not None:
                     questions.append(q['prompt'])
 
             cell = sheet.cell('F16')
