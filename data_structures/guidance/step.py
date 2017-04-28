@@ -76,18 +76,18 @@ class Step(PrintAsLine, TagsMixIn):
         self.relationships = Relationships(self)
         self.id = ID()
 
-    def to_portal(self, **kwargs):
+    def to_database(self, **kwargs):
         result = dict()
-        result['tags'] = self.tags.to_portal()
-        result['guide'] = self.guide.to_portal()
+        result['tags'] = self.tags.to_database()
+        result['guide'] = self.guide.to_database()
 
         return result
 
     @classmethod
-    def from_portal(cls, data):
+    def from_database(cls, data):
         result = cls()
-        result.tags = Tags.from_portal(data['tags'])
-        result.guide = Guide.from_portal(data['guide'])
+        result.tags = Tags.from_database(data['tags'])
+        result.guide = Guide.from_database(data['guide'])
 
         return result
 

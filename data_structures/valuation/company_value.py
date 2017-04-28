@@ -66,21 +66,21 @@ class CompanyValue(Outline):
         self.set_path()
         self.tags.add("valuation", field="req")
 
-    def to_portal(self):
+    def to_database(self):
         result = dict()
         Outline.set_path(self)
-        result['outline'] = Outline.to_portal(self)
-        result['credit'] = self.credit.to_portal()
+        result['outline'] = Outline.to_database(self)
+        result['credit'] = self.credit.to_database()
 
         return result
 
     @classmethod
-    def from_portal(cls, data):
-        outline = Outline.from_portal(data['outline'])
+    def from_database(cls, data):
+        outline = Outline.from_database(data['outline'])
 
         result = cls()
         result.__dict__.update(outline.__dict__)
-        result.credit = CreditCapacity.from_portal(data['credit'])
+        result.credit = CreditCapacity.from_database(data['credit'])
         result.set_path()
 
         return result

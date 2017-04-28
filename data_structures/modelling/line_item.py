@@ -108,10 +108,10 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
     set_hardcoded()       sets private attribute _hardcoded
     set_name()            custom method for setting instance name, updates ID
     set_value()           sets value to input, records signature
-    to_portal()           creates a flattened version of LineItem for Portal
+    to_database()           creates a flattened version of LineItem for Portal
 
     CLASS METHODS:
-    from_portal()         class method, extracts LineItem out of API-format
+    from_database()         class method, extracts LineItem out of API-format
     ====================  ======================================================
     """
     keyAttributes = BaseFinancialsComponent.keyAttributes + ["value",
@@ -244,11 +244,11 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         return result
 
     @classmethod
-    def from_portal(cls, data, statement):
+    def from_database(cls, data, statement):
         """
 
 
-        LineItem.from_portal() -> None
+        LineItem.from_database() -> None
 
         **CLASS METHOD**
 
@@ -259,15 +259,15 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         new = cls(
             parent=None,
         )
-        new.tags = Tags.from_portal(data['tags'])
+        new.tags = Tags.from_database(data['tags'])
 
         id_str = data['driver_id']
         if id_str:
-            new._driver_id = ID.from_portal(id_str).bbid
+            new._driver_id = ID.from_database(id_str).bbid
 
         # defer resolution of .xl
         new.xl = xl_mgmt.LineData()
-        new.xl.format = xl_mgmt.LineFormat.from_portal(data['xl_format'])
+        new.xl.format = xl_mgmt.LineFormat.from_database(data['xl_format'])
 
         new.summary_type = data['summary_type']
         new.summary_count = data['summary_count']
@@ -277,8 +277,8 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         new._sum_details = data['sum_details']
         new.log = data['log']
 
-        new.guide = Guide.from_portal(data['guide'])
-        new.id.bbid = ID.from_portal(data['bbid']).bbid
+        new.guide = Guide.from_database(data['guide'])
+        new.id.bbid = ID.from_database(data['bbid']).bbid
 
         position = data['position']
         position = int(position) if position else None
@@ -286,11 +286,11 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
 
         return new
 
-    def to_portal(self, top_level=False):
+    def to_database(self, top_level=False):
         """
 
 
-        LineItem.to_portal() -> dict
+        LineItem.to_database() -> dict
 
         Method returns a serialized representation of a LineItem.
         """
@@ -299,7 +299,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             parent_line = self.relationships.parent
             parent_bbid = parent_line.id.bbid.hex if parent_line else None
 
-        result = BaseFinancialsComponent.to_portal(self)
+        result = BaseFinancialsComponent.to_database(self)
 
         row = {
             'parent_bbid': parent_bbid,
@@ -310,11 +310,11 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             'replica': self._replica,
             'include_details': self._include_details,
             'sum_details': self._sum_details,
-            'xl_format': self.xl.format.to_portal(),
+            'xl_format': self.xl.format.to_database(),
             'log': self.log,
             'driver_id': self._driver_id.hex if self._driver_id else None,
             'link': False,
-            'guide': self.guide.to_portal(),
+            'guide': self.guide.to_database(),
         }
 
         result.update(row)

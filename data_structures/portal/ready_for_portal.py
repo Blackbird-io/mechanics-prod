@@ -54,7 +54,7 @@ class ReadyForPortal(Schema):
 
     FUNCTIONS:
     from_engine()         returns new instance w attr values from seed
-    to_portal()           runs from_engine, returns copy of instance dictionary
+    to_database()           runs from_engine, returns copy of instance dictionary
     ====================  ======================================================
     """
     def __init__(self,var_attrs):
@@ -81,11 +81,11 @@ class ReadyForPortal(Schema):
                 continue
         return new_instance
 
-    def to_portal(self, seed = None):
+    def to_database(self, seed = None):
         """
 
 
-        PortalObject.to_portal([seed = None]) -> dict
+        PortalObject.to_database([seed = None]) -> dict
 
 
         Method returns a dictionary that follows the instance attribute pattern

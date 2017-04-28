@@ -9,7 +9,7 @@
 
 Module defines BusinessSummary class. The BusinessSummary provides a storage
 container that describes the business as a whole at a particular point and time.
-The class also includes an output method (to_portal()) that provides a portable
+The class also includes an output method (to_database()) that provides a portable
 version of the information in a JSON-compatible, primitive form.
 ====================  ==========================================================
 Attribute             Description
@@ -55,7 +55,7 @@ class BusinessSummary(Outline):
     FUNCTIONS:
     __str__               mildly pretty print
     set_path()            put together a standard summary path
-    to_portal()           return a primitive dict of instance data
+    to_database()           return a primitive dict of instance data
     ====================  ======================================================
     """
     def __init__(self):
@@ -63,16 +63,16 @@ class BusinessSummary(Outline):
         self.data = dict.fromkeys(mandatory_summary_fields)
         self.set_path()
 
-    def to_portal(self):
+    def to_database(self):
         result = dict()
-        result['outline'] = Outline.to_portal(self)
+        result['outline'] = Outline.to_database(self)
         result['data'] = self.data
 
         return result
 
     @classmethod
-    def from_portal(cls, data):
-        outline = Outline.from_portal(data['outline'], list())
+    def from_database(cls, data):
+        outline = Outline.from_database(data['outline'], list())
 
         result = cls()
         result.__dict__.update(outline.__dict__)

@@ -52,7 +52,7 @@ class CR_Scenario(Pattern):
     n/a
 
     FUNCTIONS:
-    to_portal()           Return a dictionary with instance contents
+    to_database()           Return a dictionary with instance contents
     ====================  ======================================================
     """
     
@@ -63,11 +63,11 @@ class CR_Scenario(Pattern):
         #default structure score: 
         self.changeElement("structure", parameters.gl_structure_score)
 
-    def to_portal(self, seed = None):
+    def to_database(self, seed = None):
         """
 
 
-        CR_Scenario.to_portal([seed = None]) -> dict()
+        CR_Scenario.to_database([seed = None]) -> dict()
 
 
         Method updates an empty dictionary with data from seed. If ``seed`` is

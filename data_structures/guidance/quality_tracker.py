@@ -67,12 +67,12 @@ class QualityTracker(Counter):
         self.set_standard(standard)
 
     @classmethod
-    def from_portal(cls, portal_data):
+    def from_database(cls, portal_data):
         new = cls()
         new.__dict__.update(portal_data)
         return new
 
-    def to_portal(self):
+    def to_database(self):
         import copy
         data = copy.deepcopy(self.__dict__)
         return data

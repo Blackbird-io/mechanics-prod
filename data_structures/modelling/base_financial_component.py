@@ -100,7 +100,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
     relationships         instance of Relationships class
 
     FUNCTIONS:
-    to_portal()           creates a flattened version of instance for Portal
+    to_database()           creates a flattened version of instance for Portal
     add_line()            add line to instance
     append()              add line to instance in final position
     copy()                return deep copy
@@ -196,11 +196,11 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
     def period(self):
         return self._period
 
-    def to_portal(self):
+    def to_database(self):
         """
 
 
-        BaseFinancialComponent.to_portal() -> dict
+        BaseFinancialComponent.to_database() -> dict
 
         Method returns a serialized representation of a BaseFinancialsComponent
         """
@@ -212,7 +212,7 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
             'parent_bbid': parent_bbid,
             'name': self.name,
             'title': self.title,
-            'tags': self.tags.to_portal()
+            'tags': self.tags.to_database()
         }
 
         return row
