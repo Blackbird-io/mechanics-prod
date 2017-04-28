@@ -188,7 +188,7 @@ class Analyst:
             #
             if self.status == PENDING_RESPONSE:
                 topic_bbid_hex = model.transcript[-1][0]["topic_bbid"]
-                topic_bbid = ID.from_portal(topic_bbid_hex).bbid
+                topic_bbid = ID.from_database(topic_bbid_hex).bbid
                 topic = yenta.TM.local_catalog.issue(topic_bbid)
                 logger.info('{} {}'.format(self.status, topic.source))
                 message = topic.process(message)

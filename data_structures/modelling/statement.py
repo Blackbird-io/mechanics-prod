@@ -56,13 +56,13 @@ class Statement(BaseFinancialsComponent):
     N/A
 
     FUNCTIONS:
-    to_portal()           creates a flattened version of Statement for Portal
+    to_database()           creates a flattened version of Statement for Portal
     peer_locator()        returns a function for locating or creating a copy of
                           the instance within a given container
     set_name()            sets instance name and updates ID to reflect the change
 
     CLASS METHODS:
-    from_portal()         class method, extracts Statement out of API-format
+    from_database()         class method, extracts Statement out of API-format
     ====================  ======================================================
     """
 
@@ -71,30 +71,30 @@ class Statement(BaseFinancialsComponent):
                                          parent=parent, period=period)
 
     @classmethod
-    def from_portal(cls, portal_data, financials):
+    def from_database(cls, portal_data, financials):
         """
 
-        Statement.from_portal(portal_data) -> Statement
+        Statement.from_database(portal_data) -> Statement
 
         **CLASS METHOD**
 
         Method extracts a Statement from portal_data.
         """
         new = cls(parent=financials)
-        new.tags = Tags.from_portal(portal_data['tags'])
+        new.tags = Tags.from_database(portal_data['tags'])
 
         if portal_data['bbid'] is not None:
-            new.id.bbid = ID.from_portal(portal_data['bbid']).bbid
+            new.id.bbid = ID.from_database(portal_data['bbid']).bbid
 
         # deserialize all LineItems
         catalog = dict()
         for row in portal_data['lines']:
             if row.get('link'):
-                new_line = Link.from_portal(row, new)
+                new_line = Link.from_database(row, new)
             elif 'driver_id' in row:
-                new_line = LineItem.from_portal(row, new)
+                new_line = LineItem.from_database(row, new)
             else:
-                new_line = Step.from_portal(row)
+                new_line = Step.from_database(row)
 
             parent_id = row.get('parent_bbid', None)
             if parent_id is None and new.id.bbid is not None:
@@ -102,7 +102,7 @@ class Statement(BaseFinancialsComponent):
                 parent_id = new.id.bbid.hex
 
             if parent_id:
-                par_id = ID.from_portal(parent_id).bbid
+                par_id = ID.from_database(parent_id).bbid
             else:
                 par_id = None
 
@@ -124,14 +124,14 @@ class Statement(BaseFinancialsComponent):
 
         return new
 
-    def to_portal(self):
+    def to_database(self):
         """
 
-        Statement.to_portal() -> dict
+        Statement.to_database() -> dict
 
         Method yields a serialized representation of self.
         """
-        result = BaseFinancialsComponent.to_portal(self)
+        result = BaseFinancialsComponent.to_database(self)
 
         lines = list()
         for line in self.get_full_ordered():
@@ -139,7 +139,7 @@ class Statement(BaseFinancialsComponent):
             if line.relationships.parent is self:
                 top_level = True
 
-            lines.append(line.to_portal(top_level=top_level))
+            lines.append(line.to_database(top_level=top_level))
 
         result['lines'] = lines
 

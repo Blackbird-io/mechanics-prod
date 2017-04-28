@@ -77,8 +77,8 @@ class InterviewTracker(Outline):
         self.track_progress = True
 
     @classmethod
-    def from_portal(cls, portal_data, link_list):
-        new_outline = Outline.from_portal(portal_data, link_list)
+    def from_database(cls, portal_data, link_list):
+        new_outline = Outline.from_database(portal_data, link_list)
 
         new = cls()
         new.__dict__.update(new_outline.__dict__)
@@ -86,8 +86,8 @@ class InterviewTracker(Outline):
 
         return new
 
-    def to_portal(self):
-        data = Outline.to_portal(self)
+    def to_database(self):
+        data = Outline.to_database(self)
         data['progress'] = self.progress
 
         return data

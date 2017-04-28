@@ -76,39 +76,39 @@ class CreditCapacity(Step):
         for obj in [self.asset_backed, self.lev_loans]:
             obj.relationships.set_parent(self)
 
-    def to_portal(self, **kwargs):
+    def to_database(self, **kwargs):
         result = dict()
 
-        result['asset_backed'] = self.asset_backed.to_portal() if self.asset_backed else None
-        result['bonds'] = self.bonds.to_portal() if self.bonds else None
-        result['combined'] = self.combined.to_portal() if self.combined else None
-        result['converts'] = self.converts.to_portal() if self.converts else None
-        result['lev_loans'] = self.lev_loans.to_portal() if self.lev_loans else None
+        result['asset_backed'] = self.asset_backed.to_database() if self.asset_backed else None
+        result['bonds'] = self.bonds.to_database() if self.bonds else None
+        result['combined'] = self.combined.to_database() if self.combined else None
+        result['converts'] = self.converts.to_database() if self.converts else None
+        result['lev_loans'] = self.lev_loans.to_database() if self.lev_loans else None
 
         return result
 
     @classmethod
-    def from_portal(cls, data):
+    def from_database(cls, data):
         result = cls()
 
         if data['asset_backed']:
-            result.asset_backed = Landscape.from_portal(data['asset_backed'])
+            result.asset_backed = Landscape.from_database(data['asset_backed'])
             result.asset_backed.relationships.set_parent(result)
 
         if data['bonds']:
-            result.bonds = Landscape.from_portal(data['bonds'])
+            result.bonds = Landscape.from_database(data['bonds'])
             result.bonds.relationships.set_parent(result)
 
         if data['combined']:
-            result.combined = Landscape.from_portal(data['combined'])
+            result.combined = Landscape.from_database(data['combined'])
             result.combined.relationships.set_parent(result)
 
         if data['converts']:
-            result.converts = Landscape.from_portal(data['converts'])
+            result.converts = Landscape.from_database(data['converts'])
             result.converts.relationships.set_parent(result)
 
         if data['lev_loans']:
-            result.lev_loans = Landscape.from_portal(data['lev_loans'])
+            result.lev_loans = Landscape.from_database(data['lev_loans'])
             result.lev_loans.relationships.set_parent(result)
 
         return result

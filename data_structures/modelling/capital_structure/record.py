@@ -56,7 +56,7 @@ class Record:
         self.units = units
         self.cash = cash
     
-    def to_portal(self):
+    def to_database(self):
         result = dict()
         result['owner_name'] = self.owner_name
         result['round_name'] = self.round_name
@@ -66,7 +66,7 @@ class Record:
         return result
 
     @classmethod
-    def from_portal(cls, data):
+    def from_database(cls, data):
         owner_name = data['owner_name']
         round_name = data['round_name']
         units = float(data['units'])

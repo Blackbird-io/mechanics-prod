@@ -80,9 +80,9 @@ class Landscape(dict, Step):
         Step.__init__(self, name)
         self.keep_forecasts = True
 
-    def to_portal(self, **kwargs):
+    def to_database(self, **kwargs):
         result = dict()
-        result['step'] = Step.to_portal(self)
+        result['step'] = Step.to_database(self)
 
         result['data'] = dict()
         for k, v in self.items():
@@ -93,8 +93,8 @@ class Landscape(dict, Step):
         return result
 
     @classmethod
-    def from_portal(cls, data):
-        step = Step.from_portal(data['step'])
+    def from_database(cls, data):
+        step = Step.from_database(data['step'])
 
         result = cls()
         result.__dict__.update(step.__dict__)

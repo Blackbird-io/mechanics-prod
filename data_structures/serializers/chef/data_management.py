@@ -145,11 +145,11 @@ class DriverData:
         self.comment = ""
 
     @classmethod
-    def from_portal(cls, portal_data, model, **kargs):
+    def from_database(cls, portal_data, model, **kargs):
         """
 
 
-        DriverData.from_portal() -> DriverData
+        DriverData.from_database() -> DriverData
 
         **CLASS METHOD**
 
@@ -167,11 +167,11 @@ class DriverData:
 
         return new
 
-    def to_portal(self, **kargs):
+    def to_database(self, **kargs):
         """
 
 
-        DriverData.to_portal() -> dict
+        DriverData.to_database() -> dict
 
         Method yields a serialized representation of self.
         """
@@ -299,11 +299,11 @@ class LineData(Range):
         self.format.number_format = value
 
     @classmethod
-    def from_portal(cls, portal_data, model, **kargs):
+    def from_database(cls, portal_data, model, **kargs):
         """
 
 
-        LineData.from_portal() -> LineData
+        LineData.from_database() -> LineData
 
         **CLASS METHOD**
 
@@ -325,17 +325,17 @@ class LineData(Range):
             )
 
         new.derived.calculations = [
-            DriverData.from_portal(calc, model=model)
+            DriverData.from_database(calc, model=model)
             for calc in portal_data['derived']['calculations']
         ]
 
         return new
 
-    def to_portal(self):
+    def to_database(self):
         """
 
 
-        LineData.to_portal() -> dict
+        LineData.to_database() -> dict
 
         Method yields a serialized representation of self.
 
@@ -362,7 +362,7 @@ class LineData(Range):
 
         if self.derived.calculations:
             for calc in self.derived.calculations:
-                row['derived']['calculations'].append(calc.to_portal())
+                row['derived']['calculations'].append(calc.to_database())
 
         return row
 
@@ -454,11 +454,11 @@ class LineFormat:
         self._border = None
 
     @classmethod
-    def from_portal(cls, portal_data):
+    def from_database(cls, portal_data):
         """
 
 
-        LineFormat.from_portal() -> LineFormat
+        LineFormat.from_database() -> LineFormat
 
         **CLASS METHOD**
 
@@ -468,11 +468,11 @@ class LineFormat:
         new.__dict__.update(portal_data)
         return new
 
-    def to_portal(self):
+    def to_database(self):
         """
 
 
-        LineFormat.to_portal() -> dict
+        LineFormat.to_database() -> dict
 
         Method yields a serialized representation of self.
         """

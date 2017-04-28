@@ -64,18 +64,18 @@ class DriverContainer(Container):
         Container.__init__(self)
 
     @classmethod
-    def from_portal(cls, portal_data):
+    def from_database(cls, portal_data):
         new = cls()
         for dr_data in portal_data:
-            new_dr = Driver.from_portal(dr_data)
+            new_dr = Driver.from_database(dr_data)
             new.add(new_dr)
 
         return new
 
-    def to_portal(self):
+    def to_database(self):
         drivers_out = list()
         for dr in self.directory.values():
-            drivers_out.append(dr.to_portal())
+            drivers_out.append(dr.to_database())
         return drivers_out
     
     def add(self, obj):
