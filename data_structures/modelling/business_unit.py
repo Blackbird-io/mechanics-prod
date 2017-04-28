@@ -849,6 +849,11 @@ class BusinessUnit(TagsMixIn, Equalities):
 
             fins.restrict()
 
+            for statement in fins.full_ordered:
+                if statement:
+                    for line in statement._details.values():
+                        line._update_stored_value(recur=False)
+
             period.financials[self.id.bbid] = fins
 
         return fins
@@ -1259,7 +1264,6 @@ class BusinessUnit(TagsMixIn, Equalities):
         ``start_line`` and assigns their values to the matching line in the
         ending balance sheet ``end_line``.
         """
-
         if start_line._details:
             for name, line in start_line._details.items():
                 ending_line = end_line.find_first(line.tags.name)

@@ -908,7 +908,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
 
         self._details[replica.tags.name] = replica
 
-    def _update_stored_value(self):
+    def _update_stored_value(self, recur=True):
         """
         Method updates cached value in the Period's value directory so that it
          will be preserved in the database.
@@ -916,9 +916,10 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         if self.period:
             self.period.update_line_value(self)
 
-        parent = self.relationships.parent
-        if isinstance(parent, LineItem):
-            parent._update_stored_value()
+        if recur:
+            parent = self.relationships.parent
+            if isinstance(parent, LineItem):
+                parent._update_stored_value()
 
     def _update_stored_xl(self):
         """
