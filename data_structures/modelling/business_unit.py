@@ -159,34 +159,34 @@ class BusinessUnit(TagsMixIn, Equalities):
         self.cap_table = CapTable()
 
     @classmethod
-    def from_portal(cls, portal_data, link_list=list()):
+    def from_database(cls, portal_data, link_list=list()):
         new = cls(None)
-        new.tags = Tags.from_portal(portal_data['tags'])
-        new._parameters = Parameters.from_portal(portal_data['parameters'],
+        new.tags = Tags.from_database(portal_data['tags'])
+        new._parameters = Parameters.from_database(portal_data['parameters'],
                                                  target='parameters')
         new._type = portal_data['type']
-        new.life = LifeCycle.from_portal(portal_data['life'])
+        new.life = LifeCycle.from_database(portal_data['life'])
         new.location = portal_data['location']
         new.size = portal_data['size']
 
         ids = portal_data['used']
-        real_ids = [ID.from_portal(id).bbid for id in ids]
+        real_ids = [ID.from_database(id).bbid for id in ids]
         new.used = set(real_ids)
-        new.guide = Guide.from_portal(portal_data['guide'])
-        new.components = [ID.from_portal(id).bbid for id in portal_data['components']]
-        new.interview = InterviewTracker.from_portal(portal_data['interview'],
+        new.guide = Guide.from_database(portal_data['guide'])
+        new.components = [ID.from_database(id).bbid for id in portal_data['components']]
+        new.interview = InterviewTracker.from_database(portal_data['interview'],
                                                      link_list)
 
         summary = portal_data['summary']
         if summary:
-            new.summary = BusinessSummary.from_portal(summary)
+            new.summary = BusinessSummary.from_database(summary)
         else:
             # preserve None values here
             new.summary = summary
 
         valuation = portal_data['valuation']
         if valuation:
-            new.valuation = CompanyValue.from_portal(valuation)
+            new.valuation = CompanyValue.from_database(valuation)
         else:
             # preserve None values here
             new.valuation = valuation
@@ -202,26 +202,26 @@ class BusinessUnit(TagsMixIn, Equalities):
         new._used_archive = portal_data['used_archive']
 
         fins = portal_data.get('financials_structure')
-        new_fins = Financials.from_portal(fins, new, period=None)
+        new_fins = Financials.from_database(fins, new, period=None)
         new.set_financials(new_fins)
 
-        new.cap_table = CapTable.from_portal(portal_data['cap_table'])
+        new.cap_table = CapTable.from_database(portal_data['cap_table'])
 
         return new
 
-    def to_portal(self, taxonomy=False):
+    def to_database(self, taxonomy=False):
         data = dict()
-        data['parameters'] = list(self._parameters.to_portal(target='parameters'))
+        data['parameters'] = list(self._parameters.to_database(target='parameters'))
         data['type'] = self._type
         data['components'] = [k.hex for k in self.components.keys()]
         data['bbid'] = self.id.bbid.hex
-        data['life'] = self.life.to_portal()
+        data['life'] = self.life.to_database()
         data['location'] = self.location
         data['name'] = self.name
         data['title'] = self.title
         data['size'] = self.size
-        data['tags'] = self.tags.to_portal()
-        data['financials_structure'] = self.financials.to_portal()
+        data['tags'] = self.tags.to_database()
+        data['financials_structure'] = self.financials.to_database()
 
         if self._stage is self.summary and self._stage is not None:
             stage = 'summary'
@@ -232,17 +232,17 @@ class BusinessUnit(TagsMixIn, Equalities):
 
         data['stage'] = stage
         data['used'] = [id.hex for id in self.used]
-        data['guide'] = self.guide.to_portal()
-        data['interview'] = self.interview.to_portal()
+        data['guide'] = self.guide.to_database()
+        data['interview'] = self.interview.to_database()
 
-        data['summary'] = self.summary.to_portal() if self.summary else None
-        data['valuation'] = self.valuation.to_portal() if self.valuation else None
+        data['summary'] = self.summary.to_database() if self.summary else None
+        data['valuation'] = self.valuation.to_database() if self.valuation else None
 
         # for monitoring, temporary storage for existing path and used sets
         data['path_archive'] = self._path_archive
         data['used_archive'] = self._used_archive
         data['taxonomy'] = taxonomy
-        data['cap_table'] = self.cap_table.to_portal()
+        data['cap_table'] = self.cap_table.to_database()
 
         return data
 
@@ -465,7 +465,7 @@ class BusinessUnit(TagsMixIn, Equalities):
          pre-process before setting the monitoring path.
         """
         if self.stage.path is not None:
-            self._path_archive.append(self.stage.path.to_portal())
+            self._path_archive.append(self.stage.path.to_database())
 
         new_path = Statement()
         self.stage.set_path(new_path)

@@ -210,10 +210,10 @@ class TimePeriod(TagsMixIn):
         pass
 
     @classmethod
-    def from_portal(cls, portal_data, model, **kargs):
+    def from_database(cls, portal_data, model, **kargs):
         """
 
-        TimeLine.from_portal(portal_data) -> TimeLine
+        TimeLine.from_database(portal_data) -> TimeLine
 
         **CLASS METHOD**
 
@@ -232,7 +232,7 @@ class TimePeriod(TagsMixIn):
         new.periods_used = portal_data.get('periods_used') or 1
 
         new.parameters.add(
-            Parameters.from_portal(
+            Parameters.from_database(
                 portal_data['parameters'], target='parameters'
             )
         )
@@ -240,27 +240,27 @@ class TimePeriod(TagsMixIn):
         new._inflate_line_storage(portal_data['financials_values'])
 
         # convert unit_parameters keys to UUID
-        for k, v in Parameters.from_portal(portal_data['unit_parameters'],
+        for k, v in Parameters.from_database(portal_data['unit_parameters'],
                                            target='unit_parameters').items():
-            new.unit_parameters.add({ID.from_portal(k).bbid: v})
+            new.unit_parameters.add({ID.from_database(k).bbid: v})
 
         time_line = kargs['time_line']
         time_line.add_period(new)
 
         return new
 
-    def to_portal(self):
+    def to_database(self):
         """
 
-        TimeLine.to_portal() -> dict
+        TimeLine.to_database() -> dict
 
         Method yields a serialized representation of self.
         """
         result = {
             'period_end': self.end,
             'period_start': self.start,
-            'parameters': list(self.parameters.to_portal(target='parameters')),
-            'unit_parameters': list(self.unit_parameters.to_portal(
+            'parameters': list(self.parameters.to_database(target='parameters')),
+            'unit_parameters': list(self.unit_parameters.to_database(
                 target='unit_parameters')),
             'financials_values': self._deflate_line_storage(),                 # _line_item_storage is already pretty flat, but we have to do some minor work to make each line's entry into a row
             'periods_used': self.periods_used,
@@ -474,7 +474,7 @@ class TimePeriod(TagsMixIn):
             model = self.relationships.parent.model
             flat_xl = line_dict.get('xl_info', {})
             if flat_xl:
-                stored_xl = LineData.from_portal(flat_xl,
+                stored_xl = LineData.from_database(flat_xl,
                                                  model)
 
         return stored_xl
@@ -542,7 +542,7 @@ class TimePeriod(TagsMixIn):
             line_dict = blank_row.copy()
             self._line_item_storage[line.id.bbid.hex] = line_dict
 
-        line_dict['xl_info'] = line.xl.to_portal()
+        line_dict['xl_info'] = line.xl.to_database()
 
     def update_line_hardcoded(self, line):
         # THIS SHOULD NOT BE RUN BY TOPICS

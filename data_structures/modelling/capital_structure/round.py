@@ -60,7 +60,7 @@ class Round:
         self.valuation = valuation
         self.preference = preference
         
-    def to_portal(self):
+    def to_database(self):
         result = dict()
         result['name'] = self.name
         result['size'] = self.size
@@ -70,7 +70,7 @@ class Round:
         return result
     
     @classmethod
-    def from_portal(cls, data):
+    def from_database(cls, data):
         name = data['name']
         size = float(data['size'])
         valuation = float(data['valuation'])

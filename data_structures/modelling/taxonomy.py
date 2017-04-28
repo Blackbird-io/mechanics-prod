@@ -84,11 +84,11 @@ class Taxonomy(dict):
             dict.__setitem__(self, key, value)
 
     @classmethod
-    def from_portal(cls, portal_data, taxo_dir):
+    def from_database(cls, portal_data, taxo_dir):
         """
 
 
-        Taxonomy.from_portal() -> TaxoDir
+        Taxonomy.from_database() -> TaxoDir
 
         --``portal_data`` is a dictionary containing serialized TaxoDir data
         --``model`` is the Model instance the new TaxoDir will be attached to
@@ -109,17 +109,17 @@ class Taxonomy(dict):
                     temp = dict.__getitem__(this_dict, k)
 
             id_hex = taxo_unit['bbid']
-            bbid = ID.from_portal(id_hex).bbid if id_hex else None
+            bbid = ID.from_database(id_hex).bbid if id_hex else None
             bu = new.taxo_dir.get(bbid)
             dict.__setitem__(this_dict, k, bu)
 
         return new
 
-    def to_portal(self):
+    def to_database(self):
         """
 
 
-        Taxonomy.to_portal() -> list
+        Taxonomy.to_database() -> list
 
         Method flattens TaxoDir into a serialized dictionary.
         """

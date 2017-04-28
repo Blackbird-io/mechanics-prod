@@ -61,20 +61,20 @@ class Snapshot:
         self.created_date = created_date or date.today()
         self.records = dict()
 
-    def to_portal(self):
+    def to_database(self):
         result = dict()
         result['ref_date'] = self.ref_date.strftime('%Y-%m-%d')
         result['created_date'] = self.created_date.strftime('%Y-%m-%d')
 
         records = list()
         for record in self.records.values():
-            records.append(record.to_portal())
+            records.append(record.to_database())
         result['records'] = records
 
         return result
 
     @classmethod
-    def from_portal(cls, data):
+    def from_database(cls, data):
         if isinstance(data['ref_date'], str):
             ref_date = date_from_iso(data['ref_date'])
         else:
@@ -88,7 +88,7 @@ class Snapshot:
         result = cls(ref_date, created_date=created_date)
 
         for flat_rec in data['records']:
-            record = Record.from_portal(flat_rec)
+            record = Record.from_database(flat_rec)
             key = (record.owner_name, record.round_name)
             result.records[key] = record
 

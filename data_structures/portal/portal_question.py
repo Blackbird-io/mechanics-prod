@@ -44,7 +44,7 @@ class PortalQuestion(ReadyForPortal):
     Class defines an object that translates a question the Engine wishes to ask
     the user into the Engine API's PortalQuestion schema.
 
-    Use to_portal() to generate clean dictionaries suitable for external
+    Use to_database() to generate clean dictionaries suitable for external
     delivery.
 
     PortalQuestion objects do not rely on any QuestionManager functionality. 
@@ -66,7 +66,7 @@ class PortalQuestion(ReadyForPortal):
     transcribe            bool; whether portal should show question to lenders
 
     FUNCTIONS:
-    to_portal()           returns attr : attr_val dictionary
+    to_database()           returns attr : attr_val dictionary
     ====================  ======================================================
     """
     def __init__(self):
@@ -105,11 +105,11 @@ class PortalQuestion(ReadyForPortal):
         self.extra_rows = True
         self.delayed = False
 
-    def to_portal(self, seed, web=False):
+    def to_database(self, seed, web=False):
         """
 
 
-        PortalQuestion.to_portal() -> dict()
+        PortalQuestion.to_database() -> dict()
 
         
         Method returns a dictionary object, keyed by attribute name for a
@@ -120,7 +120,7 @@ class PortalQuestion(ReadyForPortal):
         objects composed of built-in types only (as opposed to user-defined
         classes). 
 
-        Method delegates work to ReadyForPortal.to_portal, then modifies the
+        Method delegates work to ReadyForPortal.to_database, then modifies the
         output by stripping out inactive elements from input array.
 
         If ``web`` is True, method condenses active elements into dictionary
@@ -136,7 +136,7 @@ class PortalQuestion(ReadyForPortal):
         ignores them altogether. Method pulls data for values directly from
         **seed** (as opposed to prelim). 
         """
-        prelim = ReadyForPortal.to_portal(self, seed)
+        prelim = ReadyForPortal.to_database(self, seed)
         # Prelim is a dictionary with keys that track attributes
         
         result = prelim.copy()
@@ -148,7 +148,7 @@ class PortalQuestion(ReadyForPortal):
                 clean_element = input_element
                 #weed out inactive elements
                 if web:
-                    clean_element = input_element.to_portal()
+                    clean_element = input_element.to_database()
                     #flatten input_element to a dictionary for web output
                 #
                 result["input_array"].append(clean_element)
@@ -157,7 +157,7 @@ class PortalQuestion(ReadyForPortal):
         result["progress"] = int(prelim["progress"])
         if web:
             if prelim["show_if"] is not None:
-                result["show_if"] = prelim["show_if"].to_portal()
+                result["show_if"] = prelim["show_if"].to_database()
                 # Flatten binary gating element to JSON spec
             
         # additional portal-oriented data

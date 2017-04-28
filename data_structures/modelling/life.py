@@ -180,7 +180,7 @@ class Life(Equalities):
         # Assume old age begins at 70.
 
     @classmethod
-    def from_portal(cls, portal_data):
+    def from_database(cls, portal_data):
         new = cls()
         new._birth_event_names = set(portal_data['birth_event_names'])
         new._death_event_names = set(portal_data['death_event_names'])
@@ -201,7 +201,7 @@ class Life(Equalities):
 
         return new
 
-    def to_portal(self):
+    def to_database(self):
         data = dict()
         data['birth_event_names'] = list(self._birth_event_names)
         data['death_event_names'] = list(self._death_event_names)
