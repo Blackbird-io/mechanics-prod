@@ -237,11 +237,11 @@ class Tags:
                 source.remove(badTag)
 
     @classmethod
-    def from_portal(cls, data):
+    def from_database(cls, data):
         """
 
 
-        LineItem.from_portal() -> None
+        LineItem.from_database() -> None
 
         **CLASS METHOD**
 
@@ -256,11 +256,11 @@ class Tags:
 
         return new
 
-    def to_portal(self, parent_line=None):
+    def to_database(self, parent_line=None):
         """
 
 
-        Tags.to_portal() -> dict
+        Tags.to_database() -> dict
 
         Method yields a serialized representation of tags
         """

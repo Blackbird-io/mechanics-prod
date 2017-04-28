@@ -97,7 +97,7 @@ class Model(TagsMixIn):
     valuation             P; pointer to current period valuation
 
     FUNCTIONS:
-    to_portal()           creates a flattened version of model for Portal
+    to_database()           creates a flattened version of model for Portal
     calc_summaries()      creates or updates standard summaries for model
     change_ref_date()     updates timeline to use new reference date
     clear_fins_storage()  clears financial data from non SSOT financials
@@ -120,7 +120,7 @@ class Model(TagsMixIn):
     transcribe()          append message and timestamp to transcript
 
     CLASS METHODS:
-    from_portal()         class method, extracts model out of API-format
+    from_database()         class method, extracts model out of API-format
     ====================  ======================================================
 
     ``P`` indicates attributes decorated as properties. See attribute-level doc
@@ -308,10 +308,10 @@ class Model(TagsMixIn):
 
     # METHODS
     @classmethod
-    def from_portal(cls, portal_model):
+    def from_database(cls, portal_model):
         """
 
-        Model.from_portal(portal_model) -> Model
+        Model.from_database(portal_model) -> Model
 
         **CLASS METHOD**
 
@@ -330,7 +330,7 @@ class Model(TagsMixIn):
 
         tags = M.portal_data.pop('tags')
         if tags:
-            M.tags = Tags.from_portal(tags)
+            M.tags = Tags.from_database(tags)
 
         # set basic attributes
         M._processing_status = M.portal_data.pop('processing_status', 'intake')
@@ -357,15 +357,15 @@ class Model(TagsMixIn):
         taxo_bus = [bu for bu in bu_list if bu.get('taxonomy', False)]
 
         for flat_bu in reg_bus:
-            rich_bu = BusinessUnit.from_portal(flat_bu, link_list)
+            rich_bu = BusinessUnit.from_database(flat_bu, link_list)
             rich_bu.relationships.set_model(M)
-            bbid = ID.from_portal(flat_bu['bbid']).bbid
+            bbid = ID.from_database(flat_bu['bbid']).bbid
             temp_directory[bbid] = rich_bu
 
         # now rebuild structure
         company_id = M.portal_data.pop('company', None)
         if company_id:
-            company_id = ID.from_portal(company_id).bbid
+            company_id = ID.from_database(company_id).bbid
 
             def build_bu_structure(seed, directory):
                 component_list = seed.components
@@ -383,7 +383,7 @@ class Model(TagsMixIn):
 
         # TaxoDir
         if taxo_bus:
-            M.taxo_dir = TaxoDir.from_portal(taxo_bus, M, link_list)
+            M.taxo_dir = TaxoDir.from_database(taxo_bus, M, link_list)
 
         # Fix Links
         if link_list:
@@ -401,12 +401,12 @@ class Model(TagsMixIn):
         # Taxonomy
         data = M.portal_data.pop('taxonomy', None)
         if data:
-            M.taxonomy = Taxonomy.from_portal(data, M.taxo_dir)
+            M.taxonomy = Taxonomy.from_database(data, M.taxo_dir)
 
         # Target
         target_id = M.portal_data.pop('target', None)
         if target_id:
-            target_id = ID.from_portal(target_id).bbid
+            target_id = ID.from_database(target_id).bbid
             try:
                 M.target = M.bu_directory[target_id]
             except KeyError:
@@ -418,13 +418,13 @@ class Model(TagsMixIn):
             timelines = {}
             for data in timeline_data:
                 key = (data['resolution'], data['name'])
-                timelines[key] = TimeLine.from_portal(data, model=M)
+                timelines[key] = TimeLine.from_database(data, model=M)
             M.timelines = timelines
 
         # reinflate drivers
         drivers = M.portal_data.pop('drivers', list())
         if drivers:
-            M.drivers = DriverContainer.from_portal(drivers)
+            M.drivers = DriverContainer.from_database(drivers)
 
         if business_name and business_name != M.title:
             M.set_name(business_name)
@@ -434,10 +434,10 @@ class Model(TagsMixIn):
 
         return M
 
-    def to_portal(self):
+    def to_database(self):
         """
 
-        Model.to_portal() -> dict
+        Model.to_database() -> dict
 
         Method returns a serialized representation of self.
         """
@@ -453,16 +453,16 @@ class Model(TagsMixIn):
         result['topic_list'] = self.topic_list
         result['transcript'] = self.transcript
         result['scenarios'] = self.scenarios
-        result['tags'] = self.tags.to_portal()
+        result['tags'] = self.tags.to_database()
         result['name'] = self.name
         result['report_summary'] = self.report_summary
 
         # pre-process financials in the current period, make sure they get
         # serialized in th database to maintain structure data
-        bus = [bu.to_portal() for bu in self.bu_directory.values()]
-        bus.extend(self.taxo_dir.to_portal())
+        bus = [bu.to_database() for bu in self.bu_directory.values()]
+        bus.extend(self.taxo_dir.to_database())
         result['business_units'] = bus
-        result['taxonomy'] = self.taxonomy.to_portal()
+        result['taxonomy'] = self.taxonomy.to_database()
 
         # serialized representation has a list of timelines attached
         # with (resolution, name) as properties
@@ -473,11 +473,11 @@ class Model(TagsMixIn):
                 'name': name,
             }
             # add serialized periods
-            data.update(time_line.to_portal())
+            data.update(time_line.to_database())
             timelines.append(data)
 
         result['timelines'] = timelines
-        result['drivers'] = self.drivers.to_portal()
+        result['drivers'] = self.drivers.to_database()
         result['fiscal_year_end'] = self._fiscal_year_end
 
         # One-way attributes (will not be used in de-serialization):
@@ -649,8 +649,8 @@ class Model(TagsMixIn):
         Method finds a LineItem matching the locator.
         """
         period_end = kargs['period']
-        bbid = ID.from_portal(kargs['bbid']).bbid
-        buid = ID.from_portal(kargs['buid']).bbid
+        bbid = ID.from_database(kargs['bbid']).bbid
+        buid = ID.from_database(kargs['buid']).bbid
         fins_attr = kargs['financials_attr']
         if period_end:
             key = (
@@ -960,7 +960,7 @@ class Model(TagsMixIn):
         message['topic_bbid'] = message['topic_bbid'].hex
 
         if message['q_out'] is not None:
-            message['q_out'] = message['q_out'].to_portal()
+            message['q_out'] = message['q_out'].to_database()
 
         record = (message, time_stamp)
 

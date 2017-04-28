@@ -82,11 +82,11 @@ class TaxoDir:
         self.id.assign(seed='taxonomy directory')
 
     @classmethod
-    def from_portal(cls, portal_data, model, link_list):
+    def from_database(cls, portal_data, model, link_list):
         """
 
 
-        TaxoDir.from_portal() -> TaxoDir
+        TaxoDir.from_database() -> TaxoDir
 
         --``portal_data`` is a dictionary containing serialized TaxoDir data
         --``model`` is the Model instance the new TaxoDir will be attached to
@@ -96,23 +96,23 @@ class TaxoDir:
         new = cls(model)
 
         for unit in portal_data:
-            tmp = BusinessUnit.from_portal(unit, link_list)
+            tmp = BusinessUnit.from_database(unit, link_list)
             tmp._set_components()
             new.register(tmp)
 
         return new
 
-    def to_portal(self):
+    def to_database(self):
         """
 
 
-        TaxoDir.to_portal() -> dict
+        TaxoDir.to_database() -> dict
 
         Method flattens TaxoDir into a serialized dictionary.
         """
         taxo_list = list()
         for unit in self.bu_directory.values():
-            data = unit.to_portal(taxonomy=True)
+            data = unit.to_database(taxonomy=True)
             taxo_list.append(data)
 
         return taxo_list

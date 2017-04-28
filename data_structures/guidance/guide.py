@@ -85,22 +85,22 @@ class Guide:
         Guide.__init__(self)
 
     @classmethod
-    def from_portal(cls, portal_data):
+    def from_database(cls, portal_data):
         new = cls()
         new.complete = portal_data['complete']
-        new.attention = AttentionTracker.from_portal(portal_data['attention'])
-        new.priority = Counter.from_portal(portal_data['priority'])
-        new.quality = QualityTracker.from_portal(portal_data['quality'])
-        new.selection = SelectionTracker.from_portal(portal_data['selection'])
+        new.attention = AttentionTracker.from_database(portal_data['attention'])
+        new.priority = Counter.from_database(portal_data['priority'])
+        new.quality = QualityTracker.from_database(portal_data['quality'])
+        new.selection = SelectionTracker.from_database(portal_data['selection'])
 
         return new
 
-    def to_portal(self):
+    def to_database(self):
         data = dict()
-        data['attention'] = self.attention.to_portal()
+        data['attention'] = self.attention.to_database()
         data['complete'] = self.complete
-        data['priority'] = self.priority.to_portal()
-        data['quality'] = self.quality.to_portal()
-        data['selection'] = self.selection.to_portal()
+        data['priority'] = self.priority.to_database()
+        data['quality'] = self.quality.to_database()
+        data['selection'] = self.selection.to_database()
 
         return data

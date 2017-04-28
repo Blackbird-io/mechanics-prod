@@ -62,7 +62,7 @@ class CR_Reference(Pattern):
 
     FUNCTIONS:
     setAll()              method sets the same value across all scenarios
-    to_portal()           return primitive representation of instance data
+    to_database()           return primitive representation of instance data
     ====================  ======================================================
     """
     
@@ -99,22 +99,22 @@ class CR_Reference(Pattern):
             except KeyError:
                 continue
 
-    def to_portal(self, seed = None):
+    def to_database(self, seed = None):
         """
 
 
-        CR_Reference.to_portal([seed = None]) -> dict()
+        CR_Reference.to_database([seed = None]) -> dict()
 
 
         Method updates an empty dictionary with primitive representations of
         seed content. If ``seed`` is None, method uses instance as seed. For
-        each key in seed, result includes the value's to_portal() output.
+        each key in seed, result includes the value's to_database() output.
         """
         if not seed:
             seed = self
         result = dict()
         for k in seed:
-            result[k] = seed[k].to_portal()
+            result[k] = seed[k].to_database()
         #
         return result
 

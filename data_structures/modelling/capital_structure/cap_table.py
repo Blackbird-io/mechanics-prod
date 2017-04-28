@@ -63,33 +63,33 @@ class CapTable:
         self.rounds = OrderedDict()
         self.snapshots = dict()
 
-    def to_portal(self):
+    def to_database(self):
         result = dict()
 
         rounds = list()
         for round in self.rounds.values():
-            rounds.append(round.to_portal())
+            rounds.append(round.to_database())
         result['rounds'] = rounds
 
         snapshots = list()
         for snapshot in self.snapshots.values():
-            snapshots.append(snapshot.to_portal())
+            snapshots.append(snapshot.to_database())
         result['snapshots'] = snapshots
 
         return result
 
     @classmethod
-    def from_portal(cls, data):
+    def from_database(cls, data):
         result = cls()
 
         rounds = data['rounds']
         while rounds:
             r = rounds.pop(0)
-            round = Round.from_portal(r)
+            round = Round.from_database(r)
             result.rounds[round.name] = round
 
         for s in data['snapshots']:
-            snap = Snapshot.from_portal(s)
+            snap = Snapshot.from_database(s)
             result.snapshots[snap.ref_date] = snap
 
         return result

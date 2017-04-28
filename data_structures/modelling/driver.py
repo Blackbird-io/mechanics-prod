@@ -202,12 +202,12 @@ class Driver(TagsMixIn):
         return self.name
 
     @classmethod
-    def from_portal(cls, portal_data):
+    def from_database(cls, portal_data):
         new = cls()
-        new.tags = Tags.from_portal(portal_data.get('tags'))
+        new.tags = Tags.from_database(portal_data.get('tags'))
         new.conversion_table = portal_data.get('conversion_table')
-        new.formula_bbid = ID.from_portal(portal_data.get('formula_bbid')).bbid
-        new.parameters = Parameters.from_portal(portal_data.get('parameters'),
+        new.formula_bbid = ID.from_database(portal_data.get('formula_bbid')).bbid
+        new.parameters = Parameters.from_database(portal_data.get('parameters'),
                                                 target='parameters')
         new.run_on_past = portal_data.get('run_on_past', False)
 
@@ -217,12 +217,12 @@ class Driver(TagsMixIn):
 
         return new
 
-    def to_portal(self):
+    def to_database(self):
         data = dict()
-        data['tags'] = self.tags.to_portal()
+        data['tags'] = self.tags.to_database()
         data['conversion_table'] = self.conversion_table
         data['formula_bbid'] = self.formula_bbid.hex
-        data['parameters'] = list(self.parameters.to_portal(
+        data['parameters'] = list(self.parameters.to_database(
             target='parameters'))
         data['run_on_past'] = self.run_on_past
 

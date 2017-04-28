@@ -196,10 +196,10 @@ class ID:
         return result
 
     @classmethod
-    def from_portal(cls, portal_data):
+    def from_database(cls, portal_data):
         """
 
-        ID.from_portal(portal_data) -> ID
+        ID.from_database(portal_data) -> ID
 
         **CLASS METHOD**
 
@@ -209,10 +209,10 @@ class ID:
         new.bbid = uuid.UUID(portal_data)
         return new
 
-    def to_portal(self):
+    def to_database(self):
         """
 
-        TimeLine.to_portal() -> dict
+        TimeLine.to_database() -> dict
 
         Method yields a serialized representation of self.
         """

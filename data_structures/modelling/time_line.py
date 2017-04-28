@@ -149,10 +149,10 @@ class TimeLine(dict):
         return result
 
     @classmethod
-    def from_portal(cls, portal_data, model, **kargs):
+    def from_database(cls, portal_data, model, **kargs):
         """
 
-        TimeLine.from_portal(portal_data) -> TimeLine
+        TimeLine.from_database(portal_data) -> TimeLine
 
         **CLASS METHOD**
 
@@ -175,10 +175,10 @@ class TimeLine(dict):
         if portal_data['has_been_extrapolated'] is not None:
             new.has_been_extrapolated = portal_data['has_been_extrapolated']
         if portal_data['parameters'] is not None:
-            new.parameters = Parameters.from_portal(portal_data['parameters'])
+            new.parameters = Parameters.from_database(portal_data['parameters'])
 
         for data in portal_data['periods']:
-            period = TimePeriod.from_portal(
+            period = TimePeriod.from_database(
                 data,
                 model=model,
                 time_line=new,
@@ -186,22 +186,22 @@ class TimeLine(dict):
 
         return new
 
-    def to_portal(self):
+    def to_database(self):
         """
 
-        TimeLine.to_portal() -> dict
+        TimeLine.to_database() -> dict
 
         Method yields a serialized representation of self.
         """
         periods = [
-            period.to_portal() for period in self.values()
+            period.to_database() for period in self.values()
         ]
         result = {
             'periods': periods,
             'interval': self.interval,
             'ref_date': format(self.ref_date) if self.ref_date else None,
             'has_been_extrapolated': self.has_been_extrapolated,
-            'parameters': list(self.parameters.to_portal()),
+            'parameters': list(self.parameters.to_database()),
         }
         return result
 

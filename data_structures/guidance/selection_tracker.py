@@ -70,14 +70,14 @@ class SelectionTracker(Counter):
         self.used = []
 
     @classmethod
-    def from_portal(cls, portal_data):
+    def from_database(cls, portal_data):
         new = cls()
         new.__dict__.update(portal_data)
-        new.used = [ID.from_portal(id).bbid for id in portal_data['used']]
+        new.used = [ID.from_database(id).bbid for id in portal_data['used']]
 
         return new
 
-    def to_portal(self):
+    def to_database(self):
         data = self.__dict__.copy()
         data['used'] = [id.hex for id in self.used]
         return data

@@ -94,7 +94,7 @@ class FileInput(ReadyForPortal):
     format_response()     take string, return object formatted per type and API
     set_response()        take string, format, set as target response
     set_sub_type()        set to permitted sub_type or raise error
-    to_portal()           return schema-compliant dict
+    to_database()           return schema-compliant dict
     update()              update instance attributes to spec values
     ====================  ======================================================
     """
@@ -309,11 +309,11 @@ class FileInput(ReadyForPortal):
             c = c % (value, self._sub_types)
             raise bb_exceptions.QuestionFormatError(c)
 
-    def to_portal(self):
+    def to_database(self):
         """
 
 
-        GenericInput.to_portal() -> dict
+        GenericInput.to_database() -> dict
 
 
         Return a flat dictionary that describes instance according to the API

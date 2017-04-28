@@ -209,10 +209,10 @@ class Financials:
         return result
 
     @classmethod
-    def from_portal(cls, portal_data, company, **kargs):
+    def from_database(cls, portal_data, company, **kargs):
         """
 
-        Financials.from_portal(portal_data) -> Financials
+        Financials.from_database(portal_data) -> Financials
 
         **CLASS METHOD**
 
@@ -230,7 +230,7 @@ class Financials:
         for data in portal_data['statements']:
             attr_name = data['attr_name']
 
-            statement = Statement.from_portal(
+            statement = Statement.from_database(
                 data, financials=new
             )
 
@@ -238,10 +238,10 @@ class Financials:
 
         return new
 
-    def to_portal(self):
+    def to_database(self):
         """
 
-        Financials.to_portal() -> dict
+        Financials.to_database() -> dict
 
         Method yields a serialized representation of self.
         """
@@ -256,7 +256,7 @@ class Financials:
 
             statement = getattr(self, name, None)
             if statement:
-                data = statement.to_portal()
+                data = statement.to_database()
                 data['attr_name'] = name
                 statements.append(data)
 
@@ -542,7 +542,7 @@ class Financials:
         Finds a LineItem across all statements by its bbid.
         """
         if isinstance(line_id, str):
-            line_id = ID.from_portal(line_id).bbid
+            line_id = ID.from_database(line_id).bbid
 
         statement = getattr(self, statement_attr, None)
         if statement:
