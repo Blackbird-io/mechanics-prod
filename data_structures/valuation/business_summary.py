@@ -31,8 +31,8 @@ BusinessSummary       dictionary with pre-populated fields
 
 #imports
 from ..guidance.outline import Outline
-from ..guidance.step import Step
 from ..modelling.book_mark import BookMark
+from ..modelling.line_item import LineItem
 
 
 
@@ -91,7 +91,7 @@ class BusinessSummary(Outline):
         """
         Outline.set_path(self)
         steps = [BookMark("start Summary", "Summary"),
-                 Step("annual financials"),
-                 Step("credit capacity"),
+                 LineItem("annual financials"),
+                 LineItem("credit capacity"),
                  BookMark("end Summary", "Summary", "endStatement")]
         self.path.extend(steps)
