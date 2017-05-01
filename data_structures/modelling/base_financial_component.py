@@ -506,8 +506,8 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         Return a detail that matches the ancestor tree or None.
 
         The ancestor tree should be one or more strings naming objects in order
-        of their relationship, from most junior to most senior. So if "bubbles"
-        is part of "cost", you can run stmt.find_first("bubbles", "cost").
+        of their relationship, from highest to lowest. So if "dogs"
+        is part of "mammals", you can run stmt.find_first("mammals", "dogs").
 
         If only one object named "bubbles" exists in the instance and any of its
         details, a call to stmt.find_first("bubbles") will return the same

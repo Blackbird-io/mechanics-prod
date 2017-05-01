@@ -729,8 +729,9 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
                                 if behavior_dict.get('scale'):
                                     data['scale'] = behavior_dict['scale']
 
+                                dr_name = (parent_name or "") +">" + line_name
                                 driver = model.drivers.get_or_create(
-                                    line_name.casefold(),
+                                    dr_name,
                                     data,
                                     formula)
                                 ssot_line.assign_driver(driver.id.bbid)
@@ -913,8 +914,12 @@ def _parse_formula(sheet, cell_f, bu, sm):
                 data[t_type] = "operator"
 
         model = bu.relationships.model
-        driver = model.drivers.get_or_create(line_name.casefold(), data,
-                                             formula)
+        dr_name = (parent_name or "") +">" + line_name
+        driver = model.drivers.get_or_create(
+            dr_name,
+            data,
+            formula
+        )
         line.assign_driver(driver.id.bbid)
 
     return True
