@@ -91,18 +91,18 @@ def forecast_terms(model, fixed, ask, ref_date=None):
 
     ``ref_date`` can be datetime.date or ISO-format string object.
     """
-    if ref_date:
-        model.time_line.update_current(ref_date)
-    model = update_valuation(model)
-    #
-    model.valuation.credit.combine()
-    ref = model.valuation.credit.combined.forecast(ask=ask, field=fixed)
-    #
-    model.time_line.revert_current()
-    result = (model, ref)
-    #
-    return result
-
+    # if ref_date:
+    #     model.time_line.update_current(ref_date)
+    # model = update_valuation(model)
+    # #
+    # model.valuation.credit.combine()
+    # ref = model.valuation.credit.combined.forecast(ask=ask, field=fixed)
+    # #
+    # model.time_line.revert_current()
+    # result = (model, ref)
+    # #
+    # return result
+    raise ImportError("obsolete function")
 
 def process(message):
     """
@@ -155,18 +155,18 @@ def summarize_landscape(model, ref_date=None):
 
     ``ref_date`` can be datetime.date or ISO-format string object.
     """
-    if ref_date:
-        model.time_line.update_current(ref_date)
-    model = update_valuation(model)
-    #
-    model.valuation.credit.combine()
-    summary = model.valuation.credit.combined.get_summary()
-    #
-    model.time_line.revert_current()
-    result = (model, summary)
-    #
-    return result
-
+    # if ref_date:
+    #     model.time_line.update_current(ref_date)
+    # model = update_valuation(model)
+    # #
+    # model.valuation.credit.combine()
+    # summary = model.valuation.credit.combined.get_summary()
+    # #
+    # model.time_line.revert_current()
+    # result = (model, summary)
+    # #
+    # return result
+    raise ImportError("obsolete function")
 
 def update_valuation(model):
     """
@@ -177,11 +177,12 @@ def update_valuation(model):
 
     Function gets an analyst to process valuation for the current period.
     """
-    model.target.stage = model.valuation
-    #
-    message = (model, None, None)
-    warren_buffet = Analyst()
-    message = warren_buffet.process(message, run_summary=False)
-    #
-    updated_model = message[0]
-    return updated_model
+    # model.target.stage = model.valuation
+    # #
+    # message = (model, None, None)
+    # warren_buffet = Analyst()
+    # message = warren_buffet.process(message, run_summary=False)
+    # #
+    # updated_model = message[0]
+    # return updated_model
+    raise ImportError("obsolete function")
