@@ -87,7 +87,6 @@ class BusinessUnit(TagsMixIn, Equalities):
     relationships         instance of Relationships class
     size                  int; number of real-life equivalents obj represents
     stage                 property; returns non-public stage or interview
-    summary               None or BusinessSummary; investment summary
     type                  str or None; unit's in-model type (e.g., "team")
     used                  set; contains BBIDs of used Topics
     valuation             None or CompanyValue; market view on unit
@@ -149,7 +148,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         self.used = set()
         self.guide = Guide()
         self.interview = InterviewTracker()
-        self.summary = BusinessSummary()
+        self.summary = None
         self.valuation = CompanyValue()
 
         # for monitoring, temporary storage for existing path and used sets
@@ -192,9 +191,7 @@ class BusinessUnit(TagsMixIn, Equalities):
             new.valuation = valuation
 
         stage = portal_data['stage']
-        if stage == 'summary':
-            new._stage = new.summary
-        elif stage == 'valuation':
+        if stage == 'valuation':
             new._stage = new.valuation
 
         new._path_archive = portal_data['path_archive'] # don't bother reinfl-
@@ -223,9 +220,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         data['tags'] = self.tags.to_database()
         data['financials_structure'] = self.financials.to_database()
 
-        if self._stage is self.summary and self._stage is not None:
-            stage = 'summary'
-        elif self._stage is self.valuation and self._stage is not None:
+        if self._stage is self.valuation and self._stage is not None:
             stage = 'valuation'
         else:
             stage = None
@@ -421,7 +416,6 @@ class BusinessUnit(TagsMixIn, Equalities):
             ParentBU2.add_component(ChildBU, False, False)
 
         """
-        bu.summary = None
         bu.valuation = None
         bu.relationships.set_model(self.relationships.model)
 
@@ -568,7 +562,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         # Have to make a deep copy of guide because it is composed of Counter
         # objects. Guide shouldn't point to a business unit or model
         result.life = self.life.copy()
-        result.summary = BusinessSummary()
+        result.summary = None
         result.valuation = CompanyValue()
         result._parameters = self._parameters.copy()
 

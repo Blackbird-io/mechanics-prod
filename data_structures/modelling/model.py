@@ -254,27 +254,6 @@ class Model(TagsMixIn):
         return self._started
 
     @property
-    def summary(self):
-        """
-
-
-        **read-only property**
-
-
-        Pointer to company summary.
-        """
-        company = self.get_company()
-        if company:
-            result = company.summary
-            return result
-
-    @summary.setter
-    def summary(self, value):
-        c = "Assignment prohibited. ``model.summary`` serves only as a pointer"
-        c += " to the current period company summary."
-        raise bb_exceptions.ManagedAttributeError(c)
-
-    @property
     def valuation(self):
         """
 
