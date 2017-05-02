@@ -34,8 +34,6 @@ import uuid
 import bb_exceptions
 import bb_settings
 
-import color_manager as ColorManager
-
 from tools import for_messages as message_tools
 
 from .bbid import ID
@@ -46,7 +44,6 @@ from .tags_mixin import TagsMixIn
 
 
 # Globals
-ColorManager.populate()
 user_stop = message_tools.USER_STOP
 
 
@@ -123,7 +120,7 @@ class Topic(TagsMixIn):
 
     def __init__(self, name=None):
         TagsMixIn.__init__(self, name=name)
-        self.CM = ColorManager
+        # self.CM = ColorManager
         self.id = ID()
         self.MR = Messenger()
         self.formulas = None
