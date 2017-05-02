@@ -103,7 +103,6 @@ class BusinessUnit(TagsMixIn, Equalities):
     make_past()           put a younger version of financials in prior period
     recalculate()         reset financials, compute again, repeat for future
     reset_financials()    resets instance and (optionally) component financials
-    set_analytics()       attaches an object to instance.analytics
     set_financials()      attaches a Financials object from the right template
     synchronize()         set components to same life, optionally recursive
     ====================  ======================================================
@@ -709,18 +708,6 @@ class BusinessUnit(TagsMixIn, Equalities):
             for unit in self.components.get_all():
                 unit.reset_statement(statement_name, period=period)
 
-    def set_analytics(self, atx):
-        """
-
-
-        BusinessUnit.set_analytics() -> None
-
-
-        Method sets instance.analytics to passed-in argument, sets analytics
-        object to point to instance as its parent.
-        """
-        atx.relationships.set_parent(self)
-        self.valuation = atx
 
     def set_financials(self, fins=None):
         """
