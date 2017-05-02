@@ -243,7 +243,5 @@ class Analyst:
         #
         if run_valuation:
             message = self.check_stage(message, model.valuation)
-        if run_summary:
-            message = self.check_stage(message, model.summary)
-        #
+
         return message
