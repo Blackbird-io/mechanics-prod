@@ -159,7 +159,6 @@ class Analyst:
             status = check(message)
         #
         if status == END_SESSION:
-            message = self.wrap_interview(message)
             status = check(message)
         #
         self.status = status
@@ -213,35 +212,4 @@ class Analyst:
                 break
             # circuit-breaker logic
         #
-        return message
-
-    def wrap_interview(self, message, run_valuation=True, run_summary=True):
-        """
-
-
-        Analyst.wrap_interview(message) -> message
-
-
-        Method prepares a final message for portal. The final message should
-        contain a completed Engine model, as well as any API-format summary
-        and analytics data the portal expects. Accordingly,
-
-
-        Method runs process_summary to summarize the model.
-
-        More generally, wrapInterview() performs clean up, storage, and/or
-        transformation logic on messages signaling the end of an interview
-        before they go out to higher level modules and the user.
-
-        For example, wrapInterview() can insert final questions or flag certain
-        items for follow-up or review.
-        """
-        # basically, check for completion in various ways, if it's not complete
-        # point where necessary, and set message into m,_,_
-        #
-        model = message[0]
-        #
-        # if run_valuation:
-        #     message = self.check_stage(message, model.valuation)
-
         return message
