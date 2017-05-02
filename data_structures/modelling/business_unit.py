@@ -41,7 +41,6 @@ from data_structures.guidance.guide import Guide
 from data_structures.guidance.interview_tracker import InterviewTracker
 from data_structures.modelling.statement import Statement
 from data_structures.system.tags import Tags
-from data_structures.valuation.company_value import CompanyValue
 
 from . import common_events
 
@@ -148,7 +147,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         self.guide = Guide()
         self.interview = InterviewTracker()
         self.summary = None
-        self.valuation = CompanyValue()
+        self.valuation = None
 
         # for monitoring, temporary storage for existing path and used sets
         self._path_archive = list()
@@ -177,16 +176,11 @@ class BusinessUnit(TagsMixIn, Equalities):
 
         new.summary = None
 
-        valuation = portal_data['valuation']
-        if valuation:
-            new.valuation = CompanyValue.from_database(valuation)
-        else:
-            # preserve None values here
-            new.valuation = valuation
+        new.valuation = None
 
-        stage = portal_data['stage']
-        if stage == 'valuation':
-            new._stage = new.valuation
+        # stage = portal_data['stage']
+        # if stage == 'valuation':
+        #     new._stage = new.valuation
 
         new._path_archive = portal_data['path_archive'] # don't bother reinfl-
         # ating archived paths, they won't be used
@@ -557,7 +551,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         # objects. Guide shouldn't point to a business unit or model
         result.life = self.life.copy()
         result.summary = None
-        result.valuation = CompanyValue()
+        result.valuation = None
         result._parameters = self._parameters.copy()
 
         result._stage = None
