@@ -41,7 +41,6 @@ from data_structures.guidance.guide import Guide
 from data_structures.guidance.interview_tracker import InterviewTracker
 from data_structures.modelling.statement import Statement
 from data_structures.system.tags import Tags
-from data_structures.valuation.business_summary import BusinessSummary
 from data_structures.valuation.company_value import CompanyValue
 
 from . import common_events
@@ -176,12 +175,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         new.interview = InterviewTracker.from_database(portal_data['interview'],
                                                      link_list)
 
-        summary = portal_data['summary']
-        if summary:
-            new.summary = BusinessSummary.from_database(summary)
-        else:
-            # preserve None values here
-            new.summary = summary
+        new.summary = None
 
         valuation = portal_data['valuation']
         if valuation:

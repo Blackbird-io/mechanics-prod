@@ -41,7 +41,7 @@ from ..modelling.line_item import LineItem
 mandatory_summary_fields = ["credit_capacity"]
 
 #classes
-class BusinessSummary(Outline):
+class BusinessSummary2(Outline):
     """
 
     Container for business summary information. 
