@@ -27,10 +27,7 @@ MR                    obj; instance of Messenger, stores current message
 
 FUNCTIONS:
 check_started()       returns True if message model is started, else False
-forecast_terms()      computes terms for a transaction on the model
 process()             returns next message from Engine
-summarize_landscape() returns summary of transaction opportunity landscape
-update_valuation()    gets an analyst to compute valuation as of current period
 
 CLASSES:
 n/a
@@ -75,35 +72,6 @@ def check_started(message):
             result = True
     return result
 
-
-def forecast_terms(model, fixed, ask, ref_date=None):
-    """
-
-
-    forecast_terms(model, fixed, ask[, ref_date = None]) -> (model, ref)
-
-
-    Function returns a forecast for the terms of a credit transaction on the
-    ref_date. If ref_date is None, function returns summary for the existing
-    current period.
-
-    Function forecasts outcome on the combined credit surface.
-
-    ``ref_date`` can be datetime.date or ISO-format string object.
-    """
-    # if ref_date:
-    #     model.time_line.update_current(ref_date)
-    # model = update_valuation(model)
-    # #
-    # model.valuation.credit.combine()
-    # ref = model.valuation.credit.combined.forecast(ask=ask, field=fixed)
-    # #
-    # model.time_line.revert_current()
-    # result = (model, ref)
-    # #
-    # return result
-    raise ImportError("obsolete function")
-
 def process(message):
     """
 
@@ -141,48 +109,3 @@ def process(message):
 
     return message
 
-
-def summarize_landscape(model, ref_date=None):
-    """
-
-
-    summarize_landscape(model[, ref_date = None]) --> (model, summary)
-
-
-    Function returns a summary for the combined credit landscape on the
-    ref_date. If ref_date is None, function returns summary for the existing
-    current period.
-
-    ``ref_date`` can be datetime.date or ISO-format string object.
-    """
-    # if ref_date:
-    #     model.time_line.update_current(ref_date)
-    # model = update_valuation(model)
-    # #
-    # model.valuation.credit.combine()
-    # summary = model.valuation.credit.combined.get_summary()
-    # #
-    # model.time_line.revert_current()
-    # result = (model, summary)
-    # #
-    # return result
-    raise ImportError("obsolete function")
-
-def update_valuation(model):
-    """
-
-
-    proces_analytics(model) -> model
-
-
-    Function gets an analyst to process valuation for the current period.
-    """
-    # model.target.stage = model.valuation
-    # #
-    # message = (model, None, None)
-    # warren_buffet = Analyst()
-    # message = warren_buffet.process(message, run_summary=False)
-    # #
-    # updated_model = message[0]
-    # return updated_model
-    raise ImportError("obsolete function")
