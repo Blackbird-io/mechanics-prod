@@ -87,7 +87,6 @@ class BusinessUnit(TagsMixIn, Equalities):
     stage                 property; returns non-public stage or interview
     type                  str or None; unit's in-model type (e.g., "team")
     used                  set; contains BBIDs of used Topics
-    valuation             None or CompanyValue; market view on unit
 
     FUNCTIONS:
     add_component()       adds unit to instance components
@@ -174,13 +173,9 @@ class BusinessUnit(TagsMixIn, Equalities):
         new.interview = InterviewTracker.from_database(portal_data['interview'],
                                                      link_list)
 
-        new.summary = None
-
-        new.valuation = None
-
-        # stage = portal_data['stage']
-        # if stage == 'valuation':
-        #     new._stage = new.valuation
+        new.summary = None  # Obsolete
+        new.valuation = None  # Obsolete
+        new.stage = None  # Obsolete
 
         new._path_archive = portal_data['path_archive'] # don't bother reinfl-
         # ating archived paths, they won't be used
@@ -208,18 +203,13 @@ class BusinessUnit(TagsMixIn, Equalities):
         data['tags'] = self.tags.to_database()
         data['financials_structure'] = self.financials.to_database()
 
-        if self._stage is self.valuation and self._stage is not None:
-            stage = 'valuation'
-        else:
-            stage = None
-
-        data['stage'] = stage
+        data['stage'] = None
         data['used'] = [id.hex for id in self.used]
         data['guide'] = self.guide.to_database()
         data['interview'] = self.interview.to_database()
 
-        data['summary'] = self.summary.to_database() if self.summary else None
-        data['valuation'] = self.valuation.to_database() if self.valuation else None
+        data['summary'] = None  # Obsolete
+        data['valuation'] = None  # Obsolete
 
         # for monitoring, temporary storage for existing path and used sets
         data['path_archive'] = self._path_archive
