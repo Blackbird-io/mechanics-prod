@@ -40,6 +40,7 @@ from data_structures.system.tags import Tags
 
 from .base_financial_component import BaseFinancialsComponent
 from .history_line import HistoryLine
+from .line_item_usage import LineItemUsage
 
 
 
@@ -164,6 +165,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             self.set_value(value, self.SIGNATURE_FOR_CREATION)
 
         self.workspace = dict()
+        self.usage = LineItemUsage()
         self.xl = xl_mgmt.LineData()
 
     def __str__(self):
@@ -289,6 +291,10 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         if workspace:
             new.workspace.update(workspace)
 
+        usage = data.get('usage', None)
+        if usage:
+            new.usage = LineItemUsage.from_database(usage)
+
         return new
 
     def to_database(self, top_level=False):
@@ -321,6 +327,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             'link': False,
             'guide': self.guide.to_database(),
             'workspace': self.workspace,
+            'usage': self.usage.to_database(),
         }
 
         result.update(row)
@@ -400,6 +407,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         new_line._driver_id = copy.copy(self._driver_id)
         new_line.set_consolidate(self._consolidate)
         new_line.id = copy.copy(self.id)
+        new_line.usage = self.usage.copy()
         new_line.workspace = self.workspace.copy()
         new_line.xl = xl_mgmt.LineData()
         new_line.xl.format = self.xl.format.copy()
