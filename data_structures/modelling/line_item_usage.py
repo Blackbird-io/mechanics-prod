@@ -45,17 +45,17 @@ class LineItemUsage:
     ====================  ======================================================
 
     DATA:
-    status_rules          dict;
-    alert_commentary      dict;
-    behavior              dict;
-    monitor               bool; 
+    status_rules          dict; contains rules for establishing a status
+    alert_commentary      dict; contains notes on alerts
+    behavior              dict; contains behavior details
+    monitor               bool; whether to monitor line item
 
     FUNCTIONS:
-    copy()                returns a new line w copies of key attributes
-    to_database()         creates a flattened version of LineItem for Portal
+    copy()                returns a new usage instance w/copies of key attributes
+    to_database()         creates a flattened version of LineItemUsage for database
 
     CLASS METHODS:
-    from_database()       class method, extracts LineItem out of API-format
+    from_database()       class method, extracts LineItemUsage from database format
     ====================  ======================================================
     """
     def __init__(self):
@@ -66,6 +66,15 @@ class LineItemUsage:
     
     @classmethod
     def from_database(cls, data):
+        """
+
+
+        LineItemUsage.from_database() -> None
+
+        **CLASS METHOD**
+
+        Method deserializes usage data from database.
+        """
         new = cls()
         
         status_rules = data.get('status_rules', None)
@@ -86,6 +95,13 @@ class LineItemUsage:
         return new
 
     def to_database(self):
+        """
+
+
+        LineItemUsage.to_database() -> dict
+
+        Method returns a serialized representation of a LineItemUsage.
+        """
         data = dict()
 
         data['status_rules'] = self.status_rules
@@ -96,6 +112,14 @@ class LineItemUsage:
         return data
 
     def copy(self):
+        """
+
+
+        LineItemUsage.copy() -> LineItemUsage
+
+
+        Return a deep copy of the instance and its details.
+        """
         result = LineItemUsage()
         result.status_rules = self.status_rules.copy()
         result.alert_commentary = self.alert_commentary.copy()
