@@ -57,6 +57,10 @@ class TagsMixIn:
         self.tags = Tags(name)
 
     @property
+    def cased_name(self):
+        return self.tags.cased_name
+
+    @property
     def name(self):
         return self.tags.name
 
@@ -75,7 +79,6 @@ class TagsMixIn:
         Method sets tags.name by delegating to tags.set_name().
         """
         self.tags.set_name(new_name)
-
 
     def set_title(self, new_title):
         """
