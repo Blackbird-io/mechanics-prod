@@ -375,8 +375,7 @@ class LineChef:
 
             # the outer iter converts the sorted list into an iterator
             # which is needed to chunk it by group
-            paired = iter(zip(labels, sources))
-
+            paired = iter(sorted(zip(labels, sources)))
             # chunker gives (label, source) pairs in chunks of "links_per_cell".
             # Each hit returns a links_per_cell-sized tuple of tuples.
             chunker = itertools.repeat(paired, links_per_cell)

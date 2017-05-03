@@ -102,7 +102,7 @@ class Tags:
         if self._title:
             return self._title
         else:
-            return self._name
+            return self._cased_name
 
     @property
     def optional(self):
@@ -130,7 +130,7 @@ class Tags:
         Method returns a shallow copy of the instance.
         """
         result = Tags(name=self.cased_name)
-        result.set_title(self.title)
+        result.set_title(self._title)
         self._copy_tags_to(result)
 
         return result
@@ -186,9 +186,6 @@ class Tags:
 
         self._cased_name = name
         self._name = deCase(name)
-
-        if self._title is None:
-            self.set_title(name)
 
     def set_title(self, title):
         """
