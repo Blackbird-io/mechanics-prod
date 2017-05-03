@@ -87,6 +87,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
     summary_count         int; how many periods contributed to line's value
     summary_type          str; how to summarize line's value over time
     value                 instance value
+    workspace             dict; unstructured data hoard
     xl                    instance of LineData record set
 
     FUNCTIONS:
@@ -157,12 +158,12 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         self._include_details = True
         self._sum_details = True
         self.id = ID()
-
         self._driver_id = None
 
         if value is not None:
             self.set_value(value, self.SIGNATURE_FOR_CREATION)
 
+        self.workspace = dict()
         self.xl = xl_mgmt.LineData()
 
     def __str__(self):
@@ -284,6 +285,10 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         position = int(position) if position else None
         new.position = position
 
+        workspace = data.get('workspace', None)
+        if workspace:
+            new.workspace.update(workspace)
+
         return new
 
     def to_database(self, top_level=False):
@@ -315,6 +320,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             'driver_id': self._driver_id.hex if self._driver_id else None,
             'link': False,
             'guide': self.guide.to_database(),
+            'workspace': self.workspace,
         }
 
         result.update(row)
@@ -394,6 +400,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         new_line._driver_id = copy.copy(self._driver_id)
         new_line.set_consolidate(self._consolidate)
         new_line.id = copy.copy(self.id)
+        new_line.workspace = self.workspace.copy()
         new_line.xl = xl_mgmt.LineData()
         new_line.xl.format = self.xl.format.copy()
 
