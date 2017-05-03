@@ -84,9 +84,14 @@ class Tags:
         self._optional = set()
         self._required = set()
         self._prohibited = set()
+        self._cased_name = None
         self._name = None
         self._title = None
         self.set_name(name)
+
+    @property
+    def cased_name(self):
+        return self._cased_name
 
     @property
     def name(self):
@@ -97,7 +102,7 @@ class Tags:
         if self._title:
             return self._title
         else:
-            return self._name
+            return self._cased_name
 
     @property
     def optional(self):
@@ -124,8 +129,8 @@ class Tags:
 
         Method returns a shallow copy of the instance.
         """
-        result = Tags(name=self.name)
-        result.set_title(self.title)
+        result = Tags(name=self.cased_name)
+        result.set_title(self._title)
         self._copy_tags_to(result)
 
         return result
@@ -179,9 +184,8 @@ class Tags:
         if name is not None:
             name = name.strip()
 
+        self._cased_name = name
         self._name = deCase(name)
-
-        self.set_title(name)
 
     def set_title(self, title):
         """
@@ -249,6 +253,7 @@ class Tags:
         """
         new = cls()
         new._name = data['name']
+        new._cased_name = data.get('cased_name', new._name)
         new._title = data['title']
         new._required = set(data['required'])
         new._prohibited = set(data['prohibited'])
@@ -270,6 +275,7 @@ class Tags:
             'prohibited': list(self.prohibited),
             'name': self._name,
             'title': self._title,
+            'cased_name': self._cased_name,
         }
 
         return row
