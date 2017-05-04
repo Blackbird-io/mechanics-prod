@@ -811,7 +811,7 @@ class BusinessUnit(TagsMixIn, Equalities):
             for statement in fins.full_ordered:
                 if statement:
                     for line in statement._details.values():
-                        line._update_stored_value(recur=False)
+                        line.update_stored_value(recur=False)
 
             period.financials[self.id.bbid] = fins
 

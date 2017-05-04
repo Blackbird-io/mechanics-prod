@@ -359,19 +359,19 @@ class LineData(Range):
         self.consolidated.sources.append(source)
         if label:
             self.consolidated.labels.append(label)
-        self.line._update_stored_xl()
+        self.line.update_stored_xl()
 
     def add_derived_calculation(self, calc):
         self.derived.calculations.append(calc)
-        self.line._update_stored_xl()
+        self.line.update_stored_xl()
 
     def set_ref_source(self, src):
         self.reference.source = src
-        self.line._update_stored_xl()
+        self.line.update_stored_xl()
 
     def set_ref_direct_source(self, src):
         self.reference.direct_source = src
-        self.line._update_stored_xl()
+        self.line.update_stored_xl()
 
     def get_coordinates(self, include_sheet=True):
         """

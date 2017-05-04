@@ -110,7 +110,10 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
     set_hardcoded()       sets private attribute _hardcoded
     set_name()            custom method for setting instance name, updates ID
     set_value()           sets value to input, records signature
-    to_database()           creates a flattened version of LineItem for Portal
+    to_database()         creates a flattened version of LineItem for Portal
+    update_stored_hc()    updates hardcoded value cached for this LineItem
+    update_stored_value() updates value cached for this LineItem
+    update_stored_xl()    updates xl_data cached by this LineItem
 
     CLASS METHODS:
     from_database()         class method, extracts LineItem out of API-format
@@ -376,7 +379,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             if keep_format:
                 self.xl_format = format2keep
 
-            self._update_stored_xl()
+            self.update_stored_xl()
 
             self.set_consolidate(consolidate)
             # Start with a clean slate for Excel tracking, except for
@@ -672,8 +675,8 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         """
         BaseFinancialsComponent.register(self, namespace)
 
-        self._update_stored_hc()
-        self._update_stored_value()
+        self.update_stored_hc()
+        self.update_stored_value()
 
     def set_consolidate(self, val):
         """
@@ -711,7 +714,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             msg = "lineitem._hardcoded can only be set to a boolean value"
             raise(TypeError(msg))
 
-        self._update_stored_hc()
+        self.update_stored_hc()
 
         if recur:
             for line in self._details.values():
@@ -789,7 +792,39 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
 
         log_entry = (signature, time.time(), value)
         self.log.append(log_entry)
-        self._update_stored_value()
+        self.update_stored_value()
+
+    def update_stored_value(self, recur=True):
+        """
+        Method updates cached value in the Period's value directory so that it
+         will be preserved in the database.
+        """
+        if self.period:
+            self.period.update_line_value(self)
+
+        if recur:
+            parent = self.relationships.parent
+            if isinstance(parent, LineItem):
+                parent.update_stored_value()
+
+    def update_stored_xl(self):
+        """
+        Method updates cached Excel data in the Period's value directory
+        so that it will be preserved in the database.
+        """
+        if self.period:
+            self.period.update_line_xl(self)
+
+    def update_stored_hc(self):
+        """
+        Method updates cached hardcoded value in the Period's value directory
+        so that it will be preserved in the database.
+        """
+        if self.period:
+            self.period.update_line_hardcoded(self)
+
+        for line in self._details.values():
+            line.update_stored_hc()
 
     #*************************************************************************#
     #                          NON-PUBLIC METHODS                             #
@@ -814,8 +849,8 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
 
         BaseFinancialsComponent._bind_and_record(self, line, noclear=noclear)
 
-        self._update_stored_hc()
-        line._update_stored_value()
+        self.update_stored_hc()
+        line.update_stored_value()
 
     def _bring_down_local_value(self):
         """
@@ -919,35 +954,3 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         replica.register(namespace=self.id.namespace)
 
         self._details[replica.tags.name] = replica
-
-    def _update_stored_value(self, recur=True):
-        """
-        Method updates cached value in the Period's value directory so that it
-         will be preserved in the database.
-        """
-        if self.period:
-            self.period.update_line_value(self)
-
-        if recur:
-            parent = self.relationships.parent
-            if isinstance(parent, LineItem):
-                parent._update_stored_value()
-
-    def _update_stored_xl(self):
-        """
-        Method updates cached Excel data in the Period's value directory
-        so that it will be preserved in the database.
-        """
-        if self.period:
-            self.period.update_line_xl(self)
-
-    def _update_stored_hc(self):
-        """
-        Method updates cached hardcoded value in the Period's value directory
-        so that it will be preserved in the database.
-        """
-        if self.period:
-            self.period.update_line_hardcoded(self)
-
-        for line in self._details.values():
-            line._update_stored_hc()
