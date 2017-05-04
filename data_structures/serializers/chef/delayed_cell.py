@@ -82,7 +82,7 @@ class DelayedCell:
         self.update_cell = kargs.get('update_cell', True)
         self.formatter = kargs.get('formatter')
         # hook selves unto the line
-        self.line.xl.cell_delayed = self
+        self.line.xl_data.cell_delayed = self
         # hook selves unto layout containers
         if self.row_container and self.col_container:
             self.row_container.cells[self.col_container.path] = self
@@ -91,17 +91,17 @@ class DelayedCell:
     def from_cell(cls, line, **kargs):
         """
 
-        --``line`` LineItem with .xl property.
+        --``line`` LineItem with .xl_data property.
 
         Returns DelayedCell, two scenarios possible:
         1. ``line`` already has a DelayedCell attached
         2. wrap the actual cell attached to the line
         """
-        if line.xl:
-            cell = getattr(line.xl, 'cell_delayed', None)
+        if line.xl_data :
+            cell = getattr(line.xl_data , 'cell_delayed', None)
             if cell:
                 return cell
-            cell = getattr(line.xl, 'cell', None)
+            cell = getattr(line.xl_data , 'cell', None)
             if cell:
                 kargs['sheet'] = cell.parent
                 kargs['cell'] = cell
@@ -120,12 +120,12 @@ class DelayedCell:
         self.cell = cell
         line = self.line
         # remove reference to self from target line
-        line.xl.cell_delayed = None
+        line.xl_data.cell_delayed = None
         if self.update_cell:
             # attach new cell to target line, possibly replacing existing
-            line.xl.cell = cell
+            line.xl_data.cell = cell
             if self.cell_type:
-                base = getattr(line.xl, self.cell_type)
+                base = getattr(line.xl_data , self.cell_type)
                 setattr(base, 'cell', cell)
         # apply formats
         CellStyles.format_line(self.line)

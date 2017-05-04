@@ -211,13 +211,13 @@ def check_alignment(line):
     Function checks that ``line`` is aligned with itself from prior periods.
     Function prints misalignments to screen and returns False when detected.
     """
-    cell = line.xl.cell
+    cell = line.xl_data.cell
     sheet = cell.parent
 
     try:
         check_data = sheet.bb.line_directory[line.id.bbid]
     except KeyError:
-        # sheet.bb.line_directory[line.id.bbid] = line.xl
+        # sheet.bb.line_directory[line.id.bbid] = line.xl_data
         # check_data = sheet.bb.line_directory[line.id.bbid]
         check_data = None
 
@@ -446,7 +446,7 @@ def set_param_rows(line, sheet):
 
     if template_xl:
         for check_data, driver_data in zip(template_xl.derived.calculations,
-                                           line.xl.derived.calculations):
+                                           line.xl_data.derived.calculations):
             if check_data.name != driver_data.name:
                 c = "Formulas are not consistent for line over time!"
                 raise ExcelPrepError(c)
@@ -454,7 +454,7 @@ def set_param_rows(line, sheet):
             driver_data.rows = check_data.rows
     elif FILTER_PARAMETERS:
         # get params to keep
-        for driver_data in line.xl.derived.calculations:
+        for driver_data in line.xl_data.derived.calculations:
             params_keep = []
             for step in driver_data.formula.values():
                 temp_step = [m.start() for m in re.finditer('parameters\[*',

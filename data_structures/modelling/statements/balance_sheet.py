@@ -70,7 +70,7 @@ class BalanceSheet(Statement):
         equity = LineItem(name="Equity")
 
         for line in [assets, liabilities, equity]:
-            line.xl.format.blank_row_after = True
+            line.xl_data.format.blank_row_after = True
             self.add_top_line(line, noclear=True)
 
     def add_line(self, new_line, position=None, noclear=False):

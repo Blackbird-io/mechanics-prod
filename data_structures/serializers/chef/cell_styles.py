@@ -427,25 +427,25 @@ class CellStyles:
         standard.
         """
 
-        use_format = line.xl.number_format or NumberFormats.DEFAULT_LINE_FORMAT
+        use_format = line.xl_data.number_format or NumberFormats.DEFAULT_LINE_FORMAT
 
-        if line.xl.derived.cell:
-            line.xl.derived.cell.number_format = use_format
+        if line.xl_data.derived.cell:
+            line.xl_data.derived.cell.number_format = use_format
 
-        if line.xl.consolidated.cell:
-            line.xl.consolidated.cell.number_format = use_format
+        if line.xl_data.consolidated.cell:
+            line.xl_data.consolidated.cell.number_format = use_format
 
-        for cell in line.xl.consolidated.array:
+        for cell in line.xl_data.consolidated.array:
             cell.number_format = use_format
 
-        if line.xl.detailed.cell:
-            line.xl.detailed.cell.number_format = use_format
+        if line.xl_data.detailed.cell:
+            line.xl_data.detailed.cell.number_format = use_format
 
-        if line.xl.cell:
-            line.xl.cell.number_format = use_format
+        if line.xl_data.cell:
+            line.xl_data.cell.number_format = use_format
 
-        if line.xl.format.font_format:
-            line.xl.cell.font = Font(**line.xl.format.font_format)
+        if line.xl_data.format.font_format:
+            line.xl_data.cell.font = Font(**line.xl_data.format.font_format)
 
     @staticmethod
     def format_line_borders(book):
