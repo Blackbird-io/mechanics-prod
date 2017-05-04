@@ -236,7 +236,7 @@ class ReportChef:
             row_container.calc_size()
 
             if act_line.sum_details:
-                if act_line.xl_data.format.blank_row_before:
+                if act_line.xl_format.blank_row_before:
                     row_container.add_group('spacer_details', size=1)
 
                 # subtotal row for details
@@ -344,7 +344,7 @@ class ReportChef:
 
         details = act_line.get_ordered()
 
-        if act_line.xl_data.format.blank_row_before and not details:
+        if act_line.xl_format.blank_row_before and not details:
             # if row_container.groups or not row_container.offset:
             sheet.bb.need_spacer = True
 
@@ -443,7 +443,7 @@ class ReportChef:
         r = sheet.row_dimensions[working_row]
         r.outline_level = sheet.bb.outline_level
 
-        if act_line.xl_data.format.blank_row_after:
+        if act_line.xl_format.blank_row_after:
             sheet.bb.need_spacer = True
         else:
             sheet.bb.need_spacer = False

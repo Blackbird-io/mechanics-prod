@@ -144,7 +144,7 @@ class SummaryLineChef:
 
         # previous line may have requested a spacer after itself
         # or we want one before ourselves
-        if line.xl_data.format.blank_row_before and not line._details:
+        if line.xl_format.blank_row_before and not line._details:
             sheet.bb.need_spacer = True
         if sheet.bb.need_spacer:
             if not matter.offset:
@@ -175,7 +175,7 @@ class SummaryLineChef:
         if line.id.bbid not in sheet.bb.line_directory.keys():
             sheet.bb.line_directory[line.id.bbid] = line.xl_data
 
-        if line.xl_data.format.blank_row_after:
+        if line.xl_format.blank_row_after:
             sheet.bb.need_spacer = True
 
         return sheet

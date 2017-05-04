@@ -285,20 +285,7 @@ class LineData(Range):
 
         self.sheet = None
         self.cell = None
-        self.format = LineFormat()
-
         self.built = False
-
-    @property
-    def number_format(self):
-        """
-        legacy interface
-        """
-        return self.format.number_format
-
-    @number_format.setter
-    def number_format(self, value):
-        self.format.number_format = value
 
     @classmethod
     def from_database(cls, portal_data, model, line):
