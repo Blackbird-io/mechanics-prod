@@ -416,9 +416,9 @@ class Financials:
         for statement in self.full_ordered:
             if statement is not None and (statement is not self.starting or period is first):
                 for line in statement.get_full_ordered():
-                    new_xl = LineData()
-                    new_xl.format = line.xl.format
-                    line.xl = new_xl
+                    new_xl = LineData(line)
+                    new_xl.format = line.xl_format
+                    line.xl_data = new_xl
 
                     if not line._details or not line.sum_details:
                         value = period.get_line_value(line.id.bbid.hex)
@@ -446,9 +446,9 @@ class Financials:
                 self.starting.set_period(past)
 
                 for line in self.starting.get_full_ordered():
-                    new_xl = LineData()
-                    new_xl.format = line.xl.format  # for posterity, and for
-                    line.xl = new_xl
+                    new_xl = LineData(line)
+                    new_xl.format = line.xl_format  # for posterity, and for
+                    line.xl_data = new_xl
 
                     if not line._details or not line.sum_details:
                         value = past.get_line_value(line.id.bbid.hex)

@@ -166,7 +166,8 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
 
         self.workspace = dict()
         self.usage = LineItemUsage()
-        self.xl = xl_mgmt.LineData()
+        self.xl_data = xl_mgmt.LineData(self)
+        self.xl_format = xl_mgmt.LineFormat()
 
     def __str__(self):
         result = "\n".join(self._get_line_strings())
@@ -269,8 +270,8 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             new._driver_id = ID.from_database(id_str).bbid
 
         # defer resolution of .xl
-        new.xl = xl_mgmt.LineData()
-        new.xl.format = xl_mgmt.LineFormat.from_database(data['xl_format'])
+        new.xl_data = xl_mgmt.LineData(new)
+        new.xl_format = xl_mgmt.LineFormat.from_database(data['xl_format'])
 
         new.summary_type = data['summary_type']
         new.summary_count = data['summary_count']
@@ -321,7 +322,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             'replica': self._replica,
             'include_details': self._include_details,
             'sum_details': self._sum_details,
-            'xl_format': self.xl.format.to_database(),
+            'xl_format': self.xl_format.to_database(),
             'log': self.log,
             'driver_id': self._driver_id.hex if self._driver_id else None,
             'link': False,
@@ -369,11 +370,11 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             sig = self.SIGNATURE_FOR_VALUE_RESET
             self.set_value(None, sig, override=True)
 
-            format2keep = self.xl.format.copy()
-            self.xl = xl_mgmt.LineData()
+            format2keep = self.xl_format.copy()
+            self.xl_data = xl_mgmt.LineData(self)
 
             if keep_format:
-                self.xl.format = format2keep
+                self.xl_format = format2keep
 
             self._update_stored_xl()
 
@@ -409,8 +410,8 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         new_line.id = copy.copy(self.id)
         new_line.usage = self.usage.copy()
         new_line.workspace = self.workspace.copy()
-        new_line.xl = xl_mgmt.LineData()
-        new_line.xl.format = self.xl.format.copy()
+        new_line.xl_data = xl_mgmt.LineData(new_line)
+        new_line.xl_format = self.xl_format.copy()
 
         if not clean:
             new_line.set_hardcoded(self._hardcoded)
@@ -455,7 +456,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         """
         return any((
             len(self._details) > 0,
-            self.xl.derived.calculations,
+            self.xl_data.derived.calculations,
             self.hardcoded,
         ))
 
@@ -487,9 +488,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             # details to this instance.
         elif matching_line.value is None:
             if self.consolidate and consolidating:
-                self.xl.consolidated.sources.append(matching_line)
-                self.xl.consolidated.labels.append(xl_label)
-                self._update_stored_xl()
+                self.xl_data.add_consolidated_source(matching_line, label=xl_label)
         else:
             if signature is None:
                 signature = self.SIGNATURE_FOR_INCREMENTATION
@@ -534,9 +533,8 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
                             self.tags.inherit_from(matching_line.tags)
                             self._consolidated = True
 
-                        self.xl.consolidated.sources.append(matching_line)
-                        self.xl.consolidated.labels.append(xl_label)
-                        self._update_stored_xl()
+                        self.xl_data.add_consolidated_source(matching_line,
+                                                        label=xl_label)
 
     def increment_value(self, matching_line):
         """
@@ -580,8 +578,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             self.set_value(matching_line.value,
                            signature=self.SIGNATURE_FOR_LINKING_STATEMENTS,
                            override=True)
-            self.xl.reference.source = matching_line
-            self._update_stored_xl()
+            self.xl_data.set_ref_source(matching_line)
 
     def peer_locator(self):
         """
@@ -913,8 +910,8 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         replica = copy.copy(self)
         replica.tags = self.tags.copy()
         replica._details = dict()
-        replica.xl = xl_mgmt.LineData()
-        replica.xl.format = self.xl.format.copy()
+        replica.xl_data = xl_mgmt.LineData(replica)
+        replica.xl_format = self.xl_format.copy()
         replica.set_consolidate(self._consolidate)
         replica._period = self.period
         replica._replica = True

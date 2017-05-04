@@ -757,12 +757,12 @@ class Model(TagsMixIn):
                     for statement in fins.full_ordered:
                         if statement:
                             for line in statement.get_full_ordered():
-                                if not line.xl.built:
+                                if not line.xl_data.built:
                                     id = line.id.bbid.hex
-                                    new_data = period.get_xl_info(id)
-                                    new_data.format = line.xl.format
+                                    new_data = period.get_xl_info(id, line)
+                                    new_data.format = line.xl_format
                                     new_data.built = True
-                                    line.xl = new_data
+                                    line.xl_data = new_data
 
     def prep_for_monitoring_interview(self):
         """

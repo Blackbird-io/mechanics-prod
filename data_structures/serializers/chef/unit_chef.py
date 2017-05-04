@@ -216,7 +216,7 @@ class UnitChef:
             children = unit.components.get_ordered()
 
             for child in children:
-                index = book.get_index(child.xl.sheet) - 1
+                index = book.get_index(child.xl_data.sheet) - 1
                 self.chop_multi_valuation(
                     model, book, unit=child, index=index, recur=recur
                 )
