@@ -750,9 +750,8 @@ class BaseFinancialsComponent(Equalities, TagsMixIn):
         # need to make sure Chef knows to consolidate this
         # source line (and its details) also
         if not local_copy._details:
-            local_copy.xl.consolidated.sources.append(external_line)
-            local_copy.xl.consolidated.labels.append(xl_label)
-            local_copy._update_stored_xl()
+            local_copy.xl_data.add_consolidated_source(external_line,
+                                                  label=xl_label)
         else:
             for n, l in local_copy._details.items():
                 detail_to_append = external_line._details.get(n)

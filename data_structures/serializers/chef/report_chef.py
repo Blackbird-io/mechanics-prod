@@ -224,11 +224,11 @@ class ReportChef:
 
                     link_template = FormulaTemplates.ADD_COORDINATES
 
-                    cos = act_det.xl.get_coordinates(include_sheet=False)
+                    cos = act_det.xl_data.get_coordinates(include_sheet=False)
                     link = link_template.format(coordinates=cos)
                     act_detail_summation += link
 
-                    cos = for_det.xl.get_coordinates(include_sheet=False)
+                    cos = for_det.xl_data.get_coordinates(include_sheet=False)
                     link = link_template.format(coordinates=cos)
                     for_detail_summation += link
 
@@ -236,7 +236,7 @@ class ReportChef:
             row_container.calc_size()
 
             if act_line.sum_details:
-                if act_line.xl.format.blank_row_before:
+                if act_line.xl_format.blank_row_before:
                     row_container.add_group('spacer_details', size=1)
 
                 # subtotal row for details
@@ -248,13 +248,13 @@ class ReportChef:
                 # ACTUAL
                 act_cell = sheet.cell(column=actual_col.number(), row=finish.number())
                 act_cell.set_explicit_value(act_detail_summation, data_type=TypeCodes.FORMULA)
-                act_line.xl.cell = act_cell
+                act_line.xl_data.cell = act_cell
                 CellStyles.format_line(act_line)
 
                 # FORECAST
                 for_cell = sheet.cell(column=forecast_col.number(), row=finish.number())
                 for_cell.set_explicit_value(for_detail_summation, data_type=TypeCodes.FORMULA)
-                for_line.xl.cell = for_cell
+                for_line.xl_data.cell = for_cell
                 CellStyles.format_line(for_line)
 
     def _make_report_header(self, sheet, title, date):
@@ -344,7 +344,7 @@ class ReportChef:
 
         details = act_line.get_ordered()
 
-        if act_line.xl.format.blank_row_before and not details:
+        if act_line.xl_format.blank_row_before and not details:
             # if row_container.groups or not row_container.offset:
             sheet.bb.need_spacer = True
 
@@ -383,23 +383,23 @@ class ReportChef:
             sheet.bb.calc_sizes()
 
             # need to write actual and forecast values here (link to source)
-            formula_string = '=%s' % act_line.xl.get_coordinates(
+            formula_string = '=%s' % act_line.xl_data.get_coordinates(
                 include_sheet=True)
             act_cell = sheet.cell(row=line_row.number(),
                                   column=actual_col.number())
             act_cell.set_explicit_value(formula_string,
                                         data_type=TypeCodes.FORMULA)
-            act_line.xl.cell = act_cell
+            act_line.xl_data.cell = act_cell
             CellStyles.format_line(act_line)
 
-            formula_string = '=%s' % for_line.xl.get_coordinates(
+            formula_string = '=%s' % for_line.xl_data.get_coordinates(
                 include_sheet=True)
 
             for_cell = sheet.cell(row=line_row.number(),
                                   column=forecast_col.number())
             for_cell.set_explicit_value(formula_string,
                                         data_type=TypeCodes.FORMULA)
-            for_line.xl.cell = for_cell
+            for_line.xl_data.cell = for_cell
             CellStyles.format_line(for_line)
 
         sheet.bb.calc_sizes()
@@ -414,8 +414,8 @@ class ReportChef:
         # *************************************************************
         # Do the actual work here
         materials = dict()
-        materials['actual'] = act_line.xl.get_coordinates(include_sheet=False)
-        materials['forecast'] = for_line.xl.get_coordinates(include_sheet=False)
+        materials['actual'] = act_line.xl_data.get_coordinates(include_sheet=False)
+        materials['forecast'] = for_line.xl_data.get_coordinates(include_sheet=False)
         materials['placeholder'] = self._placeholder
 
         delta_cell = sheet.cell(row=line_row.number(), column=delta_col.number())
@@ -426,10 +426,10 @@ class ReportChef:
 
         working_row = delta_cell.row
 
-        save_cell = act_line.xl.cell
-        act_line.xl.cell = delta_cell
+        save_cell = act_line.xl_data.cell
+        act_line.xl_data.cell = delta_cell
         CellStyles.format_line(act_line)
-        act_line.xl.cell = save_cell
+        act_line.xl_data.cell = save_cell
 
         diff_cell = sheet.cell(row=line_row.number(), column=diff_col.number())
         temp = FormulaTemplates.REPORT_DIFF
@@ -443,7 +443,7 @@ class ReportChef:
         r = sheet.row_dimensions[working_row]
         r.outline_level = sheet.bb.outline_level
 
-        if act_line.xl.format.blank_row_after:
+        if act_line.xl_format.blank_row_after:
             sheet.bb.need_spacer = True
         else:
             sheet.bb.need_spacer = False

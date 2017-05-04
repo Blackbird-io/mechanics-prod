@@ -144,7 +144,7 @@ class SummaryLineChef:
 
         # previous line may have requested a spacer after itself
         # or we want one before ourselves
-        if line.xl.format.blank_row_before and not line._details:
+        if line.xl_format.blank_row_before and not line._details:
             sheet.bb.need_spacer = True
         if sheet.bb.need_spacer:
             if not matter.offset:
@@ -173,9 +173,9 @@ class SummaryLineChef:
             )
 
         if line.id.bbid not in sheet.bb.line_directory.keys():
-            sheet.bb.line_directory[line.id.bbid] = line.xl
+            sheet.bb.line_directory[line.id.bbid] = line.xl_data
 
-        if line.xl.format.blank_row_after:
+        if line.xl_format.blank_row_after:
             sheet.bb.need_spacer = True
 
         return sheet
@@ -204,13 +204,13 @@ class SummaryLineChef:
         with the new location.
         """
         source = None
-        if line.xl.derived.calculations:
+        if line.xl_data.derived.calculations:
             source = line
-        if line.xl.reference.source:
-            source = line.xl.reference.source
+        if line.xl_data.reference.source:
+            source = line.xl_data.reference.source
 
-        if line.xl.cell:  ##
-            source = line  ##
+        if line.xl_data.cell:
+            source = line
 
         if source:
             cell = DelayedCell.from_cell(source)
@@ -228,7 +228,7 @@ class SummaryLineChef:
                     col_container=col_container,
                     cell_type='reference',
                 )
-                line.xl.ending = row_container.number()
+                line.xl_data.ending = row_container.number()
         return sheet
 
     def _add_consolidation(
@@ -245,23 +245,23 @@ class SummaryLineChef:
         --``row_container`` coordinate anchor on the row axis
         --``col_container`` coordinate anchor on the col axis
 
-        Expects line.xl.consolidated.sources to include full range of pointers
+        Expects line.xl_data.consolidated.sources to include full range of pointers
         to source lines in relevant time periods.
 
         Creates a formula linking directly to TimeLine inputs.
 
         Returns Worksheet with consolidation logic added.
         """
-        if line.xl.consolidated.sources:
+        if line.xl_data.consolidated.sources:
             matter = row_container.groups[1]
             matter.size = 1
 
-            sources = line.xl.consolidated.sources
-            labels = line.xl.consolidated.labels
+            sources = line.xl_data.consolidated.sources
+            labels = line.xl_data.consolidated.labels
 
-            line.xl.consolidated.starting = matter.number()
-            line.xl.consolidated.ending = matter.number()
-            line.xl.consolidated.array.clear()
+            line.xl_data.consolidated.starting = matter.number()
+            line.xl_data.consolidated.ending = matter.number()
+            line.xl_data.consolidated.array.clear()
 
             formula_source = {}
             formula_layout = []
@@ -270,8 +270,8 @@ class SummaryLineChef:
                 if cell:
                     formula_source['_{}'.format(i)] = cell
                     formula_layout.append('{{_{}}}'.format(i))
-                    if source_line.xl.cell:
-                        line.xl.consolidated.array.append(source_line.xl.cell)
+                    if source_line.xl_data.cell:
+                        line.xl_data.consolidated.array.append(source_line.xl_data.cell)
             if formula_layout:
                 formula = '+'.join(formula_layout)
                 # handling for summary_type == 'average'
@@ -392,11 +392,11 @@ class SummaryLineChef:
         """
         if not line.summary_type == 'derive':
             return
-        if not line.xl.derived.calculations:
+        if not line.xl_data.derived.calculations:
             return
-        if len(line.xl.derived.calculations) != 1:
+        if len(line.xl_data.derived.calculations) != 1:
             return
-        data_cluster = line.xl.derived.calculations[0]
+        data_cluster = line.xl_data.derived.calculations[0]
         if len(data_cluster.formula) != 1:
             return
         # render first (and only) formula

@@ -12,7 +12,7 @@
                 # where they are, though we could have some system that sets up pointers
                 # to the input lines and then we resolve the pointers when we know where
                 # they are. Like literally, the formula would deliver a string template
-                # with a bunch of blank fields "{cost}.xl.final + {opex}.xl.final + {sga}.xl.final" and then an array of
+                # with a bunch of blank fields "{cost}.xl_data.final + {opex}.xl_data.final + {sga}.xl_data.final" and then an array of
                 # objects (!): [a, b, c]  (or a dictionary: "cost" : a, "opex" : b, "sga" : c} and we would format the string at the appropriate time (once
                 # we have completed those other things). A more explicit format like that
                 # could actually prove useful as a comment in excel: we can literally take
@@ -33,7 +33,7 @@
                 #
                 # The spreader function could then spread all those entries to a list. 
                 #
-                #   The issue is how to do incremental things. I guess could just point to line.xl.final
+                #   The issue is how to do incremental things. I guess could just point to line.xl_data.final
                 #   and would have to be careful about when I increment them (ie, whatever the value was
                 #   at that time). 
                 #
@@ -52,7 +52,7 @@
                 # other. Here, you really would want to insert lines in the spreadsheet, because
                 # you want to make sure you keep the alignment. 
                 #
-                # So driver would build up driver cells and put them on .xl.derived.rows
+                # So driver would build up driver cells and put them on .xl_data.derived.rows
                 #
                 # and then the spreader would put all the cells in a particular order
                 #
@@ -134,7 +134,7 @@
         #    # really would be a LOT more elegant if we could eliminate the driver-level params
         #    # could give the sheet to the formula and get
 
-        #   i want to get a formula like "={references}[line].xl.final * 1.03" or "=c4 * (1+{inflation})"
+        #   i want to get a formula like "={references}[line].xl_data.final * 1.03" or "=c4 * (1+{inflation})"
             # {line} requires a final position
             # inflation is just a parameter
             # and i m responsible for filling in the parameters later
@@ -245,7 +245,7 @@ IOP:
    quickly trace it. Also add format_error intercept into Chef itself. 
  
  -!!! make sure drivers only add their DriverData when they are allowed to work on the item.
- - define copy behavior for unit.xl (should probably get zeroed out)
+ - define copy behavior for unit.xl_data (should probably get zeroed out)
  
  - !! APPLY Sheet style to all sheets?
  
