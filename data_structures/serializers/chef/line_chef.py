@@ -160,7 +160,7 @@ class LineChef:
         """
         details = line.get_ordered()
 
-        if line.xl_data.format.blank_row_before and not details:
+        if line.xl_format.blank_row_before and not details:
             # if row_container.groups or not row_container.offset:
             sheet.bb.need_spacer = True
 
@@ -260,7 +260,7 @@ class LineChef:
         r = sheet.row_dimensions[line.xl_data.cell.row]
         r.outline_level = sheet.bb.outline_level
 
-        if line.xl_data.format.blank_row_after:
+        if line.xl_format.blank_row_after:
             sheet.bb.need_spacer = True
         else:
             sheet.bb.need_spacer = False
@@ -820,7 +820,7 @@ class LineChef:
             row_container.calc_size()
 
             if line.sum_details:
-                if line.xl_data.format.blank_row_before:
+                if line.xl_format.blank_row_before:
                     row_container.add_group('spacer_details', size=1)
 
                 # subtotal row for details

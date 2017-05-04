@@ -413,7 +413,7 @@ class Financials:
             if statement is not None and (statement is not self.starting or period is first):
                 for line in statement.get_full_ordered():
                     new_xl = LineData(line)
-                    new_xl.format = line.xl_data.format
+                    new_xl.format = line.xl_format
                     line.xl_data = new_xl
 
                     if not line._details or not line.sum_details:
@@ -443,7 +443,7 @@ class Financials:
 
                 for line in self.starting.get_full_ordered():
                     new_xl = LineData(line)
-                    new_xl.format = line.xl_data.format  # for posterity, and for
+                    new_xl.format = line.xl_format  # for posterity, and for
                     line.xl_data = new_xl
 
                     if not line._details or not line.sum_details:

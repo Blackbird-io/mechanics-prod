@@ -760,7 +760,7 @@ class Model(TagsMixIn):
                                 if not line.xl_data.built:
                                     id = line.id.bbid.hex
                                     new_data = period.get_xl_info(id, line)
-                                    new_data.format = line.xl_data.format
+                                    new_data.format = line.xl_format
                                     new_data.built = True
                                     line.xl_data = new_data
 

@@ -427,7 +427,7 @@ class CellStyles:
         standard.
         """
 
-        use_format = line.xl_data.number_format or NumberFormats.DEFAULT_LINE_FORMAT
+        use_format = line.xl_format.number_format or NumberFormats.DEFAULT_LINE_FORMAT
 
         if line.xl_data.derived.cell:
             line.xl_data.derived.cell.number_format = use_format
@@ -444,8 +444,8 @@ class CellStyles:
         if line.xl_data.cell:
             line.xl_data.cell.number_format = use_format
 
-        if line.xl_data.format.font_format:
-            line.xl_data.cell.font = Font(**line.xl_data.format.font_format)
+        if line.xl_format.font_format:
+            line.xl_data.cell.font = Font(**line.xl_format.font_format)
 
     @staticmethod
     def format_line_borders(book):
