@@ -715,6 +715,8 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
                         c = "Invalid JSON String: " + behavior_str
                         raise bb_exceptions.BBAnalyticalError(c)
 
+                    ssot_line.usage.behavior = behavior_dict
+
                     required_keys = ps.ROLLING_SUM_KEYS
                     if len(required_keys - behavior_dict.keys()) == 0:
                         if behavior_dict['operation'] == 'sum':
