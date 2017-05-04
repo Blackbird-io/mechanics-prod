@@ -455,11 +455,11 @@ class TimePeriod(TagsMixIn):
 
         return stored_value
 
-    def get_xl_info(self, bbid_hex, line):
+    def get_xl_data(self, bbid_hex, line):
         """
 
 
-        TimePeriod.get_xl_info() -> LineData
+        TimePeriod.get_xl_data() -> LineData
 
         --``bbid_hex`` is the string representation of a BBID
 
@@ -484,13 +484,11 @@ class TimePeriod(TagsMixIn):
         """
 
 
-        TimePeriod.get_xl_info() -> LineData
+        TimePeriod.get_line_hc() -> bool
 
         --``bbid_hex`` is the string representation of a BBID
 
-        Method returns the LineData object containing information pertinent to
-        the specified line.  Method retrieves flat data from
-        _line_item_storage, converts it to a rich object, and returns.
+        Method returns the hardcoded attribute for the line in this period.
         """
 
         line_dict = self._line_item_storage.get(bbid_hex, None)

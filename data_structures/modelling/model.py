@@ -759,8 +759,7 @@ class Model(TagsMixIn):
                             for line in statement.get_full_ordered():
                                 if not line.xl_data.built:
                                     id = line.id.bbid.hex
-                                    new_data = period.get_xl_info(id, line)
-                                    new_data.format = line.xl_format
+                                    new_data = period.get_xl_data(id, line)
                                     new_data.built = True
                                     line.xl_data = new_data
 
