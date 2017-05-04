@@ -297,7 +297,7 @@ def _build_fins_from_sheet(bu, sheet, sm):
 
         if not row[sm.cols[ps.STATEMENT]-1].value:
             if line:
-                line.xl.format.blank_row_after = True
+                line.xl_data.format.blank_row_after = True
             # Skip blank rows
             continue
 
@@ -671,8 +671,8 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
             # Always match number formats
             ssot_stmt = getattr(ssot_fins, statement_name)
             ssot_line = ssot_stmt.find_first(line_name)
-            if cell.number_format and not ssot_line.xl.format.number_format:
-                ssot_line.xl.format.number_format = cell.number_format
+            if cell.number_format and not ssot_line.xl_data.format.number_format:
+                ssot_line.xl_data.format.number_format = cell.number_format
 
             # Status column
             if sm.cols[ps.STATUS]:
@@ -970,4 +970,4 @@ def _populate_line_from_cell(cell, line_name, parent_name, statement):
         # If the line is a hardcoded value, set a direct reference in excel
         sheet = cell.parent
         full_address = "'" + sheet.title + "'!" + cell.coordinate
-        line.xl.set_ref_direct_source(full_address)
+        line.xl_data.set_ref_direct_source(full_address)

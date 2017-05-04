@@ -101,8 +101,8 @@ class LineChef:
         new_lines = dict()
         for key, line in calc.references.items():
             try:
-                include = line.xl.cell.parent is not sheet
-                new_lines[key] = line.xl.get_coordinates(include_sheet=include)
+                include = line.xl_data.cell.parent is not sheet
+                new_lines[key] = line.xl_data.get_coordinates(include_sheet=include)
             except (ExcelPrepError, AttributeError):
                 print("Name:     ", calc.name)
                 print("Template: ", calc.formula)
@@ -160,7 +160,7 @@ class LineChef:
         """
         details = line.get_ordered()
 
-        if line.xl.format.blank_row_before and not details:
+        if line.xl_data.format.blank_row_before and not details:
             # if row_container.groups or not row_container.offset:
             sheet.bb.need_spacer = True
 
@@ -188,10 +188,10 @@ class LineChef:
             )
 
         elif start_bal:
-            if line.xl.cell:
-                # here just link the current cell to the cell in line.xl.cell
-                old_cell = line.xl.cell
-                line.xl.reference.source = line
+            if line.xl_data.cell:
+                # here just link the current cell to the cell in line.xl_data.cell
+                old_cell = line.xl_data.cell
+                line.xl_data.reference.source = line
                 self._add_reference(
                     sheet=sheet,
                     column=column,
@@ -202,9 +202,9 @@ class LineChef:
 
                 CellStyles.format_line(line)
 
-                line.xl.reference.source = None
-                line.xl.reference.cell = None
-                line.xl.cell = old_cell
+                line.xl_data.reference.source = None
+                line.xl_data.reference.cell = None
+                line.xl_data.cell = old_cell
 
         if not start_bal:
             self._add_reference(
@@ -233,12 +233,12 @@ class LineChef:
                 set_labels=set_labels,
             )
 
-        if start_bal and (details or line.xl.cell):
+        if start_bal and (details or line.xl_data.cell):
             run_segments = False
         else:
             run_segments = True
 
-        if run_segments and not line.xl.reference.source:
+        if run_segments and not line.xl_data.reference.source:
             self._combine_segments(
                 sheet=sheet,
                 column=column,
@@ -255,12 +255,12 @@ class LineChef:
 
         if check and not start_bal:
             if line.id.bbid not in sheet.bb.line_directory.keys():
-                sheet.bb.line_directory[line.id.bbid] = line.xl
+                sheet.bb.line_directory[line.id.bbid] = line.xl_data
 
-        r = sheet.row_dimensions[line.xl.cell.row]
+        r = sheet.row_dimensions[line.xl_data.cell.row]
         r.outline_level = sheet.bb.outline_level
 
-        if line.xl.format.blank_row_after:
+        if line.xl_data.format.blank_row_after:
             sheet.bb.need_spacer = True
         else:
             sheet.bb.need_spacer = False
@@ -324,7 +324,7 @@ class LineChef:
         3. sources have own content.
         """
         if line.has_own_content():
-            for sub in line.xl.consolidated.sources:
+            for sub in line.xl_data.consolidated.sources:
                 if sub.has_own_content():
                     c = (
                         'line "{}" on sheet "{}" has content '
@@ -348,7 +348,7 @@ class LineChef:
         --``set_labels`` must be a boolean; True will set labels for line
         --``indent`` is amount of indent
 
-        Expects line.xl.consolidated.sources to include full range of pointers
+        Expects line.xl_data.consolidated.sources to include full range of pointers
         to source lines on children.
 
         Always stuffs consolidation into the same number of rows.
@@ -361,9 +361,9 @@ class LineChef:
             # a line with own content should have no children with own content
             # throw an error if any of consolidation sources have content
             self._validate_consolidation(sheet, line)
-        elif line.xl.consolidated.sources:
-            sources = line.xl.consolidated.sources
-            labels = line.xl.consolidated.labels
+        elif line.xl_data.consolidated.sources:
+            sources = line.xl_data.consolidated.sources
+            labels = line.xl_data.consolidated.labels
             required_rows = sheet.bb.consolidation_size
             n_sources = len(sources)
             links_per_cell = n_sources // required_rows
@@ -371,7 +371,7 @@ class LineChef:
             # Make sure we include at least 1 link per cell.
 
             link_template = FormulaTemplates.ADD_COORDINATES
-            line.xl.consolidated.array.clear()
+            line.xl_data.consolidated.array.clear()
 
             # the outer iter converts the sorted list into an iterator
             # which is needed to chunk it by group
@@ -387,8 +387,8 @@ class LineChef:
                     if label:
                         sub_indent = indent + LineItem.TAB_WIDTH * 2
                         label_line = (sub_indent * " ") + label
-                    include = source_line.xl.cell.parent is not sheet
-                    source_cos = source_line.xl.get_coordinates(
+                    include = source_line.xl_data.cell.parent is not sheet
+                    source_cos = source_line.xl_data.get_coordinates(
                         include_sheet=include
                     )
                     link = link_template.format(coordinates=source_cos)
@@ -405,17 +405,17 @@ class LineChef:
                         batch_summation,
                         data_type=TypeCodes.FORMULA
                     )
-                    line.xl.consolidated.array.append(batch_cell)
+                    line.xl_data.consolidated.array.append(batch_cell)
 
             row_container.calc_size()
 
             # Group the cells
-            line.xl.consolidated.starting = line.xl.consolidated.array[0].row
-            line.xl.consolidated.ending = line.xl.consolidated.array[-1].row
+            line.xl_data.consolidated.starting = line.xl_data.consolidated.array[0].row
+            line.xl_data.consolidated.ending = line.xl_data.consolidated.array[-1].row
             alpha_column = get_column_letter(column)
             summation_params = {
-                "starting_row": line.xl.consolidated.starting,
-                "ending_row": line.xl.consolidated.ending,
+                "starting_row": line.xl_data.consolidated.starting,
+                "ending_row": line.xl_data.consolidated.ending,
                 "alpha_column": alpha_column
             }
 
@@ -429,8 +429,8 @@ class LineChef:
             summation_cell.set_explicit_value(
                 summation, data_type=TypeCodes.FORMULA
             )
-            line.xl.consolidated.cell = summation_cell
-            line.xl.cell = summation_cell
+            line.xl_data.consolidated.cell = summation_cell
+            line.xl_data.cell = summation_cell
 
         return sheet
 
@@ -451,11 +451,11 @@ class LineChef:
         to dynamic links in Excel cells.
         """
 
-        if not line.xl.derived.calculations:
+        if not line.xl_data.derived.calculations:
             pass
         else:
             set_param_rows(line, sheet)
-            for data_cluster in line.xl.derived.calculations:
+            for data_cluster in line.xl_data.derived.calculations:
                 self._add_driver_calculation(
                     sheet=sheet,
                     column=column,
@@ -544,8 +544,8 @@ class LineChef:
         problem_line = False
         for k, obj in driver_data.references.items():
             try:
-                include = obj.xl.cell.parent is not sheet
-                line_coordinates[k] = obj.xl.get_coordinates(
+                include = obj.xl_data.cell.parent is not sheet
+                line_coordinates[k] = obj.xl_data.get_coordinates(
                     include_sheet=include
                 )
             except (ExcelPrepError, AttributeError):
@@ -661,13 +661,13 @@ class LineChef:
 
             CellStyles.format_calculation(calc_cell)
             # If formula included a reference to the prior value of the line
-            # itself, it's picked up here. Can now change line.xl.derived.final
+            # itself, it's picked up here. Can now change line.xl_data.derived.final
 
             # we don't want a blank row between the calc cell and the summary
             # cell
-            line.xl.derived.ending = finish.number()
-            line.xl.derived.cell = calc_cell
-            line.xl.cell = calc_cell
+            line.xl_data.derived.ending = finish.number()
+            line.xl_data.derived.cell = calc_cell
+            line.xl_data.cell = calc_cell
 
             if problem_line:
                 # save tuple of line and derivation materials
@@ -694,23 +694,23 @@ class LineChef:
         Adds a single cell reference to a new cell.
         (e.g. new_cell.value = '=C18')
         """
-        if line.xl.reference.direct_source and not self.values_only:
+        if line.xl_data.reference.direct_source and not self.values_only:
             line_label = indent * " " + line.title  # + ': ref'
             finish = row_container.add_group(
                 line.title, size=1, label=line_label, bbid=line.id.bbid.hex
             )
             cell = sheet.cell(column=column, row=finish.number())
 
-            excel_str = "=" + line.xl.reference.direct_source
+            excel_str = "=" + line.xl_data.reference.direct_source
 
             cell.set_explicit_value(excel_str, data_type=TypeCodes.FORMULA)
 
-            line.xl.ending = finish.number()
-            line.xl.reference.cell = cell
+            line.xl_data.ending = finish.number()
+            line.xl_data.reference.cell = cell
 
             if update_cell:
-                line.xl.cell = cell
-        elif line.xl.reference.source:
+                line.xl_data.cell = cell
+        elif line.xl_data.reference.source:
             line_label = indent * " " + line.title  # + ': ref'
 
             finish = row_container.add_group(
@@ -718,18 +718,18 @@ class LineChef:
             )
             cell = sheet.cell(column=column, row=finish.number())
 
-            ref_cell = line.xl.reference.source.xl.cell
+            ref_cell = line.xl_data.reference.source.xl_data.cell
             include = ref_cell.parent is not sheet
-            source = line.xl.reference.source
-            excel_str = "=" + source.xl.get_coordinates(include_sheet=include)
+            source = line.xl_data.reference.source
+            excel_str = "=" + source.xl_data.get_coordinates(include_sheet=include)
 
             cell.set_explicit_value(excel_str, data_type=TypeCodes.FORMULA)
 
-            line.xl.ending = finish.number()
-            line.xl.reference.cell = ref_cell
+            line.xl_data.ending = finish.number()
+            line.xl_data.reference.cell = ref_cell
 
             if update_cell:
-                line.xl.cell = cell
+                line.xl_data.cell = cell
 
         return sheet
 
@@ -750,10 +750,10 @@ class LineChef:
         Adds the combination to the current row.
         """
         processed = any((
-            line.xl.consolidated.cell,
-            line.xl.derived.cell,
-            line.xl.detailed.cell,
-            line.xl.reference.cell
+            line.xl_data.consolidated.cell,
+            line.xl_data.derived.cell,
+            line.xl_data.detailed.cell,
+            line.xl_data.reference.cell
         ))
 
         write_value = not processed
@@ -769,8 +769,8 @@ class LineChef:
             cell.value = line.value
             CellStyles.format_hardcoded(cell)
 
-            line.xl.ending = finish.number()
-            line.xl.cell = cell
+            line.xl_data.ending = finish.number()
+            line.xl_data.cell = cell
 
         return sheet
 
@@ -810,9 +810,9 @@ class LineChef:
                 )
 
                 link_template = FormulaTemplates.ADD_COORDINATES
-                include = detail.xl.cell.parent is not sheet
+                include = detail.xl_data.cell.parent is not sheet
 
-                cos = detail.xl.get_coordinates(include_sheet=include)
+                cos = detail.xl_data.get_coordinates(include_sheet=include)
                 link = link_template.format(coordinates=cos)
                 detail_summation += link
 
@@ -820,7 +820,7 @@ class LineChef:
             row_container.calc_size()
 
             if line.sum_details:
-                if line.xl.format.blank_row_before:
+                if line.xl_data.format.blank_row_before:
                     row_container.add_group('spacer_details', size=1)
 
                 # subtotal row for details
@@ -832,9 +832,9 @@ class LineChef:
                 subtotal_cell.set_explicit_value(
                     detail_summation, data_type=TypeCodes.FORMULA
                 )
-                line.xl.detailed.ending = finish.number()
-                line.xl.detailed.cell = subtotal_cell
-                line.xl.cell = subtotal_cell
+                line.xl_data.detailed.ending = finish.number()
+                line.xl_data.detailed.cell = subtotal_cell
+                line.xl_data.cell = subtotal_cell
 
         return sheet
 

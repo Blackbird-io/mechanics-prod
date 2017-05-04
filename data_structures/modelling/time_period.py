@@ -543,7 +543,7 @@ class TimePeriod(TagsMixIn):
             line_dict = blank_row.copy()
             self._line_item_storage[line.id.bbid.hex] = line_dict
 
-        line_dict['xl_info'] = line.xl.to_database()
+        line_dict['xl_info'] = line.xl_data.to_database()
 
     def update_line_hardcoded(self, line):
         # THIS SHOULD NOT BE RUN BY TOPICS
