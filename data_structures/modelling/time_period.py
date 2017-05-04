@@ -53,7 +53,7 @@ logger = logging.getLogger(bb_settings.LOGNAME_MAIN)
 
 blank_row = dict()
 blank_row['hardcoded'] = False
-blank_row['xl_info'] = dict()
+blank_row['xl_data'] = dict()
 blank_row['value'] = None
 blank_row['value_type'] = None
 
@@ -121,7 +121,7 @@ class TimePeriod(TagsMixIn):
 
         self._line_item_storage = dict()
         # {"value": value of any primitive type,
-        #  "xl_info": flat LineData object without styles info,
+        #  "xl_data": flat LineData object without styles info,
         #  "hardcoded": bool}
 
         self.complete = True
@@ -472,7 +472,7 @@ class TimePeriod(TagsMixIn):
         line_dict = self._line_item_storage.get(bbid_hex, None)
         if line_dict:
             model = self.relationships.parent.model
-            flat_xl = line_dict.get('xl_info', {})
+            flat_xl = line_dict.get('xl_data', {})
             if flat_xl:
                 stored_xl = LineData.from_database(flat_xl,
                                                    model,
@@ -543,7 +543,7 @@ class TimePeriod(TagsMixIn):
             line_dict = blank_row.copy()
             self._line_item_storage[line.id.bbid.hex] = line_dict
 
-        line_dict['xl_info'] = line.xl_data.to_database()
+        line_dict['xl_data'] = line.xl_data.to_database()
 
     def update_line_hardcoded(self, line):
         # THIS SHOULD NOT BE RUN BY TOPICS
