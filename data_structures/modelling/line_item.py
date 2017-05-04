@@ -577,8 +577,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             self.set_value(matching_line.value,
                            signature=self.SIGNATURE_FOR_LINKING_STATEMENTS,
                            override=True)
-            self.xl.reference.source = matching_line
-            self._update_stored_xl()
+            self.xl.set_ref_source(matching_line)
 
     def peer_locator(self):
         """

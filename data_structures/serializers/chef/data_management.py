@@ -378,11 +378,11 @@ class LineData(Range):
         self.derived.calculations.append(calc)
         self.line._update_stored_xl()
 
-    def add_ref_source(self, src):
+    def set_ref_source(self, src):
         self.reference.source = src
         self.line._update_stored_xl()
 
-    def add_ref_direct_source(self, src):
+    def set_ref_direct_source(self, src):
         self.reference.direct_source = src
         self.line._update_stored_xl()
 
