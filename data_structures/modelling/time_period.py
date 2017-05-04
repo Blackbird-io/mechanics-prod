@@ -455,7 +455,7 @@ class TimePeriod(TagsMixIn):
 
         return stored_value
 
-    def get_xl_info(self, bbid_hex):
+    def get_xl_info(self, bbid_hex, line):
         """
 
 
@@ -467,7 +467,7 @@ class TimePeriod(TagsMixIn):
         the specified line.  Method retrieves flat data from
         _line_item_storage, converts it to a rich object, and returns.
         """
-        stored_xl = LineData()
+        stored_xl = LineData(line)
 
         line_dict = self._line_item_storage.get(bbid_hex, None)
         if line_dict:
@@ -475,7 +475,8 @@ class TimePeriod(TagsMixIn):
             flat_xl = line_dict.get('xl_info', {})
             if flat_xl:
                 stored_xl = LineData.from_database(flat_xl,
-                                                 model)
+                                                   model,
+                                                   line)
 
         return stored_xl
 
