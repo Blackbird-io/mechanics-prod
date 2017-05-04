@@ -259,7 +259,7 @@ def build_sheet_map(sheet):
         c = "No header for %s" % missing_columns
         raise bb_exceptions.ExcelPrepError(c)
 
-    # Make sure everything after sm.cols["FIRST_PERIOD"] is all in a date format.
+    # Make sure everything after sm.cols["FIRST_PERIOD"] is all in a date format
     for cell in header_row[sm.cols["FIRST_PERIOD"]-1:]:
         if cell.value is None and cell is header_row[sm.cols["FIRST_PERIOD"]-1:][-1]:
             # Sometimes the last blank column cell is read in
@@ -504,7 +504,7 @@ def _combine_fins_structure(old_model, new_model):
 
         last_position = 0
         for old_line in old_stmt.get_full_ordered():
-            old_parent = old_line.relationships.parent # Can be stmt or line
+            old_parent = old_line.relationships.parent  # Can be stmt or line
             if isinstance(old_parent, LineItem):
                 new_line = new_stmt.find_first(old_parent.name, old_line.name)
             else:
@@ -638,12 +638,12 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
             row_num = cell.row
             col_num = cell.col_idx
 
-            statement_str = sheet.cell(row_num, sm.cols[ps.STATEMENT]).value
+            statement_str = sheet.cell(row=row_num, column=sm.cols[ps.STATEMENT]).value
             if not statement_str:
                 continue
             statement_name = statement_str.split()[0].casefold()
-            line_name = sheet.cell(row_num, sm.cols[ps.LINE_NAME]).value
-            parent_name = sheet.cell(row_num, sm.cols[ps.PARENT_NAME]).value
+            line_name = sheet.cell(row=row_num, column=sm.cols[ps.LINE_NAME]).value
+            parent_name = sheet.cell(row=row_num, column=sm.cols[ps.PARENT_NAME]).value
 
             # Handle rows where we just want to add a parameter value
             if statement_name in ("parameters", "parameter"):
@@ -704,7 +704,8 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
 
             # Behaviour column
             if sm.cols[ps.BEHAVIOR]:
-                behavior_cell = sheet.cell(row_num, sm.cols[ps.BEHAVIOR])
+                behavior_cell = sheet.cell(row=row_num,
+                                           column=sm.cols[ps.BEHAVIOR])
                 behavior_str = behavior_cell.value
 
                 if behavior_str:
@@ -912,7 +913,7 @@ def _parse_formula(sheet, cell_f, bu, sm):
                 data[t_type] = "operator"
 
         model = bu.relationships.model
-        dr_name = (parent_name or "") +">" + line_name
+        dr_name = (parent_name or "") + ">" + line_name
         driver = model.drivers.get_or_create(
             dr_name,
             data,
