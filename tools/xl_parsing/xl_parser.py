@@ -455,7 +455,7 @@ def _add_line_effects(line, bu, row, sm):
 
             try:
                 conditions_dict = json.loads(alert_val)
-                bu.stage.work_space[new_path_line.name] = conditions_dict
+                line.usage.alert_commentary = conditions_dict
             except ValueError:
                 c = "Invalid JSON String: " + alert_val
                 raise bb_exceptions.BBAnalyticalError(c)
@@ -579,7 +579,6 @@ def _populate_old_actuals(old_model, new_model):
                                            signature='old hardcoded value',
                                            override=True)
                         new_line.set_hardcoded(True)
-
 
 
 def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
