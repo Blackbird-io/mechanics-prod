@@ -302,6 +302,10 @@ class Financials:
         position in instance.full_order.  If no position is provided, the
         new statement will be added at the end.
         """
+        if name.casefold() in self.__dict__:
+            c = "%s already exists as a statement!" % name
+            raise bb_exceptions.BlackbirdError(c)
+
         if not self._restricted:
             if not statement:
                 use_name = title or name
