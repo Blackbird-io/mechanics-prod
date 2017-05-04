@@ -259,9 +259,11 @@ class LineData(Range):
     ====================  =====================================================
     """
 
-    def __init__(self):
+    def __init__(self, line):
 
         Range.__init__(self)
+
+        self.line = line
 
         self.consolidated = Range()
         self.consolidated.sources = list()
@@ -299,7 +301,7 @@ class LineData(Range):
         self.format.number_format = value
 
     @classmethod
-    def from_database(cls, portal_data, model, **kargs):
+    def from_database(cls, portal_data, model, line):
         """
 
 
@@ -310,7 +312,7 @@ class LineData(Range):
         Method deserializes a LineData.
         DOES NOT INCLUDE FORMAT
         """
-        new = cls()
+        new = cls(line)
 
         if portal_data['consolidated']['sources']:
             new.consolidated.labels = portal_data['consolidated']['labels']
@@ -365,6 +367,24 @@ class LineData(Range):
                 row['derived']['calculations'].append(calc.to_database())
 
         return row
+
+    def add_consolidated_source(self, source, label=None):
+        self.consolidated.sources.append(source)
+        if label:
+            self.consolidated.labels.append(label)
+        self.line._update_stored_xl()
+
+    def add_derived_calculation(self, calc):
+        self.derived.calculations.append(calc)
+        self.line._update_stored_xl()
+
+    def add_ref_source(self, src):
+        self.reference.source = src
+        self.line._update_stored_xl()
+
+    def add_ref_direct_source(self, src):
+        self.reference.direct_source = src
+        self.line._update_stored_xl()
 
     def get_coordinates(self, include_sheet=True):
         """
