@@ -426,7 +426,8 @@ def _add_line_effects(line, bu, row, sm):
     if sm.cols[ps.MONITOR]:
         monitor_bool = row[sm.cols[ps.MONITOR]-1].value
         if monitor_bool in ("True", "TRUE", True, "Yes"):
-            line.tags.add('monitor')
+            # line.tags.add('monitor')
+            line.usage.monitor = True
 
     if sm.cols[ps.PARSE_FORMULA]:
         parse_formula_bool = row[sm.cols[ps.PARSE_FORMULA]-1].value
@@ -638,15 +639,13 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
             row_num = cell.row
             col_num = cell.col_idx
 
-            statement_str = sheet.cell(row=row_num, column=sm.cols[ps.STATEMENT]).value
+            statement_str = sheet.cell(row_num, sm.cols[ps.STATEMENT]).value
             if not statement_str:
                 continue
             statement_name = statement_str.split()[0].casefold()
-            line_name = sheet.cell(row=row_num, column=sm.cols[ps.LINE_NAME]).value
-            parent_name = sheet.cell(row=row_num, column=sm.cols[ps.PARENT_NAME]).value
-            # print(line_name, parent_name)
-            # import pdb
-            # pdb.set_trace()
+            line_name = sheet.cell(row_num, sm.cols[ps.LINE_NAME]).value
+            parent_name = sheet.cell(row_num, sm.cols[ps.PARENT_NAME]).value
+
             # Handle rows where we just want to add a parameter value
             if statement_name in ("parameters", "parameter"):
                 if parent_name in ("Timeline", "timeline"):
@@ -706,8 +705,8 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
 
             # Behaviour column
             if sm.cols[ps.BEHAVIOR]:
-                behavior_str = sheet.cell(row=row_num,
-                                          column=sm.cols[ps.BEHAVIOR]).value
+                behavior_cell = sheet.cell(row_num, sm.cols[ps.BEHAVIOR])
+                behavior_str = behavior_cell.value
 
                 if behavior_str:
                     try:
@@ -729,7 +728,7 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
                                 if behavior_dict.get('scale'):
                                     data['scale'] = behavior_dict['scale']
 
-                                dr_name = (parent_name or "") +">" + line_name
+                                dr_name = (parent_name or "") + ">" + line_name
                                 driver = model.drivers.get_or_create(
                                     dr_name,
                                     data,
