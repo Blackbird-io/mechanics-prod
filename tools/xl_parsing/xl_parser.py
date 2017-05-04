@@ -676,7 +676,8 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
 
             # Status column
             if sm.cols[ps.STATUS]:
-                status_str = sheet.cell(row=row_num, column=sm.cols[ps.STATUS]).value
+                status_cell = sheet.cell(row=row_num, column=sm.cols[ps.STATUS])
+                status_str = status_cell.value
 
                 if status_str:
                     try:
@@ -701,8 +702,7 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
                             status_value = status_dict.pop(key)
                             status_dict[float(key)] = status_value
 
-                    # ssot_line.rules = status_dict
-                    bu.stage.work_space[ssot_line.name] = status_dict
+                    ssot_line.usage.status_rules = status_dict
 
             # Behaviour column
             if sm.cols[ps.BEHAVIOR]:
