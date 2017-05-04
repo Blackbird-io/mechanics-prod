@@ -970,5 +970,4 @@ def _populate_line_from_cell(cell, line_name, parent_name, statement):
         # If the line is a hardcoded value, set a direct reference in excel
         sheet = cell.parent
         full_address = "'" + sheet.title + "'!" + cell.coordinate
-        line.xl.reference.direct_source = full_address
-        line._update_stored_xl()
+        line.xl.set_ref_direct_source(full_address)
