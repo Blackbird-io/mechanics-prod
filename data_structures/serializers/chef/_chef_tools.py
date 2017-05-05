@@ -215,7 +215,7 @@ def check_alignment(line):
     sheet = cell.parent
 
     try:
-        check_data = sheet.bb.line_directory[line.id.bbid]
+        check_data, xl_format = sheet.bb.line_directory[line.id.bbid]
     except KeyError:
         # sheet.bb.line_directory[line.id.bbid] = line.xl_data
         # check_data = sheet.bb.line_directory[line.id.bbid]
@@ -440,7 +440,7 @@ def set_param_rows(line, sheet):
     """
 
     try:
-        template_xl = sheet.bb.line_directory[line.id.bbid]
+        template_xl, xl_format = sheet.bb.line_directory[line.id.bbid]
     except KeyError:
         template_xl = None
 
