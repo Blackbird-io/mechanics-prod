@@ -477,9 +477,9 @@ class CellStyles:
             else:
                 ed_col = sheet.max_column - 1
 
-            for xl in sheet.bb.line_directory.values():
-                row = xl.cell.row
-                border = xl.format.border
+            for xl_data, xl_format in sheet.bb.line_directory.values():
+                row = xl_data.cell.row
+                border = xl_format.border
 
                 if not border:
                     continue

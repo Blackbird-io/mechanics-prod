@@ -255,7 +255,8 @@ class LineChef:
 
         if check and not start_bal:
             if line.id.bbid not in sheet.bb.line_directory.keys():
-                sheet.bb.line_directory[line.id.bbid] = line.xl_data
+                sheet.bb.line_directory[line.id.bbid] = (line.xl_data,
+                                                         line.xl_format)
 
         r = sheet.row_dimensions[line.xl_data.cell.row]
         r.outline_level = sheet.bb.outline_level
@@ -848,7 +849,7 @@ class LineChef:
         keys = []  # Return a blank list if no formula steps.
 
         try:
-            template_xl = sheet.bb.line_directory[line.id.bbid]
+            template_xl, xl_format = sheet.bb.line_directory[line.id.bbid]
         except KeyError:
             template_xl = None
 

@@ -173,7 +173,8 @@ class SummaryLineChef:
             )
 
         if line.id.bbid not in sheet.bb.line_directory.keys():
-            sheet.bb.line_directory[line.id.bbid] = line.xl_data
+            sheet.bb.line_directory[line.id.bbid] = (line.xl_data,
+                                                     line.xl_format)
 
         if line.xl_format.blank_row_after:
             sheet.bb.need_spacer = True
