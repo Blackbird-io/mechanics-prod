@@ -299,6 +299,9 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         if usage:
             new.usage = LineItemUsage.from_database(usage)
 
+        if 'monitor' in new.tags.all:
+            new.usage = True
+
         return new
 
     def to_database(self, top_level=False):
