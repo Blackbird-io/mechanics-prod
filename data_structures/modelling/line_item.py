@@ -300,7 +300,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
             new.usage = LineItemUsage.from_database(usage)
 
         if 'monitor' in new.tags.all:
-            new.usage = True
+            new.usage.monitor = True
 
         return new
 
