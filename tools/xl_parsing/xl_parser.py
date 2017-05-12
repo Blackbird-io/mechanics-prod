@@ -717,6 +717,7 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
 
                     ssot_line.usage.behavior = behavior_dict
 
+                    # LTM Sum formula
                     required_keys = ps.ROLLING_SUM_KEYS
                     if len(required_keys - behavior_dict.keys()) == 0:
                         if behavior_dict['operation'] == 'sum':
@@ -737,6 +738,7 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
                                     formula)
                                 ssot_line.assign_driver(driver.id.bbid)
 
+                    # Custom Status formula
                     required_keys = ps.CUSTOM_STATUS_KEYS
                     if len(required_keys - behavior_dict.keys()) == 0:
                         if not ssot_line.get_driver():
@@ -744,6 +746,26 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
                             formula = FC.issue(f_id)
                             data = dict()
                             data.update(behavior_dict)  # Same key names
+                            dr_name = (parent_name or "") + ">" + line_name
+                            driver = model.drivers.get_or_create(
+                                dr_name,
+                                data,
+                                formula)
+                            ssot_line.assign_driver(driver.id.bbid)
+
+                    # Default Covenant Status formula
+                    required_keys = ps.COVENANT_STATUS_KEYS
+                    if len(required_keys - behavior_dict.keys()) == 0:
+                        if not ssot_line.get_driver():
+                            f_id = FC.by_name["covenant status."]
+                            formula = FC.issue(f_id)
+                            data = dict()
+                            data['current line'] = behavior_dict["current"]
+                            data['limit line'] = behavior_dict["limit"]
+                            if behavior_dict["comparison"] == ">":
+                                data['limit type'] = "floor"
+                            elif behavior_dict["comparison"] == "<":
+                                data['limit type'] = "ceiling"
                             dr_name = (parent_name or "") + ">" + line_name
                             driver = model.drivers.get_or_create(
                                 dr_name,

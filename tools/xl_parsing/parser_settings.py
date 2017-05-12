@@ -64,6 +64,15 @@ CUSTOM_STATUS_KEYS = {
     "style"
 }
 
+COVENANT_STATUS_KEYS = {
+    # "source",
+    # "benchmark",
+    "comparison"
+    "current",
+    "limit",
+    # "type",
+}
+
 ALLOWABLE_XL_TEXT = [
     "EBITDA<0",
     "EBITDA<=0",
