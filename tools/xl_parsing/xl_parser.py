@@ -736,6 +736,21 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
                                     data,
                                     formula)
                                 ssot_line.assign_driver(driver.id.bbid)
+
+                    required_keys = ps.CUSTOM_STATUS_KEYS
+                    if len(required_keys - behavior_dict.keys()) == 0:
+                        if not ssot_line.get_driver():
+                            f_id = FC.by_name["custom status."]
+                            formula = FC.issue(f_id)
+                            data = dict()
+                            data.update(behavior_dict)  # Same key names
+                            dr_name = (parent_name or "") + ">" + line_name
+                            driver = model.drivers.get_or_create(
+                                dr_name,
+                                data,
+                                formula)
+                            ssot_line.assign_driver(driver.id.bbid)
+
                     continue  # Don't parse or hardcode line if behavior exists
 
             # Look to see if Formula should be automatically imported
