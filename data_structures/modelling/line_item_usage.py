@@ -24,8 +24,6 @@ LineItemUsage         simple class containing behavior information for LineItems
 """
 
 
-
-
 # Imports
 # N/A
 
@@ -58,12 +56,14 @@ class LineItemUsage:
     from_database()       class method, extracts LineItemUsage from database format
     ====================  ======================================================
     """
+
     def __init__(self):
         self.status_rules = dict()
         self.alert_commentary = dict()
         self.behavior = dict()
         self.monitor = False
-    
+        self.limits = list()
+
     @classmethod
     def from_database(cls, data):
         """
@@ -76,7 +76,7 @@ class LineItemUsage:
         Method deserializes usage data from database.
         """
         new = cls()
-        
+
         status_rules = data.get('status_rules', None)
         if status_rules:
             new.status_rules.update(status_rules)
@@ -91,6 +91,10 @@ class LineItemUsage:
 
         monitor = data.get('monitor', False)
         new.monitor = monitor
+
+        limits = data.get('limits', list())
+        if limits:
+            new.limits = limits
 
         return new
 
@@ -108,6 +112,7 @@ class LineItemUsage:
         data['alert_commentary'] = self.alert_commentary
         data['behavior'] = self.behavior
         data['monitor'] = self.monitor
+        data['limits'] = self.limits
 
         return data
 
@@ -125,5 +130,6 @@ class LineItemUsage:
         result.alert_commentary = self.alert_commentary.copy()
         result.behavior = self.behavior.copy()
         result.monitor = self.monitor
+        result.limits = self.limits.copy()
 
         return result
