@@ -756,62 +756,81 @@ def _set_behavior(behavior_str, line, model):
 
     if behavior_dict.get('formula'):
         formula_name = behavior_dict.pop('formula')
+    else:
+        formula_name = "rolling sum over time."
 
-    # LTM Sum formula
-    required_keys = ps.ROLLING_SUM_KEYS
-    if len(required_keys - behavior_dict.keys()) == 0:
-        if behavior_dict['operation'] == 'sum':
-            if not line.get_driver():
-                f_id = FC.by_name["rolling sum over time."]
-                formula = FC.issue(f_id)
-                data = dict()
-                data['source line'] = behavior_dict["source"]
-                data['statement'] = behavior_dict["statement"]
-                data['periods'] = behavior_dict["horizon"]
-                if behavior_dict.get('scale'):
-                    data['scale'] = behavior_dict['scale']
-    
-                dr_name = (parent_name or "") + ">" + line_name
-                driver = model.drivers.get_or_create(
-                    dr_name,
-                    data,
-                    formula)
-                line.assign_driver(driver.id.bbid)
-    
-    # Custom Status formula
-    required_keys = ps.CUSTOM_STATUS_KEYS
+    # All formula names must end in a period.
+    if formula_name[-1] != ".":
+        formula_name += "."
+
+    f_id = FC.by_name[formula_name]
+    formula = FC.issue(f_id)
+    if not formula:
+        c = "No formula found by name of: " + formula_name
+        raise bb_exceptions.BBAnalyticalError(c)
+
+    required_keys = formula.required_data
+
     if len(required_keys - behavior_dict.keys()) == 0:
         if not line.get_driver():
-            f_id = FC.by_name["custom status."]
-            formula = FC.issue(f_id)
             data = dict()
             data.update(behavior_dict)  # Same key names
             dr_name = (parent_name or "") + ">" + line_name
-            driver = model.drivers.get_or_create(
-                dr_name,
-                data,
-                formula)
+            driver = model.drivers.get_or_create(dr_name, data, formula)
             line.assign_driver(driver.id.bbid)
-    
-    # Default Covenant Status formula
-    required_keys = ps.COVENANT_STATUS_KEYS
-    if len(required_keys - behavior_dict.keys()) == 0:
-        if not line.get_driver():
-            f_id = FC.by_name["covenant status."]
-            formula = FC.issue(f_id)
-            data = dict()
-            data['current line'] = behavior_dict["current"]
-            data['limit line'] = behavior_dict["limit"]
-            if behavior_dict["comparison"] == ">":
-                data['limit type'] = "floor"
-            elif behavior_dict["comparison"] == "<":
-                data['limit type'] = "ceiling"
-            dr_name = (parent_name or "") + ">" + line_name
-            driver = model.drivers.get_or_create(
-                dr_name,
-                data,
-                formula)
-            line.assign_driver(driver.id.bbid)
+
+    # if len(required_keys - behavior_dict.keys()) == 0:
+    #     if not line.get_driver():
+    #         # f_id = FC.by_name["rolling sum over time."]
+    #         # formula = FC.issue(f_id)
+    #         data = dict()
+    #         data['source line'] = behavior_dict["source"]
+    #         data['statement'] = behavior_dict["statement"]
+    #         data['periods'] = behavior_dict["horizon"]
+    #         if behavior_dict.get('scale'):
+    #             data['scale'] = behavior_dict['scale']
+    #
+    #         dr_name = (parent_name or "") + ">" + line_name
+    #         driver = model.drivers.get_or_create(
+    #             dr_name,
+    #             data,
+    #             formula)
+    #         line.assign_driver(driver.id.bbid)
+
+    # # Custom Status formula
+    # required_keys = ps.CUSTOM_STATUS_KEYS
+    # if len(required_keys - behavior_dict.keys()) == 0:
+    #     if not line.get_driver():
+    #         f_id = FC.by_name["custom status."]
+    #         formula = FC.issue(f_id)
+    #         data = dict()
+    #         data.update(behavior_dict)  # Same key names
+    #         dr_name = (parent_name or "") + ">" + line_name
+    #         driver = model.drivers.get_or_create(
+    #             dr_name,
+    #             data,
+    #             formula)
+    #         line.assign_driver(driver.id.bbid)
+    #
+    # # Default Covenant Status formula
+    # required_keys = ps.COVENANT_STATUS_KEYS
+    # if len(required_keys - behavior_dict.keys()) == 0:
+    #     if not line.get_driver():
+    #         f_id = FC.by_name["covenant status."]
+    #         formula = FC.issue(f_id)
+    #         data = dict()
+    #         data['current line'] = behavior_dict["current"]
+    #         data['limit line'] = behavior_dict["limit"]
+    #         if behavior_dict["comparison"] == ">":
+    #             data['limit type'] = "floor"
+    #         elif behavior_dict["comparison"] == "<":
+    #             data['limit type'] = "ceiling"
+    #         dr_name = (parent_name or "") + ">" + line_name
+    #         driver = model.drivers.get_or_create(
+    #             dr_name,
+    #             data,
+    #             formula)
+    #         line.assign_driver(driver.id.bbid)
 
 
 def _parse_formula(sheet, cell_f, bu, sm):
