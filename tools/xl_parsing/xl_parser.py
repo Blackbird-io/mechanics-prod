@@ -466,12 +466,13 @@ def _add_line_effects(line, bu, row, sm):
             line.tags.add('business summary')
 
     # Tag line with one or more tags.
-    tags_str = row[sm.cols[ps.TAGS]-1].value
-    if tags_str:
-        tags_list = tags_str.split(",")
-        for t in tags_list:
-            new_tag = t.strip()  # Remove white space from both sides
-            line.tags.add(new_tag)
+    if sm.cols[ps.TAGS]:
+        tags_str = row[sm.cols[ps.TAGS]-1].value
+        if tags_str:
+            tags_list = tags_str.split(",")
+            for t in tags_list:
+                new_tag = t.strip()  # Remove white space from both sides
+                line.tags.add(new_tag)
 
 
 def _combine_fins_structure(old_model, new_model):
@@ -754,63 +755,30 @@ def _set_behavior(behavior_str, line, model):
     
     line.usage.behavior = behavior_dict
 
-    if behavior_dict.get('formula'):
-        formula_name = behavior_dict.pop('formula')
+    if behavior_dict.get('action'):
+        action_name = behavior_dict.pop('action')
+    else:
+        action_name = "rolling sum over time"
 
-    # LTM Sum formula
-    required_keys = ps.ROLLING_SUM_KEYS
-    if len(required_keys - behavior_dict.keys()) == 0:
-        if behavior_dict['operation'] == 'sum':
-            if not line.get_driver():
-                f_id = FC.by_name["rolling sum over time."]
-                formula = FC.issue(f_id)
-                data = dict()
-                data['source line'] = behavior_dict["source"]
-                data['statement'] = behavior_dict["statement"]
-                data['periods'] = behavior_dict["horizon"]
-                if behavior_dict.get('scale'):
-                    data['scale'] = behavior_dict['scale']
-    
-                dr_name = (parent_name or "") + ">" + line_name
-                driver = model.drivers.get_or_create(
-                    dr_name,
-                    data,
-                    formula)
-                line.assign_driver(driver.id.bbid)
-    
-    # Custom Status formula
-    required_keys = ps.CUSTOM_STATUS_KEYS
+    formula_name = ps.ACTION_TO_FORMULA_MAP.get(action_name)
+    if not formula_name:
+        c = "No formula mapped to the action name of: " + action_name
+        raise bb_exceptions.BBAnalyticalError(c)
+
+    f_id = FC.by_name[formula_name]
+    formula = FC.issue(f_id)
+    if not formula:
+        c = "No formula found by name of: " + formula_name
+        raise bb_exceptions.BBAnalyticalError(c)
+
+    required_keys = formula.required_data
+
     if len(required_keys - behavior_dict.keys()) == 0:
         if not line.get_driver():
-            f_id = FC.by_name["custom status."]
-            formula = FC.issue(f_id)
             data = dict()
             data.update(behavior_dict)  # Same key names
             dr_name = (parent_name or "") + ">" + line_name
-            driver = model.drivers.get_or_create(
-                dr_name,
-                data,
-                formula)
-            line.assign_driver(driver.id.bbid)
-    
-    # Default Covenant Status formula
-    required_keys = ps.COVENANT_STATUS_KEYS
-    if len(required_keys - behavior_dict.keys()) == 0:
-        if not line.get_driver():
-            f_id = FC.by_name["covenant status."]
-            formula = FC.issue(f_id)
-            data = dict()
-            data['current line'] = behavior_dict["current"]
-            data['limit line'] = behavior_dict["limit"]
-            if behavior_dict["comparison"] == ">":
-                data['limit type'] = "floor"
-            elif behavior_dict["comparison"] == "<":
-                data['limit type'] = "ceiling"
-            dr_name = (parent_name or "") + ">" + line_name
-            driver = model.drivers.get_or_create(
-                dr_name,
-                data,
-                formula)
+            driver = model.drivers.get_or_create(dr_name, data, formula)
             line.assign_driver(driver.id.bbid)
 
 
