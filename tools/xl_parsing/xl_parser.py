@@ -709,70 +709,7 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
                 behavior_str = behavior_cell.value
 
                 if behavior_str:
-                    try:
-                        behavior_dict = json.loads(behavior_str)
-                    except ValueError:
-                        c = "Invalid JSON String: " + behavior_str
-                        raise bb_exceptions.BBAnalyticalError(c)
-
-                    ssot_line.usage.behavior = behavior_dict
-
-                    # LTM Sum formula
-                    required_keys = ps.ROLLING_SUM_KEYS
-                    if len(required_keys - behavior_dict.keys()) == 0:
-                        if behavior_dict['operation'] == 'sum':
-                            if not ssot_line.get_driver():
-                                f_id = FC.by_name["rolling sum over time."]
-                                formula = FC.issue(f_id)
-                                data = dict()
-                                data['source line'] = behavior_dict["source"]
-                                data['statement'] = behavior_dict["statement"]
-                                data['periods'] = behavior_dict["horizon"]
-                                if behavior_dict.get('scale'):
-                                    data['scale'] = behavior_dict['scale']
-
-                                dr_name = (parent_name or "") + ">" + line_name
-                                driver = model.drivers.get_or_create(
-                                    dr_name,
-                                    data,
-                                    formula)
-                                ssot_line.assign_driver(driver.id.bbid)
-
-                    # Custom Status formula
-                    required_keys = ps.CUSTOM_STATUS_KEYS
-                    if len(required_keys - behavior_dict.keys()) == 0:
-                        if not ssot_line.get_driver():
-                            f_id = FC.by_name["custom status."]
-                            formula = FC.issue(f_id)
-                            data = dict()
-                            data.update(behavior_dict)  # Same key names
-                            dr_name = (parent_name or "") + ">" + line_name
-                            driver = model.drivers.get_or_create(
-                                dr_name,
-                                data,
-                                formula)
-                            ssot_line.assign_driver(driver.id.bbid)
-
-                    # Default Covenant Status formula
-                    required_keys = ps.COVENANT_STATUS_KEYS
-                    if len(required_keys - behavior_dict.keys()) == 0:
-                        if not ssot_line.get_driver():
-                            f_id = FC.by_name["covenant status."]
-                            formula = FC.issue(f_id)
-                            data = dict()
-                            data['current line'] = behavior_dict["current"]
-                            data['limit line'] = behavior_dict["limit"]
-                            if behavior_dict["comparison"] == ">":
-                                data['limit type'] = "floor"
-                            elif behavior_dict["comparison"] == "<":
-                                data['limit type'] = "ceiling"
-                            dr_name = (parent_name or "") + ">" + line_name
-                            driver = model.drivers.get_or_create(
-                                dr_name,
-                                data,
-                                formula)
-                            ssot_line.assign_driver(driver.id.bbid)
-
+                    _set_behavior(behavior_str, ssot_line, model)
                     continue  # Don't parse or hardcode line if behavior exists
 
             # Look to see if Formula should be automatically imported
@@ -787,6 +724,94 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
 
                 if timeline_name in ("True", "TRUE", True, "ACTUAL", "Actual"):
                     _populate_line_from_cell(cell, line_name, parent_name, actl_stmt)
+
+
+def _set_behavior(behavior_str, line, model):
+    """
+
+
+    _set_behavior(sheet, cell_f, bu) -> bool
+
+    --``sheet`` is an instance of openpyxl.WorkSheet with Values
+    --``cell_f`` is an instance of openpyxl.Cell with Formulas as str
+    --``bu`` is the instance of EngineModel.BusinessUnit
+    --``sm`` is an instance of SheetMap    
+
+    Function takes a formula string from excel and creates a driver that will
+    provide the same value in the Blackbird Engine. Function returns False if
+    it was not able to parse the formula and True if the driver was added.
+    """
+
+
+    try:
+        behavior_dict = json.loads(behavior_str)
+    except ValueError:
+        c = "Invalid JSON String: " + behavior_str
+        raise bb_exceptions.BBAnalyticalError(c)
+
+    line_name = line.name
+    parent_name = line.relationships.parent.name
+    
+    line.usage.behavior = behavior_dict
+
+    if behavior_dict.get('formula'):
+        formula_name = behavior_dict.pop('formula')
+
+    # LTM Sum formula
+    required_keys = ps.ROLLING_SUM_KEYS
+    if len(required_keys - behavior_dict.keys()) == 0:
+        if behavior_dict['operation'] == 'sum':
+            if not line.get_driver():
+                f_id = FC.by_name["rolling sum over time."]
+                formula = FC.issue(f_id)
+                data = dict()
+                data['source line'] = behavior_dict["source"]
+                data['statement'] = behavior_dict["statement"]
+                data['periods'] = behavior_dict["horizon"]
+                if behavior_dict.get('scale'):
+                    data['scale'] = behavior_dict['scale']
+    
+                dr_name = (parent_name or "") + ">" + line_name
+                driver = model.drivers.get_or_create(
+                    dr_name,
+                    data,
+                    formula)
+                line.assign_driver(driver.id.bbid)
+    
+    # Custom Status formula
+    required_keys = ps.CUSTOM_STATUS_KEYS
+    if len(required_keys - behavior_dict.keys()) == 0:
+        if not line.get_driver():
+            f_id = FC.by_name["custom status."]
+            formula = FC.issue(f_id)
+            data = dict()
+            data.update(behavior_dict)  # Same key names
+            dr_name = (parent_name or "") + ">" + line_name
+            driver = model.drivers.get_or_create(
+                dr_name,
+                data,
+                formula)
+            line.assign_driver(driver.id.bbid)
+    
+    # Default Covenant Status formula
+    required_keys = ps.COVENANT_STATUS_KEYS
+    if len(required_keys - behavior_dict.keys()) == 0:
+        if not line.get_driver():
+            f_id = FC.by_name["covenant status."]
+            formula = FC.issue(f_id)
+            data = dict()
+            data['current line'] = behavior_dict["current"]
+            data['limit line'] = behavior_dict["limit"]
+            if behavior_dict["comparison"] == ">":
+                data['limit type'] = "floor"
+            elif behavior_dict["comparison"] == "<":
+                data['limit type'] = "ceiling"
+            dr_name = (parent_name or "") + ">" + line_name
+            driver = model.drivers.get_or_create(
+                dr_name,
+                data,
+                formula)
+            line.assign_driver(driver.id.bbid)
 
 
 def _parse_formula(sheet, cell_f, bu, sm):
