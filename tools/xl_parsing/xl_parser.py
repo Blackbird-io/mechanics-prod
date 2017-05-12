@@ -466,12 +466,13 @@ def _add_line_effects(line, bu, row, sm):
             line.tags.add('business summary')
 
     # Tag line with one or more tags.
-    tags_str = row[sm.cols[ps.TAGS]-1].value
-    if tags_str:
-        tags_list = tags_str.split(",")
-        for t in tags_list:
-            new_tag = t.strip()  # Remove white space from both sides
-            line.tags.add(new_tag)
+    if sm.cols[ps.TAGS]:
+        tags_str = row[sm.cols[ps.TAGS]-1].value
+        if tags_str:
+            tags_list = tags_str.split(",")
+            for t in tags_list:
+                new_tag = t.strip()  # Remove white space from both sides
+                line.tags.add(new_tag)
 
 
 def _combine_fins_structure(old_model, new_model):
