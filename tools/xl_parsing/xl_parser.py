@@ -754,14 +754,15 @@ def _set_behavior(behavior_str, line, model):
     
     line.usage.behavior = behavior_dict
 
-    if behavior_dict.get('formula'):
-        formula_name = behavior_dict.pop('formula')
+    if behavior_dict.get('action'):
+        action_name = behavior_dict.pop('action')
     else:
-        formula_name = "rolling sum over time."
+        action_name = "rolling sum over time"
 
-    # All formula names must end in a period.
-    if formula_name[-1] != ".":
-        formula_name += "."
+    formula_name = ps.ACTION_TO_FORMULA_MAP.get(action_name)
+    if not formula_name:
+        c = "No formula mapped to the action name of: " + action_name
+        raise bb_exceptions.BBAnalyticalError(c)
 
     f_id = FC.by_name[formula_name]
     formula = FC.issue(f_id)
