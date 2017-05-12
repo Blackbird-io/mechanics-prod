@@ -57,6 +57,13 @@ ROLLING_SUM_KEYS = {
     "operation"
 }
 
+CUSTOM_STATUS_KEYS = {
+    "source",
+    "benchmark",
+    "comparison",
+    "style"
+}
+
 ALLOWABLE_XL_TEXT = [
     "EBITDA<0",
     "EBITDA<=0",
