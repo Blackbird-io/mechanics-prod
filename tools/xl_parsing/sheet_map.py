@@ -70,6 +70,7 @@ class SheetMap():
         self.cols[ps.ALERT[0]] = None
         self.cols[ps.STATUS] = None
         self.cols[ps.ON_CARD] = None
+        self.cols[ps.LIMITS] = None
         self.cols[ps.TAGS] = None
         self.cols["FIRST_PERIOD"] = None   # First column with a period date
 

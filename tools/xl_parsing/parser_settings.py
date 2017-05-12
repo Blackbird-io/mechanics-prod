@@ -73,6 +73,12 @@ COVENANT_STATUS_KEYS = {
     # "type",
 }
 
+ACTION_TO_FORMULA_MAP = {
+    "rolling sum over time": "rolling sum over time.",
+    "covenant status": "covenant status.",
+    "custom status": "custom status.",
+}
+
 ALLOWABLE_XL_TEXT = [
     "EBITDA<0",
     "EBITDA<=0",
@@ -99,6 +105,7 @@ BEHAVIOR = "BEHAVIOR"
 ALERT = ("ALERT", "ALERT_COMMENTARY")
 STATUS = "STATUS"
 ON_CARD = "ON_CARD"
+LIMITS = "LIMITS"
 TAGS = "TAGS"
 
 REQUIRED_COLS = [
