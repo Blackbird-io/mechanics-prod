@@ -709,8 +709,14 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
                                            column=sm.cols[ps.BEHAVIOR])
                 behavior_str = behavior_cell.value
 
+                limits_str = None
+                if sm.cols[ps.LIMITS]:
+                    limits_cell = sheet.cell(row=row_num,
+                                             column=sm.cols[ps.LIMITS])
+                    limits_str = limits_cell.value
+
                 if behavior_str:
-                    _set_behavior(behavior_str, ssot_line, model)
+                    _set_behavior(behavior_str, limits_str, ssot_line, model)
                     continue  # Don't parse or hardcode line if behavior exists
 
             # Look to see if Formula should be automatically imported
@@ -727,22 +733,20 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
                     _populate_line_from_cell(cell, line_name, parent_name, actl_stmt)
 
 
-def _set_behavior(behavior_str, line, model):
+def _set_behavior(behavior_str, limits_str, line, model):
     """
 
 
     _set_behavior(sheet, cell_f, bu) -> bool
 
-    --``sheet`` is an instance of openpyxl.WorkSheet with Values
-    --``cell_f`` is an instance of openpyxl.Cell with Formulas as str
-    --``bu`` is the instance of EngineModel.BusinessUnit
-    --``sm`` is an instance of SheetMap    
+    --``behavior_str`` is string representing a JSON dict
+    --``limits_str`` is string representing of a list of 2 item lists
+    --``line`` is the instance of LineItem which we want to add behavior
+    --``model`` is an instance of EngineModel    
 
-    Function takes a formula string from excel and creates a driver that will
-    provide the same value in the Blackbird Engine. Function returns False if
-    it was not able to parse the formula and True if the driver was added.
+    Function takes a behavior and and limits string and figures out a formula
+    and driver to attach to the line.
     """
-
 
     try:
         behavior_dict = json.loads(behavior_str)
@@ -750,10 +754,19 @@ def _set_behavior(behavior_str, line, model):
         c = "Invalid JSON String: " + behavior_str
         raise bb_exceptions.BBAnalyticalError(c)
 
-    line_name = line.name
-    parent_name = line.relationships.parent.name
-    
     line.usage.behavior = behavior_dict
+
+    if not limits_str:
+        # set default value
+        limits_str = '[[1.3,"Overperforming"],[1.1,"Performing"]]'
+
+    try:
+        limits_list = json.loads(limits_str)
+    except ValueError:
+        c = "Invalid JSON String: " + limits_str
+        raise bb_exceptions.BBAnalyticalError(c)
+
+    line.usage.limits = limits_list
 
     if behavior_dict.get('action'):
         action_name = behavior_dict.pop('action')
@@ -777,7 +790,9 @@ def _set_behavior(behavior_str, line, model):
         if not line.get_driver():
             data = dict()
             data.update(behavior_dict)  # Same key names
-            dr_name = (parent_name or "") + ">" + line_name
+
+            parent_name = line.relationships.parent.name
+            dr_name = (parent_name or "") + ">" + line.name
             driver = model.drivers.get_or_create(dr_name, data, formula)
             line.assign_driver(driver.id.bbid)
 
