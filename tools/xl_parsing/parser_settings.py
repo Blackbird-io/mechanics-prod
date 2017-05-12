@@ -67,7 +67,7 @@ CUSTOM_STATUS_KEYS = {
 COVENANT_STATUS_KEYS = {
     # "source",
     # "benchmark",
-    "comparison"
+    "comparison",
     "current",
     "limit",
     # "type",
