@@ -291,13 +291,13 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         position = int(position) if position else None
         new.position = position
 
-        usage = data.get('usage', None)
-        if usage:
-            new.usage = LineItemUsage.from_database(usage)
-
         workspace = data.get('workspace', None)
-        if workspace:
-            new.usage.workspace.update(workspace)
+        if workspace and workspace != 'null':
+            new.workspace.update(workspace)
+
+        usage = data.get('usage', None)
+        if usage and usage != 'null':
+            new.usage = LineItemUsage.from_database(usage)
 
         if 'monitor' in new.tags.all:
             new.usage.monitor = True
