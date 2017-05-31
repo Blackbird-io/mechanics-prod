@@ -419,9 +419,7 @@ def _add_line_effects(line, bu, row, sm):
     if sm.cols[ps.REPORT]:
         report_str = row[sm.cols[ps.REPORT]-1].value
         if report_str:
-            if report_str.casefold() in ps.VALID_REPORTS:
-                # Only tag valid comparisons
-                line.tags.add(report_str)
+            line.tags.add("show on report")
 
     if sm.cols[ps.MONITOR]:
         monitor_bool = row[sm.cols[ps.MONITOR]-1].value
