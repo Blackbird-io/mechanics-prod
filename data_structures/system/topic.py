@@ -93,6 +93,7 @@ class Topic(TagsMixIn):
     record_containers     list of objects that record_work() goes through
     record_strings        list of string attribute paths w respect to M
     record_on_exit        bool, whether record work should run on sign off
+    repeatable            bool, whether topic can be repeated in the same path
     scenarios             dictionary of scenarios used by topic, by q bbid
     source                relative path of content module that described obj
     tags                  instance of Tags class
@@ -129,6 +130,7 @@ class Topic(TagsMixIn):
         self.scenarios = None
         self.source = None
         self.work_plan = {}
+        self.repeatable = False
 
     def add_work_item(self, line_name, contribution):
         """

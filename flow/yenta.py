@@ -253,7 +253,8 @@ class Yenta():
             work["scoring"] = dict()
 
         for bbid in pool:
-            topic_tags = self.TM.local_catalog.get_tags(bbid)
+            topic = self.TM.local_catalog.by_id[bbid]
+            topic_tags = topic.tags
             topic_criterion = topic_tags.required - {None}
             topic_profile = topic_tags.all | {topic_tags.name}
 
@@ -261,7 +262,10 @@ class Yenta():
             missing_on_target = topic_criterion - targ_profile
             prohibited_on_topic = topic_profile & target.tags.prohibited
             prohibited_on_target = targ_profile & topic_tags.prohibited
-            used = bbid in model.target.used
+
+            used = False
+            if bbid in model.target.used and not topic.repeatable:
+                used = True
 
             if trace:
                 work["scoring"][bbid] = dict()
