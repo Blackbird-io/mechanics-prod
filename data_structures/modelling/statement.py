@@ -180,3 +180,11 @@ class Statement(BaseFinancialsComponent):
         """
         BaseFinancialsComponent.set_name(self, name)
         self.register(self.id.namespace)
+
+    def get_monitoring_lines(self):
+        out = list()
+        for line in self.get_full_ordered():
+            if line.usage.monitor:
+                out.append(line)
+
+        return out

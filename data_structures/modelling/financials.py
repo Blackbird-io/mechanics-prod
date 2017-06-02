@@ -108,6 +108,8 @@ class Financials:
 
         self._restricted = False
 
+        self.update_statements = list()
+
     @property
     def compute_order(self):
         return self._compute_order.copy()
@@ -222,6 +224,9 @@ class Financials:
         new = cls(parent=company, period=period)
         new.register(company.id.bbid)
 
+        us = portal_data['update_statements']
+        new.update_statements = us
+
         new._chef_order = portal_data['chef_order']
         new._compute_order = portal_data['compute_order']
         new._exclude_statements = portal_data['exclude_statements']
@@ -266,6 +271,7 @@ class Financials:
             'compute_order': self._compute_order,
             'exclude_statements': self._exclude_statements,
             'full_order': self._full_order,
+            'update_statements': self.update_statements,
         }
         return result
 
