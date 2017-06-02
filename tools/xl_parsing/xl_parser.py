@@ -412,33 +412,33 @@ def _add_line_effects(line, bu, row, sm):
     # Add sum_details attribute if FALSE (TRUE is default for blank cells)
     if sm.cols[ps.SUM_DETAILS]:
         sum_details = row[sm.cols[ps.SUM_DETAILS]-1].value
-        if sum_details in ("False", "FALSE", False, "No"):
+        if not _check_truthy(sum_details):
             line.sum_details = False
 
     # Tag line with which summary report we want to display it on.
     if sm.cols[ps.REPORT]:
         report_str = row[sm.cols[ps.REPORT]-1].value
-        if isinstance(report_str, str):
-            temp = report_str.casefold()
-            if temp in ps.VALID_REPORTS or temp in ("true", "yes"):
-                line.usage.show_on_report = True
-        elif isinstance(report_str, bool):
-            if report_str:
-                line.usage.show_on_report = True
+        if _check_truthy(report_str):
+            line.usage.show_on_report = True
+        else:
+            if isinstance(report_str, str):
+                report_str = report_str.casefold()
+                if report_str in ps.VALID_REPORTS:
+                    line.usage.show_on_report = True
 
     if sm.cols[ps.MONITOR]:
         monitor_bool = row[sm.cols[ps.MONITOR]-1].value
-        if monitor_bool in ("True", "TRUE", True, "Yes"):
+        if _check_truthy(monitor_bool):
             line.usage.monitor = True
 
     if sm.cols[ps.PARSE_FORMULA]:
         parse_formula_bool = row[sm.cols[ps.PARSE_FORMULA]-1].value
-        if parse_formula_bool in ("True", "TRUE", True, "Yes"):
+        if _check_truthy(parse_formula_bool):
             line.tags.add('parse formula')
 
     if sm.cols[ps.ADD_TO_PATH[0]]:
         topic_formula_bool = row[sm.cols[ps.ADD_TO_PATH[0]] - 1].value
-        if topic_formula_bool in ("True", "TRUE", True, "Yes"):
+        if _check_truthy(topic_formula_bool):
             new_path_line = LineItem(line.name)
             bu.stage.path.append(new_path_line)
             line.tags.add('topic formula')
@@ -452,7 +452,7 @@ def _add_line_effects(line, bu, row, sm):
             line.tags.add('alert commentary')
 
             # Backwards compatibility when ALERT was a bool column
-            if alert_val in ("True", "TRUE", True, "Yes"):
+            if _check_truthy(alert_val):
                 alert_val = '{"comparison":"=","limit":"Needs Review"}'
 
             try:
@@ -464,7 +464,7 @@ def _add_line_effects(line, bu, row, sm):
 
     if sm.cols[ps.ON_CARD]:
         on_card_bool = row[sm.cols[ps.ON_CARD] - 1].value
-        if on_card_bool in ("True", "TRUE", True, "Yes"):
+        if _check_truthy(on_card_bool):
             line.tags.add('business summary')
 
     # Tag line with one or more tags.
@@ -475,6 +475,32 @@ def _add_line_effects(line, bu, row, sm):
             for t in tags_list:
                 new_tag = t.strip()  # Remove white space from both sides
                 line.tags.add(new_tag)
+
+
+def _check_truthy(var, others=list()):
+    """
+
+
+    _build_fins_from_sheet(financials, sheet) -> None
+
+    --``old_model``     old instance of Engine Model
+    --``new_model``     new instance of Engine Model
+
+    Function combines line structure from the old and new models
+    """
+    truths = ["true", "yes"]
+
+    others = [o.casefold() for o in others]
+    truths.extend(others)
+
+    val = False
+    if isinstance(var, str):
+        var = var.casefold()
+        if var in truths:
+            val = True
+    elif isinstance(var, bool):
+        val = var
+    return val
 
 
 def _combine_fins_structure(old_model, new_model):
@@ -625,7 +651,8 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
             proj_tl.add_period(proj_pd)
 
         actl_pd = actl_tl.find_period(dt)
-        if timeline_name in ("True", "TRUE", True, "ACTUAL", "Actual"):
+
+        if _check_truthy(timeline_name, others=["actual"]):
             if not actl_pd:
                 actl_pd = TimePeriod(start_date=start_dt,
                                      end_date=end_dt,
@@ -731,7 +758,7 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
                 # Always populate projected statement. (Include Historical Actuals)
                 _populate_line_from_cell(cell, line_name, parent_name, proj_stmt)
 
-                if timeline_name in ("True", "TRUE", True, "ACTUAL", "Actual"):
+                if _check_truthy(timeline_name, others=["actual"]):
                     _populate_line_from_cell(cell, line_name, parent_name, actl_stmt)
 
 
@@ -825,7 +852,7 @@ def _parse_formula(sheet, cell_f, bu, sm):
         return False
 
     parse_formula_bool_cell = sheet.cell(row=row, column=sm.cols[ps.PARSE_FORMULA])
-    if parse_formula_bool_cell.value not in ("True", "TRUE", True, "Yes"):
+    if not _check_truthy(parse_formula_bool_cell.value):
         return False
 
     line_name = sheet.cell(row=row, column=sm.cols[ps.LINE_NAME]).value
@@ -998,19 +1025,9 @@ def _populate_line_from_cell(cell, line_name, parent_name, statement):
 
     if line is None:
         print(line_name, parent_name)
-        import pdb
-        pdb.set_trace()
 
     if line._details and line.sum_details:
         pass
-        # if line.value is not None:
-        #     if abs(value - line.value) > 0.1:  # Decimals
-        #         # print("Upload Value:", value)
-        #         # print("Detail Sum:", line.value)
-        #         # print(line)
-        #         c = "Warning! Sum of details do not match expected line value!"
-        #         # print(c)
-                # raise bb_exceptions.ExcelPrepError(c)
     else:
         line.set_value(value, "uploaded projections", override=True)
         line.set_hardcoded(True)
