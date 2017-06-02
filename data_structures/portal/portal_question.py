@@ -85,6 +85,7 @@ class PortalQuestion(ReadyForPortal):
                     "target",
                     "extra_rows",
                     "delayed",
+                    "context",
                     ]
         #
         ReadyForPortal.__init__(self, pq_attrs)
@@ -104,6 +105,7 @@ class PortalQuestion(ReadyForPortal):
         self.target = None
         self.extra_rows = True
         self.delayed = False
+        self.context = dict()
 
     def to_database(self, seed, web=False):
         """
@@ -166,6 +168,7 @@ class PortalQuestion(ReadyForPortal):
         result["target"] = seed.context.get("target", None)
         result["extra_rows"] = seed.extra_rows
         result["delayed"] = seed.delayed
+        result["context"] = seed.context
 
         del result["_var_attrs"]
         
