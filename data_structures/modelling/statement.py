@@ -56,13 +56,14 @@ class Statement(BaseFinancialsComponent):
     N/A
 
     FUNCTIONS:
-    to_database()           creates a flattened version of Statement for Portal
+    to_database()         creates a flattened version of Statement for Portal
+    get_monitoring_lines() returns list of monitored lines on the statement
     peer_locator()        returns a function for locating or creating a copy of
                           the instance within a given container
     set_name()            sets instance name and updates ID to reflect the change
 
     CLASS METHODS:
-    from_database()         class method, extracts Statement out of API-format
+    from_database()       class method, extracts Statement out of API-format
     ====================  ======================================================
     """
 
@@ -145,6 +146,22 @@ class Statement(BaseFinancialsComponent):
 
         return result
 
+    def get_monitoring_lines(self):
+        """
+
+
+        Statement.get_monitoring_lines() -> list
+
+        Method compiles list of monitored lines on the statement and returns
+        them.
+        """
+        out = list()
+        for line in self.get_full_ordered():
+            if line.usage.monitor:
+                out.append(line)
+
+        return out
+
     def peer_locator(self):
         """
 
@@ -180,11 +197,3 @@ class Statement(BaseFinancialsComponent):
         """
         BaseFinancialsComponent.set_name(self, name)
         self.register(self.id.namespace)
-
-    def get_monitoring_lines(self):
-        out = list()
-        for line in self.get_full_ordered():
-            if line.usage.monitor:
-                out.append(line)
-
-        return out
