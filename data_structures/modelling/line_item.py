@@ -299,8 +299,10 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         if usage:
             new.usage = LineItemUsage.from_database(usage)
 
-        if 'monitor' in new.tags.all:
-            new.usage.monitor = True
+        old_magic_keys = {"kpi", "covenants", "financials", "overall",
+                          "business summary"}
+        if 'show on report' in new.tags.all or (new.tags.all & old_magic_keys):
+            new.usage.show_on_report = True
 
         return new
 

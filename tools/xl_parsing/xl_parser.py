@@ -418,13 +418,17 @@ def _add_line_effects(line, bu, row, sm):
     # Tag line with which summary report we want to display it on.
     if sm.cols[ps.REPORT]:
         report_str = row[sm.cols[ps.REPORT]-1].value
-        if report_str:
-            line.tags.add("show on report")
+        if isinstance(report_str, str):
+            temp = report_str.casefold()
+            if temp in ps.VALID_REPORTS or temp in ("true", "yes"):
+                line.usage.show_on_report = True
+        elif isinstance(report_str, bool):
+            if report_str:
+                line.usage.show_on_report = True
 
     if sm.cols[ps.MONITOR]:
         monitor_bool = row[sm.cols[ps.MONITOR]-1].value
         if monitor_bool in ("True", "TRUE", True, "Yes"):
-            # line.tags.add('monitor')
             line.usage.monitor = True
 
     if sm.cols[ps.PARSE_FORMULA]:
