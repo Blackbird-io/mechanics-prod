@@ -304,6 +304,9 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         if 'show on report' in new.tags.all or (new.tags.all & old_magic_keys):
             new.usage.show_on_report = True
 
+        if 'monitor' in new.tags.all:
+            new.usage.monitor = True
+
         return new
 
     def to_database(self, top_level=False):
