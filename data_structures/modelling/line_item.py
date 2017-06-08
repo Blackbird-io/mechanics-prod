@@ -292,11 +292,11 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         new.position = position
 
         workspace = data.get('workspace', None)
-        if workspace:
+        if workspace and workspace != 'null':
             new.workspace.update(workspace)
 
         usage = data.get('usage', None)
-        if usage:
+        if usage and usage != 'null':
             new.usage = LineItemUsage.from_database(usage)
 
         old_magic_keys = {"kpi", "covenants", "financials", "overall",
