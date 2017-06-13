@@ -64,6 +64,7 @@ class LineItemUsage:
         self.monitor = False
         self.limits = list()
         self.show_on_report = False
+        self.show_on_card = False
 
     @classmethod
     def from_database(cls, data):
@@ -100,6 +101,9 @@ class LineItemUsage:
         rpt = data.get('show_on_report', False)
         new.show_on_report = rpt
 
+        rpt = data.get('show_on_card', False)
+        new.show_on_card = rpt
+
         return new
 
     def to_database(self):
@@ -118,6 +122,7 @@ class LineItemUsage:
         data['monitor'] = self.monitor
         data['limits'] = self.limits
         data['show_on_report'] = self.show_on_report
+        data['show_on_card'] = self.show_on_card
 
         return data
 
@@ -137,5 +142,6 @@ class LineItemUsage:
         result.monitor = self.monitor
         result.limits = self.limits.copy()
         result.show_on_report = self.show_on_report
+        result.show_on_card = self.show_on_card
 
         return result

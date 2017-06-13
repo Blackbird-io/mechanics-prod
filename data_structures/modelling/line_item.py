@@ -304,6 +304,9 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         if 'show on report' in new.tags.all or (new.tags.all & old_magic_keys):
             new.usage.show_on_report = True
 
+        if "business summary" in new.tags.all:
+            new.usage.show_on_card = True
+
         if 'monitor' in new.tags.all:
             new.usage.monitor = True
 

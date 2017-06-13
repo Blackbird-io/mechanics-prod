@@ -460,7 +460,7 @@ def _add_line_effects(line, bu, row, sm):
     if sm.cols[ps.ON_CARD]:
         on_card_bool = row[sm.cols[ps.ON_CARD] - 1].value
         if _check_truthy(on_card_bool):
-            line.tags.add('business summary')
+            line.usage.show_on_card = True
 
     # Tag line with one or more tags.
     if sm.cols[ps.TAGS]:
