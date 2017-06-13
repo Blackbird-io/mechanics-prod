@@ -248,8 +248,8 @@ def build_sheet_map(sheet):
         if col_name in sm.cols.keys():
             sm.cols[col_name] = cell.col_idx
         else:
-            import pdb
-            pdb.set_trace()
+            c = "col_name not in sm.cols.keys()"
+            raise bb_exceptions.ExcelPrepError(c)
 
     missing_columns = []
     for col in ps.REQUIRED_COLS:
@@ -385,6 +385,8 @@ def _build_fins_from_sheet(bu, sheet, sm):
 
         line.set_title(line_title)
         _add_line_effects(line, bu, row, sm)
+
+    print(financials)
 
 
 def _add_line_effects(line, bu, row, sm):
@@ -658,7 +660,13 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
         for cell in col[sm.rows["FIRST_DATA"]-1:]:
             # Skip blank cells
             if cell.value in (None, ""):
-                continue
+                behavior_str = ''
+                if sm.cols[ps.BEHAVIOR]:
+                    behavior_str = sheet.cell(row=cell.row,
+                                               column=sm.cols[ps.BEHAVIOR]).value
+
+                if not behavior_str:
+                    continue
 
             row_num = cell.row
             col_num = cell.col_idx
@@ -740,6 +748,7 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
                     limits_str = limits_cell.value
 
                 if behavior_str:
+                    print(ssot_line.name)
                     _set_behavior(behavior_str, limits_str, ssot_line, model)
                     continue  # Don't parse or hardcode line if behavior exists
 
@@ -819,6 +828,17 @@ def _set_behavior(behavior_str, limits_str, line, model):
             dr_name = (parent_name or "") + ">" + line.name
             driver = model.drivers.get_or_create(dr_name, data, formula)
             line.assign_driver(driver.id.bbid)
+
+            # print(line.name)
+            # print(formula.name)
+            # print(driver.name)
+            # print(data)
+
+            #
+            # import pdb
+            # pdb.set_trace()
+#           PROBABLY WITHIN THE FORMULA IS WHERE WE WILL NEED TO BE ABLE TO USE THE ACTUAL STATEMENT NAME INSTEAD OF ATTRIBUTE NAME
+#           WE SHOULD ALSO CASEFOLD STORAGE AND SEARCH.
 
 
 def _parse_formula(sheet, cell_f, bu, sm):
