@@ -292,17 +292,20 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
         new.position = position
 
         workspace = data.get('workspace', None)
-        if workspace:
+        if workspace and workspace != 'null':
             new.workspace.update(workspace)
 
         usage = data.get('usage', None)
-        if usage:
+        if usage and usage != 'null':
             new.usage = LineItemUsage.from_database(usage)
 
         old_magic_keys = {"kpi", "covenants", "financials", "overall",
                           "business summary"}
         if 'show on report' in new.tags.all or (new.tags.all & old_magic_keys):
             new.usage.show_on_report = True
+
+        if 'monitor' in new.tags.all:
+            new.usage.monitor = True
 
         return new
 
