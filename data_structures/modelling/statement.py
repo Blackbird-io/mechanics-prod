@@ -176,7 +176,7 @@ class Statement(BaseFinancialsComponent):
 
         def locator(financials, **kargs):
             for stub in financials._full_order:
-                peer = getattr(financials, stub)
+                peer = financials.get_statement(stub)
                 if peer.name == self.name:
                     return peer
 
