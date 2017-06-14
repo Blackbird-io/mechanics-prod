@@ -143,7 +143,7 @@ class ReportChef:
                 else:
                     label = None
 
-                for_statement = getattr(for_fins, name)
+                for_statement = for_fins.get_statement(name)
                 self._report_statement(sheet, act_statement, for_statement, name=label)
 
         # Add Finishing Touches

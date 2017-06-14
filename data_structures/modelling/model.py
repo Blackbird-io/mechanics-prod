@@ -781,7 +781,8 @@ class Model(TagsMixIn):
         # preserve existing path and set fresh BU.used and BU.stage.path
         for bu in self.bu_directory.values():
             bu.financials.update_statements = bu.financials.full_order
-            idx = bu.financials.update_statements.index("starting")
+            starting = bu.financials.START_BAL_NAME
+            idx = bu.financials.update_statements.index(starting)
             bu.financials.update_statements.pop(idx)
 
             bu.archive_path()
