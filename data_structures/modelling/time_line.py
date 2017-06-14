@@ -542,7 +542,7 @@ class TimeLine(dict):
         for period in self.iter_ordered(open=seed.end):
             if period.end > seed.end:
                 new_fins = company.get_financials(period=period)
-                new_stat = getattr(new_fins, statement_name, None)
+                new_stat = new_fins.get_statement(statement_name)
                 if new_stat is None:
                     # need to add statement
                     new_stat = orig_statement.copy(clean=True)

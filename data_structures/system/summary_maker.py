@@ -378,14 +378,14 @@ class SummaryMaker:
 
         target_fins = self.model.get_financials(self.buid, target)
 
-        source_statement = getattr(source_fins, statement_name, None)
-        target_statement = getattr(target_fins, statement_name, None)
+        source_statement = source_fins.get_statement(statement_name)
+        target_statement = target_fins.get_statement(statement_name)
 
         if not source_statement:
             return
         if not target_statement:
             target_fins.add_statement(statement_name)
-            target_statement = getattr(target_fins, statement_name)
+            target_statement = target_fins.get_statement(statement_name)
 
         # label by ISO end date of the source period
         label = format(source.end)

@@ -524,7 +524,7 @@ def _combine_fins_structure(old_model, new_model):
             continue
 
         stmt_name = old_stmt.name.split()[0].casefold()
-        new_stmt = getattr(new_fins, stmt_name, None)
+        new_stmt = new_fins.get_statement(stmt_name)
         if not new_stmt:
             c = 'Old %s doesn exist!' % old_stmt.name
             raise bb_exceptions.BBAnalyticalError(c)
@@ -588,7 +588,7 @@ def _populate_old_actuals(old_model, new_model):
                     continue
 
                 stmt_name = old_stmt.name.split()[0].casefold()
-                new_stmt = getattr(new_fins, stmt_name, None)
+                new_stmt = new_fins.get_statement(stmt_name)
                 if not new_stmt:
                     c = 'Old %s doesn exist!' % old_stmt.name
                     raise bb_exceptions.BBAnalyticalError(c)
@@ -696,12 +696,12 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
             # # print(statement_name, line_name, parent_name)
             if actl_pd:
                 actl_fins = bu.get_financials(actl_pd)
-                actl_stmt = getattr(actl_fins, statement_name, None)
+                actl_stmt = actl_fins.get_statement(statement_name)
             proj_fins = bu.get_financials(proj_pd)
-            proj_stmt = getattr(proj_fins, statement_name, None)
+            proj_stmt = proj_fins.get_statement(statement_name, None)
 
             # Always match number formats
-            ssot_stmt = getattr(ssot_fins, statement_name)
+            ssot_stmt = ssot_fins.get_statement(statement_name)
             ssot_line = ssot_stmt.find_first(line_name)
             if cell.number_format and not ssot_line.xl_format.number_format:
                 ssot_line.xl_format.number_format = cell.number_format
@@ -876,7 +876,7 @@ def _parse_formula(sheet, cell_f, bu, sm):
     stmt_name = sheet.cell(row=row, column=sm.cols[ps.STATEMENT]).value
 
     stmt_str = stmt_name.casefold().split()[0]
-    statement = getattr(bu.financials, stmt_str)
+    statement = bu.financials.get_statement(stmt_str)
 
     ancestors = [line_name]
     if parent_name:
