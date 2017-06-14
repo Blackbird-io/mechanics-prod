@@ -112,8 +112,8 @@ class UnitFinsChef:
             for name, statement in financials.chef_ordered():
                 sheet.bb.outline_level = 1
                 if statement is not None:
-                    if name == 'starting':
-                        title = 'Starting Balance Sheet'
+                    if name == financials.START_BAL_NAME:
+                        title = financials.START_BAL_NAME
                         start_bal = True
                     else:
                         title = statement.title

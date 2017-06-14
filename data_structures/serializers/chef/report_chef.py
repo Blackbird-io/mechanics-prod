@@ -138,8 +138,8 @@ class ReportChef:
 
         for name, act_statement in act_fins.chef_ordered():
             if act_statement is not None:
-                if name == 'starting':
-                    label = 'Starting Balance Sheet'
+                if name == act_fins.START_BAL_NAME:
+                    label = act_fins.START_BAL_NAME
                 else:
                     label = None
 
