@@ -630,12 +630,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
 
         # parent is Financials at this point
         financials = parent
-
-        statement_attr = None
-        for attr in financials._full_order:
-            stmt = getattr(financials, attr, None)
-            if stmt is statement:
-                statement_attr = attr
+        statement_attr = statement.name
 
         bu = financials.relationships.parent
         locator = dict(

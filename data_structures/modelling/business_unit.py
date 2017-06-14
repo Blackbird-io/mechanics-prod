@@ -460,11 +460,11 @@ class BusinessUnit(TagsMixIn, Equalities):
         if not period:
             period = self.relationships.model.get_timeline().current_period
 
-        struct_stmt = getattr(self.financials, statement_name)
+        struct_stmt = self.financials.get_statement(statement_name)
         struct_stmt = struct_stmt.copy(clean=True)
 
         fins = self.get_financials(period)
-        fins.__dict__[statement_name] = struct_stmt
+        fins._statement_directory[statement_name.casefold()] = struct_stmt
         struct_stmt.relationships.set_parent(fins)
         struct_stmt.set_period(period)
 
@@ -701,13 +701,12 @@ class BusinessUnit(TagsMixIn, Equalities):
         of its components.
         """
         fins = self.get_financials(period)
-        statement = getattr(fins, statement_name)
+        statement = fins.get_statement(statement_name)
         statement.reset()
 
         if recur:
             for unit in self.components.get_all():
                 unit.reset_statement(statement_name, period=period)
-
 
     def set_financials(self, fins=None):
         """
@@ -962,8 +961,8 @@ class BusinessUnit(TagsMixIn, Equalities):
             sub_fins = sub.get_financials(period)
             top_fins = self.get_financials(period)
 
-        sub_statement = getattr(sub_fins, statement_name, None)
-        top_statement = getattr(top_fins, statement_name, None)
+        sub_statement = sub_fins.get_statement(statement_name)
+        top_statement = top_fins.get_statement(statement_name)
 
         xl_only = True
         if period:
@@ -993,7 +992,7 @@ class BusinessUnit(TagsMixIn, Equalities):
         BusinessUnit._derive_line() for all substantive derivation work.
         """
         financials = self.get_financials(period)
-        this_statement = getattr(financials, statement_name, None)
+        this_statement = financials.get_statement(statement_name)
 
         if this_statement:
             for line in this_statement.get_ordered():
