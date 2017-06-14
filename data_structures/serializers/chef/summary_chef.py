@@ -485,8 +485,8 @@ class SummaryChef:
 
                 if statement is not None:
                     # to handle the hard link from starting to ending financials
-                    if name == 'starting':
-                        title = 'Starting Balance Sheet'
+                    if name == financials.START_BAL_NAME:
+                        title = financials.START_BAL_NAME
                     else:
                         title = statement.title
                     line_chef.chop_summary_statement(
