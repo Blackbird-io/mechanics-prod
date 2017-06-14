@@ -698,7 +698,7 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
                 actl_fins = bu.get_financials(actl_pd)
                 actl_stmt = actl_fins.get_statement(statement_name)
             proj_fins = bu.get_financials(proj_pd)
-            proj_stmt = proj_fins.get_statement(statement_name, None)
+            proj_stmt = proj_fins.get_statement(statement_name)
 
             # Always match number formats
             ssot_stmt = ssot_fins.get_statement(statement_name)
