@@ -74,41 +74,97 @@ class Financials:
     copy                  return deep copy
     ====================  ======================================================
     """
+    OVERVIEW_NAME = "Overview"
+    INCOME_NAME = "Income Statement"
+    CASH_NAME = "Cash Flow Statement"
+    VALUATION_NAME = "Valuation"
+    START_BAL_NAME = "Starting Balance Sheet"
+    ENDING_BAL_NAME = "Ending Balance Sheet"
 
     def __init__(self, parent=None, period=None):
-        self.overview = Statement(name="overview", parent=self, period=period)
-        self.income = Statement(name="income statement", parent=self,
-                                period=period)
-        self.cash = CashFlow(parent=self, period=period)
-        self.valuation = Statement("Valuation", parent=self, period=period)
-        self.starting = BalanceSheet("Starting Balance Sheet", parent=self, period=period)
-        self.ending = BalanceSheet("Ending Balance Sheet", parent=self, period=period)
-        self.ledger = None
         self.id = ID()  # does not get its own bbid, just holds namespace
 
         # parent for Financials is BusinessUnit
         self.relationships = Relationships(self, parent=parent)
 
         self._period = period
-        # self.filled = False
-
-        # defaults for monthly; quarterly and annual need to overwrite
-        # self.complete = True
-        # self.periods_used = 1
-
-        self._full_order = [
-            "overview", "income", "cash", "starting", "ending",
-            "ledger", "valuation"
-        ]
-        self._chef_order = [
-            "overview", "income", "cash", "starting", "ending"
-        ]
-        self._compute_order = ['overview', 'income', 'cash']
-        self._exclude_statements = ['valuation', 'starting']
-
+        self._full_order = [self.OVERVIEW_NAME, self.INCOME_NAME, 
+                            self.CASH_NAME, self.START_BAL_NAME, 
+                            self.ENDING_BAL_NAME, self.VALUATION_NAME]
+        self._chef_order = [self.OVERVIEW_NAME, self.INCOME_NAME, 
+                            self.CASH_NAME, self.START_BAL_NAME, 
+                            self.ENDING_BAL_NAME]
+        self._compute_order = [self.OVERVIEW_NAME, self.INCOME_NAME,
+                               self.CASH_NAME]
+        self._exclude_statements = [self.VALUATION_NAME, self.START_BAL_NAME]
         self._restricted = False
+        self._statement_directory = dict()
 
         self.update_statements = list()
+
+        statements = [Statement(name=self.OVERVIEW_NAME, parent=self, 
+                                period=period),
+                      Statement(name=self.INCOME_NAME, parent=self, 
+                                period=period),
+                      CashFlow(name=self.CASH_NAME, parent=self, 
+                               period=period),
+                      Statement(name=self.VALUATION_NAME, parent=self, 
+                                period=period),
+                      BalanceSheet(name=self.START_BAL_NAME, parent=self, 
+                                   period=period),
+                      BalanceSheet(name=self.ENDING_BAL_NAME, parent=self, 
+                                   period=period)]
+
+        for stmt in statements:
+            self._statement_directory[stmt.name.casefold()] = stmt
+
+    @property
+    def overview(self):
+        return self.get_statement(self.OVERVIEW_NAME)
+
+    @overview.setter
+    def overview(self, value):
+        self._statement_directory[self.OVERVIEW_NAME.casefold()] = value
+
+    @property
+    def income(self):
+        return self.get_statement(self.INCOME_NAME)
+
+    @income.setter
+    def income(self, value):
+        self._statement_directory[self.INCOME_NAME.casefold()] = value
+
+    @property
+    def cash(self):
+        return self.get_statement(self.CASH_NAME)
+
+    @cash.setter
+    def cash(self, value):
+        self._statement_directory[self.CASH_NAME.casefold()] = value
+
+    @property
+    def valuation(self):
+        return self.get_statement(self.VALUATION_NAME)
+
+    @valuation.setter
+    def valuation(self, value):
+        self._statement_directory[self.VALUATION_NAME.casefold()] = value
+
+    @property
+    def starting(self):
+        return self.get_statement(self.START_BAL_NAME)
+
+    @starting.setter
+    def starting(self, value):
+        self._statement_directory[self.START_BAL_NAME.casefold()] = value
+
+    @property
+    def ending(self):
+        return self.get_statement(self.ENDING_BAL_NAME)
+
+    @ending.setter
+    def ending(self, value):
+        self._statement_directory[self.ENDING_BAL_NAME.casefold()] = value
 
     @property
     def compute_order(self):
@@ -127,16 +183,15 @@ class Financials:
         Return list of attribute values for all names in instance.full_order.
         """
         result = []
-
         for name in self._full_order:
-            statement = getattr(self, name)
+            statement = self.get_statement(name)
             result.append(statement)
 
         return result
 
     @property
     def has_valuation(self):
-        return not self.valuation == Statement("Valuation")
+        return not self.valuation == Statement(self.VALUATION_NAME)
 
     @property
     def order(self):
@@ -156,7 +211,7 @@ class Financials:
         """
         result = []
         for name in self.order:
-            statement = getattr(self, name)
+            statement = self.get_statement(name)
             result.append(statement)
 
         return result
@@ -233,13 +288,10 @@ class Financials:
         new._full_order = portal_data['full_order']
 
         for data in portal_data['statements']:
-            attr_name = data['attr_name']
-
             statement = Statement.from_database(
                 data, financials=new
             )
-
-            new.__dict__[attr_name] = statement
+            new._statement_directory[statement.name.casefold()] = statement
 
         return new
 
@@ -254,12 +306,7 @@ class Financials:
 
         statements = []
         for name in self._full_order:
-            if name == 'starting' and self.period:
-                if self.period.past is not None:
-                    # enforce SSOT in database
-                    continue
-
-            statement = getattr(self, name, None)
+            statement = self.get_statement(name)
             if statement:
                 data = statement.to_database()
                 data['attr_name'] = name
@@ -284,10 +331,10 @@ class Financials:
         """
 
         for name in self._chef_order:
-            yield name, getattr(self, name, None)
+            yield name, self.get_statement(name)
 
     def add_statement(self, name, statement=None, title=None, position=None,
-                      compute=True):
+                      compute=True, overwrite=False):
         """
 
         Financials.add_statement() -> None
@@ -308,7 +355,7 @@ class Financials:
         position in instance.full_order.  If no position is provided, the
         new statement will be added at the end.
         """
-        if name.casefold() in self.__dict__:
+        if name.casefold() in self._statement_directory and not overwrite:
             c = "%s already exists as a statement!" % name
             raise bb_exceptions.BlackbirdError(c)
 
@@ -319,7 +366,7 @@ class Financials:
 
             statement.relationships.set_parent(self)
 
-            self.__dict__[name] = statement
+            self._statement_directory[name.casefold()] = statement
 
             if position:
                 self._full_order.insert(position, name)
@@ -388,18 +435,38 @@ class Financials:
         new_instance._compute_order = self._compute_order.copy()
         new_instance._exclude_statements = self._exclude_statements.copy()
         new_instance._chef_order = self._chef_order.copy()
-        for name in self.full_order:
-            own_statement = getattr(self, name)
-            if own_statement is not None:
-                new_statement = own_statement.copy(clean=clean)
-                new_statement.relationships.set_parent(new_instance)
 
-                new_instance.__dict__[name] = new_statement
+        for key, stmt in self._statement_directory.items():
+            new_statement = stmt.copy(clean=clean)
+            new_statement.relationships.set_parent(new_instance)
+            new_instance._statement_directory[key] = new_statement
 
         new_instance.id = ID()
         new_instance.register(self.id.namespace)
 
         return new_instance
+
+    def get_statement(self, name):
+
+        if isinstance(name, str):
+            name = name.casefold()
+            if name in self._statement_directory:
+                return self._statement_directory[name]
+            else:
+                outs = list()
+                for k in self._statement_directory.keys():
+                    if name in k:
+                        outs.append(self._statement_directory[k])
+
+                if len(outs) == 1:
+                    return outs[0]
+                elif len(outs) > 1:
+                    c = "Statement with exact name not found. " \
+                        "Multiple statements with partial matching" \
+                        " name were found."
+                    raise KeyError(c)
+    
+        return None
 
     def populate_from_stored_values(self, period):
         """
@@ -550,7 +617,7 @@ class Financials:
         if isinstance(line_id, str):
             line_id = ID.from_database(line_id).bbid
 
-        statement = getattr(self, statement_attr, None)
+        statement = self.get_statement(statement_attr)
         if statement:
             for line in statement.get_full_ordered():
                 if line.id.bbid == line_id:
