@@ -480,7 +480,7 @@ class SummaryChef:
             # Statements
             statement_rowgroup = output_rows.add_group('statements', offset=1)
             for name, statement in financials.chef_ordered():
-                if name == 'covenants':
+                if name.casefold() == 'covenants':
                     continue
 
                 if statement is not None:
