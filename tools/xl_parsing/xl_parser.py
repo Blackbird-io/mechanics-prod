@@ -416,7 +416,6 @@ def _add_line_effects(line, bu, row, sm):
     if sm.cols[ps.SUM_DETAILS]:
         sum_details = row[sm.cols[ps.SUM_DETAILS]-1].value
         if not (_check_truthy(sum_details) or sum_details is None):
-            print(line.name)
             line.sum_details = False
 
     # Tag line with which summary report we want to display it on.
@@ -753,7 +752,6 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
                     limits_str = limits_cell.value
 
                 if behavior_str:
-                    print(ssot_line.name)
                     _set_behavior(behavior_str, limits_str, ssot_line, model)
                     continue  # Don't parse or hardcode line if behavior exists
 
