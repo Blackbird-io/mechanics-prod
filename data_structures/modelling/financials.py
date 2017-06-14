@@ -468,6 +468,15 @@ class Financials:
     
         return None
 
+    def get_covenant_statements(self):
+        result = list()
+
+        for stmt in self._statement_directory.values():
+            if stmt.type == stmt.COVENANT_TYPE:
+                result.append(stmt)
+
+        return result
+
     def populate_from_stored_values(self, period):
         """
 
