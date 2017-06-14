@@ -311,7 +311,7 @@ def _build_fins_from_sheet(bu, sheet, sm):
         statement2 = financials.get_statement(word_one)
 
         statement = statement1 or statement2
-        if not statement:
+        if not statement and statement_name:
             statement = Statement(statement_name)
             financials.add_statement(name=statement_name, statement=statement)
 
@@ -415,7 +415,8 @@ def _add_line_effects(line, bu, row, sm):
     # Add sum_details attribute if FALSE (TRUE is default for blank cells)
     if sm.cols[ps.SUM_DETAILS]:
         sum_details = row[sm.cols[ps.SUM_DETAILS]-1].value
-        if not _check_truthy(sum_details):
+        if not (_check_truthy(sum_details) or sum_details is None):
+            print(line.name)
             line.sum_details = False
 
     # Tag line with which summary report we want to display it on.
@@ -488,7 +489,7 @@ def _check_truthy(var, others=list()):
     """
     truths = ["true", "yes"]
 
-    others = [o.casefold() for o in others]
+    others = [o.casefold() for o in others if isinstance(o, str)]
     truths.extend(others)
 
     val = False
@@ -498,6 +499,9 @@ def _check_truthy(var, others=list()):
             val = True
     elif isinstance(var, bool):
         val = var
+    elif var in truths:
+        val = True
+
     return val
 
 
