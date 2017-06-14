@@ -66,10 +66,14 @@ class Statement(BaseFinancialsComponent):
     from_database()       class method, extracts Statement out of API-format
     ====================  ======================================================
     """
+    REGULAR_TYPE = "regular"
+    COVENANT_TYPE = "covenant"
 
     def __init__(self, name=None, spacing=100, parent=None, period=None):
         BaseFinancialsComponent.__init__(self, name=name, spacing=spacing,
                                          parent=parent, period=period)
+
+        self.type = "regular"
 
     @classmethod
     def from_database(cls, portal_data, financials):
@@ -123,6 +127,13 @@ class Statement(BaseFinancialsComponent):
 
             build_line_structure(new, catalog)
 
+        stmt_type = portal_data.get("type", None)
+        if stmt_type and stmt_type != "null":
+            new.type = stmt_type
+
+        if new.name and new.name.casefold() in ["covenants", "covenant"]:
+            new.type = new.COVENANT_TYPE
+
         return new
 
     def to_database(self):
@@ -143,6 +154,7 @@ class Statement(BaseFinancialsComponent):
             lines.append(line.to_database(top_level=top_level))
 
         result['lines'] = lines
+        result['type'] = self.type
 
         return result
 
