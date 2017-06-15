@@ -464,9 +464,10 @@ class SummaryMaker:
 
         # apply derivations to target financials
         target_fins = self.model.get_financials(self.buid, target)
-        for statement in target_fins.ordered:
+        for statement in target_fins.full_ordered:
             if statement:
-                for line in statement.get_full_ordered():
-                    if line.summary_type == 'derive':
-                        line.clear()
-                        bu._derive_line(line, period=target)
+                if statement.compute and statement is not target_fins.starting:
+                    for line in statement.get_full_ordered():
+                        if line.summary_type == 'derive':
+                            line.clear()
+                            bu._derive_line(line, period=target)

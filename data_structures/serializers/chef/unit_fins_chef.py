@@ -109,27 +109,32 @@ class UnitFinsChef:
             column = sheet.bb.time_line.columns.get_position(period.end)
             SheetStyle.set_column_width(sheet, column)
             financials = unit.get_financials(period)
-            for name, statement in financials.chef_ordered():
+            for statement in financials.full_ordered:
                 sheet.bb.outline_level = 1
-                if statement is not None:
-                    if name == financials.START_BAL_NAME:
-                        title = financials.START_BAL_NAME
-                        start_bal = True
-                    else:
-                        title = statement.title
-                        start_bal = False
-                    statement_rows = self.add_statement_container(
-                        sheet, statement, title=title
-                    )
-                    line_chef.chop_statement(
-                        sheet=sheet,
-                        statement=statement,
-                        row_container=statement_rows,
-                        column=column,
-                        title=title,
-                        start_bal=start_bal,
-                        set_labels=(period.end == now.end),
-                    )
+                if statement is None:
+                    continue
+
+                if not statement.compute:
+                    continue
+
+                if statement is financials.starting:
+                    title = financials.START_BAL_NAME
+                    start_bal = True
+                else:
+                    title = statement.title
+                    start_bal = False
+                statement_rows = self.add_statement_container(
+                    sheet, statement, title=title
+                )
+                line_chef.chop_statement(
+                    sheet=sheet,
+                    statement=statement,
+                    row_container=statement_rows,
+                    column=column,
+                    title=title,
+                    start_bal=start_bal,
+                    set_labels=(period.end == now.end),
+                )
 
         # We're done with the first pass of chopping financials, now go back
         # and try to resolve problem_line issues.

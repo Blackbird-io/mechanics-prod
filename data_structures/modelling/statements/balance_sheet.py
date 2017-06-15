@@ -61,7 +61,8 @@ class BalanceSheet(Statement):
     """
     def __init__(self, name, as_of=None, parent=None, period=None):
 
-        Statement.__init__(self, name, parent=parent, period=period)
+        Statement.__init__(self, name, parent=parent, period=period,
+                           balance_sheet=True)
 
         self.as_of = as_of
 

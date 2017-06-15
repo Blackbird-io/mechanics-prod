@@ -70,11 +70,16 @@ class Statement(BaseFinancialsComponent):
     KPI_TYPE = "kpi"
     COVENANT_TYPE = "covenant"
 
-    def __init__(self, name=None, spacing=100, parent=None, period=None):
+    def __init__(self, name=None, spacing=100, parent=None, period=None,
+                 compute=True, balance_sheet=False):
         BaseFinancialsComponent.__init__(self, name=name, spacing=spacing,
                                          parent=parent, period=period)
 
         self.display_type = self.REGULAR_TYPE
+
+        # Behavioral settings
+        self.balance_sheet = balance_sheet  # True if instance is balance sheet
+        self.compute = compute  # True to automatically compute statement
 
     @classmethod
     def from_database(cls, portal_data, financials):
@@ -140,6 +145,15 @@ class Statement(BaseFinancialsComponent):
             if "kpi" in new.name.casefold():
                 new.display_type = new.KPI_TYPE
 
+        # Behavioral settings
+        compute = portal_data.get("compute", None)
+        if compute != "null" and compute is not None:
+            new.compute = compute
+
+        balance_sheet = portal_data.get("balance_sheet", None)
+        if balance_sheet != "null" and balance_sheet is not None:
+            new.balance_sheet = balance_sheet
+
         return new
 
     def to_database(self):
@@ -161,12 +175,17 @@ class Statement(BaseFinancialsComponent):
 
         result['lines'] = lines
         result['display_type'] = self.display_type
+        result['compute'] = self.compute
+        result['balance_sheet'] = self.balance_sheet
 
         return result
 
-    def copy(self):
+    def copy(self, check_include_details=False, clean=False):
         result = BaseFinancialsComponent.copy(self)
         result.display_type = self.display_type
+        result.compute = self.compute
+        result.balance_sheet = self.balance_sheet
+
         return result
 
     def get_monitoring_lines(self):

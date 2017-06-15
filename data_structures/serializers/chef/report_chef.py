@@ -136,15 +136,20 @@ class ReportChef:
         act_fins = self.model.get_financials(co.id.bbid, act_period)
         for_fins = self.model.get_financials(co.id.bbid, for_period)
 
-        for name, act_statement in act_fins.chef_ordered():
-            if act_statement is not None:
-                if name == act_fins.START_BAL_NAME:
-                    label = act_fins.START_BAL_NAME
-                else:
-                    label = None
+        for act_statement in act_fins.full_ordered:
+            if act_statement is None:
+                continue
 
-                for_statement = for_fins.get_statement(name)
-                self._report_statement(sheet, act_statement, for_statement, name=label)
+            if not act_statement.compute:
+                continue
+
+            if act_statement is act_fins.starting:
+                label = act_fins.START_BAL_NAME
+            else:
+                label = None
+
+            for_statement = for_fins.get_statement(label or act_statement.name)
+            self._report_statement(sheet, act_statement, for_statement, name=label)
 
         # Add Finishing Touches
         sheet.bb.calc_sizes()
