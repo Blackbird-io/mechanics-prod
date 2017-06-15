@@ -386,27 +386,28 @@ class Financials:
 
         return new_instance
 
-    def get_statement(self, name):
+    def find_line(self, line_id, statement_attr):
+        """
 
-        if isinstance(name, str):
-            name = name.casefold()
-            if name in self._statement_directory:
-                return self._statement_directory[name]
-            else:
-                outs = list()
-                for k in self._statement_directory.keys():
-                    if name in k:
-                        outs.append(self._statement_directory[k])
 
-                if len(outs) == 1:
-                    return outs[0]
-                elif len(outs) > 1:
-                    c = "Statement with exact name not found. " \
-                        "Multiple statements with partial matching" \
-                        " name were found."
-                    raise KeyError(c)
-    
-        return None
+        Financials.find_line() -> LineItem
+
+        --``line_id`` bbid of line
+
+        Finds a LineItem across all statements by its bbid.
+        """
+        if isinstance(line_id, str):
+            line_id = ID.from_database(line_id).bbid
+
+        statement = self.get_statement(statement_attr)
+        if statement:
+            for line in statement.get_full_ordered():
+                if line.id.bbid == line_id:
+                    return line
+
+        raise bb_exceptions.StructureError(
+            'Could not find line with id {}'.format(line_id)
+        )
 
     def get_covenant_statements(self):
         """
@@ -455,6 +456,43 @@ class Financials:
                 result.append(stmt)
 
         return result
+
+    def get_statement(self, name):
+
+        if isinstance(name, str):
+            name = name.casefold()
+            if name in self._statement_directory:
+                return self._statement_directory[name]
+            else:
+                outs = list()
+                for k in self._statement_directory.keys():
+                    if name in k:
+                        outs.append(self._statement_directory[k])
+
+                if len(outs) == 1:
+                    return outs[0]
+                elif len(outs) > 1:
+                    c = "Statement with exact name not found. " \
+                        "Multiple statements with partial matching" \
+                        " name were found."
+                    raise KeyError(c)
+
+        return None
+
+    def peer_locator(self):
+        """
+
+
+        Financials.peer_locator() -> Financials
+
+        Given a parent container from another time period, return a function
+        locating a copy of ourselves within that container.
+        """
+
+        def locator(bu, **kargs):
+            peer = bu.get_financials(kargs['period'])
+            return peer
+        return locator
 
     def populate_from_stored_values(self, period):
         """
@@ -547,7 +585,12 @@ class Financials:
         Reset each defined statement.
         """
         self.run_on_all("reset")
-        # self.filled = False
+
+    def restrict(self):
+        self._restricted = True
+        for statement in self._statement_directory.values():
+            if statement is not None:
+                statement.restrict()
 
     def run_on_all(self, action, *kargs, **pargs):
         """
@@ -577,47 +620,3 @@ class Financials:
         Summarize each defined statement.
         """
         self.run_on_all("summarize")
-
-    def peer_locator(self):
-        """
-
-
-        Financials.peer_locator() -> Financials
-
-        Given a parent container from another time period, return a function
-        locating a copy of ourselves within that container.
-        """
-
-        def locator(bu, **kargs):
-            peer = bu.get_financials(kargs['period'])
-            return peer
-        return locator
-
-    def find_line(self, line_id, statement_attr):
-        """
-
-
-        Financials.find_line() -> LineItem
-
-        --``line_id`` bbid of line
-
-        Finds a LineItem across all statements by its bbid.
-        """
-        if isinstance(line_id, str):
-            line_id = ID.from_database(line_id).bbid
-
-        statement = self.get_statement(statement_attr)
-        if statement:
-            for line in statement.get_full_ordered():
-                if line.id.bbid == line_id:
-                    return line
-
-        raise bb_exceptions.StructureError(
-            'Could not find line with id {}'.format(line_id)
-        )
-
-    def restrict(self):
-        self._restricted = True
-        for statement in self._statement_directory.values():
-            if statement is not None:
-                statement.restrict()

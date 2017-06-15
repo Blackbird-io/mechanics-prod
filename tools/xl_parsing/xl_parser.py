@@ -285,8 +285,8 @@ def _build_fins_from_sheet(bu, sheet, sm):
     Function extracts information from 'sheet' to build the LineItem structure
     in 'financials'. Functions creates new statements if necessary.
     """
+    full_order = list()
     financials = bu.financials  # SSOT Fins
-
     line = None
 
     # Loop through each row that contains LineItem information
@@ -304,8 +304,12 @@ def _build_fins_from_sheet(bu, sheet, sm):
         statement_name = row[sm.cols[ps.STATEMENT]-1].value
         word_one = statement_name.split()[0]
 
-        if statement_name.casefold() in ("parameter", "parameters"):
+        if "parameter" in statement_name.casefold():
             continue  # Ignore parameters
+
+        # put statements in order
+        if statement_name.casefold() not in full_order:
+            full_order.append(statement_name.casefold())
 
         statement1 = financials.get_statement(statement_name)
         statement2 = financials.get_statement(word_one)
@@ -314,6 +318,9 @@ def _build_fins_from_sheet(bu, sheet, sm):
         if not statement and statement_name:
             statement = Statement(statement_name)
             financials.add_statement(name=statement_name, statement=statement)
+
+        if statement is financials.valuation:
+            statement.compute = True
 
         line_name = row[sm.cols[ps.LINE_NAME]-1].value
         if not line_name:
@@ -387,6 +394,7 @@ def _build_fins_from_sheet(bu, sheet, sm):
         line.set_title(line_title)
         _add_line_effects(line, bu, row, sm)
 
+    financials.set_order(full_order)
     print(financials)
 
 
@@ -678,7 +686,7 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
             statement_str = sheet.cell(row=row_num, column=sm.cols[ps.STATEMENT]).value
             if not statement_str:
                 continue
-            statement_name = statement_str.split()[0].casefold()
+            statement_name = statement_str.casefold()
             line_name = sheet.cell(row=row_num, column=sm.cols[ps.LINE_NAME]).value
             parent_name = sheet.cell(row=row_num, column=sm.cols[ps.PARENT_NAME]).value
 
