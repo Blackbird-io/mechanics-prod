@@ -72,6 +72,9 @@ class Financials:
 
     FUNCTIONS:
     copy                  return deep copy
+    get_covenant_statements method returns list of instances covenants statements
+    get_kpi_statements      method returns list of instances kpi statements
+    get_regular_statements  method returns list of instances regular statements
     ====================  ======================================================
     """
     OVERVIEW_NAME = "Overview"
@@ -469,10 +472,52 @@ class Financials:
         return None
 
     def get_covenant_statements(self):
-        result = list()
+        """
 
-        for stmt in self._statement_directory.values():
+
+        Financials.get_covenant_statements() -> list
+
+        Method compiles list of covenant statements tied to instance, returned
+        in order dictated by _full_order.
+        """
+        result = list()
+        for name in self._full_order:
+            stmt = self.get_statement(name)
             if stmt.type == stmt.COVENANT_TYPE:
+                result.append(stmt)
+
+        return result
+
+    def get_kpi_statements(self):
+        """
+
+
+        Financials.get_kpi_statements() -> list
+
+        Method compiles list of kpi statements tied to instance, returned
+        in order dictated by _full_order.
+        """
+        result = list()
+        for name in self._full_order:
+            stmt = self.get_statement(name)
+            if stmt.type == stmt.KPI_TYPE:
+                result.append(stmt)
+
+        return result
+
+    def get_regular_statements(self):
+        """
+
+
+        Financials.get_regular_statements() -> list
+
+        Method compiles list of regular statements tied to instance, returned
+        in order dictated by _full_order.
+        """
+        result = list()
+        for name in self._full_order:
+            stmt = self.get_statement(name)
+            if stmt.type == stmt.REGULAR_TYPE:
                 result.append(stmt)
 
         return result

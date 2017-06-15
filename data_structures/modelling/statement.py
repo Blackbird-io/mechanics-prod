@@ -67,13 +67,14 @@ class Statement(BaseFinancialsComponent):
     ====================  ======================================================
     """
     REGULAR_TYPE = "regular"
+    KPI_TYPE = "kpi"
     COVENANT_TYPE = "covenant"
 
     def __init__(self, name=None, spacing=100, parent=None, period=None):
         BaseFinancialsComponent.__init__(self, name=name, spacing=spacing,
                                          parent=parent, period=period)
 
-        self.type = "regular"
+        self.display_type = self.REGULAR_TYPE
 
     @classmethod
     def from_database(cls, portal_data, financials):
@@ -127,12 +128,17 @@ class Statement(BaseFinancialsComponent):
 
             build_line_structure(new, catalog)
 
-        stmt_type = portal_data.get("type", None)
+        # DISPLAY TYPE
+        stmt_type = portal_data.get("display_type", None)
         if stmt_type and stmt_type != "null":
-            new.type = stmt_type
+            new.display_type = stmt_type
 
-        if new.name and new.name.casefold() in ["covenants", "covenant"]:
-            new.type = new.COVENANT_TYPE
+        if new.display_type == "regular" and new.name:
+            if "covenant" in new.name.casefold():
+                new.display_type = new.COVENANT_TYPE
+
+            if "kpi" in new.name.casefold():
+                new.display_type = new.KPI_TYPE
 
         return new
 
@@ -154,8 +160,13 @@ class Statement(BaseFinancialsComponent):
             lines.append(line.to_database(top_level=top_level))
 
         result['lines'] = lines
-        result['type'] = self.type
+        result['display_type'] = self.display_type
 
+        return result
+
+    def copy(self):
+        result = BaseFinancialsComponent.copy(self)
+        result.display_type = self.display_type
         return result
 
     def get_monitoring_lines(self):
