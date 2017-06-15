@@ -479,20 +479,25 @@ class SummaryChef:
 
             # Statements
             statement_rowgroup = output_rows.add_group('statements', offset=1)
-            for name, statement in financials.chef_ordered():
-                if name.casefold() == 'covenants':
+            for statement in financials.full_ordered:
+                if statement is None:
                     continue
 
-                if statement is not None:
-                    # to handle the hard link from starting to ending financials
-                    if name == financials.START_BAL_NAME:
-                        title = financials.START_BAL_NAME
-                    else:
-                        title = statement.title
-                    line_chef.chop_summary_statement(
-                        sheet=sheet,
-                        statement=statement,
-                        row_container=statement_rowgroup,
-                        col_container=column,
-                        title=title,
-                    )
+                if statement.display_type == statement.COVENANT_TYPE:
+                    continue
+
+                if not statement.compute:
+                    continue
+
+                # to handle the hard link from starting to ending financials
+                if statement is financials.starting:
+                    title = financials.START_BAL_NAME
+                else:
+                    title = statement.title
+                line_chef.chop_summary_statement(
+                    sheet=sheet,
+                    statement=statement,
+                    row_container=statement_rowgroup,
+                    col_container=column,
+                    title=title,
+                )

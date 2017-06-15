@@ -91,19 +91,10 @@ class Financials:
         self.relationships = Relationships(self, parent=parent)
 
         self._period = period
-        self._full_order = [self.OVERVIEW_NAME, self.INCOME_NAME, 
+        self._restricted = False
+        self._full_order = [self.OVERVIEW_NAME, self.INCOME_NAME,
                             self.CASH_NAME, self.START_BAL_NAME, 
                             self.ENDING_BAL_NAME, self.VALUATION_NAME]
-        self._chef_order = [self.OVERVIEW_NAME, self.INCOME_NAME, 
-                            self.CASH_NAME, self.START_BAL_NAME, 
-                            self.ENDING_BAL_NAME]
-        self._compute_order = [self.OVERVIEW_NAME, self.INCOME_NAME,
-                               self.CASH_NAME]
-        self._exclude_statements = [self.VALUATION_NAME, self.START_BAL_NAME]
-        self._restricted = False
-        self._statement_directory = dict()
-
-        self.update_statements = list()
 
         statements = [Statement(name=self.OVERVIEW_NAME, parent=self, 
                                 period=period),
@@ -112,14 +103,17 @@ class Financials:
                       CashFlow(name=self.CASH_NAME, parent=self, 
                                period=period),
                       Statement(name=self.VALUATION_NAME, parent=self, 
-                                period=period),
+                                period=period, compute=False),
                       BalanceSheet(name=self.START_BAL_NAME, parent=self, 
                                    period=period),
                       BalanceSheet(name=self.ENDING_BAL_NAME, parent=self, 
                                    period=period)]
 
+        self._statement_directory = dict()
         for stmt in statements:
             self._statement_directory[stmt.name.casefold()] = stmt
+
+        self.update_statements = list()
 
     @property
     def overview(self):
@@ -170,10 +164,6 @@ class Financials:
         self._statement_directory[self.ENDING_BAL_NAME.casefold()] = value
 
     @property
-    def compute_order(self):
-        return self._compute_order.copy()
-
-    @property
     def full_order(self):
         return self._full_order.copy()
 
@@ -197,36 +187,13 @@ class Financials:
         return not self.valuation == Statement(self.VALUATION_NAME)
 
     @property
-    def order(self):
-        order = self.full_order
-        for name in self._exclude_statements:
-            order.remove(name)
-
-        return order
-
-    @property
-    def ordered(self):
-        """
-
-        **read-only property**
-
-        Return list of attribute values for all names in instance.order
-        """
-        result = []
-        for name in self.order:
-            statement = self.get_statement(name)
-            result.append(statement)
-
-        return result
-
-    @property
     def period(self):
         return self._period
 
     @period.setter
     def period(self, value):
         self._period = value
-        for statement in self.full_ordered:
+        for statement in self._statement_directory.values():
             if statement:
                 if statement.relationships.parent is self:
                     statement.set_period(value)
@@ -285,9 +252,9 @@ class Financials:
         us = portal_data['update_statements']
         new.update_statements = us
 
-        new._chef_order = portal_data['chef_order']
-        new._compute_order = portal_data['compute_order']
-        new._exclude_statements = portal_data['exclude_statements']
+        # new._chef_order = portal_data['chef_order']
+        # new._compute_order = portal_data['compute_order']
+        # new._exclude_statements = portal_data['exclude_statements']
         new._full_order = portal_data['full_order']
 
         for data in portal_data['statements']:
@@ -317,24 +284,13 @@ class Financials:
 
         result = {
             'statements': statements,
-            'chef_order': self._chef_order,
-            'compute_order': self._compute_order,
-            'exclude_statements': self._exclude_statements,
+            # 'chef_order': self._chef_order,
+            # 'compute_order': self._compute_order,
+            # 'exclude_statements': self._exclude_statements,
             'full_order': self._full_order,
             'update_statements': self.update_statements,
         }
         return result
-
-    def chef_ordered(self):
-        """
-
-        Financials.chef_ordered() -> iter(Statement)
-
-        Method yields own statements in order displayed on a spreadsheet.
-        """
-
-        for name in self._chef_order:
-            yield name, self.get_statement(name)
 
     def add_statement(self, name, statement=None, title=None, position=None,
                       compute=True, overwrite=False):
@@ -365,7 +321,8 @@ class Financials:
         if not self._restricted:
             if not statement:
                 use_name = title or name
-                statement = Statement(use_name, period=self.period)
+                statement = Statement(use_name, period=self.period,
+                                      compute=compute)
 
             statement.relationships.set_parent(self)
 
@@ -375,23 +332,6 @@ class Financials:
                 self._full_order.insert(position, name)
             else:
                 self._full_order.append(name)
-
-            if compute:
-                # include statement to be computed during fill_out in the same
-                # order it is in full_order
-                full = set(self.full_order)
-                comp = set(self._compute_order) | {name}
-
-                rem_terms = full - comp
-
-                new_compute = self.full_order
-                for term in rem_terms:
-                    new_compute.remove(term)
-
-                self._compute_order = new_compute
-                self._chef_order.append(name)
-            else:
-                self._exclude_statements.append(name)
 
             if self.id.namespace:
                 statement.register(self.id.namespace)
@@ -435,9 +375,6 @@ class Financials:
         """
         new_instance = Financials()
         new_instance._full_order = self._full_order.copy()
-        new_instance._compute_order = self._compute_order.copy()
-        new_instance._exclude_statements = self._exclude_statements.copy()
-        new_instance._chef_order = self._chef_order.copy()
 
         for key, stmt in self._statement_directory.items():
             new_statement = stmt.copy(clean=clean)
@@ -481,8 +418,7 @@ class Financials:
         in order dictated by _full_order.
         """
         result = list()
-        for name in self._full_order:
-            stmt = self.get_statement(name)
+        for stmt in self.full_ordered:
             if stmt.type == stmt.COVENANT_TYPE:
                 result.append(stmt)
 
@@ -498,8 +434,7 @@ class Financials:
         in order dictated by _full_order.
         """
         result = list()
-        for name in self._full_order:
-            stmt = self.get_statement(name)
+        for stmt in self.full_ordered:
             if stmt.type == stmt.KPI_TYPE:
                 result.append(stmt)
 
@@ -515,8 +450,7 @@ class Financials:
         in order dictated by _full_order.
         """
         result = list()
-        for name in self._full_order:
-            stmt = self.get_statement(name)
+        for stmt in self.full_ordered:
             if stmt.type == stmt.REGULAR_TYPE:
                 result.append(stmt)
 
@@ -599,7 +533,7 @@ class Financials:
         """
         self.id.set_namespace(namespace)
 
-        for statement in self.full_ordered:
+        for statement in self._statement_directory.values():
             if statement:
                 statement.register(self.id.namespace)
 
@@ -627,10 +561,11 @@ class Financials:
 
         Expects ``action`` to be a string naming the statement method.
         """
-        for statement in self.ordered:
-            if statement is not None:
-                routine = getattr(statement, action)
-                routine(*kargs, **pargs)
+        for statement in self.full_ordered:
+            if statement:
+                if statement.compute and statement is not self.starting:
+                    routine = getattr(statement, action)
+                    routine(*kargs, **pargs)
 
     def summarize(self):
         """
@@ -683,6 +618,6 @@ class Financials:
 
     def restrict(self):
         self._restricted = True
-        for statement in self.full_ordered:
+        for statement in self._statement_directory.values():
             if statement is not None:
                 statement.restrict()

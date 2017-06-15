@@ -574,16 +574,33 @@ class BusinessUnit(TagsMixIn, Equalities):
         """
         financials = self.get_financials(period)
 
+        # Designate which statements to compute in between balance sheet ops
+        # And which to compute after all ops
+        mid_compute = list()
+        end_compute = list()
+
+        use_list = mid_compute
+        for statement in financials.full_ordered:
+            if statement.balance_sheet:
+                use_list = end_compute
+                continue
+
+            if statement.compute:
+                use_list.append(statement.name)
+
         if not period:
             period = self.get_current_period()
+
         self._load_starting_balance(period)
 
-        for statement in financials.compute_order:
+        for statement in mid_compute:
             self.compute(statement, period)
 
         self._compute_ending_balance(period)
-
         self._check_start_balance(period)
+
+        for statement in end_compute:
+            self.compute(statement, period)
 
     def kill(self, date=None, recur=True):
         """
