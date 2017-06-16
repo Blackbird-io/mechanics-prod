@@ -56,7 +56,7 @@ class Statement(BaseFinancialsComponent):
     N/A
 
     FUNCTIONS:
-    to_database()         creates a flattened version of Statement for Portal
+    to_database()         creates a flattened version of Statement for database
     get_monitoring_lines() returns list of monitored lines on the statement
     peer_locator()        returns a function for locating or creating a copy of
                           the instance within a given container
