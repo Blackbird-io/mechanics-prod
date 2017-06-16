@@ -56,25 +56,53 @@ logger = logging.getLogger(bb_settings.LOGNAME_MAIN)
 class Financials:
     """
 
-    A StatementBundle that includes standard financial statements.
+    A class that organizes and operates on financial statements.
     ====================  ======================================================
     Attribute             Description
     ====================  ======================================================
 
     DATA:
-    balance               BalanceSheet; starting and ending balance for object
-    cash                  Statement; cash flow statement for object
-    has_valuation         bool; whether the object has a non-blank valuation
-    income                Statement; income statement for object
-    ledger                placeholder for object general ledger
-    overview              Statement; general data about an object
-    valuation             Statement; business valuation for the object
+    cash                  p; returns cash flow Statement for instance
+    ending                p; returns ending BalanceSheet for instance
+    full_order            p; returns list of instance statements in display order
+    full_ordered          p; returns list of Statements in order of full_order
+    has_valuation         p; returns bool on whether instance has valuation data
+    id                    instance of ID object, holds unique BBID for instance
+    income                p; returns income Statement for instance
+    overview              p; returns overview Statement for instance
+    period                p; returns TimePeriod that instance belongs to
+    relationships         instance of Relationships class
+    starting              p; returns starting BalanceSheet for instance
+    update_statements     list; holds onto state info in monitoring interviews
+    valuation             p; returns valuation Statement for instance
+
+    CLASS DATA:
+    CASH_NAME             str; default name of the cash flow statement
+    DEFAULT_ORDER         list; default ordering of statements
+    ENDING_BAL_NAME       str; default name of ending balance sheet
+    INCOME_NAME           str; default name of income statement
+    OVERVIEW_NAME         str; default name of overview statement
+    START_BAL_NAME        str; default name of starting balance sheet
+    VALUATION_NAME        str; default name of valuation statement
 
     FUNCTIONS:
-    copy                  return deep copy
-    get_covenant_statements method returns list of instances covenants statements
-    get_kpi_statements      method returns list of instances kpi statements
-    get_regular_statements  method returns list of instances regular statements
+    to_database           creates a flattened version of Financials for database
+    add_statement         adds a statement to the instance
+    check_balance_sheet   ensures matching structure between start and end balance
+    copy                  returns deep copy
+    find_line             uses provided information to locate a LineItem and returns it
+    get_covenant_statements returns list of instances covenant statements
+    get_kpi_statements      returns list of instances kpi statements
+    get_regular_statements  returns list of instances regular statements
+    get_statement           returns a statement with the given name
+    populate_from_stored_values populates LineItems with values from .period
+    register              registers instance and components in a namespace
+    reset                 resets instance and all components
+    restrict              restricts structural changes to instance and components
+    set_order             sets statement order on the instance
+
+    CLASS METHODS:
+    from_database()       class method, extracts Financials out of API-format
     ====================  ======================================================
     """
     OVERVIEW_NAME = "Overview"
@@ -84,6 +112,9 @@ class Financials:
     START_BAL_NAME = "Starting Balance Sheet"
     ENDING_BAL_NAME = "Ending Balance Sheet"
 
+    DEFAULT_ORDER = [OVERVIEW_NAME, INCOME_NAME, CASH_NAME, START_BAL_NAME,
+                     ENDING_BAL_NAME, VALUATION_NAME]
+
     def __init__(self, parent=None, period=None):
         self.id = ID()  # does not get its own bbid, just holds namespace
 
@@ -92,9 +123,7 @@ class Financials:
 
         self._period = period
         self._restricted = False
-        self._full_order = [self.OVERVIEW_NAME, self.INCOME_NAME,
-                            self.CASH_NAME, self.START_BAL_NAME, 
-                            self.ENDING_BAL_NAME, self.VALUATION_NAME]
+        self._full_order = self.DEFAULT_ORDER.copy()
 
         statements = [Statement(name=self.OVERVIEW_NAME, parent=self, 
                                 period=period),
@@ -169,12 +198,6 @@ class Financials:
 
     @property
     def full_ordered(self):
-        """
-
-        **read-only property**
-
-        Return list of attribute values for all names in instance.full_order.
-        """
         result = []
         for name in self._full_order:
             statement = self.get_statement(name)
@@ -201,7 +224,7 @@ class Financials:
     def __str__(self):
         header = ''
 
-        period = self.period #or self.relationships.parent.period
+        period = self.period
         if period:
             if Equalities.multi_getattr(self, "relationships.parent", None):
                 header = (
@@ -239,6 +262,7 @@ class Financials:
     def from_database(cls, portal_data, company, **kargs):
         """
 
+
         Financials.from_database(portal_data) -> Financials
 
         **CLASS METHOD**
@@ -268,6 +292,7 @@ class Financials:
     def to_database(self):
         """
 
+
         Financials.to_database() -> dict
 
         Method yields a serialized representation of self.
@@ -295,6 +320,7 @@ class Financials:
     def add_statement(self, name, statement=None, title=None, position=None,
                       compute=True, overwrite=False):
         """
+
 
         Financials.add_statement() -> None
 
@@ -336,18 +362,16 @@ class Financials:
             if self.id.namespace:
                 statement.register(self.id.namespace)
 
-    def build_tables(self):
-        """
-
-
-        Financials.build_tables() -> None
-
-
-        Build tables for each defined statement.
-        """
-        self.run_on_all("build_tables")
-
     def check_balance_sheets(self):
+        """
+
+
+        Financials.check_balance_sheets() -> None
+
+        Method ensures that starting and ending balance sheets have matching
+        structures.
+        """
+
         start_lines = self.starting.get_full_ordered()
         start_names = [line.name for line in start_lines]
 
@@ -458,7 +482,20 @@ class Financials:
         return result
 
     def get_statement(self, name):
+        """
 
+
+        Financials.get_statement() -> Statement or None
+
+        Method searches for a statement with the specified name (caseless
+        search) in instance directory.  To maintain backwards compatibility
+        with legacy Excel uploads, we also search for statements with names
+        containing the provided name (e.g. name="income" will generally
+        return the income statement, whose proper name is "income statement").
+
+        If no exact name match is found and multiple partial matches are found
+        an error is raised.
+        """
         if isinstance(name, str):
             name = name.casefold()
             if name in self._statement_directory:
@@ -472,27 +509,15 @@ class Financials:
                 if len(outs) == 1:
                     return outs[0]
                 elif len(outs) > 1:
+                    b = "ENTRY IS NOT A STATEMENT"
+                    names = [s.name if isinstance(s, Statement) else b for s in outs]
+
                     c = "Statement with exact name not found. " \
                         "Multiple statements with partial matching" \
-                        " name were found."
+                        " name were found: " + ', '.join(names)
                     raise KeyError(c)
 
         return None
-
-    def peer_locator(self):
-        """
-
-
-        Financials.peer_locator() -> Financials
-
-        Given a parent container from another time period, return a function
-        locating a copy of ourselves within that container.
-        """
-
-        def locator(bu, **kargs):
-            peer = bu.get_financials(kargs['period'])
-            return peer
-        return locator
 
     def populate_from_stored_values(self, period):
         """
@@ -579,44 +604,66 @@ class Financials:
         """
 
 
-        StatementBundle.reset() -> None
+        Financials.reset() -> None
 
 
         Reset each defined statement.
         """
-        self.run_on_all("reset")
-
-    def restrict(self):
-        self._restricted = True
-        for statement in self._statement_directory.values():
-            if statement is not None:
-                statement.restrict()
-
-    def run_on_all(self, action, *kargs, **pargs):
-        """
-
-
-        Bundle.run_on_all() -> None
-
-
-        Run ``statement.action(*kargs, **pargs)`` for all defined statements
-        in instance.ordered.
-
-        Expects ``action`` to be a string naming the statement method.
-        """
         for statement in self.full_ordered:
             if statement:
                 if statement.compute and statement is not self.starting:
-                    routine = getattr(statement, action)
-                    routine(*kargs, **pargs)
+                    statement.reset()
 
-    def summarize(self):
+    def restrict(self):
         """
 
 
-        StatementBundle.summarize() -> None
+        Financials.restrict() -> None
 
 
-        Summarize each defined statement.
+        Restrict instance and each defined statement from altering their
+        structure (no adding lines or removing lines).  This is used for
+        period financials which should show SSOT structure.
         """
-        self.run_on_all("summarize")
+        self._restricted = True
+        for statement in self._statement_directory.values():
+            if statement:
+                statement.restrict()
+
+    def set_order(self, new_order):
+        """
+
+
+        Financials.set_order() -> None
+
+        --``new_order`` is a list of strings representing the names of the
+        statements on the instance in the order they should be displayed
+
+        Method looks for default statement names in the list and replaces them
+        with their standard cased versions.  Method ensures that starting
+        balance sheet is placed appropriately (immediately preceding ending
+        balance sheet).  Method ensures that all default statements are
+        represented; statements not included in the upload are appended at the
+        end of the order.
+        """
+        new_order = [name.casefold() for name in new_order]
+
+        for idx, stmt in enumerate(new_order):
+            for entry in self.DEFAULT_ORDER:
+                if stmt in entry.casefold():
+                    new_order[idx] = entry
+                    break
+
+        try:
+            idx = new_order.index(self.ENDING_BAL_NAME)
+        except ValueError:
+            pass
+        else:
+            if new_order[idx-1] != self.START_BAL_NAME:
+                new_order.insert(idx, self.START_BAL_NAME)
+
+        for name in self.DEFAULT_ORDER:
+            if name not in new_order:
+                new_order.append(name)
+
+        self._full_order = new_order
