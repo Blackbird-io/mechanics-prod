@@ -686,7 +686,8 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
             statement_str = sheet.cell(row=row_num, column=sm.cols[ps.STATEMENT]).value
             if not statement_str:
                 continue
-            statement_name = statement_str.casefold()
+
+            statement_name = statement_str.casefold().strip()
             line_name = sheet.cell(row=row_num, column=sm.cols[ps.LINE_NAME]).value
             parent_name = sheet.cell(row=row_num, column=sm.cols[ps.PARENT_NAME]).value
 
@@ -714,6 +715,7 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
             # Always match number formats
             ssot_stmt = ssot_fins.get_statement(statement_name)
             ssot_line = ssot_stmt.find_first(line_name)
+
             if cell.number_format and not ssot_line.xl_format.number_format:
                 ssot_line.xl_format.number_format = cell.number_format
 

@@ -581,6 +581,9 @@ class BusinessUnit(TagsMixIn, Equalities):
 
         use_list = mid_compute
         for statement in financials.full_ordered:
+            if not statement:
+                continue
+
             if statement.balance_sheet:
                 use_list = end_compute
                 continue
