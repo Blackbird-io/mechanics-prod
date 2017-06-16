@@ -534,7 +534,7 @@ def _combine_fins_structure(old_model, new_model):
             # Valuation is empty
             continue
 
-        stmt_name = old_stmt.name.split()[0].casefold()
+        stmt_name = old_stmt.name.casefold().strip()
         new_stmt = new_fins.get_statement(stmt_name)
         if not new_stmt:
             c = 'Old %s doesn exist!' % old_stmt.name
@@ -598,7 +598,7 @@ def _populate_old_actuals(old_model, new_model):
                     # Valuation is empty
                     continue
 
-                stmt_name = old_stmt.name.split()[0].casefold()
+                stmt_name = old_stmt.name.casefold().strip()
                 new_stmt = new_fins.get_statement(stmt_name)
                 if not new_stmt:
                     c = 'Old %s doesn exist!' % old_stmt.name
@@ -762,7 +762,8 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
                     limits_str = limits_cell.value
 
                 if behavior_str:
-                    _set_behavior(behavior_str, limits_str, ssot_line, model)
+                    _set_behavior(behavior_str, limits_str, ssot_stmt,
+                                  ssot_line, model)
                     continue  # Don't parse or hardcode line if behavior exists
 
             # Look to see if Formula should be automatically imported
@@ -778,8 +779,12 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
                 if _check_truthy(timeline_name, others=["actual"]):
                     _populate_line_from_cell(cell, line_name, parent_name, actl_stmt)
 
+            if ssot_line.usage.status_rules and ssot_stmt.display_type == \
+                    ssot_stmt.REGULAR_TYPE:
+                ssot_stmt.display_type = ssot_stmt.KPI_TYPE
 
-def _set_behavior(behavior_str, limits_str, line, model):
+
+def _set_behavior(behavior_str, limits_str, statement, line, model):
     """
 
 
@@ -819,6 +824,9 @@ def _set_behavior(behavior_str, limits_str, line, model):
     else:
         action_name = "rolling sum over time"
 
+    if action_name.casefold() == "custom status":
+        statement.display_type == statement.COVENANT_TYPE
+
     formula_name = ps.ACTION_TO_FORMULA_MAP.get(action_name)
     if not formula_name:
         c = "No formula mapped to the action name of: " + action_name
@@ -841,17 +849,6 @@ def _set_behavior(behavior_str, limits_str, line, model):
             dr_name = (parent_name or "") + ">" + line.name
             driver = model.drivers.get_or_create(dr_name, data, formula)
             line.assign_driver(driver.id.bbid)
-
-            # print(line.name)
-            # print(formula.name)
-            # print(driver.name)
-            # print(data)
-
-            #
-            # import pdb
-            # pdb.set_trace()
-#           PROBABLY WITHIN THE FORMULA IS WHERE WE WILL NEED TO BE ABLE TO USE THE ACTUAL STATEMENT NAME INSTEAD OF ATTRIBUTE NAME
-#           WE SHOULD ALSO CASEFOLD STORAGE AND SEARCH.
 
 
 def _parse_formula(sheet, cell_f, bu, sm):
@@ -887,7 +884,7 @@ def _parse_formula(sheet, cell_f, bu, sm):
     parent_name = sheet.cell(row=row, column=sm.cols[ps.PARENT_NAME]).value
     stmt_name = sheet.cell(row=row, column=sm.cols[ps.STATEMENT]).value
 
-    stmt_str = stmt_name.casefold().split()[0]
+    stmt_str = stmt_name.casefold().strip()
     statement = bu.financials.get_statement(stmt_str)
 
     ancestors = [line_name]
@@ -975,7 +972,7 @@ def _parse_formula(sheet, cell_f, bu, sm):
                                               column=sm.cols[ps.LINE_NAME]).value
                 source_statement = sheet.cell(row=source_row,
                                               column=sm.cols[ps.STATEMENT]).value
-                source_statement = source_statement.split()[0].casefold()
+                source_statement = source_statement.casefold().strip()
                 data[t_name] = source_line_name
                 data[t_type] = "source"
                 data[t_name + "_statement"] = source_statement
