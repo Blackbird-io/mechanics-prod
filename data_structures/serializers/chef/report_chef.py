@@ -140,7 +140,7 @@ class ReportChef:
             if act_statement is None:
                 continue
 
-            if not act_statement.compute:
+            if not act_statement.compute or not act_statement.visible:
                 continue
 
             if act_statement is act_fins.starting:
