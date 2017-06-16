@@ -53,7 +53,15 @@ class Statement(BaseFinancialsComponent):
     ====================  ======================================================
 
     DATA:
-    N/A
+    balance_sheet        bool; whether statement is a balance sheet
+    compute              bool; whether to do compute operations on statement
+    display_type         str; how to display the statement on the Portal
+    visible              bool; whether the statement should be displayed
+    
+    CLASS DATA:
+    COVENANT_TYPE        str; standard name for covenant type declaration
+    KPI_TYPE             str; standard name for kpi type declaration
+    REGULAR_TYPE         str; standard name for regular type declaration
 
     FUNCTIONS:
     to_database()         creates a flattened version of Statement for database
@@ -71,11 +79,13 @@ class Statement(BaseFinancialsComponent):
     COVENANT_TYPE = "covenant"
 
     def __init__(self, name=None, spacing=100, parent=None, period=None,
-                 compute=True, balance_sheet=False):
+                 compute=True, balance_sheet=False, visible=True):
         BaseFinancialsComponent.__init__(self, name=name, spacing=spacing,
                                          parent=parent, period=period)
-
+        
+        # Display Settings
         self.display_type = self.REGULAR_TYPE
+        self.visible = visible
 
         # Behavioral settings
         self.balance_sheet = balance_sheet  # True if instance is balance sheet
@@ -145,6 +155,11 @@ class Statement(BaseFinancialsComponent):
             if "kpi" in new.name.casefold():
                 new.display_type = new.KPI_TYPE
 
+        # Visible attribute
+        visible = portal_data.get("visible", None)
+        if isinstance(visible, bool):
+            new.visible = visible
+
         # Behavioral settings
         compute = portal_data.get("compute", None)
         if compute != "null" and compute is not None:
@@ -177,6 +192,7 @@ class Statement(BaseFinancialsComponent):
         result['display_type'] = self.display_type
         result['compute'] = self.compute
         result['balance_sheet'] = self.balance_sheet
+        result['visible'] = self.visible
 
         return result
 

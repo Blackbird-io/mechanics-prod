@@ -664,6 +664,8 @@ class Financials:
 
         for name in self.DEFAULT_ORDER:
             if name not in new_order:
+                stmt = self.get_statement(name)
+                stmt.visible = False
                 new_order.append(name)
 
         self._full_order = new_order

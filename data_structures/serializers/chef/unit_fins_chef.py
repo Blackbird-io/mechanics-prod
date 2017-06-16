@@ -114,7 +114,7 @@ class UnitFinsChef:
                 if statement is None:
                     continue
 
-                if not statement.compute:
+                if not statement.compute or not statement.visible:
                     continue
 
                 if statement is financials.starting:
