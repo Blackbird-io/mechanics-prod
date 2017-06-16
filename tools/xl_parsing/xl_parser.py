@@ -1015,7 +1015,7 @@ def _parse_formula(sheet, cell_f, bu, sm):
                 data[t_type] = "operator"
 
         model = bu.relationships.model
-        dr_name = (parent_name or "") + ">" + line_name
+        dr_name = stmt_name + '>' + (parent_name or "") + ">" + line_name
         driver = model.drivers.get_or_create(
             dr_name,
             data,
