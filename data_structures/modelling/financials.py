@@ -433,54 +433,6 @@ class Financials:
             'Could not find line with id {}'.format(line_id)
         )
 
-    def get_covenant_statements(self):
-        """
-
-
-        Financials.get_covenant_statements() -> list
-
-        Method compiles list of covenant statements tied to instance, returned
-        in order dictated by _full_order.
-        """
-        result = list()
-        for stmt in self.full_ordered:
-            if stmt.type == stmt.COVENANT_TYPE:
-                result.append(stmt)
-
-        return result
-
-    def get_kpi_statements(self):
-        """
-
-
-        Financials.get_kpi_statements() -> list
-
-        Method compiles list of kpi statements tied to instance, returned
-        in order dictated by _full_order.
-        """
-        result = list()
-        for stmt in self.full_ordered:
-            if stmt.type == stmt.KPI_TYPE:
-                result.append(stmt)
-
-        return result
-
-    def get_regular_statements(self):
-        """
-
-
-        Financials.get_regular_statements() -> list
-
-        Method compiles list of regular statements tied to instance, returned
-        in order dictated by _full_order.
-        """
-        result = list()
-        for stmt in self.full_ordered:
-            if stmt.type == stmt.REGULAR_TYPE:
-                result.append(stmt)
-
-        return result
-
     def get_statement(self, name):
         """
 
