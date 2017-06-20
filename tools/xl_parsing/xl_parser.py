@@ -824,8 +824,8 @@ def _set_behavior(behavior_str, limits_str, statement, line, model):
     else:
         action_name = "rolling sum over time"
 
-    if action_name.casefold() == "custom status":
-        statement.display_type == statement.COVENANT_TYPE
+    if action_name.casefold().strip() == "custom status":
+        statement.display_type = statement.COVENANT_TYPE
 
     formula_name = ps.ACTION_TO_FORMULA_MAP.get(action_name)
     if not formula_name:
