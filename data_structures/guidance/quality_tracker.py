@@ -26,6 +26,8 @@ QualityTracker        specialized gauge to track quality, includes standards
 
 
 #imports
+import copy
+
 from .counter import Counter
 
 
@@ -59,10 +61,9 @@ class QualityTracker(Counter):
     """
     
     QUALITY_DEFAULT = 5
-    QUALITY_MAX = 10
-    
+
     def __init__(self, standard=QUALITY_DEFAULT):
-        Counter.__init__(self, cut_off=self.QUALITY_MAX)
+        Counter.__init__(self, cut_off=None)
         self.standard = None
         self.set_standard(standard)
 
@@ -73,7 +74,6 @@ class QualityTracker(Counter):
         return new
 
     def to_database(self):
-        import copy
         data = copy.deepcopy(self.__dict__)
         return data
 

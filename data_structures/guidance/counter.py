@@ -26,7 +26,7 @@ Counter               simple gauge objects
 
 
 #imports
-#n/a
+import copy
 
 
 
@@ -61,7 +61,6 @@ class Counter:
         return new
 
     def to_database(self):
-        import copy
         data = copy.deepcopy(self.__dict__)
         return data
 
