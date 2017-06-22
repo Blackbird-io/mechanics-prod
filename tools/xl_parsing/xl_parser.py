@@ -301,8 +301,7 @@ def _build_fins_from_sheet(bu, sheet, sm):
             # Skip blank rows
             continue
 
-        statement_name = row[sm.cols[ps.STATEMENT]-1].value
-        word_one = statement_name.split()[0]
+        statement_name = row[sm.cols[ps.STATEMENT]-1].value.strip()
 
         if "parameter" in statement_name.casefold():
             continue  # Ignore parameters
@@ -311,10 +310,8 @@ def _build_fins_from_sheet(bu, sheet, sm):
         if statement_name.casefold() not in full_order:
             full_order.append(statement_name.casefold())
 
-        statement1 = financials.get_statement(statement_name)
-        statement2 = financials.get_statement(word_one)
+        statement = financials.get_statement(statement_name)
 
-        statement = statement1 or statement2
         if not statement and statement_name:
             statement = Statement(statement_name)
             financials.add_statement(name=statement_name, statement=statement)
