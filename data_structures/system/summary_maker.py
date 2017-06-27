@@ -422,7 +422,8 @@ class SummaryMaker:
             self.onkey, target.periods_used
         ))
 
-        for name in ["overview", "income", "cash", "ownership"]:
+        for name in [Financials.OVERVIEW_NAME, Financials.INCOME_NAME,
+                     Financials.CASH_NAME, "ownership"]:
             self.add_statement_summary(source, name)
 
     def wrap(self):

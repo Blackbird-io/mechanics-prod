@@ -540,7 +540,7 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
                     new_value = self.increment_value(matching_line)
 
                     if not xl_only:
-                        self.set_value(new_value, signature)
+                        self.set_value(new_value, signature, override=True)
 
                     if consolidating:
                         if not xl_only:
@@ -569,7 +569,11 @@ class LineItem(BaseFinancialsComponent, HistoryLine):
                 ) / (self.summary_count + 1)
             self.summary_count += 1
         else:
-            new_value = old_value + matching_line.value
+            try:
+                new_value = old_value + matching_line.value
+            except TypeError:
+                new_value = None
+
         return new_value
 
     def link_to(self, matching_line):
