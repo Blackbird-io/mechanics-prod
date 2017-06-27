@@ -104,12 +104,14 @@ class LineChef:
                 include = line.xl_data.cell.parent is not sheet
                 new_lines[key] = line.xl_data.get_coordinates(include_sheet=include)
             except (ExcelPrepError, AttributeError):
+                msg = 'Cannot resolve bad line reference.'
+                print(msg)
                 print("Name:     ", calc.name)
                 print("Template: ", calc.formula)
                 print(line)
 
-                msg = 'Cannot resolve bad line reference.'
-                raise ExcelPrepError(msg)
+                new_lines[key] = "#REF!"
+                # raise ExcelPrepError(msg)
 
         materials['lines'] = new_lines
 
