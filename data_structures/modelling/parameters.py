@@ -143,7 +143,11 @@ class Parameters(dict):
                 yield from v.to_database(key_path=path, target=target)
             else:
                 typ = type(v).__name__
-                if typ == 'date':
+                if 'date' in typ:
+                    if typ == 'datetime':
+                        v = v.date()
+
+                    typ = 'date'
                     v = v.isoformat()
 
                 data = dict(
