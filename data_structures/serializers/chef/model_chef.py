@@ -124,7 +124,8 @@ class ModelChef:
 
         return book
 
-    def build_report(self, model, report='latest', specific_dates=None):
+    def build_report(self, model, report='latest', specific_dates=None,
+                     base_file=None):
         """
 
 
@@ -156,8 +157,15 @@ class ModelChef:
 
         last_date = max(actl.keys())
 
+        if base_file is not None:
+            obook = xlio.load_workbook(base_file)
+            book = Workbook.convert(obook)
+        else:
+            book = Workbook()
+
         # Make workbook and add Cover tab
-        book = GarnishChef.add_garnishes(model, report=True, last_date=last_date)
+        book = GarnishChef.add_garnishes(model, book=book, report=True,
+                                         last_date=last_date)
 
         # Add "Forecast" tab filled with projections and "Actual" tab filled
         # with reported values.

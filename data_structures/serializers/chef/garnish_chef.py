@@ -116,7 +116,11 @@ class GarnishChef:
 
         GarnishChef._create_cover_tab(book, model, report=report, last_report=last_date)
 
-        GarnishChef._create_scenarios_tab(book, model, report=report)
+        idx = 1
+        if report:
+            idx = 0
+
+        GarnishChef._create_scenarios_tab(book, model, report=report, index=idx)
 
         return book
 
@@ -246,7 +250,7 @@ class GarnishChef:
             sheet.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
 
     @staticmethod
-    def _create_scenarios_tab(book, model, report=False):
+    def _create_scenarios_tab(book, model, report=False, index=1):
         """
 
 
@@ -256,7 +260,7 @@ class GarnishChef:
         Return a worksheet that lays out the assumptions used by the model in
         various scenarios.
         """
-        my_tab = book.create_sheet(TabNames.SCENARIOS, index=1)
+        my_tab = book.create_sheet(TabNames.SCENARIOS, index=index)
 
         if my_tab.title != TabNames.SCENARIOS:
             book.drivers_tab_name = my_tab.title
