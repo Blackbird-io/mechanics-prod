@@ -144,6 +144,8 @@ class ModelChef:
         specific_dates keyword must be set, otherwise will produce latest
         report.
         """
+        excel_data = model.portal_data.get('excel_data', dict())
+
         model.populate_xl_data()
 
         forecast_color = '4f6228'
