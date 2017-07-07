@@ -146,6 +146,8 @@ class ModelChef:
         """
         excel_data = model.portal_data.get('excel_data', dict())
 
+        print(excel_data)
+
         model.populate_xl_data()
 
         forecast_color = '4f6228'
