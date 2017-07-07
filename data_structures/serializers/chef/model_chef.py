@@ -144,10 +144,6 @@ class ModelChef:
         specific_dates keyword must be set, otherwise will produce latest
         report.
         """
-        excel_data = model.portal_data.get('excel_data', dict())
-
-        print(excel_data)
-
         model.populate_xl_data()
 
         forecast_color = '4f6228'
@@ -161,11 +157,18 @@ class ModelChef:
 
         last_date = max(actl.keys())
 
+        excel_data = model.portal_data.get('excel_data', dict())
+        actl_pd = actl.find_period(last_date)
+        co = model.get_company()
+        actl_fins = co.get_financials(actl_pd)
+
         if base_file is not None:
             obook = xlio.load_workbook(base_file)
             book = Workbook.convert(obook)
         else:
             book = Workbook()
+
+        self.update_fins_refs(actl_fins, excel_data, book)
 
         # Make workbook and add Cover tab
         book = GarnishChef.add_garnishes(model, book=book, report=True,
@@ -192,11 +195,40 @@ class ModelChef:
                                  dates=specific_dates)
         report_chef.build_reports(book)
 
-        # Add "Reports >>" tab with table of contents.  Need to do this last
-        # since we can't count on dates corresponding exactly with period start
-        # and end dates.
-
-        # structure_chef = StructureChef(model)
-        # structure_chef.chop_report(book, spacer_color)
-
         return book
+
+    @staticmethod
+    def update_fins_refs(financials, excel_data, wb):
+        """
+
+
+        update_fins_refs() -> None
+
+        --``financials`` is the instance of financials on which to set refs
+        --``excel_data`` is a dictionary of BBID: transcript cell address
+        --``wb`` is the original workbook on which Report will be built
+
+        Method works in-place to temporarily set direct references on
+        last final period of actuals timeline based on transcript data from
+        Portal.
+        """
+
+        if excel_data:
+            for stmt in financials.full_ordered:
+                if stmt:
+                    for line in stmt.get_full_ordered():
+                        bbid = line.id.bbid.hex
+                        if bbid in excel_data:
+                            source = excel_data[bbid]
+
+                            sheet_name, cell_coord = source.split('!')
+                            sheet_name = sheet_name.replace("'", "")
+
+                            sheet = wb.get_sheet_by_name(sheet_name)
+                            cell = sheet[cell_coord]
+
+                            if cell.data_type == "f":
+                                source = cell.value.replace("=", "")
+
+                            line.xl_data.set_ref_direct_source(source,
+                                                               update=False)

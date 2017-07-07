@@ -369,9 +369,11 @@ class LineData(Range):
         self.reference.source = src
         self.line.update_stored_xl()
 
-    def set_ref_direct_source(self, src):
+    def set_ref_direct_source(self, src, update=True):
         self.reference.direct_source = src
-        self.line.update_stored_xl()
+
+        if update:
+            self.line.update_stored_xl()
 
     def get_coordinates(self, include_sheet=True):
         """
