@@ -107,7 +107,7 @@ class GarnishChef:
                     idx = 1
 
                 # two worksheets means 1 transcript sheet and 1 spare tab
-                otab = book.create_sheet("Original >>", index=idx)
+                otab = book.create_sheet("Original -->", index=idx)
                 otab.sheet_properties.tabColor = chef_settings.COVER_TAB_COLOR
                 SheetStyle.style_sheet(otab)
                 book.original_tab_count = len(book.worksheets) - idx
@@ -120,7 +120,11 @@ class GarnishChef:
         if report:
             idx = 0
 
-        GarnishChef._create_scenarios_tab(book, model, report=report, index=idx)
+        tab = GarnishChef._create_scenarios_tab(book, model, report=report,
+                                                index=idx)
+        if report:
+            tab.sheet_state = "hidden"
+
 
         return book
 
