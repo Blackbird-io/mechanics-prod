@@ -125,7 +125,6 @@ class GarnishChef:
         if report:
             tab.sheet_state = "hidden"
 
-
         return book
 
     # *************************************************************************#

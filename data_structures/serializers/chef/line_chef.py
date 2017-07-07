@@ -697,7 +697,14 @@ class LineChef:
         Adds a single cell reference to a new cell.
         (e.g. new_cell.value = '=C18')
         """
-        if line.xl_data.reference.direct_source and not self.values_only:
+        tl = line.period.relationships.parent
+        last_date = max(tl.keys())
+        last_period = line.period is tl.find_period(last_date)
+        actual = tl.name == 'actual'
+        monitor = line.usage.monitor
+
+        allowed = not self.values_only or (last_period and monitor and actual)
+        if line.xl_data.reference.direct_source and allowed:
             line_label = indent * " " + line.title  # + ': ref'
             finish = row_container.add_group(
                 line.title, size=1, label=line_label, bbid=line.id.bbid.hex
