@@ -36,6 +36,8 @@ import openpyxl as xlio
 import bb_settings
 import chef_settings
 
+from openpyxl.styles import Alignment, PatternFill, Font, Border, Side
+
 from .bb_workbook import BB_Workbook as Workbook
 from .cell_styles import CellStyles
 from .garnish_chef import GarnishChef
@@ -95,6 +97,7 @@ class ModelChef:
 
         if base_file is not None:
             obook = xlio.load_workbook(base_file)
+            preserved_styles = self.save_styles_from_file(obook)
             book = Workbook.convert(obook)
         else:
             book = Workbook()
@@ -121,6 +124,9 @@ class ModelChef:
         unit_chef.chop_multi_valuation(model, book, index=2, recur=False)
 
         CellStyles.format_line_borders(book)
+
+        if base_file:
+            self.apply_saved_styles_to_file(book, preserved_styles)
 
         return book
 
@@ -164,6 +170,7 @@ class ModelChef:
 
         if base_file is not None:
             obook = xlio.load_workbook(base_file)
+            preserved_styles = self.save_styles_from_file(obook)
             book = Workbook.convert(obook)
         else:
             book = Workbook()
@@ -194,6 +201,9 @@ class ModelChef:
         report_chef = ReportChef(model, proj, actl, report,
                                  dates=specific_dates)
         report_chef.build_reports(book)
+
+        if base_file:
+            self.apply_saved_styles_to_file(book, preserved_styles)
 
         return book
 
@@ -232,3 +242,76 @@ class ModelChef:
 
                             line.xl_data.set_ref_direct_source(source,
                                                                update=False)
+
+    @staticmethod
+    def save_styles_from_file(wb):
+        data = dict()
+        for worksheet in wb.worksheets:
+            sheet_dict = data.setdefault(worksheet.title, dict())
+            for cell in worksheet.get_cell_collection():
+                cell_dict = sheet_dict.setdefault(cell.coordinate, dict())
+
+                cell_dict["number_format"] = cell.number_format
+
+                #  FONT
+                font_keys = ['family', 'vertAlign', 'strike', 'charset',
+                             'color', 'b', 'scheme', 'condense', 'i',
+                             'outline', 'u', 'shadow', 'extend', 'name', 'sz']
+                font_dict = dict()
+                for k in font_keys:
+                    font_dict[k] = cell.font.__dict__[k]
+
+                cell_dict["font"] = font_dict
+
+                #  BORDER
+                border_keys = ['diagonal_direction', 'vertical', 'horizontal',
+                               'diagonalUp', 'diagonalDown', 'outline',
+                               'start', 'end']
+                border_sides = ['left', 'right', 'top', 'bottom', 'diagonal']
+                side_keys = ['style', 'color']
+
+                border_dict = dict()
+                for k in border_keys:
+                    border_dict[k] = cell.border.__dict__[k]
+                cell_dict["border"] = border_dict
+
+                side_dict = border_dict.setdefault('sides', dict())
+                for s in border_sides:
+                    side = cell.border.__dict__[s]
+                    this_dict = side_dict.setdefault(s, dict())
+                    for k in side_keys:
+                        this_dict[k] = side.__dict__[k]
+
+                #  FILL
+                fill_keys = ['patternType', 'fgColor', 'bgColor']
+                fill_dict = dict()
+                for k in fill_keys:
+                    fill_dict[k] = cell.fill.__dict__[k]
+
+                cell_dict["fill"] = fill_dict
+
+        return data
+
+    @staticmethod
+    def apply_saved_styles_to_file(wb, styles, skip_sheet=None):
+        for worksheet in wb.worksheets:
+            if worksheet.title == skip_sheet:
+                continue
+
+            if worksheet.title in styles:
+                sheet_styles = styles[worksheet.title]
+                for cell in worksheet.get_cell_collection():
+                    cell_dict = sheet_styles.get(cell.coordinate, None)
+                    if cell_dict:
+                        cell.number_format = cell_dict["number_format"]
+
+                        cell.font = Font(**cell_dict["font"])
+
+                        border_dict = cell_dict["border"]
+                        sides_dict = border_dict.pop('sides')
+                        for side, info in sides_dict.items():
+                            side_obj = Side(**info)
+                            border_dict[side] = side_obj
+                        cell.border = Border(**border_dict)
+
+                        cell.fill = PatternFill(**cell_dict["fill"])
