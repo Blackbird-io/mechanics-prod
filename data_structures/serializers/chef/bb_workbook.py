@@ -89,18 +89,19 @@ class BB_Workbook(xlio.Workbook):
         Return BB_Workbook version of book.
         """
         new_book = BB_Workbook()
+
         new_book._alignments = book._alignments
         new_book._borders = book._borders
         new_book._cell_styles = book._cell_styles
         new_book._colors = book._colors
-        new_book._charts = book._charts
         new_book._differential_styles = book._differential_styles
-        new_book._drawings = book._drawings
         new_book._fills = book._fills
         new_book._fonts = book._fonts
-        new_book._named_ranges = book._named_ranges
-        new_book._images = book._images
         new_book._named_styles = book._named_styles
+        new_book._number_formats = book._number_formats
+        new_book._protections = book._protections
+        new_book._table_styles = book._table_styles
+        new_book._protections = book._protections
 
         for sheet in book.worksheets:
             sheet._WorkbookChild__parent = new_book
