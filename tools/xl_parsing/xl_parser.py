@@ -746,6 +746,10 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
 
                     ssot_line.usage.status_rules = status_dict
 
+                if ssot_line.usage.status_rules and ssot_stmt.display_type == \
+                        ssot_stmt.REGULAR_TYPE:
+                    ssot_stmt.display_type = ssot_stmt.KPI_TYPE
+
             # Behaviour column
             if sm.cols[ps.BEHAVIOR]:
                 behavior_cell = sheet.cell(row=row_num,
