@@ -149,7 +149,7 @@ def revise_projections(xl_serial, old_model):
     Function revises projection values while keeping existing actuals values
     Function takes a serialized Excel workbook in a specific format
     and converts it to an EngineModel with LineItem values. 
-    
+
     Function delegates to:
         build_sheet_maps()
         _build_fins_from_sheet()
@@ -220,7 +220,7 @@ def build_sheet_map(sheet):
     build_sheet_map(sheet) -> SheetMap()
 
     --``sheet`` is an instance of openpyxl.WorkSheets
-    
+
     Function checks if the uploaded excel sheet is in the right format.
     Raises Error if format is violated. Function also finds and sets the Column
     numbers for each field.
@@ -281,7 +281,7 @@ def _build_fins_from_sheet(bu, sheet, sm):
     --``bu`` is the instance of Business Unit we want build Financials on
     --``sheet`` is an instance of openpyxl.WorkSheet
     --``sm`` is an instance of SheetMap
-    
+
     Function extracts information from 'sheet' to build the LineItem structure
     in 'financials'. Functions creates new statements if necessary.
     """
@@ -401,12 +401,12 @@ def _add_line_effects(line, bu, row, sm):
 
     _add_line_effects(financials, sheet) -> None
 
-    --``line`` is the target LineItem 
+    --``line`` is the target LineItem
     --``bu`` is the instance of Business Unit that the line belongs to
     --``row`` is list of openpyxl.Cells in the same row
     --``sm`` is an instance of SheetMap
 
-    Function validates column values. This information and stores on the line 
+    Function validates column values. This information and stores on the line
     so that the Engine knows what to do with line later.
     """
 
@@ -517,7 +517,7 @@ def _combine_fins_structure(old_model, new_model):
 
     --``old_model``     old instance of Engine Model
     --``new_model``     new instance of Engine Model
-    
+
     Function combines line structure from the old and new models
     """
     old_bu = old_model.get_company()
