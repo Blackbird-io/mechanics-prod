@@ -29,7 +29,8 @@ BB_Workbook           workbook where each sheet has a SheetData record set
 # Imports
 import openpyxl as xlio
 
-from chef_settings import COLLAPSE_ROWS, DEFAULT_SCENARIOS, SCENARIO_SELECTORS
+from chef_settings import COLLAPSE_ROWS, DEFAULT_SCENARIOS, \
+    SCENARIO_SELECTORS, SAVE_NAMED_RANGES
 
 from ._chef_tools import check_filename_ext
 from .data_management import SheetData
@@ -90,19 +91,26 @@ class BB_Workbook(xlio.Workbook):
         """
         new_book = BB_Workbook()
 
+        # Openpyxl version 2.4.8
         new_book._alignments = book._alignments
         new_book._borders = book._borders
         new_book._cell_styles = book._cell_styles
         new_book._colors = book._colors
-        new_book._charts = book._charts
+        new_book._data_only = book._data_only
         new_book._differential_styles = book._differential_styles
-        new_book._drawings = book._drawings
         new_book._fills = book._fills
         new_book._fonts = book._fonts
-        new_book._named_ranges = book._named_ranges
-        new_book._images = book._images
         new_book._named_styles = book._named_styles
+        new_book._number_formats = book._number_formats
         new_book._protections = book._protections
+        new_book._read_only = book._read_only
+        new_book._table_styles = book._table_styles
+        new_book.loaded_theme = book.loaded_theme
+
+        if SAVE_NAMED_RANGES:
+            for nr in book.get_named_ranges():
+                if nr.attr_text != '#REF!' and not nr.hidden:
+                    new_book.add_named_range(nr)
 
         for sheet in book.worksheets:
             sheet._WorkbookChild__parent = new_book

@@ -100,7 +100,8 @@ def add_projections(xl_serial, engine_model):
     sm = build_sheet_map(sheet)
 
     # 2) Align model.time_line to ref_date. Add additional periods as needed
-    header_row = sheet.rows[sm.rows["HEADER"]-1]
+    sheet_rows = [r for r in sheet.rows]
+    header_row = sheet_rows[sm.rows["HEADER"]-1]
     xl_dates = []
     for cell in header_row[sm.cols["FIRST_PERIOD"]-1:]:
         if isinstance(cell.value, datetime):
@@ -230,7 +231,9 @@ def build_sheet_map(sheet):
     sm.rows["DATES"] = 1
     sm.rows["TIMELINE"] = 2  # "Actual" or "Forecast"
     sm.rows["FIRST_DATA"] = 3  # First row with LineItem data
-    header_row = sheet.rows[sm.rows["HEADER"]-1]
+
+    sheet_rows = [r for r in sheet.rows]
+    header_row = sheet_rows[sm.rows["HEADER"]-1]
 
     # Next few columns can be in any order
     for cell in header_row:
@@ -638,7 +641,8 @@ def _populate_fins_from_sheet(engine_model, sheet, sheet_f, sm):
     ssot_fins = bu.financials
 
     # Loop across periods (Left to Right on Excel)
-    for col in sheet.columns[sm.cols["FIRST_PERIOD"]-1:]:
+    sheet_columns = [c for c in sheet.columns]
+    for col in sheet_columns[sm.cols["FIRST_PERIOD"]-1:]:
         dt = col[0].value.date()
         timeline_name = col[sm.rows["TIMELINE"]-1].value
 
@@ -899,22 +903,13 @@ def _parse_formula(sheet, cell_f, bu, sm):
 
     formula_str = cell_f.value
 
-    tok = Tokenizer(formula_str)
-    try:
-        tok.parse()
-    except TypeError:
-        # This Error will trigger if formula_str is not a str
-        # # print(formula_str, type(formula_str))
-        return False
-
-    # # print("\n".join("%15s%15s%15s" % (i.value, i.type, i.subtype) for i in
-    #                 Tokenizer("=$A$1*12+B1").items))
-
     if not isinstance(formula_str, str):
         return False
     elif "!" in formula_str:
         return False  # Don't include other tabs "=Sheet2!A1"
     else:
+        tok = Tokenizer(formula_str)
+
         for t in tok.items:
             if t.type == "FUNC" and t.subtype in ("OPEN", "CLOSE"):
                 # # print(t.value)

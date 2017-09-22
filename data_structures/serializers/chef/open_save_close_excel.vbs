@@ -5,7 +5,7 @@ Option Explicit
 
 Dim xlApp, xlBook
 
-Set xlApp = GetObject("","Excel.Application")
+Set xlApp = CreateObject("Excel.Application")
 xlApp.Visible = False
 
 Set xlBook = xlApp.Workbooks.Open("FILENAME_PLACEHOLDER")
